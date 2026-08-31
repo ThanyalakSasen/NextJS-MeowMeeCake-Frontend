@@ -418,5 +418,8 @@
   "attendance": {},
   "finance": {},
   "storeDesign": {},
-  "notifications": {}
+  "notifications": {
+    "title": "การแจ้งเตือน",
+    "viewAll": "ดูประวัติทั้งหมด"
+  }
 }

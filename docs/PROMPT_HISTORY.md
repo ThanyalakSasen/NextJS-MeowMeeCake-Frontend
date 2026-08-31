@@ -293,3 +293,24 @@ share component (ใช้หลายที่) + base component (atom) + compo
 - **ยังไม่เทส (ต้องเบราว์เซอร์ + Service Worker):** login form → MSW `/auth/login` → cookie → `/auth/me` → dashboard — เฟส 6 หรือ `npm run dev` เทสมือด้วย credential ข้างบน
 
 **ถัดไป:** เฟส 3 (component library — `base/` + `shared/` + `COMPONENT_MAP.md`)
+
+---
+
+## #16 — 2026-09-01  ▶ เฟส 3 (Component library — แกนหลัก) เสร็จ
+
+**ผู้ใช้สั่ง:** เฟส 3
+
+**ทำจริง:**
+- **`src/components/base/` — 19 atoms** (ครอบ antd + ธีม): Button, Input, PasswordInput, InputNumber, Select, Switch, Tag, Badge, Spinner, Divider, DatePicker/RangePicker, Avatar(+`initialsOf`), DotIndicator, ProgressBar, Card, Logo, EmptyState, ErrorMessage, LocaleSwitcher + `index.ts` (Icon = ใช้ heroicons/lucide ตรง)
+- **`src/components/shared/layout/`** — AuthLayout · **OwnerLayout** (rewrite จาก placeholder → `<Sidebar/>` + `<Navbar/>` จริง + mobile drawer + auth gate + idle) · Sidebar (กรองเมนูตาม `useMenuAccess`) · MenuGroupItem · Navbar · BreadcrumbTrail · NotificationDropdown · NotificationItem · UserMenuDropdown · ListPageLayout + barrel
+- **`shared/feedback/`** LoadingSpin, ConfirmDeletePopup · **`shared/stats/`** StatCard, StatCardsGrid, StatusBadge (`group` → enumConfig สี + i18n label) · **`shared/data/`** SearchInput, PaginationBar
+- `src/constants/menu.ts` (โครงเมนู 4 section, labelKey → i18n `nav`) · `src/constants/breadcrumb.ts` (`buildBreadcrumbs` route→navKey)
+- **notifications vertical** (สำหรับ Navbar bell): `types/notification.ts` (DTO) · `services/notifications.ts` · `hooks/useNotifications.ts` (react-query) · `mocks/fixtures/notifications.ts` (5 รายการ) + `seed` + `crudHandlers("notifications")` ใน `handlers/index.ts`
+- i18n: เพิ่ม `notifications.title` + `notifications.viewAll` (th + en)
+- fix lint: `useIdleTimeout` ref-in-effect (แก้ก่อนหน้า) · OwnerLayout `setState` in effect → `eslint-disable-next-line`
+- **`docs/COMPONENT_MAP.md`** — ทะเบียน component ทุกตัว (built + deferred) + กติกาที่วาง
+- **ผล: `build` ✅ · `lint` ✅ · `lint:i18n` ✅ · curl: `/owner/dashboard` +cookie → SSR "กำลังโหลด" (ไม่ crash) · `/login` render**
+
+**เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `DetailDrawer` · `charts/*` · `KPIStatsRow` · `form/*` · `{TabbedPageLayout,DashboardPageLayout}` · page-local `_components/` ทั้งหมด
+
+**ถัดไป:** เฟส 4 (27 screens — เริ่ม Auth → Dashboard → Products ...) · ต้องเทส MSW auth flow ในเบราว์เซอร์ก่อนลุยหนัก

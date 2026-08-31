@@ -418,5 +418,8 @@
   "attendance": {},
   "finance": {},
   "storeDesign": {},
-  "notifications": {}
+  "notifications": {
+    "title": "Notifications",
+    "viewAll": "View all"
+  }
 }

@@ -158,8 +158,16 @@ src/
 > **curl verified:** `/` no-cookie → 307 `/login` · `/` cookie → 307 `/owner/dashboard` · `/owner/*` no-cookie → 307 `/login?next=` · `/login` cookie → 307 `/owner/dashboard` · `mockServiceWorker.js` เสิร์ฟ 200
 > **ยังไม่ได้เทส (ต้องเบราว์เซอร์):** login form → MSW `/auth/login` → cookie → `/auth/me` → dashboard render — ทำในเฟส 6 หรือ `npm run dev` เทสมือ
 
-### เฟส 3 — Component library
-*(เหมือนแผนเดิม — ดู §6)* · `base/` + `shared/<concern>/` + page-local `_components/` · MVVM · ไม่มี literal ข้อความ (i18n) · `COMPONENT_MAP.md`
+### เฟส 3 — Component library  ✅ **แกนหลักเสร็จ 2026-09-01** (`build` + `lint` + `lint:i18n` ผ่าน · SSR shell curl-verified)
+> ทำจริง:
+> - **`base/` (19 atoms)** — Button, Input, PasswordInput, InputNumber, Select, Switch, Tag, Badge, Spinner, Divider, DatePicker/RangePicker, Avatar (+`initialsOf`), DotIndicator, ProgressBar, Card, Logo, EmptyState, ErrorMessage, LocaleSwitcher + `index.ts` barrel
+> - **`shared/layout/`** — AuthLayout, **OwnerLayout** (rewrite: Sidebar+Navbar จริง + mobile drawer), Sidebar (กรอง permission ผ่าน `useMenuAccess`), MenuGroupItem, Navbar, BreadcrumbTrail, NotificationDropdown, NotificationItem, UserMenuDropdown, ListPageLayout
+> - **`shared/feedback/`** LoadingSpin · ConfirmDeletePopup · **`shared/stats/`** StatCard · StatCardsGrid · StatusBadge (enumConfig + i18n) · **`shared/data/`** SearchInput · PaginationBar
+> - `src/constants/menu.ts` (โครงเมนู labelKey) · `src/constants/breadcrumb.ts` (`buildBreadcrumbs`)
+> - **notifications vertical:** `types/notification.ts` · `services/notifications.ts` · `hooks/useNotifications.ts` · `mocks/fixtures/notifications.ts` + handler (crud)
+> - i18n: เพิ่ม `notifications.title` / `notifications.viewAll` (th+en) · `docs/COMPONENT_MAP.md`
+>
+> **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
 ### เฟส 4 — Screens (27)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
