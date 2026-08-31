@@ -76,6 +76,8 @@ export function useProductsViewModel() {
     products: productsQ.data?.data ?? [],
     total: productsQ.data?.meta.total ?? 0,
     isLoading: productsQ.isLoading,
+    isError: productsQ.isError,
+    refetch: () => productsQ.refetch(),
     categories: categoriesQ.data?.data ?? [],
 
     // filters

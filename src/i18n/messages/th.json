@@ -26,7 +26,9 @@
     "actions": "การจัดการ",
     "status": "สถานะ",
     "confirmDelete": "ยืนยันการลบรายการนี้?",
-    "setupInProgress": "กำลังตั้งค่าโปรเจกต์"
+    "setupInProgress": "กำลังตั้งค่าโปรเจกต์",
+    "loadFailed": "โหลดข้อมูลไม่สำเร็จ",
+    "retry": "ลองใหม่"
   },
   "nav": {
     "sectionOverview": "ภาพรวม",

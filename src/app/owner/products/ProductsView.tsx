@@ -2,7 +2,7 @@
 // View ของ Products List — JSX ล้วน รับ props จาก useProductsViewModel
 // i18n: ใช้ t ตัวเดียว, key = path เต็มใน messages json (t("products.title"), t("common.all"))
 import { useTranslations, useLocale } from "next-intl";
-import { Button, Switch } from "@/components/base";
+import { Button, EmptyState, Switch } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import {
   DataTable, FilterToolbar, SearchInput, SortDropdown, TypeTabBar, ViewToggle,
@@ -89,9 +89,16 @@ export function ProductsView(vm: VM) {
         </div>
       }
     >
-      {vm.viewMode === "grid" ? (
+      {vm.isError ? (
+        <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <p className="text-gray-500">{t("common.loadFailed")}</p>
+          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+        </div>
+      ) : vm.viewMode === "grid" ? (
         vm.isLoading ? (
           <DataTable columns={[]} rows={[]} loading />
+        ) : vm.products.length === 0 ? (
+          <EmptyState description={t("common.noData")} />
         ) : (
           <ProductGrid
             products={vm.products}

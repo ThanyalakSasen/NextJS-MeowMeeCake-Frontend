@@ -26,7 +26,9 @@
     "actions": "Actions",
     "status": "Status",
     "confirmDelete": "Delete this item?",
-    "setupInProgress": "Project setup in progress"
+    "setupInProgress": "Project setup in progress",
+    "loadFailed": "Failed to load data",
+    "retry": "Retry"
   },
   "nav": {
     "sectionOverview": "Overview",
