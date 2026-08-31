@@ -341,3 +341,24 @@ share component (ใช้หลายที่) + base component (atom) + compo
 
 **เหลือ 25 screen** — copy pattern: list → Products · form → (Add Product ต่อไป) · Dashboard/POS/Kanban = bespoke
 **ถัดไป:** เฟส 4 ต่อ — Dashboard หรือ Add/Edit Product (ตามลำดับใน §7)
+
+---
+
+## #18 — 2026-09-01  ▶ เฟส 4 ต่อ (4/27 — Add/Edit Product + form reference)
+
+**ผู้ใช้สั่ง:** เฟส 4 ต่อ
+
+**ทำจริง — form reference:**
+- `components/shared/form/` — `FormField` (label + control + error) · `UploadImageBox` (antd Upload → base64 data URL) + barrel · `base/Input` เพิ่ม `TextArea`
+- units vertical: `types/unit.ts` · `services/units.ts` · `mocks/fixtures/units.ts` (4) + seed + `crudHandlers("units")`
+- `app/owner/products/productForm.ts` — pure: `ProductFormValue` · `emptyProductForm` · `fromProduct` · `toInput` · `validate` (คืน map field → **i18n key**, ไม่พึ่ง t)
+- `app/owner/products/_components/ProductFormFields.tsx` — controlled form UI (value/onChange/errors) ใช้ทั้ง add + edit · โหลด category + unit ผ่าน `useQuery`
+
+**Screen #4 Add Product** ✅ — `page.tsx` + `AddProductView.tsx` + `useAddProductViewModel.ts` (`useState(emptyProductForm)` + `useMutation(create)` + validate→map ผ่าน `t` → redirect `/owner/products`)
+**Screen #5 Edit Product** ✅ — `[id]/edit/{page,EditProductView,useEditProductViewModel}` (`useParams` id + `useQuery(get)` → seed ฟอร์มใน `useEffect` (`// eslint-disable set-state-in-effect`) + `useMutation(update)` · loading/error state)
+
+- i18n: `validation.{required,positive,nonNegative}` + `products.saleLtPrice` (th+en) · **ใช้แนวใหม่: `const t = useTranslations()` + key path เต็ม ทุกไฟล์**
+- **ผล: `build` ✅ · `lint` ✅ · `lint:i18n` ✅ (ทั้ง 2 เช็ค)** · curl: `/owner/products/addProducts` → "เพิ่มสินค้า" + form · `/owner/products/[id]/edit` → "แก้ไข" + loading (ไม่ crash)
+- อัปเดต `REBUILD_PLAN` (4/27, เหลือ 23) · `COMPONENT_MAP` (form + ProductFormFields)
+
+**ถัดไป:** เฟส 4 ต่อ — Product Stock (#6) หรือ Dashboard (#2)

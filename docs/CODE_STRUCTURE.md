@@ -136,6 +136,30 @@ src/services/
 
 ---
 
+## 5.5 ฟอร์ม — ใช้ antd `<Form>` (ไม่ใช้ 3rd party)
+
+**เหตุผล:** antd มีอยู่แล้ว · ทำงานกับ antd input ทุกช่องโดยไม่ต้องห่อ `<Controller>` · `<Form.Item rules>` = label + error + validation ในตัว · `initialValues` seed หน้า edit ง่าย
+**ไม่เอา** react-hook-form (antd input ต้อง `<Controller>` ทุกช่อง) · zod เพิ่มทีหลังได้ถ้าฟอร์ม logic ซับซ้อน (ตอนนี้ยังไม่ต้อง)
+
+**โครง (reference: `app/owner/products/addProducts` + `[id]/edit`):**
+
+```
+products/
+  productForm.ts          # pure: type ProductFormValue · emptyProductForm (initialValues ตอน add)
+                          #       fromProduct(p) (Product → initialValues ตอน edit) · toInput(v) (form → API body)
+  _components/ProductFormFields.tsx   # <FormItem name=... label=... rules=[...]> ครอบ base/ input — render ข้างใน <Form>
+  addProducts/ page + View + ViewModel
+  [id]/edit/   page + View + ViewModel
+```
+
+- **ViewModel** ถือแค่ `initialValues` + `submitting` + `onSubmit(values)` + `onCancel` — **ไม่มี form state / validate เอง** (antd Form ถือให้)
+- **View**: `<Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}> <XxxFormFields/> <Button htmlType="submit" .../> </Form>` — `onFinish` ยิงหลัง validate ผ่านแล้วเท่านั้น
+- **edit**: render `<Form>` หลัง `useQuery` โหลดเสร็จ (`if (isLoading) return <LoadingSpin/>`) → `initialValues` ใช้ตรง ๆ ไม่ต้อง `setFieldsValue` / effect
+- **validation message** = i18n: `rules={[{ required: true, message: t("validation.required") }]}` · cross-field ใช้ `dependencies` + `validator`
+- `FormItem` มาจาก `@/components/base` (wrap `antd Form.Item`)
+
+---
+
 ## 6. Naming convention
 
 | สิ่ง | รูปแบบ | ตัวอย่าง |

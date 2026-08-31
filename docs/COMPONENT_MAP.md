@@ -87,8 +87,12 @@
 ### shared/stats/ — ⏳ เฟส 4
 | KPIStatsRow | ⏳ | Finance Summary |
 
-### shared/form/ — ⏳ เฟส 4
-| FormField · UploadImageBox · ToggleRow · MonthSelector · PasswordShuffleButton · AvatarUploader | ⏳ | Add/Edit Product, Add/Edit Employee, Finance, Store Design |
+### shared/form/
+| component | สถานะ | consumers |
+|---|---|---|
+| FormField | ✅ เฟส 4 (จาก Add Product) | ทุกฟอร์ม |
+| UploadImageBox | ✅ เฟส 4 | Add/Edit Product, Store Design |
+| ToggleRow · MonthSelector · PasswordShuffleButton · AvatarUploader | ⏳ | Add/Edit Employee, Finance |
 
 ### shared/layout/ — ⏳ เฟส 4
 | TabbedPageLayout | ⏳ | Production, Promotions |
@@ -102,7 +106,7 @@
 | screen | _components |
 |---|---|
 | Login (`app/login/_components/`) | `LoginForm` ✅ |
-| Products (`app/owner/products/_components/`) | `ProductCard` · `ProductGrid` · `CategoryChip` · `RatingDisplay` ✅ |
+| Products (`app/owner/products/_components/`) | `ProductCard` · `ProductGrid` · `CategoryChip` · `RatingDisplay` · `ProductFormFields` (ใช้ทั้ง add+edit) ✅ |
 
 ที่เหลือสร้างพร้อม screen ที่ใช้ (1 consumer) — ดูรายการเต็มใน `REBUILD_PLAN.md` §6 ตัวอย่าง:
 `products/_components/` ProductCard, ProductGrid, ProductFormFields · `production/_components/` KanbanBoard, ProductionOrderCard · `orders/OrderInStore/_components/` CartPanel, ProductPickerGrid, QRPaymentModal · `recipes/_components/` MainRecipeModal, IngredientEditor · `dashboard/_components/` RecentOrdersWidget, LowStockWidget · ฯลฯ

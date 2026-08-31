@@ -93,6 +93,11 @@
     "validation": "Some fields are invalid. Please check.",
     "duplicate": "This {label} already exists. Please use another name."
   },
+  "validation": {
+    "required": "Required",
+    "positive": "Must be greater than 0",
+    "nonNegative": "Must not be negative"
+  },
   "actions": {
     "CREATE": "created",
     "UPDATE": "updated",
@@ -427,7 +432,8 @@
     "saved": "Saved",
     "saveFailed": "Save failed",
     "deleted": "Deleted",
-    "deleteFailed": "Delete failed"
+    "deleteFailed": "Delete failed",
+    "saleLtPrice": "Sale price must be lower than the price"
   },
   "orders": {},
   "pos": {},

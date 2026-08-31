@@ -5,3 +5,4 @@ export type { InputProps };
 export function Input(props: InputProps) {
   return <AntInput {...props} />;
 }
+export const TextArea = AntInput.TextArea;

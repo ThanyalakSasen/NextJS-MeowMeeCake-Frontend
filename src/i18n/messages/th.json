@@ -93,6 +93,11 @@
     "validation": "ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบ",
     "duplicate": "{label}นี้มีอยู่แล้วในระบบ กรุณาใช้ชื่ออื่น"
   },
+  "validation": {
+    "required": "จำเป็นต้องกรอก",
+    "positive": "ต้องมากกว่า 0",
+    "nonNegative": "ต้องไม่ติดลบ"
+  },
   "actions": {
     "CREATE": "เพิ่ม",
     "UPDATE": "แก้ไข",
@@ -427,7 +432,8 @@
     "saved": "บันทึกแล้ว",
     "saveFailed": "บันทึกไม่สำเร็จ",
     "deleted": "ลบแล้ว",
-    "deleteFailed": "ลบไม่สำเร็จ"
+    "deleteFailed": "ลบไม่สำเร็จ",
+    "saleLtPrice": "ราคาโปรโมชันต้องน้อยกว่าราคาปกติ"
   },
   "orders": {},
   "pos": {},

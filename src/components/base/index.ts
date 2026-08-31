@@ -1,6 +1,6 @@
 // base/ — atom ทั้งหมด (ครอบ antd + ธีมโปรเจกต์) · import จากที่เดียว: @/components/base
 export { Button, type ButtonProps } from "./Button";
-export { Input, type InputProps } from "./Input";
+export { Input, TextArea, type InputProps } from "./Input";
 export { PasswordInput } from "./PasswordInput";
 export { InputNumber, type InputNumberProps } from "./InputNumber";
 export { Select, type SelectProps } from "./Select";
@@ -14,6 +14,7 @@ export { Avatar, initialsOf } from "./Avatar";
 export { DotIndicator } from "./DotIndicator";
 export { ProgressBar } from "./ProgressBar";
 export { Card } from "./Card";
+export { Form, FormItem, useAntForm } from "./Form";
 export { Logo } from "./Logo";
 export { EmptyState } from "./EmptyState";
 export { ErrorMessage } from "./ErrorMessage";
