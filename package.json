@@ -12,7 +12,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "lint:i18n": "node scripts/check-i18n.mjs"
+    "lint:i18n": "node scripts/check-i18n.mjs",
+    "lint:theme": "node scripts/check-theme.mjs --strict",
+    "check": "node scripts/check-i18n.mjs && node scripts/check-theme.mjs --strict && tsc --noEmit && eslint"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

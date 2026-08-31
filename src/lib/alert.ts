@@ -5,6 +5,7 @@
 // default ของ confirm เป็น English fallback เท่านั้น (ผู้เรียกควรส่ง t() มาเสมอ)
 // ─────────────────────────────────────────────────────────────
 import Swal from "sweetalert2";
+import { color } from "@/theme";
 
 type ToastIcon = "success" | "error" | "warning" | "info";
 
@@ -45,7 +46,7 @@ export async function confirmAlert(
     showCancelButton: true,
     confirmButtonText: opts?.confirmText ?? "Confirm",
     cancelButtonText: opts?.cancelText ?? "Cancel",
-    confirmButtonColor: opts?.danger ? "#dc2626" : "#4B2E2B",
+    confirmButtonColor: opts?.danger ? color.danger : color.brandPrimary,
     reverseButtons: true,
   });
   return result.isConfirmed;

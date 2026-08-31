@@ -5,22 +5,31 @@
 
 @import "tailwindcss";
 
+/* ════════════════════════════════════════════════════════════════════
+   THEME SYSTEM — ชั้น CSS (ดู docs/THEME.md)
+   ┌─ @theme            = โทเคนที่ Tailwind สร้าง utility ให้ (bg-brown-800, text-danger …)
+   ├─ :root (ส่วนที่ 1)  = โทเคนเชิงความหมาย + ขนาดโครงหน้า (ไม่สร้าง utility)
+   └─ ฝั่ง JS/antd        = src/theme/*  (palette.ts → tokens.ts → antdTheme.ts)
+
+   ⚠️  ค่าสีใน @theme ด้านล่าง "ต้องตรงกับ" src/theme/palette.ts
+       รันตรวจ: npm run lint:theme  (scripts/check-theme.mjs)
+   ════════════════════════════════════════════════════════════════════ */
+
 /* ฟอนต์หลัก = Noto Sans Thai (ไทยไม่มีหัว) โหลดใน src/app/layout.tsx ผ่าน next/font
-   ตัวแปร --font-noto-thai ถูก set บน <html> — ผูกเข้ากับ font-sans ของ Tailwind ที่นี่
-   ใช้ @theme inline เพื่อให้ค่าถูกแทนตอน build (ไม่กลายเป็น var ซ้อน var) */
+   --font-noto-thai ถูก set บน <html> — ผูกเข้ากับ font-sans ของ Tailwind ที่นี่
+   @theme inline: ให้ utility เก็บ var() ไว้ (ไม่ resolve ตอน build) */
 @theme inline {
   --font-sans: var(--font-noto-thai), "Inter", system-ui, -apple-system, sans-serif;
 }
 
-/* สเกลฟอนต์เป็นมิตรกับผู้สูงอายุ: ยกขนาดฐานทั้งหน้าเป็น 18px ที่ html{font-size} (ดูส่วน base reset)
-   ทุก text-* ของ Tailwind เป็น rem จึงขยายตามสัดส่วนพร้อมกัน (base 18 · sm ~15.75 · xl ~22.5 · 2xl 27)
-   หมายเหตุ: ของเดิมตั้ง --font-size-* ซึ่ง Tailwind v4 ไม่รู้จัก (namespace ที่ถูกคือ --text-*) — บล็อกนั้นไม่เคยมีผล
-   ที่นี่แค่ดันพื้น text-xs ขึ้นเล็กน้อยกันข้อความจิ๋ว ที่เหลือปล่อยให้ไล่ตามสัดส่วน */
 @theme {
-  --text-xs: 0.8125rem; /* ~14.6px ที่ฐาน 18 (เดิม 0.75rem) */
+  /* ── สเกลตัวอักษร ──
+     ฐานทั้งหน้า = 18px ที่ html{font-size:112.5%} (ดู base reset ด้านล่าง)
+     text-* ของ Tailwind เป็น rem จึงขยายตามสัดส่วนอยู่แล้ว — ที่นี่แค่ดันพื้น text-xs กันจิ๋ว
+     (namespace ที่ถูกของ Tailwind v4 คือ --text-* ไม่ใช่ --font-size-*) */
+  --text-xs: 0.8125rem; /* ~14.6px ที่ฐาน 18 */
 
-  /* ธีมสีน้ำตาล Coffee: bg-brown-*, text-brown-*, border-brown-* ใช้แทนที่ slate-800/900 เดิม
-     ทุกจุดที่เป็นสีหลักของแบรนด์ (ปุ่มหลัก หัวข้อ แถบเมนูที่เลือกอยู่) จุดยึดคือ brown-800 */
+  /* ── สีแบรนด์ "Coffee" (น้ำตาล) — จุดยึด = 800 ──  ⚠️ sync กับ src/theme/palette.ts (brand) */
   --color-brown-50:  #FAF5F2;
   --color-brown-100: #F1E4DC;
   --color-brown-200: #E3C9B8;
@@ -32,76 +41,90 @@
   --color-brown-800: #4B2E2B;
   --color-brown-900: #37201D;
   --color-brown-950: #241512;
+
+  /* ── สีสถานะ — ใช้เป็น bg-success / text-danger ฯลฯ ──  ⚠️ sync กับ src/theme/palette.ts (status) */
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+  --color-danger:  #DC2626;
+  --color-info:    #2563EB;
 }
 
 /* ------------------------------------------------------------
-   1. CSS Variables — สี, ขนาด, transition
+   1. โทเคนเชิงความหมาย + ขนาดโครงหน้า
+   ค่าสีอ้าง var(--color-*) จาก @theme เสมอ — ไม่ใส่ hex ซ้ำ
+   ตัวเลข px/rem ที่ฝั่ง JS ต้องรู้ (touch target, sidebar, navbar …) mirror อยู่ที่ src/theme/tokens.ts
    ------------------------------------------------------------ */
 :root {
-  /* ── มาตรฐานผู้สูงอายุ ──
-     --touch-target: ปุ่ม/ไอคอนกดต้อง ≥ 44px (นิ้วผู้ใหญ่แตะแม่นขึ้น, ตาม WCAG 2.2 2.5.8)
-     --text-muted:   สีข้อความรอง คอนทราสต์ ≥ 4.5:1 บนพื้นขาว (เลิกใช้ gray-400 ที่จางเกิน) */
-  --touch-target: 2.75rem;      /* 44px */
-  --text-muted: #4b5563;        /* gray-600 — แทน gray-400/500 ที่คอนทราสต์ตก */
+  /* ── ข้อความ (คอนทราสต์ ≥ 4.5:1 บนพื้นขาว — เลิกใช้ gray-400) ── */
+  --text-strong: #3D2523;       /* = neutral.ink   (src/theme/palette.ts) */
+  --text-muted:  #4B5563;       /* = neutral.muted — label / คำอธิบาย */
+  --text-subtle: #64748B;       /* = neutral.subtle — timestamp / hint (ข้อความสั้นเท่านั้น) */
 
-  /* Sidebar (กว้างขึ้นให้รองรับตัวอักษร 17px โดยไม่ตัดบรรทัดบ่อย) */
-  --sidebar-width: 268px;
-  --sidebar-bg: #ffffff;
-  --sidebar-border: #f1f5f9;
+  /* ── พื้น / เส้น ── */
+  --surface:       #FFFFFF;
+  --bg-app:        #F8FAFC;
+  --border:        #E2E8F0;
+  --border-subtle: #F1F5F9;
 
-  /* Section label */
-  --sidebar-section-color: #4b5563;
+  /* ── a11y (WCAG 2.2 — 2.5.8 / 2.4.7) ── */
+  --touch-target:     2.75rem;  /* 44px — พื้นที่กดขั้นต่ำของปุ่ม/ไอคอน */
+  --focus-ring-width: 3px;
+  --focus-ring-color: var(--color-brown-800);
 
-  /* Menu item */
-  --menu-item-color: #1f2937;
-  --menu-item-hover-bg: #FAF5F2;
-  --menu-item-hover-color: #4B2E2B;
-  --menu-item-active-bg: #F1E4DC;
-  --menu-item-active-color: #4B2E2B;
-  --menu-item-font-size: 1.0625rem; /* 17px */
+  /* ── โครงหน้า ── */
+  --sidebar-width:    268px;    /* กว้างพอสำหรับตัวอักษร 17px ไม่ตัดบรรทัดบ่อย */
+  --navbar-height:    64px;
+  --content-padding:  1.5rem;
+  --breakpoint-mobile: 992px;   /* อ้างอิงเท่านั้น — className จริงใช้ prefix lg: */
 
-  /* Submenu item */
-  --submenu-item-color: #1f2937;
-  --submenu-item-active-color: #4B2E2B;
-  --submenu-indent: 2.25rem; /* 36px */
+  /* ── สีพื้นผิวของ shell ── */
+  --sidebar-bg:     var(--surface);
+  --sidebar-border: var(--border-subtle);
+  --navbar-bg:      var(--surface);
+  --navbar-border:  var(--border-subtle);
+  --content-bg:     var(--bg-app);
 
-  /* Navbar */
-  --navbar-height: 64px;
-  --navbar-bg: #ffffff;
-  --navbar-border: #f1f5f9;
+  /* ── Sidebar: section label ── */
+  --sidebar-section-color: var(--text-muted);
 
-  /* Breadcrumb */
-  --bc-link-color: #64748b;
-  --bc-link-hover-color: #7C4F35;
-  --bc-current-color: #4B2E2B;
+  /* ── Sidebar: menu item ── */
+  --menu-item-color:        #1F2937;
+  --menu-item-hover-bg:     var(--color-brown-50);
+  --menu-item-hover-color:  var(--color-brown-800);
+  --menu-item-active-bg:    var(--color-brown-100);
+  --menu-item-active-color: var(--color-brown-800);
+  --menu-item-font-size:    1.0625rem; /* 17px */
 
-  /* Notification dot */
-  --notif-dot-color: #ef4444;
+  /* ── Sidebar: submenu ── */
+  --submenu-item-color:        #1F2937;
+  --submenu-item-active-color: var(--color-brown-800);
+  --submenu-indent:            2.25rem; /* 36px */
 
-  /* Avatar */
-  --avatar-bg: #F1E4DC;
-  --avatar-color: #4B2E2B;
+  /* ── Navbar: breadcrumb ── */
+  --bc-link-color:       var(--text-subtle);
+  --bc-link-hover-color: var(--color-brown-600);
+  --bc-current-color:    var(--color-brown-800);
 
-  /* Submit and cancel buttons */
-  --btn-submit-bg: #4B2E2B;
-  --btn-submit-color: #ffffff;
-  --btn-cancel-bg: #f1f5f9;
-  --btn-cancel-color: #4B2E2B;
+  /* ── Navbar: avatar ── */
+  --avatar-bg:    var(--color-brown-100);
+  --avatar-color: var(--color-brown-800);
 
-  /* Logout */
-  --logout-color: #ef4444;
-  --logout-hover-bg: #fef2f2;
+  /* ── Notification dot (แดงสว่างสำหรับจุดเล็ก — ตั้งใจให้ต่างจาก --color-danger) ── */
+  --notif-dot-color: #EF4444;
 
-  /* Layout */
-  --content-bg: #f8fafc;
-  --content-padding: 1.5rem;
+  /* ── ปุ่ม submit / cancel ของฟอร์ม ── */
+  --btn-submit-bg:     var(--color-brown-800);
+  --btn-submit-color:  #FFFFFF;
+  --btn-cancel-bg:     var(--border-subtle);
+  --btn-cancel-color:  var(--color-brown-800);
 
-  /* Transitions */
-  --transition-fast: 0.15s ease;
+  /* ── Logout ── */
+  --logout-color:    #EF4444;
+  --logout-hover-bg: #FEF2F2;
+
+  /* ── Transition ── */
+  --transition-fast:   0.15s ease;
   --transition-drawer: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Breakpoint (reference only — use Tailwind lg: prefix) */
-  --breakpoint-mobile: 992px;
 }
 
 /* ------------------------------------------------------------
@@ -127,7 +150,7 @@ body {
   /* Noto Sans Thai ผ่าน --font-sans (ผูกใน @theme inline ด้านบน) */
   font-family: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
   line-height: 1.7;             /* เว้นบรรทัดกว้างขึ้น อ่านง่ายขึ้นสำหรับอักษรไทยที่มีวรรณยุกต์ */
-  color: #3d2523;              /* เข้มขึ้นเล็กน้อยจาก brown-800 เพื่อคอนทราสต์ */
+  color: var(--text-strong);
   background-color: var(--content-bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -139,7 +162,7 @@ body {
 
 /* โฟกัสชัดเจน — ผู้สูงอายุที่ใช้คีย์บอร์ด/มองเห็นไม่ชัดจะรู้ว่าตอนนี้อยู่ที่ปุ่มไหน */
 :focus-visible {
-  outline: 3px solid var(--menu-item-active-color, #4B2E2B);
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -216,7 +239,7 @@ body {
 .sidebar-brand-name {
   font-size: 1rem;
   font-weight: 600;
-  color: #4B2E2B;
+  color: var(--color-brown-800);
   line-height: 1.2;
 }
 
@@ -615,7 +638,7 @@ body {
 .notif-dropdown-title {
   font-size: 1rem;
   font-weight: 500;
-  color: #4B2E2B;
+  color: var(--color-brown-800);
 }
 
 .notif-unread-badge {
@@ -652,7 +675,7 @@ body {
 }
 
 .notif-item.unread {
-  background-color: #FAF5F2;
+  background-color: var(--color-brown-50);
 }
 
 .notif-type-dot {
@@ -702,13 +725,13 @@ body {
   align-items: center;
   gap: 0.3125rem;
   font-size: 1rem;
-  color: #7C4F35;
+  color: var(--color-brown-600);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 .notif-history-link:hover {
-  color: #4B2E2B;
+  color: var(--color-brown-800);
 }
 
 .notif-history-link svg {
@@ -734,7 +757,7 @@ body {
 }
 
 .owner-avatar:hover {
-  background-color: #E3C9B8;
+  background-color: var(--color-brown-200);
 }
 
 .navbar-actor-btn {
