@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import type { MenuLeaf } from "@/constants/menu";
+import type { NavKey } from "@/i18n/keys";
 
 export function MenuGroupItem({
   labelKey,
@@ -13,7 +14,7 @@ export function MenuGroupItem({
   open,
   onToggle,
 }: {
-  labelKey: string;
+  labelKey: NavKey;
   Icon: React.ElementType;
   items: MenuLeaf[];
   open: boolean;

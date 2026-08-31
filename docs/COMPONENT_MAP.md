@@ -66,17 +66,17 @@
 | StatCardsGrid | `stats/StatCardsGrid.tsx` | เช่นเดียวกัน |
 | StatusBadge | `stats/StatusBadge.tsx` | Orders, Production, Payments, Stock (10+ screens) — `group` = enumConfig + i18n |
 
-### shared/data/ (✅ SearchInput, PaginationBar เฟส 3 · ที่เหลือ ⏳ เฟส 4)
-| component | ไฟล์ | สถานะ |
-|---|---|---|
-| SearchInput | `data/SearchInput.tsx` | ✅ |
-| PaginationBar | `data/PaginationBar.tsx` | ✅ |
-| DataTable | `data/DataTable.tsx` | ⏳ เฟส 4 — API shape จาก consumer แรก (Products/Orders table) |
-| FilterToolbar | `data/FilterToolbar.tsx` | ⏳ เฟส 4 |
-| TypeTabBar | `data/TypeTabBar.tsx` | ⏳ เฟส 4 |
-| SortDropdown | `data/SortDropdown.tsx` | ⏳ เฟส 4 (Products) |
-| ViewToggle | `data/ViewToggle.tsx` | ⏳ เฟส 4 (Products) |
-| AutoCompleteSearch | `data/AutoCompleteSearch.tsx` | ⏳ เฟส 4 (Ingredient Stock) |
+### shared/data/ (✅ เฟส 3–4 · AutoCompleteSearch ⏳)
+| component | ไฟล์ | สถานะ | consumers |
+|---|---|---|---|
+| SearchInput | `data/SearchInput.tsx` | ✅ เฟส 3 | list screens |
+| PaginationBar | `data/PaginationBar.tsx` | ✅ เฟส 3 | DataTable, list screens |
+| DataTable | `data/DataTable.tsx` | ✅ เฟส 4 (จาก Products) | Products(table), Orders, Employees, Ingredients, ... |
+| FilterToolbar | `data/FilterToolbar.tsx` | ✅ เฟส 4 | list screens |
+| TypeTabBar | `data/TypeTabBar.tsx` | ✅ เฟส 4 | Products, Orders, Notifications |
+| SortDropdown | `data/SortDropdown.tsx` | ✅ เฟส 4 | Products |
+| ViewToggle | `data/ViewToggle.tsx` | ✅ เฟส 4 | Products |
+| AutoCompleteSearch | `data/AutoCompleteSearch.tsx` | ⏳ เฟส 4 (Ingredient Stock) | |
 
 ### shared/feedback/ — ⏳ เฟส 4
 | DetailDrawer | ⏳ | Orders, Notifications, Ingredients, User Log — shape จาก consumer |
@@ -96,9 +96,15 @@
 
 ---
 
-## page-local (`app/owner/<route>/_components/`) — ⏳ เฟส 4
+## page-local (`app/owner/<route>/_components/`)
 
-ทั้งหมดสร้างพร้อม screen ที่ใช้ (1 consumer) — ดูรายการเต็มใน `REBUILD_PLAN.md` §6 ตัวอย่าง:
+**เสร็จแล้ว:**
+| screen | _components |
+|---|---|
+| Login (`app/login/_components/`) | `LoginForm` ✅ |
+| Products (`app/owner/products/_components/`) | `ProductCard` · `ProductGrid` · `CategoryChip` · `RatingDisplay` ✅ |
+
+ที่เหลือสร้างพร้อม screen ที่ใช้ (1 consumer) — ดูรายการเต็มใน `REBUILD_PLAN.md` §6 ตัวอย่าง:
 `products/_components/` ProductCard, ProductGrid, ProductFormFields · `production/_components/` KanbanBoard, ProductionOrderCard · `orders/OrderInStore/_components/` CartPanel, ProductPickerGrid, QRPaymentModal · `recipes/_components/` MainRecipeModal, IngredientEditor · `dashboard/_components/` RecentOrdersWidget, LowStockWidget · ฯลฯ
 
 **Promotion rule:** page-local ตัวไหนมี screen ที่ 2 มาใช้ → ย้ายขึ้น `shared/<concern>/` + อัปเดตแถวในเอกสารนี้

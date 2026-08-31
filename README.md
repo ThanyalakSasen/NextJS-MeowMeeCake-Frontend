@@ -193,21 +193,27 @@ component มีได้ **3 ที่เท่านั้น** ตัดส�
 cookie mmc_locale  ──►  src/i18n/request.ts  ──►  โหลด src/i18n/messages/<ภาษา>.json  ──►  t("...") ใช้ได้ทุกที่
 ```
 
-**ใช้ในโค้ด:**
+**ใช้ในโค้ด — กฎเดียว: `t` ตัวเดียว, key = path เต็ม**
 ```tsx
 // client component
 import { useTranslations } from "next-intl";
-const t = useTranslations("products");        // เลือก namespace
-return <h1>{t("title")}</h1>;                 // อ่าน messages/th.json → { "products": { "title": "รายการสินค้า" } }
+const t = useTranslations();                  // ไม่ใส่ namespace
+return <h1>{t("products.title")}</h1>;        // key ตรงกับ path ใน messages json เป๊ะ
+// ค่าแทรก: t("products.stock", { n: 12 })   // json: "stock": "สต็อก {n}"
 
 // server component
 import { getTranslations } from "next-intl/server";
-const t = await getTranslations("common");
+const t = await getTranslations();
 ```
 
-**เพิ่มข้อความใหม่:** เติม key **เดียวกันทั้ง 2 ไฟล์** (`th.json` + `en.json`) แล้วเรียก `t("key")`
+**เพิ่มข้อความใหม่ = 2 ขั้น:** (1) เติม key **เดียวกันทั้ง** `th.json` + `en.json` → (2) เรียก `t("path.to.key")`
 
-**ห้าม** เขียนข้อความไทย/อังกฤษตรง ๆ ใน `.tsx` — `npm run lint:i18n` จะเตือน (ยกเว้นในโฟลเดอร์ `i18n/` `models/` `types/` `constants/` `mocks/` ที่มีค่าจาก DB เป็นภาษาไทยได้)
+**3 อย่างที่กันพลาด:**
+- พิมพ์ key ผิด → editor autocomplete + **build error** (ผ่าน `src/i18n/messages.d.ts`)
+- ลืมเติมอีกไฟล์ → `npm run lint:i18n` เช็ค key ของ th/en ให้ตรงกัน
+- เผลอเขียนข้อความไทยตรง ๆ ใน `.tsx` → `npm run lint:i18n` จับ (ยกเว้น `i18n/` `types/` `constants/` `mocks/`)
+
+**key จากตัวแปร/config:** ต้อง type ให้แคบ (เช่น `menu.ts` `labelKey: NavKey`) หรือ cast `t(key as Parameters<typeof t>[0])`
 
 **สลับภาษา:** component `<LocaleSwitcher/>` (ปุ่ม TH/EN) → เขียน cookie + `router.refresh()` · antd (ปฏิทิน, ปุ่ม "วันนี้") กับ dayjs สลับตามให้อัตโนมัติผ่าน `src/app/providers.tsx`
 

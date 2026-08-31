@@ -6,17 +6,20 @@ import { seed } from "@/mocks/db";
 import { authHandlers } from "@/mocks/handlers/auth";
 import { crudHandlers } from "@/mocks/handlers/_crud";
 import { productsFixture } from "@/mocks/fixtures/products";
+import { productCategoriesFixture } from "@/mocks/fixtures/productCategories";
 import { notificationsFixture } from "@/mocks/fixtures/notifications";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 // ── seed ──
 seed("products", productsFixture);
+seed("product-categories", productCategoriesFixture);
 seed("notifications", notificationsFixture);
 
 // ── handlers ──
 export const handlers = [
   ...authHandlers,
   ...crudHandlers("products", `${API}/products`),
+  ...crudHandlers("product-categories", `${API}/product-categories`),
   ...crudHandlers("notifications", `${API}/notifications`),
 ];

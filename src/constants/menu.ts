@@ -4,15 +4,16 @@
 // menuKey ไม่ระบุ = แสดงเสมอ (ตราบใด login) · ระบุ = กรองด้วย usePermission(menuKey).view
 // ─────────────────────────────────────────────────────────────
 import type { MenuKey } from "@/constants/menuKeys";
+import type { NavKey } from "@/i18n/keys";
 
 export interface MenuLeaf {
-  labelKey: string; // key ใน messages.*.nav
+  labelKey: NavKey; // key ใน messages.*.nav (typescript เช็คว่ามีจริง)
   href: string;
   menuKey?: MenuKey;
 }
 
 export interface MenuNode {
-  labelKey: string;
+  labelKey: NavKey;
   /** heroicon name — import ที่ Sidebar */
   icon: string;
   href?: string;
@@ -21,7 +22,7 @@ export interface MenuNode {
 }
 
 export interface MenuSection {
-  labelKey: string;
+  labelKey: NavKey;
   items: MenuNode[];
 }
 

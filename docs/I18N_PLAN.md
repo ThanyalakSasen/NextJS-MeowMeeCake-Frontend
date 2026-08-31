@@ -1,7 +1,46 @@
 # แผน i18n — รองรับ 2 ภาษา (ไทย / อังกฤษ)
 
 > ทำ **ก่อน** เริ่มสร้าง component/screen — เพื่อให้ทุกชิ้น i18n-ready ตั้งแต่แรก ไม่ต้องย้อนมาแก้
-> เพิ่มเป็น **เฟส 0.5** ใน `REBUILD_PLAN.md`
+
+---
+
+## 0. วิธีใช้ (มือใหม่อ่านตรงนี้พอ)
+
+**กฎเดียว:** ทุก component ที่มีข้อความ →
+
+```tsx
+"use client";
+import { useTranslations } from "next-intl";
+
+export function Foo() {
+  const t = useTranslations();               // ← ตัวเดียว ไม่ต้องใส่ namespace
+  return <h1>{t("products.title")}</h1>;      // ← key = path เต็มใน messages json
+}
+```
+
+**server component:** `const t = await getTranslations()` (จาก `next-intl/server`) — ที่เหลือเหมือนกัน
+
+**เพิ่มข้อความใหม่ = 2 ขั้น:**
+1. เติม key ใน **ทั้ง** `src/i18n/messages/th.json` และ `en.json` (path เดียวกัน)
+2. เรียก `t("path.to.key")`
+
+**3 อย่างที่ช่วยไม่ให้พลาด:**
+| ปัญหา | ตัวช่วย |
+|---|---|
+| พิมพ์ key ผิด | `src/i18n/messages.d.ts` ทำให้ editor **autocomplete** + พิมพ์ผิด = **build error** (ไม่ใช่รอ runtime) |
+| ลืมเติมอีกไฟล์ | `npm run lint:i18n` เช็คว่า th.json / en.json มี key ตรงกันครบ |
+| เผลอเขียนข้อความไทยตรง ๆ ใน .tsx | `npm run lint:i18n` จับ (ยกเว้น `src/i18n\|mocks\|types\|constants`) |
+
+**ค่าแทรก (interpolation):**
+```tsx
+t("products.stock", { n: 12 })   // json: "stock": "สต็อก {n}"
+```
+
+**key ที่มาจากตัวแปร/config (ไม่ใช่ literal):** typescript จะบ่นว่า key เป็น `string` —
+วิธีแก้: type ตัวแปรให้แคบ เช่นใน `src/constants/menu.ts` `labelKey: NavKey` (ดู `src/i18n/keys.ts`)
+หรือถ้า dynamic จริง ๆ cast: `t(key as Parameters<typeof t>[0])` (เช่นใน `StatusBadge`)
+
+**namespace แบบเก่า** `useTranslations("products")` แล้ว `t("title")` — ยังใช้ได้ แต่ทีมนี้ใช้แบบ §0 (t เดียว, path เต็ม) เพื่อให้ 1 component มี `t` ตัวเดียวเสมอ
 
 ---
 

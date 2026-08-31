@@ -56,11 +56,41 @@ for (const file of walk(SRC)) {
   });
 }
 
-if (hits.length === 0) {
-  console.log("✓ i18n: ไม่พบ literal อักษรไทยนอก catalog");
-  process.exit(0);
+// ── 2. เช็คว่า th.json กับ en.json มี key เหมือนกัน (กันลืมอัปเดตอีกไฟล์) ──
+function flatKeys(obj, prefix = "") {
+  const out = [];
+  for (const [k, v] of Object.entries(obj)) {
+    const key = prefix ? `${prefix}.${k}` : k;
+    if (v && typeof v === "object" && !Array.isArray(v)) out.push(...flatKeys(v, key));
+    else out.push(key);
+  }
+  return out;
 }
 
-console.log(`✗ i18n: พบ literal อักษรไทย ${hits.length} จุด — ย้ายไป src/i18n/messages แล้วใช้ t()`);
-for (const h of hits) console.log(`  ${h.rel}:${h.line}  ${h.text}`);
-process.exit(STRICT ? 1 : 0);
+const th = JSON.parse(readFileSync(join(SRC, "i18n/messages/th.json"), "utf8"));
+const en = JSON.parse(readFileSync(join(SRC, "i18n/messages/en.json"), "utf8"));
+const thKeys = new Set(flatKeys(th));
+const enKeys = new Set(flatKeys(en));
+const missingInEn = [...thKeys].filter((k) => !enKeys.has(k));
+const missingInTh = [...enKeys].filter((k) => !thKeys.has(k));
+
+// ── สรุปผล ──
+let failed = false;
+
+if (hits.length === 0) {
+  console.log("✓ i18n: ไม่พบ literal อักษรไทยนอก catalog");
+} else {
+  failed = true;
+  console.log(`✗ i18n: พบ literal อักษรไทย ${hits.length} จุด — ย้ายไป src/i18n/messages แล้วใช้ t()`);
+  for (const h of hits) console.log(`  ${h.rel}:${h.line}  ${h.text}`);
+}
+
+if (missingInEn.length === 0 && missingInTh.length === 0) {
+  console.log("✓ i18n: key ของ th.json / en.json ตรงกันครบ");
+} else {
+  failed = true;
+  if (missingInEn.length) console.log(`✗ i18n: มีใน th.json แต่ไม่มีใน en.json (${missingInEn.length}): ${missingInEn.join(", ")}`);
+  if (missingInTh.length) console.log(`✗ i18n: มีใน en.json แต่ไม่มีใน th.json (${missingInTh.length}): ${missingInTh.join(", ")}`);
+}
+
+process.exit(failed && STRICT ? 1 : 0);

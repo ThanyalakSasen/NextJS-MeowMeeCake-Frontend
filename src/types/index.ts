@@ -4,12 +4,14 @@
 // DTO เฉพาะ resource (Product, Order, ...) อยู่ไฟล์แยก เช่น @/types/product
 // ─────────────────────────────────────────────────────────────
 
+import type { NavKey } from "@/i18n/keys";
+
 export * from "@/types/api";
 export * from "@/types/auth";
 
 /** ชิ้น breadcrumb — labelKey ชี้ไป i18n namespace "nav" (ไม่ใช่ข้อความตรง ๆ) */
 export interface BreadcrumbItem {
-  labelKey: string;
+  labelKey: NavKey;
   href?: string; // ไม่มี href = หน้าปัจจุบัน (ไม่ clickable)
 }
 

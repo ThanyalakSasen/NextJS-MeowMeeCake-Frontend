@@ -3,8 +3,9 @@
 // map pathname → key ใน i18n namespace "nav" + สร้าง trail
 // ─────────────────────────────────────────────────────────────
 import type { BreadcrumbItem } from "@/types";
+import type { NavKey } from "@/i18n/keys";
 
-const ROUTE_NAV_KEY: Record<string, string> = {
+const ROUTE_NAV_KEY: Record<string, NavKey> = {
   "/owner/dashboard": "dashboard",
   "/owner/reports/sales": "reportsSales",
   "/owner/reports/reviews": "reportsReviews",

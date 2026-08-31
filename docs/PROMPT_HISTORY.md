@@ -314,3 +314,30 @@ share component (ใช้หลายที่) + base component (atom) + compo
 **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `DetailDrawer` · `charts/*` · `KPIStatsRow` · `form/*` · `{TabbedPageLayout,DashboardPageLayout}` · page-local `_components/` ทั้งหมด
 
 **ถัดไป:** เฟส 4 (27 screens — เริ่ม Auth → Dashboard → Products ...) · ต้องเทส MSW auth flow ในเบราว์เซอร์ก่อนลุยหนัก
+
+---
+
+## #17 — 2026-09-01  ▶ เฟส 4 เริ่ม (2/27 screens + foundation)
+
+**ผู้ใช้สั่ง:** เฟส 4
+
+**ทำจริง — foundation ที่ Products บังคับให้เกิด:**
+- `components/shared/data/DataTable.tsx` — ตาราง generic: `Column<T>` (key/title/render/align/width) · loading→`LoadingSpin` · empty→`EmptyState` · row action column · integrate `PaginationBar` · ใช้ `.data-table` CSS จาก globals
+- `data/FilterToolbar` (left/right slot) · `data/TypeTabBar` (antd Segmented) · `data/SortDropdown` · `data/ViewToggle` (grid/table) + barrel
+- product-categories vertical: `types/productCategory.ts` · `services/productCategories.ts` · `mocks/fixtures/productCategories.ts` (4) + seed + `crudHandlers`
+
+**Screen #1 — Login** ✅ (แทน interim):
+- `app/login/_components/LoginForm.tsx` — Logo + `base/{Input,PasswordInput,Button,ErrorMessage}` + `authClient.login` + `next` param redirect + Suspense wrap · `app/login/page.tsx` บาง
+
+**Screen #3 — Products List** ✅ (**reference สำหรับหน้ารายการ**):
+- `useProductsViewModel.ts` — state (search/categoryId/type/sort/page/pageSize/viewMode) · `useQuery(["products", params])` + `useQuery(["product-categories"])` · `usePermission("products")` · `useMutation` toggle visibility / delete + invalidate + `alert` (t) · reset page เมื่อ filter เปลี่ยน
+- `ProductsView.tsx` — `ListPageLayout` + `FilterToolbar`(SearchInput+TypeTabBar / SortDropdown+ViewToggle) + CategoryChip row + grid(`ProductGrid`/`ProductCard`) หรือ table(`DataTable` + columns + row action + pagination)
+- `_components/` `ProductCard` · `ProductGrid` · `CategoryChip` (สี hash) · `RatingDisplay`
+- `page.tsx` = `const vm = useProductsViewModel(); return <ProductsView {...vm}/>`
+- i18n: `products.*` 20 keys (th+en)
+
+- **ผล: `build` ✅ · `lint` ✅ · `lint:i18n` ✅** · curl: `/owner/products` +cookie → SSR "จัดการข้อมูลสินค้า" + loading (ไม่ crash) · `/login` → LoginForm render
+- อัปเดต `REBUILD_PLAN.md` §เฟส4 (2/27 + checklist 25 ที่เหลือ) · `COMPONENT_MAP.md`
+
+**เหลือ 25 screen** — copy pattern: list → Products · form → (Add Product ต่อไป) · Dashboard/POS/Kanban = bespoke
+**ถัดไป:** เฟส 4 ต่อ — Dashboard หรือ Add/Edit Product (ตามลำดับใน §7)

@@ -169,9 +169,18 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (2/27 + foundation — 2026-09-01)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
-- ทำ 27 screen ใน reference (D5) · ข้อมูลจาก MSW จนกว่า backend พร้อม
+
+> **เสร็จรอบนี้:**
+> - **shared components ที่ Products บังคับให้เกิด:** `data/DataTable` (ตาราง generic: columns/loading/empty/rowAction/pagination, ใช้ `.data-table` CSS) · `data/FilterToolbar` · `data/TypeTabBar` · `data/SortDropdown` · `data/ViewToggle`
+> - **product-categories vertical:** `types/productCategory.ts` · `services/productCategories.ts` · fixture + handler
+> - **Screen #1 Login** ✅ — `login/_components/LoginForm.tsx` (Logo + `base/` + ErrorMessage) แทน interim
+> - **Screen #3 Products List** ✅ — `page.tsx` + `ProductsView.tsx` + `useProductsViewModel.ts` + `_components/{ProductCard,ProductGrid,CategoryChip,RatingDisplay}` · grid/table toggle · filter (search/category/type/sort) · toggle visibility + delete (useMutation) · pagination · **= reference สำหรับหน้ารายการอื่น**
+> - i18n: `products.*` (th+en) · smoke: SSR ไม่ crash, MSW ต้องเทสในเบราว์เซอร์
+>
+> **เหลือ 25 screen** — copy pattern จาก Products (list) / Login (form):
+> Dashboard · Add/Edit Product · Product Stock · Manage Orders · POS · Ingredients List · Ingredient Stock · Ingredient History · Manage Units · Production (3 tab) · Recipes · Employees List · Add/Edit Employee · Permissions · User Log · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)
