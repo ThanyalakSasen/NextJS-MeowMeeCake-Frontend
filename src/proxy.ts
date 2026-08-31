@@ -1,0 +1,45 @@
+// ─────────────────────────────────────────────────────────────
+// src/proxy.ts   (Next 16 "proxy" = middleware เดิม, รัน Node runtime)
+// ด่านหน้าแบบเบา — เช็คแค่ "มี" auth cookie ไหม (ไม่ verify JWT, ไม่แตะ backend) — D18
+// การเช็ค can_view ต่อ route ย้ายไปฝั่ง client (usePermission)
+// + ตั้ง cookie ภาษาจาก Accept-Language ให้ครั้งแรก
+// ─────────────────────────────────────────────────────────────
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { AUTH_COOKIE, LOGIN_PATH, HOME_PATH } from "@/constants/auth";
+import { LOCALE_COOKIE, isLocale } from "@/i18n/config";
+
+const LOCALE_MAX_AGE = 60 * 60 * 24 * 365;
+
+function ensureLocaleCookie(req: NextRequest, res: NextResponse): NextResponse {
+  if (!isLocale(req.cookies.get(LOCALE_COOKIE)?.value)) {
+    const guess = (req.headers.get("accept-language") ?? "").toLowerCase().startsWith("en") ? "en" : "th";
+    res.cookies.set(LOCALE_COOKIE, guess, { path: "/", maxAge: LOCALE_MAX_AGE, sameSite: "lax" });
+  }
+  return res;
+}
+
+export function proxy(req: NextRequest): NextResponse {
+  const { pathname } = req.nextUrl;
+  const hasAuth = !!req.cookies.get(AUTH_COOKIE)?.value;
+
+  if (pathname.startsWith("/owner")) {
+    if (!hasAuth) {
+      const url = new URL(LOGIN_PATH, req.url);
+      url.searchParams.set("next", pathname);
+      return ensureLocaleCookie(req, NextResponse.redirect(url));
+    }
+    return ensureLocaleCookie(req, NextResponse.next());
+  }
+
+  // login อยู่แล้ว แต่เปิด /login ซ้ำ → ไปหน้าแรก
+  if (pathname === LOGIN_PATH && hasAuth) {
+    return ensureLocaleCookie(req, NextResponse.redirect(new URL(HOME_PATH, req.url)));
+  }
+
+  return ensureLocaleCookie(req, NextResponse.next());
+}
+
+export const config = {
+  matcher: ["/owner/:path*", "/login"],
+};

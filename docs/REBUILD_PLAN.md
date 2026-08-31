@@ -130,14 +130,18 @@ src/
 >
 > **เลื่อนไปเฟสที่มี consumer:** `src/utils/{fieldDiff,promotion,unitContext}` → เฟส 4 (fieldDiff คู่ userLog · promotion คู่ POS + ต้อง refactor reason เป็น code แทนข้อความไทย · unitContext คู่ units/ingredients) · DTO + service ของ resource อื่น (Order, Recipe, ...) → เฟส 4 คู่ screen (copy จาก products)
 
-### เฟส 2 — Auth + app shell
-1. `src/lib/authClient.ts` — `login/logout/me/refresh/broadcastLogout`
-2. interceptor 401→refresh→redirect (single-flight) + `alert.ts` port
-3. `src/hooks/useCurrentUser.ts` (react-query + revalidate on focus) · `src/hooks/useIdleTimeout.ts`
-4. `src/context/PermissionsContext.tsx` + `usePermission(key)` (ป้อนจาก `useCurrentUser().menuAccess`)
-5. `src/proxy.ts` — cookie-presence guard + `config.matcher` (`/owner/:path*`, `/login`) + set `mmc_locale` จาก `Accept-Language` ถ้ายังไม่มี
-6. templates: `components/shared/layout/AuthLayout.tsx` + `OwnerLayout.tsx` + `app/login/layout.tsx` + `app/owner/layout.tsx`
-7. cross-tab `BroadcastChannel` + `visibilitychange`
+### เฟส 2 — Auth + app shell  ✅ **เสร็จ 2026-09-01** (`build` + `lint` + `lint:i18n` ผ่าน · runtime ทดสอบไม่ได้จน MSW เฟส 2.5)
+> ทำจริง:
+> - `src/constants/auth.ts` (`AUTH_COOKIE` จาก `NEXT_PUBLIC_AUTH_COOKIE` default `mmc_session`, `LOGIN_PATH`/`HOME_PATH`/`ACCESS_DENIED_PATH`, `AUTH_BROADCAST_CHANNEL`) · `src/constants/session.ts` (`IDLE_TIMEOUT_MS` 30 นาที, `IDLE_WARN_MS` 60 วิ, `ACTIVITY_EVENTS`)
+> - `src/lib/authClient.ts` — `me/login/logout/refresh` (single-flight) · `onAuthBroadcast` (BroadcastChannel) · `installAuthInterceptor(onFail)` ต่อ 401 hook ของ `http.ts` → refresh → retry request เดิม / fail → `onFail`
+> - `src/hooks/useCurrentUser.ts` (react-query `["auth","me"]`, retry:false, refetchOnWindowFocus) · `src/hooks/useIdleTimeout.ts` (throttle 5 วิ, latest-ref pattern)
+> - `src/context/PermissionsContext.tsx` — `PermissionsProvider` + `usePermission(key)` (fail closed = `NO_MENU_ACCESS`) + `useMenuAccess()`
+> - `src/proxy.ts` — เช็ค `AUTH_COOKIE` presence (D18): `/owner/*` ไม่มี → redirect `/login?next=` · `/login` มี → redirect `/owner/dashboard` · ตั้ง `mmc_locale` จาก `Accept-Language` ถ้ายังไม่มี · matcher `["/owner/:path*","/login"]`
+> - `src/components/shared/layout/AuthLayout.tsx` (centered) · `OwnerLayout.tsx` (client — `useCurrentUser` gate + `useIdleTimeout` + warn modal ผ่าน `confirmAlert` + `PermissionsProvider` + **placeholder** Sidebar/Navbar → เฟส 3 ใส่ของจริง)
+> - `src/components/providers/AuthBootstrap.tsx` — mount ใน `providers.tsx`: `installAuthInterceptor` (fail → `qc.clear()` + redirect) + ฟัง logout ข้ามแท็บ
+> - route: `app/page.tsx` (redirect ตาม cookie) · `app/login/{layout,page}.tsx` (login form interim — เฟส 4 = Screen #1 เต็ม) · `app/owner/layout.tsx` (re-export OwnerLayout) · `app/owner/dashboard/page.tsx` (stub)
+>
+> **ยังไม่ทำ:** `visibilitychange` เพิ่ม explicit (react-query `refetchOnWindowFocus` ครอบอยู่แล้ว) · access-denied page → เฟส 4
 
 ### เฟส 2.5 — Mock API (MSW) — D17
 1. `src/mocks/handlers/*.ts` — implement `API_CONTRACT.md` (list/get/create/update/remove + auth) ด้วย `msw`

@@ -250,3 +250,24 @@ share component (ใช้หลายที่) + base component (atom) + compo
 **เลื่อนไปเฟส 4 (มี consumer จริงตอนนั้น):** `src/utils/{fieldDiff,promotion,unitContext}` · DTO+service ของ resource อื่น (copy จาก `products`) — `promotion.ts` ต้อง refactor `reason` เป็น code แทนข้อความไทย (i18n)
 
 **ยังไม่ commit** (git ในโฟลเดอร์นี้ถูก classifier บล็อก) · **ถัดไป:** เฟส 2 (auth + app shell)
+
+---
+
+## #14 — 2026-09-01  ▶ เฟส 2 (Auth + app shell) เสร็จ
+
+**ผู้ใช้สั่ง:** เฟส 2
+
+**ทำจริง:**
+- `src/constants/auth.ts` (`AUTH_COOKIE` = `NEXT_PUBLIC_AUTH_COOKIE` \|\| `mmc_session` · path constants · broadcast channel) · `src/constants/session.ts` (idle 30 นาที / warn 60 วิ / activity events)
+- `src/lib/authClient.ts` — `me` · `login` (post + then me) · `logout` (+broadcast) · `refresh` (single-flight) · `onAuthBroadcast` (BroadcastChannel) · `installAuthInterceptor(onFail)` ต่อ 401 hook ของ `http.ts` → refresh → retry request เดิม / fail → onFail
+- `src/hooks/useCurrentUser.ts` (react-query `["auth","me"]`, retry:false, refetchOnWindowFocus) · `src/hooks/useIdleTimeout.ts` (throttle 5 วิ + latest-ref)
+- `src/context/PermissionsContext.tsx` — `PermissionsProvider` + `usePermission(key)` (fail closed) + `useMenuAccess()`
+- `src/proxy.ts` — cookie-presence guard (D18): `/owner/*` ไม่มี cookie → `/login?next=` · `/login` มี cookie → `/owner/dashboard` · set `mmc_locale` จาก `Accept-Language` · matcher `["/owner/:path*","/login"]`
+- `src/components/shared/layout/AuthLayout.tsx` (centered) · `OwnerLayout.tsx` (client — auth gate + idle warn ผ่าน `confirmAlert` + `PermissionsProvider` + placeholder Sidebar/Navbar → เฟส 3)
+- `src/components/providers/AuthBootstrap.tsx` (mount ใน `providers.tsx`) — install interceptor + ฟัง logout ข้ามแท็บ → `qc.clear()` + redirect
+- route: `app/page.tsx` (redirect ตาม cookie, แทน placeholder เดิม) · `app/login/{layout,page}.tsx` (login form interim — เฟส 4 = Screen #1 เต็ม) · `app/owner/layout.tsx` (re-export) · `app/owner/dashboard/page.tsx` (stub)
+- fix lint: `useIdleTimeout` เขียน ref ใน `useEffect` แทน render body
+- **ผล: `build` ✅ (routes: `/`, `/login`, `/owner/dashboard`, Proxy) · `lint` ✅ · `lint:i18n` ✅**
+- **หมายเหตุ:** runtime auth flow ทดสอบไม่ได้จนกว่าจะมี MSW (เฟส 2.5) — ยังไม่มี backend ให้ยิง
+
+**ถัดไป:** เฟส 2.5 (MSW mock API — handlers ตาม `API_CONTRACT.md` + fixtures + toggle `NEXT_PUBLIC_API_MOCK`)
