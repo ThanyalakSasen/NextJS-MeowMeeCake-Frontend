@@ -271,3 +271,25 @@ share component (ใช้หลายที่) + base component (atom) + compo
 - **หมายเหตุ:** runtime auth flow ทดสอบไม่ได้จนกว่าจะมี MSW (เฟส 2.5) — ยังไม่มี backend ให้ยิง
 
 **ถัดไป:** เฟส 2.5 (MSW mock API — handlers ตาม `API_CONTRACT.md` + fixtures + toggle `NEXT_PUBLIC_API_MOCK`)
+
+---
+
+## #15 — 2026-09-01  ▶ เฟส 2.5 (Mock API / MSW) เสร็จ
+
+**ผู้ใช้สั่ง:** เฟส 2.5
+
+**ทำจริง:**
+- `msw@2.15` (devDep) + `npx msw init public/` → `public/mockServiceWorker.js` + `package.json` `msw.workerDirectory`
+- `src/mocks/db.ts` — in-memory store: `seed` (generic) + `list` (page/limit/search substring/sort/filter ตรงตัว) / `getById` / `create` / `update` / `softDelete` — ตาม `API_CONTRACT.md` §1
+- `src/mocks/handlers/_crud.ts` — `crudHandlers(name, basePath)` factory (GET list/`:id` · POST · PATCH · DELETE + 404)
+- `src/mocks/handlers/auth.ts` — `/auth/login|logout|me|refresh` · login = `DEV_CREDENTIALS` (`owner@meowmeecake.local` / `owner1234`) → ตั้ง cookie `mmc_session` ผ่าน `document.cookie` (ให้ `proxy.ts` Node อ่านเจอ) · `me` คืน `MOCK_USER` + menuAccess เต็ม (owner)
+- `src/mocks/fixtures/{auth,products}.ts` (สินค้า 5 รายการ) · `handlers/index.ts` (seed + รวม) · `browser.ts` (`startMockWorker` single-flight, `onUnhandledRequest:"bypass"`) · `server.ts` (test)
+- `src/components/providers/MSWReady.tsx` — `NEXT_PUBLIC_API_MOCK==="1"` → `import("@/mocks/browser")` + start → render children · mock off → dynamic import ไม่เข้า bundle · wire ครอบ `{children}` ใน `providers.tsx`
+- `proxy.ts` — เพิ่ม `/` ใน matcher + redirect ที่ proxy (redirect ใน `page.tsx` = meta-refresh ตอน streaming ตาม Next 16 docs → ทำที่ proxy ให้เป็น 307)
+- `eslint.config.mjs` — ignore `public/mockServiceWorker.js` · fix `db.ts seed` generic type
+- `docs/MOCKS.md` — credential + สถานะ handler + วิธีเพิ่ม resource (2 บรรทัด)
+- **ผล: `build` ✅ · `lint` ✅ · `lint:i18n` ✅**
+- **curl verified:** `/` (±cookie) → 307 `/login` \| `/owner/dashboard` · `/owner/*` no-cookie → 307 `/login?next=` · `/login` +cookie → 307 dashboard · `mockServiceWorker.js` → 200
+- **ยังไม่เทส (ต้องเบราว์เซอร์ + Service Worker):** login form → MSW `/auth/login` → cookie → `/auth/me` → dashboard — เฟส 6 หรือ `npm run dev` เทสมือด้วย credential ข้างบน
+
+**ถัดไป:** เฟส 3 (component library — `base/` + `shared/` + `COMPONENT_MAP.md`)

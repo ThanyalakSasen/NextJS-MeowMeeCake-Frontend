@@ -23,6 +23,11 @@ export function proxy(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
   const hasAuth = !!req.cookies.get(AUTH_COOKIE)?.value;
 
+  // "/" → เด้งตามสถานะ login (redirect ใน page.tsx เป็น meta-refresh ตอน streaming — ทำที่นี่ให้เป็น 307)
+  if (pathname === "/") {
+    return ensureLocaleCookie(req, NextResponse.redirect(new URL(hasAuth ? HOME_PATH : LOGIN_PATH, req.url)));
+  }
+
   if (pathname.startsWith("/owner")) {
     if (!hasAuth) {
       const url = new URL(LOGIN_PATH, req.url);
@@ -41,5 +46,5 @@ export function proxy(req: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/owner/:path*", "/login"],
+  matcher: ["/", "/owner/:path*", "/login"],
 };

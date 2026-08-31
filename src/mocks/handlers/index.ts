@@ -1,0 +1,19 @@
+// ─────────────────────────────────────────────────────────────
+// src/mocks/handlers/index.ts  — รวม handler ทุก resource + seed fixtures
+// เฟส 4: เพิ่ม resource ใหม่ = seed(...) + crudHandlers(...) อีก 1 บรรทัด
+// ─────────────────────────────────────────────────────────────
+import { seed } from "@/mocks/db";
+import { authHandlers } from "@/mocks/handlers/auth";
+import { crudHandlers } from "@/mocks/handlers/_crud";
+import { productsFixture } from "@/mocks/fixtures/products";
+
+const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+
+// ── seed ──
+seed("products", productsFixture);
+
+// ── handlers ──
+export const handlers = [
+  ...authHandlers,
+  ...crudHandlers("products", `${API}/products`),
+];

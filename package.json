@@ -2,6 +2,11 @@
   "name": "meowmeecake-frontend",
   "version": "0.1.0",
   "private": true,
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -33,6 +38,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "msw": "^2.15.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

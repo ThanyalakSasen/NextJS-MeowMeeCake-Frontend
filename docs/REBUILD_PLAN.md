@@ -143,11 +143,20 @@ src/
 >
 > **ยังไม่ทำ:** `visibilitychange` เพิ่ม explicit (react-query `refetchOnWindowFocus` ครอบอยู่แล้ว) · access-denied page → เฟส 4
 
-### เฟส 2.5 — Mock API (MSW) — D17
-1. `src/mocks/handlers/*.ts` — implement `API_CONTRACT.md` (list/get/create/update/remove + auth) ด้วย `msw`
-2. `src/mocks/fixtures/*.ts` — ข้อมูลตัวอย่าง (seed จาก MOCK_* เดิมในต้นทาง + สร้างเพิ่มให้ครบ 27 screen)
-3. `src/mocks/browser.ts` + init ใน `providers.tsx` เมื่อ `NEXT_PUBLIC_API_MOCK === "1"` · `src/mocks/server.ts` สำหรับ SSR (ถ้าจำเป็น)
-4. `docs/MOCKS.md` — ทุก handler + วิธีปิด (ตั้ง `NEXT_PUBLIC_API_BASE_URL` จริง + `NEXT_PUBLIC_API_MOCK=0`)
+### เฟส 2.5 — Mock API (MSW) — D17  ✅ **เสร็จ 2026-09-01** (`build` + `lint` + `lint:i18n` ผ่าน · proxy/routing curl-verified · MSW auth flow ต้องเทสในเบราว์เซอร์)
+> ทำจริง:
+> - ติดตั้ง `msw@2.15` (devDep) + `npx msw init public/` → `public/mockServiceWorker.js` + `package.json` `msw.workerDirectory`
+> - `src/mocks/db.ts` — store กลาง: `seed` + `list` (page/limit/search/sort/filter ตรงตัว) / `getById` / `create` / `update` / `softDelete`
+> - `src/mocks/handlers/_crud.ts` — `crudHandlers(name, basePath)` factory ตาม `API_CONTRACT.md` §3
+> - `src/mocks/handlers/auth.ts` — `/auth/login|logout|me|refresh` · login = `DEV_CREDENTIALS` (`owner@meowmeecake.local` / `owner1234`) · ตั้ง/ล้าง cookie `mmc_session` ผ่าน `document.cookie` (ให้ `proxy.ts` Node อ่านเจอ)
+> - `src/mocks/fixtures/{auth,products}.ts` · `handlers/index.ts` (seed + รวม) · `browser.ts` (`startMockWorker` single-flight) · `server.ts` (test — ยังไม่ใช้)
+> - `src/components/providers/MSWReady.tsx` — mock on → รอ worker start ก่อน render children · mock off → `msw` ไม่เข้า bundle (dynamic import) · wire ใน `providers.tsx` (ครอบ `{children}`)
+> - `proxy.ts` — เพิ่ม `/` เข้า matcher + redirect ที่ proxy (redirect ใน `page.tsx` เป็น meta-refresh ตอน streaming — Next 16 behavior)
+> - `eslint.config.mjs` — ignore `public/mockServiceWorker.js`
+> - `docs/MOCKS.md` — อัปเดตสถานะ + credential + วิธีเพิ่ม resource
+>
+> **curl verified:** `/` no-cookie → 307 `/login` · `/` cookie → 307 `/owner/dashboard` · `/owner/*` no-cookie → 307 `/login?next=` · `/login` cookie → 307 `/owner/dashboard` · `mockServiceWorker.js` เสิร์ฟ 200
+> **ยังไม่ได้เทส (ต้องเบราว์เซอร์):** login form → MSW `/auth/login` → cookie → `/auth/me` → dashboard render — ทำในเฟส 6 หรือ `npm run dev` เทสมือ
 
 ### เฟส 3 — Component library
 *(เหมือนแผนเดิม — ดู §6)* · `base/` + `shared/<concern>/` + page-local `_components/` · MVVM · ไม่มี literal ข้อความ (i18n) · `COMPONENT_MAP.md`

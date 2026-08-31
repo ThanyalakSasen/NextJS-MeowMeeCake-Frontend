@@ -107,27 +107,44 @@ export const worker = setupWorker(...handlers);
 
 ---
 
+## Credential dev (โหมด mock)
+
+```
+email:    owner@meowmeecake.local
+password: owner1234
+```
+→ login สำเร็จ MSW ตั้ง cookie `mmc_session` ผ่าน `document.cookie` (ให้ `proxy.ts` ฝั่ง Node อ่านเจอ) · `role = owner` → เห็นทุกเมนู
+
+---
+
 ## โครง `src/mocks/`
 
 | ไฟล์ | หน้าที่ | สถานะ |
 |---|---|---|
-| `browser.ts` | `setupWorker(...handlers)` — เรียกใน `providers.tsx` เมื่อ `NEXT_PUBLIC_API_MOCK==="1"` | ⏳ เฟส 2.5 |
-| `server.ts` | `setupServer(...handlers)` — สำหรับ SSR / test (ถ้าจำเป็น) | ⏳ เฟส 2.5 |
-| `handlers/index.ts` | รวม handler ทุก resource | ⏳ เฟส 2.5 |
-| `handlers/<resource>.ts` | CRUD handler ต่อ resource ตาม `API_CONTRACT.md` §3 | ⏳ เฟส 2.5 |
-| `handlers/auth.ts` | `/auth/login|logout|me|refresh` — login ผ่านด้วย credential dev, `me` คืน owner + menuAccess เต็ม | ⏳ เฟส 2.5 |
-| `handlers/reports.ts` | aggregate endpoints (dashboard, finance-summary, ...) — §4 | ⏳ เฟส 2.5 |
-| `fixtures/<resource>.ts` | ข้อมูลตัวอย่าง (seed จาก `MOCK_*` ในต้นทาง + เพิ่มให้ครบ 27 screen) | ⏳ เฟส 2.5–4 |
-| `db.ts` | in-memory store กลาง (Map<resource, Doc[]>) + helper list/paginate/filter/softDelete | ⏳ เฟส 2.5 |
+| `db.ts` | in-memory store กลาง + `seed` + `list`(paginate/filter/search/sort) / `getById` / `create` / `update` / `softDelete` | ✅ เฟส 2.5 |
+| `browser.ts` | `setupWorker(...handlers)` + `startMockWorker()` (single-flight) | ✅ เฟส 2.5 |
+| `server.ts` | `setupServer(...handlers)` — สำหรับ test (ยังไม่ถูกใช้) | ✅ เฟส 2.5 |
+| `handlers/index.ts` | รวม handler + `seed()` fixtures | ✅ เฟส 2.5 |
+| `handlers/_crud.ts` | **factory** `crudHandlers(name, basePath)` — GET list/id · POST · PATCH · DELETE ตาม `API_CONTRACT.md` §3 | ✅ เฟส 2.5 |
+| `handlers/auth.ts` | `/auth/login\|logout\|me\|refresh` — login = credential dev, ตั้ง/ล้าง cookie ผ่าน `document.cookie`, `me` คืน owner + menuAccess เต็ม | ✅ เฟส 2.5 |
+| `fixtures/auth.ts` | `DEV_CREDENTIALS`, `MOCK_USER`, `MOCK_MENU_ACCESS` (owner = full) | ✅ เฟส 2.5 |
+| `fixtures/products.ts` | สินค้า 5 รายการ (reference) | ✅ เฟส 2.5 |
+| `fixtures/<resource>.ts` | resource อื่น — เพิ่มพร้อม screen | ⏳ เฟส 4 |
+| `handlers/reports.ts` | aggregate endpoints (dashboard, finance-summary, ...) — §4 | ⏳ เฟส 4 |
+
+**init:** `src/components/providers/MSWReady.tsx` — เมื่อ `NEXT_PUBLIC_API_MOCK==="1"` → `import("@/mocks/browser")` + `startMockWorker()` แล้วค่อย render children · mock ปิด → `msw` ไม่เข้า bundle · `public/mockServiceWorker.js` = generated (`npx msw init public/`)
 
 ---
 
-## รายการ handler (เติมตอนทำ)
+## รายการ handler
 
-| resource | endpoints | fixture count | ใช้กับ screen | หมายเหตุ |
+| resource | endpoints | fixtures | ใช้กับ screen | สถานะ |
 |---|---|---|---|---|
-| `auth` | login/logout/me/refresh | user owner 1 | ทุกหน้า | credential dev: (จะกำหนดตอนทำ) |
-| _(เพิ่มตอนเฟส 2.5–4)_ | | | | |
+| `auth` | `POST /auth/login` · `POST /auth/logout` · `GET /auth/me` · `POST /auth/refresh` | owner 1 | ทุกหน้า | ✅ |
+| `products` | list/get/create/update/remove (`crudHandlers`) | 5 | Products, POS, Dashboard, ... | ✅ (reference) |
+| resource อื่น ~38 ตัว | `crudHandlers("<name>", ...)` + fixture | — | ตาม screen | ⏳ เฟส 4 |
+
+**เพิ่ม resource ใหม่ (เฟส 4):** `src/mocks/handlers/index.ts` → `seed("orders", ordersFixture)` + `...crudHandlers("orders", `${API}/orders`)` (2 บรรทัด)
 
 ---
 
