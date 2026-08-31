@@ -110,19 +110,25 @@ src/
 
 ## 5. เฟส
 
-### เฟส 0 — Setup ✅ (2026-08-31) — เพิ่มงานถอน backend
+### เฟส 0 — Setup ✅ (2026-08-31) + ถอน backend ✅ (2026-09-01)
 - [x] downgrade + deps + reactCompiler + globals.css + providers + i18n-ready layout
-- [ ] **(ใหม่)** ถอน `mongoose`/`bcryptjs`/`jsonwebtoken`/`@types/*` · ลบ `src/models/` · เพิ่ม `NEXT_PUBLIC_API_BASE_URL` + `NEXT_PUBLIC_API_MOCK` ใน `.env.*`
+- [x] ถอน `mongoose`/`bcryptjs`/`jsonwebtoken`/`@types/bcryptjs`/`@types/jsonwebtoken` · เพิ่ม `@tanstack/react-query@5` · ลบ `src/models/` (38 ไฟล์) · `.env.*` → `NEXT_PUBLIC_API_BASE_URL` + `NEXT_PUBLIC_API_MOCK` (ตัด env backend ทิ้ง) · เพิ่ม `.gitattributes` · `npm install` (532 pkg)
 
 ### เฟส 0.5 — i18n foundation ✅ (2026-08-31)
 
-### เฟส 1 — API layer + DTO + contract
-1. `docs/API_CONTRACT.md` — ระบุ endpoint, envelope (`{data,meta}`), query params (page/limit/search/filter), error shape, auth endpoints — อิงจาก ~80 API route ต้นทาง (catalog เดิม)
-2. `src/lib/http.ts` — axios: `baseURL = process.env.NEXT_PUBLIC_API_BASE_URL`, `withCredentials` (D15) · request interceptor (`Accept-Language` จาก locale) · response interceptor (unwrap envelope, 401→refresh, 403 toast, 409/422 ส่งต่อ, 5xx/network toast)
-3. `src/lib/queryClient.ts` + provider ใน `providers.tsx` — `@tanstack/react-query` (D16)
-4. `src/types/*` — DTO ต่อ resource (interface ตรงกับ JSON) — เริ่มจากที่ 27 screen ใช้
-5. `src/services/<resource>.ts` — ฟังก์ชัน typed ต่อ endpoint (list/get/create/update/remove) เรียก `http.ts`
-6. `src/constants/{menuKeys,enumConfig}.ts` + `src/utils/{fieldDiff,promotion,unitContext}.ts` — port pure helpers จากต้นทาง
+### เฟส 1 — API layer + DTO + contract  ✅ **เสร็จ 2026-09-01** (`build` + `lint` + `lint:i18n` ผ่าน)
+> ทำจริง:
+> 1. `docs/API_CONTRACT.md` — ✅ (เขียนก่อนหน้า + เพิ่ม §0 ตัวอย่างเต็ม + §6 โค้ดจริง 4 ชั้น)
+> 2. `src/types/api.ts` — `ListResponse<T>` · `ItemResponse<T>` · `EmptyResponse` · `ListMeta` · `ListParams` · `ApiError` + `isApiError()`
+> 3. `src/types/auth.ts` — `MenuAction` · `MenuAccess` · `CurrentUser` · `LoginInput` · `src/types/index.ts` (`BreadcrumbItem.labelKey`, `NotificationItem`, re-export)
+> 4. `src/constants/menuKeys.ts` — port (`MenuKey`, `ALL_MENU_KEYS`, `MenuPermissionSet`, `FULL/NO_MENU_ACCESS`, `resolveMenuKey`, `isUnrestrictedRole`) · `src/constants/enumConfig.ts` — สี/flow enum (ไม่มี label)
+> 5. `src/lib/cookies.ts` (readCookie/writeCookie, SSR-guard) · `src/lib/http.ts` — axios instance + `withCredentials` (D15) + request interceptor (`Accept-Language`) + response interceptor (แปลง error → `ApiError`, 401 → `setUnauthorizedHandler` hook สำหรับเฟส 2) + facade `http.get/post/patch/delete<T>` คืน body ตรง
+> 6. `src/lib/queryClient.ts` — `makeQueryClient()` (staleTime 30s, retry เฉพาะ network/5xx) · wire `<QueryClientProvider>` ใน `providers.tsx` (D16)
+> 7. `src/lib/alert.ts` — port (sweetalert2, default เป็น English fallback — ผู้เรียกส่ง `t()`) · `src/lib/exportCsv.ts` — port
+> 8. **reference pattern:** `src/types/product.ts` + `src/services/products.ts` + `src/services/README.md` (แพตเทิร์นให้ resource อื่น copy)
+> 9. `scripts/check-i18n.mjs` — allow `src/constants`
+>
+> **เลื่อนไปเฟสที่มี consumer:** `src/utils/{fieldDiff,promotion,unitContext}` → เฟส 4 (fieldDiff คู่ userLog · promotion คู่ POS + ต้อง refactor reason เป็น code แทนข้อความไทย · unitContext คู่ units/ingredients) · DTO + service ของ resource อื่น (Order, Recipe, ...) → เฟส 4 คู่ screen (copy จาก products)
 
 ### เฟส 2 — Auth + app shell
 1. `src/lib/authClient.ts` — `login/logout/me/refresh/broadcastLogout`

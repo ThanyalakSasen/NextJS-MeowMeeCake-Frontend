@@ -220,3 +220,33 @@ share component (ใช้หลายที่) + base component (atom) + compo
 **หมายเหตุ:** ไฟล์ D0.5 ถูกคัดลอกมาโฟลเดอร์นี้แล้ว (ยังไม่ commit — `git add` ถูก classifier บล็อกเพราะอยู่นอก working dir หลัก) · `src/models/` ยังอยู่ รอลบตามแผน · `src/lib` `src/constants` `src/mocks` เป็นโฟลเดอร์ว่าง (residue เฟส 1 เดิมที่ revert)
 
 **ถัดไป:** ยืนยัน D15–D19 → เฟส 0 (ปิดงานถอน backend) → เฟส 1
+
+---
+
+## #13 — 2026-09-01  ▶ เฟส 0 (ถอน backend) + เฟส 1 (API layer) เสร็จ
+
+**ผู้ใช้สั่ง:** เริ่มทำเฟส 1  *(ดำเนินตามค่าแนะนำ D15–D19: D15 = cookie + withCredentials (สลับเป็น bearer ได้ที่ `http.ts` จุดเดียว) · D16 = react-query · D17 = MSW · D18 = proxy cookie-presence · D19 = ลบ backend residue)*
+
+**ทำจริง (โฟลเดอร์ `NextJS-MeowMeeCake-Frontend`):**
+
+เฟส 0 — ถอน backend:
+- `package.json`: ลบ `mongoose` `bcryptjs` `jsonwebtoken` `@types/bcryptjs` `@types/jsonwebtoken` · เพิ่ม `@tanstack/react-query@^5.62` · name → `meowmeecake-frontend`
+- ลบ `src/models/` (38 ไฟล์)
+- `.env.local` + `.env.example`: เหลือ `NEXT_PUBLIC_API_BASE_URL` + `NEXT_PUBLIC_API_MOCK` (ตัด MONGODB_URI / JWT_* / OMISE_* / EMAIL_* / GOOGLE_*)
+- เพิ่ม `.gitattributes` (LF) · `npm install` (532 pkg, ยืนยัน react 18.3.1 / next 16.2.6)
+
+เฟส 1 — API layer + DTO + contract:
+- `src/types/api.ts` — envelope (`ListResponse<T>` / `ItemResponse<T>` / `EmptyResponse` / `ListMeta`) · `ListParams` · `ApiError` + `isApiError()`
+- `src/types/auth.ts` — `MenuAction` · `MenuAccess` · `CurrentUser` · `LoginInput` · `src/types/index.ts` (`BreadcrumbItem`, `NotificationItem`, re-export api+auth)
+- `src/constants/menuKeys.ts` — port pure (MenuKey, resolveMenuKey, isUnrestrictedRole, FULL/NO_MENU_ACCESS) · `src/constants/enumConfig.ts` — สี/flow enum (label แยกไป i18n)
+- `src/lib/cookies.ts` — readCookie/writeCookie (SSR-guard)
+- `src/lib/http.ts` — axios `baseURL=NEXT_PUBLIC_API_BASE_URL` + `withCredentials` (D15) · req interceptor แนบ `Accept-Language` จาก cookie locale · res interceptor แปลง error → `ApiError` + 401 hook `setUnauthorizedHandler()` (เฟส 2 ใส่ refresh) · facade `http.get/post/patch/delete<T>` คืน body ตรง
+- `src/lib/queryClient.ts` — `makeQueryClient()` (staleTime 30s · retry เฉพาะ network/5xx ผ่าน `isApiError`) · wire `<QueryClientProvider>` ใน `providers.tsx`
+- `src/lib/alert.ts` + `src/lib/exportCsv.ts` — port (alert default = English fallback, ผู้เรียกส่ง `t()`)
+- **reference pattern:** `src/types/product.ts` + `src/services/products.ts` + `src/services/README.md` — แพตเทิร์นให้ resource อื่น copy ตอนเฟส 4
+- `scripts/check-i18n.mjs` — allow `src/constants` (key ค่า DB enum ไทย, แนวทาง A)
+- **ผล: `npm run build` ✅ · `lint` ✅ · `lint:i18n` ✅**
+
+**เลื่อนไปเฟส 4 (มี consumer จริงตอนนั้น):** `src/utils/{fieldDiff,promotion,unitContext}` · DTO+service ของ resource อื่น (copy จาก `products`) — `promotion.ts` ต้อง refactor `reason` เป็น code แทนข้อความไทย (i18n)
+
+**ยังไม่ commit** (git ในโฟลเดอร์นี้ถูก classifier บล็อก) · **ถัดไป:** เฟส 2 (auth + app shell)

@@ -17,9 +17,9 @@ const STRICT = process.argv.includes("--strict");
 // ไดเรกทอรี/ไฟล์ที่ยกเว้น (มีอักษรไทยได้โดยตั้งใจ)
 const ALLOW_DIRS = [
   "src/i18n",           // ตัว catalog เอง
-  "src/mocks",          // fixture (D6) — ชั่วคราว
-  "src/models",         // schema enum ค่าไทย (แนวทาง A) — ไม่ใช่ UI
-  "src/types",          // *_CONFIG label + RecipeCategory — เฟส 1 จะแยก label ออก
+  "src/mocks",          // MSW fixture (D17)
+  "src/types",          // interface/union ที่มีค่าไทยเป็น literal type (แนวทาง A)
+  "src/constants",      // *_CONFIG ที่ key ด้วยค่า DB enum ภาษาไทย (แนวทาง A)
 ];
 const ALLOW_FILES = [
   "src/app/layout.tsx", // metadata.description — จะย้ายไป generateMetadata ทีหลัง
