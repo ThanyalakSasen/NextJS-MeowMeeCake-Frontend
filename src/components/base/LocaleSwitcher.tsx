@@ -24,7 +24,7 @@ export function LocaleSwitcher({ className = "" }: { className?: string }) {
           disabled={isPending}
           onClick={() => setLocale(code)}
           aria-pressed={locale === code}
-          className={`rounded-md px-2 py-0.5 text-xs font-medium transition-colors ${
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
             locale === code
               ? "bg-brown-800 text-white"
               : "text-brown-700 hover:bg-brown-50"

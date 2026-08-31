@@ -5,15 +5,19 @@
 
 @import "tailwindcss";
 
-/* สเกลฟอนต์ทั้งโปรเจกต์ถูกจำกัดไว้ที่ 14px (ขั้นต่ำ) – 22px (สูงสุด)
-   text-xl กับ text-2xl เท่ากันที่ 22px เพราะไม่มีที่ว่างให้ไล่ระดับสูงกว่านั้นได้อีก */
+/* ฟอนต์หลัก = Noto Sans Thai (ไทยไม่มีหัว) โหลดใน src/app/layout.tsx ผ่าน next/font
+   ตัวแปร --font-noto-thai ถูก set บน <html> — ผูกเข้ากับ font-sans ของ Tailwind ที่นี่
+   ใช้ @theme inline เพื่อให้ค่าถูกแทนตอน build (ไม่กลายเป็น var ซ้อน var) */
+@theme inline {
+  --font-sans: var(--font-noto-thai), "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* สเกลฟอนต์เป็นมิตรกับผู้สูงอายุ: ยกขนาดฐานทั้งหน้าเป็น 18px ที่ html{font-size} (ดูส่วน base reset)
+   ทุก text-* ของ Tailwind เป็น rem จึงขยายตามสัดส่วนพร้อมกัน (base 18 · sm ~15.75 · xl ~22.5 · 2xl 27)
+   หมายเหตุ: ของเดิมตั้ง --font-size-* ซึ่ง Tailwind v4 ไม่รู้จัก (namespace ที่ถูกคือ --text-*) — บล็อกนั้นไม่เคยมีผล
+   ที่นี่แค่ดันพื้น text-xs ขึ้นเล็กน้อยกันข้อความจิ๋ว ที่เหลือปล่อยให้ไล่ตามสัดส่วน */
 @theme {
-  --font-size-xs:   0.875rem;   /* 14px — ขั้นต่ำของทั้งโปรเจกต์ (ทดลองลดจาก 16px) */
-  --font-size-sm:   1rem;       /* 16px */
-  --font-size-base: 1.125rem;   /* 18px */
-  --font-size-lg:   1.25rem;    /* 20px */
-  --font-size-xl:   1.375rem;   /* 22px — สูงสุดของทั้งโปรเจกต์ */
-  --font-size-2xl:  1.375rem;   /* 22px (เท่ากับ xl เพราะชนเพดานสูงสุด) */
+  --text-xs: 0.8125rem; /* ~14.6px ที่ฐาน 18 (เดิม 0.75rem) */
 
   /* ธีมสีน้ำตาล Coffee: bg-brown-*, text-brown-*, border-brown-* ใช้แทนที่ slate-800/900 เดิม
      ทุกจุดที่เป็นสีหลักของแบรนด์ (ปุ่มหลัก หัวข้อ แถบเมนูที่เลือกอยู่) จุดยึดคือ brown-800 */
@@ -34,34 +38,40 @@
    1. CSS Variables — สี, ขนาด, transition
    ------------------------------------------------------------ */
 :root {
-  /* Sidebar */
-  --sidebar-width: 240px;
+  /* ── มาตรฐานผู้สูงอายุ ──
+     --touch-target: ปุ่ม/ไอคอนกดต้อง ≥ 44px (นิ้วผู้ใหญ่แตะแม่นขึ้น, ตาม WCAG 2.2 2.5.8)
+     --text-muted:   สีข้อความรอง คอนทราสต์ ≥ 4.5:1 บนพื้นขาว (เลิกใช้ gray-400 ที่จางเกิน) */
+  --touch-target: 2.75rem;      /* 44px */
+  --text-muted: #4b5563;        /* gray-600 — แทน gray-400/500 ที่คอนทราสต์ตก */
+
+  /* Sidebar (กว้างขึ้นให้รองรับตัวอักษร 17px โดยไม่ตัดบรรทัดบ่อย) */
+  --sidebar-width: 268px;
   --sidebar-bg: #ffffff;
   --sidebar-border: #f1f5f9;
 
   /* Section label */
-  --sidebar-section-color: #94a3b8;
+  --sidebar-section-color: #4b5563;
 
   /* Menu item */
-  --menu-item-color: #111827;
+  --menu-item-color: #1f2937;
   --menu-item-hover-bg: #FAF5F2;
   --menu-item-hover-color: #4B2E2B;
   --menu-item-active-bg: #F1E4DC;
   --menu-item-active-color: #4B2E2B;
-  --menu-item-font-size: 1rem; /* 16px */
+  --menu-item-font-size: 1.0625rem; /* 17px */
 
   /* Submenu item */
-  --submenu-item-color: #111827;
+  --submenu-item-color: #1f2937;
   --submenu-item-active-color: #4B2E2B;
   --submenu-indent: 2.25rem; /* 36px */
 
   /* Navbar */
-  --navbar-height: 56px;
+  --navbar-height: 64px;
   --navbar-bg: #ffffff;
   --navbar-border: #f1f5f9;
 
   /* Breadcrumb */
-  --bc-link-color: #94a3b8;
+  --bc-link-color: #64748b;
   --bc-link-hover-color: #7C4F35;
   --bc-current-color: #4B2E2B;
 
@@ -103,16 +113,35 @@
   box-sizing: border-box;
 }
 
+/* ฐาน 18px สำหรับผู้สูงอายุ — ตั้งที่ html เท่านั้น (rem ทั้งแอปอิงค่านี้)
+   ห้ามตั้ง font-size ซ้ำที่ body ด้วยหน่วย rem ไม่งั้นจะทบกัน (18 × 1.125 = 20.25) */
+html {
+  font-size: 112.5%; /* 16 → 18px */
+}
+
 html,
 body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: "Sarabun", "Inter", system-ui, -apple-system, sans-serif;
-  font-size: 1rem;
-  color: #4B2E2B;
+  /* Noto Sans Thai ผ่าน --font-sans (ผูกใน @theme inline ด้านบน) */
+  font-family: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
+  line-height: 1.7;             /* เว้นบรรทัดกว้างขึ้น อ่านง่ายขึ้นสำหรับอักษรไทยที่มีวรรณยุกต์ */
+  color: #3d2523;              /* เข้มขึ้นเล็กน้อยจาก brown-800 เพื่อคอนทราสต์ */
   background-color: var(--content-bg);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-size: 1rem; /* = 18px (ไม่ทบ เพราะ rem อิง html) */
+}
+
+/* โฟกัสชัดเจน — ผู้สูงอายุที่ใช้คีย์บอร์ด/มองเห็นไม่ชัดจะรู้ว่าตอนนี้อยู่ที่ปุ่มไหน */
+:focus-visible {
+  outline: 3px solid var(--menu-item-active-color, #4B2E2B);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* ------------------------------------------------------------
@@ -217,10 +246,9 @@ body {
 
 /* --- Section label --- */
 .sidebar-section-label {
-  font-size: var(--sidebar-section-font-size);
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-size: 0.9375rem; /* 15px — เดิมอ้าง var ที่ไม่มีนิยาม */
+  font-weight: 700;
+  letter-spacing: 0.02em; /* อักษรไทยไม่ควร track กว้าง */
   color: var(--sidebar-section-color);
   padding: 0.75rem 1rem 0.25rem;
 }
@@ -236,9 +264,9 @@ body {
 .menu-item-btn {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -262,17 +290,17 @@ body {
 }
 
 .menu-item-btn .menu-icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.375rem;
+  height: 1.375rem;
   flex-shrink: 0;
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 .menu-item-link .menu-icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.375rem;
+  height: 1.375rem;
   flex-shrink: 0;
-  opacity: 0.7;
+  opacity: 0.75;
   color: #000;
 }
 
@@ -283,13 +311,13 @@ body {
 
 .menu-item-label {
   flex: 1;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 /* Chevron rotate animation */
 .menu-chevron {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 1rem;
+  height: 1rem;
   flex-shrink: 0;
   color: #000000;
   transition: transform var(--transition-fast);
@@ -303,8 +331,8 @@ body {
 .menu-item-link {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0.5rem 1rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   color: var(--menu-item-color);
   font-size: var(--menu-item-font-size);
   text-decoration: none;
@@ -334,7 +362,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4375rem 1rem 0.4375rem var(--submenu-indent);
+  padding: 0.625rem 1rem 0.625rem var(--submenu-indent);
   color: var(--submenu-item-color);
   font-size: var(--menu-item-font-size);
   text-decoration: none;
@@ -368,9 +396,9 @@ body {
 .logout-btn {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -386,8 +414,8 @@ body {
 }
 
 .logout-btn .menu-icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.375rem;
+  height: 1.375rem;
   flex-shrink: 0;
 }
 
@@ -440,27 +468,27 @@ body {
 
 /* Toggle button (mobile only) */
 .navbar-toggle-btn {
-  width: 2.125rem;
-  height: 2.125rem;
+  width: var(--touch-target);
+  height: var(--touch-target);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   background: transparent;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 0.5rem;
   cursor: pointer;
-  color: #64748b;
+  color: #475569;
   transition: background-color var(--transition-fast);
 }
 
 .navbar-toggle-btn:hover {
-  background-color: #f8fafc;
+  background-color: #f1f5f9;
 }
 
 .navbar-toggle-btn svg {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 /* Vertical divider */
@@ -484,7 +512,7 @@ body {
 }
 
 .breadcrumb-link {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: var(--bc-link-color);
   text-decoration: none;
   white-space: nowrap;
@@ -503,8 +531,8 @@ body {
 }
 
 .breadcrumb-current {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 1.0625rem;
+  font-weight: 600;
   color: var(--bc-current-color);
   white-space: nowrap;
   overflow: hidden;
@@ -522,26 +550,26 @@ body {
 /* Icon button (bell, etc.) */
 .navbar-icon-btn {
   position: relative;
-  width: 2.125rem;
-  height: 2.125rem;
+  width: var(--touch-target);
+  height: var(--touch-target);
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 0.5rem;
   cursor: pointer;
-  color: #64748b;
+  color: #475569;
   transition: background-color var(--transition-fast);
 }
 
 .navbar-icon-btn:hover {
-  background-color: #f8fafc;
+  background-color: #f1f5f9;
 }
 
 .navbar-icon-btn svg {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 /* Notification unread dot */
@@ -609,8 +637,8 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 0.625rem;
-  padding: 0.625rem 1rem;
-  border-bottom: 1px solid #f8fafc;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
   cursor: pointer;
   transition: background-color var(--transition-fast);
 }
@@ -647,13 +675,13 @@ body {
 
 .notif-item-message {
   font-size: 1rem;
-  color: #4B2E2B;
-  line-height: 1.45;
+  color: #3d2523;
+  line-height: 1.55;
 }
 
 .notif-item-time {
-  font-size: 1rem;
-  color: #94a3b8;
+  font-size: 0.9375rem;
+  color: var(--text-muted);
   margin-top: 0.125rem;
 }
 
@@ -661,7 +689,7 @@ body {
   padding: 1.5rem 1rem;
   text-align: center;
   font-size: 1rem;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .notif-dropdown-footer {
@@ -690,15 +718,15 @@ body {
 
 /* --- Owner avatar --- */
 .owner-avatar {
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   background-color: var(--avatar-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.0625rem;
+  font-weight: 700;
   color: var(--avatar-color);
   cursor: pointer;
   border: none;
@@ -727,9 +755,9 @@ body {
 }
 
 .owner-name {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #334155;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: #1e293b;
   white-space: nowrap;
 }
 
@@ -764,34 +792,34 @@ body {
 
 /* ── Page header ── */
 .page-title {
-  @apply text-xl font-medium text-brown-900;
+  @apply text-xl font-semibold text-brown-900;
 }
 
 .page-description {
-  @apply mt-1 text-sm text-gray-500;
+  @apply mt-1 text-base text-gray-600;
 }
 
 /* ── Stat cards ── */
 .stat-card {
-  @apply rounded-xl bg-white border border-gray-100 p-4;
+  @apply rounded-xl bg-white border border-gray-200 p-5;
 }
 
 .stat-card-label {
-  @apply text-xs text-gray-400;
+  @apply text-sm text-gray-600;
 }
 
 .stat-card-value {
-  @apply mt-1 text-2xl font-medium text-brown-900;
+  @apply mt-1 text-2xl font-semibold text-brown-900;
 }
 
 .stat-card-sub {
-  @apply mt-1 text-xs;
+  @apply mt-1 text-sm;
 }
 
-.stat-card-sub.up   { @apply text-green-500; }
-.stat-card-sub.down { @apply text-red-500; }
-.stat-card-sub.warn { @apply text-amber-500; }
-.stat-card-sub.muted { @apply text-gray-400; }
+.stat-card-sub.up   { @apply text-green-600; }
+.stat-card-sub.down { @apply text-red-600; }
+.stat-card-sub.warn { @apply text-amber-600; }
+.stat-card-sub.muted { @apply text-gray-600; }
 
 /* ── Section card ── */
 .section-card {
@@ -803,7 +831,7 @@ body {
 }
 
 .section-card-title {
-  @apply text-sm font-medium text-brown-900;
+  @apply text-base font-semibold text-brown-900;
 }
 
 .section-card-footer {
@@ -811,36 +839,36 @@ body {
 }
 
 .section-card-link {
-  @apply text-xs text-blue-500 hover:text-blue-600 transition-colors cursor-pointer;
+  @apply text-sm text-blue-600 hover:text-blue-700 transition-colors cursor-pointer;
 }
 
 /* ── Status badges ── */
 .badge {
-  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium;
 }
 
-.badge-pending  { @apply bg-amber-50  text-amber-600; }
-.badge-shipping { @apply bg-blue-50   text-blue-600; }
-.badge-done     { @apply bg-green-50  text-green-600; }
-.badge-warning  { @apply bg-amber-50  text-amber-600; }
-.badge-danger   { @apply bg-red-50    text-red-500; }
-.badge-info     { @apply bg-blue-50   text-blue-600; }
+.badge-pending  { @apply bg-amber-100 text-amber-800; }
+.badge-shipping { @apply bg-blue-100  text-blue-800; }
+.badge-done     { @apply bg-green-100 text-green-800; }
+.badge-warning  { @apply bg-amber-100 text-amber-800; }
+.badge-danger   { @apply bg-red-100   text-red-800; }
+.badge-info     { @apply bg-blue-100  text-blue-800; }
 
 /* ── Table ── */
 .data-table {
-  @apply w-full text-sm;
+  @apply w-full text-base;
 }
 
 .data-table thead tr {
-  @apply border-b border-gray-100;
+  @apply border-b border-gray-200;
 }
 
 .data-table th {
-  @apply px-5 py-3 text-left text-xs font-medium text-gray-400;
+  @apply px-5 py-4 text-left text-sm font-semibold text-gray-600;
 }
 
 .data-table td {
-  @apply px-5 py-3 text-gray-600 border-b border-gray-50;
+  @apply px-5 py-4 text-gray-700 border-b border-gray-100;
 }
 
 .data-table tbody tr:last-child td {
@@ -853,24 +881,24 @@ body {
 
 /* ── Low stock list ── */
 .stock-item {
-  @apply flex items-center justify-between px-5 py-3 border-b border-gray-50 last:border-0;
+  @apply flex items-center justify-between px-5 py-4 border-b border-gray-100 last:border-0;
 }
 
 .stock-item-name {
-  @apply text-sm font-medium text-brown-800;
+  @apply text-base font-medium text-brown-800;
 }
 
 .stock-item-threshold {
-  @apply text-xs text-gray-400 mt-0.5;
+  @apply text-sm text-gray-600 mt-0.5;
 }
 
 .stock-item-value {
-  @apply text-sm font-medium text-red-500;
+  @apply text-base font-semibold text-red-600;
 }
 
 /* ── Top products (bar) ── */
 .product-item {
-  @apply px-5 py-3 border-b border-gray-50 last:border-0;
+  @apply px-5 py-4 border-b border-gray-100 last:border-0;
 }
 
 .product-item-row {
@@ -878,19 +906,19 @@ body {
 }
 
 .product-item-rank {
-  @apply text-xs font-medium text-gray-400 w-4;
+  @apply text-sm font-semibold text-gray-600 w-4;
 }
 
 .product-item-name {
-  @apply text-sm text-brown-800;
+  @apply text-base text-brown-800;
 }
 
 .product-item-revenue {
-  @apply text-sm font-medium text-gray-700;
+  @apply text-base font-medium text-gray-700;
 }
 
 .product-item-count {
-  @apply ml-2 text-xs text-gray-400;
+  @apply ml-2 text-sm text-gray-600;
 }
 
 .product-bar-bg {
@@ -903,15 +931,15 @@ body {
 
 /* ── Production list ── */
 .production-item {
-  @apply flex items-start justify-between px-5 py-3 border-b border-gray-50 last:border-0;
+  @apply flex items-start justify-between px-5 py-4 border-b border-gray-100 last:border-0;
 }
 
 .production-item-name {
-  @apply text-sm font-medium text-brown-800;
+  @apply text-base font-medium text-brown-800;
 }
 
 .production-item-meta {
-  @apply text-xs text-gray-400 mt-0.5;
+  @apply text-sm text-gray-600 mt-0.5;
 }
 
 /* ── Grid layouts ── */

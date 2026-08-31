@@ -19,19 +19,29 @@ import { MSWReady } from "@/components/providers/MSWReady";
 dayjs.locale("th");
 
 // antd render ฟอนต์ของ Table/Select/Input/Button/Tag ฯลฯ ด้วย design token ของตัวเอง
-// (ไม่ผ่านคลาส Tailwind text-*) — ตั้ง token ที่นี่ครั้งเดียวให้ทุกคอมโพเนนต์ antd อยู่ในช่วง 14–22px
+// (ไม่ผ่านคลาส Tailwind text-*) — ตั้ง token ที่นี่ครั้งเดียว
+// ปรับให้เป็นมิตรกับผู้สูงอายุ: ตัวอักษร 16–28px, บรรทัดสูง 1.7, ช่องกรอก/ปุ่มสูง 40–48px
 const theme: ThemeConfig = {
   token: {
-    fontSize: 14,
-    fontSizeSM: 14,
-    fontSizeLG: 16,
-    fontSizeXL: 18,
-    fontSizeIcon: 14,
-    fontSizeHeading1: 22,
-    fontSizeHeading2: 20,
-    fontSizeHeading3: 18,
-    fontSizeHeading4: 16,
-    fontSizeHeading5: 14,
+    // ฟอนต์ Noto Sans Thai (ไม่มีหัว) เดียวกับทั้งแอป — ผูกผ่าน CSS var ที่ layout.tsx ตั้งไว้บน <html>
+    fontFamily: "var(--font-sans)",
+
+    fontSize: 17, // ฐาน (เดิม 14) — ใกล้เคียง body 18px ของฝั่ง Tailwind
+    fontSizeSM: 15, // เล็กสุด — label ตาราง / tag
+    fontSizeLG: 19,
+    fontSizeXL: 21,
+    fontSizeIcon: 16,
+    fontSizeHeading1: 28,
+    fontSizeHeading2: 24,
+    fontSizeHeading3: 20,
+    fontSizeHeading4: 18,
+    fontSizeHeading5: 16,
+    lineHeight: 1.7,
+
+    // ความสูง control — Input / Select / DatePicker / Button กดง่ายขึ้นด้วยนิ้ว
+    controlHeightSM: 32,
+    controlHeight: 40, // default (เดิม 32)
+    controlHeightLG: 48,
 
     // ธีมสีน้ำตาล (Coffee) — สีหลักของแบรนด์ ให้คอมโพเนนต์ antd ที่ไม่ได้ครอบสีด้วย Tailwind
     // ใช้สีนี้แทนสีฟ้า default ของ antd (Switch ตอนเปิด, focus ring, ปุ่ม primary เปล่า, ลิงก์)
@@ -40,6 +50,11 @@ const theme: ThemeConfig = {
     colorPrimaryActive: "#37201D",
     colorLink: "#7C4F35",
     colorLinkHover: "#4B2E2B",
+
+    // ข้อความเข้มขึ้นเพื่อคอนทราสต์ (เดิม antd ใช้เทาอ่อนเกินสำหรับสายตาผู้สูงอายุ)
+    colorText: "#3d2523",
+    colorTextSecondary: "#4b5563",
+    colorTextTertiary: "#64748b",
   },
 };
 

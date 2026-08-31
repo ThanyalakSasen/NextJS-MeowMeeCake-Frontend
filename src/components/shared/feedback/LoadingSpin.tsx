@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 export function LoadingSpin({ text, className = "py-16" }: { text?: string; className?: string }) {
   const t = useTranslations("common");
   return (
-    <div className={`${className} flex flex-col items-center justify-center gap-2.5 text-sm text-gray-400`}>
+    <div className={`${className} flex flex-col items-center justify-center gap-2.5 text-base text-gray-600`}>
       <Spin size="large" />
       <span>{text ?? t("loading")}</span>
     </div>

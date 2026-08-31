@@ -16,11 +16,11 @@ export function ListPageLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-medium text-brown-900">{title}</h1>
-          {description && <p className="mt-1 text-sm text-gray-500">{description}</p>}
+          <h1 className="text-xl font-semibold text-brown-900">{title}</h1>
+          {description && <p className="mt-1 text-base text-gray-600">{description}</p>}
         </div>
         {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
       </div>

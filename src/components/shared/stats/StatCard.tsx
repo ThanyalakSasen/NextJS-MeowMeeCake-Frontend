@@ -11,12 +11,12 @@ export function StatCard({
   sub?: string;
   tone?: "up" | "down" | "warn" | "muted";
 }) {
-  const toneCls = { up: "text-green-500", down: "text-red-500", warn: "text-amber-500", muted: "text-gray-400" }[tone];
+  const toneCls = { up: "text-green-600", down: "text-red-600", warn: "text-amber-600", muted: "text-gray-600" }[tone];
   return (
-    <Card className="p-4">
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="mt-1 text-2xl font-medium text-brown-900">{value}</p>
-      {sub && <p className={`mt-1 text-xs ${toneCls}`}>{sub}</p>}
+    <Card className="p-5">
+      <p className="text-sm text-gray-600">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-brown-900">{value}</p>
+      {sub && <p className={`mt-1 text-sm ${toneCls}`}>{sub}</p>}
     </Card>
   );
 }
