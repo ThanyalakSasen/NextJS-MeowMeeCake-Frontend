@@ -36,8 +36,8 @@ export const neutral = {
   border: "#E4DAD1",
   /** เส้นแบ่งบาง / พื้นหลัง hover อ่อน (เดิม #F1F5F9) */
   borderSubtle: "#F0E9E2",
-  /** พื้นหลังพื้นที่เนื้อหา — warm off-white (เดิม #F8FAFC) */
-  bgApp: "#F4F0EB",
+  /** พื้นหลังพื้นที่เนื้อหา — warm off-white จาง (เดิม #F8FAFC → #F4F0EB) */
+  bgApp: "#FBF8F4",
   /** พื้นการ์ด / แผง */
   surface: "#FFFFFF",
 } as const;

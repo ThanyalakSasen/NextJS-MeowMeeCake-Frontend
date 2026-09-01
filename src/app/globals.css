@@ -62,7 +62,7 @@
 
   /* ── พื้น / เส้น (โทนอุ่นให้เข้ากับแบรนด์กาแฟ — เดิมเป็น slate เย็น) ── */
   --surface:       #FFFFFF;
-  --bg-app:        #F4F0EB;   /* warm off-white — ดันให้การ์ดขาวลอยขึ้น */
+  --bg-app:        #FBF8F4;   /* warm off-white จาง — ให้ต่างชัดจาก navbar ที่ tint เข้มกว่า */
   --border:        #E4DAD1;   /* เทาอุ่น (เดิม #E2E8F0) */
   --border-subtle: #F0E9E2;   /* เส้นแบ่งบาง (เดิม #F1F5F9) */
 
@@ -81,8 +81,8 @@
   /* ── สีพื้นผิวของ shell ── */
   --sidebar-bg:     var(--color-brown-50);   /* tint อุ่น — แยก sidebar ออกจากเนื้อหา */
   --sidebar-border: var(--color-brown-100);  /* เส้นแบ่งขวาเห็นชัดขึ้น */
-  --navbar-bg:      var(--surface);          /* ขาว — ตัดกับ sidebar/เนื้อหาที่อุ่น */
-  --navbar-border:  var(--border);
+  --navbar-bg:      var(--color-brown-100);  /* tint อุ่นเข้มกว่าทั้ง sidebar (brown-50) และ content — แถบบนไม่กลืนพื้น */
+  --navbar-border:  var(--color-brown-200);
   --content-bg:     var(--bg-app);
 
   /* ── Sidebar: section label ── */
@@ -108,7 +108,7 @@
   --bc-current-color:    var(--color-brown-800);
 
   /* ── Navbar: avatar ── */
-  --avatar-bg:    var(--color-brown-100);
+  --avatar-bg:    var(--color-brown-200);  /* เข้มกว่า navbar (brown-100) — วงกลม avatar ไม่จม */
   --avatar-color: var(--color-brown-800);
 
   /* ── Notification dot (แดงสว่างสำหรับจุดเล็ก — ตั้งใจให้ต่างจาก --color-danger) ── */
@@ -528,7 +528,7 @@ body {
   justify-content: center;
   flex-shrink: 0;
   background: transparent;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-brown-300);
   border-radius: 0.5rem;
   cursor: pointer;
   color: #475569;
@@ -536,7 +536,7 @@ body {
 }
 
 .navbar-toggle-btn:hover {
-  background-color: #f1f5f9;
+  background-color: var(--color-brown-50);
 }
 
 .navbar-toggle-btn svg {
@@ -548,7 +548,7 @@ body {
 .navbar-divider {
   width: 1px;
   height: 1.25rem;
-  background-color: #e2e8f0;
+  background-color: var(--color-brown-200);
   flex-shrink: 0;
 }
 
@@ -609,7 +609,7 @@ body {
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-brown-300);
   border-radius: 0.5rem;
   cursor: pointer;
   color: #475569;
@@ -617,7 +617,7 @@ body {
 }
 
 .navbar-icon-btn:hover {
-  background-color: #f1f5f9;
+  background-color: var(--color-brown-50);
 }
 
 .navbar-icon-btn svg {
@@ -804,7 +804,7 @@ body {
 }
 
 .navbar-actor-btn:hover {
-  background-color: #f8fafc;
+  background-color: var(--color-brown-50);
 }
 
 .owner-name {

@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (5/27 + foundation — 2026-09-01)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (6/27 + foundation — 2026-09-01)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -185,9 +185,11 @@ src/
 > **เพิ่มรอบ 2026-09-01 (b):**
 > - **Screen #2 Dashboard** ✅ — `DashboardPageLayout` (shared) · aggregate 1 query `GET /reports/dashboard` (ViewModel ไม่ประกอบเอง) · `types/dashboard.ts` + `services/reports.ts` + `mocks/fixtures/dashboard.ts` + `mocks/handlers/reports.ts` (custom handler ไม่ใช่ crudHandlers) · 4 widget presentational ใน `_components/` (RecentOrders/LowStock/TopProducts/ProductionStatus) ใช้ `.section-card`/`.stock-item`/`.product-item`/`.production-item` CSS + `StatusBadge` + `StatCard` · i18n `dashboard.*` (th+en) · verified ในเบราว์เซอร์ (MSW 200)
 > - **theme refresh** — `globals.css` + `palette.ts` (neutral) + `tokens.ts` (layout mirror): shell โทนอุ่นขึ้น (sidebar tint `brown-50` + accent bar เมนู active), เส้นขอบ/พื้น warm, การ์ดมีเงา `--shadow-card`, sidebar-width → `17rem`, navbar → `4rem`, เพิ่ม `--content-max` 1400px, เอา `bg-pink-300` ออกจาก product bar
+> - **Screen #6 Product Stock** ✅ — `/owner/products/productStock` · ListPageLayout · **ไม่มี resource ใหม่** (ใช้ `productsService` list `?product_type=ready` + `update({product_stock_quantity})`) · map category/unit จาก `productCategoriesService`+`unitsService` · `stockStatus.ts` (pure: `LOW_STOCK_THRESHOLD`, `getStockStatus`) · `_components/{StockProgressRow, AdjustStockModal}` (antd `Modal` + `base/Form`) · stat cards (StatCardsGrid) + filter search/หมวดหมู่/สถานะ · i18n `productStock.*` (th+en) · fixture products เพิ่ม `category_id`/`unit_id` (+ sourdough stock→0 ให้มีเคส "หมดสต็อก") · verified: adjust → PATCH → invalidate → ตาราง+stat อัปเดต
+>   - **ตัดออก:** แท็บ "ประวัติการสต็อก" (ของเดิม derive จาก `/user-logs`) → เลื่อนไปคู่ Screen #21 User Log (ต้อง `/user-logs` vertical + TabbedPageLayout ซึ่ง defer อยู่)
 >
-> **เหลือ 22 screen** — copy pattern: list→Products · form→Add Product · dashboard→Dashboard:
-> Product Stock · Manage Orders · POS · Ingredients List · Ingredient Stock · Ingredient History · Manage Units · Production (3 tab) · Recipes · Employees List · Add/Edit Employee · Permissions · User Log · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
+> **เหลือ 21 screen** — copy pattern: list→Products · form→Add Product · dashboard→Dashboard:
+> Manage Orders · POS · Ingredients List · Ingredient Stock · Ingredient History · Manage Units · Production (3 tab) · Recipes · Employees List · Add/Edit Employee · Permissions · User Log (+ แท็บประวัติสต็อกสินค้า) · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)
