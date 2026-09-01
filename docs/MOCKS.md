@@ -148,6 +148,7 @@ password: owner1234
 | `orders` | `crudHandlers` (DTO เดียว รวม ready+preorder) | 9 | Manage Orders, POS, Dashboard | ✅ |
 | `ingredients` · `ingredient-categories` · `ingredient-transactions` | `crudHandlers` | 10 · 5 · 10 | Ingredients List, Stock, History | ✅ |
 | `units` | `crudHandlers` | 8 | Manage Units, Ingredients/Product forms | ✅ |
+| `users` · `roles` | `crudHandlers` | 8 · 5 | Employees List (+ Add/Edit/Permissions/UserLog เฟสถัดไป) | ✅ |
 | `notifications` | `crudHandlers` | — | Navbar, Notification History | ✅ |
 | `GET /reports/dashboard` | `handlers/reports.ts` (ไม่ใช่ crud) | fixture เดียว | Dashboard | ✅ |
 | resource อื่นที่เหลือ | `crudHandlers("<name>", ...)` + fixture | — | ตาม screen | ⏳ เฟส 4 |
