@@ -4,7 +4,7 @@
 > **เปิดอ่านเมื่อ:** ก่อนเริ่ม/หลังจบ screen ใดในเฟส 4 · สงสัยว่าทำไมกดเมนูแล้วไปหน้าอื่น/404 · เช็คว่าลืมต่อสายอะไรไหม
 > **ความสัมพันธ์กับเอกสารอื่น:** `REBUILD_PLAN.md` §7 = route/template/component ต่อหน้า (ของ "จะสร้างอะไร") · `COMPONENT_MAP.md` = ทะเบียน component (ของ "component อยู่ไหน") · **เอกสารนี้ = เข้าถึงหน้านั้นได้จริงหรือยัง**
 >
-> อัปเดตล่าสุด: 2026-09-01 (8/27 ✅)
+> อัปเดตล่าสุด: 2026-09-02 (10/27 ✅)
 
 ---
 
@@ -40,10 +40,10 @@
 | 6 | Product Stock | `/owner/products/productStock` | ✅ | ⚠️ ไม่มี sidebar leaf แม้ nav/breadcrumb/menuKey พร้อม (**G2**) | `stock` | `productStock` | ListPageLayout | `page.tsx`+`ProductStockView.tsx`+`useProductStockViewModel.ts` | AdjustStockModal, StockProgressRow | reuse: `products`+`productCategories`+`units` (ไม่มี resource ใหม่) |
 | 7 | Manage Orders | `/owner/orders/manageOrders` | ✅ | sidebar: `ordersManage` leaf | `orders` | `ordersManage` | ListPageLayout | `page.tsx`+`ManageOrdersView.tsx`+`useManageOrdersViewModel.ts`+`orderStatus.ts` | OrderStatusFilter, PaymentSlipPreview, OrderLifecycleSteps, OrderDetailContent | `orders` (ใหม่ — DTO รวม ready+preorder) · `shared/feedback/DetailDrawer` (build) |
 | 8 | POS หน้าร้าน | `/owner/orders/OrderInStore` | ✅ | sidebar: `ordersInStore` leaf | `orders` | `ordersInStore` | custom 2-pane (`DashboardPageLayout` shell) | `page.tsx`+`POSView.tsx`+`usePOSViewModel.ts`+`posCart.ts` | ProductPickerGrid, CartPanel, QRPaymentModal | reuse: `orders`+`products` (ไม่มี resource ใหม่) · QR = mock (`qrcode` lib) |
-| 9 | Ingredients List | `/owner/ingredients` | ⬜ | sidebar: `ingredients` leaf (พร้อมแล้ว) | `ingredients` | `ingredients` | ListPageLayout | — | IngredientFormModal | → §4 ingredients (ใหม่) |
+| 9 | Ingredients List | `/owner/ingredients` | ✅ | sidebar: `ingredients` leaf | `ingredients` | `ingredients` | ListPageLayout | `page.tsx`+`IngredientsView.tsx`+`useIngredientsViewModel.ts`+`ingredientStatus.ts` | IngredientFormModal | `ingredients`+`ingredient-categories` (ใหม่) · reuse `units` · `src/utils/unitContext.ts` (build) |
 | 10 | Ingredient Stock | `/owner/ingredients/ingredientStock` | ⬜ | sidebar: `ingredientStock` leaf (พร้อมแล้ว) | `stock` | `ingredientStock` | (custom) | — | ReceiveModal, AdjustModal, BulkReceiveModal, IngredientStockCard, AutoCompleteSearch | → §4 ingredients (ใหม่) |
 | 11 | Ingredient History | `/owner/ingredients/ingredientHistory` | ⬜ | sidebar: `ingredientHistory` leaf (พร้อมแล้ว) | `stock` | `ingredientHistory` | (custom) | — | TransactionTimeline, HistoryItemCard, AnalyticsBarChart, LogTransactionModal | → §4 ingredients (ใหม่) |
-| 12 | Manage Units | `/owner/ingredients/units` | ⬜ | sidebar: `units` leaf (พร้อมแล้ว) | `ingredients` | `units` | (2-col) | — | UnitListCard, UnitFormModal | reuse: `units` (มีแล้ว) |
+| 12 | Manage Units | `/owner/ingredients/units` | ✅ | sidebar: `units` leaf | `ingredients` | `units` | 2-col (`DashboardPageLayout` shell) | `page.tsx`+`UnitsView.tsx`+`useUnitsViewModel.ts` | UnitListCard, UnitFormModal | reuse: `units` (ไม่มี resource ใหม่) · `src/utils/unitContext.ts` |
 | 13 | Production — Plan | `/owner/production?tab=plan` | ⬜ | sidebar: `production` leaf (route เดียว, สลับผ่าน `?tab=`) | `production` | `production` | TabbedPageLayout (build) | — | ProductionOrderForm, ProductionStatCards | → §4 production (ใหม่) |
 | 14 | Production — Status | `/owner/production?tab=status` | ⬜ | เหมือน #13 | `production` | `production` | TabbedPageLayout (build) | — | KanbanBoard, ProductionOrderCard | → §4 production (ใหม่) |
 | 15 | Production — History | `/owner/production?tab=history` | ⬜ | เหมือน #13 | `production` | `production` | TabbedPageLayout (build) | — | RevenueBarChart, AnalyticsBarChart, TeamPerformanceCard | → §4 production (ใหม่) |
@@ -88,7 +88,7 @@
 | Vertical | Screens | Resource ใหม่ (type/service/fixture/handler) | Shared component ที่ต้อง build/promote | i18n namespace ที่ต้องเติม |
 |---|---|---|---|---|
 | **orders** | #7 ✅ Manage Orders, #8 ✅ POS | `orders` ✅ (DTO เดียว รวม ready+preorder — ไม่แยก order-items/payments collection แบบต้นทาง) | `DetailDrawer` ✅ (build, ใช้กับ #7) · #7 page-local: OrderStatusFilter, PaymentSlipPreview, OrderLifecycleSteps, OrderDetailContent · #8 page-local: ProductPickerGrid, CartPanel, QRPaymentModal (+ `posCart.ts` pure) — **QR = mock ด้วย lib `qrcode`** ไม่ใช่ Omise จริง | `orders` ✅ · `pos` ✅ (th+en) |
-| **ingredients** | #9 List, #10 Stock, #11 History, #12 Units | `ingredients` (+ ingredient-transactions) — `units` มีแล้ว | IngredientFormModal, ReceiveModal/AdjustModal/BulkReceiveModal, `AutoCompleteSearch` (build, ค้างจากเฟส 3), TransactionTimeline, AnalyticsBarChart (`shared/charts/`, build), UnitFormModal | `ingredients` |
+| **ingredients** | #9 ✅ List, #10 Stock, #11 History, #12 ✅ Units | `ingredients` ✅ + `ingredient-categories` ✅ · `ingredient-transactions` ยังไม่ทำ (คู่ #10/#11) · `units` มีแล้ว · `src/utils/unitContext.ts` ✅ | #9 IngredientFormModal ✅ · #12 UnitListCard/UnitFormModal ✅ · #10/#11 ยัง: ReceiveModal/AdjustModal/BulkReceiveModal, `AutoCompleteSearch` (build), TransactionTimeline, AnalyticsBarChart (`shared/charts/`, build) | `ingredients` ✅ · `units` ✅ (th+en) |
 | **production** | #13 Plan, #14 Status, #15 History | `production-orders` (+ production-items) | **`TabbedPageLayout` (build, ค้างจากเฟส 3)** · KanbanBoard, ProductionOrderForm/Card, RevenueBarChart (reuse จาก charts), TeamPerformanceCard | `production` |
 | **recipes** | #16 Recipes | `recipes` (main+sub) | RecipeCard, MainRecipeModal, SubRecipeModal, `DetailDrawer` (reuse), IngredientEditor, StepEditor | `recipes` |
 | **employees/roles** | #17 List, #18 Add, #19 Edit, #20 Permissions, #21 User Log | `users`(employees) + `roles` + `permissions` + `user-logs` | EmployeeFormSections, AvatarUploader, ToggleRow, PasswordShuffleButton, RoleList, PermissionCollapseSection/CheckboxGroup, `DetailDrawer` (reuse) | `employees`, `permissions` · **unlock แท็บ "ประวัติการสต็อก" ที่ตัดออกจาก #6 ไว้ก่อน** (ต้อง `/user-logs` vertical) |

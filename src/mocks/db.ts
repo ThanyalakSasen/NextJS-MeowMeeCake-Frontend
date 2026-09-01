@@ -22,7 +22,7 @@ const stores = new Map<string, MockRow[]>();
 const LS_KEY = "mmc_mock_db";
 const LS_VERSION_KEY = "mmc_mock_db_version";
 /** bump เมื่อ fixture เปลี่ยนโครง/ค่า แล้วอยากให้ store ที่ persist ไว้ถูกล้างทิ้ง */
-const SEED_VERSION = "2026-09-01-p8";
+const SEED_VERSION = "2026-09-01-p9";
 
 const canPersist = (): boolean => {
   try {

@@ -144,8 +144,13 @@ password: owner1234
 | resource | endpoints | fixtures | ใช้กับ screen | สถานะ |
 |---|---|---|---|---|
 | `auth` | `POST /auth/login` · `POST /auth/logout` · `GET /auth/me` · `POST /auth/refresh` | owner 1 | ทุกหน้า | ✅ |
-| `products` | list/get/create/update/remove (`crudHandlers`) | 5 | Products, POS, Dashboard, ... | ✅ (reference) |
-| resource อื่น ~38 ตัว | `crudHandlers("<name>", ...)` + fixture | — | ตาม screen | ⏳ เฟส 4 |
+| `products` · `product-categories` | `crudHandlers` | 5 · 4 | Products, POS, Product Stock, Dashboard | ✅ |
+| `orders` | `crudHandlers` (DTO เดียว รวม ready+preorder) | 9 | Manage Orders, POS, Dashboard | ✅ |
+| `ingredients` · `ingredient-categories` | `crudHandlers` | 10 · 5 | Ingredients List (+ Stock/History เฟสถัดไป) | ✅ |
+| `units` | `crudHandlers` | 8 | Manage Units, Ingredients/Product forms | ✅ |
+| `notifications` | `crudHandlers` | — | Navbar, Notification History | ✅ |
+| `GET /reports/dashboard` | `handlers/reports.ts` (ไม่ใช่ crud) | fixture เดียว | Dashboard | ✅ |
+| resource อื่นที่เหลือ | `crudHandlers("<name>", ...)` + fixture | — | ตาม screen | ⏳ เฟส 4 |
 
 **เพิ่ม resource ใหม่ (เฟส 4):** `src/mocks/handlers/index.ts` → `seed("orders", ordersFixture)` + `...crudHandlers("orders", `${API}/orders`)` (2 บรรทัด)
 

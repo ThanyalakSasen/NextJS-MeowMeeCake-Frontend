@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (8/27 + foundation — 2026-09-01)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (10/27 + foundation — 2026-09-02)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -192,9 +192,13 @@ src/
 >   - **แก้ระหว่างทาง:** antd v6.6.2 `Drawer` เลิกรับ prop `width` (ใช้ `size` แทน — เจอ deprecation warning ตอนเทสจริง ไม่ใช่แค่จากเอกสาร)
 > - **Screen #8 POS หน้าร้าน** ✅ — `/owner/orders/OrderInStore` · custom 2-pane (กริดสินค้า + ตะกร้า sticky) ใช้ `DashboardPageLayout` เป็น shell · **reuse orders + products vertical** ไม่มี resource ใหม่ · `posCart.ts` (pure: cart ops + `buildOrderInput`) · `_components/{ProductPickerGrid, CartPanel, QRPaymentModal}` · เลือกสินค้า→ตะกร้า (จำกัด qty ตามสต็อก) → เงินสด/QR → `POST /orders` สร้างออเดอร์ `order_type:"ready"` completed+paid ทันที + best-effort PATCH ตัดสต็อกสินค้าที่ขาย · **QR = mock** (`qrcode` lib สร้าง QR จาก payload ปลอม ไม่มี Omise charge/polling — พนักงานกด "ลูกค้าชำระเงินแล้ว" เอง) · i18n `pos.*` (th+en) · verified: cash + QR checkout เดินครบ, ออเดอร์โผล่ใน Manage Orders (#7), สต็อกในกริดลดจริง
 >   - **ตัดออก (นอกขอบเขต #8):** bundle · promotion · แผงประวัติขายวันนี้ · Omise QR จริง · user_id binding — bundle/promotion เป็น "นอก 27 screen — เฟสหลัง"
+> - **MSW persist** — `src/mocks/db.ts` เก็บ store ลง `localStorage` (`mmc_mock_db`) → ข้อมูลที่กด (POST/PATCH/DELETE) อยู่ข้ามรีเฟรช · `seed()` idempotent + `SEED_VERSION` guard (bump เมื่อแก้ fixture) · `window.__resetMockDb()` = ล้างกลับ fixture (แก้ปัญหา "ใช้ mock ของ POS ไม่ได้")
+> - **Screen #9 Ingredients List** ✅ — `/owner/ingredients` · ListPageLayout · **ingredients + ingredient-categories vertical ใหม่** · reuse `units` · `ingredientStatus.ts` (pure: `getIngredientStatus` เกณฑ์ = `reorder_point` ต่อรายการ, `stockPercent`) · stat cards + filter หมวดหมู่/สถานะ · `_components/IngredientFormModal` (base/Form + Select หน่วยเฉพาะ context วัตถุดิบ) · progress bar สีตามสถานะ · i18n `ingredients.*`
+> - **Screen #12 Manage Units** ✅ — `/owner/ingredients/units` · custom 2-col (หน่วยวัตถุดิบ | หน่วยสินค้า) `DashboardPageLayout` shell · **ไม่มี resource ใหม่** (`units` vertical มีแล้ว — ขยาย fixture เป็น 8) · `src/utils/unitContext.ts` (pure: `UNIT_TYPES`, `isIngredientUnit`/`isProductUnit`) · unit_type label จาก `enums.unitType.*` (มีอยู่แล้ว) · `_components/{UnitListCard, UnitFormModal}` (checkbox → `usage_context`) · i18n `units.*`
+> - verified: ทั้ง 2 หน้า render + add unit → POST 201 → invalidate → list อัปเดต · `npm run check` เขียว
 >
-> **เหลือ 19 screen** — copy pattern: list→Products · form→Add Product · dashboard→Dashboard · orders-vertical→Manage Orders · POS→OrderInStore:
-> Ingredients List · Ingredient Stock · Ingredient History · Manage Units · Production (3 tab) · Recipes · Employees List · Add/Edit Employee · Permissions · User Log (+ แท็บประวัติสต็อกสินค้า) · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
+> **เหลือ 17 screen** — copy pattern: list→Products/Ingredients · form→Add Product · dashboard→Dashboard · orders-vertical→Manage Orders · POS→OrderInStore · 2-col→Manage Units:
+> Ingredient Stock · Ingredient History · Production (3 tab) · Recipes · Employees List · Add/Edit Employee · Permissions · User Log (+ แท็บประวัติสต็อกสินค้า) · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)
