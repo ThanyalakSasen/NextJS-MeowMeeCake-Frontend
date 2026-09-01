@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (10/27 + foundation — 2026-09-02)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (12/27 + foundation — 2026-09-02)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -196,9 +196,14 @@ src/
 > - **Screen #9 Ingredients List** ✅ — `/owner/ingredients` · ListPageLayout · **ingredients + ingredient-categories vertical ใหม่** · reuse `units` · `ingredientStatus.ts` (pure: `getIngredientStatus` เกณฑ์ = `reorder_point` ต่อรายการ, `stockPercent`) · stat cards + filter หมวดหมู่/สถานะ · `_components/IngredientFormModal` (base/Form + Select หน่วยเฉพาะ context วัตถุดิบ) · progress bar สีตามสถานะ · i18n `ingredients.*`
 > - **Screen #12 Manage Units** ✅ — `/owner/ingredients/units` · custom 2-col (หน่วยวัตถุดิบ | หน่วยสินค้า) `DashboardPageLayout` shell · **ไม่มี resource ใหม่** (`units` vertical มีแล้ว — ขยาย fixture เป็น 8) · `src/utils/unitContext.ts` (pure: `UNIT_TYPES`, `isIngredientUnit`/`isProductUnit`) · unit_type label จาก `enums.unitType.*` (มีอยู่แล้ว) · `_components/{UnitListCard, UnitFormModal}` (checkbox → `usage_context`) · i18n `units.*`
 > - verified: ทั้ง 2 หน้า render + add unit → POST 201 → invalidate → list อัปเดต · `npm run check` เขียว
+> - **sidebar polish (นอก 27 screen):** (1) active-state = `findActiveHref` longest-prefix boundary-safe + auto-open กลุ่มของหน้าปัจจุบัน + `aria-current` + scrollIntoView (`Sidebar.tsx`/`MenuGroupItem.tsx` + `menu.ts` helper) · (2) ทุกซับเมนูมี icon หัวข้อ (`MenuLeaf.icon` required + `menuIcons.ts` map รวม)
+> - **Screen #10 Ingredient Stock** ✅ — `/owner/ingredients/ingredientStock` · ListPageLayout · **ingredient-transactions vertical ใหม่** (type/service/fixture 10/handler) · reuse `ingredients`+`units`+`ingredientStatus.ts` · `_components/StockActionModal` (โหมดเดียวรวม รับเข้า/เบิกใช้/ปรับยอด แทน 3 modal แยก) · แต่ละ action = PATCH `/ingredients` + POST `/ingredient-transactions` (best-effort 2 คำขอ แบบ POS) · `performed_by` = `useCurrentUser().fullname` · i18n `ingredientStock.*`
+> - **Screen #11 Ingredient History** ✅ — `/owner/ingredients/ingredientHistory` · ListPageLayout · อ่านอย่างเดียว (สร้าง txn ที่ #10) · ตาราง: เวลา/วัตถุดิบ/ประเภท (tag สีจาก `INGREDIENT_TXN_CONFIG`)/จำนวน ±/หมายเหตุ/ผู้ทำ · filter type + ingredient + search · i18n `ingredientHistory.*`
+>   - **ตัดออก (นอกขอบเขต):** lot/expiry tracking · BulkReceiveModal · AutoCompleteSearch · CSV export · `AnalyticsBarChart` (defer — charts family ยังไม่ทำ)
+> - verified: #10 รับเข้า 500 → สต็อก 2400→2900 + มูลค่าอัปเดต · txn ใหม่โผล่ใน #11 (`performed_by` = ชื่อผู้ใช้) · `npm run check` เขียว
 >
-> **เหลือ 17 screen** — copy pattern: list→Products/Ingredients · form→Add Product · dashboard→Dashboard · orders-vertical→Manage Orders · POS→OrderInStore · 2-col→Manage Units:
-> Ingredient Stock · Ingredient History · Production (3 tab) · Recipes · Employees List · Add/Edit Employee · Permissions · User Log (+ แท็บประวัติสต็อกสินค้า) · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
+> **เหลือ 15 screen** — copy pattern: list→Products/Ingredients · form→Add Product · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units · stock-action→Ingredient Stock:
+> Production (3 tab) · Recipes · Employees List · Add/Edit Employee · Permissions · User Log (+ แท็บประวัติสต็อกสินค้า) · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)

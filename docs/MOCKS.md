@@ -146,7 +146,7 @@ password: owner1234
 | `auth` | `POST /auth/login` · `POST /auth/logout` · `GET /auth/me` · `POST /auth/refresh` | owner 1 | ทุกหน้า | ✅ |
 | `products` · `product-categories` | `crudHandlers` | 5 · 4 | Products, POS, Product Stock, Dashboard | ✅ |
 | `orders` | `crudHandlers` (DTO เดียว รวม ready+preorder) | 9 | Manage Orders, POS, Dashboard | ✅ |
-| `ingredients` · `ingredient-categories` | `crudHandlers` | 10 · 5 | Ingredients List (+ Stock/History เฟสถัดไป) | ✅ |
+| `ingredients` · `ingredient-categories` · `ingredient-transactions` | `crudHandlers` | 10 · 5 · 10 | Ingredients List, Stock, History | ✅ |
 | `units` | `crudHandlers` | 8 | Manage Units, Ingredients/Product forms | ✅ |
 | `notifications` | `crudHandlers` | — | Navbar, Notification History | ✅ |
 | `GET /reports/dashboard` | `handlers/reports.ts` (ไม่ใช่ crud) | fixture เดียว | Dashboard | ✅ |
