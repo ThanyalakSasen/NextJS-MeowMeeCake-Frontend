@@ -4,7 +4,7 @@
 > **เปิดอ่านเมื่อ:** ก่อนเริ่ม/หลังจบ screen ใดในเฟส 4 · สงสัยว่าทำไมกดเมนูแล้วไปหน้าอื่น/404 · เช็คว่าลืมต่อสายอะไรไหม
 > **ความสัมพันธ์กับเอกสารอื่น:** `REBUILD_PLAN.md` §7 = route/template/component ต่อหน้า (ของ "จะสร้างอะไร") · `COMPONENT_MAP.md` = ทะเบียน component (ของ "component อยู่ไหน") · **เอกสารนี้ = เข้าถึงหน้านั้นได้จริงหรือยัง**
 >
-> อัปเดตล่าสุด: 2026-09-01 (6/27 ✅)
+> อัปเดตล่าสุด: 2026-09-01 (7/27 ✅)
 
 ---
 
@@ -38,8 +38,8 @@
 | 4 | Add Product | `/owner/products/addProducts` | ✅ | ปุ่ม "เพิ่มสินค้า" บน Products List | `products` | `productsAdd` | (form) | `page.tsx`+`AddProductView.tsx`+`useAddProductViewModel.ts` | ProductFormFields (ใช้ร่วม edit) | `products` (มีแล้ว) — **reference หน้าฟอร์ม** |
 | 5 | Edit Product | `/owner/products/[id]/edit` | ✅ | row action บน Products List | `products` | ❌ ไม่มี key ให้ dynamic route (**G5**) — โชว์แค่ crumb "products" | (form) | `page.tsx`+`EditProductView.tsx`+`useEditProductViewModel.ts` | ProductFormFields | `products` (มีแล้ว) |
 | 6 | Product Stock | `/owner/products/productStock` | ✅ | ⚠️ ไม่มี sidebar leaf แม้ nav/breadcrumb/menuKey พร้อม (**G2**) | `stock` | `productStock` | ListPageLayout | `page.tsx`+`ProductStockView.tsx`+`useProductStockViewModel.ts` | AdjustStockModal, StockProgressRow | reuse: `products`+`productCategories`+`units` (ไม่มี resource ใหม่) |
-| 7 | Manage Orders | `/owner/orders/manageOrders` | ⬜ | sidebar: `ordersManage` leaf (พร้อมแล้ว) | `orders` | `ordersManage` | ListPageLayout | — | OrderStatusFilter, PaymentSlipPreview, OrderLifecycleSteps | → §4 orders (ใหม่) |
-| 8 | POS หน้าร้าน | `/owner/orders/OrderInStore` | ⬜ | sidebar: `ordersInStore` leaf (พร้อมแล้ว) | `orders` | `ordersInStore` | (custom 2-pane) | — | ProductPickerGrid, CartPanel, QRPaymentModal | → §4 orders (ใหม่) |
+| 7 | Manage Orders | `/owner/orders/manageOrders` | ✅ | sidebar: `ordersManage` leaf | `orders` | `ordersManage` | ListPageLayout | `page.tsx`+`ManageOrdersView.tsx`+`useManageOrdersViewModel.ts`+`orderStatus.ts` | OrderStatusFilter, PaymentSlipPreview, OrderLifecycleSteps, OrderDetailContent | `orders` (ใหม่ — DTO รวม ready+preorder) · `shared/feedback/DetailDrawer` (build) |
+| 8 | POS หน้าร้าน | `/owner/orders/OrderInStore` | ⬜ | sidebar: `ordersInStore` leaf (พร้อมแล้ว) | `orders` | `ordersInStore` | (custom 2-pane) | — | ProductPickerGrid, CartPanel, QRPaymentModal | reuse: `orders` (มีแล้ว จาก #7) — ใหม่แค่ cart/POS UI |
 | 9 | Ingredients List | `/owner/ingredients` | ⬜ | sidebar: `ingredients` leaf (พร้อมแล้ว) | `ingredients` | `ingredients` | ListPageLayout | — | IngredientFormModal | → §4 ingredients (ใหม่) |
 | 10 | Ingredient Stock | `/owner/ingredients/ingredientStock` | ⬜ | sidebar: `ingredientStock` leaf (พร้อมแล้ว) | `stock` | `ingredientStock` | (custom) | — | ReceiveModal, AdjustModal, BulkReceiveModal, IngredientStockCard, AutoCompleteSearch | → §4 ingredients (ใหม่) |
 | 11 | Ingredient History | `/owner/ingredients/ingredientHistory` | ⬜ | sidebar: `ingredientHistory` leaf (พร้อมแล้ว) | `stock` | `ingredientHistory` | (custom) | — | TransactionTimeline, HistoryItemCard, AnalyticsBarChart, LogTransactionModal | → §4 ingredients (ใหม่) |
@@ -76,7 +76,7 @@
   *ถ้าจะแก้ทีหลัง:* เพิ่ม leaf ใต้ `sectionEmployees` + เพิ่ม `{ prefix: "/owner/attendance", menuKey: ... }` ใน `ROUTE_MENU_MAP` (หรือย้ายไปกลุ่ม login-only ถ้าตั้งใจไม่ gate)
 - **G4 — sidebar มีลิงก์ชี้ไปหน้านอกสโคป 27 หน้า** — `reportsSales`, `reportsReviews` (ใต้ node "reports"), `promotionsPricing`, `promotionsCoupons` (ใต้ node "promotions") กดแล้ว **404 อยู่ตอนนี้** เพราะเป็น "Sales/Reviews report" และ "Promotions" ที่ระบุไว้ใน `REBUILD_PLAN.md` ว่า "นอก 27 screen — เฟสหลัง" → **ตัดสินใจ: ปล่อยไว้ตามเดิม** ไม่ซ่อน ไม่ disable
 - **G5 — Breadcrumb ไม่มี key ให้ 4 route:** Edit Product (#5, dynamic `[id]`), Add Employee (#18), Edit Employee (#19), Access Denied (#27) — `buildBreadcrumbs()` match path ตรงตัวเท่านั้น ไม่รองรับ dynamic segment จึงโชว์แค่ crumb ของหน้า parent ตอนนี้ (#5) หรือจะเป็นแบบเดียวกันตอนสร้าง #18/#19/#27
-- **G6 — `payments` menuKey ไม่มีหน้าใดใน 27 หน้าใช้** — อยู่ใน `ALL_MENU_KEYS` เพราะสำรองไว้ให้หน้า "Payments" ซึ่งอยู่นอกสโคป 27 (ดู `API_CONTRACT.md`)
+- **G6 — `payments` menuKey ไม่มี "หน้า" ใน 27 หน้าใช้เป็น route/menu** — แต่ตั้งแต่ #7 Manage Orders ใช้เป็น **permission ระดับ action** แล้ว (`usePermission("payments").approve` กันปุ่ม "ยืนยันการชำระเงิน" ใน DetailDrawer) — ไม่ใช่ gap อีกต่อไป แค่ไม่มี route ของตัวเองตามที่ตั้งใจไว้แต่แรก (หน้า "Payments" อยู่นอกสโคป 27)
 - **G7 — Notification History (#26) / Access Denied (#27) ตั้งใจไม่มีใน sidebar** — ทางเข้า: #26 ผ่านลิงก์ "ดูทั้งหมด" ใน `NotificationDropdown` (navbar) · #27 ผ่าน redirect เมื่อ proxy/permission gate ปฏิเสธ — ไม่ใช่ gap ต้องแก้ แค่บันทึกไว้ให้ checklist §1 ผ่านข้อ "เข้าถึงได้"
 
 ---
@@ -87,7 +87,7 @@
 
 | Vertical | Screens | Resource ใหม่ (type/service/fixture/handler) | Shared component ที่ต้อง build/promote | i18n namespace ที่ต้องเติม |
 |---|---|---|---|---|
-| **orders** | #7 Manage Orders, #8 POS | `orders` (+ order-items) | `DetailDrawer` (build) · OrderStatusFilter, PaymentSlipPreview, OrderLifecycleSteps (page-local) · POS = custom 2-pane: CartPanel, ProductPickerGrid, QRPaymentModal | `orders`, `pos` |
+| **orders** | #7 ✅ Manage Orders, #8 POS | `orders` ✅ (DTO เดียว รวม ready+preorder — ไม่แยก order-items/payments collection แบบต้นทาง) | `DetailDrawer` ✅ (build, ใช้กับ #7 แล้ว) · OrderStatusFilter, PaymentSlipPreview, OrderLifecycleSteps, OrderDetailContent (page-local, เสร็จกับ #7) · POS (#8) ยังต้องทำ: custom 2-pane CartPanel, ProductPickerGrid, QRPaymentModal | `orders` ✅ (th+en) · `pos` ยังว่าง |
 | **ingredients** | #9 List, #10 Stock, #11 History, #12 Units | `ingredients` (+ ingredient-transactions) — `units` มีแล้ว | IngredientFormModal, ReceiveModal/AdjustModal/BulkReceiveModal, `AutoCompleteSearch` (build, ค้างจากเฟส 3), TransactionTimeline, AnalyticsBarChart (`shared/charts/`, build), UnitFormModal | `ingredients` |
 | **production** | #13 Plan, #14 Status, #15 History | `production-orders` (+ production-items) | **`TabbedPageLayout` (build, ค้างจากเฟส 3)** · KanbanBoard, ProductionOrderForm/Card, RevenueBarChart (reuse จาก charts), TeamPerformanceCard | `production` |
 | **recipes** | #16 Recipes | `recipes` (main+sub) | RecipeCard, MainRecipeModal, SubRecipeModal, `DetailDrawer` (reuse), IngredientEditor, StepEditor | `recipes` |
