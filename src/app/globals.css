@@ -979,7 +979,8 @@ body {
 }
 
 .product-bar-bg {
-  @apply ml-6 h-1.5 w-full rounded-full bg-gray-100;
+  /* block width:auto → เต็มพื้นที่ที่เหลือหลังหัก ml-6 เอง — ห้ามใส่ w-full คู่ ml-6 (จะล้นขอบขวาการ์ด) */
+  @apply ml-6 h-1.5 rounded-full bg-gray-100;
 }
 
 .product-bar-fill {
