@@ -54,8 +54,8 @@ export function Sidebar({ onLogout }: { onLogout?: () => void }) {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header flex-col items-center py-5">
-        <Logo size={80} />
+      <div className="sidebar-header flex-col items-center py-4">
+        <Logo size={60} />
         <p className="sidebar-brand-sub mt-2">{tc("appTagline")}</p>
       </div>
 

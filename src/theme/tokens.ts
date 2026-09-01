@@ -72,9 +72,9 @@ export const a11y = {
 
 /** ขนาดโครงหน้า — ตรงกับ --sidebar-width / --navbar-height / --content-padding ใน globals.css */
 export const layout = {
-  sidebarWidthPx: 268,
-  navbarHeightPx: 64,
-  contentPaddingPx: 24,
+  sidebarWidthPx: 306, // ≈ 17rem ที่ฐาน 18px — globals.css ใช้ rem จริง เลขนี้อ้างอิงเฉย ๆ
+  navbarHeightPx: 72, // = 4rem ที่ฐาน 18px
+  contentPaddingPx: 32,
   /** เบรกพอยต์สลับ desktop/mobile (อ้างอิง — className จริงใช้ prefix lg: ของ Tailwind) */
   breakpointMobilePx: 992,
 } as const;

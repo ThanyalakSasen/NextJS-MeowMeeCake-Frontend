@@ -60,11 +60,11 @@
   --text-muted:  #4B5563;       /* = neutral.muted — label / คำอธิบาย */
   --text-subtle: #64748B;       /* = neutral.subtle — timestamp / hint (ข้อความสั้นเท่านั้น) */
 
-  /* ── พื้น / เส้น ── */
+  /* ── พื้น / เส้น (โทนอุ่นให้เข้ากับแบรนด์กาแฟ — เดิมเป็น slate เย็น) ── */
   --surface:       #FFFFFF;
-  --bg-app:        #F8FAFC;
-  --border:        #E2E8F0;
-  --border-subtle: #F1F5F9;
+  --bg-app:        #F4F0EB;   /* warm off-white — ดันให้การ์ดขาวลอยขึ้น */
+  --border:        #E4DAD1;   /* เทาอุ่น (เดิม #E2E8F0) */
+  --border-subtle: #F0E9E2;   /* เส้นแบ่งบาง (เดิม #F1F5F9) */
 
   /* ── a11y (WCAG 2.2 — 2.5.8 / 2.4.7) ── */
   --touch-target:     2.75rem;  /* 44px — พื้นที่กดขั้นต่ำของปุ่ม/ไอคอน */
@@ -72,16 +72,17 @@
   --focus-ring-color: var(--color-brown-800);
 
   /* ── โครงหน้า ── */
-  --sidebar-width:    268px;    /* กว้างพอสำหรับตัวอักษร 17px ไม่ตัดบรรทัดบ่อย */
-  --navbar-height:    64px;
-  --content-padding:  1.5rem;
+  --sidebar-width:    17rem;    /* rem → ขยายตามฐานฟอนต์ผู้สูงอายุ (เดิม 268px คงที่) */
+  --navbar-height:    4rem;     /* 72px ที่ฐาน 18 — เดิม 64px แน่นไปกับ touch target 44 + avatar 40 */
+  --content-padding:  2rem;
+  --content-max:      1400px;   /* คุมความกว้างเนื้อหาบนจอกว้าง ไม่ให้บรรทัดยาวเกินอ่าน */
   --breakpoint-mobile: 992px;   /* อ้างอิงเท่านั้น — className จริงใช้ prefix lg: */
 
   /* ── สีพื้นผิวของ shell ── */
-  --sidebar-bg:     var(--surface);
-  --sidebar-border: var(--border-subtle);
-  --navbar-bg:      var(--surface);
-  --navbar-border:  var(--border-subtle);
+  --sidebar-bg:     var(--color-brown-50);   /* tint อุ่น — แยก sidebar ออกจากเนื้อหา */
+  --sidebar-border: var(--color-brown-100);  /* เส้นแบ่งขวาเห็นชัดขึ้น */
+  --navbar-bg:      var(--surface);          /* ขาว — ตัดกับ sidebar/เนื้อหาที่อุ่น */
+  --navbar-border:  var(--border);
   --content-bg:     var(--bg-app);
 
   /* ── Sidebar: section label ── */
@@ -89,10 +90,11 @@
 
   /* ── Sidebar: menu item ── */
   --menu-item-color:        #1F2937;
-  --menu-item-hover-bg:     var(--color-brown-50);
-  --menu-item-hover-color:  var(--color-brown-800);
-  --menu-item-active-bg:    var(--color-brown-100);
-  --menu-item-active-color: var(--color-brown-800);
+  --menu-item-hover-bg:     var(--color-brown-100); /* sidebar เป็น brown-50 แล้ว hover ต้องเข้มกว่า */
+  --menu-item-hover-color:  var(--color-brown-900);
+  --menu-item-active-bg:    var(--color-brown-200);
+  --menu-item-active-color: var(--color-brown-900);
+  --menu-item-active-bar:   var(--color-brown-500); /* แถบ accent ซ้ายของเมนูหน้าปัจจุบัน */
   --menu-item-font-size:    1.0625rem; /* 17px */
 
   /* ── Sidebar: submenu ── */
@@ -121,6 +123,10 @@
   /* ── Logout ── */
   --logout-color:    #EF4444;
   --logout-hover-bg: #FEF2F2;
+
+  /* ── เงา (โทนอุ่น อิงสีหมึกน้ำตาล ไม่ใช่ดำล้วน) ── */
+  --shadow-card:   0 1px 2px rgba(61, 37, 35, 0.04), 0 2px 6px rgba(61, 37, 35, 0.06);
+  --shadow-navbar: 0 1px 2px rgba(61, 37, 35, 0.05);
 
   /* ── Transition ── */
   --transition-fast:   0.15s ease;
@@ -186,12 +192,21 @@ body {
   overflow: hidden;
 }
 
-/* Scrollable content area */
+/* Scrollable content area — จัดกึ่งกลาง + คุมความกว้างเนื้อหาบนจอกว้าง */
 .layout-content {
   flex: 1;
   overflow-y: auto;
   padding: var(--content-padding);
   scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* แต่ละหน้าเรนเดอร์ root เดียว — clamp ที่ --content-max, ต่ำกว่านั้นเต็มความกว้าง */
+.layout-content > * {
+  width: 100%;
+  max-width: var(--content-max);
 }
 
 /* ------------------------------------------------------------
@@ -255,15 +270,14 @@ body {
   overflow-y: auto;
   padding: 0.5rem 0;
   scrollbar-width: thin;
-  scrollbar-color: #e2e8f0 transparent;
+  scrollbar-color: var(--color-brown-200) transparent;
 }
 
 .sidebar-body::-webkit-scrollbar {
   width: 4px;
 }
 .sidebar-body::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
-
+  background: var(--color-brown-200);
   border-radius: 2px;
 }
 
@@ -285,6 +299,7 @@ body {
 
 /* --- Menu item (parent) --- */
 .menu-item-btn {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -299,6 +314,19 @@ body {
   text-align: left;
   transition: background-color var(--transition-fast), color var(--transition-fast);
   border-radius: 0;
+}
+
+/* แถบ accent ซ้ายของเมนู/กลุ่มหน้าปัจจุบัน */
+.menu-item-btn.active::before,
+.menu-item-link.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--menu-item-active-bar);
+  border-radius: 0 2px 2px 0;
 }
 
 .menu-item-btn:hover {
@@ -352,6 +380,7 @@ body {
 
 /* --- Menu item (link, no submenu) --- */
 .menu-item-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -484,6 +513,7 @@ body {
   gap: 0.75rem;
   background-color: var(--navbar-bg);
   border-bottom: 1px solid var(--navbar-border);
+  box-shadow: var(--shadow-navbar);
   flex-shrink: 0;
   position: relative;
   z-index: 10;
@@ -800,7 +830,7 @@ body {
 
   /* Content padding แคบลง */
   .layout-content {
-    padding: 1rem;
+    padding: 1.25rem;
   }
 }
 
@@ -815,7 +845,7 @@ body {
 
 /* ── Page header ── */
 .page-title {
-  @apply text-xl font-semibold text-brown-900;
+  @apply text-2xl font-semibold text-brown-800;
 }
 
 .page-description {
@@ -824,7 +854,9 @@ body {
 
 /* ── Stat cards ── */
 .stat-card {
-  @apply rounded-xl bg-white border border-gray-200 p-5;
+  @apply rounded-xl bg-white p-5;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
 }
 
 .stat-card-label {
@@ -832,7 +864,7 @@ body {
 }
 
 .stat-card-value {
-  @apply mt-1 text-2xl font-semibold text-brown-900;
+  @apply mt-1 text-2xl font-semibold text-brown-800;
 }
 
 .stat-card-sub {
@@ -846,7 +878,9 @@ body {
 
 /* ── Section card ── */
 .section-card {
-  @apply rounded-xl bg-white border border-gray-100 overflow-hidden;
+  @apply rounded-xl bg-white overflow-hidden;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
 }
 
 .section-card-header {
@@ -854,7 +888,7 @@ body {
 }
 
 .section-card-title {
-  @apply text-base font-semibold text-brown-900;
+  @apply text-base font-semibold text-brown-800;
 }
 
 .section-card-footer {
@@ -949,7 +983,8 @@ body {
 }
 
 .product-bar-fill {
-  @apply h-1.5 rounded-full bg-pink-300 transition-all;
+  @apply h-1.5 rounded-full transition-all;
+  background-color: var(--color-brown-400);
 }
 
 /* ── Production list ── */

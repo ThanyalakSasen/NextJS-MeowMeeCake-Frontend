@@ -32,12 +32,12 @@ export const neutral = {
   muted: "#4B5563",
   /** ข้อความลำดับสาม (timestamp, hint) — gray-500, ใช้กับข้อความสั้นเท่านั้น */
   subtle: "#64748B",
-  /** เส้นขอบมาตรฐาน */
-  border: "#E2E8F0",
-  /** เส้นแบ่งบาง / พื้นหลัง hover อ่อน */
-  borderSubtle: "#F1F5F9",
-  /** พื้นหลังพื้นที่เนื้อหา */
-  bgApp: "#F8FAFC",
+  /** เส้นขอบมาตรฐาน — เทาอุ่นให้เข้ากับแบรนด์กาแฟ (เดิม slate #E2E8F0) */
+  border: "#E4DAD1",
+  /** เส้นแบ่งบาง / พื้นหลัง hover อ่อน (เดิม #F1F5F9) */
+  borderSubtle: "#F0E9E2",
+  /** พื้นหลังพื้นที่เนื้อหา — warm off-white (เดิม #F8FAFC) */
+  bgApp: "#F4F0EB",
   /** พื้นการ์ด / แผง */
   surface: "#FFFFFF",
 } as const;
