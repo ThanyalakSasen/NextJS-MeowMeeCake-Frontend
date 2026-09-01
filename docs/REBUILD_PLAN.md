@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (7/27 + foundation — 2026-09-01)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (8/27 + foundation — 2026-09-01)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -190,9 +190,11 @@ src/
 > - `docs/SCREEN_MAP.md` (ใหม่) — ตาราง wiring 27 หน้า + checklist "หน้าถูก wire แล้ว" + ช่องโหว่ที่พบ (G1–G7: Dashboard/Product Stock/Attendance ไม่มี sidebar leaf ฯลฯ) + build checklist ต่อ vertical
 > - **Screen #7 Manage Orders** ✅ — `/owner/orders/manageOrders` · ListPageLayout · **orders vertical ใหม่** — DTO เดียวรวม ready+preorder (`order_type`) แทนการแยก Orders/Preorders/OrderItems/Payments/PreorderRounds หลาย collection แบบระบบเดิม (ดูเหตุผลใน `types/order.ts`) · `services/orders.ts` + fixture 9 แถว + `mocks/handlers/reports.ts`-สไตล์ (`crudHandlers`) · โหลดครั้งเดียว filter/pagination ฝั่ง client (แพทเทิร์นเดียวกับ Product Stock) · **`shared/feedback/DetailDrawer`** (build — ตัวแรกจาก 4 consumer ที่วางแผนไว้) · `_components/{OrderStatusFilter, PaymentSlipPreview, OrderLifecycleSteps, OrderDetailContent}` · เปลี่ยนสถานะออเดอร์ล็อกจนกว่า payment_status = paid (เหมือนต้นทาง) · ยืนยันสลิป + tab ready/preorder + export CSV · i18n `orders.*` + `common.view` (th+en) · verified ในเบราว์เซอร์ (MSW PATCH/GET ผ่าน, drawer+verify payment เดินครบ)
 >   - **แก้ระหว่างทาง:** antd v6.6.2 `Drawer` เลิกรับ prop `width` (ใช้ `size` แทน — เจอ deprecation warning ตอนเทสจริง ไม่ใช่แค่จากเอกสาร)
+> - **Screen #8 POS หน้าร้าน** ✅ — `/owner/orders/OrderInStore` · custom 2-pane (กริดสินค้า + ตะกร้า sticky) ใช้ `DashboardPageLayout` เป็น shell · **reuse orders + products vertical** ไม่มี resource ใหม่ · `posCart.ts` (pure: cart ops + `buildOrderInput`) · `_components/{ProductPickerGrid, CartPanel, QRPaymentModal}` · เลือกสินค้า→ตะกร้า (จำกัด qty ตามสต็อก) → เงินสด/QR → `POST /orders` สร้างออเดอร์ `order_type:"ready"` completed+paid ทันที + best-effort PATCH ตัดสต็อกสินค้าที่ขาย · **QR = mock** (`qrcode` lib สร้าง QR จาก payload ปลอม ไม่มี Omise charge/polling — พนักงานกด "ลูกค้าชำระเงินแล้ว" เอง) · i18n `pos.*` (th+en) · verified: cash + QR checkout เดินครบ, ออเดอร์โผล่ใน Manage Orders (#7), สต็อกในกริดลดจริง
+>   - **ตัดออก (นอกขอบเขต #8):** bundle · promotion · แผงประวัติขายวันนี้ · Omise QR จริง · user_id binding — bundle/promotion เป็น "นอก 27 screen — เฟสหลัง"
 >
-> **เหลือ 20 screen** — copy pattern: list→Products · form→Add Product · dashboard→Dashboard · orders-vertical→Manage Orders:
-> POS · Ingredients List · Ingredient Stock · Ingredient History · Manage Units · Production (3 tab) · Recipes · Employees List · Add/Edit Employee · Permissions · User Log (+ แท็บประวัติสต็อกสินค้า) · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
+> **เหลือ 19 screen** — copy pattern: list→Products · form→Add Product · dashboard→Dashboard · orders-vertical→Manage Orders · POS→OrderInStore:
+> Ingredients List · Ingredient Stock · Ingredient History · Manage Units · Production (3 tab) · Recipes · Employees List · Add/Edit Employee · Permissions · User Log (+ แท็บประวัติสต็อกสินค้า) · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)

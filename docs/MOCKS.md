@@ -26,7 +26,10 @@ ViewModel → productsService.list() → http.get("/products") → axios ส่�
 
 **คุณสมบัติ:**
 - handler = "backend ปลอม" ตอบตาม `API_CONTRACT.md` เป๊ะ (envelope `{data,meta}`, status code, query param)
-- `db.ts` = array ในหน่วยความจำต่อ resource · POST/PATCH/DELETE แก้ array นั้นจริง → **ข้อมูลเปลี่ยนตามที่กดในแอป** (แต่หายเมื่อรีเฟรชหน้า)
+- `db.ts` = array ในหน่วยความจำต่อ resource · POST/PATCH/DELETE แก้ array นั้นจริง → **ข้อมูลเปลี่ยนตามที่กดในแอป**
+- **persist ลง `localStorage` (`mmc_mock_db`)** → ข้อมูลที่กด **อยู่ข้ามรีเฟรชหน้า** (เดินงาน POS/ออเดอร์ต่อเนื่องได้จริง)
+  - กลับไป fixture เริ่มต้น: console → `__resetMockDb()` แล้วรีเฟรช
+  - แก้ fixture แล้วอยากให้มีผล: bump `SEED_VERSION` ใน `src/mocks/db.ts` (เวอร์ชันไม่ตรง = ล้าง store ที่ persist ไว้อัตโนมัติ)
 - ไม่มีคอมเมนต์ `// MOCK:` กระจายในโค้ด — mock อยู่รวมใน `src/mocks/` ที่เดียว
 
 ---
@@ -121,7 +124,7 @@ password: owner1234
 
 | ไฟล์ | หน้าที่ | สถานะ |
 |---|---|---|
-| `db.ts` | in-memory store กลาง + `seed` + `list`(paginate/filter/search/sort) / `getById` / `create` / `update` / `softDelete` | ✅ เฟส 2.5 |
+| `db.ts` | store กลาง (in-memory + persist `localStorage`) + `seed`(idempotent) / `list`(paginate/filter/search/sort) / `getById` / `create` / `update` / `softDelete` / `resetMockDb` (+ `window.__resetMockDb`) | ✅ เฟส 2.5 · persist เฟส 4 |
 | `browser.ts` | `setupWorker(...handlers)` + `startMockWorker()` (single-flight) | ✅ เฟส 2.5 |
 | `server.ts` | `setupServer(...handlers)` — สำหรับ test (ยังไม่ถูกใช้) | ✅ เฟส 2.5 |
 | `handlers/index.ts` | รวม handler + `seed()` fixtures | ✅ เฟส 2.5 |
