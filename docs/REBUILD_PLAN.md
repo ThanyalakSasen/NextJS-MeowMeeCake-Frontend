@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (19/27 + foundation — 2026-09-02)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (20/27 + foundation — 2026-09-02)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -211,8 +211,11 @@ src/
 > - **Screen #26 Notification History** ✅ — `/owner/notificationsHistory` (เข้าผ่านลิงก์ "ดูทั้งหมด" ใน NotificationDropdown — G7 ตั้งใจไม่มีใน sidebar) · ListPageLayout · **reuse `notifications` vertical** (เพิ่ม `remove` ใน service · fixture 5→13 แถว) · โหลด `limit:200` filter/สรุปฝั่ง client · `TypeTabBar` (ทั้งหมด/ยังไม่อ่าน/อ่านแล้ว) + filter module/type + search · stat cards (total/unread/warning/error) · row click → mark-as-read + `DetailDrawer` (`_components/NotificationDetailContent`) + footer "ไปที่รายการ" (ถ้ามี link) · mark-all-read / clear-all (`confirmAlert`) / ลบทีละอัน (`ConfirmDeletePopup`) · invalidate `["notifications"]` (refresh navbar dropdown ด้วย) · i18n `notifications.*` ขยาย
 > - **Screen #27 Access Denied** ✅ — `/owner/access-denied` (redirect ตอน permission gate ปฏิเสธ — ไม่มีใน sidebar, ไม่ gate ตัวเอง) · `page.tsx` บาง → `_components/AccessDeniedCard` (ไอคอน + ข้อความ + ปุ่มกลับ dashboard) · ไม่มี resource/VM · i18n `accessDenied.*` · breadcrumb ไม่มี key (G5 — โชว์แค่ crumb "หน้าหลัก")
 >
-> **เหลือ 8 screen** — copy pattern: list→Products/Ingredients/Employees · form→Add Product/Add Employee · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units/Permissions · stock-action→Ingredient Stock · read-only log→User Log/Notification History:
-> Production (3 tab) · Recipes · Attendance · Finance Expenses · Finance P&L · Store Design
+> - **Screen #25 Store Design** ✅ — `/owner/store-design` (sidebar leaf, login-only ไม่มี menuKey) · ListPageLayout · **`banners` vertical ใหม่** (`types/banner.ts` + `services/banners.ts` CRUD + fixture 5 แถว + crud handler) · `bannerForm.ts` (pure — `getBannerStatus` derive `scheduled` จาก `start_date`, `fromBanner`/`toInput` แปลง dayjs↔ISO) · `BANNER_STATUS_CONFIG` (enumConfig) · กริดการ์ด `sm:2 / xl:3` + การ์ด "เพิ่ม" เส้นประ · `_components/BannerCard` (รูปจริง หรือ gradient placeholder keyed by id, สถานะ tag, toggle `is_active`, ลบผ่าน `ConfirmDeletePopup`) · `_components/BannerFormModal` (`base/Form` + `UploadImageBox` reuse + `RangePicker`) · `TypeTabBar` filter สถานะ + search · stat cards · i18n `storeDesign.*` + `enums.bannerStatus.*`
+>   - **ตัดออก:** `banner_img` เป็น data URI จริงใน fixture (ปล่อยว่าง → โชว์ gradient) · duplicate/preview action · gradient picker · `banner_description` UI
+>
+> **เหลือ 7 screen** — copy pattern: list→Products/Ingredients/Employees · form→Add Product/Add Employee/Store Design · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units/Permissions · stock-action→Ingredient Stock · read-only log→User Log/Notification History:
+> Production (3 tab) · Recipes · Attendance · Finance Expenses · Finance P&L
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)

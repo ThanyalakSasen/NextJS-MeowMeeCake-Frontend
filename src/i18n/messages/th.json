@@ -424,6 +424,11 @@
       "DELETE": "ลบข้อมูล",
       "OTHER": "อื่นๆ"
     },
+    "bannerStatus": {
+      "active": "กำลังแสดง",
+      "scheduled": "รอตามกำหนด",
+      "inactive": "ปิดใช้งาน"
+    },
     "menuKey": {
       "dashboard": "หน้าหลัก",
       "products": "จัดการข้อมูลสินค้า",
@@ -799,7 +804,35 @@
   },
   "attendance": {},
   "finance": {},
-  "storeDesign": {},
+  "storeDesign": {
+    "title": "ออกแบบร้านออนไลน์ — แบนเนอร์",
+    "description": "อัปโหลดและจัดลำดับแบนเนอร์ที่แสดงบนหน้าร้านออนไลน์",
+    "addBanner": "เพิ่มแบนเนอร์",
+    "searchPlaceholder": "ค้นหาแบนเนอร์...",
+    "statTotal": "แบนเนอร์ทั้งหมด",
+    "statTotalSub": "ในระบบ",
+    "statActiveSub": "กำลังแสดงผล",
+    "statScheduledSub": "รอถึงกำหนด",
+    "statInactiveSub": "ปิดอยู่",
+    "allTime": "แสดงตลอดเวลา",
+    "addTitle": "เพิ่มแบนเนอร์ใหม่",
+    "editTitle": "แก้ไขแบนเนอร์",
+    "formImage": "รูปภาพแบนเนอร์",
+    "imageHint": "PNG, JPG, WebP · ขนาดแนะนำ 1200×400px",
+    "formName": "ชื่อแบนเนอร์",
+    "namePlaceholder": "เช่น โปรโมชันเดือนกันยายน",
+    "formLink": "ลิงก์ปลายทาง",
+    "formOrder": "ลำดับการแสดง",
+    "formDateRange": "ช่วงวันที่แสดง",
+    "formActive": "เปิดใช้งาน",
+    "addCardHint": "อัปโหลดรูปภาพ ขนาดแนะนำ 1200×400px",
+    "deleteConfirm": "ลบแบนเนอร์ \"{name}\"?",
+    "saved": "บันทึกแบนเนอร์เรียบร้อยแล้ว",
+    "saveFailed": "บันทึกแบนเนอร์ไม่สำเร็จ",
+    "deleted": "ลบแบนเนอร์เรียบร้อยแล้ว",
+    "deleteFailed": "ลบแบนเนอร์ไม่สำเร็จ",
+    "toggleFailed": "อัปเดตสถานะไม่สำเร็จ"
+  },
   "notifications": {
     "title": "การแจ้งเตือน",
     "viewAll": "ดูประวัติทั้งหมด",

@@ -18,6 +18,7 @@ import { usersFixture } from "@/mocks/fixtures/users";
 import { rolesFixture } from "@/mocks/fixtures/roles";
 import { permissionsFixture } from "@/mocks/fixtures/permissions";
 import { userLogsFixture } from "@/mocks/fixtures/userLogs";
+import { bannersFixture } from "@/mocks/fixtures/banners";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -34,6 +35,7 @@ seed("users", usersFixture);
 seed("roles", rolesFixture);
 seed("permissions", permissionsFixture);
 seed("user-logs", userLogsFixture);
+seed("banners", bannersFixture);
 
 // ── handlers ──
 export const handlers = [
@@ -51,4 +53,5 @@ export const handlers = [
   ...crudHandlers("roles", `${API}/roles`),
   ...crudHandlers("permissions", `${API}/permissions`),
   ...crudHandlers("user-logs", `${API}/user-logs`),
+  ...crudHandlers("banners", `${API}/banners`),
 ];

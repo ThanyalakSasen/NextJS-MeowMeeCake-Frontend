@@ -114,6 +114,15 @@ export const RECIPE_CATEGORY_COLORS: Record<string, { bg: string; text: string }
   "อื่นๆ":     { bg: "#f1f5f9", text: "#64748b" },
 };
 
+// ─── แบนเนอร์หน้าร้าน ───────────────────────────────────────
+export type BannerStatus = "active" | "scheduled" | "inactive";
+
+export const BANNER_STATUS_CONFIG: Record<BannerStatus, StatusStyle> = {
+  active:    { color: "#15803d", antColor: "success" },
+  scheduled: { color: "#b45309", antColor: "warning" },
+  inactive:  { color: "#64748b", antColor: "default" },
+};
+
 // ─── บันทึกการทำงานของพนักงาน (audit log) ───────────────────
 export type UserLogAction = "CREATE" | "READ" | "UPDATE" | "DELETE" | "OTHER";
 

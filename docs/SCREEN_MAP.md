@@ -4,7 +4,7 @@
 > **เปิดอ่านเมื่อ:** ก่อนเริ่ม/หลังจบ screen ใดในเฟส 4 · สงสัยว่าทำไมกดเมนูแล้วไปหน้าอื่น/404 · เช็คว่าลืมต่อสายอะไรไหม
 > **ความสัมพันธ์กับเอกสารอื่น:** `REBUILD_PLAN.md` §7 = route/template/component ต่อหน้า (ของ "จะสร้างอะไร") · `COMPONENT_MAP.md` = ทะเบียน component (ของ "component อยู่ไหน") · **เอกสารนี้ = เข้าถึงหน้านั้นได้จริงหรือยัง**
 >
-> อัปเดตล่าสุด: 2026-09-02 (19/27 ✅)
+> อัปเดตล่าสุด: 2026-09-02 (20/27 ✅)
 
 ---
 
@@ -56,7 +56,7 @@
 | 22 | Attendance | `/owner/attendance` | ⬜ | ⚠️ ไม่มี sidebar leaf (**G3**) | ⚠️ ไม่ map ใน `ROUTE_MENU_MAP` เลย (ไม่ใช่แค่ login-only เหมือน #2/#25/#26 — ไม่ถูกเขียนถึงในคอมเมนต์ด้วย) | `attendance` | (custom) | — | ClockDisplay, CheckInOutButtons, AttendanceHistoryTable | → §4 attendance (ใหม่) |
 | 23 | Finance — Expenses | `/owner/finance/expenses` | ⬜ | sidebar: `financeExpenses` leaf (พร้อมแล้ว) | `reports` | `financeExpenses` | ListPageLayout | — | ExpenseForm, CategoryBreakdownBar, RecurringReminderList, MonthSelector, ReceiptImagePreview | → §4 finance (ใหม่) |
 | 24 | Finance — P&L | `/owner/finance/summary` | ⬜ | sidebar: `financeSummary` leaf (พร้อมแล้ว) | `reports` | `financeSummary` | (custom) | — | PLStatementTable, KPIStatsRow, RevenueBarChart, ProductRevenueTable, PeriodSelector | → §4 finance (ใหม่) |
-| 25 | Store Design | `/owner/store-design` | ⬜ | sidebar: `storeDesign` leaf (พร้อมแล้ว, ไม่มี menuKey) | — (login-only) | `storeDesign` | ListPageLayout | — | BannerCard, BannerFormModal, BannerGrid | → §4 store-design (ใหม่) |
+| 25 | Store Design | `/owner/store-design` | ✅ | sidebar: `storeDesign` leaf (ไม่มี menuKey) | — (login-only) | `storeDesign` | ListPageLayout | `page.tsx`+`StoreDesignView.tsx`+`useStoreDesignViewModel.ts`+`bannerForm.ts` | BannerCard, BannerFormModal | `banners` (ใหม่ — CRUD) · reuse `UploadImageBox` + `TypeTabBar` · `BANNER_STATUS_CONFIG` (enumConfig) · สถานะ `scheduled` derive จาก `start_date` |
 | 26 | Notification History | `/owner/notificationsHistory` | ✅ | navbar: ลิงก์ "ดูทั้งหมด" ใน NotificationDropdown (ตั้งใจไม่มีใน sidebar — **G7**) | — (login-only) | `notificationsHistory` | ListPageLayout | `page.tsx`+`NotificationHistoryView.tsx`+`useNotificationHistoryViewModel.ts` | NotificationDetailContent (ใน `DetailDrawer` reuse) | reuse: `notifications` (มีแล้ว — เพิ่ม `remove` ใน service, fixture 5→13) |
 | 27 | Access Denied | `/owner/access-denied` | ✅ | redirect ตอนถูกปฏิเสธสิทธิ์ (proxy/permission gate) — ตั้งใจไม่มีใน sidebar (**G7**) | N/A (หน้าปฏิเสธสิทธิ์ ไม่ควร gate ตัวเอง) | ❌ ไม่มี key (**G5**) — โชว์แค่ crumb "หน้าหลัก" | (none) | `page.tsx`+`_components/AccessDeniedCard.tsx` | AccessDeniedCard | ไม่มี resource — i18n `accessDenied.*` |
 
@@ -95,7 +95,7 @@
 | **employees/roles** | #17 ✅ List · #18 ✅ Add · #19 ✅ Edit · #20 ✅ Permissions · #21 ✅ User Log — **vertical ครบ** | `users` ✅ + `roles` ✅ (+create/remove) · `permissions` ✅ · `user-logs` ✅ | #17 ไม่มี _components · #18/#19: `EmployeeFormFields`+`employeeForm.ts` · #20: RoleListPanel, PermissionMatrix, RoleFormModal (+`permissionGroups.ts` pure) · #21: LogDetailContent (ใน `DetailDrawer` reuse) — **ตัดออก:** AvatarUploader/ToggleRow/PasswordShuffleButton/MetaChips/DangerZone, `computeFieldDiff` util port (mock ส่ง changes[] เป็น string มาแล้ว), AnalyticsBarChart | `employees` ✅ · `permissions` ✅ · `userLog` ✅ · `enums.{userLogAction,menuKey}` ✅ · `common.export` ✅ (th+en) |
 | **attendance** | #22 Attendance | `attendances` (+ check-in/out endpoint) | ClockDisplay, CheckInOutButtons, AttendanceHistoryTable | `attendance` |
 | **finance** | #23 Expenses, #24 P&L | `expenses` + `/reports/finance-summary` | ExpenseForm, CategoryBreakdownBar, MonthSelector, PLStatementTable, `KPIStatsRow` (build), RevenueBarChart (reuse), PeriodSelector | `finance` |
-| **store-design** | #25 Store Design | `banners` | BannerCard, BannerFormModal, BannerGrid · `UploadImageBox` (reuse จาก Add Product) | `storeDesign` |
+| **store-design** | #25 ✅ Store Design | `banners` ✅ (CRUD) | BannerCard, BannerFormModal · `UploadImageBox`+`TypeTabBar` (reuse) · `bannerForm.ts` (pure — `getBannerStatus`/`fromBanner`/`toInput`, dayjs↔ISO) — **ตัดออก:** BannerGrid (grid inline), duplicate action, preview modal | `storeDesign.*` + `enums.bannerStatus.*` (th+en) |
 | **notifications history** | #26 ✅ Notification History | reuse: `notifications` (มีแล้ว — เพิ่ม `remove`) | `DetailDrawer` (reuse) · `TypeTabBar` (reuse) · `_components/NotificationDetailContent` | `notifications.*` ขยาย (th+en) |
 | **access-denied** | #27 ✅ Access Denied | ไม่มี | `_components/AccessDeniedCard` (page บาง → render card) | `accessDenied.*` (th+en) |
 
