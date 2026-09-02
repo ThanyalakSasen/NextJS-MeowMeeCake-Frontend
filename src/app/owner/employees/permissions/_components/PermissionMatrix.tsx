@@ -36,7 +36,7 @@ export function PermissionMatrix({
           <Collapse
             ghost
             defaultActiveKey={group.keys}
-            expandIconPosition="end"
+            expandIconPlacement="end"
             items={group.keys.map((menuKey) => {
               const row = rows[menuKey];
               const on = countRow(row);
