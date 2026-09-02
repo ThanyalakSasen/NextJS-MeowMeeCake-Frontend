@@ -4,7 +4,7 @@
 > **เปิดอ่านเมื่อ:** ก่อนเริ่ม/หลังจบ screen ใดในเฟส 4 · สงสัยว่าทำไมกดเมนูแล้วไปหน้าอื่น/404 · เช็คว่าลืมต่อสายอะไรไหม
 > **ความสัมพันธ์กับเอกสารอื่น:** `REBUILD_PLAN.md` §7 = route/template/component ต่อหน้า (ของ "จะสร้างอะไร") · `COMPONENT_MAP.md` = ทะเบียน component (ของ "component อยู่ไหน") · **เอกสารนี้ = เข้าถึงหน้านั้นได้จริงหรือยัง**
 >
-> อัปเดตล่าสุด: 2026-09-02 (17/27 ✅)
+> อัปเดตล่าสุด: 2026-09-02 (19/27 ✅)
 
 ---
 
@@ -57,8 +57,8 @@
 | 23 | Finance — Expenses | `/owner/finance/expenses` | ⬜ | sidebar: `financeExpenses` leaf (พร้อมแล้ว) | `reports` | `financeExpenses` | ListPageLayout | — | ExpenseForm, CategoryBreakdownBar, RecurringReminderList, MonthSelector, ReceiptImagePreview | → §4 finance (ใหม่) |
 | 24 | Finance — P&L | `/owner/finance/summary` | ⬜ | sidebar: `financeSummary` leaf (พร้อมแล้ว) | `reports` | `financeSummary` | (custom) | — | PLStatementTable, KPIStatsRow, RevenueBarChart, ProductRevenueTable, PeriodSelector | → §4 finance (ใหม่) |
 | 25 | Store Design | `/owner/store-design` | ⬜ | sidebar: `storeDesign` leaf (พร้อมแล้ว, ไม่มี menuKey) | — (login-only) | `storeDesign` | ListPageLayout | — | BannerCard, BannerFormModal, BannerGrid | → §4 store-design (ใหม่) |
-| 26 | Notification History | `/owner/notificationsHistory` | ⬜ | navbar: ลิงก์ "ดูทั้งหมด" ใน NotificationDropdown (ตั้งใจไม่มีใน sidebar — **G7**) | — (login-only) | `notificationsHistory` | ListPageLayout | — | DetailDrawer | reuse: `notifications` (มีแล้ว) |
-| 27 | Access Denied | `/owner/access-denied` | ⬜ | redirect ตอนถูกปฏิเสธสิทธิ์ (proxy/permission gate) — ตั้งใจไม่มีใน sidebar (**G7**) | N/A (หน้าปฏิเสธสิทธิ์ ไม่ควร gate ตัวเอง) | ❌ ไม่มี key (**G5**) | (none) | — | AccessDeniedCard | ไม่มี resource — หน้าไฟล์เดียว |
+| 26 | Notification History | `/owner/notificationsHistory` | ✅ | navbar: ลิงก์ "ดูทั้งหมด" ใน NotificationDropdown (ตั้งใจไม่มีใน sidebar — **G7**) | — (login-only) | `notificationsHistory` | ListPageLayout | `page.tsx`+`NotificationHistoryView.tsx`+`useNotificationHistoryViewModel.ts` | NotificationDetailContent (ใน `DetailDrawer` reuse) | reuse: `notifications` (มีแล้ว — เพิ่ม `remove` ใน service, fixture 5→13) |
+| 27 | Access Denied | `/owner/access-denied` | ✅ | redirect ตอนถูกปฏิเสธสิทธิ์ (proxy/permission gate) — ตั้งใจไม่มีใน sidebar (**G7**) | N/A (หน้าปฏิเสธสิทธิ์ ไม่ควร gate ตัวเอง) | ❌ ไม่มี key (**G5**) — โชว์แค่ crumb "หน้าหลัก" | (none) | `page.tsx`+`_components/AccessDeniedCard.tsx` | AccessDeniedCard | ไม่มี resource — i18n `accessDenied.*` |
 
 *(Production #13–15 ใช้ route เดียวกัน สลับด้วย `?tab=` — ไม่ใช่ 3 route แยก)*
 
@@ -96,8 +96,8 @@
 | **attendance** | #22 Attendance | `attendances` (+ check-in/out endpoint) | ClockDisplay, CheckInOutButtons, AttendanceHistoryTable | `attendance` |
 | **finance** | #23 Expenses, #24 P&L | `expenses` + `/reports/finance-summary` | ExpenseForm, CategoryBreakdownBar, MonthSelector, PLStatementTable, `KPIStatsRow` (build), RevenueBarChart (reuse), PeriodSelector | `finance` |
 | **store-design** | #25 Store Design | `banners` | BannerCard, BannerFormModal, BannerGrid · `UploadImageBox` (reuse จาก Add Product) | `storeDesign` |
-| **notifications history** | #26 Notification History | reuse: `notifications` (มีแล้ว) | `NotificationItem` (reuse), `DetailDrawer` (reuse) | — (namespace `notifications` มีแล้ว) |
-| **access-denied** | #27 Access Denied | ไม่มี | AccessDeniedCard (หน้าไฟล์เดียว ไม่ต้อง View/VM แยก) | — (ใช้ `common.*`) |
+| **notifications history** | #26 ✅ Notification History | reuse: `notifications` (มีแล้ว — เพิ่ม `remove`) | `DetailDrawer` (reuse) · `TypeTabBar` (reuse) · `_components/NotificationDetailContent` | `notifications.*` ขยาย (th+en) |
+| **access-denied** | #27 ✅ Access Denied | ไม่มี | `_components/AccessDeniedCard` (page บาง → render card) | `accessDenied.*` (th+en) |
 
 ---
 

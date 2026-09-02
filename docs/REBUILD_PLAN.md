@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (17/27 + foundation — 2026-09-02)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (19/27 + foundation — 2026-09-02)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -208,9 +208,11 @@ src/
 > - **Screen #21 User Activity Log** ✅ — `/owner/employees/userLog` · ListPageLayout · **`user-logs` vertical ใหม่ (อ่านอย่างเดียว)** — `types/userLog.ts` + `services/userLogs.ts` (list/get) + fixture 12 แถว + crud handler · reuse `users`+`roles` map ชื่อ/ตำแหน่ง · `USER_LOG_ACTION_CONFIG` (สี 5 action ใน `enumConfig.ts`) · filter: search / พนักงาน / ประเภท action / ช่วงวันที่ (`RangePicker`) · stat cards (total/today/update/delete) · **Export CSV** (`exportToCsv`) · `DetailDrawer` (reuse) + `_components/LogDetailContent` แสดง diff ก่อน→หลัง (mock ส่ง `changes[]` เป็น string มาแล้ว — **ไม่ port `computeFieldDiff`**, field label อ่านจาก namespace `fields` ผ่าน `useMessages()`) · i18n `userLog.*` + `enums.userLogAction.*` + `common.export` · entity label reuse namespace `entities` (มีอยู่แล้วจากเฟส 1)
 > - **Screen #20 Permissions Mgmt** ✅ — `/owner/employees/permissions` · 2-pane (`DashboardPageLayout` shell) · **`permissions` vertical ใหม่** — `types/permission.ts` + `services/permissions.ts` (CRUD เต็ม) + fixture 12 แถว + crud handler · `roles` service ขยาย (`create`/`remove` + `RoleInput`) · `permissionGroups.ts` (pure — จัดกลุ่ม 11 menu_key ตามหมวด Sidebar, `countRow`/`countAll`/`groupPermissions`) · VM ถือ `overrides` (draft ต่อ role ในหน่วยความจำ) → Save = ยิง PATCH/POST ทีละแถว แล้ว `invalidate` + เคลียร์ override · `_components/{RoleListPanel, PermissionMatrix (antd Collapse+Checkbox), RoleFormModal (base/Form)}` · เพิ่ม/ลบ Role + reset (ผ่าน `confirmAlert`) + คัดลอกสิทธิ์จาก role เดิม · gate ปุ่มด้วย `usePermission("employees").{create,update,delete}` · owner/admin โชว์ note "ข้ามการเช็ค" · i18n `permissions.*` + `enums.menuKey.*` · checkbox label reuse `fields.can_*`
 >   - **ตัดออก:** `computeFieldDiff`/`fieldLabels` util port (mock pre-format) · `expires_at` UI (สิทธิ์ชั่วคราว) · granted_by picker (ใช้ `useCurrentUser().id`) · แท็บ "ประวัติการสต็อกสินค้า" ของ #6 (ยัง defer — ต้องเติมแท็บ filter `entity=Products` ที่หน้า Product Stock)
+> - **Screen #26 Notification History** ✅ — `/owner/notificationsHistory` (เข้าผ่านลิงก์ "ดูทั้งหมด" ใน NotificationDropdown — G7 ตั้งใจไม่มีใน sidebar) · ListPageLayout · **reuse `notifications` vertical** (เพิ่ม `remove` ใน service · fixture 5→13 แถว) · โหลด `limit:200` filter/สรุปฝั่ง client · `TypeTabBar` (ทั้งหมด/ยังไม่อ่าน/อ่านแล้ว) + filter module/type + search · stat cards (total/unread/warning/error) · row click → mark-as-read + `DetailDrawer` (`_components/NotificationDetailContent`) + footer "ไปที่รายการ" (ถ้ามี link) · mark-all-read / clear-all (`confirmAlert`) / ลบทีละอัน (`ConfirmDeletePopup`) · invalidate `["notifications"]` (refresh navbar dropdown ด้วย) · i18n `notifications.*` ขยาย
+> - **Screen #27 Access Denied** ✅ — `/owner/access-denied` (redirect ตอน permission gate ปฏิเสธ — ไม่มีใน sidebar, ไม่ gate ตัวเอง) · `page.tsx` บาง → `_components/AccessDeniedCard` (ไอคอน + ข้อความ + ปุ่มกลับ dashboard) · ไม่มี resource/VM · i18n `accessDenied.*` · breadcrumb ไม่มี key (G5 — โชว์แค่ crumb "หน้าหลัก")
 >
-> **เหลือ 10 screen** — copy pattern: list→Products/Ingredients/Employees · form→Add Product/Add Employee · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units/Permissions · stock-action→Ingredient Stock · read-only log→User Log:
-> Production (3 tab) · Recipes · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
+> **เหลือ 8 screen** — copy pattern: list→Products/Ingredients/Employees · form→Add Product/Add Employee · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units/Permissions · stock-action→Ingredient Stock · read-only log→User Log/Notification History:
+> Production (3 tab) · Recipes · Attendance · Finance Expenses · Finance P&L · Store Design
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)
