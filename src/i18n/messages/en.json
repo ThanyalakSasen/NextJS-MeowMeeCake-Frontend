@@ -58,6 +58,8 @@
     "units": "Units",
     "recipes": "Recipes",
     "employees": "Employees",
+    "employeesAdd": "Add Employee",
+    "employeesEdit": "Edit Employee",
     "permissions": "Permissions",
     "userLog": "Activity Log",
     "attendance": "Attendance",
@@ -99,7 +101,8 @@
   "validation": {
     "required": "Required",
     "positive": "Must be greater than 0",
-    "nonNegative": "Must not be negative"
+    "nonNegative": "Must not be negative",
+    "email": "Invalid email"
   },
   "actions": {
     "CREATE": "created",
@@ -707,7 +710,9 @@
     "empty": "No employees match the filters",
     "deleted": "Employee deleted",
     "deleteFailed": "Could not delete",
-    "deleteConfirm": "Remove employee \"{name}\" from the system?"
+    "deleteConfirm": "Remove employee \"{name}\" from the system?",
+    "saved": "Employee saved",
+    "saveFailed": "Could not save"
   },
   "permissions": {},
   "attendance": {},

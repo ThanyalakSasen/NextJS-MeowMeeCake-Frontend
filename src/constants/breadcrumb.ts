@@ -25,6 +25,8 @@ const ROUTE_NAV_KEY: Record<string, NavKey> = {
   "/owner/ingredients/units": "units",
   "/owner/recipes": "recipes",
   "/owner/employees": "employees",
+  "/owner/employees/addEmployee": "employeesAdd",
+  "/owner/employees/editEmployee": "employeesEdit",
   "/owner/employees/permissions": "permissions",
   "/owner/employees/userLog": "userLog",
   "/owner/attendance": "attendance",

@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (13/27 + foundation — 2026-09-02)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (15/27 + foundation — 2026-09-02)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -203,9 +203,11 @@ src/
 > - verified: #10 รับเข้า 500 → สต็อก 2400→2900 + มูลค่าอัปเดต · txn ใหม่โผล่ใน #11 (`performed_by` = ชื่อผู้ใช้) · `npm run check` เขียว
 > - **Screen #17 Employees List** ✅ — `/owner/employees` · ListPageLayout · **users + roles vertical ใหม่** (`types/{user,role}` + services + fixtures 8/5 + handler) · โหลด users+roles → map เป็นแถว (name+Avatar / role tag / employment_type / phone / status) · กรอง role `customer` ออก · stat cards (total/working/left/roles) · filter search+role+status · delete ผ่าน `ConfirmDeletePopup` · ปุ่ม "เพิ่มพนักงาน" + row "แก้ไข" ลิงก์ไป `/owner/employees/addEmployee|editEmployee` (ยังไม่ build — #18/#19) · i18n `employees.*` · **ไม่มี _components เฉพาะหน้า** (component กลางล้วน)
 > - verified: 7 พนักงาน (ตัด customer 1), stats 6 ทำงาน / 1 พ้นสภาพ / 4 ตำแหน่ง · ไม่มี console error
+> - **Screen #18 Add Employee + #19 Edit Employee** ✅ — `/owner/employees/{addEmployee,editEmployee}` · **ไม่มี resource ใหม่** (reuse `users`+`roles`) · ตามแพทเทิร์น Add/Edit Product: `employeeForm.ts` (pure — `emptyEmployeeForm`/`fromUser`/`toInput` + แปลงวันที่ dayjs↔ISO) · `_components/EmployeeFormFields.tsx` (antd `<FormItem rules>` ครอบ base/ input — fullname/phone/email/role/employment_type/salary/start+last date/emp_status) · role Select โหลดจาก `rolesService` ตัด `customer` ออก · VM ถือแค่ `initialValues`+`onSubmit` (Form ถือ state+validate) · **#19 ใช้ `?id=` query param** (`useSearchParams` → `page.tsx` ครอบ `<Suspense>`) ต่างจาก Edit Product ที่เป็น dynamic `[id]` → breadcrumb (`nav.employeesEdit`) match path ได้ตรง ๆ (ปิด G5 บางส่วน) · i18n `employees.{saved,saveFailed}` + `nav.{employeesAdd,employeesEdit}` + `validation.email` (th+en) · `npm run check` + `build` เขียว (18 route prerender ไม่ crash)
+>   - **ตัดออก (นอกขอบเขต #18/#19):** AvatarUploader · ToggleRow · PasswordShuffleButton · EmployeeSummaryCard · MetaChips · DangerZone (การลบทำที่ list ผ่าน `ConfirmDeletePopup` แล้ว) — ทำฟอร์มพื้นฐานก่อน เหมือน Add Product
 >
-> **เหลือ 14 screen** — copy pattern: list→Products/Ingredients/Employees · form→Add Product · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units · stock-action→Ingredient Stock:
-> Production (3 tab) · Recipes · Add/Edit Employee · Permissions · User Log (+ แท็บประวัติสต็อกสินค้า) · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
+> **เหลือ 12 screen** — copy pattern: list→Products/Ingredients/Employees · form→Add Product/Add Employee · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units · stock-action→Ingredient Stock:
+> Production (3 tab) · Recipes · Permissions · User Log (+ แท็บประวัติสต็อกสินค้า) · Attendance · Finance Expenses · Finance P&L · Store Design · Notification History · Access Denied
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)
