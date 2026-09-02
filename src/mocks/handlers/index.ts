@@ -6,6 +6,7 @@ import { seed } from "@/mocks/db";
 import { authHandlers } from "@/mocks/handlers/auth";
 import { crudHandlers } from "@/mocks/handlers/_crud";
 import { reportsHandlers } from "@/mocks/handlers/reports";
+import { attendanceHandlers } from "@/mocks/handlers/attendances";
 import { productsFixture } from "@/mocks/fixtures/products";
 import { productCategoriesFixture } from "@/mocks/fixtures/productCategories";
 import { unitsFixture } from "@/mocks/fixtures/units";
@@ -19,6 +20,7 @@ import { rolesFixture } from "@/mocks/fixtures/roles";
 import { permissionsFixture } from "@/mocks/fixtures/permissions";
 import { userLogsFixture } from "@/mocks/fixtures/userLogs";
 import { bannersFixture } from "@/mocks/fixtures/banners";
+import { attendancesFixture } from "@/mocks/fixtures/attendances";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -36,11 +38,13 @@ seed("roles", rolesFixture);
 seed("permissions", permissionsFixture);
 seed("user-logs", userLogsFixture);
 seed("banners", bannersFixture);
+seed("attendances", attendancesFixture);
 
 // ── handlers ──
 export const handlers = [
   ...authHandlers,
   ...reportsHandlers,
+  ...attendanceHandlers,
   ...crudHandlers("products", `${API}/products`),
   ...crudHandlers("product-categories", `${API}/product-categories`),
   ...crudHandlers("units", `${API}/units`),

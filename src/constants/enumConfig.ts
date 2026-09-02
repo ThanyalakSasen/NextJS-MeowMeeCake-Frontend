@@ -114,6 +114,19 @@ export const RECIPE_CATEGORY_COLORS: Record<string, { bg: string; text: string }
   "อื่นๆ":     { bg: "#f1f5f9", text: "#64748b" },
 };
 
+// ─── บันทึกเวลาเข้างาน (ค่าเก็บใน DB เป็นไทย — label = i18n enums.attendanceStatus) ──
+export type AttendanceStatus =
+  | "มาทำงาน" | "มาสาย" | "ขาดงาน" | "ลาป่วย" | "ลากิจ" | "วันหยุด";
+
+export const ATTENDANCE_STATUS_CONFIG: Record<AttendanceStatus, { antColor: AntColor }> = {
+  "มาทำงาน": { antColor: "success" },
+  "มาสาย":   { antColor: "warning" },
+  "ขาดงาน":  { antColor: "error" },
+  "ลาป่วย":  { antColor: "purple" },
+  "ลากิจ":   { antColor: "blue" },
+  "วันหยุด": { antColor: "default" },
+};
+
 // ─── แบนเนอร์หน้าร้าน ───────────────────────────────────────
 export type BannerStatus = "active" | "scheduled" | "inactive";
 

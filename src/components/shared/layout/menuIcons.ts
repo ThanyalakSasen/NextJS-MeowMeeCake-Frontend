@@ -27,6 +27,7 @@ import {
   ScaleIcon,
   UsersIcon,
   ShieldCheckIcon,
+  ClockIcon,
 } from "@heroicons/react/24/solid";
 
 export const MENU_ICONS: Record<string, React.ElementType> = {
@@ -52,4 +53,5 @@ export const MENU_ICONS: Record<string, React.ElementType> = {
   ScaleIcon,
   UsersIcon,
   ShieldCheckIcon,
+  ClockIcon,
 };

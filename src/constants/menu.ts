@@ -95,6 +95,7 @@ export const MENU_SECTIONS: MenuSection[] = [
           { labelKey: "userLog", href: "/owner/employees/userLog", icon: "ClipboardDocumentListIcon", menuKey: "employees" },
         ],
       },
+      { labelKey: "attendance", icon: "ClockIcon", href: "/owner/attendance" },
       { labelKey: "storeDesign", icon: "PaintBrushIcon", href: "/owner/store-design" },
     ],
   },

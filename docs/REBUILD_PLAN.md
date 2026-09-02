@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (20/27 + foundation — 2026-09-02)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (21/27 + foundation — 2026-09-02)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -214,8 +214,12 @@ src/
 > - **Screen #25 Store Design** ✅ — `/owner/store-design` (sidebar leaf, login-only ไม่มี menuKey) · ListPageLayout · **`banners` vertical ใหม่** (`types/banner.ts` + `services/banners.ts` CRUD + fixture 5 แถว + crud handler) · `bannerForm.ts` (pure — `getBannerStatus` derive `scheduled` จาก `start_date`, `fromBanner`/`toInput` แปลง dayjs↔ISO) · `BANNER_STATUS_CONFIG` (enumConfig) · กริดการ์ด `sm:2 / xl:3` + การ์ด "เพิ่ม" เส้นประ · `_components/BannerCard` (รูปจริง หรือ gradient placeholder keyed by id, สถานะ tag, toggle `is_active`, ลบผ่าน `ConfirmDeletePopup`) · `_components/BannerFormModal` (`base/Form` + `UploadImageBox` reuse + `RangePicker`) · `TypeTabBar` filter สถานะ + search · stat cards · i18n `storeDesign.*` + `enums.bannerStatus.*`
 >   - **ตัดออก:** `banner_img` เป็น data URI จริงใน fixture (ปล่อยว่าง → โชว์ gradient) · duplicate/preview action · gradient picker · `banner_description` UI
 >
-> **เหลือ 7 screen** — copy pattern: list→Products/Ingredients/Employees · form→Add Product/Add Employee/Store Design · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units/Permissions · stock-action→Ingredient Stock · read-only log→User Log/Notification History:
-> Production (3 tab) · Recipes · Attendance · Finance Expenses · Finance P&L
+> - **Screen #22 Attendance** ✅ — `/owner/attendance` · custom (`DashboardPageLayout` shell) · **`attendances` vertical ใหม่** — `types/attendance.ts` (status = union ไทย ตาม "แนวทาง A") + `services/attendances.ts` (list + `today`/`check-in`/`check-out`) + fixture 10 แถวของผู้ใช้ mock + **custom handler `mocks/handlers/attendances.ts`** (ไม่ใช้ `crudHandlers` เพราะ `:id` GET ชนกับ `/attendances/today`) · `ATTENDANCE_STATUS_CONFIG` (enumConfig, key ไทย) · `_components/ClockCard` (นาฬิกาสด `setInterval` ในคอมโพเนนต์ + ปุ่มเช็คอิน/เอาท์ + เวลาวันนี้) · `_components/AttendanceHistoryTable` (DataTable — วันที่/เข้า/ออก/ชม.ทำงาน/สถานะ) · check-in หลัง 09:00 = "มาสาย" · reuse `useCurrentUser` · i18n `attendance.*` (th+en)
+>   - **ปิด G3:** เพิ่ม `attendance` leaf ใน `sectionEmployees` (`menu.ts` + `ClockIcon` ใน `menuIcons.ts`) **ไม่ใส่ menuKey** = login-only ตั้งใจ · เพิ่มในคอมเมนต์ login-only ของ `menuKeys.ts`
+>   - **ตัดออก:** โหมดเจ้าของร้านบันทึกย้อนหลังแทนพนักงาน (`recorded_by` UI) · pagination ตาราง · sync clock กับ server time
+>
+> **เหลือ 6 screen** — copy pattern: list→Products/Ingredients/Employees · form→Add Product/Add Employee/Store Design · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units/Permissions · stock-action→Ingredient Stock · read-only log→User Log/Notification History · clock→Attendance:
+> Production (3 tab) · Recipes · Finance Expenses · Finance P&L
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)

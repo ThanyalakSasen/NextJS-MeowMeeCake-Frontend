@@ -30,7 +30,8 @@ export const NO_MENU_ACCESS: MenuPermissionSet = {
 };
 
 // map path → menu_key เรียงจาก prefix เจาะจงกว่าไว้ก่อน (longest-prefix match)
-// path ที่ไม่อยู่ในนี้ (dashboard, store-design, notificationsHistory) = login พอ ไม่เช็ค can_view เพิ่ม
+// path ที่ไม่อยู่ในนี้ (dashboard, store-design, notificationsHistory, attendance) = login พอ ไม่เช็ค can_view เพิ่ม
+// — attendance = พนักงานที่ login เช็คอิน/เช็คเอาท์ของตัวเอง (ตั้งใจไม่ผูก menu_key ใด ๆ)
 const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/ingredients/ingredientStock", menuKey: "stock" },
   { prefix: "/owner/ingredients/ingredientHistory", menuKey: "stock" },

@@ -802,7 +802,27 @@
     "exportEmpty": "No data to export for this filter",
     "exportSuccess": "Exported {n} activity entries"
   },
-  "attendance": {},
+  "attendance": {
+    "title": "Time Clock",
+    "description": "Record your own check-in and check-out times",
+    "descriptionUser": "Check-in and check-out times for {name}",
+    "checkIn": "Check in",
+    "checkOut": "Check out",
+    "checkInTime": "Check-in time",
+    "checkOutTime": "Check-out time",
+    "checkedIn": "Checked in successfully",
+    "checkedOut": "Checked out successfully",
+    "checkInFailed": "Check-in failed",
+    "checkOutFailed": "Check-out failed",
+    "historyTitle": "My attendance history (last 30 days)",
+    "colDate": "Date",
+    "colIn": "In",
+    "colOut": "Out",
+    "colHours": "Hours",
+    "colStatus": "Status",
+    "hoursUnit": "h",
+    "empty": "No attendance history yet"
+  },
   "finance": {},
   "storeDesign": {
     "title": "Store Design — Banners",
