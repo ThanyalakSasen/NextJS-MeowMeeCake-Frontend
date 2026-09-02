@@ -7,3 +7,5 @@ export interface Role {
   created_at: string;
   updated_at: string;
 }
+
+export type RoleInput = Pick<Role, "role_name" | "role_type">;

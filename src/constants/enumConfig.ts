@@ -114,6 +114,17 @@ export const RECIPE_CATEGORY_COLORS: Record<string, { bg: string; text: string }
   "อื่นๆ":     { bg: "#f1f5f9", text: "#64748b" },
 };
 
+// ─── บันทึกการทำงานของพนักงาน (audit log) ───────────────────
+export type UserLogAction = "CREATE" | "READ" | "UPDATE" | "DELETE" | "OTHER";
+
+export const USER_LOG_ACTION_CONFIG: Record<UserLogAction, { color: string; bg: string }> = {
+  CREATE: { color: "#15803d", bg: "#dcfce7" },
+  READ:   { color: "#475569", bg: "#f1f5f9" },
+  UPDATE: { color: "#b45309", bg: "#fef3c7" },
+  DELETE: { color: "#dc2626", bg: "#fee2e2" },
+  OTHER:  { color: "#7c3aed", bg: "#ede9fe" },
+};
+
 // ─── การแจ้งเตือน ───────────────────────────────────────────
 export const NOTIFICATION_TYPE_COLOR: Record<"warning" | "info" | "success" | "error", string> = {
   warning: "#f59e0b",
