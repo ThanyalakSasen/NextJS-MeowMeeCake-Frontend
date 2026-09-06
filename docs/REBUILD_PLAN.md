@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (21/27 + foundation — 2026-09-02)
+### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (24/27 + foundation — 2026-09-06)
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -218,8 +218,10 @@ src/
 >   - **ปิด G3:** เพิ่ม `attendance` leaf ใน `sectionEmployees` (`menu.ts` + `ClockIcon` ใน `menuIcons.ts`) **ไม่ใส่ menuKey** = login-only ตั้งใจ · เพิ่มในคอมเมนต์ login-only ของ `menuKeys.ts`
 >   - **ตัดออก:** โหมดเจ้าของร้านบันทึกย้อนหลังแทนพนักงาน (`recorded_by` UI) · pagination ตาราง · sync clock กับ server time
 >
-> **เหลือ 6 screen** — copy pattern: list→Products/Ingredients/Employees · form→Add Product/Add Employee/Store Design · dashboard→Dashboard · orders→Manage Orders · POS→OrderInStore · 2-col→Manage Units/Permissions · stock-action→Ingredient Stock · read-only log→User Log/Notification History · clock→Attendance:
-> Production (3 tab) · Recipes · Finance Expenses · Finance P&L
+> - **Screen #13–15 Production (3 แท็บ)** ✅ — `/owner/production?tab=plan|status|history` · **`TabbedPageLayout` (build — shared, antd `Tabs`, `activeKey`/`onChange` sync กับ `?tab=` ที่ ViewModel)** · **`production-orders` vertical ใหม่** — DTO เดียวฝัง `items[]` denormalize ชื่อสินค้า/หน่วย/ผู้รับผิดชอบตรง ๆ (แพทเทิร์นเดียวกับ `types/order.ts`) แทนแยก ProductionOrders/ProductionItems 2 collection แบบต้นทาง · โหลดครั้งเดียว ใช้ร่วม 3 แท็บ (แพทเทิร์น Manage Orders) · แท็บ 1 (แผน): stat cards + filter สถานะ/ค้นหา + `DataTable` + ปุ่มสร้าง → `_components/ProductionOrderFormModal` (แถวสินค้าไดนามิก, join `unit_abbr` จาก ViewModel) · แท็บ 2 (สถานะ): `_components/StatusBoard` — kanban ลากการ์ด (HTML5 drag-and-drop เนทีฟ) เปลี่ยนสถานะ, ล็อกใบที่ถึงสถานะสุดท้ายแล้ว · แท็บ 3 (ประวัติ): stat cards + `_components/BreakdownList` (แท่ง % สินค้า/ทีมที่ผลิตมากสุด, ใช้ `base/ProgressBar` แทน chart family) + `DataTable` กรองเดือน · `_components/ProductionOrderDetail` ใน `DetailDrawer` (reuse) ใช้ร่วมทั้ง 3 แท็บ — ดูรายละเอียด/เลื่อนสถานะ/ยกเลิก · `productionStatus.ts` (pure: `isFinalStatus`/`getNextStatus`/`statusChangePatch`/`durationHours`/`buildMonthOptions`) · sidebar leaf/menuKey/breadcrumb มีอยู่แล้วตั้งแต่ D0 (ไม่มี gap ต้องปิด) · i18n `production.*` (th+en, namespace ที่เว้นว่างไว้ตั้งแต่เฟส 0.5) · verified: `npm run check` + `build` เขียว (24 route prerender ไม่ crash)
+>   - **ตัดออก (รอ Screen #16 Recipes):** ไม่ผูก `recipe_id`/สูตรต่อรายการ — จึงไม่เช็ควัตถุดิบขาด/พอ ไม่คำนวณต้นทุนประมาณต่อใบสั่งผลิต (ต้นทางเช็คจาก `current_stock` ของวัตถุดิบในสูตร) · ไม่มี preorder round จริงผูกกับ order record (`source_type` เป็นแค่ tag หมวดหมู่) · `RevenueBarChart`/`AnalyticsBarChart`/`TeamPerformanceCard` ชื่อ component ในแผนเดิม → ทำเป็น `BreakdownList` เดียวพอ (ไม่ทำ charts family — เหตุผลเดียวกับที่ Ingredient History ตัด `AnalyticsBarChart`)
+>
+> **เหลือ 3 screen** — Recipes · Finance Expenses · Finance P&L (ต้อง `recipes` vertical ก่อน — Production ผูกจริงตอนนั้น)
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)
@@ -284,9 +286,9 @@ app/owner/<route>/_components/   ← ที่ใช้ screen เดียว (
 | 10 | Ingredient Stock Mgmt | `/owner/ingredients/ingredientStock` | (custom) | ReceiveModal, AdjustModal, BulkReceiveModal, IngredientStockCard, AutoCompleteSearch |
 | 11 | Ingredient History | `/owner/ingredients/ingredientHistory` | (custom) | TransactionTimeline, HistoryItemCard, AnalyticsBarChart, LogTransactionModal |
 | 12 | Manage Units | `/owner/ingredients/units` | (2-col) | UnitListCard, UnitFormModal |
-| 13 | Production — Plan | `/owner/production?tab=plan` | TabbedPageLayout | ProductionOrderForm, ProductionStatCards |
-| 14 | Production — Status Board | `/owner/production?tab=status` | TabbedPageLayout | KanbanBoard, ProductionOrderCard |
-| 15 | Production — History | `/owner/production?tab=history` | TabbedPageLayout | RevenueBarChart, AnalyticsBarChart, TeamPerformanceCard |
+| 13 | Production — Plan | `/owner/production?tab=plan` | TabbedPageLayout | PlanTab, ProductionOrderFormModal |
+| 14 | Production — Status Board | `/owner/production?tab=status` | TabbedPageLayout | StatusTab, StatusBoard, ProductionOrderCard |
+| 15 | Production — History | `/owner/production?tab=history` | TabbedPageLayout | HistoryTab, BreakdownList |
 | 16 | Recipes | `/owner/recipes` | ListPageLayout (2 tab) | RecipeCard, MainRecipeModal, SubRecipeModal, DetailDrawer, IngredientEditor, StepEditor |
 | 17 | Employees List | `/owner/employees` | ListPageLayout | — (component กลางล้วน) |
 | 18 | Add Employee | `/owner/employees/addEmployee` | (form) | EmployeeFormSections, AvatarUploader, ToggleRow, EmployeeSummaryCard, PasswordShuffleButton |

@@ -7,8 +7,8 @@ import type { CurrentUser, MenuAccess } from "@/types/auth";
 
 /** ใช้ login ตอน NEXT_PUBLIC_API_MOCK=1 */
 export const DEV_CREDENTIALS = {
-  email: "owner@meowmeecake.local",
-  password: "owner1234",
+  email: "thanyalak.sas@kkumail.com",
+  password: "123456789",
 };
 
 /** owner = เข้าถึงทุกเมนู */

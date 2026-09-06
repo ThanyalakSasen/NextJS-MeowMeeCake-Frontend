@@ -52,12 +52,15 @@
 | NotificationItem | `NotificationItem.tsx` | — | NotificationDropdown, Notification History |
 | UserMenuDropdown | `UserMenuDropdown.tsx` | ใช่ (open state) | Navbar |
 | ListPageLayout | `ListPageLayout.tsx` | — | Products, Orders, Employees, Ingredients, Finance, Reports, ... |
+| DashboardPageLayout | `DashboardPageLayout.tsx` | — | Dashboard, POS (2-pane shell), Manage Units/Permissions (2-col shell), Attendance |
+| TabbedPageLayout | `TabbedPageLayout.tsx` | — (antd `Tabs`, `activeKey`/`onChange` — consumer sync กับ `?tab=` เอง) | Production |
 
-### shared/feedback/ (✅ เฟส 3)
+### shared/feedback/ (✅ เฟส 3–4)
 | component | ไฟล์ | consumers |
 |---|---|---|
 | LoadingSpin | `feedback/LoadingSpin.tsx` | ทุกหน้า owner |
 | ConfirmDeletePopup | `feedback/ConfirmDeletePopup.tsx` | ทุกหน้าที่มี delete |
+| DetailDrawer | `feedback/DetailDrawer.tsx` | Manage Orders, Ingredient History, User Log, Notification History, Production |
 
 ### shared/stats/ (✅ เฟส 3)
 | component | ไฟล์ | consumers |
@@ -78,9 +81,6 @@
 | ViewToggle | `data/ViewToggle.tsx` | ✅ เฟส 4 | Products |
 | AutoCompleteSearch | `data/AutoCompleteSearch.tsx` | ⏳ เฟส 4 (Ingredient Stock) | |
 
-### shared/feedback/ — ⏳ เฟส 4
-| DetailDrawer | ⏳ | Orders, Notifications, Ingredients, User Log — shape จาก consumer |
-
 ### shared/charts/ — ⏳ เฟส 4
 | RevenueBarChart · AnalyticsBarChart | ⏳ | Finance Summary, Production History, Ingredient History (recharts) |
 
@@ -94,10 +94,6 @@
 | UploadImageBox | ✅ เฟส 4 | Add/Edit Product, Store Design |
 | ToggleRow · MonthSelector · PasswordShuffleButton · AvatarUploader | ⏳ | Add/Edit Employee, Finance |
 
-### shared/layout/ — ⏳ เฟส 4
-| TabbedPageLayout | ⏳ | Production, Promotions |
-| DashboardPageLayout | ⏳ | Dashboard |
-
 ---
 
 ## page-local (`app/owner/<route>/_components/`)
@@ -107,9 +103,10 @@
 |---|---|
 | Login (`app/login/_components/`) | `LoginForm` ✅ |
 | Products (`app/owner/products/_components/`) | `ProductCard` · `ProductGrid` · `CategoryChip` · `RatingDisplay` · `ProductFormFields` (ใช้ทั้ง add+edit) ✅ |
+| Production (`app/owner/production/_components/`) | `PlanTab` · `StatusTab` · `HistoryTab` · `ProductionOrderFormModal` · `StatusBoard` · `ProductionOrderCard` · `ProductionOrderDetail` · `BreakdownList` ✅ |
 
 ที่เหลือสร้างพร้อม screen ที่ใช้ (1 consumer) — ดูรายการเต็มใน `REBUILD_PLAN.md` §6 ตัวอย่าง:
-`products/_components/` ProductCard, ProductGrid, ProductFormFields · `production/_components/` KanbanBoard, ProductionOrderCard · `orders/OrderInStore/_components/` CartPanel, ProductPickerGrid, QRPaymentModal · `recipes/_components/` MainRecipeModal, IngredientEditor · `dashboard/_components/` RecentOrdersWidget, LowStockWidget · ฯลฯ
+`orders/OrderInStore/_components/` CartPanel, ProductPickerGrid, QRPaymentModal · `recipes/_components/` MainRecipeModal, IngredientEditor · ฯลฯ
 
 **Promotion rule:** page-local ตัวไหนมี screen ที่ 2 มาใช้ → ย้ายขึ้น `shared/<concern>/` + อัปเดตแถวในเอกสารนี้
 
@@ -118,6 +115,6 @@
 ## ยังไม่ทำใน เฟส 3 (ตั้งใจเลื่อน)
 
 - `data/DataTable` และ toolbar family → เฟส 4 (API shaped by first real table)
-- `charts/*`, `form/*`, `DetailDrawer`, `TabbedPageLayout`, `DashboardPageLayout` → เฟส 4
+- `charts/*`, `form/*` (ที่เหลือ) → เฟส 4
 - page-local components ทั้งหมด → เฟส 4
 - Sidebar mobile: มี drawer แล้ว แต่ยังไม่ทำ swipe/animation ละเอียด

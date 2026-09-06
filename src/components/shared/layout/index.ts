@@ -9,3 +9,4 @@ export { NotificationItem } from "./NotificationItem";
 export { UserMenuDropdown } from "./UserMenuDropdown";
 export { ListPageLayout } from "./ListPageLayout";
 export { DashboardPageLayout } from "./DashboardPageLayout";
+export { TabbedPageLayout, type TabbedPageLayoutItem } from "./TabbedPageLayout";
