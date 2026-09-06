@@ -33,11 +33,11 @@
 | # | Screen | Route | Status | Reach | menuKey | Breadcrumb key | Template | Files | _components (page-local) | Vertical |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Login | `/login` | ✅ | AuthLayout (public, ไม่ผ่าน sidebar) | N/A (auth) | — (AuthLayout ไม่มี breadcrumb) | AuthLayout | `page.tsx` + `_components/LoginForm.tsx` | LoginForm | auth (มีแล้ว) |
-| 2 | Dashboard | `/owner/dashboard` | ✅ | ⚠️ ไม่มี sidebar leaf — เข้าได้แค่ breadcrumb "หน้าหลัก" / redirect หลัง login (**G1**) | — (login-only) | `dashboard` (crumb แรกเสมอ) | DashboardPageLayout | `page.tsx`+`DashboardView.tsx`+`useDashboardViewModel.ts` | RecentOrdersWidget, LowStockWidget, TopProductsWidget, ProductionStatusWidget | `reports.dashboard` (มีแล้ว) |
+| 2 | Dashboard | `/owner/dashboard` | ✅ | sidebar: `dashboard` leaf ใน `sectionOverview` (ไม่มี menuKey = login-only ตั้งใจ — **ปิด G1**) | — (login-only) | `dashboard` (crumb แรกเสมอ) | DashboardPageLayout | `page.tsx`+`DashboardView.tsx`+`useDashboardViewModel.ts` | RecentOrdersWidget, LowStockWidget, TopProductsWidget, ProductionStatusWidget | `reports.dashboard` (มีแล้ว) |
 | 3 | Products List | `/owner/products` | ✅ | sidebar: `products` leaf | `products` | `products` | ListPageLayout | `page.tsx`+`ProductsView.tsx`+`useProductsViewModel.ts` | ProductCard, ProductGrid, CategoryChip, RatingDisplay | `products` (มีแล้ว) — **reference หน้ารายการ** |
 | 4 | Add Product | `/owner/products/addProducts` | ✅ | ปุ่ม "เพิ่มสินค้า" บน Products List | `products` | `productsAdd` | (form) | `page.tsx`+`AddProductView.tsx`+`useAddProductViewModel.ts` | ProductFormFields (ใช้ร่วม edit) | `products` (มีแล้ว) — **reference หน้าฟอร์ม** |
 | 5 | Edit Product | `/owner/products/[id]/edit` | ✅ | row action บน Products List | `products` | ❌ ไม่มี key ให้ dynamic route (**G5**) — โชว์แค่ crumb "products" | (form) | `page.tsx`+`EditProductView.tsx`+`useEditProductViewModel.ts` | ProductFormFields | `products` (มีแล้ว) |
-| 6 | Product Stock | `/owner/products/productStock` | ✅ | ⚠️ ไม่มี sidebar leaf แม้ nav/breadcrumb/menuKey พร้อม (**G2**) | `stock` | `productStock` | ListPageLayout | `page.tsx`+`ProductStockView.tsx`+`useProductStockViewModel.ts` | AdjustStockModal, StockProgressRow | reuse: `products`+`productCategories`+`units` (ไม่มี resource ใหม่) |
+| 6 | Product Stock | `/owner/products/productStock` | ✅ | sidebar: `productStock` leaf ใต้กลุ่ม `products` (**ปิด G2**) | `stock` | `productStock` | ListPageLayout | `page.tsx`+`ProductStockView.tsx`+`useProductStockViewModel.ts` | AdjustStockModal, StockProgressRow | reuse: `products`+`productCategories`+`units` (ไม่มี resource ใหม่) |
 | 7 | Manage Orders | `/owner/orders/manageOrders` | ✅ | sidebar: `ordersManage` leaf | `orders` | `ordersManage` | ListPageLayout | `page.tsx`+`ManageOrdersView.tsx`+`useManageOrdersViewModel.ts`+`orderStatus.ts` | OrderStatusFilter, PaymentSlipPreview, OrderLifecycleSteps, OrderDetailContent | `orders` (ใหม่ — DTO รวม ready+preorder) · `shared/feedback/DetailDrawer` (build) |
 | 8 | POS หน้าร้าน | `/owner/orders/OrderInStore` | ✅ | sidebar: `ordersInStore` leaf | `orders` | `ordersInStore` | custom 2-pane (`DashboardPageLayout` shell) | `page.tsx`+`POSView.tsx`+`usePOSViewModel.ts`+`posCart.ts` | ProductPickerGrid, CartPanel, QRPaymentModal | reuse: `orders`+`products` (ไม่มี resource ใหม่) · QR = mock (`qrcode` lib) |
 | 9 | Ingredients List | `/owner/ingredients` | ✅ | sidebar: `ingredients` leaf | `ingredients` | `ingredients` | ListPageLayout | `page.tsx`+`IngredientsView.tsx`+`useIngredientsViewModel.ts`+`ingredientStatus.ts` | IngredientFormModal | `ingredients`+`ingredient-categories` (ใหม่) · reuse `units` · `src/utils/unitContext.ts` (build) |
@@ -64,14 +64,12 @@
 
 ---
 
-## 3. ช่องโหว่ wiring ที่พบ (as of 2026-09-01)
+## 3. ช่องโหว่ wiring ที่พบ (as of 2026-09-01, ปิดแล้วส่วนใหญ่ — ดูวันที่ต่อรายการ)
 
-> **สโคปตอนนี้: บันทึกไว้เป็น known state เท่านั้น ไม่แก้โค้ด** — ปล่อย `menu.ts`/`breadcrumb.ts`/route ไว้ตามเดิม
+> G1/G2/G3 ปิดหมดแล้ว (เฟส 5 — 2026-09-07) · เหลือ G4/G6/G7 ที่ตั้งใจปล่อยไว้ตามเดิม (นอกสโคป/ไม่ใช่ gap จริง)
 
-- **G1 — Dashboard (#2) ไม่มี sidebar leaf** — เข้าได้แค่ breadcrumb "หน้าหลัก" หรือ redirect หลัง login เท่านั้น ไม่มีทางกดจาก sidebar โดยตรง
-  *ถ้าจะแก้ทีหลัง:* เพิ่มเป็น item แรกใน `sectionOverview` ของ `menu.ts` (ไม่ต้องใส่ `menuKey` = แสดงเสมอไม่ต้องเช็คสิทธิ์)
-- **G2 — Product Stock (#6) ไม่มี sidebar leaf** — ทั้งที่ `nav.productStock`, breadcrumb key, และ `resolveMenuKey` (`/owner/products/productStock` → `stock`) พร้อมหมดแล้ว เข้าถึงได้แค่พิมพ์ URL ตรง ๆ
-  *ถ้าจะแก้ทีหลัง:* เพิ่ม leaf เป็น child ของ node `products` ใน `menu.ts` พร้อม `menuKey: "stock"`
+- ~~**G1 — Dashboard (#2) ไม่มี sidebar leaf**~~ **ปิดแล้ว (2026-09-07)** — เพิ่ม `dashboard` leaf เป็น item แรกใน `sectionOverview` (`menu.ts`, icon `HomeIcon`) **ไม่ใส่ menuKey** = login-only ตั้งใจ
+- ~~**G2 — Product Stock (#6) ไม่มี sidebar leaf**~~ **ปิดแล้ว (2026-09-07)** — เปลี่ยน node `products` จาก flat item เป็น group มี children (`products` list + `productStock`, icon `ArchiveBoxIcon`, `menuKey: "stock"`)
 - ~~**G3 — Attendance (#22) ไม่มี sidebar leaf และไม่มี menuKey mapping**~~ **ปิดแล้ว (2026-09-02)** — เพิ่ม `attendance` leaf ใน `sectionEmployees` (`menu.ts`, icon `ClockIcon`) โดย **ไม่ใส่ menuKey** = login-only ตั้งใจ (พนักงานทุกคนเช็คเวลาตัวเองได้) · เพิ่ม `attendance` ในคอมเมนต์ login-only ของ `menuKeys.ts`
 - **G4 — sidebar มีลิงก์ชี้ไปหน้านอกสโคป 27 หน้า** — `reportsSales`, `reportsReviews` (ใต้ node "reports"), `promotionsPricing`, `promotionsCoupons` (ใต้ node "promotions") กดแล้ว **404 อยู่ตอนนี้** เพราะเป็น "Sales/Reviews report" และ "Promotions" ที่ระบุไว้ใน `REBUILD_PLAN.md` ว่า "นอก 27 screen — เฟสหลัง" → **ตัดสินใจ: ปล่อยไว้ตามเดิม** ไม่ซ่อน ไม่ disable
 - **G5 — Breadcrumb ไม่มี key ให้ 2 route:** Edit Product (#5, dynamic `[id]`), Access Denied (#27) — `buildBreadcrumbs()` match path ตรงตัวเท่านั้น ไม่รองรับ dynamic segment จึงโชว์แค่ crumb ของหน้า parent

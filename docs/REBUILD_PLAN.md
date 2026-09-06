@@ -231,12 +231,16 @@ src/
 >
 > **🎉 27/27 — เฟส 4 (Screens) เสร็จสมบูรณ์** → ต่อไปคือเฟส 5 (Wiring — ส่วนใหญ่ทำไปพร้อมกันแล้วระหว่างเฟส 4) และเฟส 6 (Verify)
 
-### เฟส 5 — Wiring
-- `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)
-- `app/login/layout.tsx` → `AuthLayout` · `app/owner/layout.tsx` → `OwnerLayout` (breadcrumb + `useCurrentUser` + `useIdleTimeout` + notifications)
-- `app/page.tsx` → redirect ตามการมี auth cookie
-- `src/proxy.ts`
-- `PermissionsProvider` + gate ปุ่ม/เมนู `usePermission`
+### เฟส 5 — Wiring  ✅ **เสร็จ 2026-09-07**
+> ทุกข้อด้านล่างตรวจแล้วว่าต่อสายจริง (ทำไปพร้อมกันตั้งแต่เฟส 2/2.5/3 ก่อนเฟส 4 จะเริ่มด้วยซ้ำ — งานที่เหลือของเฟสนี้คือ**ตรวจยืนยัน** + ปิด 2 ช่องโหว่ sidebar ที่ `SCREEN_MAP.md` บันทึกไว้ตั้งแต่ต้น)
+- `app/layout.tsx` → `NextIntlClientProvider` + `Providers` ✅ (antd `ConfigProvider`+`App` + react-query `QueryClientProvider` + `AuthBootstrap` + `MSWReady` รอ MSW พร้อมก่อน render)
+- `app/login/layout.tsx` → `AuthLayout` ✅ · `app/owner/layout.tsx` → `OwnerLayout` ✅ (`useCurrentUser` gate + `useIdleTimeout` (warn→refresh/logout) + `PermissionsProvider` + Sidebar/Navbar)
+- `app/page.tsx` → redirect ตามการมี auth cookie ✅ (`src/proxy.ts` กัน `/owner/*`+`/login` อีกชั้น, ตั้ง locale cookie เริ่มต้น = ไทย)
+- `src/proxy.ts` ✅
+- `PermissionsProvider` + gate ปุ่ม/เมนู `usePermission` ✅ — ใช้ครบทั้ง 27 หน้าที่มี action (verified ระหว่างเฟส 4)
+- **ปิด G1 (Dashboard ไม่มี sidebar leaf)** — เพิ่ม leaf แรกใน `sectionOverview` (`menu.ts`, ไอคอน `HomeIcon`) **ไม่ใส่ menuKey** = login-only ตั้งใจ (ตรงกับที่ `menuKeys.ts` คอมเมนต์ไว้อยู่แล้วว่า dashboard ไม่เช็ค can_view)
+- **ปิด G2 (Product Stock ไม่มี sidebar leaf)** — เปลี่ยน node `products` จาก flat item เป็น group (children: `products` list + `productStock`, ไอคอน `ArchiveBoxIcon`) — `nav.productStock`/breadcrumb/`resolveMenuKey` พร้อมอยู่แล้วตั้งแต่เฟส 1 แค่ไม่เคยมีทางเข้าจาก sidebar
+- เหลือ G4/G6/G7 ใน `SCREEN_MAP.md` §3 — **ตั้งใจไม่แก้** (นอกสโคป 27 หน้า/ไม่ใช่ gap จริงแล้ว ดูรายละเอียดที่เอกสารนั้น)
 
 ### เฟส 6 — Verify
 - `lint` · `build` · `lint:i18n` ผ่าน

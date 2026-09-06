@@ -15,6 +15,7 @@ import {
   BookOpenIcon,
   UserGroupIcon,
   PaintBrushIcon,
+  HomeIcon,
   // ซับเมนู
   ArrowTrendingUpIcon,
   ChatBubbleLeftRightIcon,
@@ -42,6 +43,7 @@ export const MENU_ICONS: Record<string, React.ElementType> = {
   BookOpenIcon,
   UserGroupIcon,
   PaintBrushIcon,
+  HomeIcon,
   ArrowTrendingUpIcon,
   ChatBubbleLeftRightIcon,
   ReceiptPercentIcon,

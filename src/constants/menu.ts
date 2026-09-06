@@ -32,6 +32,8 @@ export const MENU_SECTIONS: MenuSection[] = [
   {
     labelKey: "sectionOverview",
     items: [
+      // login-only ตั้งใจ ไม่ใส่ menuKey (แสดงเสมอ) — ปิด G1 (เดิมเข้าได้แค่ redirect หลัง login)
+      { labelKey: "dashboard", icon: "HomeIcon", href: "/owner/dashboard" },
       {
         labelKey: "reports",
         icon: "PresentationChartBarIcon",
@@ -53,7 +55,15 @@ export const MENU_SECTIONS: MenuSection[] = [
   {
     labelKey: "sectionProductsOrders",
     items: [
-      { labelKey: "products", icon: "ShoppingBagIcon", href: "/owner/products", menuKey: "products" },
+      {
+        // ปิด G2 (เดิม Product Stock ไม่มี sidebar leaf ทั้งที่ nav/breadcrumb/menuKey พร้อมแล้ว)
+        labelKey: "products",
+        icon: "ShoppingBagIcon",
+        children: [
+          { labelKey: "products", href: "/owner/products", icon: "ShoppingBagIcon", menuKey: "products" },
+          { labelKey: "productStock", href: "/owner/products/productStock", icon: "ArchiveBoxIcon", menuKey: "stock" },
+        ],
+      },
       { labelKey: "ordersManage", icon: "ClipboardDocumentListIcon", href: "/owner/orders/manageOrders", menuKey: "orders" },
       { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "orders" },
       {
