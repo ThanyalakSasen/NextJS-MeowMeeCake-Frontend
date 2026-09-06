@@ -53,7 +53,7 @@
 | UserMenuDropdown | `UserMenuDropdown.tsx` | ใช่ (open state) | Navbar |
 | ListPageLayout | `ListPageLayout.tsx` | — | Products, Orders, Employees, Ingredients, Finance, Reports, ... |
 | DashboardPageLayout | `DashboardPageLayout.tsx` | — | Dashboard, POS (2-pane shell), Manage Units/Permissions (2-col shell), Attendance |
-| TabbedPageLayout | `TabbedPageLayout.tsx` | — (antd `Tabs`, `activeKey`/`onChange` — consumer sync กับ `?tab=` เอง) | Production |
+| TabbedPageLayout | `TabbedPageLayout.tsx` | — (antd `Tabs`, `activeKey`/`onChange` — consumer sync กับ `?tab=` เอง ถ้าต้องการ) | Production (`?tab=` sync), Recipes (local state) |
 
 ### shared/feedback/ (✅ เฟส 3–4)
 | component | ไฟล์ | consumers |
@@ -104,9 +104,10 @@
 | Login (`app/login/_components/`) | `LoginForm` ✅ |
 | Products (`app/owner/products/_components/`) | `ProductCard` · `ProductGrid` · `CategoryChip` · `RatingDisplay` · `ProductFormFields` (ใช้ทั้ง add+edit) ✅ |
 | Production (`app/owner/production/_components/`) | `PlanTab` · `StatusTab` · `HistoryTab` · `ProductionOrderFormModal` · `StatusBoard` · `ProductionOrderCard` · `ProductionOrderDetail` · `BreakdownList` ✅ |
+| Recipes (`app/owner/recipes/_components/`) | `RecipeCard` · `RecipeDetail` · `MainRecipeModal` · `ComponentFormModal` · `IngredientEditor` · `StepEditor` (ใช้ร่วม 2 modal) ✅ |
 
 ที่เหลือสร้างพร้อม screen ที่ใช้ (1 consumer) — ดูรายการเต็มใน `REBUILD_PLAN.md` §6 ตัวอย่าง:
-`orders/OrderInStore/_components/` CartPanel, ProductPickerGrid, QRPaymentModal · `recipes/_components/` MainRecipeModal, IngredientEditor · ฯลฯ
+`orders/OrderInStore/_components/` CartPanel, ProductPickerGrid, QRPaymentModal · ฯลฯ
 
 **Promotion rule:** page-local ตัวไหนมี screen ที่ 2 มาใช้ → ย้ายขึ้น `shared/<concern>/` + อัปเดตแถวในเอกสารนี้
 

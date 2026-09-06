@@ -105,7 +105,11 @@ export const SALES_CHANNEL_CONFIG: Record<SalesChannel, { color: string; bg: str
 export type PromotionChannel = "online" | "instore";
 
 // ─── หมวดสูตรย่อย (ค่าเก็บใน DB เป็นไทย — label มาจาก i18n enums.recipeCategory) ──
-export const RECIPE_CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+export type RecipeCategory = "เนื้อเค้ก" | "ครีม" | "ไส้" | "ท็อปปิ้ง" | "แป้ง" | "อื่นๆ";
+
+export const RECIPE_CATEGORIES: RecipeCategory[] = ["เนื้อเค้ก", "ครีม", "ไส้", "ท็อปปิ้ง", "แป้ง", "อื่นๆ"];
+
+export const RECIPE_CATEGORY_COLORS: Record<RecipeCategory, { bg: string; text: string }> = {
   "เนื้อเค้ก": { bg: "#fce7f3", text: "#be185d" },
   "ครีม":      { bg: "#dbeafe", text: "#1d4ed8" },
   "ไส้":       { bg: "#d1fae5", text: "#15803d" },
