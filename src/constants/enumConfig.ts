@@ -151,6 +151,35 @@ export const USER_LOG_ACTION_CONFIG: Record<UserLogAction, { color: string; bg: 
   OTHER:  { color: "#7c3aed", bg: "#ede9fe" },
 };
 
+// ─── ค่าใช้จ่ายร้าน (ค่าเก็บใน DB เป็นไทย — label = i18n enums.expenseCategory) ──
+export type ExpenseCategory =
+  | "วัตถุดิบ" | "บรรจุภัณฑ์" | "ค่าจ้างแรงงาน" | "ค่าสาธารณูปโภค"
+  | "ค่าเช่า" | "ค่าการตลาด" | "ค่าซ่อมบำรุง" | "อื่นๆ";
+
+export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
+  "วัตถุดิบ", "บรรจุภัณฑ์", "ค่าจ้างแรงงาน", "ค่าสาธารณูปโภค",
+  "ค่าเช่า", "ค่าการตลาด", "ค่าซ่อมบำรุง", "อื่นๆ",
+];
+
+/** หมวดที่นับเป็นต้นทุนขาย (COGS) — ที่เหลือถือเป็นค่าใช้จ่ายดำเนินงาน (OPEX) ดู Finance P&L */
+export const COGS_EXPENSE_CATEGORIES: ExpenseCategory[] = ["วัตถุดิบ", "บรรจุภัณฑ์"];
+
+export const EXPENSE_CATEGORY_CONFIG: Record<ExpenseCategory, { color: string; bg: string }> = {
+  "วัตถุดิบ":        { color: "#1d4ed8", bg: "#dbeafe" },
+  "บรรจุภัณฑ์":      { color: "#15803d", bg: "#dcfce7" },
+  "ค่าจ้างแรงงาน":   { color: "#7c3aed", bg: "#ede9fe" },
+  "ค่าสาธารณูปโภค":  { color: "#b45309", bg: "#fef3c7" },
+  "ค่าเช่า":         { color: "#dc2626", bg: "#fee2e2" },
+  "ค่าการตลาด":      { color: "#c2410c", bg: "#ffedd5" },
+  "ค่าซ่อมบำรุง":    { color: "#0891b2", bg: "#cffafe" },
+  "อื่นๆ":           { color: "#64748b", bg: "#f1f5f9" },
+};
+
+/** วิธีชำระที่ร้านจ่ายให้ผู้ขาย/ค่าใช้จ่าย (ค่าเก็บใน DB เป็นไทย — คนละความหมายกับ POS `PaymentMethod` "cash"/"qr") */
+export type ExpensePaymentMethod = "เงินสด" | "โอนเงิน" | "บัตรเครดิต" | "QR Code";
+
+export const EXPENSE_PAYMENT_METHODS: ExpensePaymentMethod[] = ["เงินสด", "โอนเงิน", "บัตรเครดิต", "QR Code"];
+
 // ─── การแจ้งเตือน ───────────────────────────────────────────
 export const NOTIFICATION_TYPE_COLOR: Record<"warning" | "info" | "success" | "error", string> = {
   warning: "#f59e0b",

@@ -38,15 +38,3 @@ export function durationHours(order: { started_at?: string | null; completed_at?
   const ms = new Date(order.completed_at).getTime() - new Date(order.started_at).getTime();
   return Math.round((ms / 3_600_000) * 10) / 10;
 }
-
-/** ตัวเลือกเดือนย้อนหลัง (ค่าใหม่สุดก่อน) — ใช้กรองแท็บประวัติ */
-export function buildMonthOptions(locale: string, count = 6): { value: string; label: string }[] {
-  const now = new Date();
-  const tag = locale === "en" ? "en-US" : "th-TH";
-  return Array.from({ length: count }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const label = new Intl.DateTimeFormat(tag, { month: "long", year: "numeric" }).format(d);
-    return { value, label };
-  });
-}

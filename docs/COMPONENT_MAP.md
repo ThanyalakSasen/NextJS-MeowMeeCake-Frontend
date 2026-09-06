@@ -68,6 +68,7 @@
 | StatCard | `stats/StatCard.tsx` | Dashboard, Employees, Ingredients, Store Design, Notifications |
 | StatCardsGrid | `stats/StatCardsGrid.tsx` | เช่นเดียวกัน |
 | StatusBadge | `stats/StatusBadge.tsx` | Orders, Production, Payments, Stock (10+ screens) — `group` = enumConfig + i18n |
+| BreakdownList | `stats/BreakdownList.tsx` | Production History, Finance Expenses — **promote จาก `production/_components/` (consumer ที่ 2)**; `formatValue` prop optional รองรับฟอร์แมตเงิน |
 
 ### shared/data/ (✅ เฟส 3–4 · AutoCompleteSearch ⏳)
 | component | ไฟล์ | สถานะ | consumers |
@@ -81,11 +82,11 @@
 | ViewToggle | `data/ViewToggle.tsx` | ✅ เฟส 4 | Products |
 | AutoCompleteSearch | `data/AutoCompleteSearch.tsx` | ⏳ เฟส 4 (Ingredient Stock) | |
 
-### shared/charts/ — ⏳ เฟส 4
-| RevenueBarChart · AnalyticsBarChart | ⏳ | Finance Summary, Production History, Ingredient History (recharts) |
+### shared/charts/ — ตั้งใจไม่ทำ (D0 ตัดสินใจ)
+| RevenueBarChart · AnalyticsBarChart | **ไม่ทำ** | เดิมวางแผนไว้ Finance Summary/Production History/Ingredient History (recharts) — ทั้ง 3 หน้าใช้ `DataTable`/`BreakdownList` (แถบ %) แทนกราฟจริงหมดแล้ว |
 
-### shared/stats/ — ⏳ เฟส 4
-| KPIStatsRow | ⏳ | Finance Summary |
+### shared/stats/ — ⏳ (ยังไม่มี consumer)
+| KPIStatsRow | ⏳ | เดิมวางแผนไว้ Finance Summary — สุดท้ายใช้ StatCardsGrid + แถว KPI ธรรมดาแทน |
 
 ### shared/form/
 | component | สถานะ | consumers |
@@ -105,6 +106,8 @@
 | Products (`app/owner/products/_components/`) | `ProductCard` · `ProductGrid` · `CategoryChip` · `RatingDisplay` · `ProductFormFields` (ใช้ทั้ง add+edit) ✅ |
 | Production (`app/owner/production/_components/`) | `PlanTab` · `StatusTab` · `HistoryTab` · `ProductionOrderFormModal` · `StatusBoard` · `ProductionOrderCard` · `ProductionOrderDetail` · `BreakdownList` ✅ |
 | Recipes (`app/owner/recipes/_components/`) | `RecipeCard` · `RecipeDetail` · `MainRecipeModal` · `ComponentFormModal` · `IngredientEditor` · `StepEditor` (ใช้ร่วม 2 modal) ✅ |
+| Finance Expenses (`app/owner/finance/expenses/_components/`) | `ExpenseFormModal` · `RecurringRemindersList` ✅ |
+| Finance P&L (`app/owner/finance/summary/_components/`) | `PLStatementTable` ✅ |
 
 ที่เหลือสร้างพร้อม screen ที่ใช้ (1 consumer) — ดูรายการเต็มใน `REBUILD_PLAN.md` §6 ตัวอย่าง:
 `orders/OrderInStore/_components/` CartPanel, ProductPickerGrid, QRPaymentModal · ฯลฯ

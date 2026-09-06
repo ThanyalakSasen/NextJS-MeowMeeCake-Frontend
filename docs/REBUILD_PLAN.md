@@ -169,7 +169,7 @@ src/
 >
 > **เลื่อนไป เฟส 4 (shape จาก consumer แรก):** `data/{DataTable,FilterToolbar,TypeTabBar,SortDropdown,ViewToggle,AutoCompleteSearch}` · `feedback/DetailDrawer` · `charts/*` · `stats/KPIStatsRow` · `form/*` · `layout/{TabbedPageLayout,DashboardPageLayout}` · **page-local `_components/` ทั้งหมด**
 
-### เฟส 4 — Screens (27)  🔄 **กำลังทำ** (25/27 + foundation — 2026-09-06)
+### เฟส 4 — Screens (27)  ✅ **ครบ 27/27 — 2026-09-07**
 แต่ละหน้า: `page.tsx` (บาง) + `<X>View.tsx` + `use<X>ViewModel.ts` — ViewModel เรียก `useQuery`/`useMutation` ผ่าน `src/services/*` — ดู `CODE_STRUCTURE.md` + ตาราง §7
 
 > **เสร็จรอบนี้:**
@@ -224,7 +224,12 @@ src/
 > - **Screen #16 Recipes** ✅ — `/owner/recipes` · **`TabbedPageLayout` (reuse — consumer ที่ 2 ยืนยันสถานะ shared ตัวจริง, promote จาก Production)** · 2 แท็บ: **สูตรหลัก** (การ์ด grid, ผูกสินค้า 1:1) · **สูตรส่วนประกอบ** (`DataTable`, นำไปใช้ซ้ำได้หลายสูตรหลัก) · **`recipes` + `components` vertical ใหม่** — DTO denormalize ชื่อ/หน่วยตรง ๆ ทั้งคู่ (แพทเทิร์นเดียวกับ `ProductionOrderItem`) · **หมวดหมู่สูตรส่วนประกอบ (`category`) เป็น fixed enum ค่าไทย** (`RecipeCategory` ใน `enumConfig.ts` — เพิ่ม type + `RECIPE_CATEGORIES[]` ประกบ `RECIPE_CATEGORY_COLORS` ที่มีอยู่แล้วตั้งแต่ D0) **ไม่ใช่** resource `/component-categories` แยกแบบต้นทาง (แนวทาง A เดียวกับ `AttendanceStatus`) · `usedInMap` (สูตรหลักไหนใช้สูตรส่วนประกอบไหน) **คำนวณสดใน ViewModel** จากการสแกน `recipes.components[]` ไม่ใช่ field เก็บนิ่ง (กันข้อมูลค้าง) · ลบสูตรส่วนประกอบที่มีสูตรหลักใช้อยู่ → ปุ่มลบ disabled (กันเสียก่อน ไม่ปล่อยให้ backend error) · `_components/{RecipeCard, RecipeDetail, MainRecipeModal, ComponentFormModal, IngredientEditor, StepEditor}` — `IngredientEditor`/`StepEditor` ใช้ร่วม 2 modal · `recipeForm.ts`/`componentForm.ts` (pure — field ธรรมดาเท่านั้น, array ซับซ้อน (components/ingredients/steps) เป็น local state ใน modal) · แก้ไข modal ต้องพึ่ง `key={editTarget?._id ?? "new"}` จาก parent บังคับ remount ทุกครั้งที่เปลี่ยนเป้าหมาย (ต่างจาก Production's create-only form ที่ใช้ `afterClose` พอ) · "สินค้าที่ยังไม่มีสูตร" alert (จาก `productsWithoutRecipe` — fixture ตั้งใจเว้น 1 สินค้าไม่มีสูตรไว้โชว์เคสนี้) · i18n `recipes.*` (th+en) · verified: `npm run check` + `build` เขียว (26 route prerender ไม่ crash)
 >   - **ตัดออก (นอกขอบเขต):** ไม่มี unit picker แยกในแถววัตถุดิบ (ล็อกตามหน่วยของวัตถุดิบที่เลือกอยู่แล้ว — ต่างจากต้นทางที่ให้เลือกหน่วยเองได้) · ไม่มี stock-check/missing-ingredient alert ระดับสูตร (ยังไม่ต้องใช้ในสโคป 27 หน้า) · ไม่ auto-link กับ Production (Production #13-15 ยังอ้าง `recipe_id` ไม่ได้จนกว่าจะ refactor คู่กัน — บันทึกไว้เป็น follow-up)
 >
-> **เหลือ 2 screen** — Finance Expenses · Finance P&L
+> - **Screen #23 Finance Expenses + #24 Finance P&L** ✅ — ปิดเฟส 4 ครบ 27/27
+>   - **#23** `/owner/finance/expenses` · ListPageLayout · **`expenses` vertical ใหม่** — `category`/`payment_method` เป็น fixed enum ค่าไทย (แนวทาง A เดียวกับ `RecipeCategory`/`AttendanceStatus`, เพิ่ม `EXPENSE_CATEGORY_CONFIG`/`COGS_EXPENSE_CATEGORIES` ใน `enumConfig.ts`) · โหลด `expenses`+`orders` (reuse — โชว์รายรับคู่เทียบ) · ตาราง+filter เดือน/หมวด/ค้นหา + stat cards + Export CSV (แพทเทิร์นเดียวกับ Orders/UserLog) · `_components/{ExpenseFormModal, RecurringRemindersList}` — ฟอร์มใช้ `UploadImageBox` (reuse) แนบใบเสร็จ + rely on `key={editTarget?._id ?? "new"}` (แพทเทิร์นเดียวกับ Recipes modal) · aside: สรุปรายรับ-รายจ่ายเดือนนี้ + **`BreakdownList` (promote จาก Production `_components/` → `shared/stats/` — consumer ที่ 2, เพิ่ม `formatValue` prop รองรับฟอร์แมตเงิน)** + รายจ่ายประจำใกล้ครบกำหนด (คำนวณ due date สดใน ViewModel ไม่เก็บ field นิ่ง) · i18n `finance.*` + `enums.expenseCategory.*` + `enums.expensePaymentMethod.*`
+>   - **#24** `/owner/finance/summary` · DashboardPageLayout (custom — ไม่มี CRUD) · **ไม่มี resource ใหม่** (reuse `orders`+`expenses`) · เลือกช่วงเวลา 5 แบบ (วัน/สัปดาห์/เดือน/ไตรมาส/ปี) ผ่าน `TypeTabBar` (reuse) + `DatePicker` (`picker` ตาม period, ต้อง `dayjs/plugin/quarterOfYear`) · `financePeriod.ts` (pure: ช่วงวันที่ต่อ period) · งบกำไร-ขาดทุน (`_components/PLStatementTable`, แถวสไตล์ตาม kind) + เปรียบเทียบรายเดือน 6 เดือน (`DataTable` ธรรมดา แทนกราฟ — ไม่ทำ charts family เหมือน Production/Ingredient History) + KPI 4 ตัว · i18n รวมอยู่ใน namespace `finance.*` เดียวกับ #23
+>   - **ตัดออก (ทั้ง #23/#24):** ไม่ประมาณต้นทุนวัตถุดิบจากสูตร (recipe cost) — `Order.items` (`types/order.ts`) เก็บแค่ `product_name` ไม่มี `product_id` ผูกกลับ join ไปยัง Recipe ไม่ได้แม่นยำ → **COGS = เฉพาะค่าใช้จ่ายหมวดวัตถุดิบ/บรรจุภัณฑ์ที่บันทึกจริงเท่านั้น** (ต้อง refactor `Order` vertical ก่อนถึงจะผูกได้แม่นยำ — follow-up เดียวกับที่ Production ยังไม่ผูก `recipe_id`) · ไม่มี "สินค้าที่ทำรายได้สูงสุด" (Order ไม่มีราคา/ต้นทุนต่อบรรทัด — คำนวณ per-product revenue ไม่ได้) · ไม่มี recharts/BarChart (เหตุผลเดียวกับ Production History)
+>
+> **🎉 27/27 — เฟส 4 (Screens) เสร็จสมบูรณ์** → ต่อไปคือเฟส 5 (Wiring — ส่วนใหญ่ทำไปพร้อมกันแล้วระหว่างเฟส 4) และเฟส 6 (Verify)
 
 ### เฟส 5 — Wiring
 - `app/layout.tsx` → `NextIntlClientProvider` + `Providers` (antd + react-query + MSW init)
@@ -299,8 +304,8 @@ app/owner/<route>/_components/   ← ที่ใช้ screen เดียว (
 | 20 | Permissions Mgmt | `/owner/employees/permissions` | (2-pane) | RoleList, PermissionCollapseSection, PermissionCheckboxGroup, RoleFormModal |
 | 21 | User Activity Log | `/owner/employees/userLog` | ListPageLayout | DetailDrawer |
 | 22 | Attendance | `/owner/attendance` | (custom) | ClockDisplay, CheckInOutButtons, AttendanceHistoryTable |
-| 23 | Finance — Expenses | `/owner/finance/expenses` | ListPageLayout | ExpenseForm, CategoryBreakdownBar, RecurringReminderList, MonthSelector, ReceiptImagePreview |
-| 24 | Finance — P&L Summary | `/owner/finance/summary` | (custom) | PLStatementTable, KPIStatsRow, RevenueBarChart, ProductRevenueTable, PeriodSelector |
+| 23 | Finance — Expenses | `/owner/finance/expenses` | ListPageLayout | ExpenseFormModal, RecurringRemindersList, BreakdownList (shared) |
+| 24 | Finance — P&L Summary | `/owner/finance/summary` | DashboardPageLayout (custom) | PLStatementTable, TypeTabBar (reuse), monthly trend DataTable |
 | 25 | Store Design — Banners | `/owner/store-design` | ListPageLayout | BannerCard, BannerFormModal, BannerGrid |
 | 26 | Notification History | `/owner/notificationsHistory` | ListPageLayout | DetailDrawer |
 | 27 | Access Denied | `/owner/access-denied` | (none) | AccessDeniedCard |

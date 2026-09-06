@@ -14,10 +14,11 @@ import { usersService } from "@/services/users";
 import { rolesService } from "@/services/roles";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
+import { buildMonthOptions } from "@/utils/dateRange";
 import type { ProductionStatus, SourceType } from "@/constants/enumConfig";
 import type { ProductionOrder, ProductionOrderItem } from "@/types/productionOrder";
 import {
-  isFinalStatus, getNextStatus, statusChangePatch, durationHours, buildMonthOptions,
+  isFinalStatus, getNextStatus, statusChangePatch, durationHours,
 } from "./productionStatus";
 
 export type TabKey = "plan" | "status" | "history";

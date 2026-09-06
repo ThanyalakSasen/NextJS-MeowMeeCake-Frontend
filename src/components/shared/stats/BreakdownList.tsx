@@ -1,15 +1,19 @@
 import { Card, ProgressBar } from "@/components/base";
-/** การ์ดสรุปเป็นแถบ % — ใช้แสดง "สินค้าที่ผลิตมากสุด" / "ประสิทธิภาพทีม" ในแท็บประวัติการผลิต */
+/** การ์ดสรุปเป็นแถบ % — เทียบสัดส่วนของแต่ละรายการต่อค่าสูงสุดในลิสต์
+ *  ใช้แสดง "สินค้าที่ผลิตมากสุด"/"ประสิทธิภาพทีม" (Production History) ·
+ *  "ค่าใช้จ่ายแยกตามหมวด" (Finance Expenses) — ค่าเป็นตัวเลขนับ (default) หรือเงิน (ส่ง `formatValue`) */
 export function BreakdownList({
   title,
   entries,
   emptyText,
   color,
+  formatValue = (n) => String(n),
 }: {
   title: string;
   entries: [string, number][];
   emptyText: string;
   color?: string;
+  formatValue?: (n: number) => string;
 }) {
   const max = Math.max(...entries.map(([, v]) => v), 1);
   return (
@@ -25,7 +29,7 @@ export function BreakdownList({
             <div key={label} className="mb-2.5 last:mb-0">
               <div className="flex items-center justify-between text-sm mb-1">
                 <span className="text-gray-600 truncate">{label}</span>
-                <span className="font-medium text-gray-800">{value}</span>
+                <span className="font-medium text-gray-800">{formatValue(value)}</span>
               </div>
               <ProgressBar percent={Math.round((value / max) * 100)} color={color} />
             </div>

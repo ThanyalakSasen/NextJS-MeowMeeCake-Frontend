@@ -24,6 +24,7 @@ import { attendancesFixture } from "@/mocks/fixtures/attendances";
 import { productionOrdersFixture } from "@/mocks/fixtures/productionOrders";
 import { recipeComponentsFixture } from "@/mocks/fixtures/recipeComponents";
 import { recipesFixture } from "@/mocks/fixtures/recipes";
+import { expensesFixture } from "@/mocks/fixtures/expenses";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -45,6 +46,7 @@ seed("attendances", attendancesFixture);
 seed("production-orders", productionOrdersFixture);
 seed("components", recipeComponentsFixture);
 seed("recipes", recipesFixture);
+seed("expenses", expensesFixture);
 
 // ── handlers ──
 export const handlers = [
@@ -67,4 +69,5 @@ export const handlers = [
   ...crudHandlers("production-orders", `${API}/production-orders`),
   ...crudHandlers("components", `${API}/components`),
   ...crudHandlers("recipes", `${API}/recipes`),
+  ...crudHandlers("expenses", `${API}/expenses`),
 ];

@@ -2,14 +2,13 @@
 // แท็บ 3: ประวัติการผลิต — อ่านอย่างเดียว (สร้าง/แก้ที่แท็บแผน+สถานะ)
 import { useTranslations, useLocale } from "next-intl";
 import { Select } from "@/components/base";
-import { StatCard, StatCardsGrid } from "@/components/shared/stats";
+import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
 import { DataTable, type Column } from "@/components/shared/data";
 import { EmptyState } from "@/components/base";
 import { formatDate } from "@/i18n/format";
 import type { ProductionOrder } from "@/types/productionOrder";
 import type { useProductionViewModel } from "../useProductionViewModel";
 import { durationHours } from "../productionStatus";
-import { BreakdownList } from "./BreakdownList";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
