@@ -585,9 +585,9 @@ body {
 }
 
 .breadcrumb-separator {
-  width: 0.75rem;
-  height: 0.75rem;
-  color: #cbd5e1;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--text-subtle);
   flex-shrink: 0;
 }
 
