@@ -8,9 +8,9 @@
     ]
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3001",
     "lint": "eslint",
     "lint:i18n": "node scripts/check-i18n.mjs",
     "lint:theme": "node scripts/check-theme.mjs --strict",

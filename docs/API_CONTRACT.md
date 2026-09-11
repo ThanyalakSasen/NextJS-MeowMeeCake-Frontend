@@ -42,7 +42,10 @@ Accept-Language: th
 **สังเกต 3 อย่าง:**
 1. ข้อมูลถูกห่อใน `{ "data": ..., "meta": ... }` เสมอ — เรียกว่า **envelope**
 2. รูปสินค้า (`product_img`) **ไม่มา** ในลิสต์ (ข้อมูลใหญ่ — ขอเพิ่มด้วย `?include=product_img`)
-3. error ทุกแบบมี `{ "message": ... }` — frontend เอาไปโชว์ผู้ใช้ได้เลย
+3. error ทุกแบบห่อใน `{ "success": false, "error": { "code", "message", "details" } }` — frontend อ่าน
+   `error.message` ไปโชว์ผู้ใช้ได้เลย (ข้อความไทยพร้อมใช้จาก backend อยู่แล้ว) **แก้ 2026-09-12**: เดิมเอกสาร
+   ข้อนี้เขียนผิดว่าเป็น `{ "message": ... }` ระดับบนสุด (ไม่มี `error` ห่อ) — `src/lib/http.ts` เคยอ่านตามนั้น
+   เลยไม่เคยได้ข้อความจริงจาก backend เลยสักครั้ง ดูรายละเอียด `docs/Debug.md` §4
 
 ---
 
@@ -54,7 +57,7 @@ Accept-Language: th
 | list (GET collection) | `{ "data": T[], "meta": { "page": number, "limit": number, "total": number } }` |
 | item (GET/POST/PATCH one) | `{ "data": T }` |
 | delete | `{ "data": null }` |
-| error | `{ "message": string }` (+ optional `{ "errors": { field: string }[] }` สำหรับ 422) |
+| error | `{ "success": false, "error": { "code": string, "message": string, "details": ... } }` — `details` เป็น `{ "issues": [{ "path", "message", "code" }] }` เฉพาะตอน validation (400) ไม่ผ่าน, เคสอื่นเป็นรูปอื่นหรือ `null` (backend `src/lib/apiResponse.ts` / `src/lib/validate.ts` / `src/middleware.ts`) |
 
 ### Query params (list endpoints)
 | param | ค่า | ความหมาย |
@@ -89,7 +92,7 @@ Accept-Language: th
 `menuAccess`: `Record<MenuKey, { view, create, update, delete, approve }>` — owner/admin = true หมด
 `MenuKey` = `dashboard | products | orders | payments | ingredients | stock | recipes | production | employees | promotions | reports`
 
-**Auth errors** (`/auth/login`): 400 = กรอกไม่ครบ · 401 = อีเมล/รหัสผิด (ข้อความรวม กัน enumeration) · 403 = บัญชีถูกปิด / เป็น role customer · 429 = ล็อก (`{ message }` มีนาทีที่ต้องรอ)
+**Auth errors** (`/auth/login`): 400 = กรอกไม่ครบ · 401 = อีเมล/รหัสผิด (ข้อความรวม กัน enumeration) · 403 = บัญชีถูกปิด / เป็น role customer · 429 = ล็อก (`error.message` มีนาทีที่ต้องรอ, `error.code = "TOO_MANY_REQUESTS"` — ดู §1 Envelope)
 
 ---
 
