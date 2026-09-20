@@ -1,5 +1,6 @@
 // ─────────────────────────────────────────────────────────────
-// financePeriod.ts — pure: ช่วงเวลาของ P&L (day/week/month/quarter/year) → [start, end]
+// src/utils/period.ts — pure: ช่วงเวลา day/week/month/quarter/year → [start, end]
+// ใช้ร่วมกัน ≥ 2 หน้า (Finance P&L, Sales Report) — ย้ายมาจาก finance/summary/financePeriod.ts เดิม
 // ─────────────────────────────────────────────────────────────
 import dayjs, { type Dayjs } from "dayjs";
 import quarterOfYear from "dayjs/plugin/quarterOfYear";

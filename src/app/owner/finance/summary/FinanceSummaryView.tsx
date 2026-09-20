@@ -8,7 +8,7 @@ import { DataTable, TypeTabBar, type Column } from "@/components/shared/data";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { formatCurrency } from "@/i18n/format";
 import type { useFinanceSummaryViewModel } from "./useFinanceSummaryViewModel";
-import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "./financePeriod";
+import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import { PLStatementTable } from "./_components/PLStatementTable";
 
 type VM = ReturnType<typeof useFinanceSummaryViewModel>;
@@ -64,8 +64,12 @@ export function FinanceSummaryView(vm: VM) {
               tone="down"
             />
             <StatCard
-              label={t("finance.heroNet")}
-              value={formatCurrency(vm.netProfit, locale)}
+              label={vm.netProfit >= 0 ? t("finance.heroNet") : t("finance.heroNetLoss")}
+              value={
+                <span className={vm.netProfit >= 0 ? "text-green-600" : "text-red-600"}>
+                  {formatCurrency(vm.netProfit, locale)}
+                </span>
+              }
               sub={vm.totalIncome > 0 ? t("finance.profitMargin", { pct: ((vm.netProfit / vm.totalIncome) * 100).toFixed(1) }) : "—"}
               tone={vm.netProfit >= 0 ? "up" : "down"}
             />

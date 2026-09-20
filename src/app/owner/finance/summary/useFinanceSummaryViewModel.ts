@@ -13,10 +13,11 @@ import { useTranslations, useLocale } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
 import { ordersService } from "@/services/orders";
 import { expensesService } from "@/services/expenses";
+import { reportsService } from "@/services/reports";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { COGS_EXPENSE_CATEGORIES } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
-import { getRangeStartEnd, type PeriodType } from "./financePeriod";
+import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 
 export interface PnLRow {
   key: string;
@@ -34,12 +35,19 @@ export function useFinanceSummaryViewModel() {
 
   const orders = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);
   const expenses = useMemo(() => expensesQ.data?.data ?? [], [expensesQ.data]);
-  const isLoading = ordersQ.isLoading || expensesQ.isLoading;
 
   const [period, setPeriod] = useState<PeriodType>("month");
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
   const [rangeStart, rangeEnd] = useMemo(() => getRangeStartEnd(period, selectedDate), [period, selectedDate]);
+
+  // รายรับแยกตามประเภทสินค้า (คิดที่ backend เพราะ orders list ไม่มีรายการสินค้าให้แยกเอง) — ใช้แยกยอด "ออนไลน์" ออกจากยอดรวม
+  const revenueQ = useQuery({
+    queryKey: ["reports", "revenue-by-type", rangeStart.toISOString(), rangeEnd.toISOString()],
+    queryFn: () => reportsService.revenueByType({ date_from: rangeStart.toISOString(), date_to: rangeEnd.toISOString() }),
+    retry: false,
+  });
+  const isLoading = ordersQ.isLoading || expensesQ.isLoading || revenueQ.isLoading;
 
   const ordersInRange = useMemo(
     () => orders.filter((o) => {
@@ -57,9 +65,17 @@ export function useFinanceSummaryViewModel() {
     [expenses, rangeStart, rangeEnd],
   );
 
-  const readyIncome = ordersInRange.filter((o) => o.order_type === "ready").reduce((s, o) => s + o.total_amount, 0);
-  const preorderIncome = ordersInRange.filter((o) => o.order_type === "preorder").reduce((s, o) => s + o.total_amount, 0);
-  const totalIncome = readyIncome + preorderIncome;
+  // preorder ยังไม่เชื่อมกับ backend จริง (คนละ collection, ดู types/order.ts) — นับรวมเป็น 0 ไปก่อน
+  // ออเดอร์ทั้งหมดตอนนี้คือ "ready" (พร้อมขาย) เพราะ ordersService ดึงเฉพาะ /admin/orders
+  const paidIncome = ordersInRange.reduce((s, o) => s + o.total_amount, 0);
+  // ยอดขายสินค้าออนไลน์ = ส่วนของ paidIncome ที่มาจากสินค้า product_type "online" (backend แยกให้ รวมค่าส่ง/ส่วนลดตามสัดส่วนแล้ว)
+  // แยกออกจากแถว "หน้าร้าน" ไม่บวกเพิ่ม → รายรับรวมไม่เปลี่ยน ไม่นับซ้ำ · ถ้า backend ตอบไม่ได้ (revenueQ error) จะไม่แสดงแถวนี้
+  // และแถวหน้าร้านกลับไปเท่ายอดรวมเหมือนเดิม แทนที่จะโชว์ 0 ที่ผิดเงียบ ๆ · clamp ไม่ให้เกินยอดรวมของ orders list (กันช่วงเวลา/limit ไม่ตรงกัน)
+  const showOnlineRow = revenueQ.isSuccess;
+  const onlineIncome = showOnlineRow ? Math.min(Math.max(revenueQ.data.online, 0), paidIncome) : 0;
+  const readyIncome = paidIncome - onlineIncome;
+  const preorderIncome = 0;
+  const totalIncome = readyIncome + onlineIncome + preorderIncome;
 
   const expenseByCategory = useMemo(() => {
     const m = new Map<ExpenseCategory, number>();
@@ -78,6 +94,7 @@ export function useFinanceSummaryViewModel() {
     const rows: PnLRow[] = [
       { key: "income_header", label: t("finance.rowIncomeHeader"), amount: 0, kind: "header" },
       { key: "ready_sales", label: t("finance.rowReadySales"), amount: readyIncome, kind: "line" },
+      ...(showOnlineRow ? [{ key: "online_sales", label: t("finance.rowOnlineSales"), amount: onlineIncome, kind: "line" as const }] : []),
       { key: "preorder_sales", label: t("finance.rowPreorderSales"), amount: preorderIncome, kind: "line" },
       { key: "total_income", label: t("finance.rowTotalIncome"), amount: totalIncome, kind: "subtotal" },
       { key: "cogs_header", label: t("finance.rowCogsHeader"), amount: 0, kind: "header" },
@@ -89,11 +106,11 @@ export function useFinanceSummaryViewModel() {
       { key: "opex_header", label: t("finance.rowOpexHeader"), amount: 0, kind: "header" },
       ...opexEntries.map(([cat, amt]) => ({ key: `opex_${cat}`, label: t(`enums.expenseCategory.${cat}`), amount: amt, kind: "line" as const })),
       { key: "total_opex", label: t("finance.rowTotalOpex"), amount: totalOpex, kind: "subtotal" },
-      { key: "net_profit", label: t("finance.rowNetProfit"), amount: netProfit, kind: "net" },
+      { key: "net_profit", label: t("finance.rowNetResult"), amount: netProfit, kind: "net" },
     ];
     return rows;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readyIncome, preorderIncome, totalIncome, totalCogs, grossProfit, totalOpex, netProfit, expenseByCategory, opexEntries, locale]);
+  }, [readyIncome, onlineIncome, showOnlineRow, preorderIncome, totalIncome, totalCogs, grossProfit, totalOpex, netProfit, expenseByCategory, opexEntries, locale]);
 
   // ── เปรียบเทียบรายเดือน (6 เดือนล่าสุด) ──
   const monthlyTrend = useMemo(() => {
