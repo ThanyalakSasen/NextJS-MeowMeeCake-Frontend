@@ -141,13 +141,16 @@ export const BANNER_STATUS_CONFIG: Record<BannerStatus, StatusStyle> = {
 };
 
 // ─── บันทึกการทำงานของพนักงาน (audit log) ───────────────────
-export type UserLogAction = "CREATE" | "READ" | "UPDATE" | "DELETE" | "OTHER";
+// ตรงกับ enum จริงของ backend (src/models/userLogModel.ts action_type) — มี LOGIN/LOGOUT ด้วย
+export type UserLogAction = "CREATE" | "READ" | "UPDATE" | "DELETE" | "LOGIN" | "LOGOUT" | "OTHER";
 
 export const USER_LOG_ACTION_CONFIG: Record<UserLogAction, { color: string; bg: string }> = {
   CREATE: { color: "#15803d", bg: "#dcfce7" },
   READ:   { color: "#475569", bg: "#f1f5f9" },
   UPDATE: { color: "#b45309", bg: "#fef3c7" },
   DELETE: { color: "#dc2626", bg: "#fee2e2" },
+  LOGIN:  { color: "#0369a1", bg: "#e0f2fe" },
+  LOGOUT: { color: "#64748b", bg: "#f1f5f9" },
   OTHER:  { color: "#7c3aed", bg: "#ede9fe" },
 };
 
@@ -186,4 +189,48 @@ export const NOTIFICATION_TYPE_COLOR: Record<"warning" | "info" | "success" | "e
   info:    "#3b82f6",
   success: "#22c55e",
   error:   "#ef4444",
+};
+
+// ─── คูปอง/ส่วนลด (Promotion) ────────────────────────────────
+// ตรงกับ backend จริง (promotionModel.ts discount_type) เอกพจน์ตัวใหญ่นำเสมอ
+export type DiscountType = "Percentage" | "Amount" | "FreeShipping";
+
+export const DISCOUNT_TYPE_CONFIG: Record<DiscountType, { color: string }> = {
+  Percentage:   { color: "#16a34a" },
+  Amount:       { color: "#1d4ed8" },
+  FreeShipping: { color: "#7c3aed" },
+};
+
+// "active/scheduled/inactive" คำนวณฝั่ง frontend จาก is_active + start_date/end_date (ไม่มีใน DB
+// ตรง ๆ) "expired" เพิ่มมาจากการเทียบ end_date กับวันนี้ — ดู couponForm.ts deriveCouponStatus()
+export type CouponStatus = "active" | "scheduled" | "inactive" | "expired";
+
+export const COUPON_STATUS_CONFIG: Record<CouponStatus, StatusStyle> = {
+  active:    { color: "#15803d", antColor: "success" },
+  scheduled: { color: "#b45309", antColor: "warning" },
+  inactive:  { color: "#64748b", antColor: "default" },
+  expired:   { color: "#dc2626", antColor: "error" },
+};
+
+// ─── รอบพรีออเดอร์ (PreorderRound) ────────────────────────────
+// ตรงกับ backend จริง (preorderRoundService.ts ROUND_STATUSES/NEXT_ROUND_STATUS)
+// scheduled → open → closed (เดินหน้าตามลำดับ) ; scheduled|open → cancelled (ยกเลิกได้)
+export type RoundStatus = "scheduled" | "open" | "closed" | "cancelled";
+
+export const ROUND_STATUS_FLOW: RoundStatus[] = ["scheduled", "open", "closed"];
+
+export const ROUND_STATUS_CONFIG: Record<RoundStatus, StatusStyle> = {
+  scheduled: { color: "#64748b", antColor: "default" },
+  open:      { color: "#15803d", antColor: "success" },
+  closed:    { color: "#b45309", antColor: "warning" },
+  cancelled: { color: "#dc2626", antColor: "error" },
+};
+
+// ─── ผลวิเคราะห์ความรู้สึกจากรีวิว (SentimentResults) ─────────
+export type SentimentLabel = "Positive" | "Negative" | "Neutral";
+
+export const SENTIMENT_LABEL_CONFIG: Record<SentimentLabel, StatusStyle> = {
+  Positive: { color: "#15803d", antColor: "success" },
+  Negative: { color: "#dc2626", antColor: "error" },
+  Neutral:  { color: "#64748b", antColor: "default" },
 };

@@ -15,6 +15,7 @@ const ROUTE_NAV_KEY: Record<string, NavKey> = {
   "/owner/products/addProducts": "productsAdd",
   "/owner/products/productStock": "productStock",
   "/owner/orders/manageOrders": "ordersManage",
+  "/owner/orders/preOrderRound": "ordersPreorderRound",
   "/owner/orders/OrderInStore": "ordersInStore",
   "/owner/promotions/pricing": "promotionsPricing",
   "/owner/promotions/coupons": "promotionsCoupons",

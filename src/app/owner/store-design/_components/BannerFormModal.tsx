@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { Form, FormItem, useAntForm, Input, InputNumber, Switch, RangePicker } from "@/components/base";
+import { Form, FormItem, useAntForm, Input, TextArea, Switch, RangePicker } from "@/components/base";
 import { UploadImageBox } from "@/components/shared/form";
 import type { Rule } from "antd/es/form";
 import type { Banner } from "@/types/banner";
@@ -50,22 +50,30 @@ export function BannerFormModal({
       destroyOnHidden
     >
       <Form form={form} layout="vertical">
-        <FormItem name="banner_img" label={t("storeDesign.formImage")} extra={t("storeDesign.imageHint")}>
+        <FormItem name="banner_img" label={t("storeDesign.formImage")} extra={t("storeDesign.imageHint")} rules={required}>
           <UploadImageBox />
         </FormItem>
 
-        <FormItem name="banner_name" label={t("storeDesign.formName")} rules={required}>
+        <FormItem
+          name="banner_name"
+          label={t("storeDesign.formName")}
+          extra={t("storeDesign.customerFacingHint")}
+          rules={required}
+        >
           <Input placeholder={t("storeDesign.namePlaceholder")} />
         </FormItem>
 
-        <div className="grid grid-cols-2 gap-3">
-          <FormItem name="banner_link" label={t("storeDesign.formLink")}>
-            <Input placeholder="https://..." />
-          </FormItem>
-          <FormItem name="sort_order" label={t("storeDesign.formOrder")}>
-            <InputNumber min={1} />
-          </FormItem>
-        </div>
+        <FormItem
+          name="banner_description"
+          label={t("storeDesign.formDescription")}
+          extra={t("storeDesign.customerFacingHint")}
+        >
+          <TextArea rows={3} maxLength={500} showCount placeholder={t("storeDesign.descriptionPlaceholder")} />
+        </FormItem>
+
+        <FormItem name="banner_link" label={t("storeDesign.formLink")}>
+          <Input placeholder="https://..." />
+        </FormItem>
 
         <FormItem name="dateRange" label={t("storeDesign.formDateRange")}>
           <RangePicker style={{ width: "100%" }} />

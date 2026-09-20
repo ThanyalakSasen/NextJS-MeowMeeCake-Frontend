@@ -1,6 +1,6 @@
 "use client";
 // View ของ POS หน้าร้าน — 2-pane: กริดสินค้า (ซ้าย) + ตะกร้า (ขวา, sticky)
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadingSpin } from "@/components/shared/feedback";
@@ -14,6 +14,7 @@ type VM = ReturnType<typeof usePOSViewModel>;
 
 export function POSView(vm: VM) {
   const t = useTranslations();
+  const locale = useLocale();
 
   return (
     <DashboardPageLayout title={t("pos.title")} description={t("pos.description")}>
@@ -32,7 +33,9 @@ export function POSView(vm: VM) {
                 onChange={vm.setCategoryId}
                 options={[
                   { value: "all", label: t("common.all") },
-                  ...vm.categories.map((c) => ({ value: c._id, label: c.category_name })),
+                  ...[...vm.categories]
+                    .sort((a, b) => a.product_category_name.localeCompare(b.product_category_name, locale))
+                    .map((c) => ({ value: c._id, label: c.product_category_name })),
                 ]}
               />
             </div>

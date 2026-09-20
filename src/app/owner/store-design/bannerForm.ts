@@ -12,18 +12,19 @@ export function getBannerStatus(b: Pick<Banner, "is_active" | "start_date">): Ba
   return "active";
 }
 
+// sort_order ไม่อยู่ในฟอร์มแล้ว — จัดลำดับด้วยการลากการ์ด (ดู useStoreDesignViewModel.onReorder)
+// ตอนสร้างใหม่ ViewModel เป็นคนเติม sort_order ให้ (ต่อท้ายลำดับสุดท้าย) ก่อนยิง create จริง
 export interface BannerFormValue {
   banner_name: string;
   banner_img?: string;
+  banner_description?: string;
   banner_link?: string;
-  sort_order: number;
   dateRange?: [Dayjs, Dayjs] | null;
   is_active: boolean;
 }
 
 export const emptyBannerForm: BannerFormValue = {
   banner_name: "",
-  sort_order: 1,
   is_active: true,
 };
 
@@ -31,21 +32,27 @@ export function fromBanner(b: Banner): BannerFormValue {
   return {
     banner_name: b.banner_name,
     banner_img: b.banner_img || undefined,
+    banner_description: b.banner_description ?? undefined,
     banner_link: b.banner_link ?? undefined,
-    sort_order: b.sort_order,
     dateRange: b.start_date && b.end_date ? [dayjs(b.start_date), dayjs(b.end_date)] : null,
     is_active: b.is_active,
   };
 }
 
-export function toInput(v: BannerFormValue): BannerInput {
+// backend รับ field เสริมพวกนี้เป็น "ไม่ส่งมา" (undefined) เท่านั้น — ส่ง null ตรง ๆ ไม่ได้
+// (zod `.optional()` ไม่ใช่ `.nullable()`, ดูคอมเมนต์ที่ types/banner.ts) จึง omit key แทนส่ง null
+// banner_description เป็นข้อยกเว้น — schema รับ "" (string ว่าง) ได้อยู่แล้ว จึงส่งตรง ๆ ได้เสมอ
+// (แก้ไขแล้วลบข้อความที่เคยกรอกไว้ให้ว่างได้จริง ไม่เหมือน banner_link/date ที่เคลียร์ผ่าน API ไม่ได้)
+export function toInput(v: BannerFormValue): Omit<BannerInput, "sort_order"> {
+  const link = v.banner_link?.trim();
+  const [start, end] = v.dateRange ?? [];
   return {
     banner_name: v.banner_name.trim(),
     banner_img: v.banner_img ?? "",
-    banner_link: v.banner_link?.trim() || null,
-    sort_order: v.sort_order ?? 1,
+    banner_description: v.banner_description?.trim() ?? "",
     is_active: v.is_active,
-    start_date: v.dateRange?.[0] ? v.dateRange[0].toISOString() : null,
-    end_date: v.dateRange?.[1] ? v.dateRange[1].toISOString() : null,
+    ...(link ? { banner_link: link } : {}),
+    ...(start ? { start_date: start.toISOString() } : {}),
+    ...(end ? { end_date: end.toISOString() } : {}),
   };
 }

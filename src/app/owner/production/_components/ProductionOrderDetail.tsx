@@ -42,6 +42,7 @@ export function ProductionOrderDetail({
           <Tag style={{ background: srcCfg.bg, color: srcCfg.color, borderColor: "transparent" }}>
             {t(`enums.sourceType.${order.source_type}`)}
           </Tag>
+          {order.round_name && <p className="mt-1 text-gray-800">{order.round_name}</p>}
         </div>
         <div>
           <p className="text-gray-500">{t("production.fieldAssignee")}</p>

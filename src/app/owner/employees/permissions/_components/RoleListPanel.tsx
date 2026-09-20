@@ -39,7 +39,7 @@ export function RoleListPanel({
                 {t("permissions.members", { n: memberCounts[role._id] ?? 0 })}
               </p>
             </div>
-            <Tag color={role.role_type === "owner" || role.role_type === "admin" ? "gold" : "blue"}>
+            <Tag color={role.role_type === "owner" ? "gold" : "blue"}>
               {role.role_type}
             </Tag>
           </button>

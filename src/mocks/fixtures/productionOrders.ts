@@ -2,6 +2,7 @@
 // src/mocks/fixtures/productionOrders.ts  — MOCK (D17)
 // ครบ 4 สถานะ (planned/in_progress/done/cancelled) × 2 ประเภท (manual/preorder)
 // product_id อ้างอิง productsFixture จริง — unit_abbr ตรงกับ unitsFixture (u_piece/u_pound)
+// recipe_id เป็น id สมมติ (ไม่มี resource /recipes mock ผูกจริง) — item_status มิเรอร์สถานะหัวใบ
 // ─────────────────────────────────────────────────────────────
 import type { ProductionOrder } from "@/types/productionOrder";
 
@@ -13,7 +14,7 @@ export const productionOrdersFixture: ProductionOrder[] = [
     assigned_to: "u_baker1", assignee_name: "กานดา แสงเพชร",
     production_note: 'ข้อความบนเค้ก "Happy Birthday Tom" ตกแต่งดอกไม้สีชมพู',
     items: [
-      { product_id: "p_strawberry_short", product_name: "สตรอว์เบอร์รีชอร์ตเค้ก", planned_qty: 2, unit_abbr: "ปอนด์" },
+      { _id: "pi_1", product_id: "p_strawberry_short", recipe_id: "r_strawberry_short", product_name: "สตรอว์เบอร์รีชอร์ตเค้ก", planned_qty: 2, unit_abbr: "ปอนด์", item_status: "in_progress" },
     ],
     started_at: "2026-09-02T02:00:00.000Z", completed_at: null,
     created_at: "2026-09-01T14:30:00.000Z", updated_at: "2026-09-02T02:00:00.000Z",
@@ -25,8 +26,8 @@ export const productionOrdersFixture: ProductionOrder[] = [
     assigned_to: "u_baker2", assignee_name: "วิชัย ศรีสมบัติ",
     production_note: "ผลิตเพิ่มเติมสต็อก",
     items: [
-      { product_id: "p_matcha_roll", product_name: "โรลเค้กชาเขียว", planned_qty: 8, unit_abbr: "ชิ้น" },
-      { product_id: "p_sourdough", product_name: "ขนมปังซาวโดว์", planned_qty: 15, unit_abbr: "ชิ้น" },
+      { _id: "pi_2", product_id: "p_matcha_roll", recipe_id: "r_matcha_roll", product_name: "โรลเค้กชาเขียว", planned_qty: 8, unit_abbr: "ชิ้น", item_status: "pending" },
+      { _id: "pi_3", product_id: "p_sourdough", recipe_id: "r_sourdough", product_name: "ขนมปังซาวโดว์", planned_qty: 15, unit_abbr: "ชิ้น", item_status: "pending" },
     ],
     started_at: null, completed_at: null,
     created_at: "2026-09-01T15:00:00.000Z", updated_at: "2026-09-01T15:00:00.000Z",
@@ -38,7 +39,7 @@ export const productionOrdersFixture: ProductionOrder[] = [
     assigned_to: null, assignee_name: null,
     production_note: null,
     items: [
-      { product_id: "p_vanilla_cup", product_name: "คัพเค้กวานิลลา", planned_qty: 24, unit_abbr: "ชิ้น" },
+      { _id: "pi_4", product_id: "p_vanilla_cup", recipe_id: "r_vanilla_cup", product_name: "คัพเค้กวานิลลา", planned_qty: 24, unit_abbr: "ชิ้น", item_status: "pending" },
     ],
     started_at: null, completed_at: null,
     created_at: "2026-08-31T18:00:00.000Z", updated_at: "2026-08-31T18:00:00.000Z",
@@ -50,7 +51,7 @@ export const productionOrdersFixture: ProductionOrder[] = [
     assigned_to: "u_baker1", assignee_name: "กานดา แสงเพชร",
     production_note: null,
     items: [
-      { product_id: "p_strawberry_short", product_name: "สตรอว์เบอร์รีชอร์ตเค้ก", planned_qty: 1, unit_abbr: "ปอนด์" },
+      { _id: "pi_5", product_id: "p_strawberry_short", recipe_id: "r_strawberry_short", product_name: "สตรอว์เบอร์รีชอร์ตเค้ก", planned_qty: 1, unit_abbr: "ปอนด์", item_status: "done" },
     ],
     started_at: "2026-08-31T07:00:00.000Z", completed_at: "2026-08-31T11:30:00.000Z",
     created_at: "2026-08-30T16:00:00.000Z", updated_at: "2026-08-31T11:30:00.000Z",
@@ -62,8 +63,8 @@ export const productionOrdersFixture: ProductionOrder[] = [
     assigned_to: "u_baker2", assignee_name: "วิชัย ศรีสมบัติ",
     production_note: "เติมสต็อกเช้าวันเสาร์",
     items: [
-      { product_id: "p_choco_lava", product_name: "เค้กช็อกโกแลตลาวา", planned_qty: 10, unit_abbr: "ชิ้น" },
-      { product_id: "p_vanilla_cup", product_name: "คัพเค้กวานิลลา", planned_qty: 30, unit_abbr: "ชิ้น" },
+      { _id: "pi_6", product_id: "p_choco_lava", recipe_id: "r_choco_lava", product_name: "เค้กช็อกโกแลตลาวา", planned_qty: 10, unit_abbr: "ชิ้น", item_status: "done" },
+      { _id: "pi_7", product_id: "p_vanilla_cup", recipe_id: "r_vanilla_cup", product_name: "คัพเค้กวานิลลา", planned_qty: 30, unit_abbr: "ชิ้น", item_status: "done" },
     ],
     started_at: "2026-08-30T05:00:00.000Z", completed_at: "2026-08-30T09:00:00.000Z",
     created_at: "2026-08-29T20:00:00.000Z", updated_at: "2026-08-30T09:00:00.000Z",
@@ -75,7 +76,7 @@ export const productionOrdersFixture: ProductionOrder[] = [
     assigned_to: "u_baker1", assignee_name: "กานดา แสงเพชร",
     production_note: null,
     items: [
-      { product_id: "p_matcha_roll", product_name: "โรลเค้กชาเขียว", planned_qty: 6, unit_abbr: "ชิ้น" },
+      { _id: "pi_8", product_id: "p_matcha_roll", recipe_id: "r_matcha_roll", product_name: "โรลเค้กชาเขียว", planned_qty: 6, unit_abbr: "ชิ้น", item_status: "done" },
     ],
     started_at: "2026-08-29T06:00:00.000Z", completed_at: "2026-08-29T09:15:00.000Z",
     created_at: "2026-08-28T17:00:00.000Z", updated_at: "2026-08-29T09:15:00.000Z",
@@ -87,7 +88,7 @@ export const productionOrdersFixture: ProductionOrder[] = [
     assigned_to: "u_baker2", assignee_name: "วิชัย ศรีสมบัติ",
     production_note: "ยกเลิก — เปลี่ยนแผนผลิตกะทันหัน",
     items: [
-      { product_id: "p_sourdough", product_name: "ขนมปังซาวโดว์", planned_qty: 20, unit_abbr: "ชิ้น" },
+      { _id: "pi_9", product_id: "p_sourdough", recipe_id: "r_sourdough", product_name: "ขนมปังซาวโดว์", planned_qty: 20, unit_abbr: "ชิ้น", item_status: "cancelled" },
     ],
     started_at: null, completed_at: null,
     created_at: "2026-08-27T19:00:00.000Z", updated_at: "2026-08-28T08:00:00.000Z",
@@ -99,8 +100,8 @@ export const productionOrdersFixture: ProductionOrder[] = [
     assigned_to: "u_baker1", assignee_name: "กานดา แสงเพชร",
     production_note: null,
     items: [
-      { product_id: "p_strawberry_short", product_name: "สตรอว์เบอร์รีชอร์ตเค้ก", planned_qty: 3, unit_abbr: "ปอนด์" },
-      { product_id: "p_choco_lava", product_name: "เค้กช็อกโกแลตลาวา", planned_qty: 4, unit_abbr: "ชิ้น" },
+      { _id: "pi_10", product_id: "p_strawberry_short", recipe_id: "r_strawberry_short", product_name: "สตรอว์เบอร์รีชอร์ตเค้ก", planned_qty: 3, unit_abbr: "ปอนด์", item_status: "done" },
+      { _id: "pi_11", product_id: "p_choco_lava", recipe_id: "r_choco_lava", product_name: "เค้กช็อกโกแลตลาวา", planned_qty: 4, unit_abbr: "ชิ้น", item_status: "done" },
     ],
     started_at: "2026-07-26T06:00:00.000Z", completed_at: "2026-07-26T12:00:00.000Z",
     created_at: "2026-07-25T15:00:00.000Z", updated_at: "2026-07-26T12:00:00.000Z",

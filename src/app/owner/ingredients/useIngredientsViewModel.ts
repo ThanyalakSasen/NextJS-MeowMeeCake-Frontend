@@ -15,6 +15,7 @@ import { isIngredientUnit } from "@/utils/unitContext";
 import type { StockStatus } from "@/constants/enumConfig";
 import type { IngredientInput } from "@/types/ingredient";
 import { getIngredientStatus, stockPercent } from "./ingredientStatus";
+import { refId } from "@/lib/refId";
 
 export interface IngredientRow {
   _id: string;
@@ -70,16 +71,19 @@ export function useIngredientsViewModel() {
   );
 
   const rows = useMemo<IngredientRow[]>(() => {
-    const catMap = new Map((categoriesQ.data?.data ?? []).map((c) => [c._id, c.category_name]));
+    const catMap = new Map((categoriesQ.data?.data ?? []).map((c) => [c._id, c.ingredient_category_name]));
     const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, u.unit_abbr || u.unit_name]));
-    return (ingredientsQ.data?.data ?? []).map((i) => ({
+    return (ingredientsQ.data?.data ?? []).map((i) => {
+      const categoryId = refId(i.ingredient_category_id);
+      const unitId = refId(i.unit_id);
+      return {
       _id: i._id,
       sku: skuOf(i._id),
       name: i.ingredient_name,
-      categoryId: i.ingredient_category_id ?? "",
-      category: (i.ingredient_category_id && catMap.get(i.ingredient_category_id)) || "",
-      unitId: i.unit_id ?? "",
-      unitAbbr: (i.unit_id && unitMap.get(i.unit_id)) || "",
+      categoryId,
+      category: (categoryId && catMap.get(categoryId)) || "",
+      unitId,
+      unitAbbr: (unitId && unitMap.get(unitId)) || "",
       currentStock: i.current_stock,
       reorderPoint: i.reorder_point,
       maxStock: i.max_stock ?? null,
@@ -88,7 +92,8 @@ export function useIngredientsViewModel() {
       updatedAt: i.updated_at,
       status: getIngredientStatus(i),
       pct: stockPercent(i),
-    }));
+      };
+    });
   }, [ingredientsQ.data, categoriesQ.data, unitsQ.data]);
 
   const filtered = useMemo(() => {

@@ -3,7 +3,7 @@
 import { Steps } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { LinkIcon } from "@heroicons/react/24/outline";
-import { Divider, Tag } from "@/components/base";
+import { Divider } from "@/components/base";
 import { formatCurrency } from "@/i18n/format";
 import type { Recipe } from "@/types/recipe";
 
@@ -17,9 +17,6 @@ export function RecipeDetail({ recipe }: { recipe: Recipe }) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-1.5 text-sm text-gray-500">
         <LinkIcon className="h-3.5 w-3.5" /> {recipe.product_name}
-        <Tag color={recipe.product_type === "ready" ? "success" : "processing"}>
-          {t(`enums.orderType.${recipe.product_type}`)}
-        </Tag>
       </div>
 
       <div className="grid grid-cols-3 gap-2">

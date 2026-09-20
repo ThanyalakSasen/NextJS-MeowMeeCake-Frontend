@@ -1,5 +1,8 @@
 "use client";
 // View ของ Manage Orders — JSX ล้วน รับ props จาก useManageOrdersViewModel
+// payment_status แสดงเป็น badge อ่านอย่างเดียว (แก้ตรง ๆ ไม่ได้ — backend จัดการผ่าน resource
+// Payments/verify เท่านั้น) · คอลัมน์ items/สลิปเอาออกจากตาราง (ต้องเรียก getById ต่อแถว ไม่คุ้ม
+// N+1 — ดูรายละเอียดเต็มได้ที่ drawer ผ่านปุ่ม "ดู")
 import { Tooltip } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
@@ -15,7 +18,6 @@ import type { Order } from "@/types/order";
 import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
 import { STATUS_SELECT_OPTIONS } from "./orderStatus";
 import { OrderStatusFilter } from "./_components/OrderStatusFilter";
-import { PaymentSlipPreview } from "./_components/PaymentSlipPreview";
 import { OrderDetailContent } from "./_components/OrderDetailContent";
 
 type VM = ReturnType<typeof useManageOrdersViewModel>;
@@ -49,20 +51,6 @@ export function ManageOrdersView(vm: VM) {
       ),
     },
     {
-      key: "items",
-      title: t("orders.colItems"),
-      render: (o) => (
-        <span className="text-gray-700">{o.items.map((it) => `${it.product_name} ×${it.quantity}`).join(", ")}</span>
-      ),
-    },
-    ...(vm.activeTab === "preorder"
-      ? [{
-          key: "leadTime",
-          title: t("orders.leadTime"),
-          render: (o: Order) => t("orders.leadTimeDays", { n: o.lead_time_days ?? 0 }),
-        } as Column<Order>]
-      : []),
-    {
       key: "total_amount",
       title: t("orders.colTotal"),
       align: "right",
@@ -91,25 +79,7 @@ export function ManageOrdersView(vm: VM) {
     {
       key: "payment_status",
       title: t("orders.colPayment"),
-      render: (o) => (
-        <Select
-          size="small"
-          value={o.payment_status}
-          disabled={!vm.perm.update}
-          style={{ width: 140 }}
-          options={(Object.keys(PAYMENT_STATUS_CONFIG) as PaymentStatus[]).map((s) => ({
-            value: s,
-            label: t(`enums.paymentStatus.${s}`),
-          }))}
-          onChange={(next) => vm.onPaymentStatusChange(o, next as PaymentStatus)}
-        />
-      ),
-    },
-    {
-      key: "slip",
-      title: t("orders.colSlip"),
-      align: "center",
-      render: (o) => <PaymentSlipPreview order={o} />,
+      render: (o) => <StatusBadge group="paymentStatus" value={o.payment_status} />,
     },
   ];
 
@@ -131,8 +101,8 @@ export function ManageOrdersView(vm: VM) {
                   value={vm.activeTab}
                   onChange={vm.setActiveTab}
                   options={[
-                    { value: "ready", label: `${t("enums.orderType.ready")} (${vm.readyCount})` },
-                    { value: "preorder", label: `${t("enums.orderType.preorder")} (${vm.preorderCount})` },
+                    { value: "delivery", label: `${t("enums.orderType.delivery")} (${vm.deliveryCount})` },
+                    { value: "takeaway", label: `${t("enums.orderType.takeaway")} (${vm.takeawayCount})` },
                   ]}
                 />
                 <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("orders.searchPlaceholder")} />
@@ -196,9 +166,11 @@ export function ManageOrdersView(vm: VM) {
         title={vm.selectedOrder ? t("orders.drawerTitle", { no: vm.selectedOrder.order_no }) : ""}
         onClose={vm.closeDrawer}
       >
-        {vm.selectedOrder && (
+        {vm.isDetailLoading && <p className="py-10 text-center text-gray-500">{t("common.loading")}</p>}
+        {vm.selectedOrder && !vm.isDetailLoading && (
           <OrderDetailContent
             order={vm.selectedOrder}
+            payment={vm.selectedPayment}
             canApprovePayment={vm.canApprovePayment}
             onVerifyPayment={vm.onVerifyPayment}
           />

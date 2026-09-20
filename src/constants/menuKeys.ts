@@ -59,8 +59,8 @@ export function resolveMenuKey(pathname: string): MenuKey | null {
   return best?.menuKey ?? null;
 }
 
-/** role_type ที่ข้าม permission ทั้งหมด (เจ้าของร้าน/แอดมิน) — เทียบ lowercase */
+/** role_type ที่ข้าม permission ทั้งหมด (เจ้าของร้าน) — backend จริงมีแค่ owner/staff/customer
+ *  ไม่มี "admin" เลย (เทียบ lowercase กันเผื่อ role_type มาจาก source อื่นที่ตัวพิมพ์ไม่ตรง) */
 export function isUnrestrictedRole(roleType: string | undefined | null): boolean {
-  const t = (roleType ?? "").toLowerCase();
-  return t === "admin" || t === "owner";
+  return (roleType ?? "").toLowerCase() === "owner";
 }

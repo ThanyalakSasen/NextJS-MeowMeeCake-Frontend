@@ -1,11 +1,14 @@
 // ─────────────────────────────────────────────────────────────
-// src/types/recipe.ts
-// DTO ของ resource /recipes (docs/API_CONTRACT.md §3) — "สูตรหลัก" ผูกกับสินค้า 1:1
-// ระบบต้นทาง (-MeowMeeCake-NextJS5) เก็บ steps เป็น JSON string ใน `steps_content` — ที่นี่เก็บเป็น
-// array ตรง ๆ (envelope คุยกันเป็น JSON อยู่แล้ว ไม่ต้อง stringify ซ้อน)
+// src/types/recipe.ts — DTO ของ resource /admin/recipes (recipeModel.ts จริงฝั่ง backend)
+//
+// backend เก็บ steps เป็น JSON string ใน steps_content (parse/stringify ที่ services/recipes.ts
+// จุดเดียว) · ไม่มี field product_type/yield_unit_abbr/ingredient_name/component_name บน backend
+// เลย (populate แค่ product_id + yield_unit_id ตอน list — ไม่ populate ingredients/components ข้างใน)
+// — product_name/yield_unit_abbr denormalize จาก populate ที่มีอยู่ได้ที่ services/recipes.ts
+// ส่วน ingredient_name/unit_abbr/component_name ต้อง join กับ ingredients/units/components ที่โหลด
+// แยกอยู่แล้วใน useRecipesViewModel.ts (ไม่เพิ่ม request ใหม่)
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
-import type { ProductType } from "@/types/product";
 import type { RecipeIngredientLine, RecipeStep } from "@/types/recipeShared";
 
 /** สูตรส่วนประกอบที่ใช้ในสูตรหลัก — quantity = จำนวน batch ของ RecipeComponent นั้น */
@@ -19,9 +22,8 @@ export interface Recipe {
   _id: string;
   recipe_name: string;
   product_id: string;
-  /** denormalize ไว้ตรง ๆ — โชว์การ์ด/ตารางโดยไม่ต้อง join */
+  /** denormalize จาก product_id ที่ backend populate มาให้แล้ว (services/recipes.ts) */
   product_name: string;
-  product_type: ProductType;
   components: RecipeComponentRef[];
   /** วัตถุดิบที่ใช้ตรง (ไม่ผ่านสูตรส่วนประกอบ) */
   ingredients: RecipeIngredientLine[];
@@ -36,7 +38,23 @@ export interface Recipe {
   updated_at: string;
 }
 
-export type RecipeInput = Omit<Recipe, "_id" | "created_at" | "updated_at">;
+/**
+ * body ตอน create/update จริง — ต่างจาก Recipe: steps เป็น array ที่นี่ (services/recipes.ts
+ * stringify ให้เป็น steps_content เอง) · component ref backend บังคับมี unit_id ด้วย (แม้ frontend
+ * ไม่โชว์ก็ต้องแนบไป — ปกติ = yield_unit_id ของ component นั้น, ดู useRecipesViewModel.onSaveRecipe)
+ */
+export interface RecipeInput {
+  recipe_name: string;
+  product_id: string;
+  components: { component_id: string; quantity: number; unit_id: string }[];
+  ingredients: { ingredient_id: string; quantity: number; unit_id: string }[];
+  steps: RecipeStep[];
+  yield_qty: number;
+  yield_unit_id: string;
+  estimated_cost_per_batch: number;
+  duration_minutes: number;
+  note?: string | null;
+}
 
 export interface RecipeListParams extends ListParams {
   product_id?: string;

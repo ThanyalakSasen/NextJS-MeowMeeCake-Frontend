@@ -102,7 +102,7 @@ export function IngredientsView(vm: VM) {
                   onChange={(v) => vm.setCategoryId(v as string)}
                   options={[
                     { value: "all", label: t("common.all") },
-                    ...vm.categories.map((c) => ({ value: c._id, label: c.category_name })),
+                    ...vm.categories.map((c) => ({ value: c._id, label: c.ingredient_category_name })),
                   ]}
                 />
               </div>

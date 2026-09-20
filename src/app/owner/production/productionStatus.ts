@@ -18,20 +18,6 @@ export function getNextStatus(status: ProductionStatus): ProductionStatus | null
   return PRODUCTION_STATUS_FLOW[idx + 1];
 }
 
-/** body สำหรับ PATCH เปลี่ยนสถานะ — เติม started_at/completed_at อัตโนมัติครั้งแรกที่เข้าสถานะนั้น
- *  ใช้ทั้งลาก kanban การ์ด (StatusTab) และปุ่มเลื่อนสถานะ (ProductionOrderDetail) */
-export function statusChangePatch(
-  current: { started_at?: string | null; completed_at?: string | null },
-  next: ProductionStatus,
-): { production_status: ProductionStatus; started_at?: string; completed_at?: string } {
-  const now = new Date().toISOString();
-  return {
-    production_status: next,
-    ...(next === "in_progress" && !current.started_at ? { started_at: now } : {}),
-    ...(next === "done" && !current.completed_at ? { completed_at: now } : {}),
-  };
-}
-
 /** ระยะเวลาที่ใช้ผลิตจริง (ชม., ปัดทศนิยม 1 ตำแหน่ง) — null ถ้ายังไม่เริ่ม/ยังไม่เสร็จ */
 export function durationHours(order: { started_at?: string | null; completed_at?: string | null }): number | null {
   if (!order.started_at || !order.completed_at) return null;

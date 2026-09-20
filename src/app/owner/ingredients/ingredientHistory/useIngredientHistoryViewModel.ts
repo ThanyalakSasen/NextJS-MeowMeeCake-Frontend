@@ -10,6 +10,7 @@ import { ingredientsService } from "@/services/ingredients";
 import { unitsService } from "@/services/units";
 import { usePermission } from "@/context/PermissionsContext";
 import type { IngredientTxnType } from "@/constants/enumConfig";
+import { refId } from "@/lib/refId";
 
 export interface HistoryRow {
   _id: string;
@@ -51,21 +52,23 @@ export function useIngredientHistoryViewModel() {
     const ingMap = new Map(
       (ingredientsQ.data?.data ?? []).map((i) => [
         i._id,
-        { name: i.ingredient_name, unit: (i.unit_id && unitMap.get(i.unit_id)) || "" },
+        { name: i.ingredient_name, unit: (refId(i.unit_id) && unitMap.get(refId(i.unit_id))) || "" },
       ]),
     );
     return (txnsQ.data?.data ?? [])
       .map((tx) => {
-        const ing = ingMap.get(tx.ingredient_id);
+        const ing = ingMap.get(refId(tx.ingredient_id));
+        const performedByName =
+          typeof tx.performed_by === "object" && tx.performed_by ? tx.performed_by.user_fullname : null;
         return {
           _id: tx._id,
           createdAt: tx.created_at,
           ingredientName: ing?.name ?? "—",
           type: tx.type,
-          quantity: tx.quantity,
+          quantity: tx.qty,
           unitAbbr: ing?.unit ?? "",
           note: tx.note ?? "",
-          performedBy: tx.performed_by ?? "—",
+          performedBy: performedByName ?? "—",
         };
       })
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));

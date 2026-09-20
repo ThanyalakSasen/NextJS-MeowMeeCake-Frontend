@@ -2,7 +2,7 @@
 // การ์ดสูตรหลัก 1 สูตร — ผูกกับสินค้า แสดงส่วนประกอบ (สูตรส่วนประกอบ + วัตถุดิบตรง) แบบย่อ
 import { useTranslations, useLocale } from "next-intl";
 import { LinkIcon, EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
-import { Button, Card, Tag } from "@/components/base";
+import { Button, Card } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Recipe } from "@/types/recipe";
@@ -42,9 +42,6 @@ export function RecipeCard({
               </p>
             </div>
           </div>
-          <Tag color={recipe.product_type === "ready" ? "success" : "processing"}>
-            {t(`enums.orderType.${recipe.product_type}`)}
-          </Tag>
         </div>
       </div>
 

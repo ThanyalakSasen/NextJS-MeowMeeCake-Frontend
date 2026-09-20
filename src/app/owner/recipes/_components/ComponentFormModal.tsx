@@ -9,7 +9,6 @@ import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, Divider } from "@/components/base";
 import { alert } from "@/lib/alert";
-import { RECIPE_CATEGORIES } from "@/constants/enumConfig";
 import type { RecipeComponent } from "@/types/recipeComponent";
 import type { RecipeIngredientLine, RecipeStep } from "@/types/recipeShared";
 import type { ComponentFormValue } from "../componentForm";
@@ -27,6 +26,7 @@ export function ComponentFormModal({
   editTarget,
   ingredientOptions,
   yieldUnitOptions,
+  categoryOptions,
   saving,
   onClose,
   onSubmit,
@@ -35,6 +35,7 @@ export function ComponentFormModal({
   editTarget: RecipeComponent | null;
   ingredientOptions: IngredientOption[];
   yieldUnitOptions: { value: string; label: string }[];
+  categoryOptions: { value: string; label: string }[];
   saving: boolean;
   onClose: () => void;
   onSubmit: (v: ComponentSubmitValue) => void;
@@ -70,8 +71,8 @@ export function ComponentFormModal({
           <FormItem name="component_name" label={t("recipes.fieldComponentName")} rules={[{ required: true, message: t("validation.required") }]}>
             <Input placeholder={t("recipes.componentNamePlaceholder")} />
           </FormItem>
-          <FormItem name="category" label={t("recipes.fieldCategory")} rules={[{ required: true, message: t("validation.required") }]}>
-            <Select options={RECIPE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.recipeCategory.${c}`) }))} />
+          <FormItem name="componentcategory_id" label={t("recipes.fieldCategory")} rules={[{ required: true, message: t("validation.required") }]}>
+            <Select options={categoryOptions} />
           </FormItem>
         </div>
 

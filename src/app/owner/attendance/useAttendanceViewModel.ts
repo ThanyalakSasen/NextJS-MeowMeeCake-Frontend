@@ -19,8 +19,9 @@ export function useAttendanceViewModel() {
   const userId = user?.id ?? "";
 
   const todayQ = useQuery({
-    queryKey: ["attendances", "today"],
-    queryFn: () => attendancesService.today(),
+    queryKey: ["attendances", "today", userId],
+    queryFn: () => attendancesService.today(userId),
+    enabled: !!userId,
   });
   const historyQ = useQuery({
     queryKey: ["attendances", "history", userId],

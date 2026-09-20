@@ -9,7 +9,6 @@ import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { DetailDrawer, ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
-import { RECIPE_CATEGORIES, RECIPE_CATEGORY_COLORS } from "@/constants/enumConfig";
 import type { RecipeComponent } from "@/types/recipeComponent";
 import type { useRecipesViewModel } from "./useRecipesViewModel";
 import { RecipeCard } from "./_components/RecipeCard";
@@ -57,7 +56,7 @@ function MainTab(vm: VM) {
                 onChange={(v) => vm.setMainCategoryFilter(v as string)}
                 options={[
                   { value: "all", label: t("common.all") },
-                  ...vm.productCategories.map((c) => ({ value: c._id, label: c.category_name })),
+                  ...vm.productCategories.map((c) => ({ value: c._id, label: c.product_category_name })),
                 ]}
               />
             </div>
@@ -101,10 +100,7 @@ function ComponentsTab(vm: VM) {
     {
       key: "category",
       title: t("recipes.fieldCategory"),
-      render: (c) => {
-        const cfg = RECIPE_CATEGORY_COLORS[c.category];
-        return <Tag style={{ background: cfg.bg, color: cfg.text, borderColor: "transparent" }}>{t(`enums.recipeCategory.${c.category}`)}</Tag>;
-      },
+      render: (c) => <Tag>{c.category_name}</Tag>,
     },
     {
       key: "ingredients",
@@ -166,11 +162,8 @@ function ComponentsTab(vm: VM) {
             <div style={{ minWidth: 170 }}>
               <Select
                 value={vm.subCategoryFilter}
-                onChange={(v) => vm.setSubCategoryFilter(v as VM["subCategoryFilter"])}
-                options={[
-                  { value: "all", label: t("common.all") },
-                  ...RECIPE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.recipeCategory.${c}`) })),
-                ]}
+                onChange={(v) => vm.setSubCategoryFilter(v as string)}
+                options={[{ value: "all", label: t("common.all") }, ...vm.componentCategoryOptions]}
               />
             </div>
           </>
@@ -243,6 +236,7 @@ export function RecipesView(vm: VM) {
         editTarget={vm.componentEditTarget}
         ingredientOptions={vm.ingredientOptions}
         yieldUnitOptions={vm.allUnitOptions}
+        categoryOptions={vm.componentCategoryOptions}
         saving={vm.savingComponent}
         onClose={vm.closeComponentForm}
         onSubmit={vm.onSaveComponent}

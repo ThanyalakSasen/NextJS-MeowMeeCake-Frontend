@@ -64,7 +64,10 @@ export function useStoreDesignViewModel() {
 
   const save = useMutation({
     mutationFn: (v: BannerFormValue) =>
-      editTarget ? bannersService.update(editTarget._id, toInput(v)) : bannersService.create(toInput(v)),
+      editTarget
+        ? bannersService.update(editTarget._id, toInput(v))
+        // ใหม่ = ต่อท้ายลำดับสุดท้ายเสมอ (ไม่มีให้กรอกในฟอร์มแล้ว — จัดลำดับด้วยการลากการ์ดแทน)
+        : bannersService.create({ ...toInput(v), sort_order: rows.length > 0 ? Math.max(...rows.map((b) => b.sort_order)) + 1 : 1 }),
     onSuccess: () => {
       alert.success(t("storeDesign.saved"));
       invalidate();
@@ -73,6 +76,33 @@ export function useStoreDesignViewModel() {
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("storeDesign.saveFailed")),
   });
+
+  // จัดลำดับด้วยการลากการ์ด — การ์ดที่ N หลังลากแล้วต้องได้ sort_order = N เสมอ (1-based)
+  // ยิง PATCH เฉพาะใบที่ sort_order เปลี่ยนจริงเท่านั้น (ลากแค่ 2 ใบ ไม่ต้องยิงทั้งลิสต์)
+  const reorder = useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      const current = new Map(rows.map((b) => [b._id, b.sort_order]));
+      const changes = orderedIds
+        .map((id, i) => ({ id, sort_order: i + 1 }))
+        .filter(({ id, sort_order }) => current.get(id) !== sort_order);
+      await Promise.all(changes.map(({ id, sort_order }) => bannersService.update(id, { sort_order })));
+    },
+    onSuccess: invalidate,
+    onError: () => alert.error(t("storeDesign.reorderFailed")),
+  });
+
+  // จัดลำดับได้เฉพาะตอนเห็นลิสต์เต็ม ไม่ถูกกรอง — ไม่งั้นตำแหน่งการ์ดที่เห็นจะไม่ตรงกับ sort_order จริง
+  const canReorder = tab === "all" && search.trim() === "";
+
+  const onReorder = (draggedId: string, targetId: string) => {
+    if (!canReorder || draggedId === targetId) return;
+    const ids = rows.map((b) => b._id);
+    const from = ids.indexOf(draggedId);
+    const to = ids.indexOf(targetId);
+    if (from === -1 || to === -1) return;
+    ids.splice(to, 0, ids.splice(from, 1)[0]);
+    reorder.mutate(ids);
+  };
 
   const remove = useMutation({
     mutationFn: (id: string) => bannersService.remove(id),
@@ -99,6 +129,8 @@ export function useStoreDesignViewModel() {
 
     tab, setTab,
     search, setSearch,
+
+    canReorder, onReorder, reordering: reorder.isPending,
 
     modalOpen,
     editTarget,

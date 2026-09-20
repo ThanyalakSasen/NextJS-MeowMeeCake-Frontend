@@ -18,6 +18,21 @@ export interface Banner {
   updated_at: string;
 }
 
-export type BannerInput = Omit<Banner, "_id" | "created_at" | "updated_at">;
+/**
+ * body ตอน POST/PATCH /admin/banners จริง — ต่างจาก Banner ตรงที่ backend (schemas/catalog.ts
+ * bannerCreate) รับ field เสริมพวกนี้เป็น "ไม่ส่งมา" (undefined) เท่านั้น ส่ง `null` ตรง ๆ ไม่ได้
+ * (zod `.optional()` ไม่ใช่ `.nullable()`) — ต่างจาก Banner (ที่อ่านจาก DB จริงได้ null สำหรับ
+ * start_date/end_date เพราะ mongoose schema ตั้ง default: null ไว้)
+ */
+export interface BannerInput {
+  banner_name: string;
+  banner_description?: string;
+  banner_img: string;
+  banner_link?: string;
+  start_date?: string;
+  end_date?: string;
+  sort_order: number;
+  is_active?: boolean;
+}
 
 export type BannerListParams = ListParams;

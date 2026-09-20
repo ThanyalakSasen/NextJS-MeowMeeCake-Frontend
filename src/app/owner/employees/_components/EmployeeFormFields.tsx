@@ -4,18 +4,24 @@
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import type { Rule } from "antd/es/form";
-import { Input, InputNumber, Select, Switch, DatePicker, FormItem } from "@/components/base";
+import { Input, InputNumber, PasswordInput, Select, Switch, DatePicker, FormItem } from "@/components/base";
 import { rolesService } from "@/services/roles";
 
-export function EmployeeFormFields() {
+export function EmployeeFormFields({ isEdit = false }: { isEdit?: boolean }) {
   const t = useTranslations();
   const roles = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list() });
   // เลือกได้เฉพาะตำแหน่งพนักงาน — ตัด role ลูกค้าออก (เหมือนหน้ารายชื่อ)
   const staffRoles = (roles.data?.data ?? []).filter((r) => r.role_type !== "customer");
 
   const required: Rule[] = [{ required: true, message: t("validation.required") }];
-  const emailRule: Rule[] = [{ type: "email", message: t("validation.email") }];
+  // backend (schemas/user.ts createUserBody) บังคับ email จริง (ไม่ optional) ทั้งตอนสร้างและแก้ไข
+  const emailRule: Rule[] = [{ required: true, message: t("validation.required") }, { type: "email", message: t("validation.email") }];
   const nonNegative: Rule[] = [{ type: "number", min: 0, message: t("validation.nonNegative") }];
+  // backend (schemas/user.ts createUserBody → userService.assertPasswordStrength) บังคับอย่างน้อย 8 ตัวอักษร
+  const passwordRule: Rule[] = [
+    { required: true, message: t("validation.required") },
+    { min: 8, message: t("employees.passwordHint") },
+  ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 max-w-3xl">
@@ -29,6 +35,12 @@ export function EmployeeFormFields() {
       <FormItem name="email" label={t("fields.email")} rules={emailRule}>
         <Input />
       </FormItem>
+      {!isEdit && (
+        <FormItem name="password" label={t("fields.password")} extra={t("employees.passwordHint")} rules={passwordRule}>
+          <PasswordInput />
+        </FormItem>
+      )}
+
       <FormItem name="role_id" label={t("fields.role_id")} rules={required}>
         <Select
           allowClear
@@ -56,7 +68,20 @@ export function EmployeeFormFields() {
         <DatePicker />
       </FormItem>
 
-      <FormItem name="emp_status" label={t("fields.emp_status")} valuePropName="checked">
+      <FormItem
+        name="is_active"
+        label={t("employees.fieldCanLogin")}
+        extra={t("employees.fieldCanLoginHint")}
+        valuePropName="checked"
+      >
+        <Switch />
+      </FormItem>
+      <FormItem
+        name="emp_status"
+        label={t("fields.emp_status")}
+        extra={t("employees.fieldEmpStatusHint")}
+        valuePropName="checked"
+      >
         <Switch />
       </FormItem>
     </div>

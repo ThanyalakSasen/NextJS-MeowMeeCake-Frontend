@@ -24,14 +24,30 @@ function paletteOf(seed: string) {
 
 export function BannerCard({
   banner,
+  draggable,
+  dragging,
+  dragOver,
   onEdit,
   onDelete,
   onToggle,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
 }: {
   banner: BannerRow;
+  draggable: boolean;
+  dragging: boolean;
+  dragOver: boolean;
   onEdit: (b: BannerRow) => void;
   onDelete: (id: string) => void;
   onToggle: (b: BannerRow) => void;
+  onDragStart: (id: string) => void;
+  onDragOver: () => void;
+  onDragLeave: () => void;
+  onDrop: (id: string) => void;
+  onDragEnd: () => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -48,8 +64,21 @@ export function BannerCard({
 
   return (
     <div
-      className={`overflow-hidden rounded-xl border border-gray-100 bg-white transition-shadow hover:shadow-md ${
-        banner.status === "inactive" ? "opacity-60" : ""
+      draggable={draggable}
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", banner._id);
+        e.dataTransfer.effectAllowed = "move";
+        onDragStart(banner._id);
+      }}
+      onDragOver={(e) => { if (draggable) { e.preventDefault(); onDragOver(); } }}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => { e.preventDefault(); onDrop(banner._id); }}
+      onDragEnd={onDragEnd}
+      title={draggable ? t("storeDesign.reorderHint") : undefined}
+      className={`overflow-hidden rounded-xl border bg-white transition-all ${
+        dragOver ? "border-brown-400 shadow-md" : "border-gray-100 hover:shadow-md"
+      } ${banner.status === "inactive" ? "opacity-60" : ""} ${dragging ? "opacity-40" : ""} ${
+        draggable ? "cursor-grab active:cursor-grabbing" : ""
       }`}
     >
       <div className="relative h-40 overflow-hidden">

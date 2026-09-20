@@ -14,6 +14,7 @@ import { rolesService } from "@/services/roles";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
+import { refId } from "@/lib/refId";
 import { formatDate } from "@/i18n/format";
 import type { UserLog } from "@/types/userLog";
 import type { UserLogAction } from "@/constants/enumConfig";
@@ -56,7 +57,7 @@ export function useUserLogViewModel() {
     const userInfo = new Map(
       (usersQ.data?.data ?? []).map((u) => [
         u._id,
-        { name: u.user_fullname, role: (u.role_id && roleName.get(u.role_id)) || "—" },
+        { name: u.user_fullname, role: (u.role_id && roleName.get(refId(u.role_id))) || "—" },
       ]),
     );
     return (logsQ.data?.data ?? [])
