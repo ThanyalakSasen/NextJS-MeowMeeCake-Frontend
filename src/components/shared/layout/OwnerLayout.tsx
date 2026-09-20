@@ -12,7 +12,8 @@ import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { PermissionsProvider } from "@/context/PermissionsContext";
 import { logout } from "@/lib/authClient";
 import { confirmAlert } from "@/lib/alert";
-import { LOGIN_PATH } from "@/constants/auth";
+import { ACCESS_DENIED_PATH, LOGIN_PATH } from "@/constants/auth";
+import { resolveMenuKey } from "@/constants/menuKeys";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
@@ -27,6 +28,16 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (isError) router.replace(`${LOGIN_PATH}?reason=expired`);
   }, [isError, router]);
+
+  // กั้นหน้าตามสิทธิ์: path ที่ผูก menu_key (constants/menuKeys.ts ROUTE_MENU_MAP) แต่ไม่มีสิทธิ์ view → หน้า access-denied
+  // path ที่ไม่ผูก key (dashboard, attendance ฯลฯ) = login พอ · owner มี view ทุกเมนูเสมอ
+  // นี่คือ UX gate — ข้อมูลจริงถูก backend กั้นอยู่แล้วทุก route (403) · สิทธิ์ถูกเพิกถอนระหว่างใช้งาน
+  // จะมีผลเมื่อ useCurrentUser refetch (โฟกัสแท็บ / ทุก 60 วินาที)
+  const menuKey = resolveMenuKey(pathname);
+  const denied = !!user && !!menuKey && !user.menuAccess[menuKey]?.view;
+  useEffect(() => {
+    if (denied) router.replace(ACCESS_DENIED_PATH);
+  }, [denied, router]);
 
   // ปิด drawer เมื่อเปลี่ยนหน้า (mobile) — side effect ต่อ navigation จริง ไม่ derive ได้
   useEffect(() => {
@@ -57,7 +68,8 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
   useIdleTimeout({ enabled: !!user, onWarn, onTimeout });
 
-  if (isLoading || !user) {
+  // denied: ไม่ render เนื้อหาหน้านั้นเลยระหว่างรอ redirect (กัน flash + กันหน้ายิง API ที่จะได้ 403)
+  if (isLoading || !user || denied) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpin />

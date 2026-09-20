@@ -5,9 +5,41 @@
 // ดู docs/AUTH_PLAN.md
 // ─────────────────────────────────────────────────────────────
 import { http, setUnauthorizedHandler } from "@/lib/http";
-import type { CurrentUser, LoginInput } from "@/types/auth";
+import type { CurrentUser, LoginInput, MenuAccess, RawAuthUser, RawMenuPermissions } from "@/types/auth";
 import type { ItemResponse } from "@/types/api";
 import { AUTH_BROADCAST_CHANNEL } from "@/constants/auth";
+import { ALL_MENU_KEYS, FULL_MENU_ACCESS, NO_MENU_ACCESS, isUnrestrictedRole } from "@/constants/menuKeys";
+
+// ── map RawAuthUser (ดิบจาก backend) → CurrentUser (ที่ที่เหลือของแอปใช้) ──
+// menuAccess: owner = สิทธิ์เต็มเสมอ · role อื่น = ตาม permissions ที่ backend ส่งมากับ /auth/me
+// (backend คำนวณจากตาราง permissions ของ role นั้น รวมเรื่องหมดอายุแล้ว) — ไม่มีข้อมูล = ปิดหมด (fail closed)
+// นี่เป็น UX gate เท่านั้น (ซ่อนเมนู/ปุ่ม) ตัวบังคับสิทธิ์จริงคือ backend ทุก route
+function buildMenuAccess(roleType: string | undefined, perms?: RawMenuPermissions): MenuAccess {
+  const full = isUnrestrictedRole(roleType);
+  return Object.fromEntries(
+    ALL_MENU_KEYS.map((key) => {
+      if (full) return [key, FULL_MENU_ACCESS];
+      const p = perms?.[key];
+      if (!p) return [key, NO_MENU_ACCESS];
+      return [
+        key,
+        { view: !!p.can_view, create: !!p.can_create, update: !!p.can_update, delete: !!p.can_delete, approve: !!p.can_approve },
+      ];
+    })
+  ) as MenuAccess;
+}
+
+function toCurrentUser(raw: RawAuthUser, perms?: RawMenuPermissions): CurrentUser {
+  const role = typeof raw.role_id === "string" ? null : raw.role_id;
+  return {
+    id: raw._id,
+    email: raw.email,
+    fullname: raw.user_fullname,
+    roleId: role?._id ?? (typeof raw.role_id === "string" ? raw.role_id : ""),
+    roleName: role?.role_name ?? "",
+    menuAccess: buildMenuAccess(role?.role_type, perms),
+  };
+}
 
 // ── BroadcastChannel (sync logout ข้ามแท็บ) ──
 let bc: BroadcastChannel | null = null;
@@ -29,8 +61,8 @@ export function onAuthBroadcast(handler: (msg: AuthBroadcast) => void): () => vo
 
 // ── endpoints ──
 export async function me(): Promise<CurrentUser> {
-  const res = await http.get<ItemResponse<CurrentUser>>("/auth/me");
-  return res.data;
+  const res = await http.get<ItemResponse<{ user: RawAuthUser; permissions?: RawMenuPermissions }>>("/auth/me");
+  return toCurrentUser(res.data.user, res.data.permissions);
 }
 
 export async function login(input: LoginInput): Promise<CurrentUser> {
