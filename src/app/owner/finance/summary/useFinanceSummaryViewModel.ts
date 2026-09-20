@@ -16,7 +16,7 @@ import { expensesService } from "@/services/expenses";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { COGS_EXPENSE_CATEGORIES } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
-import { getRangeStartEnd, type PeriodType } from "./financePeriod";
+import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 
 export interface PnLRow {
   key: string;
@@ -57,8 +57,10 @@ export function useFinanceSummaryViewModel() {
     [expenses, rangeStart, rangeEnd],
   );
 
-  const readyIncome = ordersInRange.filter((o) => o.order_type === "ready").reduce((s, o) => s + o.total_amount, 0);
-  const preorderIncome = ordersInRange.filter((o) => o.order_type === "preorder").reduce((s, o) => s + o.total_amount, 0);
+  // preorder ยังไม่เชื่อมกับ backend จริง (คนละ collection, ดู types/order.ts) — นับรวมเป็น 0 ไปก่อน
+  // ออเดอร์ทั้งหมดตอนนี้คือ "ready" (พร้อมขาย) เพราะ ordersService ดึงเฉพาะ /admin/orders
+  const readyIncome = ordersInRange.reduce((s, o) => s + o.total_amount, 0);
+  const preorderIncome = 0;
   const totalIncome = readyIncome + preorderIncome;
 
   const expenseByCategory = useMemo(() => {
@@ -89,7 +91,7 @@ export function useFinanceSummaryViewModel() {
       { key: "opex_header", label: t("finance.rowOpexHeader"), amount: 0, kind: "header" },
       ...opexEntries.map(([cat, amt]) => ({ key: `opex_${cat}`, label: t(`enums.expenseCategory.${cat}`), amount: amt, kind: "line" as const })),
       { key: "total_opex", label: t("finance.rowTotalOpex"), amount: totalOpex, kind: "subtotal" },
-      { key: "net_profit", label: t("finance.rowNetProfit"), amount: netProfit, kind: "net" },
+      { key: "net_profit", label: t("finance.rowNetResult"), amount: netProfit, kind: "net" },
     ];
     return rows;
     // eslint-disable-next-line react-hooks/exhaustive-deps
