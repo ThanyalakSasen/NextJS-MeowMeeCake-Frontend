@@ -1036,6 +1036,7 @@
     "statementTitle": "Profit & Loss Statement",
     "rowIncomeHeader": "Income",
     "rowReadySales": "In-store Sales",
+    "rowOnlineSales": "Online Sales",
     "rowPreorderSales": "Pre-order Sales",
     "rowTotalIncome": "Total Income",
     "rowCogsHeader": "Cost of Goods Sold (COGS)",

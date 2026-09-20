@@ -1036,6 +1036,7 @@
     "statementTitle": "งบกำไร-ขาดทุน",
     "rowIncomeHeader": "รายรับ",
     "rowReadySales": "ยอดขายสินค้าหน้าร้าน",
+    "rowOnlineSales": "ยอดขายสินค้าออนไลน์",
     "rowPreorderSales": "ยอดขายพรีออเดอร์",
     "rowTotalIncome": "รายรับรวม",
     "rowCogsHeader": "ต้นทุนขาย (COGS)",
