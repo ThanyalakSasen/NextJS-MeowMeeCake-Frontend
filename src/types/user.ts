@@ -27,5 +27,7 @@ export type AppUserInput = Omit<AppUser, "_id" | "created_at" | "updated_at">;
 
 export interface UserListParams extends ListParams {
   role_id?: string;
+  /** กรองตามประเภทบทบาทที่ backend (csv) เช่น "owner,staff" = พนักงานทั้งหมด ไม่รวมลูกค้า */
+  role_type?: string;
   emp_status?: boolean;
 }
