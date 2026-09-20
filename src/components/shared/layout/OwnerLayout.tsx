@@ -26,8 +26,9 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    if (isError) router.replace(`${LOGIN_PATH}?reason=expired`);
-  }, [isError, router]);
+    // แนบ next ไว้ด้วย — โหมด AUTH_GATE="client" ไม่มี proxy ช่วยใส่ ?next= ให้ (LoginForm รับเฉพาะ path ที่ขึ้นต้น /owner)
+    if (isError) router.replace(`${LOGIN_PATH}?reason=expired&next=${encodeURIComponent(pathname)}`);
+  }, [isError, router, pathname]);
 
   // กั้นหน้าตามสิทธิ์: path ที่ผูก menu_key (constants/menuKeys.ts ROUTE_MENU_MAP) แต่ไม่มีสิทธิ์ view → หน้า access-denied
   // path ที่ไม่ผูก key (dashboard, attendance ฯลฯ) = login พอ · owner มี view ทุกเมนูเสมอ
