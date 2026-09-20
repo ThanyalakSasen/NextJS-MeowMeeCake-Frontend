@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { PermissionsProvider } from "@/context/PermissionsContext";
-import { logout, refresh } from "@/lib/authClient";
+import { logout } from "@/lib/authClient";
 import { confirmAlert } from "@/lib/alert";
 import { LOGIN_PATH } from "@/constants/auth";
 import { LoadingSpin } from "@/components/shared/feedback";
@@ -45,8 +45,9 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
       confirmText: t("auth.stayLoggedIn"),
       cancelText: t("nav.logout"),
     });
-    if (stay) refresh().catch(() => {});
-    else handleLogout();
+    // "อยู่ต่อ" ไม่ต้องทำอะไร — การกดปุ่มยืนยันเป็น activity ที่รีเซ็ต timer ใน useIdleTimeout เอง
+    // (backend ไม่มี refresh token/sliding expiry จึงไม่มีอะไรให้ต่ออายุฝั่ง server)
+    if (!stay) handleLogout();
   }, [t, handleLogout]);
 
   const onTimeout = useCallback(async () => {

@@ -4,7 +4,6 @@
 // ไม่มีข้อความ UI (component เป็นคน render ข้อความผ่าน t())
 // ดู docs/AUTH_PLAN.md
 // ─────────────────────────────────────────────────────────────
-import type { AxiosRequestConfig } from "axios";
 import { http, setUnauthorizedHandler } from "@/lib/http";
 import type { CurrentUser, LoginInput } from "@/types/auth";
 import type { ItemResponse } from "@/types/api";
@@ -48,34 +47,21 @@ export async function logout(opts: { broadcast?: boolean } = {}): Promise<void> 
   if (opts.broadcast !== false) channel()?.postMessage({ type: "logout" } satisfies AuthBroadcast);
 }
 
-// ── refresh แบบ single-flight (หลาย request 401 พร้อมกัน → refresh ครั้งเดียว) ──
-let refreshing: Promise<void> | null = null;
-export function refresh(): Promise<void> {
-  if (!refreshing) {
-    refreshing = http
-      .post("/auth/refresh")
-      .then(() => undefined)
-      .finally(() => {
-        refreshing = null;
-      });
-  }
-  return refreshing;
-}
-
 /**
- * ต่อ interceptor 401 ของ http.ts เข้ากับ flow refresh
- * onFail = callback ตอน refresh ไม่สำเร็จ (component ใส่: เคลียร์ cache + redirect /login)
+ * ต่อ interceptor 401 ของ http.ts — backend ไม่มี refresh token (JWT อายุ 7 วัน) ดังนั้น 401 = session
+ * หมดอายุจริง → เรียก onFail ทันที (component ใส่: เคลียร์ cache + redirect /login)
+ * หลาย request 401 พร้อมกัน (เช่น dashboard ยิงหลาย endpoint) → onFail แค่ครั้งเดียวต่อช่วงสั้น ๆ
  * คืนฟังก์ชันถอด (ใช้ตอน unmount)
  */
+const FAIL_DEDUPE_MS = 2_000;
+
 export function installAuthInterceptor(onFail: () => void): () => void {
-  setUnauthorizedHandler(async (originalConfig: AxiosRequestConfig) => {
-    try {
-      await refresh();
-      return http.raw.request(originalConfig); // ยิง request เดิมซ้ำ
-    } catch {
-      onFail();
-      return Promise.reject({ status: 401, message: "session expired" });
-    }
+  let lastFired = 0;
+  setUnauthorizedHandler(() => {
+    const now = Date.now();
+    if (now - lastFired < FAIL_DEDUPE_MS) return;
+    lastFired = now;
+    onFail();
   });
   return () => setUnauthorizedHandler(null);
 }
