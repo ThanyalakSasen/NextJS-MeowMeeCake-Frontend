@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { AUTH_COOKIE, LOGIN_PATH, HOME_PATH } from "@/constants/auth";
+import { AUTH_COOKIE, AUTH_GATE, LOGIN_PATH, HOME_PATH } from "@/constants/auth";
 import { LOCALE_COOKIE, defaultLocale, isLocale } from "@/i18n/config";
 
 const LOCALE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -21,6 +21,14 @@ function ensureLocaleCookie(req: NextRequest, res: NextResponse): NextResponse {
 
 export function proxy(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
+
+  // โหมด "client" (คนละ site กับ backend — ดู constants/auth.ts AUTH_GATE): cookie มองไม่เห็นจากที่นี่ ห้ามเช็ค
+  // "/" ไปหน้าแรกเลย (ยังไม่ login → OwnerLayout เด้งไป /login เอง) · /owner/* และ /login ปล่อยผ่าน
+  if (AUTH_GATE === "client") {
+    if (pathname === "/") return ensureLocaleCookie(req, NextResponse.redirect(new URL(HOME_PATH, req.url)));
+    return ensureLocaleCookie(req, NextResponse.next());
+  }
+
   const hasAuth = !!req.cookies.get(AUTH_COOKIE)?.value;
 
   // "/" → เด้งตามสถานะ login (redirect ใน page.tsx เป็น meta-refresh ตอน streaming — ทำที่นี่ให้เป็น 307)

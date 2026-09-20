@@ -29,8 +29,10 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// ── 401 handler ── (Phase 2: authClient ลงทะเบียน refresh+redirect ที่นี่)
-type UnauthorizedHandler = (originalRequest: AxiosRequestConfig) => Promise<unknown>;
+// ── 401 handler ── authClient ลงทะเบียนที่นี่ (ล้าง cache + redirect ไป login)
+// backend ไม่มี refresh token (JWT อายุ 7 วัน) → 401 = session หมดอายุจริง ไม่มีการ refresh/retry
+// interceptor แค่แจ้ง handler แล้วยังโยน ApiError ของ backend กลับให้ผู้เรียกตามปกติ
+type UnauthorizedHandler = () => void;
 let onUnauthorized: UnauthorizedHandler | null = null;
 export function setUnauthorizedHandler(fn: UnauthorizedHandler | null): void {
   onUnauthorized = fn;
@@ -62,12 +64,27 @@ function toApiError(err: AxiosError<BackendErrorBody>): ApiError {
   };
 }
 
+/**
+ * endpoint ที่ 401 = "คำตอบของมันเอง" ไม่ใช่ "session หมดอายุ" → ห้ามเด้งไป login
+ *  - /auth/login: 401 คือรหัสผ่านผิด ต้องส่ง error ของ backend ("อีเมลหรือรหัสผ่านไม่ถูกต้อง") กลับให้ฟอร์มแสดงตรง ๆ
+ *    (ถ้าปล่อยเข้า handler จะเด้ง /login?reason=expired + ล้าง cache ทุกครั้งที่พิมพ์รหัสผิด)
+ *  - /auth/logout, /auth/register, /auth/google: ไม่มี session ให้หมดอายุตั้งแต่แรก
+ * (/auth/me ไม่อยู่ในลิสต์นี้ — 401 ตรงนั้นคือ session หมดอายุจริง ให้เด้งไป login)
+ */
+const NO_EXPIRY_REDIRECT_PATHS = ["/auth/login", "/auth/logout", "/auth/register", "/auth/google"];
+
+function skipsUnauthorizedHandler(config: AxiosRequestConfig | undefined): boolean {
+  const url = config?.url ?? "";
+  // config.url อาจเป็น relative ("/auth/login") หรือเต็ม (baseURL + path) — ตัด query แล้วเทียบท้าย path
+  const path = url.split("?")[0].replace(/\/+$/, "");
+  return NO_EXPIRY_REDIRECT_PATHS.some((p) => path === p || path.endsWith(p));
+}
+
 client.interceptors.response.use(
   (res) => res,
-  async (err: AxiosError) => {
-    if (err.response?.status === 401 && onUnauthorized && !(err.config as { _retried?: boolean })?._retried) {
-      (err.config as { _retried?: boolean })._retried = true;
-      return onUnauthorized(err.config ?? {});
+  (err: AxiosError) => {
+    if (err.response?.status === 401 && onUnauthorized && !skipsUnauthorizedHandler(err.config)) {
+      onUnauthorized();
     }
     return Promise.reject(toApiError(err as AxiosError<BackendErrorBody>));
   },
@@ -94,6 +111,6 @@ export const http = {
   post:   <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => client.post<T>(url, body, config).then((r) => r.data),
   patch:  <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => client.patch<T>(url, body, config).then((r) => r.data),
   delete: <T>(url: string, config?: AxiosRequestConfig) => client.delete<T>(url, config).then((r) => r.data),
-  /** ใช้ retry request เดิมหลัง refresh สำเร็จ (Phase 2) */
+  /** axios instance ตรง ๆ — สำหรับกรณีพิเศษที่ facade ไม่พอ (ตอนนี้ยังไม่มีผู้ใช้) */
   raw: client,
 };

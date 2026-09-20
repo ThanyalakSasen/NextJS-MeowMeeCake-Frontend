@@ -4,12 +4,13 @@
 // (port จาก lib/menuKeys.ts ของระบบเดิม — ไม่แตะ DB, ไม่มี side effect)
 // ─────────────────────────────────────────────────────────────
 
+// ต้องตรงกับ MENU_KEYS ของ backend (src/services/permissionService.ts) ทุกตัว — backend เช็คสิทธิ์ด้วย key เหล่านี้
 export type MenuKey =
-  | "dashboard" | "products" | "orders" | "payments" | "ingredients"
+  | "dashboard" | "products" | "orders" | "preorder" | "payments" | "ingredients"
   | "stock" | "recipes" | "production" | "employees" | "promotions" | "reports";
 
 export const ALL_MENU_KEYS: MenuKey[] = [
-  "dashboard", "products", "orders", "payments", "ingredients",
+  "dashboard", "products", "orders", "preorder", "payments", "ingredients",
   "stock", "recipes", "production", "employees", "promotions", "reports",
 ];
 
@@ -38,6 +39,7 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/ingredients", menuKey: "ingredients" },
   { prefix: "/owner/products/productStock", menuKey: "stock" },
   { prefix: "/owner/products", menuKey: "products" },
+  { prefix: "/owner/orders/preOrderRound", menuKey: "preorder" },
   { prefix: "/owner/orders", menuKey: "orders" },
   { prefix: "/owner/promotions", menuKey: "promotions" },
   { prefix: "/owner/production", menuKey: "production" },

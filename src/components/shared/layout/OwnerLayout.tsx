@@ -10,9 +10,10 @@ import { useTranslations } from "next-intl";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { PermissionsProvider } from "@/context/PermissionsContext";
-import { logout, refresh } from "@/lib/authClient";
+import { logout } from "@/lib/authClient";
 import { confirmAlert } from "@/lib/alert";
-import { LOGIN_PATH } from "@/constants/auth";
+import { ACCESS_DENIED_PATH, LOGIN_PATH } from "@/constants/auth";
+import { resolveMenuKey } from "@/constants/menuKeys";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
@@ -25,8 +26,19 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    if (isError) router.replace(`${LOGIN_PATH}?reason=expired`);
-  }, [isError, router]);
+    // แนบ next ไว้ด้วย — โหมด AUTH_GATE="client" ไม่มี proxy ช่วยใส่ ?next= ให้ (LoginForm รับเฉพาะ path ที่ขึ้นต้น /owner)
+    if (isError) router.replace(`${LOGIN_PATH}?reason=expired&next=${encodeURIComponent(pathname)}`);
+  }, [isError, router, pathname]);
+
+  // กั้นหน้าตามสิทธิ์: path ที่ผูก menu_key (constants/menuKeys.ts ROUTE_MENU_MAP) แต่ไม่มีสิทธิ์ view → หน้า access-denied
+  // path ที่ไม่ผูก key (dashboard, attendance ฯลฯ) = login พอ · owner มี view ทุกเมนูเสมอ
+  // นี่คือ UX gate — ข้อมูลจริงถูก backend กั้นอยู่แล้วทุก route (403) · สิทธิ์ถูกเพิกถอนระหว่างใช้งาน
+  // จะมีผลเมื่อ useCurrentUser refetch (โฟกัสแท็บ / ทุก 60 วินาที)
+  const menuKey = resolveMenuKey(pathname);
+  const denied = !!user && !!menuKey && !user.menuAccess[menuKey]?.view;
+  useEffect(() => {
+    if (denied) router.replace(ACCESS_DENIED_PATH);
+  }, [denied, router]);
 
   // ปิด drawer เมื่อเปลี่ยนหน้า (mobile) — side effect ต่อ navigation จริง ไม่ derive ได้
   useEffect(() => {
@@ -45,8 +57,9 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
       confirmText: t("auth.stayLoggedIn"),
       cancelText: t("nav.logout"),
     });
-    if (stay) refresh().catch(() => {});
-    else handleLogout();
+    // "อยู่ต่อ" ไม่ต้องทำอะไร — การกดปุ่มยืนยันเป็น activity ที่รีเซ็ต timer ใน useIdleTimeout เอง
+    // (backend ไม่มี refresh token/sliding expiry จึงไม่มีอะไรให้ต่ออายุฝั่ง server)
+    if (!stay) handleLogout();
   }, [t, handleLogout]);
 
   const onTimeout = useCallback(async () => {
@@ -56,7 +69,8 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
   useIdleTimeout({ enabled: !!user, onWarn, onTimeout });
 
-  if (isLoading || !user) {
+  // denied: ไม่ render เนื้อหาหน้านั้นเลยระหว่างรอ redirect (กัน flash + กันหน้ายิง API ที่จะได้ 403)
+  if (isLoading || !user || denied) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpin />
