@@ -32,9 +32,11 @@ export function useEmployeesViewModel() {
   const [roleId, setRoleId] = useState<string>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
 
+  // หน้าพนักงาน = เจ้าของ + พนักงานเท่านั้น — กรองที่ backend (ไม่ดึงลูกค้ามา และไม่ให้ลูกค้าจำนวนมากดันพนักงานตกหน้า limit)
+  // key แยก ["users","staff"] เพราะหน้าอื่นใช้ ["users"] เดิมกับชุดข้อมูล/limit ต่างกัน (แคชจะปนกัน) — invalidate ["users"] ยังครอบถึง
   const usersQ = useQuery({
-    queryKey: ["users"],
-    queryFn: () => usersService.list({ limit: 100 }),
+    queryKey: ["users", "staff"],
+    queryFn: () => usersService.list({ limit: 100, role_type: "owner,staff" }),
   });
   const rolesQ = useQuery({
     queryKey: ["roles"],
