@@ -10,7 +10,7 @@
 // "ลูกค้าทั่วไป" ตายตัว (สร้างไว้แล้วผ่าน scripts/seed.ts, ดูค่าคงที่ GUEST_CUSTOMER_EMAIL ที่นั่น)
 // bundle/promotion/ประวัติวันนี้/Omise QR จริง → นอกขอบเขต #8 (ดู SCREEN_MAP.md §4)
 // ─────────────────────────────────────────────────────────────
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { productsService } from "@/services/products";
@@ -92,6 +92,55 @@ export function usePOSViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.scanFailed")),
     onSettled: () => setScanCode(""),
   });
+
+  // scan.mutate เปลี่ยน reference ทุก render (useMutation ไม่การันตี stable identity) — เก็บผ่าน ref
+  // ให้ effect ด้านล่าง mount แค่ครั้งเดียวได้จริง (ดูเหตุผลเต็มที่คอมเมนต์ของ effect นั้น) — ต้องอัปเดต
+  // ref ใน effect เอง ห้ามเขียนตรงกลาง render (React จะ error "Cannot update ref during render")
+  const scanMutateRef = useRef(scan.mutate);
+  useEffect(() => {
+    scanMutateRef.current = scan.mutate;
+  }, [scan.mutate]);
+
+  // ยิงบาร์โค้ดได้จากทุกที่ในหน้าโดยไม่ต้องคลิกช่องกรอกก่อน — เครื่องสแกนจริงพิมพ์เร็วมากแล้วปิดท้าย
+  // ด้วย Enter เสมอ (จำลองคีย์บอร์ด) ถ้าตอนนั้น focus ไม่ได้อยู่ใน input/textarea อื่นจริง ๆ (เช่นแค่คลิก
+  // การ์ดสินค้า/ปุ่มไปมา ไม่ได้ตั้งใจพิมพ์อะไรอยู่) capture คีย์เข้ามาเป็นบัฟเฟอร์เอง แล้วอัปเดต scanCode
+  // ให้เห็นด้วย — แต่ถ้า focus อยู่ใน input จริง (ค้นหา/ชื่อลูกค้า/ช่องสแกนเอง) ปล่อยให้ input นั้นทำงาน
+  // ตามปกติ ไม่ไปแทรก กัน hijack การพิมพ์จริงของผู้ใช้
+  //
+  // ⚠️ ต้อง mount effect นี้ "ครั้งเดียว" (dependency array ว่างเปล่า) ห้ามผูกกับ scan/scan.mutate ตรง ๆ
+  // เพราะ reference เปลี่ยนทุก render — ถ้าผูกไว้ effect จะ cleanup+re-run ใหม่ทุกครั้งที่ setScanCode
+  // ทำให้ re-render (คือทุกตัวอักษรที่พิมพ์เลย) แล้ว buffer ถูกรีเซ็ตเป็นค่าว่างใหม่ทุกครั้ง เหลือแค่
+  // ตัวอักษรตัวสุดท้ายก่อนกด Enter เท่านั้น (เจอบั๊กนี้จริงตอนทดสอบเบราว์เซอร์ — ดู docs/BACKLOG.md)
+  useEffect(() => {
+    let buffer = "";
+    // antd เอง (TypeTabBar/Segmented, Switch, Radio) ใช้ <input type="radio"/"checkbox"> ที่ซ่อนไว้
+    // เป็นตัวรับ focus จริง — ไม่ใช่ input ที่ผู้ใช้ "พิมพ์" อะไร ต้องแยกออก ไม่งั้นแค่คลิก tab หมวดหมู่
+    // จะทำให้ระบบคิดว่ามี input พิมพ์อยู่แล้ว แล้วไม่ capture การยิงบาร์โค้ดให้เลย
+    const NON_TEXT_INPUT_TYPES = new Set(["radio", "checkbox", "button", "submit", "reset", "range", "file", "color", "hidden"]);
+    const isTextEditable = (el: Element | null) => {
+      if (!(el instanceof HTMLElement)) return false;
+      if (el.tagName === "TEXTAREA" || el.isContentEditable) return true;
+      if (el.tagName === "INPUT") return !NON_TEXT_INPUT_TYPES.has((el as HTMLInputElement).type);
+      return false;
+    };
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (isTextEditable(document.activeElement)) return;
+      if (e.key === "Enter") {
+        const code = buffer.trim();
+        buffer = "";
+        if (code) scanMutateRef.current(code);
+        return;
+      }
+      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        buffer += e.key;
+        setScanCode(buffer);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []); // ตั้งใจว่างเปล่า — mount ครั้งเดียวเท่านั้น (ดูคำอธิบายเต็มด้านบน)
 
   const subtotal = cartSubtotal(cart);
   const discount = Math.min(Math.max(extraDiscount, 0), subtotal);
