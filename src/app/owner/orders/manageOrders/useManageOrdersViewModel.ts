@@ -1,12 +1,15 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ Manage Orders — โหลดออเดอร์ทั้งหมด 1 ครั้ง (mock data เล็ก) แล้วกรอง/แบ่งหน้าฝั่ง client
-// เหมือนแพทเทิร์นของ Product Stock — ถ้าข้อมูลจริงเยอะขึ้นค่อยย้าย search/filter ไปเป็น query param
+// ViewModel ของ Manage Orders — โหลดออเดอร์ทั้งหมด 1 ครั้ง แล้วกรอง/แบ่งหน้าฝั่ง client
+// แท็บ delivery/takeaway = order_type จริงของ backend (orderModel.ts) — ไม่ใช่ ready/preorder
+// (พรีออเดอร์เป็นคนละ collection ทั้งหมด ยังไม่เชื่อมกับหน้านี้ — ดู types/order.ts หัวไฟล์)
+// การชำระเงิน (verify/reject) เป็นคนละ resource (Payments) ไม่ใช่ field ที่แก้ตรง ๆ บน order ได้
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
 import { ordersService } from "@/services/orders";
+import { paymentsService } from "@/services/payments";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
@@ -22,7 +25,7 @@ export function useManageOrdersViewModel() {
   const perm = usePermission("orders");
   const paymentPerm = usePermission("payments");
 
-  const [activeTab, setActiveTabState] = useState<OrderType>("ready");
+  const [activeTab, setActiveTabState] = useState<OrderType>("delivery");
   const [search, setSearchState] = useState("");
   const [statusFilter, setStatusFilterState] = useState<OrderStatus | "all">("all");
   const [paymentFilter, setPaymentFilterState] = useState<PaymentStatus | "all">("all");
@@ -36,12 +39,12 @@ export function useManageOrdersViewModel() {
     queryFn: () => ordersService.list({ limit: 100 }),
   });
 
-  const all = ordersQ.data?.data ?? [];
-  const readyCount = all.filter((o) => o.order_type === "ready").length;
-  const preorderCount = all.filter((o) => o.order_type === "preorder").length;
+  const all = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);
+  const deliveryCount = all.filter((o) => o.order_type === "delivery").length;
+  const takeawayCount = all.filter((o) => o.order_type === "takeaway").length;
   const typeOrders = useMemo(
-    () => (ordersQ.data?.data ?? []).filter((o) => o.order_type === activeTab),
-    [ordersQ.data, activeTab],
+    () => all.filter((o) => o.order_type === activeTab),
+    [all, activeTab],
   );
 
   const filtered = useMemo(() => {
@@ -60,19 +63,33 @@ export function useManageOrdersViewModel() {
   );
 
   const unreviewedCount = typeOrders.filter((o) => o.payment_status === "pending").length;
-  const selectedOrder = all.find((o) => o._id === selectedId) ?? null;
+
+  // รายละเอียดเต็ม (มี items จริง) + รายการชำระเงินที่ผูกไว้ — ดึงเฉพาะตอนเปิด drawer (กัน N+1 ในตาราง)
+  const detailQ = useQuery({
+    queryKey: ["orders", "detail", selectedId],
+    queryFn: () => ordersService.get(selectedId as string),
+    enabled: !!selectedId && drawerOpen,
+  });
+  const paymentQ = useQuery({
+    queryKey: ["payments", "by-order", selectedId],
+    queryFn: () => paymentsService.listByOrder(selectedId as string),
+    enabled: !!selectedId && drawerOpen,
+  });
+  const selectedOrder = detailQ.data?.data ?? null;
+  const selectedPayment = paymentQ.data?.data[0] ?? null;
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["orders"] });
 
-  const updateOrder = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: Partial<Order> }) => ordersService.update(id, body),
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status, reason }: { id: string; status: OrderStatus; reason?: string }) =>
+      ordersService.updateStatus(id, status, reason),
     onSuccess: invalidate,
   });
 
   const onStatusChange = (order: Order, next: OrderStatus) => {
     if (next === order.order_status) return;
-    updateOrder.mutate(
-      { id: order._id, body: { order_status: next } },
+    statusMutation.mutate(
+      { id: order._id, status: next },
       {
         onSuccess: () => alert.success(t("orders.statusChanged", { no: order.order_no, status: t(`enums.orderStatus.${next}`) })),
         onError: () => alert.error(t("orders.statusChangeFailed")),
@@ -80,20 +97,9 @@ export function useManageOrdersViewModel() {
     );
   };
 
-  const onPaymentStatusChange = (order: Order, next: PaymentStatus) => {
-    if (next === order.payment_status) return;
-    updateOrder.mutate(
-      { id: order._id, body: { payment_status: next } },
-      {
-        onSuccess: () => alert.success(t("orders.paymentUpdated", { no: order.order_no })),
-        onError: () => alert.error(t("orders.paymentUpdateFailed")),
-      },
-    );
-  };
-
   const onCancel = (order: Order) => {
-    updateOrder.mutate(
-      { id: order._id, body: { order_status: "cancelled" } },
+    statusMutation.mutate(
+      { id: order._id, status: "cancelled" },
       {
         onSuccess: () => alert.success(t("orders.cancelled", { no: order.order_no })),
         onError: () => alert.error(t("orders.cancelFailed")),
@@ -101,11 +107,21 @@ export function useManageOrdersViewModel() {
     );
   };
 
-  const onVerifyPayment = (order: Order) => {
-    updateOrder.mutate(
-      { id: order._id, body: { payment_status: "paid", payment_verified_at: new Date().toISOString() } },
+  // ตรวจสลิป — ผ่าน resource Payments จริง (verify: true=อนุมัติ→paid, false=ปฏิเสธ→failed)
+  const verifyMutation = useMutation({
+    mutationFn: ({ paymentId, approved }: { paymentId: string; approved: boolean }) =>
+      paymentsService.verify(paymentId, approved),
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["payments", "by-order", selectedId] });
+    },
+  });
+
+  const onVerifyPayment = (paymentId: string) => {
+    verifyMutation.mutate(
+      { paymentId, approved: true },
       {
-        onSuccess: () => alert.success(t("orders.paymentVerified", { no: order.order_no })),
+        onSuccess: () => alert.success(t("orders.paymentVerified", { no: selectedOrder?.order_no ?? "" })),
         onError: () => alert.error(t("orders.paymentVerifyFailed")),
       },
     );
@@ -118,18 +134,15 @@ export function useManageOrdersViewModel() {
     }
     const headers = [
       t("orders.colOrder"), t("orders.orderedAt"), t("orders.colCustomer"),
-      t("orders.colItems"), t("orders.colTotal"), t("orders.colStatus"), t("orders.colPayment"),
-      ...(activeTab === "preorder" ? [t("orders.leadTime")] : []),
+      t("orders.colTotal"), t("orders.colStatus"), t("orders.colPayment"),
     ];
     const rows = filtered.map((o) => [
       o.order_no,
       forceText(formatDate(o.created_at, locale, { withTime: true })),
       o.customer_name,
-      o.items.map((it) => `${it.product_name} x${it.quantity}`).join(", "),
       o.total_amount,
       t(`enums.orderStatus.${o.order_status}`),
       t(`enums.paymentStatus.${o.payment_status}`),
-      ...(activeTab === "preorder" ? [o.lead_time_days ?? ""] : []),
     ]);
     exportToCsv(`orders_${activeTab}_${new Date().toISOString().slice(0, 10)}`, headers, rows);
     alert.success(t("orders.exportSuccess", { n: filtered.length }));
@@ -150,18 +163,20 @@ export function useManageOrdersViewModel() {
     orders: paged,
     ordersForStats: typeOrders,
     total: filtered.length,
-    readyCount, preorderCount, unreviewedCount,
+    deliveryCount, takeawayCount, unreviewedCount,
 
     isLoading: ordersQ.isLoading,
     isError: ordersQ.isError,
     refetch: () => ordersQ.refetch(),
 
     selectedOrder,
+    selectedPayment,
+    isDetailLoading: detailQ.isLoading || paymentQ.isLoading,
     drawerOpen,
     onView: (o: Order) => { setSelectedId(o._id); setDrawerOpen(true); },
     closeDrawer: () => setDrawerOpen(false),
 
     isFinalStatus,
-    onStatusChange, onPaymentStatusChange, onCancel, onVerifyPayment, onExport,
+    onStatusChange, onCancel, onVerifyPayment, onExport,
   };
 }

@@ -1,16 +1,25 @@
 "use client";
 // แท็บ 3: ประวัติการผลิต — อ่านอย่างเดียว (สร้าง/แก้ที่แท็บแผน+สถานะ)
+import type { Dayjs } from "dayjs";
 import { useTranslations, useLocale } from "next-intl";
-import { Select } from "@/components/base";
+import { Select, DatePicker } from "@/components/base";
 import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
 import { DataTable, type Column } from "@/components/shared/data";
 import { EmptyState } from "@/components/base";
 import { formatDate } from "@/i18n/format";
 import type { ProductionOrder } from "@/types/productionOrder";
-import type { useProductionViewModel } from "../useProductionViewModel";
+import type { HistoryViewMode, useProductionViewModel } from "../useProductionViewModel";
 import { durationHours } from "../productionStatus";
 
 type VM = ReturnType<typeof useProductionViewModel>;
+
+const VIEW_MODES: HistoryViewMode[] = ["day", "month", "year"];
+// antd DatePicker picker prop ใช้ชื่อเดียวกับ dayjs unit พอดี (day → "date")
+const PICKER_OF: Record<HistoryViewMode, "date" | "month" | "year"> = {
+  day: "date",
+  month: "month",
+  year: "year",
+};
 
 export function HistoryTab(vm: VM) {
   const t = useTranslations();
@@ -59,12 +68,21 @@ export function HistoryTab(vm: VM) {
 
       <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(0,1fr) 280px" }}>
         <div className="flex flex-col gap-3">
-          <Select
-            value={vm.selectedMonth}
-            onChange={vm.setSelectedMonth}
-            options={vm.monthOptions}
-            style={{ width: 200 }}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={vm.historyViewMode}
+              onChange={(v) => vm.setHistoryViewMode(v as HistoryViewMode)}
+              options={VIEW_MODES.map((m) => ({ value: m, label: t(`production.viewMode.${m}`) }))}
+              style={{ width: 130 }}
+            />
+            <DatePicker
+              picker={PICKER_OF[vm.historyViewMode]}
+              value={vm.historyDate}
+              onChange={(d) => d && vm.setHistoryDate(d as Dayjs)}
+              allowClear={false}
+              style={{ width: 170 }}
+            />
+          </div>
           {vm.historyRows.length === 0 ? (
             <EmptyState description={t("production.historyEmpty")} />
           ) : (

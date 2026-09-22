@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { recipesService } from "@/services/recipes";
 import { recipeComponentsService } from "@/services/recipeComponents";
+import { componentCategoriesService } from "@/services/componentCategories";
 import { productsService } from "@/services/products";
 import { productCategoriesService } from "@/services/productCategories";
 import { unitsService } from "@/services/units";
@@ -16,7 +17,7 @@ import { ingredientsService } from "@/services/ingredients";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { isProductUnit } from "@/utils/unitContext";
-import type { RecipeCategory } from "@/constants/enumConfig";
+import { refId } from "@/lib/refId";
 import type { Recipe, RecipeInput } from "@/types/recipe";
 import type { RecipeComponent, RecipeComponentInput } from "@/types/recipeComponent";
 import type { RecipeSubmitValue } from "./_components/MainRecipeModal";
@@ -33,17 +34,55 @@ export function useRecipesViewModel() {
 
   const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: 200 }) });
   const componentsQ = useQuery({ queryKey: ["components"], queryFn: () => recipeComponentsService.list({ limit: 200 }) });
+  const componentCategoriesQ = useQuery({ queryKey: ["component-categories"], queryFn: () => componentCategoriesService.list() });
   const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: 200 }) });
   const productCategoriesQ = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
   const unitsQ = useQuery({ queryKey: ["units"], queryFn: () => unitsService.list() });
   const ingredientsQ = useQuery({ queryKey: ["ingredients"], queryFn: () => ingredientsService.list({ limit: 200 }) });
 
-  const recipes = useMemo(() => recipesQ.data?.data ?? [], [recipesQ.data]);
-  const components = useMemo(() => componentsQ.data?.data ?? [], [componentsQ.data]);
+  const rawRecipes = useMemo(() => recipesQ.data?.data ?? [], [recipesQ.data]);
+  const rawComponents = useMemo(() => componentsQ.data?.data ?? [], [componentsQ.data]);
+  const componentCategories = useMemo(() => componentCategoriesQ.data?.data ?? [], [componentCategoriesQ.data]);
   const products = useMemo(() => productsQ.data?.data ?? [], [productsQ.data]);
   const productCategories = productCategoriesQ.data?.data ?? [];
   const units = useMemo(() => unitsQ.data?.data ?? [], [unitsQ.data]);
   const ingredients = useMemo(() => ingredientsQ.data?.data ?? [], [ingredientsQ.data]);
+
+  // recipeComponentsService.list() ไม่ populate ชื่อวัตถุดิบ/หมวดหมู่ (มีแค่ id) — join ที่นี่จุดเดียว
+  const components = useMemo(() => {
+    const ingNameMap = new Map(ingredients.map((i) => [i._id, i.ingredient_name]));
+    const unitAbbrMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const catNameMap = new Map(componentCategories.map((c) => [c._id, c.component_category_name]));
+    return rawComponents.map((c) => ({
+      ...c,
+      category_name: catNameMap.get(c.componentcategory_id) ?? c.category_name,
+      ingredients: c.ingredients.map((ing) => ({
+        ...ing,
+        ingredient_name: ingNameMap.get(ing.ingredient_id) ?? ing.ingredient_name,
+        unit_abbr: unitAbbrMap.get(ing.unit_id) ?? ing.unit_abbr,
+      })),
+    }));
+  }, [rawComponents, ingredients, units, componentCategories]);
+
+  // recipesService.list() ไม่ populate ชื่อวัตถุดิบ/ส่วนประกอบ (มีแค่ id) — join กับ list ที่โหลด
+  // แยกอยู่แล้วด้านบนตรงนี้จุดเดียว (ไม่ยิง request เพิ่ม) ก่อนส่งต่อให้ทุกจุดข้างล่างใช้
+  const recipes = useMemo(() => {
+    const ingNameMap = new Map(ingredients.map((i) => [i._id, i.ingredient_name]));
+    const unitAbbrMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const compNameMap = new Map(components.map((c) => [c._id, c.component_name]));
+    return rawRecipes.map((r) => ({
+      ...r,
+      ingredients: r.ingredients.map((ing) => ({
+        ...ing,
+        ingredient_name: ingNameMap.get(ing.ingredient_id) ?? ing.ingredient_name,
+        unit_abbr: unitAbbrMap.get(ing.unit_id) ?? ing.unit_abbr,
+      })),
+      components: r.components.map((c) => ({
+        ...c,
+        component_name: compNameMap.get(c.component_id) ?? c.component_name,
+      })),
+    }));
+  }, [rawRecipes, ingredients, units, components]);
 
   const isLoading = recipesQ.isLoading || componentsQ.isLoading;
   const isError = recipesQ.isError || componentsQ.isError;
@@ -52,10 +91,13 @@ export function useRecipesViewModel() {
   // ── ตัวเลือกฟอร์ม (join ไว้ล่วงหน้า — modal/View ไม่ join เอง) ──
   const ingredientOptions = useMemo(() => {
     const unitMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
-    return ingredients.map((i) => ({
-      _id: i._id, name: i.ingredient_name,
-      unit_id: i.unit_id ?? "", unit_abbr: (i.unit_id && unitMap.get(i.unit_id)) || "",
-    }));
+    return ingredients.map((i) => {
+      const unitId = refId(i.unit_id);
+      return {
+        _id: i._id, name: i.ingredient_name,
+        unit_id: unitId, unit_abbr: (unitId && unitMap.get(unitId)) || "",
+      };
+    });
   }, [ingredients, units]);
 
   const productYieldUnitOptions = useMemo(
@@ -105,7 +147,7 @@ export function useRecipesViewModel() {
     return recipes.filter((r) => {
       const matchSearch = !q || r.recipe_name.toLowerCase().includes(q) || r.product_name.toLowerCase().includes(q);
       const product = products.find((p) => p._id === r.product_id);
-      const matchCategory = mainCategoryFilter === "all" || product?.category_id === mainCategoryFilter;
+      const matchCategory = mainCategoryFilter === "all" || refId(product?.category_id) === mainCategoryFilter;
       return matchSearch && matchCategory;
     });
   }, [recipes, products, mainSearch, mainCategoryFilter]);
@@ -119,9 +161,14 @@ export function useRecipesViewModel() {
 
   // ── แท็บ 2: สูตรส่วนประกอบ ──
   const [subSearch, setSubSearch] = useState("");
-  const [subCategoryFilter, setSubCategoryFilter] = useState<RecipeCategory | "all">("all");
+  const [subCategoryFilter, setSubCategoryFilter] = useState<string>("all");
   const [componentFormOpen, setComponentFormOpen] = useState(false);
   const [componentEditTarget, setComponentEditTarget] = useState<RecipeComponent | null>(null);
+
+  const componentCategoryOptions = useMemo(
+    () => componentCategories.map((c) => ({ value: c._id, label: c.component_category_name })),
+    [componentCategories],
+  );
 
   const componentRows = useMemo(
     () => components.map((c) => ({ ...c, usedIn: usedInMap.get(c._id) ?? [] })),
@@ -132,7 +179,7 @@ export function useRecipesViewModel() {
     const q = subSearch.trim().toLowerCase();
     return componentRows.filter((c) => {
       const matchSearch = !q || c.component_name.toLowerCase().includes(q);
-      const matchCategory = subCategoryFilter === "all" || c.category === subCategoryFilter;
+      const matchCategory = subCategoryFilter === "all" || c.componentcategory_id === subCategoryFilter;
       return matchSearch && matchCategory;
     });
   }, [componentRows, subSearch, subCategoryFilter]);
@@ -165,21 +212,26 @@ export function useRecipesViewModel() {
   });
 
   const onSaveRecipe = (v: RecipeSubmitValue) => {
-    const product = products.find((p) => p._id === v.product_id);
-    const unit = units.find((u) => u._id === v.yield_unit_id);
     saveRecipe.mutate({
       id: recipeEditTarget?._id ?? null,
       body: {
         recipe_name: v.recipe_name.trim(),
         product_id: v.product_id,
-        product_name: product?.product_name_th ?? "",
-        product_type: product?.product_type ?? "ready",
-        components: v.components,
-        ingredients: v.ingredients,
+        // backend บังคับ component ref ต้องมี unit_id ด้วย (แม้ frontend ไม่ให้เลือกเอง) —
+        // ใช้ yield_unit_id ของ component นั้นเป็นค่าเริ่มต้น (หน่วยผลผลิตของมันเอง)
+        components: v.components.map((c) => ({
+          component_id: c.component_id,
+          quantity: c.quantity,
+          unit_id: components.find((x) => x._id === c.component_id)?.yield_unit_id ?? "",
+        })),
+        ingredients: v.ingredients.map((i) => ({
+          ingredient_id: i.ingredient_id,
+          quantity: i.quantity,
+          unit_id: i.unit_id,
+        })),
         steps: v.steps,
         yield_qty: v.yield_qty,
         yield_unit_id: v.yield_unit_id,
-        yield_unit_abbr: unit?.unit_abbr ?? "",
         estimated_cost_per_batch: v.estimated_cost_per_batch,
         duration_minutes: v.duration_minutes,
         note: v.note ?? null,
@@ -209,17 +261,19 @@ export function useRecipesViewModel() {
   });
 
   const onSaveComponent = (v: ComponentSubmitValue) => {
-    const unit = units.find((u) => u._id === v.yield_unit_id);
     saveComponent.mutate({
       id: componentEditTarget?._id ?? null,
       body: {
         component_name: v.component_name.trim(),
-        category: v.category,
-        ingredients: v.ingredients,
+        componentcategory_id: v.componentcategory_id,
+        ingredients: v.ingredients.map((i) => ({
+          ingredient_id: i.ingredient_id,
+          quantity: i.quantity,
+          unit_id: i.unit_id,
+        })),
         steps: v.steps,
         yield_qty: v.yield_qty,
         yield_unit_id: v.yield_unit_id,
-        yield_unit_abbr: unit?.unit_abbr ?? "",
         estimated_cost_per_batch: v.estimated_cost_per_batch,
         note: v.note ?? null,
       },
@@ -231,6 +285,7 @@ export function useRecipesViewModel() {
     isLoading, isError, refetch,
 
     productCategories, ingredientOptions, productYieldUnitOptions, allUnitOptions, componentOptions,
+    componentCategoryOptions,
 
     // แท็บ 1: สูตรหลัก
     mainSearch, setMainSearch,
@@ -249,7 +304,7 @@ export function useRecipesViewModel() {
 
     // แท็บ 2: สูตรส่วนประกอบ
     subSearch, setSubSearch,
-    subCategoryFilter, setSubCategoryFilter: (v: RecipeCategory | "all") => setSubCategoryFilter(v),
+    subCategoryFilter, setSubCategoryFilter: (v: string) => setSubCategoryFilter(v),
     filteredComponents, subStats,
     componentFormOpen, componentEditTarget,
     openAddComponent: () => { setComponentEditTarget(null); setComponentFormOpen(true); },

@@ -1,8 +1,8 @@
 "use client";
 // สร้างใบสั่งผลิต — antd Modal + base/Form · รายการสินค้าเป็นแถวไดนามิก (state ในตัว คล้าย
 // IngredientFormModal/StockActionModal — ยังไม่ซับซ้อนพอต้องแยก ViewModel ของตัวเอง)
-// **ตัดจากต้นทาง:** ไม่มี recipe_id ผูกต่อแถว (ยังไม่มี resource `recipes` ในโปรเจกต์นี้ — รอ Screen #16)
-// จึงไม่เช็ควัตถุดิบขาด/พอ และไม่คำนวณต้นทุนประมาณต่อใบสั่งผลิต
+// รายการสินค้าที่เลือกได้ = เฉพาะที่มีสูตรผูกแล้ว (backend บังคับ recipe_id ต่อแถว — กรองไว้แล้วที่
+// useProductionViewModel.productOptions) ไม่เช็ควัตถุดิบขาด/พอที่นี่ (backend เช็คตอนปิดงานผลิตแทน)
 import { useState } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
@@ -10,11 +10,10 @@ import dayjs, { type Dayjs } from "dayjs";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
-import type { SourceType } from "@/constants/enumConfig";
-import type { ProductionOrderItem } from "@/types/productionOrder";
+import type { CreateProductionOrderItemInput } from "@/types/productionOrder";
 import type { CreateProductionOrderValue } from "../useProductionViewModel";
 
-interface ProductOption { _id: string; name: string; unit_abbr: string }
+interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string }
 interface StaffOption { _id: string; user_fullname: string }
 
 interface ItemRow {
@@ -30,7 +29,6 @@ function emptyRow(): ItemRow {
 
 interface FormValues {
   production_date: Dayjs;
-  source_type: SourceType;
   assigned_to?: string;
   production_note?: string;
 }
@@ -71,13 +69,12 @@ export function ProductionOrderFormModal({
       alert.error(t("production.itemsRequired"));
       return;
     }
-    const items: ProductionOrderItem[] = validRows.map((r) => {
+    const items: CreateProductionOrderItemInput[] = validRows.map((r) => {
       const p = products.find((pr) => pr._id === r.product_id)!;
-      return { product_id: p._id, product_name: p.name, planned_qty: r.planned_qty, unit_abbr: p.unit_abbr, notes: r.notes || null };
+      return { product_id: p._id, recipe_id: p.recipe_id, planned_qty: r.planned_qty, notes: r.notes || null };
     });
     onSubmit({
       production_date: v.production_date.toISOString(),
-      source_type: v.source_type,
       assigned_to: v.assigned_to ?? null,
       production_note: v.production_note?.trim() || null,
       items,
@@ -97,7 +94,7 @@ export function ProductionOrderFormModal({
       destroyOnHidden
       afterClose={handleAfterClose}
     >
-      <Form form={form} layout="vertical" initialValues={{ production_date: dayjs(), source_type: "manual" as SourceType }}>
+      <Form form={form} layout="vertical" initialValues={{ production_date: dayjs() }}>
         <div className="grid grid-cols-2 gap-3">
           <FormItem
             name="production_date"
@@ -106,14 +103,6 @@ export function ProductionOrderFormModal({
           >
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="source_type" label={t("production.fieldSourceType")}>
-            <Select
-              options={(["manual", "preorder"] as SourceType[]).map((s) => ({ value: s, label: t(`enums.sourceType.${s}`) }))}
-            />
-          </FormItem>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
           <FormItem name="assigned_to" label={t("production.fieldAssignee")}>
             <Select
               allowClear
@@ -121,10 +110,10 @@ export function ProductionOrderFormModal({
               options={staff.map((s) => ({ value: s._id, label: s.user_fullname }))}
             />
           </FormItem>
-          <FormItem name="production_note" label={t("production.fieldNote")}>
-            <TextArea rows={1} placeholder={t("production.notePlaceholder")} />
-          </FormItem>
         </div>
+        <FormItem name="production_note" label={t("production.fieldNote")}>
+          <TextArea rows={1} placeholder={t("production.notePlaceholder")} />
+        </FormItem>
 
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-gray-500">{t("production.itemsTitle", { n: rows.length })}</p>

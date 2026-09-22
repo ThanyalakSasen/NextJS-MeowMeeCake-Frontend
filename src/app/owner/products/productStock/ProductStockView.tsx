@@ -72,17 +72,21 @@ export function ProductStockView(vm: VM) {
                 onChange={vm.setSearch}
                 placeholder={t("productStock.searchPlaceholder")}
               />
-              <div style={{ minWidth: 160 }}>
+              <div className="flex min-w-40 flex-col gap-1">
+                <span className="text-xs text-gray-500">{t("productStock.categoryFilter")}</span>
                 <Select
                   value={vm.categoryId}
                   onChange={(v) => vm.setCategoryId(v as string)}
                   options={[
                     { value: "all", label: t("common.all") },
-                    ...vm.categories.map((c) => ({ value: c._id, label: c.category_name })),
+                    ...[...vm.categories]
+                      .sort((a, b) => a.product_category_name.localeCompare(b.product_category_name, locale))
+                      .map((c) => ({ value: c._id, label: c.product_category_name })),
                   ]}
                 />
               </div>
-              <div style={{ minWidth: 150 }}>
+              <div className="flex min-w-40 flex-col gap-1">
+                <span className="text-xs text-gray-500">{t("productStock.statusFilter")}</span>
                 <Select
                   value={vm.status}
                   onChange={(v) => vm.setStatus(v as VM["status"])}

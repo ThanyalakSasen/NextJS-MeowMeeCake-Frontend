@@ -1,5 +1,9 @@
 "use client";
 // View ของ Store Design — กริดแบนเนอร์หน้าร้าน + modal เพิ่ม/แก้ไข
+// ลากการ์ดจัดลำดับ (HTML5 drag-and-drop เนทีฟ ไม่พึ่งไลบรารีเพิ่ม — แพทเทิร์นเดียวกับ StatusBoard
+// ของหน้า Production) state การลาก (draggingId/dragOverId) อยู่ในนี้ ธุรกิจ (ยิง PATCH อะไร) อยู่ที่
+// useStoreDesignViewModel.onReorder แล้ว
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/components/base";
@@ -15,6 +19,15 @@ type VM = ReturnType<typeof useStoreDesignViewModel>;
 
 export function StoreDesignView(vm: VM) {
   const t = useTranslations();
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  const handleDrop = (targetId: string) => {
+    const id = draggingId;
+    setDraggingId(null);
+    setDragOverId(null);
+    if (id) vm.onReorder(id, targetId);
+  };
 
   return (
     <ListPageLayout
@@ -61,9 +74,27 @@ export function StoreDesignView(vm: VM) {
             <StatCard label={t("enums.bannerStatus.inactive")} value={vm.counts.inactive} sub={t("storeDesign.statInactiveSub")} tone="muted" />
           </StatCardsGrid>
 
+          <p className="text-sm text-gray-400">
+            {t(vm.canReorder ? "storeDesign.reorderHint" : "storeDesign.reorderDisabledHint")}
+          </p>
+
           <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {vm.rows.map((b) => (
-              <BannerCard key={b._id} banner={b} onEdit={vm.openEdit} onDelete={vm.onDelete} onToggle={vm.onToggle} />
+              <BannerCard
+                key={b._id}
+                banner={b}
+                draggable={vm.canReorder}
+                dragging={draggingId === b._id}
+                dragOver={dragOverId === b._id}
+                onEdit={vm.openEdit}
+                onDelete={vm.onDelete}
+                onToggle={vm.onToggle}
+                onDragStart={setDraggingId}
+                onDragOver={() => setDragOverId(b._id)}
+                onDragLeave={() => setDragOverId((prev) => (prev === b._id ? null : prev))}
+                onDrop={handleDrop}
+                onDragEnd={() => { setDraggingId(null); setDragOverId(null); }}
+              />
             ))}
             <button
               type="button"

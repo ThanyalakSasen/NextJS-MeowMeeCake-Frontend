@@ -8,7 +8,7 @@ import type { Recipe } from "@/types/recipe";
 export const recipesFixture: Recipe[] = [
   {
     _id: "rcp_choco_lava", recipe_name: "สูตรเค้กช็อกโกแลตลาวา",
-    product_id: "p_choco_lava", product_name: "เค้กช็อกโกแลตลาวา", product_type: "ready",
+    product_id: "p_choco_lava", product_name: "เค้กช็อกโกแลตลาวา",
     components: [
       { component_id: "comp_choco_base", component_name: "เนื้อเค้กช็อกโกแลต", quantity: 1 },
       { component_id: "comp_choco_cream", component_name: "ครีมช็อกโกแลต", quantity: 1 },
@@ -27,7 +27,7 @@ export const recipesFixture: Recipe[] = [
   },
   {
     _id: "rcp_vanilla_cup", recipe_name: "สูตรคัพเค้กวานิลลา",
-    product_id: "p_vanilla_cup", product_name: "คัพเค้กวานิลลา", product_type: "ready",
+    product_id: "p_vanilla_cup", product_name: "คัพเค้กวานิลลา",
     components: [
       { component_id: "comp_vanilla_base", component_name: "เนื้อเค้กวานิลลา", quantity: 1 },
       { component_id: "comp_vanilla_cream", component_name: "ครีมวานิลลา", quantity: 1 },
@@ -43,7 +43,7 @@ export const recipesFixture: Recipe[] = [
   },
   {
     _id: "rcp_strawberry_short", recipe_name: "สูตรสตรอว์เบอร์รีชอร์ตเค้ก",
-    product_id: "p_strawberry_short", product_name: "สตรอว์เบอร์รีชอร์ตเค้ก", product_type: "preorder",
+    product_id: "p_strawberry_short", product_name: "สตรอว์เบอร์รีชอร์ตเค้ก",
     components: [
       { component_id: "comp_vanilla_base", component_name: "เนื้อเค้กวานิลลา", quantity: 1 },
       { component_id: "comp_vanilla_cream", component_name: "ครีมวานิลลา", quantity: 1 },
@@ -60,7 +60,7 @@ export const recipesFixture: Recipe[] = [
   },
   {
     _id: "rcp_sourdough", recipe_name: "สูตรขนมปังซาวโดว์",
-    product_id: "p_sourdough", product_name: "ขนมปังซาวโดว์", product_type: "ready",
+    product_id: "p_sourdough", product_name: "ขนมปังซาวโดว์",
     components: [
       { component_id: "comp_sourdough_starter", component_name: "แป้งซาวโดว์ Starter", quantity: 2 },
     ],

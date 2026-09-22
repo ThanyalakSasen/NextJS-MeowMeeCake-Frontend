@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
 // src/types/permission.ts — DTO ของ /permissions (docs/API_CONTRACT.md §3)
-// 1 แถว = สิทธิ์ของ (role_id × menu_key) · owner/admin ข้ามการเช็ค (ดู isUnrestrictedRole)
+// 1 แถว = สิทธิ์ของ (role_id × menu_key) · owner ข้ามการเช็ค (ดู isUnrestrictedRole)
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
 import type { MenuKey } from "@/constants/menuKeys";

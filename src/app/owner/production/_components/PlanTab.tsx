@@ -34,9 +34,12 @@ export function PlanTab(vm: VM) {
       render: (o) => {
         const cfg = SOURCE_TYPE_CONFIG[o.source_type];
         return (
-          <Tag style={{ background: cfg.bg, color: cfg.color, borderColor: "transparent" }}>
-            {t(`enums.sourceType.${o.source_type}`)}
-          </Tag>
+          <div>
+            <Tag style={{ background: cfg.bg, color: cfg.color, borderColor: "transparent" }}>
+              {t(`enums.sourceType.${o.source_type}`)}
+            </Tag>
+            {o.round_name && <p className="mt-1 text-sm text-gray-600">{o.round_name}</p>}
+          </div>
         );
       },
     },
@@ -62,9 +65,14 @@ export function PlanTab(vm: VM) {
       <div className="flex items-start justify-between gap-4">
         <p className="text-base text-gray-600">{t("production.planDescription", { n: vm.planTotal })}</p>
         {vm.perm.create && (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openCreate}>
-            {t("production.createOrder")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openCreateFromRound}>
+              {t("production.createFromRound")}
+            </Button>
+            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openCreate}>
+              {t("production.createOrder")}
+            </Button>
+          </div>
         )}
       </div>
 

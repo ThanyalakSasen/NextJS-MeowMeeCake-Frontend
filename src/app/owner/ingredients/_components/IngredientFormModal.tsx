@@ -66,7 +66,9 @@ export function IngredientFormModal({
       unit_id: v.unit_id,
       current_stock: v.current_stock ?? 0,
       reorder_point: v.reorder_point,
-      max_stock: v.max_stock ?? null,
+      // backend schema max_stock เป็น .optional() ไม่ใช่ .nullable() — ส่ง null ตรง ๆ ตอนเว้นว่าง
+      // จะโดน 400 ทุกครั้ง (บั๊กคลาสเดียวกับ banner_link ที่แก้ไปแล้ว) omit key แทนถ้าไม่มีค่า
+      ...(v.max_stock != null ? { max_stock: v.max_stock } : {}),
       cost_per_unit: v.cost_per_unit ?? 0,
       supplier: v.supplier ?? "",
     });
@@ -99,7 +101,7 @@ export function IngredientFormModal({
             rules={[{ required: true, message: t("validation.required") }]}
           >
             <Select
-              options={categories.map((c) => ({ value: c._id, label: c.category_name }))}
+              options={categories.map((c) => ({ value: c._id, label: c.ingredient_category_name }))}
               placeholder={t("ingredients.selectCategory")}
             />
           </FormItem>

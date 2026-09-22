@@ -15,6 +15,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { alert } from "@/lib/alert";
 import type { StockStatus, IngredientTxnType } from "@/constants/enumConfig";
 import { getIngredientStatus, stockPercent } from "../ingredientStatus";
+import { refId } from "@/lib/refId";
 
 export interface StockRow {
   _id: string;
@@ -59,7 +60,7 @@ export function useIngredientStockViewModel() {
       _id: i._id,
       sku: skuOf(i._id),
       name: i.ingredient_name,
-      unitAbbr: (i.unit_id && unitMap.get(i.unit_id)) || "",
+      unitAbbr: (refId(i.unit_id) && unitMap.get(refId(i.unit_id))) || "",
       currentStock: i.current_stock,
       reorderPoint: i.reorder_point,
       maxStock: i.max_stock ?? null,
@@ -90,21 +91,17 @@ export function useIngredientStockViewModel() {
 
   const submit = useMutation({
     mutationFn: async ({ row, m, value, note }: { row: StockRow; m: ActionMode; value: number; note: string }) => {
-      // receive: +value · use: -value · adjust: value = สต็อกใหม่ (absolute)
-      const nextStock =
-        m === "receive" ? row.currentStock + value : m === "use" ? row.currentStock - value : value;
-      const delta = Math.abs(nextStock - row.currentStock);
-
-      await ingredientsService.update(row._id, { current_stock: Math.max(0, nextStock) });
-      await ingredientTransactionsService
-        .create({
-          ingredient_id: row._id,
-          type: m,
-          quantity: delta,
-          note: note.trim() || undefined,
-          performed_by: user?.fullname,
-        })
-        .catch(() => undefined);
+      // current_stock ห้ามแก้ตรง ๆ (backend บล็อกไว้ที่ ingredientService — PATCH /ingredients ไม่รับ
+      // field นี้เลย) ต้องผ่าน ingredientTransactionService.createTransaction() เท่านั้น ซึ่งจะปรับ
+      // current_stock ให้อัตโนมัติ: receive = +qty · use = -qty · adjust = ตั้งยอดใหม่ตรง ๆ (= qty)
+      // ตรงกับความหมายของ value ที่กรอกในฟอร์มนี้อยู่แล้ว ไม่ต้องคำนวณ delta เอง
+      await ingredientTransactionsService.create({
+        ingredient_id: row._id,
+        type: m,
+        qty: value,
+        note: note.trim() || undefined,
+        performed_by: user?.id ?? "",
+      });
     },
     onSuccess: (_r, vars) => {
       alert.success(t(`ingredientStock.done_${vars.m}`, { name: vars.row.name }));

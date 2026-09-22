@@ -7,29 +7,37 @@ import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
+import dayjs, { type Dayjs } from "dayjs";
 import { productionOrdersService } from "@/services/productionOrders";
 import { productsService } from "@/services/products";
 import { unitsService } from "@/services/units";
 import { usersService } from "@/services/users";
 import { rolesService } from "@/services/roles";
+import { recipesService } from "@/services/recipes";
+import { preorderRoundsService } from "@/services/preorderRounds";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import { buildMonthOptions } from "@/utils/dateRange";
-import type { ProductionStatus, SourceType } from "@/constants/enumConfig";
-import type { ProductionOrder, ProductionOrderItem } from "@/types/productionOrder";
+import { isApiError } from "@/types/api";
+import { refId } from "@/lib/refId";
+import type { ProductionStatus } from "@/constants/enumConfig";
+import type {
+  ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput,
+} from "@/types/productionOrder";
 import {
-  isFinalStatus, getNextStatus, statusChangePatch, durationHours,
+  isFinalStatus, getNextStatus, durationHours,
 } from "./productionStatus";
 
 export type TabKey = "plan" | "status" | "history";
 const TAB_KEYS: TabKey[] = ["plan", "status", "history"];
 
+/** โหมดดูประวัติการผลิต — ตรงกับ unit ที่ dayjs().isSame() รับ (day/month/year) */
+export type HistoryViewMode = "day" | "month" | "year";
+
 export interface CreateProductionOrderValue {
   production_date: string;
-  source_type: SourceType;
   assigned_to: string | null;
   production_note: string | null;
-  items: ProductionOrderItem[];
+  items: CreateProductionOrderItemInput[];
 }
 
 export function useProductionViewModel() {
@@ -50,18 +58,78 @@ export function useProductionViewModel() {
   const unitsQ = useQuery({ queryKey: ["units"], queryFn: () => unitsService.list() });
   const usersQ = useQuery({ queryKey: ["users"], queryFn: () => usersService.list({ limit: 200 }) });
   const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list() });
+  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: 100 }) });
+  // รอบพรีออเดอร์ที่ "ปิดรับแล้ว" — ตัวเลือกตอนสร้างใบสั่งผลิตจากรอบ (เฉพาะที่ยังไม่มีใบสั่งผลิตอยู่)
+  const closedRoundsQ = useQuery({
+    queryKey: ["preorder-rounds", "closed"],
+    queryFn: () => preorderRoundsService.list({ status: "closed", limit: 100 }),
+  });
 
-  const orders = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);
-
-  /** ตัวเลือกสินค้าในฟอร์ม — join unit_abbr ไว้ล่วงหน้า (View/Modal ไม่ join เอง) */
-  const productOptions = useMemo(() => {
+  /** ชื่อ/หน่วยของทุกสินค้า (ไม่กรอง) — ใช้ enrich รายการของใบสั่งผลิตเก่าด้วย แม้สินค้านั้นจะไม่มีสูตรแล้วก็ตาม */
+  const productsById = useMemo(() => {
     const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, u.unit_abbr || u.unit_name]));
-    return (productsQ.data?.data ?? []).map((p) => ({
-      _id: p._id,
-      name: p.product_name_th,
-      unit_abbr: (p.unit_id && unitMap.get(p.unit_id)) || "",
-    }));
+    const map = new Map<string, { name: string; unit_abbr: string }>();
+    (productsQ.data?.data ?? []).forEach((p) => {
+      map.set(p._id, { name: p.product_name_th, unit_abbr: (refId(p.unit_id) && unitMap.get(refId(p.unit_id))) || "" });
+    });
+    return map;
   }, [productsQ.data, unitsQ.data]);
+
+  /** product_id → recipe_id ตัวแรกที่พบ (backend บังคับทุก production item ต้องผูก recipe_id จริง) */
+  const recipeByProduct = useMemo(() => {
+    const map = new Map<string, string>();
+    (recipesQ.data?.data ?? []).forEach((r) => {
+      if (r.product_id && !map.has(r.product_id)) map.set(r.product_id, r._id);
+    });
+    return map;
+  }, [recipesQ.data]);
+
+  const orders: ProductionOrder[] = useMemo(() => {
+    const raw = (ordersQ.data?.data ?? []) as RawProductionOrder[];
+    return raw.map((o) => ({
+      _id: o._id,
+      production_no: o.production_no,
+      production_date: o.production_date,
+      source_type: o.source_type,
+      round_id: refId(o.round_id) || null,
+      round_name: typeof o.round_id === "object" && o.round_id ? o.round_id.round_name : null,
+      production_status: o.production_status,
+      assigned_to: refId(o.assigned_to) || null,
+      assignee_name: typeof o.assigned_to === "object" && o.assigned_to ? o.assigned_to.user_fullname : null,
+      production_note: o.production_note ?? null,
+      started_at: o.started_at ?? null,
+      completed_at: o.completed_at ?? null,
+      created_at: o.created_at,
+      updated_at: o.updated_at,
+      items: (o.items ?? []).map((it) => {
+        const pid = refId(it.product_id);
+        const info = productsById.get(pid);
+        return {
+          _id: it._id,
+          product_id: pid,
+          recipe_id: refId(it.recipe_id),
+          product_name: info?.name ?? (typeof it.product_id === "object" && it.product_id ? it.product_id.product_name_th : ""),
+          unit_abbr: info?.unit_abbr ?? "",
+          planned_qty: it.planned_qty,
+          actual_qty: it.actual_qty ?? null,
+          item_status: it.item_status,
+          notes: it.notes ?? null,
+        };
+      }),
+    }));
+  }, [ordersQ.data, productsById]);
+
+  /** ตัวเลือกสินค้าตอนสร้างใบสั่งผลิต — เฉพาะสินค้าที่มีสูตรผูกแล้วเท่านั้น (ไม่งั้น backend reject ทันที) */
+  const productOptions = useMemo(() => (
+    (productsQ.data?.data ?? [])
+      .filter((p) => recipeByProduct.has(p._id))
+      .map((p) => ({
+        _id: p._id,
+        name: productsById.get(p._id)?.name ?? p.product_name_th,
+        unit_abbr: productsById.get(p._id)?.unit_abbr ?? "",
+        recipe_id: recipeByProduct.get(p._id)!,
+      }))
+  ), [productsQ.data, recipeByProduct, productsById]);
 
   /** พนักงานที่มอบหมายงานผลิตได้ — active + ไม่ใช่ role ลูกค้า */
   const staff = useMemo(() => {
@@ -70,6 +138,20 @@ export function useProductionViewModel() {
     );
     return (usersQ.data?.data ?? []).filter((u) => u.emp_status && u.role_id && !customerRoleIds.has(u.role_id));
   }, [usersQ.data, rolesQ.data]);
+
+  /** รอบที่ปิดรับแล้ว "และ" ยังไม่มีใบสั่งผลิต (source_type preorder, ไม่ใช่ cancelled) ผูกอยู่ —
+   *  backend อนุญาตแค่ 1 ใบต่อรอบ (409 ถ้าซ้ำ) กรองไว้ที่นี่กันเลือกแล้วเจอ error ทันที */
+  const roundsWithProduction = useMemo(
+    () => new Set(
+      orders.filter((o) => o.source_type === "preorder" && o.production_status !== "cancelled" && o.round_id)
+        .map((o) => o.round_id as string),
+    ),
+    [orders],
+  );
+  const eligibleRounds = useMemo(
+    () => (closedRoundsQ.data?.data ?? []).filter((r) => !roundsWithProduction.has(r._id)),
+    [closedRoundsQ.data, roundsWithProduction],
+  );
 
   const isLoading = ordersQ.isLoading;
   const isError = ordersQ.isError;
@@ -81,6 +163,7 @@ export function useProductionViewModel() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createFromRoundOpen, setCreateFromRoundOpen] = useState(false);
 
   const planFiltered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -109,43 +192,53 @@ export function useProductionViewModel() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const selectedOrder = orders.find((o) => o._id === selectedId) ?? null;
 
-  // ── แท็บ 3: ประวัติการผลิต ──
-  const monthOptions = useMemo(() => buildMonthOptions(locale), [locale]);
-  const [selectedMonth, setSelectedMonth] = useState(monthOptions[0].value);
+  // ── แท็บ 3: ประวัติการผลิต — เลือกดูแบบรายวัน/รายเดือน/รายปี ──
+  const [historyViewMode, setHistoryViewMode] = useState<HistoryViewMode>("month");
+  const [historyDate, setHistoryDate] = useState<Dayjs>(() => dayjs());
 
   const doneOrders = useMemo(() => orders.filter((o) => o.production_status === "done"), [orders]);
   const historyRows = useMemo(
-    () => doneOrders.filter((o) => (o.completed_at ?? "").startsWith(selectedMonth)),
-    [doneOrders, selectedMonth],
+    () =>
+      doneOrders.filter((o) => {
+        if (!o.completed_at) return false;
+        return dayjs(o.completed_at).isSame(historyDate, historyViewMode);
+      }),
+    [doneOrders, historyViewMode, historyDate],
   );
 
+  // สถิติ/breakdown อิงตามช่วงที่เลือก (historyRows) ไม่ใช่ all-time — ให้ตรงกับตัวกรองวัน/เดือน/ปี
   const historyStats = useMemo(() => {
-    const totalQty = doneOrders.reduce((s, o) => s + o.items.reduce((si, it) => si + it.planned_qty, 0), 0);
-    const durations = doneOrders.map(durationHours).filter((d): d is number => d !== null);
+    const totalQty = historyRows.reduce((s, o) => s + o.items.reduce((si, it) => si + it.planned_qty, 0), 0);
+    const durations = historyRows.map(durationHours).filter((d): d is number => d !== null);
     const avgDuration = durations.length > 0 ? durations.reduce((s, d) => s + d, 0) / durations.length : 0;
-    return { totalOrders: doneOrders.length, totalQty, avgDuration };
-  }, [doneOrders]);
+    return { totalOrders: historyRows.length, totalQty, avgDuration };
+  }, [historyRows]);
 
   const productBreakdown = useMemo(() => {
     const acc: Record<string, number> = {};
-    doneOrders.forEach((o) => o.items.forEach((it) => {
+    historyRows.forEach((o) => o.items.forEach((it) => {
       acc[it.product_name] = (acc[it.product_name] ?? 0) + it.planned_qty;
     }));
     return Object.entries(acc).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [doneOrders]);
+  }, [historyRows]);
 
   const teamBreakdown = useMemo(() => {
     const acc: Record<string, number> = {};
-    doneOrders.forEach((o) => { if (o.assignee_name) acc[o.assignee_name] = (acc[o.assignee_name] ?? 0) + 1; });
+    historyRows.forEach((o) => { if (o.assignee_name) acc[o.assignee_name] = (acc[o.assignee_name] ?? 0) + 1; });
     return Object.entries(acc).sort((a, b) => b[1] - a[1]);
-  }, [doneOrders]);
+  }, [historyRows]);
 
   // ── mutations ──
   const invalidate = () => qc.invalidateQueries({ queryKey: ["production-orders"] });
 
   const createOrder = useMutation({
-    mutationFn: (body: Omit<ProductionOrder, "_id" | "created_at" | "updated_at">) =>
-      productionOrdersService.create(body),
+    mutationFn: (v: CreateProductionOrderValue) =>
+      productionOrdersService.create({
+        production_date: v.production_date,
+        assigned_to: v.assigned_to,
+        production_note: v.production_note,
+        items: v.items,
+      }),
     onSuccess: () => {
       alert.success(t("production.created"));
       invalidate();
@@ -154,33 +247,33 @@ export function useProductionViewModel() {
     onError: () => alert.error(t("production.createFailed")),
   });
 
-  const updateOrder = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: Partial<ProductionOrder> }) =>
-      productionOrdersService.update(id, body),
+  const createFromRound = useMutation({
+    mutationFn: (v: ProductionOrderFromRoundInput) => productionOrdersService.createFromRound(v),
+    onSuccess: () => {
+      alert.success(t("production.fromRoundCreated"));
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["preorder-rounds"] });
+      setCreateFromRoundOpen(false);
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("production.fromRoundCreateFailed")),
+  });
+
+  /** เปลี่ยนสถานะผ่าน sub-route เฉพาะทาง (start/complete/cancel) — PATCH ตรง ๆ ไม่มีผล (backend เพิกเฉย production_status) */
+  const changeStatus = useMutation({
+    mutationFn: ({ order, next }: { order: ProductionOrder; next: ProductionStatus }) => {
+      if (next === "in_progress") return productionOrdersService.start(order._id);
+      if (next === "done") return productionOrdersService.complete(order._id);
+      return productionOrdersService.cancel(order._id);
+    },
     onSuccess: invalidate,
   });
 
-  const onCreateSubmit = (v: CreateProductionOrderValue) => {
-    const no = `PO-${new Date().toISOString().slice(2, 10).replace(/-/g, "")}-${Math.floor(Math.random() * 9000 + 1000)}`;
-    const assignee = staff.find((s) => s._id === v.assigned_to);
-    createOrder.mutate({
-      production_no: no,
-      production_date: v.production_date,
-      source_type: v.source_type,
-      production_status: "planned",
-      assigned_to: v.assigned_to,
-      assignee_name: assignee?.user_fullname ?? null,
-      production_note: v.production_note,
-      items: v.items,
-      started_at: null,
-      completed_at: null,
-    });
-  };
+  const onCreateSubmit = (v: CreateProductionOrderValue) => createOrder.mutate(v);
 
   const onChangeStatus = (order: ProductionOrder, next: ProductionStatus) => {
     if (next === order.production_status) return;
-    updateOrder.mutate(
-      { id: order._id, body: statusChangePatch(order, next) },
+    changeStatus.mutate(
+      { order, next },
       {
         onSuccess: () => alert.success(
           t("production.statusChanged", { no: order.production_no, status: t(`enums.productionStatus.${next}`) }),
@@ -213,11 +306,17 @@ export function useProductionViewModel() {
     createOpen, openCreate: () => setCreateOpen(true), closeCreate: () => setCreateOpen(false),
     onCreateSubmit, creating: createOrder.isPending,
 
+    eligibleRounds,
+    createFromRoundOpen, openCreateFromRound: () => setCreateFromRoundOpen(true), closeCreateFromRound: () => setCreateFromRoundOpen(false),
+    onCreateFromRoundSubmit: (v: ProductionOrderFromRoundInput) => createFromRound.mutate(v),
+    creatingFromRound: createFromRound.isPending,
+
     // แท็บ 2
     orders,
 
     // แท็บ 3
-    monthOptions, selectedMonth, setSelectedMonth,
+    historyViewMode, setHistoryViewMode,
+    historyDate, setHistoryDate,
     historyRows, historyStats, productBreakdown, teamBreakdown,
 
     // รายละเอียด (ใช้ร่วม)

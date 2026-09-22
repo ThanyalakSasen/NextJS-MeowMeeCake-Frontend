@@ -46,7 +46,6 @@ export function RoleFormModal({
         <FormItem name="role_type" label={t("permissions.roleType")} rules={required}>
           <Select
             options={[
-              { value: "admin", label: t("permissions.roleTypeAdmin") },
               { value: "staff", label: t("permissions.roleTypeStaff") },
             ]}
           />

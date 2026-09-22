@@ -9,6 +9,7 @@ import { PlanTab } from "./_components/PlanTab";
 import { StatusTab } from "./_components/StatusTab";
 import { HistoryTab } from "./_components/HistoryTab";
 import { ProductionOrderFormModal } from "./_components/ProductionOrderFormModal";
+import { CreateFromRoundModal } from "./_components/CreateFromRoundModal";
 import { ProductionOrderDetail } from "./_components/ProductionOrderDetail";
 
 type VM = ReturnType<typeof useProductionViewModel>;
@@ -36,6 +37,15 @@ export function ProductionView(vm: VM) {
         saving={vm.creating}
         onClose={vm.closeCreate}
         onSubmit={vm.onCreateSubmit}
+      />
+
+      <CreateFromRoundModal
+        open={vm.createFromRoundOpen}
+        rounds={vm.eligibleRounds}
+        staff={vm.staff}
+        saving={vm.creatingFromRound}
+        onClose={vm.closeCreateFromRound}
+        onSubmit={vm.onCreateFromRoundSubmit}
       />
 
       <DetailDrawer

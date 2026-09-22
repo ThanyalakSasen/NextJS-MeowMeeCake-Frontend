@@ -3,14 +3,14 @@
 // เรียก endpoint /expenses — แพทเทิร์นเดียวกับ services/products.ts
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
-import type { ListResponse, ItemResponse, EmptyResponse } from "@/types/api";
+import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { Expense, ExpenseInput, ExpenseListParams } from "@/types/expense";
 
-const BASE = "/expenses";
+const BASE = "/admin/expenses";
 
 export const expensesService = {
   list: (params: ExpenseListParams = {}) =>
-    http.get<ListResponse<Expense>>(BASE, { params }),
+    http.getList<Expense>(BASE, { params }),
 
   get: (id: string) =>
     http.get<ItemResponse<Expense>>(`${BASE}/${id}`),

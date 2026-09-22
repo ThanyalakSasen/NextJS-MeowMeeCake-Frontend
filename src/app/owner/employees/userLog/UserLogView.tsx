@@ -14,7 +14,7 @@ import { LogDetailContent } from "./_components/LogDetailContent";
 
 type VM = ReturnType<typeof useUserLogViewModel>;
 
-const ACTION_TYPES: UserLogAction[] = ["CREATE", "READ", "UPDATE", "DELETE", "OTHER"];
+const ACTION_TYPES: UserLogAction[] = ["CREATE", "READ", "UPDATE", "DELETE", "LOGIN", "LOGOUT", "OTHER"];
 
 export function UserLogView(vm: VM) {
   const t = useTranslations();
@@ -59,7 +59,7 @@ export function UserLogView(vm: VM) {
           <p className="text-gray-700">{r.action}</p>
           {r.entity && (
             <p className="mt-0.5 text-xs text-gray-400">
-              {t(`entities.${r.entity}`)}
+              {t.has(`entities.${r.entity}`) ? t(`entities.${r.entity}`) : t("entities.fallback")}
               {r.entity_id && <span className="ml-1 font-mono">{r.entity_id}</span>}
             </p>
           )}

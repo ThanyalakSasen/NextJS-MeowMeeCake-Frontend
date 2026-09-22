@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// posCart.ts — pure: ตะกร้าขายหน้าร้าน + แปลงเป็น body ของ POST /orders
+// posCart.ts — pure: ตะกร้าขายหน้าร้าน + แปลงเป็น body ของ POST /admin/orders
 // ขอบเขต #8: สินค้าเดี่ยวเท่านั้น — bundle/promotion เป็นของนอก 27 screen (เฟสหลัง)
 // ─────────────────────────────────────────────────────────────
 import type { Product } from "@/types/product";
@@ -42,27 +42,23 @@ export function cartSubtotal(cart: CartLine[]): number {
   return cart.reduce((s, c) => s + c.price * c.qty, 0);
 }
 
-/** cart + ข้อมูลชำระเงิน → body ของ POST /orders — ขายหน้าร้าน = จบทันที (completed + paid) */
+/**
+ * cart + ลูกค้า → body ของ POST /admin/orders จริง (backend gen order_no/subtotal/total_amount
+ * เอง — รับแค่ user_id + items เป็น product_id/quantity) ขายหน้าร้าน = "takeaway" เสมอ
+ * (ไม่มีที่อยู่จัดส่ง) ส่วนการทำเครื่องหมายจ่ายเงินแล้ว+เสร็จสิ้น ทำหลังสร้างออเดอร์สำเร็จ
+ * (ดู usePOSViewModel.ts — สร้าง payment + verify + เปลี่ยนสถานะแยกเป็นขั้นตอนถัดไป)
+ */
 export function buildOrderInput(args: {
   cart: CartLine[];
-  /** ชื่อลูกค้า (ผู้เรียก resolve ค่า default มาแล้ว — ห้ามใส่ literal ไทยที่นี่) */
-  customerName: string;
-  total: number;
-  orderNo: string;
-  /** ISO ปัจจุบัน */
-  now: string;
+  guestUserId: string;
+  discount: number;
 }): OrderInput {
   return {
-    order_no: args.orderNo,
-    order_type: "ready",
-    customer_name: args.customerName,
-    customer_phone: "-",
-    items: args.cart.map((c) => ({ product_name: c.name, quantity: c.qty })),
-    total_amount: args.total,
-    order_status: "completed",
-    payment_status: "paid",
-    payment_slip_url: null,
-    payment_verified_at: args.now,
-    due_date: args.now,
+    user_id: args.guestUserId,
+    source: "items",
+    order_type: "takeaway",
+    channel: "instore",
+    items: args.cart.map((c) => ({ product_id: c.productId, quantity: c.qty })),
+    discount_amount: args.discount || undefined,
   };
 }

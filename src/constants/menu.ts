@@ -64,7 +64,12 @@ export const MENU_SECTIONS: MenuSection[] = [
           { labelKey: "productStock", href: "/owner/products/productStock", icon: "ArchiveBoxIcon", menuKey: "stock" },
         ],
       },
-      { labelKey: "ordersManage", icon: "ClipboardDocumentListIcon", href: "/owner/orders/manageOrders", menuKey: "orders" },
+      { labelKey: "ordersManage", icon: "ClipboardDocumentListIcon", href: "/owner/orders/manageOrders", menuKey: "orders", 
+        children: [
+          { labelKey: "ordersManage", href: "/owner/orders/manageOrders", icon: "ClipboardDocumentListIcon", menuKey: "orders" },
+          { labelKey: "ordersPreorderRound", href: "/owner/orders/preOrderRound", icon: "ClockIcon", menuKey: "preorder" },
+        ]
+      },
       { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "orders" },
       {
         labelKey: "promotions",

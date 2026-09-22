@@ -13,6 +13,7 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import type { StockStatus } from "@/constants/enumConfig";
 import { getStockStatus } from "./stockStatus";
+import { refId } from "@/lib/refId";
 
 export interface StockProductRow {
   _id: string;
@@ -28,7 +29,9 @@ export interface StockProductRow {
 
 export type StatusFilter = "all" | StockStatus;
 
-const READY_PARAMS = { product_type: "ready", limit: 100 } as const;
+// backend ไม่มี product_type "ready" (จริง ๆ คือ "inStore"/"online") และ query filter ใช้ค่าเดียวไม่ได้
+// สองค่าพร้อมกัน — โหลดทั้งหมดมาแล้วตัด "preorder" ออกฝั่ง client แทน (พรีออเดอร์ไม่มีสต็อกให้ปรับที่นี่)
+const ALL_PARAMS = { limit: 200 } as const;
 
 export function useProductStockViewModel() {
   const t = useTranslations();
@@ -41,8 +44,8 @@ export function useProductStockViewModel() {
   const [adjustTarget, setAdjustTarget] = useState<StockProductRow | null>(null);
 
   const productsQ = useQuery({
-    queryKey: ["products", READY_PARAMS],
-    queryFn: () => productsService.list(READY_PARAMS),
+    queryKey: ["products", ALL_PARAMS],
+    queryFn: () => productsService.list(ALL_PARAMS),
   });
   const categoriesQ = useQuery({
     queryKey: ["product-categories"],
@@ -54,22 +57,26 @@ export function useProductStockViewModel() {
   });
 
   const rows = useMemo<StockProductRow[]>(() => {
-    const catMap = new Map((categoriesQ.data?.data ?? []).map((c) => [c._id, c.category_name]));
+    const catMap = new Map((categoriesQ.data?.data ?? []).map((c) => [c._id, c.product_category_name]));
     const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, u.unit_abbr || u.unit_name]));
-    return (productsQ.data?.data ?? []).map((p) => {
-      const stock = p.product_stock_quantity ?? 0;
-      return {
-        _id: p._id,
-        name: p.product_name_th,
-        categoryId: p.category_id ?? "",
-        category: (p.category_id && catMap.get(p.category_id)) || "",
-        unit: (p.unit_id && unitMap.get(p.unit_id)) || t("productStock.unitDefault"),
-        price: p.product_price,
-        stock,
-        status: getStockStatus(stock),
-        value: stock * p.product_price,
-      };
-    });
+    return (productsQ.data?.data ?? [])
+      .filter((p) => p.product_type !== "preorder")
+      .map((p) => {
+        const stock = p.product_stock_quantity ?? 0;
+        const categoryId = refId(p.category_id);
+        const unitId = refId(p.unit_id);
+        return {
+          _id: p._id,
+          name: p.product_name_th,
+          categoryId,
+          category: (categoryId && catMap.get(categoryId)) || "",
+          unit: (unitId && unitMap.get(unitId)) || t("productStock.unitDefault"),
+          price: p.product_price,
+          stock,
+          status: getStockStatus(stock),
+          value: stock * p.product_price,
+        };
+      });
   }, [productsQ.data, categoriesQ.data, unitsQ.data, t]);
 
   const filtered = useMemo(() => {

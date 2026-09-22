@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { usersService } from "@/services/users";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
-import { emptyEmployeeForm, toInput, type EmployeeFormValue } from "../employeeForm";
+import { emptyEmployeeForm, toCreateInput, type EmployeeFormValue } from "../employeeForm";
 
 const LIST = "/owner/employees";
 
@@ -15,7 +15,7 @@ export function useAddEmployeeViewModel() {
   const qc = useQueryClient();
 
   const create = useMutation({
-    mutationFn: (v: EmployeeFormValue) => usersService.create(toInput(v)),
+    mutationFn: (v: EmployeeFormValue) => usersService.create(toCreateInput(v)),
     onSuccess: () => {
       alert.success(t("employees.saved"));
       qc.invalidateQueries({ queryKey: ["users"] });

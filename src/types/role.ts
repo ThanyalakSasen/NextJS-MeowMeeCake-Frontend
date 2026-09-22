@@ -1,4 +1,5 @@
-export type RoleType = "owner" | "admin" | "staff" | "customer";
+// ตรงกับ backend จริง (schemas/rbac.ts ROLE_TYPES / models/roleModel.ts) — ไม่มี "admin"
+export type RoleType = "owner" | "staff" | "customer";
 
 export interface Role {
   _id: string;

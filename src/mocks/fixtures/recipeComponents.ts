@@ -7,7 +7,7 @@ import type { RecipeComponent } from "@/types/recipeComponent";
 
 export const recipeComponentsFixture: RecipeComponent[] = [
   {
-    _id: "comp_choco_base", component_name: "เนื้อเค้กช็อกโกแลต", category: "เนื้อเค้ก",
+    _id: "comp_choco_base", component_name: "เนื้อเค้กช็อกโกแลต", componentcategory_id: "cc_base", category_name: "ฐานและสปันจ์",
     ingredients: [
       { ingredient_id: "ing_flour", ingredient_name: "แป้งสาลีอเนกประสงค์", quantity: 200, unit_id: "u_gram", unit_abbr: "ก." },
       { ingredient_id: "ing_egg", ingredient_name: "ไข่ไก่", quantity: 3, unit_id: "u_egg", unit_abbr: "ฟอง" },
@@ -26,7 +26,7 @@ export const recipeComponentsFixture: RecipeComponent[] = [
     created_at: "2026-08-15T09:00:00.000Z", updated_at: "2026-08-30T09:00:00.000Z",
   },
   {
-    _id: "comp_vanilla_base", component_name: "เนื้อเค้กวานิลลา", category: "เนื้อเค้ก",
+    _id: "comp_vanilla_base", component_name: "เนื้อเค้กวานิลลา", componentcategory_id: "cc_base", category_name: "ฐานและสปันจ์",
     ingredients: [
       { ingredient_id: "ing_flour", ingredient_name: "แป้งสาลีอเนกประสงค์", quantity: 180, unit_id: "u_gram", unit_abbr: "ก." },
       { ingredient_id: "ing_egg", ingredient_name: "ไข่ไก่", quantity: 3, unit_id: "u_egg", unit_abbr: "ฟอง" },
@@ -42,7 +42,7 @@ export const recipeComponentsFixture: RecipeComponent[] = [
     created_at: "2026-08-14T09:00:00.000Z", updated_at: "2026-08-29T09:00:00.000Z",
   },
   {
-    _id: "comp_choco_cream", component_name: "ครีมช็อกโกแลต", category: "ครีม",
+    _id: "comp_choco_cream", component_name: "ครีมช็อกโกแลต", componentcategory_id: "cc_cream", category_name: "ครีมและฟรอสติ้ง",
     ingredients: [
       { ingredient_id: "ing_dark_choc", ingredient_name: "ช็อกโกแลตดาร์ก", quantity: 150, unit_id: "u_gram", unit_abbr: "ก." },
       { ingredient_id: "ing_cream", ingredient_name: "วิปปิ้งครีม", quantity: 100, unit_id: "u_ml", unit_abbr: "มล." },
@@ -57,7 +57,7 @@ export const recipeComponentsFixture: RecipeComponent[] = [
     created_at: "2026-08-15T09:00:00.000Z", updated_at: "2026-08-30T09:00:00.000Z",
   },
   {
-    _id: "comp_vanilla_cream", component_name: "ครีมวานิลลา", category: "ครีม",
+    _id: "comp_vanilla_cream", component_name: "ครีมวานิลลา", componentcategory_id: "cc_cream", category_name: "ครีมและฟรอสติ้ง",
     ingredients: [
       { ingredient_id: "ing_cream", ingredient_name: "วิปปิ้งครีม", quantity: 200, unit_id: "u_ml", unit_abbr: "มล." },
       { ingredient_id: "ing_sugar", ingredient_name: "น้ำตาลทราย", quantity: 0.03, unit_id: "u_kg", unit_abbr: "กก." },
@@ -69,7 +69,7 @@ export const recipeComponentsFixture: RecipeComponent[] = [
     created_at: "2026-08-13T09:00:00.000Z", updated_at: "2026-08-28T09:00:00.000Z",
   },
   {
-    _id: "comp_strawberry_filling", component_name: "ไส้สตรอว์เบอร์รี", category: "ไส้",
+    _id: "comp_strawberry_filling", component_name: "ไส้สตรอว์เบอร์รี", componentcategory_id: "cc_filling", category_name: "ไส้ขนม",
     ingredients: [
       { ingredient_id: "ing_strawberry", ingredient_name: "สตรอว์เบอร์รีสด", quantity: 200, unit_id: "u_gram", unit_abbr: "ก." },
       { ingredient_id: "ing_sugar", ingredient_name: "น้ำตาลทราย", quantity: 0.08, unit_id: "u_kg", unit_abbr: "กก." },
@@ -82,7 +82,7 @@ export const recipeComponentsFixture: RecipeComponent[] = [
     created_at: "2026-08-12T09:00:00.000Z", updated_at: "2026-08-27T09:00:00.000Z",
   },
   {
-    _id: "comp_sourdough_starter", component_name: "แป้งซาวโดว์ Starter", category: "แป้ง",
+    _id: "comp_sourdough_starter", component_name: "แป้งซาวโดว์ Starter", componentcategory_id: "cc_base", category_name: "ฐานและสปันจ์",
     ingredients: [
       { ingredient_id: "ing_flour", ingredient_name: "แป้งสาลีอเนกประสงค์", quantity: 300, unit_id: "u_gram", unit_abbr: "ก." },
       { ingredient_id: "ing_yeast", ingredient_name: "ยีสต์แห้ง", quantity: 2, unit_id: "u_gram", unit_abbr: "ก." },
