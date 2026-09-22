@@ -34,7 +34,9 @@ function normalizeRating(raw: any): number | undefined {
   return Number(raw) || 0;
 }
 
-function toProduct(raw: any): Product {
+/** export ไว้ให้ services/pos.ts เรียกซ้ำได้ — resolveScan() (backend) คืน product shape เดียวกับ
+ *  list/get เป๊ะ (presentProduct() ใช้ร่วมกันฝั่ง backend) จึงต้อง normalize เหมือนกันทุกจุด */
+export function toProduct(raw: any): Product {
   return {
     ...raw,
     product_type: normalizeProductType(raw.product_type),

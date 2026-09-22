@@ -20,6 +20,9 @@ export interface PreorderConfig {
 /** backend populate category_id/unit_id เป็น object เต็มตอน GET/list — ใช้ refId() ดึง id ตอนต้องใช้เทียบ/ส่งกลับ */
 export interface Product {
   _id: string;
+  /** รหัสสินค้า/บาร์โค้ด เช่น "pos-0126264" (สินค้าพร้อมขาย) / "pre-..." (พรีออเดอร์) — ใช้กับ POS
+   *  scan (`services/pos.ts`) ไม่ใช่ทุกแถวจะมีค่า (สร้างผ่าน backfill/สร้างสินค้าใหม่เท่านั้น) */
+  product_id?: string;
   product_name_th: string;
   /** backend บังคับ required จริง (ไม่ optional) ทั้งตอน create — เก็บเป็น optional ที่นี่เพราะ
    *  Product ใช้ตอนอ่านด้วย (ข้อมูลเก่าก่อน field นี้บังคับอาจว่างอยู่) แต่ ProductInput ด้านล่างบังคับจริง */
