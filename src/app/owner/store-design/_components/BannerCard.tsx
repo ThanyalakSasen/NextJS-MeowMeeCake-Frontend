@@ -5,6 +5,7 @@ import { PencilSquareIcon } from "@heroicons/react/24/solid";
 import { Button, Switch, Tag } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
+import { resolveUploadUrl } from "@/lib/uploads";
 import { BANNER_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { BannerRow } from "../useStoreDesignViewModel";
 
@@ -84,7 +85,7 @@ export function BannerCard({
       <div className="relative h-40 overflow-hidden">
         {banner.banner_img ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={banner.banner_img} alt={banner.banner_name} className="h-full w-full object-cover" />
+          <img src={resolveUploadUrl(banner.banner_img)} alt={banner.banner_name} className="h-full w-full object-cover" />
         ) : (
           <div
             className="flex h-full w-full flex-col items-center justify-center gap-1 px-3 text-center"

@@ -117,11 +117,20 @@ export function ProductsView(vm: VM) {
           rows={vm.products}
           loading={vm.isLoading}
           actions={
-            vm.perm.delete
+            vm.perm.update || vm.perm.delete
               ? (p) => (
-                  <Button size="small" danger onClick={() => vm.onDelete(p._id)}>
-                    {t("common.delete")}
-                  </Button>
+                  <>
+                    {vm.perm.update && (
+                      <Button size="small" href={`/owner/products/${p._id}/edit`}>
+                        {t("common.edit")}
+                      </Button>
+                    )}
+                    {vm.perm.delete && (
+                      <Button size="small" danger onClick={() => vm.onDelete(p._id)}>
+                        {t("common.delete")}
+                      </Button>
+                    )}
+                  </>
                 )
               : undefined
           }

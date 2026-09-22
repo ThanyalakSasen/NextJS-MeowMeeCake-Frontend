@@ -9,6 +9,7 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 import { productsService } from "@/services/products";
 import { alert } from "@/lib/alert";
+import { resolveUploadUrl } from "@/lib/uploads";
 
 const MAX_IMAGES = 8;
 
@@ -23,10 +24,10 @@ export function ProductImageUpload({
   const [uploading, setUploading] = useState(false);
 
   const fileList: UploadFile[] = value.map((url, i) => ({
-    uid: url,
+    uid: url, // ต้องเป็น url ดิบ (ตรงกับที่เก็บใน value/DB) — onRemove ด้านล่างเทียบกับตัวนี้
     name: `image-${i}`,
     status: "done",
-    url,
+    url: resolveUploadUrl(url), // ใช้แค่โชว์ thumbnail — path ดิบ resolve ผิด origin ได้ 404
   }));
 
   const customRequest: UploadProps["customRequest"] = async (options) => {
