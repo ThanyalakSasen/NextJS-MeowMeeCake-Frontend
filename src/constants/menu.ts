@@ -39,7 +39,10 @@ export const MENU_SECTIONS: MenuSection[] = [
         icon: "PresentationChartBarIcon",
         children: [
           { labelKey: "reportsSales", href: "/owner/reports/sales", icon: "ArrowTrendingUpIcon", menuKey: "reports" },
-          { labelKey: "reportsReviews", href: "/owner/reports/reviews", icon: "ChatBubbleLeftRightIcon", menuKey: "reports" },
+          // menuKey: "products" ไม่ใช่ "reports" — endpoint จริงที่หน้านี้ยิงคือ /admin/reviews ใต้
+          // products.* (ดู useReviewsViewModel.ts) ต้องตรงกับสิทธิ์จริง ไม่ใช่แค่หมวดที่โชว์ใน sidebar
+          // (docs/BACKLOG.md §1)
+          { labelKey: "reportsReviews", href: "/owner/reports/reviews", icon: "ChatBubbleLeftRightIcon", menuKey: "products" },
         ],
       },
       {
@@ -75,7 +78,10 @@ export const MENU_SECTIONS: MenuSection[] = [
         labelKey: "promotions",
         icon: "TagIcon",
         children: [
-          { labelKey: "promotionsPricing", href: "/owner/promotions/pricing", icon: "CurrencyDollarIcon", menuKey: "promotions" },
+          // menuKey: "products" ไม่ใช่ "promotions" — endpoint จริงที่หน้านี้ยิงคือ /admin/products
+          // (ตั้งราคา/ราคาลดของสินค้าตรง ๆ ไม่มี endpoint "โปรโมชัน" แยก ดู usePricingViewModel.ts)
+          // ต้องตรงกับสิทธิ์จริง ไม่ใช่แค่หมวดที่โชว์ใน sidebar (docs/BACKLOG.md §1)
+          { labelKey: "promotionsPricing", href: "/owner/promotions/pricing", icon: "CurrencyDollarIcon", menuKey: "products" },
           { labelKey: "promotionsCoupons", href: "/owner/promotions/coupons", icon: "TicketIcon", menuKey: "promotions" },
         ],
       },
