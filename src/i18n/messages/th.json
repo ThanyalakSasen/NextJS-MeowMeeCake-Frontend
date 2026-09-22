@@ -445,7 +445,8 @@
     },
     "employmentType": {
       "full_time": "เต็มเวลา",
-      "part_time": "พาร์ทไทม์"
+      "part_time": "พาร์ทไทม์",
+      "fallback": "ไม่ระบุ"
     },
     "authProvider": {
       "local": "อีเมล/รหัสผ่าน",

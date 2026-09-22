@@ -29,7 +29,14 @@ export function EmployeesView(vm: VM) {
     {
       key: "type",
       title: t("employees.colType"),
-      render: (r) => (r.employmentType ? t(`enums.employmentType.${r.employmentType}`) : "—"),
+      // ข้อมูลเก่าบางแถวมีค่านอก enum ที่ schema กำหนด (เช่น "Active" — ดู docs/BACKLOG.md §2)
+      // กัน MISSING_MESSAGE ด้วย t.has() เหมือนแพทเทิร์นเดียวกันที่ userLog/UserLogView.tsx ใช้
+      render: (r) =>
+        r.employmentType
+          ? t.has(`enums.employmentType.${r.employmentType}`)
+            ? t(`enums.employmentType.${r.employmentType}`)
+            : t("enums.employmentType.fallback")
+          : "—",
     },
     { key: "phone", title: t("employees.colPhone"), render: (r) => r.phone },
     {

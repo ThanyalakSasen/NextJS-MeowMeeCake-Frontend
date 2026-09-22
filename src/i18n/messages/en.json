@@ -445,7 +445,8 @@
     },
     "employmentType": {
       "full_time": "Full-time",
-      "part_time": "Part-time"
+      "part_time": "Part-time",
+      "fallback": "Unspecified"
     },
     "authProvider": {
       "local": "Email / password",
