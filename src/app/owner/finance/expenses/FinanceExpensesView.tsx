@@ -9,6 +9,7 @@ import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stat
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
+import { resolveUploadUrl } from "@/lib/uploads";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
@@ -64,9 +65,9 @@ export function FinanceExpensesView(vm: VM) {
       align: "center",
       render: (e) => (
         e.receipt_url ? (
-          <a href={e.receipt_url} target="_blank" rel="noreferrer">
+          <a href={resolveUploadUrl(e.receipt_url)} target="_blank" rel="noreferrer">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={e.receipt_url} alt={t("finance.fieldReceipt")} className="h-8 w-8 rounded object-cover" />
+            <img src={resolveUploadUrl(e.receipt_url)} alt={t("finance.fieldReceipt")} className="h-8 w-8 rounded object-cover" />
           </a>
         ) : (
           <span className="text-gray-300">—</span>

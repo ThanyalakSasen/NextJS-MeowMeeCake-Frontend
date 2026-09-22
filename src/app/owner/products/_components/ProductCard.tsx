@@ -3,6 +3,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Card, Switch, Button } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency } from "@/i18n/format";
+import { resolveUploadUrl } from "@/lib/uploads";
 import type { Product } from "@/types/product";
 import { RatingDisplay } from "./RatingDisplay";
 
@@ -28,7 +29,7 @@ export function ProductCard({
       <div className="aspect-[4/3] overflow-hidden rounded-lg bg-brown-50 flex items-center justify-center text-3xl">
         {product.product_img?.[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={product.product_img[0]} alt={product.product_name_th} className="h-full w-full object-cover" />
+          <img src={resolveUploadUrl(product.product_img[0])} alt={product.product_name_th} className="h-full w-full object-cover" />
         ) : (
           "🍰"
         )}
@@ -50,13 +51,20 @@ export function ProductCard({
           <Switch checked={product.is_visible} disabled={!canUpdate} onChange={onToggleVisible} />
         </span>
       </div>
-      {canDelete && (
-        <ConfirmDeletePopup onConfirm={onDelete}>
-          <Button danger block>
-            {t("common.delete")}
+      <div className="flex gap-2">
+        {canUpdate && (
+          <Button block href={`/owner/products/${product._id}/edit`}>
+            {t("common.edit")}
           </Button>
-        </ConfirmDeletePopup>
-      )}
+        )}
+        {canDelete && (
+          <ConfirmDeletePopup onConfirm={onDelete}>
+            <Button danger block>
+              {t("common.delete")}
+            </Button>
+          </ConfirmDeletePopup>
+        )}
+      </div>
     </Card>
   );
 }
