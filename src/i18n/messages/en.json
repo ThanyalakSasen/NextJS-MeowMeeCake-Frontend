@@ -713,6 +713,10 @@
   "pos": {
     "title": "In-store Orders",
     "description": "Fast point-of-sale — the customer pays and takes the goods right away",
+    "scanPlaceholder": "Scan a barcode or type a product code (e.g. pos-0126264) then press Enter",
+    "scanAdded": "Added \"{name}\" to the cart",
+    "scanOutOfStock": "\"{name}\" is out of stock — cannot add to cart",
+    "scanFailed": "No product found for the scanned code",
     "searchPlaceholder": "Search products...",
     "outOfStock": "Out of stock",
     "stockLeft": "{n} left",

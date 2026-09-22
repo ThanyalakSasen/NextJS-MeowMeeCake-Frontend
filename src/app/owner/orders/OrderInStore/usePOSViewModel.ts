@@ -18,8 +18,10 @@ import { productCategoriesService } from "@/services/productCategories";
 import { ordersService } from "@/services/orders";
 import { paymentsService } from "@/services/payments";
 import { usersService } from "@/services/users";
+import { posService } from "@/services/pos";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
+import { isApiError } from "@/types/api";
 import type { Product } from "@/types/product";
 import { refId } from "@/lib/refId";
 import { addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, type CartLine } from "./posCart";
@@ -39,6 +41,7 @@ export function usePOSViewModel() {
   const perm = usePermission("orders");
 
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [scanCode, setScanCode] = useState("");
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string>("all");
   const [customerName, setCustomerName] = useState("");
@@ -71,6 +74,24 @@ export function usePOSViewModel() {
         (!q || p.product_name_th.toLowerCase().includes(q)),
     );
   }, [catalogQ.data, search, categoryId]);
+
+  // ยิงบาร์โค้ด → GET /admin/pos/scan?code=... → เพิ่มลงตะกร้าทันที (แทนต้องหาในกริดเอง)
+  // ยังไม่รองรับ variants (0 สินค้าในระบบจริงใช้ variant เลย — ดู backend docs/BACKLOG2.md §9)
+  // เจอ variants ค่อยว่ากันทีหลังตอนมีสินค้าจริงใช้งาน ตอนนี้เพิ่มตัวสินค้าหลักตรง ๆ
+  const scan = useMutation({
+    mutationFn: (code: string) => posService.scan(code),
+    onSuccess: (res) => {
+      const stock = res.product.product_stock_quantity ?? 0;
+      if (stock <= 0) {
+        alert.error(t("pos.scanOutOfStock", { name: res.product.product_name_th }));
+        return;
+      }
+      setCart((c) => addLine(c, res.product));
+      alert.success(t("pos.scanAdded", { name: res.product.product_name_th }));
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.scanFailed")),
+    onSettled: () => setScanCode(""),
+  });
 
   const subtotal = cartSubtotal(cart);
   const discount = Math.min(Math.max(extraDiscount, 0), subtotal);
@@ -135,6 +156,9 @@ export function usePOSViewModel() {
     refetch: () => catalogQ.refetch(),
 
     cart, itemCount, subtotal, discount, total,
+    scanCode, setScanCode,
+    onScan: (code: string) => { if (code.trim()) scan.mutate(code.trim()); },
+    scanning: scan.isPending,
     search, setSearch,
     categoryId, setCategoryId,
     customerName, setCustomerName,

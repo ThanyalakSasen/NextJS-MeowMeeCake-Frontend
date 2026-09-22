@@ -1,7 +1,8 @@
 "use client";
 // View ของ POS หน้าร้าน — 2-pane: กริดสินค้า (ซ้าย) + ตะกร้า (ขวา, sticky)
 import { useLocale, useTranslations } from "next-intl";
-import { Button } from "@/components/base";
+import { QrCodeIcon } from "@heroicons/react/24/outline";
+import { Button, Input } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { SearchInput, TypeTabBar } from "@/components/shared/data";
@@ -26,6 +27,17 @@ export function POSView(vm: VM) {
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">
           <div className="flex flex-col gap-3">
+            <Input
+              autoFocus
+              allowClear
+              value={vm.scanCode}
+              onChange={(e) => vm.setScanCode(e.target.value)}
+              onPressEnter={() => vm.onScan(vm.scanCode)}
+              disabled={vm.scanning}
+              placeholder={t("pos.scanPlaceholder")}
+              prefix={<QrCodeIcon className="w-4 h-4 text-gray-400" />}
+              size="large"
+            />
             <div className="flex flex-wrap items-center gap-2">
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("pos.searchPlaceholder")} />
               <TypeTabBar
