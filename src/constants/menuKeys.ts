@@ -41,10 +41,17 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/products", menuKey: "products" },
   { prefix: "/owner/orders/preOrderRound", menuKey: "preorder" },
   { prefix: "/owner/orders", menuKey: "orders" },
+  // ตั้งราคา/ราคาลดยิง /admin/products ตรง ๆ (ไม่มี endpoint "โปรโมชัน" แยก) ต้องผูกกับ "products"
+  // ไม่ใช่ "promotions" ถึงจะตรงกับสิทธิ์จริงที่หน้าเช็ค (usePricingViewModel.ts) — ต้องมาก่อน
+  // /owner/promotions ทั่วไปเพราะ resolveMenuKey() เลือก prefix ที่ยาวที่สุด (docs/BACKLOG.md §1)
+  { prefix: "/owner/promotions/pricing", menuKey: "products" },
   { prefix: "/owner/promotions", menuKey: "promotions" },
   { prefix: "/owner/production", menuKey: "production" },
   { prefix: "/owner/recipes", menuKey: "recipes" },
   { prefix: "/owner/employees", menuKey: "employees" },
+  // รีวิวลูกค้ายิง /admin/reviews ใต้ products.* (ดู useReviewsViewModel.ts) — เหตุผลเดียวกับ pricing
+  // ข้างบน ต้องมาก่อน /owner/reports ทั่วไป (docs/BACKLOG.md §1)
+  { prefix: "/owner/reports/reviews", menuKey: "products" },
   { prefix: "/owner/reports", menuKey: "reports" },
   { prefix: "/owner/finance", menuKey: "reports" },
 ];
