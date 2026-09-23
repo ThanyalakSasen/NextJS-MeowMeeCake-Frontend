@@ -33,10 +33,12 @@ export function FinanceExpensesView(vm: VM) {
     {
       key: "description",
       title: t("finance.colDescription"),
+      // รายการตัดที่ 2 บรรทัด + ร้านค้า 1 บรรทัด — ความสูงแถวสูงสุดคงที่ (ใช้คำนวณ .expense-table-scroll)
+      // ข้อความเต็มดูได้จาก tooltip (title)
       render: (e) => (
         <div>
-          <p className="font-medium text-brown-900">{e.description}</p>
-          {e.vendor && <p className="text-sm text-gray-400">{e.vendor}</p>}
+          <p className="line-clamp-2 font-medium text-brown-900" title={e.description}>{e.description}</p>
+          {e.vendor && <p className="line-clamp-1 text-sm text-gray-400" title={e.vendor}>{e.vendor}</p>}
         </div>
       ),
     },
@@ -129,39 +131,51 @@ export function FinanceExpensesView(vm: VM) {
           <StatCard label={t("finance.statNoReceipt")} value={vm.noReceiptCount} sub={t("finance.statNoReceiptSub")} tone={vm.noReceiptCount > 0 ? "warn" : "muted"} />
         </StatCardsGrid>
 
-        <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(0,1fr) 300px" }}>
-          <div>
-            {vm.isError ? (
-              <div className="flex flex-col items-center gap-3 py-10 text-center">
-                <p className="text-gray-600">{t("common.loadFailed")}</p>
-                <Button onClick={vm.refetch}>{t("common.retry")}</Button>
-              </div>
-            ) : (
-              <DataTable
-                columns={columns}
-                rows={vm.rows}
-                loading={vm.isLoading}
-                emptyText={t("finance.empty")}
-                actions={
-                  vm.perm.update || vm.perm.delete
-                    ? (e) => (
-                        <div className="flex justify-end gap-2">
-                          {vm.perm.update && <Button size="small" onClick={() => vm.openEdit(e)}>{t("common.edit")}</Button>}
-                          {vm.perm.delete && (
-                            <ConfirmDeletePopup title={t("finance.deleteConfirm", { name: e.description })} onConfirm={() => vm.onDelete(e._id)}>
-                              <Button size="small" danger>{t("common.delete")}</Button>
-                            </ConfirmDeletePopup>
-                          )}
-                        </div>
-                      )
-                    : undefined
-                }
-                pagination={{ page: vm.page, pageSize: vm.pageSize, total: vm.total, onChange: vm.setPagination }}
-              />
-            )}
+        {/* grid 4 คอลัมน์ + gap เดียวกับ StatCardsGrid ด้านบน — การ์ดตารางกิน 3 คอลัมน์ คอลัมน์ขวา (สรุปเดือนนี้ +
+            แยกตามหมวด + รายจ่ายประจำ) 1 คอลัมน์ · ไม่ใส่ items-start → คอลัมน์ขวายืดสูงเท่าการ์ดตาราง (ความสูงตายตัว
+            10 แถว ดู .expense-table-area) การ์ดสุดท้ายยืดเต็มที่ว่าง · จอเล็กซ้อนคอลัมน์เดียว */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+          <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white lg:col-span-3">
+            <div className="border-b border-gray-100 px-4 py-3">
+              <p className="text-sm font-semibold text-brown-900">{t("finance.expenseListTitle")}</p>
+            </div>
+            <div className="expense-table-area">
+              {vm.isError ? (
+                <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
+                  <p className="text-gray-600">{t("common.loadFailed")}</p>
+                  <Button onClick={vm.refetch}>{t("common.retry")}</Button>
+                </div>
+              ) : (
+                <DataTable
+                  inCard
+                  scrollClassName="expense-table-scroll"
+                  columns={columns}
+                  rows={vm.rows}
+                  loading={vm.isLoading}
+                  emptyText={t("finance.empty")}
+                  actions={
+                    vm.perm.update || vm.perm.delete
+                      ? (e) => (
+                          <div className="flex justify-end gap-2">
+                            {vm.perm.update && <Button size="small" onClick={() => vm.openEdit(e)}>{t("common.edit")}</Button>}
+                            {vm.perm.delete && (
+                              <ConfirmDeletePopup title={t("finance.deleteConfirm", { name: e.description })} onConfirm={() => vm.onDelete(e._id)}>
+                                <Button size="small" danger>{t("common.delete")}</Button>
+                              </ConfirmDeletePopup>
+                            )}
+                          </div>
+                        )
+                      : undefined
+                  }
+                  pagination={{ page: vm.page, pageSize: vm.pageSize, total: vm.total, onChange: vm.setPagination }}
+                />
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-col gap-3">
+          {/* lg:h-0 + lg:min-h-full: คอลัมน์นี้ไม่มีส่วนกำหนดความสูงแถวของ grid (สูง 0 ตอนคิดขนาดแถว) แต่ยืดเต็มแถว
+              ที่การ์ดตารางกำหนด → รายจ่ายประจำที่ยาวเลื่อนดูในการ์ดแทนการดันทั้งแถวให้สูงตาม · จอเล็กสูงตามเนื้อหาปกติ */}
+          <div className="flex min-w-0 flex-col gap-4 lg:h-0 lg:min-h-full">
             <div className="rounded-xl border border-gray-100 bg-white px-4 py-3">
               <p className="mb-2.5 text-sm font-semibold text-brown-900">{t("finance.monthSummaryTitle")}</p>
               <div className="flex flex-col gap-2 text-sm">
@@ -195,7 +209,7 @@ export function FinanceExpensesView(vm: VM) {
               formatValue={(n) => formatCurrency(n, locale)}
             />
 
-            <RecurringRemindersList reminders={vm.recurringReminders} locale={locale} />
+            <RecurringRemindersList reminders={vm.recurringReminders} locale={locale} className="min-h-0 flex-1" />
           </div>
         </div>
       </div>

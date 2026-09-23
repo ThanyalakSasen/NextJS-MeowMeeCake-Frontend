@@ -30,6 +30,10 @@ export interface DataTableProps<T> {
     total: number;
     onChange: (page: number, pageSize: number) => void;
   };
+  /** วางอยู่ในการ์ดอยู่แล้ว (section card ที่มีหัวข้อ) — ไม่วาดกรอบ/มุมมนซ้อนอีกชั้น + เว้นขอบให้แถบแบ่งหน้า */
+  inCard?: boolean;
+  /** class เพิ่มให้กล่อง scroll ของตาราง — เช่นกำหนดความสูงตายตัว (ดู .expense-table-scroll) */
+  scrollClassName?: string;
 }
 
 export function DataTable<T>({
@@ -41,6 +45,8 @@ export function DataTable<T>({
   onRowClick,
   actions,
   pagination,
+  inCard,
+  scrollClassName = "",
 }: DataTableProps<T>) {
   if (loading) return <LoadingSpin />;
   if (rows.length === 0) return <EmptyState description={emptyText} />;
@@ -50,7 +56,7 @@ export function DataTable<T>({
 
   return (
     <div className="flex flex-col">
-      <div className="overflow-x-auto rounded-xl border border-gray-100">
+      <div className={`overflow-x-auto ${inCard ? "" : "rounded-xl border border-gray-100"} ${scrollClassName}`}>
         <table className="data-table">
           <thead>
             <tr>
@@ -86,12 +92,14 @@ export function DataTable<T>({
       </div>
 
       {pagination && (
-        <PaginationBar
-          page={pagination.page}
-          pageSize={pagination.pageSize}
-          total={pagination.total}
-          onChange={pagination.onChange}
-        />
+        <div className={inCard ? "border-t border-gray-100 px-4 pb-3" : undefined}>
+          <PaginationBar
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={pagination.onChange}
+          />
+        </div>
       )}
     </div>
   );

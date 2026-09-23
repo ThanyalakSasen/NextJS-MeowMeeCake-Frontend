@@ -52,15 +52,20 @@ export function CouponCard({
   const minLabel = minParts.length > 0 ? minParts.join(" + ") : t("coupons.noMinimum");
 
   return (
-    <div className={`overflow-hidden rounded-xl border border-gray-100 bg-white transition-all hover:border-gray-200 hover:shadow-md ${isExpired ? "opacity-60" : ""}`}>
-      <div className="flex">
+    // h-full + flex-col: การ์ดยืดเต็มความสูงแถวของ grid แล้วแถบสถานะด้านล่างชิดล่างเสมอ (การ์ดในแถวเดียวกันสูงเท่ากัน)
+    <div className={`flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all hover:border-gray-200 hover:shadow-md ${isExpired ? "opacity-60" : ""}`}>
+      <div className="flex flex-1">
         <div className="w-1 shrink-0" style={{ background: statusCfg.color }} />
 
-        <div className="flex-1 p-3.5">
-          <div className="mb-2 flex items-start justify-between">
-            <div>
+        <div className="flex flex-1 flex-col p-3.5">
+          <div className="mb-2 flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
               <p className="font-mono text-sm font-bold tracking-wider text-brown-800">{coupon.promotion_code}</p>
-              {coupon.promotion_name && <p className="mt-0.5 text-xs text-gray-400">{coupon.promotion_name}</p>}
+              {/* ชื่อตัดที่ 2 บรรทัด + เผื่อที่ 2 บรรทัดเสมอ (แม้ชื่อสั้นหรือไม่มีชื่อ) ให้มูลค่าส่วนลดด้านล่างอยู่ระดับเดียวกันทุกใบ
+                  leading-5 แทนค่าเริ่มต้นของ text-xs — สระบน/ล่างของภาษาไทยไม่โดน line-clamp ตัด */}
+              <p className="mt-0.5 line-clamp-2 min-h-10 text-xs leading-5 text-gray-400" title={coupon.promotion_name || undefined}>
+                {coupon.promotion_name}
+              </p>
             </div>
             <div className="flex items-center gap-1">
               {!isExpired && canUpdate && (
@@ -91,7 +96,8 @@ export function CouponCard({
             <p className="mb-2 text-xs text-gray-400">{t("coupons.usageUnlimited", { used: coupon.used_count })}</p>
           )}
 
-          <div className="flex flex-col gap-1 border-t border-gray-100 pt-2 text-xs text-gray-500">
+          {/* mt-auto: ช่วงวันที่/ขั้นต่ำชิดล่าง — ที่ว่างจากการยืดการ์ดไปอยู่เหนือบรรทัดนี้แทน */}
+          <div className="mt-auto flex flex-col gap-1 border-t border-gray-100 pt-2 text-xs text-gray-500">
             <span>{formatDate(coupon.start_date, locale)} – {formatDate(coupon.end_date, locale)}</span>
             <span>{minLabel} · {scopeLabel}</span>
           </div>

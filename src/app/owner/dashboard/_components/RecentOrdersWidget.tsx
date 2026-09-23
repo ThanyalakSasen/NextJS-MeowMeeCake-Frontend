@@ -11,7 +11,7 @@ export function RecentOrdersWidget({ orders }: { orders: DashboardRecentOrder[] 
   const locale = useLocale();
 
   return (
-    <section className="section-card">
+    <section className="section-card dashboard-widget">
       <div className="section-card-header">
         <h2 className="section-card-title">{t("recentOrders")}</h2>
         <Link href="/owner/orders/manageOrders" className="section-card-link">
@@ -20,9 +20,9 @@ export function RecentOrdersWidget({ orders }: { orders: DashboardRecentOrder[] 
       </div>
 
       {orders.length === 0 ? (
-        <p className="px-5 py-8 text-center text-gray-600">{t("noOrders")}</p>
+        <p className="dashboard-widget-empty">{t("noOrders")}</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="dashboard-widget-body overflow-x-auto">
           <table className="data-table">
             <thead>
               <tr>

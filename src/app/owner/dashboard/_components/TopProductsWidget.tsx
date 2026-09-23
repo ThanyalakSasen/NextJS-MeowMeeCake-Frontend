@@ -9,7 +9,7 @@ export function TopProductsWidget({ products }: { products: DashboardTopProduct[
   const locale = useLocale();
 
   return (
-    <section className="section-card">
+    <section className="section-card dashboard-widget">
       <div className="section-card-header">
         <div>
           <h2 className="section-card-title">{t("topProducts")}</h2>
@@ -18,9 +18,9 @@ export function TopProductsWidget({ products }: { products: DashboardTopProduct[
       </div>
 
       {products.length === 0 ? (
-        <p className="px-5 py-8 text-center text-gray-600">{t("topProductsNone")}</p>
+        <p className="dashboard-widget-empty">{t("topProductsNone")}</p>
       ) : (
-        <ul>
+        <ul className="dashboard-widget-body">
           {products.map((p, idx) => (
             <li key={p._id} className="product-item">
               <div className="product-item-row">

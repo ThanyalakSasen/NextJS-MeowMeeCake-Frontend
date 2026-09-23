@@ -76,13 +76,15 @@ export function BannerCard({
       onDrop={(e) => { e.preventDefault(); onDrop(banner._id); }}
       onDragEnd={onDragEnd}
       title={draggable ? t("storeDesign.reorderHint") : undefined}
-      className={`overflow-hidden rounded-xl border bg-white transition-all ${
+      className={`flex h-full flex-col overflow-hidden rounded-xl border bg-white transition-all ${
         dragOver ? "border-brown-400 shadow-md" : "border-gray-100 hover:shadow-md"
       } ${banner.status === "inactive" ? "opacity-60" : ""} ${dragging ? "opacity-40" : ""} ${
         draggable ? "cursor-grab active:cursor-grabbing" : ""
       }`}
     >
-      <div className="relative h-40 overflow-hidden">
+      {/* aspect-[3/1] = สัดส่วนเดียวกับขนาดที่แนะนำให้อัปโหลด (1200×400) — รูปแสดงเต็มไม่โดนตัดขอบซ้าย/ขวา
+          (เดิม h-40 ตายตัว สัดส่วนจริง ~2.5:1 ทำให้ object-cover ตัดข้างรูปทิ้ง ~16%) */}
+      <div className="relative aspect-[3/1] shrink-0 overflow-hidden">
         {banner.banner_img ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={resolveUploadUrl(banner.banner_img)} alt={banner.banner_name} className="h-full w-full object-cover" />
@@ -91,7 +93,7 @@ export function BannerCard({
             className="flex h-full w-full flex-col items-center justify-center gap-1 px-3 text-center"
             style={{ background: `linear-gradient(135deg, ${palette.from}, ${palette.to})` }}
           >
-            <span className="text-sm font-medium" style={{ color: palette.text }}>
+            <span className="line-clamp-2 text-sm font-medium" style={{ color: palette.text }}>
               {banner.banner_name}
             </span>
           </div>
@@ -104,15 +106,17 @@ export function BannerCard({
         </span>
       </div>
 
+      {/* ทุกบรรทัดเป็น 1 บรรทัดตายตัว (truncate) + แสดงเสมอ — ไม่มีลิงก์ก็ยังกินที่ 1 บรรทัด ("—")
+          การ์ดจึงสูงเท่ากันทุกใบไม่ว่าข้อความจะยาวแค่ไหน · ข้อความเต็มดูได้จาก tooltip (title) */}
       <div className="px-3 py-2.5">
-        <p className="truncate text-sm font-semibold text-brown-800">{banner.banner_name}</p>
-        {banner.banner_link && (
-          <p className="mt-0.5 truncate text-xs text-gray-400">{banner.banner_link}</p>
-        )}
-        <p className="mt-0.5 text-xs text-gray-400">{dateText}</p>
+        <p className="truncate text-sm font-semibold text-brown-800" title={banner.banner_name}>{banner.banner_name}</p>
+        <p className="mt-0.5 truncate text-xs text-gray-400" title={banner.banner_link || undefined}>
+          {banner.banner_link || "—"}
+        </p>
+        <p className="mt-0.5 truncate text-xs text-gray-400" title={dateText}>{dateText}</p>
       </div>
 
-      <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2">
+      <div className="mt-auto flex items-center justify-between border-t border-gray-100 px-3 py-2">
         <div className="flex items-center gap-1.5">
           <Button size="small" icon={<PencilSquareIcon className="h-3.5 w-3.5" />} onClick={() => onEdit(banner)}>
             {t("common.edit")}
@@ -124,8 +128,10 @@ export function BannerCard({
             <Button size="small" danger>{t("common.delete")}</Button>
           </ConfirmDeletePopup>
         </div>
+        {/* ผูกกับ is_active ตรง ๆ (สวิตช์ = "เปิดใช้งาน") — เดิมใช้ status === "active" แบนเนอร์ที่เปิดไว้แต่ยัง
+            "รอตามกำหนด" จึงโชว์เป็นปิด แล้วกดเปิดกลับได้ is_active: false (ตรงข้ามกับที่ตั้งใจ) */}
         <Switch
-          checked={banner.status === "active"}
+          checked={banner.is_active}
           onChange={() => onToggle(banner)}
           aria-label={banner.banner_name}
         />

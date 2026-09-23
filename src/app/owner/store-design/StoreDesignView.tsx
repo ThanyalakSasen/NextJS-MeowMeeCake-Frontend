@@ -78,7 +78,8 @@ export function StoreDesignView(vm: VM) {
             {t(vm.canReorder ? "storeDesign.reorderHint" : "storeDesign.reorderDisabledHint")}
           </p>
 
-          <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {/* ไม่ใส่ items-start → การ์ดยืดเต็มแถว (BannerCard h-full) สูงเท่ากัน รวมถึงปุ่ม "เพิ่มแบนเนอร์" */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {vm.rows.map((b) => (
               <BannerCard
                 key={b._id}

@@ -907,6 +907,43 @@ body {
   @apply text-sm text-blue-600 hover:text-blue-700 transition-colors cursor-pointer;
 }
 
+/* ── Dashboard widget — section-card ที่สูงเท่ากันทุกใบ (ว่างหรือมีข้อมูล) ──
+   จอ lg ขึ้นไป (2 คอลัมน์) ความสูงตายตัว รายการที่ยาวเกินเลื่อนดูใน body
+   จอเล็ก (ซ้อนคอลัมน์เดียว) ใช้แค่ความสูงขั้นต่ำ ให้การ์ดว่างไม่เตี้ยกว่าการ์ดอื่นมาก */
+.dashboard-widget {
+  @apply flex flex-col min-h-[22rem] lg:h-[28rem];
+}
+
+.dashboard-widget-body {
+  @apply min-h-0 flex-1 overflow-y-auto;
+}
+
+.dashboard-widget-empty {
+  @apply flex flex-1 items-center justify-center px-5 py-8 text-center text-gray-600;
+}
+
+/* ── ตารางค่าใช้จ่าย (/owner/finance/expenses) — ความสูงตายตัว พอดีจอ แถวที่เกินเลื่อนดูในการ์ด ──
+   ความสูงพื้นที่ตาราง = ความสูงจอ − 14rem (แถบบน ~4.9rem + หัวการ์ด ~2.9rem + แถบแบ่งหน้า 3.75rem + ขอบบน/ล่าง 2rem)
+   → ทั้งการ์ดเห็นครบในจอเดียว · เพดาน = 10 แถว (ค่าเริ่มต้นของหน้า) · ขั้นต่ำ 24rem (~3 แถว) กันจอเตี้ย
+   หัวตาราง 1 บรรทัด  = py-4 (2rem) + text-sm (1.25rem)                             = 3.25rem
+   แถวที่สูงที่สุด     = py-4 (2rem) + รายการ 2 บรรทัด (2 × 1.5rem) + ร้านค้า 1 บรรทัด (1.25rem) = 6.25rem
+   (+1px เส้นคั่นต่อแถว) · หัวตารางค้างไว้ด้านบนเวลาเลื่อน
+   ถ้าแก้ padding ของ .data-table หรือจำนวนบรรทัดที่ตัดในคอลัมน์รายการ ต้องแก้ค่าเพดานตาม */
+.expense-table-area {
+  --expense-rows-h: min(calc(3.25rem + 1px + 10 * (6.25rem + 1px)), max(24rem, calc(100dvh - 14rem)));
+  /* ตอนโหลด/ไม่มีรายการ (DataTable ไม่วาดตาราง) ยังคงความสูงเท่าเดิม — 3.75rem = แถบแบ่งหน้า */
+  @apply flex min-h-[calc(var(--expense-rows-h)+3.75rem)] flex-col;
+}
+
+.expense-table-scroll {
+  height: var(--expense-rows-h);
+  @apply overflow-y-auto;
+}
+
+.expense-table-scroll th {
+  @apply sticky top-0 z-10 whitespace-nowrap bg-white;
+}
+
 /* ── Status badges ── */
 .badge {
   @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium;

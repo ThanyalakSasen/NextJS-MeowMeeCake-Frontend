@@ -73,6 +73,17 @@ export const SOURCE_TYPE_CONFIG: Record<SourceType, { color: string; bg: string 
   preorder: { color: "#1d4ed8", bg: "#dbeafe" },
 };
 
+// ─── ประเภทสินค้า (Product.product_type) ─────────────────────────
+// ป้ายบนมุมรูปของการ์ดสินค้า — inStore ใช้โทนน้ำตาลของแบรนด์ (brown-600 บน brown-100)
+export const PRODUCT_TYPE_CONFIG: Record<"inStore" | "online" | "preorder", { color: string; bg: string }> = {
+  inStore:  { color: "#7C4F35", bg: "#F1E4DC" },
+  online:   { color: "#1d4ed8", bg: "#dbeafe" },
+  preorder: { color: "#7c3aed", bg: "#ede9fe" },
+};
+
+/** ข้อมูลเก่าใน DB อาจมีค่านอก enum (เช่น "ready" ที่ค้างมาก่อนแยกประเภท) — fallback สีเทา */
+export const PRODUCT_TYPE_FALLBACK = { color: "#4b5563", bg: "#f3f4f6" };
+
 // ─── สต็อกวัตถุดิบ ───────────────────────────────────────────
 export type StockStatus = "ok" | "low" | "out";
 

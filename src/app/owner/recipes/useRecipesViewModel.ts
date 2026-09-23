@@ -234,7 +234,8 @@ export function useRecipesViewModel() {
         yield_unit_id: v.yield_unit_id,
         estimated_cost_per_batch: v.estimated_cost_per_batch,
         duration_minutes: v.duration_minutes,
-        note: v.note ?? null,
+        // backend schemas/bom.ts รับ note เป็น string เท่านั้น (null = 400) — "" ล้างหมายเหตุเดิมตอนแก้ไขได้ด้วย
+        note: v.note ?? "",
       },
     });
   };
@@ -275,7 +276,7 @@ export function useRecipesViewModel() {
         yield_qty: v.yield_qty,
         yield_unit_id: v.yield_unit_id,
         estimated_cost_per_batch: v.estimated_cost_per_batch,
-        note: v.note ?? null,
+        note: v.note ?? "", // ดูเหตุผลที่ onSaveRecipe — null = 400
       },
     });
   };

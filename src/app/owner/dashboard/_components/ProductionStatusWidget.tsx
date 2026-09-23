@@ -11,7 +11,7 @@ export function ProductionStatusWidget({ items }: { items: DashboardProduction[]
   const locale = useLocale();
 
   return (
-    <section className="section-card">
+    <section className="section-card dashboard-widget">
       <div className="section-card-header">
         <h2 className="section-card-title">{t("productionStatus")}</h2>
         <Link href="/owner/production?tab=status" className="section-card-link">
@@ -20,9 +20,9 @@ export function ProductionStatusWidget({ items }: { items: DashboardProduction[]
       </div>
 
       {items.length === 0 ? (
-        <p className="px-5 py-8 text-center text-gray-600">{t("productionNone")}</p>
+        <p className="dashboard-widget-empty">{t("productionNone")}</p>
       ) : (
-        <ul>
+        <ul className="dashboard-widget-body">
           {items.map((p) => (
             <li key={p._id} className="production-item">
               <div>

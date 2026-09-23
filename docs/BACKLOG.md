@@ -5,7 +5,7 @@
 > วิธีตรวจ: อ่านโค้ดจริง + เปิดแอปทดสอบจริงด้วย Playwright (ล็อกอินจริง คลิกทุกหน้าใหม่) + ตรวจ DB จริง
 > (read-only) เพื่อยืนยันผลกระทบ — ไม่ใช่รายงานดิบจาก agent (ตามธรรมเนียมเดียวกับ BACKLOG2.md ฝั่ง backend)
 >
-> **สถานะโดยรวม:** §1/§2/§3/§5/§6/§7 แก้ครบแล้ว · §4 บันทึกไว้ก่อน ยังไม่แก้ (2026-09-22)
+> **สถานะโดยรวม:** §1/§2/§3/§5/§6/§7 แก้ครบแล้ว · §4 บันทึกไว้ก่อน ยังไม่แก้ (2026-09-22) · §8 วางแผนไว้ ยังไม่แก้ (2026-09-23)
 
 ## สถานะโดยรวม
 
@@ -18,6 +18,7 @@
 | **§5 URL รูปภาพเป็น relative path — 404 ข้าม origin (product/banner/receipt)** | ✅ **แก้แล้ว** (2026-09-22) — เพิ่ม `resolveUploadUrl()` ใช้ที่ 4 จุด |
 | **§6 หน้า `products/[id]/edit` ไม่มีปุ่ม/ลิงก์เข้าถึงจาก UI เลย** | ✅ **แก้แล้ว** (2026-09-22) — เพิ่มปุ่ม "แก้ไข" ทั้งมุมมองกริดและตาราง |
 | **§7 POS: ยิงบาร์โค้ดต้องคลิกช่องกรอกก่อนเสมอ** | ✅ **แก้แล้ว** (2026-09-22) — global keydown capture, เจอ+แก้บั๊กจริง 2 ตัวระหว่างทำ |
+| **§8 เพิ่มแบนเนอร์/แนบใบเสร็จไม่ได้ — `UploadImageBox` ส่งรูปเป็น base64 เกิน 1000 ตัวอักษร** | 🟡 พบจริง วางแผนไว้ ยังไม่แก้ (2026-09-23) — ต้องแก้ทั้ง 2 repo (เพิ่ม endpoint อัปโหลดใน backend) |
 
 ---
 
@@ -246,3 +247,86 @@ input นั้นทำงานตามปกติเสมอ ไม่ hij
 ยืนยันด้วย `npm run check` (i18n+theme+tsc+eslint) exit 0
 
 **สถานะ:** ✅ แก้แล้ว (2026-09-22)
+
+---
+
+## 8. 🟡 เพิ่มแบนเนอร์/แนบใบเสร็จไม่ได้ — `UploadImageBox` ส่งรูปเป็น base64 เกิน 1000 ตัวอักษร
+
+**อาการ (ผู้ใช้เจอจริง 2026-09-23):** หน้า `/owner/store-design` → "เพิ่มแบนเนอร์ใหม่" กรอกครบทุกช่อง +
+เลือกรูป → กด "เพิ่มแบนเนอร์" ได้ `POST /api/admin/banners` → **400 Bad Request** ทุกครั้ง หน้าเว็บขึ้นแค่
+"บันทึกไม่สำเร็จ" ไม่บอกเหตุผล
+
+**สาเหตุ (ยืนยันด้วยการยิง API ซ้ำ):**
+
+- `src/components/shared/form/UploadImageBox.tsx:30` อ่านไฟล์ด้วย `FileReader.readAsDataURL` แล้วคืนค่าเป็น
+  `data:image/jpeg;base64,...` ให้ฟอร์มตรง ๆ — **ไม่เคยอัปโหลดไฟล์จริง** (คอมเมนต์ในไฟล์เองก็เขียนไว้
+  "ไม่อัปโหลดจริง — เก็บ base64" ตั้งแต่สมัย mock — §5 สังเกตเห็นไว้แล้วแต่ยังไม่ได้แก้)
+- backend `src/schemas/catalog.ts:49` → `banner_img: z.string().trim().min(1).max(1000)` ออกแบบไว้รับ
+  **URL ของไฟล์ที่อัปโหลดแล้ว** (แบบเดียวกับ `product_img`) ไม่ใช่ตัวไฟล์
+- รูปแบนเนอร์ขนาดปกติเป็น base64 ยาวหลายหมื่นตัวอักษร → zod ตอบ 400 · base64 1000 ตัวอักษร ≈ ไฟล์แค่
+  ~700 ไบต์ **จึงไม่มีรูปจริงไหนผ่านได้เลย** (ไม่มีทางเลี่ยงชั่วคราวฝั่งผู้ใช้)
+- ยิงซ้ำด้วย base64 สั้น ๆ (`data:image/jpeg;base64,/9j/4AAQ`) → 201 ผ่าน = ช่องอื่นถูกหมด ปัญหาอยู่ที่ความยาว
+  อย่างเดียว (แบนเนอร์ทดสอบ `__test__` ที่สร้างขึ้นถูก soft delete แล้ว)
+
+**จุดที่โดนเหมือนกัน:** `UploadImageBox` ถูกใช้ 2 ที่ — และ backend จำกัด 1000 ตัวอักษรทั้งคู่
+
+| หน้า | ฟอร์ม | field | backend schema | สิทธิ์ (menu ของ route) |
+|---|---|---|---|---|
+| `/owner/store-design` | `store-design/_components/BannerFormModal.tsx:54` | `banner_img` (บังคับ) | `schemas/catalog.ts:49` `max(1000)` | `products` (`app/api/admin/banners/route.ts:11`) |
+| `/owner/finance/expenses` | `finance/expenses/_components/ExpenseFormModal.tsx:78` | `receipt_url` (ไม่บังคับ) | `schemas/expense.ts:26` `max(1000)` | `reports` (`app/api/admin/expenses/route.ts:30`) |
+
+ใบเสร็จไม่บังคับ จึงยังบันทึกค่าใช้จ่ายแบบไม่แนบรูปได้ แต่แนบรูปเมื่อไหร่ก็ได้ 400 แบบเดียวกัน
+
+### ทางเลือก
+
+| | วิธี | ผล |
+|---|---|---|
+| ก | ขยาย `max()` ใน backend ให้รับ base64 | ❌ ไม่เอา — เก็บไฟล์หลายร้อย KB ต่อแถวใน MongoDB, `GET /banners` (หน้าร้านลูกค้าเรียกทุกครั้ง) หนักขึ้นตามจำนวนแบนเนอร์, ขัดกับ `UPLOAD_DRIVER`/S3 ที่ออกแบบไว้แล้ว |
+| ข | ใช้ `POST /admin/products/images` ที่มีอยู่แทน | ❌ ไม่เอา — ไฟล์ไปอยู่โฟลเดอร์ `products/`, ต้องมีสิทธิ์ `products.update` (ใบเสร็จอยู่เมนู `reports`), audit log เขียนว่า "อัปโหลดรูปสินค้า" |
+| **ค** | **เพิ่ม endpoint อัปโหลดแยกของแต่ละ resource + ให้ `UploadImageBox` อัปโหลดไฟล์จริงแล้วเก็บ URL** | ✅ **แผนที่เลือก** — pattern เดียวกับรูปสินค้า (`ProductImageUpload`) ที่ใช้งานได้จริงอยู่แล้ว |
+
+### แผน (ทางเลือก ค)
+
+**PR 1 — Backend (`NextJS-MeowMeeCake`)**
+
+1. `src/app/api/admin/banners/images/route.ts` — `POST` multipart field `files`, `withPermission("products",
+   "update")` (ให้ตรงกับ menu ของ banner route), `saveImages(files, "banners")`, audit "อัปโหลดรูปแบนเนอร์"
+   · ต้นแบบ: `src/app/api/admin/products/images/route.ts`
+2. `src/app/api/admin/expenses/receipts/route.ts` — เหมือนกัน `withPermission("reports", "create")`,
+   `saveImages(files, "receipts")`
+3. จำกัด 1 ไฟล์ต่อครั้ง (ฟอร์มทั้ง 2 ใช้รูปเดียว) · ข้อจำกัดเดิมของ `src/lib/upload.ts` ใช้ได้เลย: JPG/PNG/
+   WebP/AVIF, ≤ 5 MB
+4. (ไม่บังคับ) ลบไฟล์เดิมด้วย `deleteImages()` เมื่อเปลี่ยนรูป/ลบแบนเนอร์ กันไฟล์กำพร้าสะสม — ดู pattern
+   การลบรูปสินค้าใน `productService`
+5. เทส: อัปโหลดสำเร็จคืน URL `/uploads/banners/...`, ไฟล์เกิน 5 MB → 400, นามสกุลไม่รองรับ → 400, ไม่มีสิทธิ์
+   → 403 · `npm run typecheck && npm test`
+
+**PR 2 — Frontend (ทำหลัง PR 1 merge)**
+
+1. `src/services/banners.ts` เพิ่ม `uploadImage(file): Promise<string>` · `src/services/expenses.ts` เพิ่ม
+   `uploadReceipt(file): Promise<string>` (แบบเดียวกับ `productsService.uploadImages`)
+2. `UploadImageBox.tsx` — รับ prop `upload: (file: File) => Promise<string>` เลือกไฟล์แล้วอัปโหลดทันที
+   (`customRequest` ของ antd `Upload`), ระหว่างอัปโหลดโชว์สถานะ loading + ปิดปุ่มบันทึก, สำเร็จแล้ว
+   `onChange(url)` เป็น URL ที่ backend คืน, preview ใช้ `resolveUploadUrl(value)` (§5) · ตรวจชนิด/ขนาดไฟล์
+   ฝั่ง client ก่อนส่ง (≤ 5 MB)
+3. `BannerFormModal.tsx` → `<UploadImageBox upload={bannersService.uploadImage} />` ·
+   `ExpenseFormModal.tsx` → `<UploadImageBox upload={expensesService.uploadReceipt} />`
+4. แก้ข้อความใต้ช่องรูป (`storeDesign.imageHint`) ให้บอกขีดจำกัด 5 MB + AVIF ให้ตรงกับ backend
+5. `onError` ของการอัปโหลดและการบันทึก — โชว์ `e.message` จาก backend เมื่อเป็น `isApiError(e)` (เหมือน POS
+   scan) แทนข้อความรวม ๆ อย่างเดียว
+6. คีย์ i18n ใหม่ใน `src/i18n/messages/th.json` + `en.json` (เช่น `common.uploading`,
+   `storeDesign.imageUploadFailed`) · `npm run check`
+
+**ข้อมูลเดิมใน DB:** §5 พบว่ามีแถวที่เก็บ base64 ไว้ใน field เหล่านี้ตั้งแต่ก่อนมี validation —
+`resolveUploadUrl()` ปล่อย `data:` URI ผ่านอยู่แล้ว จึงยังแสดงผลได้ ไม่ต้อง migrate ตอนนี้ แต่ถ้าเปิดแก้ไข
+แถวนั้นแล้วกดบันทึกโดยไม่เปลี่ยนรูป PATCH จะส่ง base64 เดิมกลับไป → 400 · กันด้วย: ส่ง `banner_img`/
+`receipt_url` ใน PATCH เฉพาะเมื่อค่าเปลี่ยน หรือเขียนสคริปต์ย้าย base64 → ไฟล์จริงทีหลัง
+
+**ทดสอบในเบราว์เซอร์หลังแก้:**
+- เพิ่มแบนเนอร์ใหม่พร้อมรูป ~1200×400 px → สำเร็จ, การ์ดแบนเนอร์แสดงรูปจาก `http://localhost:3000/uploads/banners/...`
+- แก้ไขแบนเนอร์: เปลี่ยนรูป / ไม่เปลี่ยนรูป แล้วบันทึก → สำเร็จทั้งคู่
+- รูปเกิน 5 MB / ไฟล์ `.gif` → ข้อความบอกเหตุผลชัดเจน ไม่ส่ง request บันทึก
+- เพิ่มค่าใช้จ่ายพร้อมใบเสร็จ → ลิงก์ใบเสร็จในตารางเปิดรูปได้
+- ผู้ใช้ที่ไม่มีสิทธิ์ `products.update` → อัปโหลดรูปแบนเนอร์ไม่ได้ (403)
+
+**สถานะ:** 🟡 วางแผนไว้ ยังไม่แก้ (2026-09-23)

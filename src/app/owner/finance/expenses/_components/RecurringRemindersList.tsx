@@ -13,15 +13,24 @@ export interface RecurringReminder {
   isUrgent: boolean;
 }
 
-export function RecurringRemindersList({ reminders, locale }: { reminders: RecurringReminder[]; locale: string }) {
+/** className — เช่น "min-h-0 flex-1" ให้การ์ดยืดเต็มที่ว่างที่เหลือของคอลัมน์ รายการที่ยาวเกินเลื่อนดูในการ์ด */
+export function RecurringRemindersList({
+  reminders,
+  locale,
+  className = "",
+}: {
+  reminders: RecurringReminder[];
+  locale: string;
+  className?: string;
+}) {
   const t = useTranslations();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={`flex flex-col overflow-hidden ${className}`}>
       <div className="border-b border-gray-100 px-4 py-3">
         <p className="text-sm font-semibold text-brown-900">{t("finance.recurringTitle")}</p>
       </div>
-      <div className="flex flex-col gap-2 px-4 py-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
         {reminders.length === 0 ? (
           <p className="py-2 text-center text-sm text-gray-400">{t("finance.recurringEmpty")}</p>
         ) : (

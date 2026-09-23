@@ -55,7 +55,8 @@ export function FinanceSummaryView(vm: VM) {
         <EmptyState description={t("finance.noDataThisPeriod")} />
       ) : (
         <>
-          <StatCardsGrid>
+          {/* แถว 1: สรุป 3 ค่า แบ่งเต็มแถวเท่ากัน */}
+          <StatCardsGrid cols={3}>
             <StatCard label={t("finance.heroIncome")} value={formatCurrency(vm.totalIncome, locale)} sub={t("finance.heroIncomeSub", { n: vm.orderCount, period: vm.periodLabel })} tone="up" />
             <StatCard
               label={t("finance.heroExpense")}
@@ -75,41 +76,41 @@ export function FinanceSummaryView(vm: VM) {
             />
           </StatCardsGrid>
 
-          <div className="grid gap-4 items-start" style={{ gridTemplateColumns: "minmax(0,1fr) 320px" }}>
-            <div className="flex flex-col gap-4">
-              <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
-                <div className="border-b border-gray-100 px-4 py-3">
-                  <p className="text-sm font-semibold text-brown-900">{t("finance.trendTitle")}</p>
-                </div>
-                <DataTable columns={trendColumns} rows={vm.monthlyTrend} />
+          {/* แถว 2: grid 3 คอลัมน์ + gap เดียวกับแถว 1 — ตารางเปรียบเทียบกิน 2 คอลัมน์ งบกำไร-ขาดทุน 1 คอลัมน์
+              (ขอบตรงกับการ์ดสรุปด้านบน) · ไม่ใส่ items-start → 2 การ์ดยืดสูงเท่ากันตามใบที่สูงกว่า · จอเล็กซ้อนคอลัมน์เดียว */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white lg:col-span-2">
+              <div className="border-b border-gray-100 px-4 py-3">
+                <p className="text-sm font-semibold text-brown-900">{t("finance.trendTitle")}</p>
               </div>
+              <DataTable inCard columns={trendColumns} rows={vm.monthlyTrend} />
             </div>
 
-            <div className="flex flex-col gap-4">
-              <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
-                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-                  <p className="text-sm font-semibold text-brown-900">{t("finance.statementTitle")}</p>
-                  <span className="text-sm text-gray-400">{vm.periodLabel}</span>
-                </div>
-                <PLStatementTable rows={vm.pnlRows} />
-                <p className="mx-4 my-3 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm text-amber-700">
-                  {t("finance.cogsNote")}
-                </p>
+            <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white">
+              <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                <p className="text-sm font-semibold text-brown-900">{t("finance.statementTitle")}</p>
+                <span className="text-sm text-gray-400">{vm.periodLabel}</span>
               </div>
+              <PLStatementTable rows={vm.pnlRows} />
+              {/* mt-auto: หมายเหตุชิดล่างเสมอ ถ้าการ์ดถูกยืดตามตารางเปรียบเทียบที่ยาวกว่า */}
+              <p className="mx-4 mb-3 mt-auto rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                {t("finance.cogsNote")}
+              </p>
+            </div>
+          </div>
 
-              <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
-                <div className="border-b border-gray-100 px-4 py-3">
-                  <p className="text-sm font-semibold text-brown-900">{t("finance.kpiTitle")}</p>
+          {/* แถว 3: KPI กว้างเต็มแถว — 4 ค่าเรียงแนวนอน (จอเล็ก 2×2) */}
+          <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div className="border-b border-gray-100 px-4 py-3">
+              <p className="text-sm font-semibold text-brown-900">{t("finance.kpiTitle")}</p>
+            </div>
+            <div className="grid grid-cols-2 divide-gray-100 lg:grid-cols-4 lg:divide-x">
+              {vm.kpis.map((kpi) => (
+                <div key={kpi.key} className="flex flex-col gap-1 px-4 py-3">
+                  <span className="text-sm text-gray-500">{kpi.label}</span>
+                  <span className="text-base font-bold text-brown-900">{kpi.value}</span>
                 </div>
-                <div className="flex flex-col gap-2.5 px-4 py-3">
-                  {vm.kpis.map((kpi) => (
-                    <div key={kpi.key} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">{kpi.label}</span>
-                      <span className="text-base font-bold text-brown-900">{kpi.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </>

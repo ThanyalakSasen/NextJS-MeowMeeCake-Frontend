@@ -140,6 +140,6 @@ export function useStoreDesignViewModel() {
     closeModal: () => { setModalOpen(false); setEditTarget(null); },
     onSubmit: (v: BannerFormValue) => save.mutate(v),
     onDelete: (id: string) => remove.mutate(id),
-    onToggle: (b: BannerRow) => toggle.mutate({ id: b._id, is_active: b.status === "inactive" }),
+    onToggle: (b: BannerRow) => toggle.mutate({ id: b._id, is_active: !b.is_active }),
   };
 }

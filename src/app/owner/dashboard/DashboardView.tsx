@@ -60,15 +60,21 @@ export function DashboardView(vm: VM) {
             />
           </StatCardsGrid>
 
-          {/* 2 คอลัมน์ ซ้าย (กว้างกว่า) : ขวา = 2:1 บน lg — ต่ำกว่านั้นซ้อนเป็นแถวเดียว
-              ซ้าย: ออเดอร์ล่าสุด + สินค้าขายดี · ขวา: วัตถุดิบใกล้หมด + สถานะการผลิต */}
+          {/* grid 2 แถวจริง ซ้าย (กว้างกว่า) : ขวา = 2:1 บน lg — การ์ดที่อยู่แถวเดียวกันจึงสูงเท่ากัน
+              (เดิมเป็น flex 2 คอลัมน์แยกกัน การ์ดคู่กันสูงไม่เท่ากัน) ความสูงเท่ากันทุกใบมาจาก .dashboard-widget
+              แถว 1: ออเดอร์ล่าสุด | วัตถุดิบใกล้หมด · แถว 2: สินค้าขายดี | สถานะการผลิต
+              วางตำแหน่งด้วย col/row-start ตรง ๆ เพื่อให้ลำดับ DOM (= ลำดับบนจอเล็กที่ซ้อนแถวเดียว) เหมือนเดิม */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-            <div className="flex flex-col gap-5 lg:col-span-2">
+            <div className="lg:col-span-2 lg:row-start-1">
               <RecentOrdersWidget orders={vm.recentOrders} />
+            </div>
+            <div className="lg:col-span-2 lg:row-start-2">
               <TopProductsWidget products={vm.topProducts} />
             </div>
-            <div className="flex flex-col gap-5">
+            <div className="lg:col-start-3 lg:row-start-1">
               <LowStockWidget items={vm.lowStock} />
+            </div>
+            <div className="lg:col-start-3 lg:row-start-2">
               <ProductionStatusWidget items={vm.productionStatus} />
             </div>
           </div>

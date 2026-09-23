@@ -39,7 +39,8 @@ export interface RecipeComponentInput {
   yield_qty: number;
   yield_unit_id: string;
   estimated_cost_per_batch: number;
-  note?: string | null;
+  /** backend schemas/bom.ts รับ string เท่านั้น — null = 400 (ส่ง "" แทนเมื่อว่าง) */
+  note?: string;
 }
 
 export interface RecipeComponentListParams extends ListParams {

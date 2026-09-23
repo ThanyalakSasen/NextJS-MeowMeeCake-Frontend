@@ -1213,6 +1213,7 @@
   "finance": {
     "expensesTitle": "บันทึกค่าใช้จ่าย",
     "expensesDescription": "บันทึกและติดตามค่าใช้จ่ายของร้าน {n} รายการเดือนนี้",
+    "expenseListTitle": "รายการค่าใช้จ่าย",
     "addExpense": "บันทึกรายการ",
     "searchPlaceholder": "ค้นหารายการ, ผู้ขาย...",
     "empty": "ยังไม่มีรายการค่าใช้จ่าย",

@@ -1213,6 +1213,7 @@
   "finance": {
     "expensesTitle": "Expense Log",
     "expensesDescription": "Tracking {n} expenses this month",
+    "expenseListTitle": "Expenses",
     "addExpense": "Log Expense",
     "searchPlaceholder": "Search item, vendor...",
     "empty": "No expenses yet",

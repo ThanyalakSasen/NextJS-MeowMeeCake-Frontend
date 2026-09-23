@@ -10,16 +10,16 @@ export function LowStockWidget({ items }: { items: DashboardLowStock[] }) {
   const locale = useLocale();
 
   return (
-    <section className="section-card">
+    <section className="section-card dashboard-widget">
       <div className="section-card-header">
         <h2 className="section-card-title">{t("lowStockTitle")}</h2>
         <span className="badge badge-danger">{t("lowStockCount", { n: items.length })}</span>
       </div>
 
       {items.length === 0 ? (
-        <p className="px-5 py-8 text-center text-gray-600">{t("lowStockNone")}</p>
+        <p className="dashboard-widget-empty">{t("lowStockNone")}</p>
       ) : (
-        <ul>
+        <ul className="dashboard-widget-body">
           {items.map((i) => (
             <li key={i._id} className="stock-item">
               <div>
