@@ -3,7 +3,12 @@
 > **เอกสารนี้คืออะไร:** วิธีที่ frontend "แกล้ง" มี backend ด้วย MSW (Mock Service Worker) — ตอบข้อมูลตัวอย่างตาม `API_CONTRACT.md`
 > **เปิดอ่านเมื่อ:** dev โดยยังไม่มี backend · จะเพิ่ม endpoint ให้ mock ตอบ · จะสลับไปต่อ backend จริง
 > **ทำไมสำคัญ:** ทำให้ทีม frontend ทำงาน 27 หน้าได้เลยโดยไม่ต้องรอ backend · โค้ดจริง (`services/`, `http.ts`, หน้า) **ไม่รู้ตัว**ว่าคุยกับของปลอม → พอ backend มา ลบ `src/mocks/` ทิ้งได้สะอาด
-> toggle: `NEXT_PUBLIC_API_MOCK=1` (dev default) → ใช้ MSW · `=0` + ตั้ง `NEXT_PUBLIC_API_BASE_URL` → ยิง backend จริง
+> toggle: `NEXT_PUBLIC_API_MOCK=1` → ใช้ MSW · `=0` + ตั้ง `NEXT_PUBLIC_API_BASE_URL` → ยิง backend จริง
+
+> ⚠️ **สถานะ (2026-09-23): ต่อ backend จริงแล้ว — mock ล้าหลังและใช้งานจริงไม่ได้**
+> - `.env.local` ตั้ง `NEXT_PUBLIC_API_MOCK=0` + `NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api` · ตรวจ login / `me` / CORS + cookie ผ่านแล้ว
+> - `src/services/*` ย้ายไปใช้ path `/admin/...` แล้ว (commit `cf647c6` "align the data layer … with the real backend") แต่ handler ใน `src/mocks/` ยังดัก path เดิม (`/products`, `/orders`, `/reports/dashboard` …) → ถ้าเปิด `API_MOCK=1` **ตรงกันแค่ `/auth/*`** นอกนั้นหลุดเป็น "unhandled" (MSW เตือนใน console แล้วปล่อยผ่านไป backend) — ดูตาราง [path ของ mock vs service](#path-ของ-mock-vs-service-จริง)
+> - แผน: ถอด mock ตาม [Checklist](#checklist-ถอด-mock-ออก)
 
 ---
 
@@ -34,7 +39,9 @@ ViewModel → productsService.list() → http.get("/products") → axios ส่�
 
 ---
 
-## 1. ตัวอย่าง handler (โค้ดจริง)
+## 1. ตัวอย่าง handler (แนวคิด)
+
+> โค้ดชุดนี้เป็น **ตัวอย่างอธิบายหลักการ** จากตอนออกแบบ — ไม่มีไฟล์ `handlers/products.ts` จริง · ของจริงใช้ factory `crudHandlers()` ใน `handlers/_crud.ts` + store ใน `db.ts` (`seed`/`list`/`getById`/`create`/`update`/`softDelete`) · `worker.start()` จริงอยู่ใน `browser.ts` (`onUnhandledRequest` = เตือนแล้วปล่อยผ่าน ไม่ใช่ `"bypass"`) ถูกเรียกจาก `MSWReady.tsx`
 
 ```ts
 // src/mocks/db.ts  (ย่อ) — store กลาง
@@ -113,51 +120,123 @@ export const worker = setupWorker(...handlers);
 ## Credential dev (โหมด mock)
 
 ```
-email:    owner@meowmeecake.local
-password: owner1234
+email:    thanyalak.sas@kkumail.com
+password: 123456789
 ```
-→ login สำเร็จ MSW ตั้ง cookie `mmc_session` ผ่าน `document.cookie` (ให้ `proxy.ts` ฝั่ง Node อ่านเจอ) · `role = owner` → เห็นทุกเมนู
+(ค่าจาก `DEV_CREDENTIALS` ใน `src/mocks/fixtures/auth.ts` — **ไม่ใช่** บัญชีใน backend จริง; backend จริงใช้ owner ที่สร้างจาก `npm run seed` ฝั่ง backend)
+→ login สำเร็จ MSW ตั้ง cookie `mmc_session` (`MOCK_AUTH_COOKIE`) ผ่าน `document.cookie` (ให้ `proxy.ts` ฝั่ง Node อ่านเจอ) · `role = owner` → เห็นทุกเมนู
+> ⚠️ backend จริงใช้ cookie ชื่อ `session` และ `.env.local` ตั้ง `NEXT_PUBLIC_AUTH_COOKIE=session` → ถ้าจะเปิด mock ต้องเปลี่ยนเป็น `mmc_session` ด้วย ไม่งั้น `proxy.ts` มองไม่เห็น cookie
 
 ---
 
 ## โครง `src/mocks/`
 
-| ไฟล์ | หน้าที่ | สถานะ |
-|---|---|---|
-| `db.ts` | store กลาง (in-memory + persist `localStorage`) + `seed`(idempotent) / `list`(paginate/filter/search/sort) / `getById` / `create` / `update` / `softDelete` / `resetMockDb` (+ `window.__resetMockDb`) | ✅ เฟส 2.5 · persist เฟส 4 |
-| `browser.ts` | `setupWorker(...handlers)` + `startMockWorker()` (single-flight) | ✅ เฟส 2.5 |
-| `server.ts` | `setupServer(...handlers)` — สำหรับ test (ยังไม่ถูกใช้) | ✅ เฟส 2.5 |
-| `handlers/index.ts` | รวม handler + `seed()` fixtures | ✅ เฟส 2.5 |
-| `handlers/_crud.ts` | **factory** `crudHandlers(name, basePath)` — GET list/id · POST · PATCH · DELETE ตาม `API_CONTRACT.md` §3 | ✅ เฟส 2.5 |
-| `handlers/auth.ts` | `/auth/login\|logout\|me\|refresh` — login = credential dev, ตั้ง/ล้าง cookie ผ่าน `document.cookie`, `me` คืน owner + menuAccess เต็ม | ✅ เฟส 2.5 |
-| `fixtures/auth.ts` | `DEV_CREDENTIALS`, `MOCK_USER`, `MOCK_MENU_ACCESS` (owner = full) | ✅ เฟส 2.5 |
-| `fixtures/products.ts` | สินค้า 5 รายการ (reference) | ✅ เฟส 2.5 |
-| `fixtures/<resource>.ts` | resource อื่น — เพิ่มพร้อม screen | ⏳ เฟส 4 |
-| `handlers/reports.ts` | aggregate endpoints (dashboard, finance-summary, ...) — §4 | ⏳ เฟส 4 |
+ไฟล์ทั้งหมด 28 ไฟล์ (ตรวจกับ working tree 2026-09-23)
 
-**init:** `src/components/providers/MSWReady.tsx` — เมื่อ `NEXT_PUBLIC_API_MOCK==="1"` → `import("@/mocks/browser")` + `startMockWorker()` แล้วค่อย render children · mock ปิด → `msw` ไม่เข้า bundle · `public/mockServiceWorker.js` = generated (`npx msw init public/`)
+### แกนกลาง
+
+| ไฟล์ | หน้าที่ |
+|---|---|
+| `src/mocks/db.ts` | store กลาง (in-memory + persist `localStorage` key `mmc_mock_db`) · `seed` (idempotent + `SEED_VERSION`) / `list` (paginate/filter/search/sort) / `getById` / `create` / `update` / `softDelete` / `resetMockDb` (+ `window.__resetMockDb`) |
+| `src/mocks/browser.ts` | `setupWorker(...handlers)` + `startMockWorker()` (single-flight) · `onUnhandledRequest` = `print.warning()` แล้วปล่อยผ่าน (ยกเว้น `/_next`) |
+| `src/mocks/server.ts` | `setupServer(...handlers)` — สำหรับ test (ยังไม่มีเทสเรียกใช้) |
+
+### handlers (`src/mocks/handlers/`)
+
+| ไฟล์ | หน้าที่ |
+|---|---|
+| `index.ts` | `seed()` fixture 18 resource + รวม handler ทั้งหมดเป็น `handlers` |
+| `_crud.ts` | factory `crudHandlers(name, basePath)` — GET list / GET `:id` / POST / PATCH / DELETE (+ 404) ตาม `API_CONTRACT.md` §3 |
+| `auth.ts` | `POST /auth/login` · `POST /auth/logout` · `GET /auth/me` · `POST /auth/refresh` |
+| `reports.ts` | `GET /reports/dashboard` → `fixtures/dashboard.ts` |
+| `attendances.ts` | `GET /attendances/today` · `POST /attendances/check-in` · `POST /attendances/check-out` · `GET /attendances` |
+
+### fixtures (`src/mocks/fixtures/`)
+
+จำนวน = นับจาก `_id:` ในไฟล์ (โดยประมาณ — บางไฟล์มี `_id` ซ้อนใน object ลูก)
+
+| ไฟล์ | export | seed เป็น resource | ~จำนวน `_id` |
+|---|---|---|---|
+| `auth.ts` | `DEV_CREDENTIALS`, `MOCK_USER`, `MOCK_MENU_ACCESS`, `MOCK_AUTH_COOKIE` | — (ใช้ใน `handlers/auth.ts`) | — |
+| `dashboard.ts` | `dashboardFixture` | — (ใช้ใน `handlers/reports.ts`) | 15 |
+| `attendances.ts` | `attendancesFixture` | `attendances` | 1 |
+| `banners.ts` | `bannersFixture` | `banners` | 5 |
+| `expenses.ts` | `expensesFixture` | `expenses` | 13 |
+| `ingredientCategories.ts` | `ingredientCategoriesFixture` | `ingredient-categories` | 5 |
+| `ingredients.ts` | `ingredientsFixture` | `ingredients` | 10 |
+| `ingredientTransactions.ts` | `ingredientTransactionsFixture` | `ingredient-transactions` | 10 |
+| `notifications.ts` | `notificationsFixture` | `notifications` | 13 |
+| `orders.ts` | `ordersFixture` | `orders` | 6 |
+| `permissions.ts` | `permissionsFixture` | `permissions` | 1 |
+| `productCategories.ts` | `productCategoriesFixture` | `product-categories` | 4 |
+| `productionOrders.ts` | `productionOrdersFixture` | `production-orders` | 19 |
+| `products.ts` | `productsFixture` | `products` | 5 |
+| `recipeComponents.ts` | `recipeComponentsFixture` | `components` | 6 |
+| `recipes.ts` | `recipesFixture` | `recipes` | 4 |
+| `roles.ts` | `rolesFixture` | `roles` | 5 |
+| `units.ts` | `unitsFixture` | `units` | 8 |
+| `userLogs.ts` | `userLogsFixture` | `user-logs` | 12 |
+| `users.ts` | `usersFixture` | `users` | 8 |
+
+### ไฟล์นอก `src/mocks/` ที่ผูกกับ mock
+
+| ไฟล์ | เกี่ยวยังไง |
+|---|---|
+| `src/components/providers/MSWReady.tsx` | `NEXT_PUBLIC_API_MOCK==="1"` → `import("@/mocks/browser")` + `startMockWorker()` แล้วค่อย render children · mock ปิด → `msw` ไม่เข้า bundle |
+| `src/app/providers.tsx` (บรรทัด 15, 41–42) | import + ครอบ `<MSWReady>{children}</MSWReady>` |
+| `public/mockServiceWorker.js` | generated (`npx msw init public/`) |
+| `package.json` | `devDependencies.msw` + field `"msw": { "workerDirectory": ["public"] }` |
+| `eslint.config.mjs` (บรรทัด 16) | ignore `public/mockServiceWorker.js` |
+| `.env.example` / `.env.local` | `NEXT_PUBLIC_API_MOCK` |
+| `README.md` (บรรทัด ~137, ~159, ~327) · `src/services/README.md` (บรรทัด 26) | อธิบายการใช้ mock |
+| `docs/OVERVIEW.md`, `docs/INVENTORY.md` | อ้างถึง `src/mocks/` (ประวัติ/ภาพรวม) — `docs/REBUILD_PLAN.md`, `docs/PROMPT_HISTORY.md` เป็นบันทึกประวัติ ไม่ต้องแก้ |
 
 ---
 
 ## รายการ handler
 
-| resource | endpoints | fixtures | ใช้กับ screen | สถานะ |
-|---|---|---|---|---|
-| `auth` | `POST /auth/login` · `POST /auth/logout` · `GET /auth/me` · `POST /auth/refresh` | owner 1 | ทุกหน้า | ✅ |
-| `products` · `product-categories` | `crudHandlers` | 5 · 4 | Products, POS, Product Stock, Dashboard | ✅ |
-| `orders` | `crudHandlers` (DTO เดียว รวม ready+preorder) | 9 | Manage Orders, POS, Dashboard | ✅ |
-| `ingredients` · `ingredient-categories` · `ingredient-transactions` | `crudHandlers` | 10 · 5 · 10 | Ingredients List, Stock, History | ✅ |
-| `units` | `crudHandlers` | 8 | Manage Units, Ingredients/Product forms | ✅ |
-| `users` · `roles` | `crudHandlers` | 8 · 5 | Employees List (+ Add/Edit/Permissions/UserLog เฟสถัดไป) | ✅ |
-| `notifications` | `crudHandlers` | — | Navbar, Notification History | ✅ |
-| `GET /reports/dashboard` | `handlers/reports.ts` (ไม่ใช่ crud) | fixture เดียว | Dashboard | ✅ |
-| resource อื่นที่เหลือ | `crudHandlers("<name>", ...)` + fixture | — | ตาม screen | ⏳ เฟส 4 |
+ลงทะเบียนใน `handlers/index.ts` — `crudHandlers(name, `${API}/<name>`)` ทุกตัวได้ GET list · GET `:id` · POST · PATCH · DELETE
 
-**เพิ่ม resource ใหม่ (เฟส 4):** `src/mocks/handlers/index.ts` → `seed("orders", ordersFixture)` + `...crudHandlers("orders", `${API}/orders`)` (2 บรรทัด)
+| resource | handler | fixture |
+|---|---|---|
+| `auth` | `handlers/auth.ts` (login / logout / me / refresh) | `fixtures/auth.ts` |
+| `reports/dashboard` | `handlers/reports.ts` | `fixtures/dashboard.ts` |
+| `attendances` | `handlers/attendances.ts` (today / check-in / check-out / list) | `fixtures/attendances.ts` |
+| `products` · `product-categories` | `crudHandlers` | `products.ts` · `productCategories.ts` |
+| `orders` | `crudHandlers` | `orders.ts` |
+| `ingredients` · `ingredient-categories` · `ingredient-transactions` | `crudHandlers` | `ingredients.ts` · `ingredientCategories.ts` · `ingredientTransactions.ts` |
+| `units` | `crudHandlers` | `units.ts` |
+| `users` · `roles` · `permissions` · `user-logs` | `crudHandlers` | `users.ts` · `roles.ts` · `permissions.ts` · `userLogs.ts` |
+| `notifications` | `crudHandlers` | `notifications.ts` |
+| `banners` | `crudHandlers` | `banners.ts` |
+| `production-orders` | `crudHandlers` | `productionOrders.ts` |
+| `components` · `recipes` | `crudHandlers` | `recipeComponents.ts` · `recipes.ts` |
+| `expenses` | `crudHandlers` | `expenses.ts` |
+
+### path ของ mock vs service จริง
+
+`BASE` ใน `src/services/*.ts` ตอนนี้ (ต่อจาก `NEXT_PUBLIC_API_BASE_URL`) เทียบกับ path ที่ mock ดัก:
+
+| service (`src/services/`) | path ที่ service เรียก | path ที่ mock ดัก | ตรงไหม |
+|---|---|---|---|
+| `authClient.ts` (`src/lib/`) | `/auth/login` · `/auth/logout` · `/auth/me` | `/auth/*` | ✅ |
+| `products.ts` | `/admin/products` | `/products` | ❌ |
+| `orders.ts` | `/admin/orders` | `/orders` | ❌ |
+| `ingredients.ts` · `ingredientTransactions.ts` | `/admin/ingredients` · `/admin/ingredient-transactions` | `/ingredients` · `/ingredient-transactions` | ❌ |
+| `units.ts` | `/admin/units` | `/units` | ❌ |
+| `users.ts` · `roles.ts` · `permissions.ts` · `userLogs.ts` | `/admin/users` · `/admin/roles` · `/admin/permissions` · `/admin/user-logs` | ไม่มี `/admin` | ❌ |
+| `notifications.ts` · `banners.ts` · `expenses.ts` | `/admin/notifications` · `/admin/banners` · `/admin/expenses` | ไม่มี `/admin` | ❌ |
+| `productionOrders.ts` · `recipes.ts` · `recipeComponents.ts` | `/admin/production-orders` · `/admin/recipes` · `/admin/components` | ไม่มี `/admin` | ❌ |
+| `attendances.ts` | `/admin/attendances` (+ `/check-in`, `/check-out`) | `/attendances` | ❌ |
+| dashboard | `/admin/dashboard/overview` · `/revenue-by-type` · `/top-products` | `/reports/dashboard` | ❌ |
+| หมวดหมู่ | `/admin/product-categories` · `/admin/ingredient-categories` · `/admin/component-categories` | `/product-categories` · `/ingredient-categories` · (ไม่มี) | ❌ |
+| `payments.ts` · `preorders.ts` · `preorderRounds.ts` · `promotions.ts` · `reviews.ts` · POS `/admin/pos/scan` | `/admin/...` | **ไม่มี handler** | ❌ |
 
 ---
 
 ## จุดที่ frontend "ประกอบเอง" ชั่วคราว (ถ้า backend ยังไม่มี aggregate)
+
+> ล้าสมัยแล้ว — backend จริงมี endpoint dashboard (`/admin/dashboard/overview` · `/revenue-by-type` · `/top-products`) และ service ใช้แล้ว · เก็บตารางไว้เป็นประวัติ
 
 | endpoint | ถ้าไม่มีจริง | ต้องแก้ตอน backend พร้อม |
 |---|---|---|
@@ -167,12 +246,22 @@ password: owner1234
 
 ---
 
-## Checklist ตอน backend พร้อม
+## Checklist ถอด mock ออก
 
-- [ ] ตั้ง `NEXT_PUBLIC_API_BASE_URL` = URL backend จริง · `NEXT_PUBLIC_API_MOCK=0`
+**ต่อ backend จริง**
+- [x] ตั้ง `NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api` · `NEXT_PUBLIC_API_MOCK=0` (2026-09-23)
+- [x] ตรวจ CORS + cookie (D15): `Access-Control-Allow-Origin=http://localhost:3001` · `Access-Control-Allow-Credentials=true` · cookie `session` (`Secure; HttpOnly; SameSite=none`) · login → `me` = 200 (2026-09-23)
 - [ ] เทียบ response จริงกับ `API_CONTRACT.md` — แก้ `src/types/*` + `src/services/*` ถ้าต่าง
-- [ ] ตรวจ CORS + cookie (D15): `Access-Control-Allow-Credentials`, `SameSite`, `Secure`
-- [ ] ลบโฟลเดอร์ `src/mocks/` + ถอน `msw` ออกจาก devDependencies + ลบ init ใน `providers.tsx`
-- [ ] `grep -rn "API_MOCK\|src/mocks" src/` → ต้องไม่เหลือ
 - [ ] เดินครบ 27 screen ด้วย backend จริง + สลับ locale th/en
 - [ ] auth flow จริง: login → me → refresh (401) → logout (cross-tab)
+
+**ลบไฟล์ / config**
+- [ ] ลบโฟลเดอร์ `src/mocks/` (28 ไฟล์ตาม [โครง](#โครง-srcmocks))
+- [ ] ลบ `src/components/providers/MSWReady.tsx` + เอา import/`<MSWReady>` ออกจาก `src/app/providers.tsx` (render `{children}` ตรง ๆ)
+- [ ] ลบ `public/mockServiceWorker.js`
+- [ ] `npm uninstall msw` + ลบ field `"msw": { "workerDirectory": ... }` ใน `package.json`
+- [ ] เอา `"public/mockServiceWorker.js"` ออกจาก ignore ใน `eslint.config.mjs`
+- [ ] ลบ `NEXT_PUBLIC_API_MOCK` ออกจาก `.env.example` และ `.env.local`
+- [ ] แก้ `README.md` + `src/services/README.md` ส่วนที่พูดถึง mock · ปรับ `docs/OVERVIEW.md` / `docs/INVENTORY.md` · ย้าย/ปิดเอกสารนี้
+- [ ] `grep -rn "API_MOCK\|src/mocks\|@/mocks\|msw\|MSWReady" src/ public/ package.json eslint.config.mjs .env.example` → ต้องไม่เหลือ
+- [ ] `npm run check` ผ่าน · `npm run build` ผ่าน
