@@ -1,10 +1,10 @@
 "use client";
-// เพิ่ม/แก้ไขแบนเนอร์ — antd Modal + base/Form + UploadImageBox
+// เพิ่ม/แก้ไขแบนเนอร์ — antd Modal + base/Form + BannerImageUpload
 import { useEffect } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import { Form, FormItem, useAntForm, Input, TextArea, Switch, RangePicker } from "@/components/base";
-import { UploadImageBox } from "@/components/shared/form";
+import { BannerImageUpload } from "./BannerImageUpload";
 import type { Rule } from "antd/es/form";
 import type { Banner } from "@/types/banner";
 import { emptyBannerForm, fromBanner, type BannerFormValue } from "../bannerForm";
@@ -51,7 +51,7 @@ export function BannerFormModal({
     >
       <Form form={form} layout="vertical">
         <FormItem name="banner_img" label={t("storeDesign.formImage")} extra={t("storeDesign.imageHint")} rules={required}>
-          <UploadImageBox />
+          <BannerImageUpload />
         </FormItem>
 
         <FormItem
