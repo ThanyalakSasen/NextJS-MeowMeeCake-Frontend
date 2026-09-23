@@ -16,6 +16,7 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { refId } from "@/lib/refId";
 import type { ProductType } from "@/types/product";
+import { isApiError } from "@/types/api";
 import { calcSalePrice, discountFromSalePrice, type Discount } from "./pricingHelpers";
 
 export interface PricingRow {
@@ -136,7 +137,7 @@ export function usePricingViewModel() {
       setDrafts({});
       qc.invalidateQueries({ queryKey: ["products"] });
     },
-    onError: () => alert.error(t("pricing.saveFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("pricing.saveFailed")),
   });
 
   return {

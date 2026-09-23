@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, EmptyState, Switch } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
+import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import {
   DataTable, FilterToolbar, SearchInput, SortDropdown, TypeTabBar, ViewToggle,
   type Column,
@@ -131,8 +132,11 @@ export function ProductsView(vm: VM) {
                     {vm.perm.update && (
                       <EditButton size="small" href={`/owner/products/${p._id}/edit`} />
                     )}
+                    {/* ถามยืนยันก่อนลบ เหมือนมุมมองกริด (ProductCard) — เดิมกดแล้วลบทันที */}
                     {vm.perm.delete && (
-                      <DeleteButton size="small" onClick={() => vm.onDelete(p._id)} />
+                      <ConfirmDeletePopup onConfirm={() => vm.onDelete(p._id)}>
+                        <DeleteButton size="small" />
+                      </ConfirmDeletePopup>
                     )}
                   </>
                 )

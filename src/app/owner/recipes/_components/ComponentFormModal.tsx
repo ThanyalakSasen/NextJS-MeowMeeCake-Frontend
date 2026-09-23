@@ -49,7 +49,7 @@ export function ComponentFormModal({
   const handleOk = async () => {
     const v = await form.validateFields();
     if (ingredients.some((i) => !i.ingredient_id)) {
-      alert.error(t("recipes.ingredientRequired"));
+      alert.warning(t("recipes.ingredientRequired"));
       return;
     }
     onSubmit({ ...v, note: v.note?.trim() || undefined, ingredients, steps });

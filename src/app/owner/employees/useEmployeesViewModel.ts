@@ -10,6 +10,7 @@ import { rolesService } from "@/services/roles";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import type { EmploymentType } from "@/types/user";
+import { isApiError } from "@/types/api";
 
 export interface EmployeeRow {
   _id: string;
@@ -95,7 +96,7 @@ export function useEmployeesViewModel() {
       alert.success(t("employees.deleted"));
       qc.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: () => alert.error(t("employees.deleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("employees.deleteFailed")),
   });
 
   return {

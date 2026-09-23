@@ -96,13 +96,13 @@ export function useCouponsViewModel() {
       alert.success(t("coupons.deleted"));
       invalidate();
     },
-    onError: () => alert.error(t("coupons.deleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("coupons.deleteFailed")),
   });
 
   const toggle = useMutation({
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) => promotionsService.update(id, { is_active }),
     onSuccess: invalidate,
-    onError: () => alert.error(t("coupons.toggleFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("coupons.toggleFailed")),
   });
 
   return {

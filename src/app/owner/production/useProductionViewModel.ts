@@ -244,7 +244,7 @@ export function useProductionViewModel() {
       invalidate();
       setCreateOpen(false);
     },
-    onError: () => alert.error(t("production.createFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("production.createFailed")),
   });
 
   const createFromRound = useMutation({
@@ -278,7 +278,7 @@ export function useProductionViewModel() {
         onSuccess: () => alert.success(
           t("production.statusChanged", { no: order.production_no, status: t(`enums.productionStatus.${next}`) }),
         ),
-        onError: () => alert.error(t("production.statusChangeFailed")),
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("production.statusChangeFailed")),
       },
     );
   };

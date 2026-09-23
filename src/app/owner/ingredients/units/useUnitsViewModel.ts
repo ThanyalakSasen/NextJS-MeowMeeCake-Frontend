@@ -10,6 +10,7 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { isIngredientUnit, isProductUnit } from "@/utils/unitContext";
 import type { Unit, UnitUsage } from "@/types/unit";
+import { isApiError } from "@/types/api";
 
 export type UnitContext = "ingredient" | "product";
 
@@ -55,7 +56,7 @@ export function useUnitsViewModel() {
       setModalOpen(false);
       setEditTarget(null);
     },
-    onError: () => alert.error(t("units.saveFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("units.saveFailed")),
   });
 
   const remove = useMutation({
@@ -64,7 +65,7 @@ export function useUnitsViewModel() {
       alert.success(t("units.deleted"));
       invalidate();
     },
-    onError: () => alert.error(t("units.deleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("units.deleteFailed")),
   });
 
   const onSubmit = (v: UnitFormValues) => {
@@ -72,7 +73,7 @@ export function useUnitsViewModel() {
     if (v.forIngredient) usage_context.push("Ingredient");
     if (v.forProduct) usage_context.push("Product");
     if (usage_context.length === 0) {
-      alert.error(t("units.pickContext"));
+      alert.warning(t("units.pickContext"));
       return;
     }
     save.mutate({

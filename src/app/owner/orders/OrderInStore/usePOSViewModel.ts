@@ -83,7 +83,7 @@ export function usePOSViewModel() {
     onSuccess: (res) => {
       const stock = res.product.product_stock_quantity ?? 0;
       if (stock <= 0) {
-        alert.error(t("pos.scanOutOfStock", { name: res.product.product_name_th }));
+        alert.warning(t("pos.scanOutOfStock", { name: res.product.product_name_th }));
         return;
       }
       setCart((c) => addLine(c, res.product));
@@ -184,7 +184,7 @@ export function usePOSViewModel() {
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["products"] });
     },
-    onError: () => alert.error(t("pos.saveFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.saveFailed")),
   });
 
   const onConfirm = () => {

@@ -20,6 +20,7 @@ import { isProductUnit } from "@/utils/unitContext";
 import { refId } from "@/lib/refId";
 import type { Recipe, RecipeInput } from "@/types/recipe";
 import type { RecipeComponent, RecipeComponentInput } from "@/types/recipeComponent";
+import { isApiError } from "@/types/api";
 import type { RecipeSubmitValue } from "./_components/MainRecipeModal";
 import type { ComponentSubmitValue } from "./_components/ComponentFormModal";
 
@@ -202,13 +203,13 @@ export function useRecipesViewModel() {
       setRecipeFormOpen(false);
       setRecipeEditTarget(null);
     },
-    onError: () => alert.error(t("recipes.recipeSaveFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("recipes.recipeSaveFailed")),
   });
 
   const deleteRecipe = useMutation({
     mutationFn: (id: string) => recipesService.remove(id),
     onSuccess: () => { alert.success(t("recipes.recipeDeleted")); invalidateRecipes(); },
-    onError: () => alert.error(t("recipes.recipeDeleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("recipes.recipeDeleteFailed")),
   });
 
   const onSaveRecipe = (v: RecipeSubmitValue) => {
@@ -252,13 +253,13 @@ export function useRecipesViewModel() {
       setComponentFormOpen(false);
       setComponentEditTarget(null);
     },
-    onError: () => alert.error(t("recipes.componentSaveFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("recipes.componentSaveFailed")),
   });
 
   const deleteComponent = useMutation({
     mutationFn: (id: string) => recipeComponentsService.remove(id),
     onSuccess: () => { alert.success(t("recipes.componentDeleted")); invalidateComponents(); },
-    onError: () => alert.error(t("recipes.componentDeleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("recipes.componentDeleteFailed")),
   });
 
   const onSaveComponent = (v: ComponentSubmitValue) => {

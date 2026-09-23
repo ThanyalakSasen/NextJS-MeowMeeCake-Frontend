@@ -31,7 +31,17 @@
     "loadFailed": "โหลดข้อมูลไม่สำเร็จ",
     "retry": "ลองใหม่",
     "export": "ส่งออก CSV",
-    "currencySymbol": "฿"
+    "currencySymbol": "฿",
+    "ok": "ตกลง"
+  },
+  "alert": {
+    "titleSuccess": "สำเร็จ",
+    "titleError": "ทำรายการไม่สำเร็จ",
+    "titleWarning": "กรุณาตรวจสอบข้อมูล",
+    "titleInfo": "แจ้งให้ทราบ",
+    "titleConfirm": "ยืนยันการทำรายการ",
+    "titleDelete": "ยืนยันการลบ",
+    "deleteIrreversible": "การลบไม่สามารถย้อนกลับได้"
   },
   "nav": {
     "sectionOverview": "ภาพรวม",
@@ -1411,6 +1421,7 @@
     "statErrorSub": "รายการ",
     "markAllRead": "อ่านทั้งหมด",
     "markedAllRead": "ทำเครื่องหมายอ่านแล้วทั้งหมด",
+    "markAllReadFailed": "ทำเครื่องหมายอ่านแล้วไม่สำเร็จ",
     "clearAll": "ล้างทั้งหมด",
     "clearAllConfirm": "ลบการแจ้งเตือนทั้งหมด? การกระทำนี้ย้อนกลับไม่ได้",
     "cleared": "ลบการแจ้งเตือนทั้งหมดแล้ว",

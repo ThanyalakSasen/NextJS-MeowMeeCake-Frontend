@@ -16,6 +16,7 @@ import { alert } from "@/lib/alert";
 import type { StockStatus, IngredientTxnType } from "@/constants/enumConfig";
 import { getIngredientStatus, stockPercent } from "../ingredientStatus";
 import { refId } from "@/lib/refId";
+import { isApiError } from "@/types/api";
 
 export interface StockRow {
   _id: string;
@@ -109,7 +110,7 @@ export function useIngredientStockViewModel() {
       qc.invalidateQueries({ queryKey: ["ingredient-transactions"] });
       setTarget(null);
     },
-    onError: () => alert.error(t("ingredientStock.actionFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("ingredientStock.actionFailed")),
   });
 
   return {

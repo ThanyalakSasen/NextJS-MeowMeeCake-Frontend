@@ -15,6 +15,7 @@ import { alert, confirmAlert } from "@/lib/alert";
 import type { MenuKey } from "@/constants/menuKeys";
 import type { PermissionInput } from "@/types/permission";
 import type { RoleInput, RoleType } from "@/types/role";
+import { isApiError } from "@/types/api";
 import {
   PERM_MENU_KEYS, emptyRolePerms, groupPermissions, countAll, countRow, rowHasAny,
   type RolePerms, type PermField, type PermRow,
@@ -126,8 +127,8 @@ export function usePermissionsViewModel() {
       });
       qc.invalidateQueries({ queryKey: ["permissions"] });
       alert.success(t("permissions.saveSuccess", { role: selectedRole.role_name }));
-    } catch {
-      alert.error(t("permissions.saveFailed"));
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("permissions.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -154,8 +155,8 @@ export function usePermissionsViewModel() {
       });
       qc.invalidateQueries({ queryKey: ["permissions"] });
       alert.info(t("permissions.resetSuccess"));
-    } catch {
-      alert.error(t("permissions.resetFailed"));
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("permissions.resetFailed"));
     } finally {
       setSaving(false);
     }
@@ -180,29 +181,24 @@ export function usePermissionsViewModel() {
       setSelectedRoleId(newId);
       alert.success(t("permissions.createRoleSuccess", { role: created.data.role_name }));
       return true;
-    } catch {
-      alert.error(t("permissions.createRoleFailed"));
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("permissions.createRoleFailed"));
       return false;
     }
   };
 
+  // ยืนยันแล้วที่ <ConfirmDeletePopup> ของปุ่ม "ลบบทบาท" (PermissionsView) — ไม่ถาม confirmAlert ซ้ำอีกชั้น
+  // (เดิมถาม 2 ครั้ง: Popconfirm แล้วตามด้วย popup กลางจอ)
   const onDeleteRole = async () => {
     if (!selectedRole) return;
-    const ok = await confirmAlert(t("permissions.deleteRoleConfirm", { role: selectedRole.role_name }), {
-      title: t("permissions.deleteRole"),
-      confirmText: t("common.delete"),
-      cancelText: t("common.cancel"),
-      danger: true,
-    });
-    if (!ok) return;
     try {
       await rolesService.remove(selectedRole._id);
       const remaining = roles.filter((r) => r._id !== selectedRole._id);
       setSelectedRoleId(remaining[0]?._id ?? null);
       qc.invalidateQueries({ queryKey: ["roles"] });
       alert.success(t("permissions.deleteRoleSuccess", { role: selectedRole.role_name }));
-    } catch {
-      alert.error(t("permissions.deleteRoleFailed"));
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("permissions.deleteRoleFailed"));
     }
   };
 

@@ -14,6 +14,7 @@ import { alert } from "@/lib/alert";
 import type { StockStatus } from "@/constants/enumConfig";
 import { getStockStatus } from "./stockStatus";
 import { refId } from "@/lib/refId";
+import { isApiError } from "@/types/api";
 
 export interface StockProductRow {
   _id: string;
@@ -107,7 +108,7 @@ export function useProductStockViewModel() {
       qc.invalidateQueries({ queryKey: ["products"] });
       setAdjustTarget(null);
     },
-    onError: () => alert.error(t("productStock.adjustFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("productStock.adjustFailed")),
   });
 
   return {

@@ -89,7 +89,7 @@ export function useStoreDesignViewModel() {
       await Promise.all(changes.map(({ id, sort_order }) => bannersService.update(id, { sort_order })));
     },
     onSuccess: invalidate,
-    onError: () => alert.error(t("storeDesign.reorderFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("storeDesign.reorderFailed")),
   });
 
   // จัดลำดับได้เฉพาะตอนเห็นลิสต์เต็ม ไม่ถูกกรอง — ไม่งั้นตำแหน่งการ์ดที่เห็นจะไม่ตรงกับ sort_order จริง
@@ -111,14 +111,14 @@ export function useStoreDesignViewModel() {
       alert.success(t("storeDesign.deleted"));
       invalidate();
     },
-    onError: () => alert.error(t("storeDesign.deleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("storeDesign.deleteFailed")),
   });
 
   const toggle = useMutation({
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
       bannersService.update(id, { is_active }),
     onSuccess: invalidate,
-    onError: () => alert.error(t("storeDesign.toggleFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("storeDesign.toggleFailed")),
   });
 
   return {

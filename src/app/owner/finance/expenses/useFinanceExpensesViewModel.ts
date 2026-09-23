@@ -16,6 +16,7 @@ import { formatDate } from "@/i18n/format";
 import { buildMonthOptions } from "@/utils/dateRange";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense, ExpenseInput } from "@/types/expense";
+import { isApiError } from "@/types/api";
 import { toExpenseInput, type ExpenseFormValue } from "./expenseForm";
 import type { RecurringReminder } from "./_components/RecurringRemindersList";
 
@@ -110,13 +111,13 @@ export function useFinanceExpensesViewModel() {
       setFormOpen(false);
       setEditTarget(null);
     },
-    onError: () => alert.error(t("finance.saveFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("finance.saveFailed")),
   });
 
   const deleteExpense = useMutation({
     mutationFn: (id: string) => expensesService.remove(id),
     onSuccess: () => { alert.success(t("finance.deleted")); invalidate(); },
-    onError: () => alert.error(t("finance.deleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("finance.deleteFailed")),
   });
 
   const onExport = () => {

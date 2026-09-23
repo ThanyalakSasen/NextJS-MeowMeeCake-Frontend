@@ -16,6 +16,7 @@ import type { StockStatus } from "@/constants/enumConfig";
 import type { IngredientInput } from "@/types/ingredient";
 import { getIngredientStatus, stockPercent } from "./ingredientStatus";
 import { refId } from "@/lib/refId";
+import { isApiError } from "@/types/api";
 
 export interface IngredientRow {
   _id: string;
@@ -128,7 +129,7 @@ export function useIngredientsViewModel() {
       setFormOpen(false);
       setEditTarget(null);
     },
-    onError: () => alert.error(t("ingredients.saveFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("ingredients.saveFailed")),
   });
 
   const remove = useMutation({
@@ -137,7 +138,7 @@ export function useIngredientsViewModel() {
       alert.success(t("ingredients.deleted"));
       invalidate();
     },
-    onError: () => alert.error(t("ingredients.deleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("ingredients.deleteFailed")),
   });
 
   return {

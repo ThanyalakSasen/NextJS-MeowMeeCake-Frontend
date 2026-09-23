@@ -58,7 +58,7 @@ export function MainRecipeModal({
   const handleOk = async () => {
     const v = await form.validateFields();
     if (components.some((c) => !c.component_id) || ingredients.some((i) => !i.ingredient_id)) {
-      alert.error(t("recipes.ingredientRequired"));
+      alert.warning(t("recipes.ingredientRequired"));
       return;
     }
     onSubmit({ ...v, note: v.note?.trim() || undefined, components, ingredients, steps });

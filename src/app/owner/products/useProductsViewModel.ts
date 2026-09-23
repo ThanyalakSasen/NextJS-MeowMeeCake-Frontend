@@ -11,6 +11,7 @@ import { productCategoriesService } from "@/services/productCategories";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import type { Product, ProductType } from "@/types/product";
+import { isApiError } from "@/types/api";
 
 type TypeFilter = "all" | ProductType;
 
@@ -59,7 +60,7 @@ export function useProductsViewModel() {
       alert.success(t("products.saved"));
       invalidate();
     },
-    onError: () => alert.error(t("products.saveFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("products.saveFailed")),
   });
 
   const remove = useMutation({
@@ -68,7 +69,7 @@ export function useProductsViewModel() {
       alert.success(t("products.deleted"));
       invalidate();
     },
-    onError: () => alert.error(t("products.deleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("products.deleteFailed")),
   });
 
   return {

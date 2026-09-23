@@ -16,6 +16,7 @@ import { exportToCsv, forceText } from "@/lib/exportCsv";
 import { formatDate } from "@/i18n/format";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import type { Order, OrderType } from "@/types/order";
+import { isApiError } from "@/types/api";
 import { isFinalStatus } from "./orderStatus";
 
 export function useManageOrdersViewModel() {
@@ -92,7 +93,7 @@ export function useManageOrdersViewModel() {
       { id: order._id, status: next },
       {
         onSuccess: () => alert.success(t("orders.statusChanged", { no: order.order_no, status: t(`enums.orderStatus.${next}`) })),
-        onError: () => alert.error(t("orders.statusChangeFailed")),
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.statusChangeFailed")),
       },
     );
   };
@@ -102,7 +103,7 @@ export function useManageOrdersViewModel() {
       { id: order._id, status: "cancelled" },
       {
         onSuccess: () => alert.success(t("orders.cancelled", { no: order.order_no })),
-        onError: () => alert.error(t("orders.cancelFailed")),
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.cancelFailed")),
       },
     );
   };
@@ -122,7 +123,7 @@ export function useManageOrdersViewModel() {
       { paymentId, approved: true },
       {
         onSuccess: () => alert.success(t("orders.paymentVerified", { no: selectedOrder?.order_no ?? "" })),
-        onError: () => alert.error(t("orders.paymentVerifyFailed")),
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.paymentVerifyFailed")),
       },
     );
   };

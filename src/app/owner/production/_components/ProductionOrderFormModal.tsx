@@ -67,7 +67,7 @@ export function ProductionOrderFormModal({
     const v = await form.validateFields();
     const validRows = rows.filter((r) => r.product_id && r.planned_qty > 0);
     if (validRows.length === 0) {
-      alert.error(t("production.itemsRequired"));
+      alert.warning(t("production.itemsRequired"));
       return;
     }
     const items: CreateProductionOrderItemInput[] = validRows.map((r) => {

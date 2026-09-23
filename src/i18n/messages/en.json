@@ -31,7 +31,17 @@
     "loadFailed": "Failed to load data",
     "retry": "Retry",
     "export": "Export CSV",
-    "currencySymbol": "฿"
+    "currencySymbol": "฿",
+    "ok": "OK"
+  },
+  "alert": {
+    "titleSuccess": "Success",
+    "titleError": "Something went wrong",
+    "titleWarning": "Please check your input",
+    "titleInfo": "Note",
+    "titleConfirm": "Please confirm",
+    "titleDelete": "Confirm delete",
+    "deleteIrreversible": "This can't be undone"
   },
   "nav": {
     "sectionOverview": "Overview",
@@ -1411,6 +1421,7 @@
     "statErrorSub": "entries",
     "markAllRead": "Mark all read",
     "markedAllRead": "All notifications marked as read",
+    "markAllReadFailed": "Couldn't mark notifications as read",
     "clearAll": "Clear all",
     "clearAllConfirm": "Delete all notifications? This cannot be undone.",
     "cleared": "All notifications deleted",

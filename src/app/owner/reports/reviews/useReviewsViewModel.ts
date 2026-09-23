@@ -13,6 +13,7 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { refId } from "@/lib/refId";
 import type { Review } from "@/types/review";
+import { isApiError } from "@/types/api";
 
 export interface ReviewRow extends Review {
   userName: string;
@@ -83,7 +84,7 @@ export function useReviewsViewModel() {
   const toggleVisibility = useMutation({
     mutationFn: ({ id, is_visible }: { id: string; is_visible: boolean }) => reviewsService.setVisibility(id, is_visible),
     onSuccess: invalidate,
-    onError: () => alert.error(t("reviews.toggleFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("reviews.toggleFailed")),
   });
 
   const remove = useMutation({
@@ -92,7 +93,7 @@ export function useReviewsViewModel() {
       alert.success(t("reviews.deleted"));
       invalidate();
     },
-    onError: () => alert.error(t("reviews.deleteFailed")),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("reviews.deleteFailed")),
   });
 
   const selectedReview = rows.find((r) => r._id === selectedId) ?? null;

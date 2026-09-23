@@ -47,11 +47,11 @@ export function EditRoundModal({
   const handleOk = async () => {
     const v = await form.validateFields();
     if (!v.open_date.isBefore(v.close_date)) {
-      alert.error(t("preorderRound.openBeforeCloseRequired"));
+      alert.warning(t("preorderRound.openBeforeCloseRequired"));
       return;
     }
     if (v.pickup_date.isBefore(v.close_date)) {
-      alert.error(t("preorderRound.pickupAfterCloseRequired"));
+      alert.warning(t("preorderRound.pickupAfterCloseRequired"));
       return;
     }
     onSubmit({

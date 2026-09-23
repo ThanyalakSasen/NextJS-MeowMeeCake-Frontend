@@ -56,6 +56,8 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
       title: t("auth.sessionExpiring"),
       confirmText: t("auth.stayLoggedIn"),
       cancelText: t("nav.logout"),
+      // ปุ่มยกเลิก = "ออกจากระบบ" — เดิมกด Esc/คลิกนอกกล่องได้ผลเป็น "ไม่ยืนยัน" แล้วโดน logout ทันทีโดยไม่ได้ตั้งใจ
+      dismissible: false,
     });
     // "อยู่ต่อ" ไม่ต้องทำอะไร — การกดปุ่มยืนยันเป็น activity ที่รีเซ็ต timer ใน useIdleTimeout เอง
     // (backend ไม่มี refresh token/sliding expiry จึงไม่มีอะไรให้ต่ออายุฝั่ง server)

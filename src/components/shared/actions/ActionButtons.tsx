@@ -5,7 +5,7 @@
 // รายการจุดที่เปลี่ยนมาใช้ + ตารางไอคอนต่อความหมาย: docs/ACTION_BUTTONS.md
 //
 // ส่ง props ของ Button ต่อทั้งหมด (size / block / type / href / onClick / disabled / htmlType ...) — ครอบด้วย
-// <ConfirmDeletePopup> ได้เหมือนเดิม (Popconfirm ฉีด onClick ฯลฯ เข้ามาทาง props แล้วเราส่งต่อให้ Button)
+// <ConfirmDeletePopup> ได้เหมือนเดิม (ConfirmDeletePopup ฉีด onClick เข้ามาทาง props แล้วเราส่งต่อให้ Button)
 // ─────────────────────────────────────────────────────────────
 import { useTranslations } from "next-intl";
 import {
@@ -63,7 +63,7 @@ export function actionIcon(kind: ActionIconKind, size?: ButtonProps["size"]) {
   return <Icon className={iconClass(size)} />;
 }
 
-/** ไอคอนปุ่มท้าย antd <Modal> / <Popconfirm> — spread ลงบน Modal:
+/** ไอคอนปุ่มท้าย antd <Modal> (ฟอร์มเพิ่ม/แก้ไข) — spread ลงบน Modal:
  *  <Modal {...modalButtonIcons(editTarget ? "save" : "add")} okText=... cancelText=...>
  *  ปุ่ม OK ได้ไอคอนตาม ok · ปุ่ม Cancel ได้ ✕ เสมอ */
 export function modalButtonIcons(ok: ActionIconKind, size?: ButtonProps["size"]) {

@@ -10,6 +10,7 @@ import { notificationsService } from "@/services/notifications";
 import { alert, confirmAlert } from "@/lib/alert";
 import type { NotificationDTO, NotificationModule } from "@/types/notification";
 import type { NotificationType } from "@/types";
+import { isApiError } from "@/types/api";
 
 type TabFilter = "all" | "unread" | "read";
 type ModuleFilter = "all" | NotificationModule;
@@ -81,15 +82,16 @@ export function useNotificationHistoryViewModel() {
       await Promise.all(unread.map((n) => notificationsService.markRead(n._id)));
       invalidate();
       alert.success(t("notifications.markedAllRead"));
-    } catch {
-      alert.error(t("common.loadFailed"));
+    } catch (e) {
+      // เดิมใช้ common.loadFailed ("โหลดข้อมูลไม่สำเร็จ") — ไม่ตรงกับสิ่งที่ล้มเหลวจริง (การทำเครื่องหมายอ่านแล้ว)
+      alert.error(isApiError(e) ? e.message : t("notifications.markAllReadFailed"));
     }
   };
 
   const onDelete = (id: string) =>
     remove.mutate(id, {
       onSuccess: () => alert.success(t("notifications.deleted")),
-      onError: () => alert.error(t("notifications.deleteFailed")),
+      onError: (e) => alert.error(isApiError(e) ? e.message : t("notifications.deleteFailed")),
     });
 
   const onClearAll = async () => {
@@ -105,8 +107,8 @@ export function useNotificationHistoryViewModel() {
       await Promise.all(all.map((n) => notificationsService.remove(n._id)));
       invalidate();
       alert.success(t("notifications.cleared"));
-    } catch {
-      alert.error(t("notifications.deleteFailed"));
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("notifications.deleteFailed"));
     }
   };
 
