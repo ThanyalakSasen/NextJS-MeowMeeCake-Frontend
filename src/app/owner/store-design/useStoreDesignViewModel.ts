@@ -47,6 +47,7 @@ export function useStoreDesignViewModel() {
       active: rows.filter((b) => b.status === "active").length,
       scheduled: rows.filter((b) => b.status === "scheduled").length,
       inactive: rows.filter((b) => b.status === "inactive").length,
+      expired: rows.filter((b) => b.status === "expired").length,
     }),
     [rows],
   );

@@ -143,12 +143,14 @@ export const ATTENDANCE_STATUS_CONFIG: Record<AttendanceStatus, { antColor: AntC
 };
 
 // ─── แบนเนอร์หน้าร้าน ───────────────────────────────────────
-export type BannerStatus = "active" | "scheduled" | "inactive";
+// คำนวณฝั่ง frontend จาก is_active + start_date/end_date (ไม่มีใน DB) — ดู bannerForm.ts getBannerStatus()
+export type BannerStatus = "active" | "scheduled" | "inactive" | "expired";
 
 export const BANNER_STATUS_CONFIG: Record<BannerStatus, StatusStyle> = {
   active:    { color: "#15803d", antColor: "success" },
   scheduled: { color: "#b45309", antColor: "warning" },
   inactive:  { color: "#64748b", antColor: "default" },
+  expired:   { color: "#dc2626", antColor: "error" },
 };
 
 // ─── บันทึกการทำงานของพนักงาน (audit log) ───────────────────

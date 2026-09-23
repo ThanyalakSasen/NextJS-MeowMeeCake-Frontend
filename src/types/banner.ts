@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
 // src/types/banner.ts — DTO ของ /banners (docs/API_CONTRACT.md §3)
-// แบนเนอร์หน้าร้านออนไลน์ · สถานะ "scheduled" คำนวณฝั่ง frontend จาก start_date
+// แบนเนอร์หน้าร้านออนไลน์ · สถานะ "scheduled"/"expired" คำนวณฝั่ง frontend จาก start_date/end_date
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
 

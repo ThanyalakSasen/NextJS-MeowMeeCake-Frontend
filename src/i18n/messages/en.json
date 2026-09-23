@@ -464,7 +464,8 @@
     "bannerStatus": {
       "active": "Active",
       "scheduled": "Scheduled",
-      "inactive": "Inactive"
+      "inactive": "Inactive",
+      "expired": "Expired"
     },
     "discountType": {
       "Percentage": "Percent discount",
@@ -1359,6 +1360,7 @@
     "statActiveSub": "showing now",
     "statScheduledSub": "waiting to start",
     "statInactiveSub": "turned off",
+    "statExpiredSub": "past end date",
     "allTime": "Always shown",
     "addTitle": "Add banner",
     "editTitle": "Edit banner",

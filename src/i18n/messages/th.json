@@ -464,7 +464,8 @@
     "bannerStatus": {
       "active": "กำลังแสดง",
       "scheduled": "รอตามกำหนด",
-      "inactive": "ปิดใช้งาน"
+      "inactive": "ปิดใช้งาน",
+      "expired": "หมดอายุ"
     },
     "discountType": {
       "Percentage": "ส่วนลด %",
@@ -1359,6 +1360,7 @@
     "statActiveSub": "กำลังแสดงผล",
     "statScheduledSub": "รอถึงกำหนด",
     "statInactiveSub": "ปิดอยู่",
+    "statExpiredSub": "เลยวันสิ้นสุดแล้ว",
     "allTime": "แสดงตลอดเวลา",
     "addTitle": "เพิ่มแบนเนอร์ใหม่",
     "editTitle": "แก้ไขแบนเนอร์",

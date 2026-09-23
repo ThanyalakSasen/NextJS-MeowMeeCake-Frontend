@@ -3,6 +3,7 @@
 const COLS_CLASS = {
   3: "grid grid-cols-1 gap-4 sm:grid-cols-3",
   4: "grid grid-cols-2 gap-4 lg:grid-cols-4",
+  5: "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5",
 } as const;
 
 export function StatCardsGrid({ cols = 4, children }: { cols?: keyof typeof COLS_CLASS; children: React.ReactNode }) {

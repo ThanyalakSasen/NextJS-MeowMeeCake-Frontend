@@ -1,14 +1,19 @@
 // ─────────────────────────────────────────────────────────────
 // bannerForm.ts — helper ล้วนของ Store Design (สถานะแบนเนอร์ + แปลงค่าฟอร์ม)
-// สถานะ "scheduled" ไม่มีใน DB — คำนวณจาก start_date ที่ยังไม่ถึง
+// สถานะ "scheduled"/"expired" ไม่มีใน DB — คำนวณจาก start_date ที่ยังไม่ถึง / end_date ที่เลยไปแล้ว
 // ─────────────────────────────────────────────────────────────
 import dayjs, { type Dayjs } from "dayjs";
 import type { Banner, BannerInput } from "@/types/banner";
 import type { BannerStatus } from "@/constants/enumConfig";
 
-export function getBannerStatus(b: Pick<Banner, "is_active" | "start_date">): BannerStatus {
+/** ลำดับเดียวกับ couponForm.ts deriveCouponStatus(): ปิดเอง > หมดอายุ > รอตามกำหนด > กำลังแสดง
+ *  end_date เก็บเป็น 00:00 ของ "วันสุดท้าย" (toInput ใช้ค่าจาก DatePicker ตรง ๆ) → เทียบแบบรายวัน
+ *  แบนเนอร์ยังแสดงได้ตลอดวันสุดท้าย หมดอายุตั้งแต่วันถัดไป */
+export function getBannerStatus(b: Pick<Banner, "is_active" | "start_date" | "end_date">): BannerStatus {
   if (!b.is_active) return "inactive";
-  if (b.start_date && dayjs(b.start_date).isAfter(dayjs())) return "scheduled";
+  const now = dayjs();
+  if (b.end_date && dayjs(b.end_date).isBefore(now, "day")) return "expired";
+  if (b.start_date && dayjs(b.start_date).isAfter(now)) return "scheduled";
   return "active";
 }
 

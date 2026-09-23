@@ -50,6 +50,7 @@ export function StoreDesignView(vm: VM) {
                   { value: "active", label: `${t("enums.bannerStatus.active")} (${vm.counts.active})` },
                   { value: "scheduled", label: `${t("enums.bannerStatus.scheduled")} (${vm.counts.scheduled})` },
                   { value: "inactive", label: `${t("enums.bannerStatus.inactive")} (${vm.counts.inactive})` },
+                  { value: "expired", label: `${t("enums.bannerStatus.expired")} (${vm.counts.expired})` },
                 ]}
               />
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("storeDesign.searchPlaceholder")} />
@@ -67,11 +68,12 @@ export function StoreDesignView(vm: VM) {
         <LoadingSpin />
       ) : (
         <div className="flex flex-col gap-5">
-          <StatCardsGrid>
+          <StatCardsGrid cols={5}>
             <StatCard label={t("storeDesign.statTotal")} value={vm.counts.all} sub={t("storeDesign.statTotalSub")} />
             <StatCard label={t("enums.bannerStatus.active")} value={vm.counts.active} sub={t("storeDesign.statActiveSub")} tone="up" />
             <StatCard label={t("enums.bannerStatus.scheduled")} value={vm.counts.scheduled} sub={t("storeDesign.statScheduledSub")} tone="warn" />
             <StatCard label={t("enums.bannerStatus.inactive")} value={vm.counts.inactive} sub={t("storeDesign.statInactiveSub")} tone="muted" />
+            <StatCard label={t("enums.bannerStatus.expired")} value={vm.counts.expired} sub={t("storeDesign.statExpiredSub")} tone="down" />
           </StatCardsGrid>
 
           <p className="text-sm text-gray-400">

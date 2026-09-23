@@ -78,7 +78,7 @@ export function BannerCard({
       title={draggable ? t("storeDesign.reorderHint") : undefined}
       className={`flex h-full flex-col overflow-hidden rounded-xl border bg-white transition-all ${
         dragOver ? "border-brown-400 shadow-md" : "border-gray-100 hover:shadow-md"
-      } ${banner.status === "inactive" ? "opacity-60" : ""} ${dragging ? "opacity-40" : ""} ${
+      } ${banner.status === "inactive" || banner.status === "expired" ? "opacity-60" : ""} ${dragging ? "opacity-40" : ""} ${
         draggable ? "cursor-grab active:cursor-grabbing" : ""
       }`}
     >
