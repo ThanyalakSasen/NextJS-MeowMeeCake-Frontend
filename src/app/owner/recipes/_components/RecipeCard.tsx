@@ -1,11 +1,12 @@
 "use client";
 // การ์ดสูตรหลัก 1 สูตร — ผูกกับสินค้า แสดงส่วนประกอบ (สูตรส่วนประกอบ + วัตถุดิบตรง) แบบย่อ
 import { useTranslations, useLocale } from "next-intl";
-import { LinkIcon, EyeIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import { LinkIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { Button, Card } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Recipe } from "@/types/recipe";
+import { EditButton, DeleteButton } from "@/components/shared/actions";
 
 export function RecipeCard({
   recipe,
@@ -95,11 +96,11 @@ export function RecipeCard({
         <div className="flex items-center gap-1.5">
           <Button size="small" type="text" icon={<EyeIcon className="h-3.5 w-3.5" />} onClick={onView} aria-label={t("common.view")} />
           {canUpdate && (
-            <Button size="small" type="text" icon={<PencilSquareIcon className="h-3.5 w-3.5" />} onClick={onEdit} aria-label={t("common.edit")} />
+            <EditButton size="small" type="text" onClick={onEdit} />
           )}
           {canDelete && (
             <ConfirmDeletePopup title={t("recipes.deleteRecipeConfirm", { name: recipe.recipe_name })} onConfirm={onDelete}>
-              <Button size="small" type="text" danger>{t("common.delete")}</Button>
+              <DeleteButton size="small" type="text" />
             </ConfirmDeletePopup>
           )}
         </div>

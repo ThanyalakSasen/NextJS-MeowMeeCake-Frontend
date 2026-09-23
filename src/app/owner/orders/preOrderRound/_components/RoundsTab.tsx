@@ -9,6 +9,7 @@ import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound } from "@/types/preorderRound";
+import { DeleteButton, RetryButton, ViewButton } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { isFinalRoundStatus } from "../preorderStatus";
 
@@ -92,7 +93,7 @@ export function RoundsTab(vm: VM) {
       {vm.isRoundsError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={vm.refetchRounds}>{t("common.retry")}</Button>
+          <RetryButton onClick={vm.refetchRounds} />
         </div>
       ) : (
         <DataTable
@@ -103,10 +104,10 @@ export function RoundsTab(vm: VM) {
           onRowClick={vm.onViewRound}
           actions={(r) => (
             <div className="flex justify-end gap-2">
-              <Button size="small" onClick={() => vm.onViewRound(r)}>{t("common.view")}</Button>
+              <ViewButton size="small" onClick={() => vm.onViewRound(r)} />
               {vm.perm.delete && isFinalRoundStatus(r.round_status) && (
                 <ConfirmDeletePopup title={t("preorderRound.deleteConfirm")} onConfirm={() => vm.onDeleteRound(r._id)}>
-                  <Button size="small" danger>{t("common.delete")}</Button>
+                  <DeleteButton size="small" />
                 </ConfirmDeletePopup>
               )}
             </div>

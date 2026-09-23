@@ -2,10 +2,11 @@
 // การ์ดรายการหน่วยนับ 1 กลุ่ม (วัตถุดิบ หรือ สินค้า) — ใช้ซ้ำทั้ง 2 คอลัมน์
 import { Empty } from "antd";
 import { useTranslations } from "next-intl";
-import { PlusIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
+import { PlusIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import type { Unit } from "@/types/unit";
+import { EditButton, DeleteButton } from "@/components/shared/actions";
 
 export function UnitListCard({
   title,
@@ -71,22 +72,14 @@ export function UnitListCard({
               {(canUpdate || canDelete) && (
                 <div className="flex shrink-0 items-center gap-2">
                   {canUpdate && (
-                    <Button
-                      size="small"
-                      type="text"
-                      aria-label={t("common.edit")}
-                      icon={<PencilSquareIcon className="h-4 w-4" />}
-                      onClick={() => onEdit(u)}
-                    />
+                    <EditButton size="small" type="text" onClick={() => onEdit(u)} />
                   )}
                   {canDelete && (
                     <ConfirmDeletePopup
                       title={t("units.deleteConfirm", { name: u.unit_name })}
                       onConfirm={() => onDelete(u._id)}
                     >
-                      <Button size="small" type="text" danger>
-                        {t("common.delete")}
-                      </Button>
+                      <DeleteButton size="small" type="text" />
                     </ConfirmDeletePopup>
                   )}
                 </div>

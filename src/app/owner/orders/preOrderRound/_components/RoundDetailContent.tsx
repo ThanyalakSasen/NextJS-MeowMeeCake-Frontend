@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/shared/stats";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { PreorderRound } from "@/types/preorderRound";
+import { EditButton, DeleteButton, actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
@@ -25,7 +26,7 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
       <div className="flex items-center justify-between">
         <StatusBadge group="roundStatus" value={round.round_status} />
         {vm.perm.update && !final && (
-          <Button size="small" onClick={vm.openEditRound}>{t("common.edit")}</Button>
+          <EditButton size="small" onClick={vm.openEditRound} />
         )}
       </div>
 
@@ -46,9 +47,9 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
 
       {vm.perm.update && !final && (
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-          <Button danger size="small" onClick={() => vm.onCancelRound(round)}>{t("preorderRound.cancelRound")}</Button>
+          <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancelRound(round)}>{t("preorderRound.cancelRound")}</Button>
           {next && (
-            <Button type="primary" size="small" onClick={() => vm.onAdvanceRoundStatus(round)}>
+            <Button type="primary" size="small" icon={actionIcon("next", "small")} onClick={() => vm.onAdvanceRoundStatus(round)}>
               {t("preorderRound.advanceTo", { status: t(`enums.roundStatus.${next}`) })}
             </Button>
           )}
@@ -97,10 +98,10 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
                 </span>
                 {vm.perm.update && !final && (
                   <div className="flex gap-2">
-                    <Button size="small" type="text" onClick={() => vm.openEditItem(it._id)}>{t("common.edit")}</Button>
+                    <EditButton size="small" type="text" onClick={() => vm.openEditItem(it._id)} />
                     {it.current_qty === 0 && (
                       <ConfirmDeletePopup title={t("preorderRound.removeItemConfirm")} onConfirm={() => vm.onRemoveRoundItem(it._id)}>
-                        <Button size="small" type="text" danger>{t("common.delete")}</Button>
+                        <DeleteButton size="small" type="text" />
                       </ConfirmDeletePopup>
                     )}
                   </div>

@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { ShoppingCartIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Button, Input, InputNumber } from "@/components/base";
 import { formatCurrency } from "@/i18n/format";
+import { actionIcon } from "@/components/shared/actions";
 import type { CartLine } from "../posCart";
 import type { PaymentMethod } from "../usePOSViewModel";
 
@@ -137,6 +138,7 @@ export function CartPanel({
         {canCreate ? (
           <Button
             type="primary"
+            icon={actionIcon("confirm")}
             disabled={cart.length === 0 || submitting}
             loading={submitting}
             onClick={onConfirm}

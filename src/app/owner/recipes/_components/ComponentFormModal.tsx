@@ -11,6 +11,7 @@ import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, Divid
 import { alert } from "@/lib/alert";
 import type { RecipeComponent } from "@/types/recipeComponent";
 import type { RecipeIngredientLine, RecipeStep } from "@/types/recipeShared";
+import { modalButtonIcons } from "@/components/shared/actions";
 import type { ComponentFormValue } from "../componentForm";
 import { emptyComponentForm, fromComponent } from "../componentForm";
 import { IngredientEditor, type IngredientOption } from "./IngredientEditor";
@@ -61,6 +62,7 @@ export function ComponentFormModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons(editTarget ? "save" : "add")}
       okText={editTarget ? t("common.save") : t("recipes.addComponent")}
       cancelText={t("common.cancel")}
       width={600}

@@ -8,6 +8,7 @@ import { Modal } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { Form, FormItem, useAntForm, InputNumber } from "@/components/base";
 import { formatNumber } from "@/i18n/format";
+import { modalButtonIcons } from "@/components/shared/actions";
 import type { StockProductRow } from "../useProductStockViewModel";
 
 export function AdjustStockModal({
@@ -42,6 +43,7 @@ export function AdjustStockModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons("save")}
       okText={t("common.save")}
       cancelText={t("common.cancel")}
       destroyOnHidden

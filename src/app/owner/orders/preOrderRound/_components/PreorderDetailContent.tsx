@@ -6,6 +6,7 @@ import { Avatar, Button } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Preorder } from "@/types/preorder";
+import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
@@ -104,9 +105,9 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
 
       {vm.perm.update && !final && (
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-          <Button danger size="small" onClick={() => vm.onCancelOrder(order)}>{t("orders.cancel")}</Button>
+          <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancelOrder(order)}>{t("orders.cancel")}</Button>
           {next && (
-            <Button type="primary" size="small" onClick={() => vm.onAdvanceOrderStatus(order)}>
+            <Button type="primary" size="small" icon={actionIcon("next", "small")} onClick={() => vm.onAdvanceOrderStatus(order)}>
               {t("preorderRound.advanceTo", { status: t(`enums.orderStatus.${next}`) })}
             </Button>
           )}

@@ -1,12 +1,13 @@
 "use client";
 // View ของ Ingredient History — ตาราง log การเคลื่อนไหวสต็อกวัตถุดิบ
 import { useTranslations, useLocale } from "next-intl";
-import { Button, Select } from "@/components/base";
+import { Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatDate, formatNumber } from "@/i18n/format";
 import { INGREDIENT_TXN_CONFIG } from "@/constants/enumConfig";
+import { RetryButton } from "@/components/shared/actions";
 import type { HistoryRow, useIngredientHistoryViewModel } from "./useIngredientHistoryViewModel";
 
 type VM = ReturnType<typeof useIngredientHistoryViewModel>;
@@ -97,7 +98,7 @@ export function IngredientHistoryView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <div className="flex flex-col gap-5">

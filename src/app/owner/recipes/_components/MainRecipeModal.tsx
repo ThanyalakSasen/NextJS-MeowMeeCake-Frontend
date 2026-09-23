@@ -11,6 +11,7 @@ import { alert } from "@/lib/alert";
 import type { Recipe, RecipeComponentRef } from "@/types/recipe";
 import type { RecipeIngredientLine, RecipeStep } from "@/types/recipeShared";
 import type { ProductType } from "@/types/product";
+import { modalButtonIcons } from "@/components/shared/actions";
 import type { RecipeFormValue } from "../recipeForm";
 import { emptyRecipeForm, fromRecipe } from "../recipeForm";
 import { IngredientEditor, type IngredientOption } from "./IngredientEditor";
@@ -70,6 +71,7 @@ export function MainRecipeModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons(editTarget ? "save" : "add")}
       okText={editTarget ? t("common.save") : t("recipes.addRecipe")}
       cancelText={t("common.cancel")}
       width={640}

@@ -7,6 +7,7 @@ import { Form, FormItem, useAntForm, Input, InputNumber, Select } from "@/compon
 import type { IngredientInput } from "@/types/ingredient";
 import type { IngredientCategory } from "@/types/ingredientCategory";
 import type { Unit } from "@/types/unit";
+import { modalButtonIcons } from "@/components/shared/actions";
 import type { IngredientRow } from "../useIngredientsViewModel";
 
 interface FormValues {
@@ -81,6 +82,7 @@ export function IngredientFormModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons(editTarget ? "save" : "add")}
       okText={editTarget ? t("common.save") : t("ingredients.addIngredient")}
       cancelText={t("common.cancel")}
       destroyOnHidden

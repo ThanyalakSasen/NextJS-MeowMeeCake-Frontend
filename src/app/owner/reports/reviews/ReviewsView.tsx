@@ -1,11 +1,12 @@
 "use client";
 // View ของ Customer Reviews — list + filter + detail drawer (อ่าน + ควบคุมการแสดงผลเท่านั้น)
 import { useTranslations } from "next-intl";
-import { Button, Select, Switch } from "@/components/base";
+import { Select, Switch } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { ConfirmDeletePopup, DetailDrawer } from "@/components/shared/feedback";
+import { DeleteButton, RetryButton } from "@/components/shared/actions";
 import type { ReviewRow, useReviewsViewModel } from "./useReviewsViewModel";
 import { StarRating } from "./_components/StarRating";
 import { ReviewDetailContent } from "./_components/ReviewDetailContent";
@@ -80,7 +81,7 @@ export function ReviewsView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <div className="flex flex-col gap-5">
@@ -108,7 +109,7 @@ export function ReviewsView(vm: VM) {
                 />
                 {vm.perm.delete && (
                   <ConfirmDeletePopup title={t("reviews.deleteConfirm")} onConfirm={() => vm.onDelete(r._id)}>
-                    <Button size="small" danger>{t("common.delete")}</Button>
+                    <DeleteButton size="small" />
                   </ConfirmDeletePopup>
                 )}
               </div>

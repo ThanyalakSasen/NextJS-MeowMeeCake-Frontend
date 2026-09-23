@@ -10,6 +10,7 @@ import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components
 import { DetailDrawer, ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RecipeComponent } from "@/types/recipeComponent";
+import { EditButton, DeleteButton } from "@/components/shared/actions";
 import type { useRecipesViewModel } from "./useRecipesViewModel";
 import { RecipeCard } from "./_components/RecipeCard";
 import { RecipeDetail } from "./_components/RecipeDetail";
@@ -180,16 +181,14 @@ function ComponentsTab(vm: VM) {
             ? (c) => (
                 <div className="flex justify-end gap-2">
                   {vm.perm.update && (
-                    <Button size="small" onClick={() => vm.openEditComponent(c)}>{t("common.edit")}</Button>
+                    <EditButton size="small" onClick={() => vm.openEditComponent(c)} />
                   )}
                   {vm.perm.delete && (
                     c.usedIn.length > 0 ? (
-                      <Button size="small" danger disabled title={t("recipes.deleteComponentBlocked")}>
-                        {t("common.delete")}
-                      </Button>
+                      <DeleteButton size="small" disabled title={t("recipes.deleteComponentBlocked")} />
                     ) : (
                       <ConfirmDeletePopup title={t("recipes.deleteComponentConfirm", { name: c.component_name })} onConfirm={() => vm.onDeleteComponent(c._id)}>
-                        <Button size="small" danger>{t("common.delete")}</Button>
+                        <DeleteButton size="small" />
                       </ConfirmDeletePopup>
                     )
                   )}

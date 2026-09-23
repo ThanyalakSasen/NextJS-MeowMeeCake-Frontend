@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Order } from "@/types/order";
 import type { Payment } from "@/types/payment";
+import { actionIcon } from "@/components/shared/actions";
 import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
 
 export function OrderDetailContent({
@@ -98,7 +99,7 @@ export function OrderDetailContent({
                 <>
                   <p className="mb-1.5 text-sm font-medium text-amber-700">{t("orders.slipAwaitingReview")}</p>
                   {canApprovePayment && (
-                    <Button size="small" type="primary" onClick={() => onVerifyPayment(payment._id)}>
+                    <Button size="small" type="primary" icon={actionIcon("verify", "small")} onClick={() => onVerifyPayment(payment._id)}>
                       {t("orders.verifyPayment")}
                     </Button>
                   )}

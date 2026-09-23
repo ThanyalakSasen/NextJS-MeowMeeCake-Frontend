@@ -2,11 +2,11 @@
 // View ของ Dashboard — JSX ล้วน รับ props จาก useDashboardViewModel
 // i18n: t ตัวเดียว key path เต็ม (t("dashboard.title"), t("common.retry"))
 import { useTranslations, useLocale } from "next-intl";
-import { Button } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
+import { RetryButton } from "@/components/shared/actions";
 import type { useDashboardViewModel } from "./useDashboardViewModel";
 import { RecentOrdersWidget } from "./_components/RecentOrdersWidget";
 import { LowStockWidget } from "./_components/LowStockWidget";
@@ -28,7 +28,7 @@ export function DashboardView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : vm.isLoading ? (
         <LoadingSpin />

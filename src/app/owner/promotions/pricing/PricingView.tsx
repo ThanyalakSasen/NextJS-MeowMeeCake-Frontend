@@ -7,6 +7,7 @@ import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
+import { RetryButton } from "@/components/shared/actions";
 import type { PricingRow, usePricingViewModel } from "./usePricingViewModel";
 import { tagColorFor } from "./pricingHelpers";
 import { PriceCell } from "./_components/PriceCell";
@@ -122,7 +123,7 @@ export function PricingView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <div className="flex flex-col gap-5">

@@ -11,6 +11,7 @@ import { formatDate } from "@/i18n/format";
 import { NOTIFICATION_TYPE_COLOR } from "@/constants/enumConfig";
 import type { NotificationDTO, NotificationModule } from "@/types/notification";
 import type { NotificationType } from "@/types";
+import { DeleteButton, RetryButton, actionIcon } from "@/components/shared/actions";
 import type { useNotificationHistoryViewModel } from "./useNotificationHistoryViewModel";
 import { NotificationDetailContent } from "./_components/NotificationDetailContent";
 
@@ -130,7 +131,7 @@ export function NotificationHistoryView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <div className="flex flex-col gap-5">
@@ -149,7 +150,7 @@ export function NotificationHistoryView(vm: VM) {
             onRowClick={vm.openDetail}
             actions={(n) => (
               <ConfirmDeletePopup title={t("notifications.deleteConfirm")} onConfirm={() => vm.onDelete(n._id)}>
-                <Button size="small" danger>{t("common.delete")}</Button>
+                <DeleteButton size="small" />
               </ConfirmDeletePopup>
             )}
           />
@@ -162,7 +163,7 @@ export function NotificationHistoryView(vm: VM) {
         onClose={vm.closeDrawer}
         footer={
           vm.selected?.link ? (
-            <Button type="primary" block href={vm.selected.link}>
+            <Button type="primary" block icon={actionIcon("external")} href={vm.selected.link}>
               {t("notifications.goToLink")}
             </Button>
           ) : undefined

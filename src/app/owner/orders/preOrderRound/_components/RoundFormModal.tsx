@@ -11,6 +11,7 @@ import { alert } from "@/lib/alert";
 import { formatCurrency } from "@/i18n/format";
 import type { Product } from "@/types/product";
 import type { CreateRoundInput, RoundItemInput } from "@/types/preorderRound";
+import { modalButtonIcons } from "@/components/shared/actions";
 
 interface ItemRow {
   key: string;
@@ -89,6 +90,7 @@ export function RoundFormModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons("add")}
       okText={t("common.create")}
       cancelText={t("common.cancel")}
       width={680}

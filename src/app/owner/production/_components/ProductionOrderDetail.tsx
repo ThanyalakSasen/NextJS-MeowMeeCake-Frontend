@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/shared/stats";
 import { formatDate } from "@/i18n/format";
 import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
+import { actionIcon } from "@/components/shared/actions";
 import { getNextStatus, isFinalStatus } from "../productionStatus";
 
 export function ProductionOrderDetail({
@@ -78,9 +79,9 @@ export function ProductionOrderDetail({
 
       {canUpdate && !final && (
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-          <Button danger size="small" onClick={() => onCancel(order)}>{t("production.cancelOrder")}</Button>
+          <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => onCancel(order)}>{t("production.cancelOrder")}</Button>
           {next && (
-            <Button type="primary" size="small" onClick={() => onAdvance(order)}>
+            <Button type="primary" size="small" icon={actionIcon("next", "small")} onClick={() => onAdvance(order)}>
               {t("production.advanceTo", { status: t(`enums.productionStatus.${next}`) })}
             </Button>
           )}

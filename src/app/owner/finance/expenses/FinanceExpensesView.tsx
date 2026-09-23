@@ -13,6 +13,7 @@ import { resolveUploadUrl } from "@/lib/uploads";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
+import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
 import type { useFinanceExpensesViewModel } from "./useFinanceExpensesViewModel";
 import { ExpenseFormModal } from "./_components/ExpenseFormModal";
 import { RecurringRemindersList } from "./_components/RecurringRemindersList";
@@ -143,7 +144,7 @@ export function FinanceExpensesView(vm: VM) {
               {vm.isError ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
                   <p className="text-gray-600">{t("common.loadFailed")}</p>
-                  <Button onClick={vm.refetch}>{t("common.retry")}</Button>
+                  <RetryButton onClick={vm.refetch} />
                 </div>
               ) : (
                 <DataTable
@@ -157,10 +158,10 @@ export function FinanceExpensesView(vm: VM) {
                     vm.perm.update || vm.perm.delete
                       ? (e) => (
                           <div className="flex justify-end gap-2">
-                            {vm.perm.update && <Button size="small" onClick={() => vm.openEdit(e)}>{t("common.edit")}</Button>}
+                            {vm.perm.update && <EditButton size="small" onClick={() => vm.openEdit(e)} />}
                             {vm.perm.delete && (
                               <ConfirmDeletePopup title={t("finance.deleteConfirm", { name: e.description })} onConfirm={() => vm.onDelete(e._id)}>
-                                <Button size="small" danger>{t("common.delete")}</Button>
+                                <DeleteButton size="small" />
                               </ConfirmDeletePopup>
                             )}
                           </div>

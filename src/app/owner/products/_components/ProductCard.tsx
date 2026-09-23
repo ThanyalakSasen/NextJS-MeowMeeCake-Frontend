@@ -1,11 +1,12 @@
 "use client";
 import { useTranslations, useLocale } from "next-intl";
-import { Card, Switch, Button } from "@/components/base";
+import { Card, Switch } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency } from "@/i18n/format";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { PRODUCT_TYPE_CONFIG, PRODUCT_TYPE_FALLBACK } from "@/constants/enumConfig";
 import type { Product } from "@/types/product";
+import { EditButton, DeleteButton } from "@/components/shared/actions";
 import { RatingDisplay } from "./RatingDisplay";
 
 export function ProductCard({
@@ -65,15 +66,11 @@ export function ProductCard({
         </div>
         <div className="mt-auto flex gap-2">
           {canUpdate && (
-            <Button block href={`/owner/products/${product._id}/edit`}>
-              {t("common.edit")}
-            </Button>
+            <EditButton block href={`/owner/products/${product._id}/edit`} />
           )}
           {canDelete && (
             <ConfirmDeletePopup onConfirm={onDelete}>
-              <Button danger block>
-                {t("common.delete")}
-              </Button>
+              <DeleteButton block />
             </ConfirmDeletePopup>
           )}
         </div>

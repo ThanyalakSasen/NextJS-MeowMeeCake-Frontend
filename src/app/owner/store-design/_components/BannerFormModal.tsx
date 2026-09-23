@@ -7,6 +7,7 @@ import { Form, FormItem, useAntForm, Input, TextArea, Switch, RangePicker } from
 import { BannerImageUpload } from "./BannerImageUpload";
 import type { Rule } from "antd/es/form";
 import type { Banner } from "@/types/banner";
+import { modalButtonIcons } from "@/components/shared/actions";
 import { emptyBannerForm, fromBanner, type BannerFormValue } from "../bannerForm";
 
 export function BannerFormModal({
@@ -45,6 +46,7 @@ export function BannerFormModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons(editTarget ? "save" : "add")}
       okText={editTarget ? t("common.save") : t("storeDesign.addBanner")}
       cancelText={t("common.cancel")}
       destroyOnHidden

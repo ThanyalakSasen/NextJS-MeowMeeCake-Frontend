@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Collapse, Checkbox } from "antd";
 import { Button, Divider } from "@/components/base";
 import type { MenuKey } from "@/constants/menuKeys";
+import { actionIcon } from "@/components/shared/actions";
 import {
   PERMISSION_GROUPS, PERM_FIELDS, countRow,
   type RolePerms, type PermField,
@@ -51,7 +52,12 @@ export function PermissionMatrix({
                     >
                       <span className="text-xs text-gray-400">{on}/5</span>
                       {canEdit && (
-                        <Button size="small" type="text" onClick={() => onToggleSection(menuKey)}>
+                        <Button
+                          size="small"
+                          type="text"
+                          icon={actionIcon(on < 5 ? "confirm" : "off", "small")}
+                          onClick={() => onToggleSection(menuKey)}
+                        >
                           {on < 5 ? t("permissions.toggleAllOn") : t("permissions.toggleAllOff")}
                         </Button>
                       )}

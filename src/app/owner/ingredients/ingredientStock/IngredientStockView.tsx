@@ -8,6 +8,7 @@ import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats"
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatNumber } from "@/i18n/format";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
+import { RetryButton, actionIcon } from "@/components/shared/actions";
 import type { StockRow, useIngredientStockViewModel } from "./useIngredientStockViewModel";
 import { StockActionModal } from "./_components/StockActionModal";
 
@@ -85,7 +86,7 @@ export function IngredientStockView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <div className="flex flex-col gap-5">
@@ -105,9 +106,9 @@ export function IngredientStockView(vm: VM) {
               vm.perm.update
                 ? (r) => (
                     <div className="flex justify-end gap-2">
-                      <Button size="small" onClick={() => vm.openAction(r, "receive")}>{t("ingredientStock.ok_receive")}</Button>
-                      <Button size="small" onClick={() => vm.openAction(r, "use")}>{t("ingredientStock.ok_use")}</Button>
-                      <Button size="small" onClick={() => vm.openAction(r, "adjust")}>{t("ingredientStock.ok_adjust")}</Button>
+                      <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("ingredientStock.ok_receive")}</Button>
+                      <Button size="small" icon={actionIcon("use", "small")} onClick={() => vm.openAction(r, "use")}>{t("ingredientStock.ok_use")}</Button>
+                      <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("ingredientStock.ok_adjust")}</Button>
                     </div>
                   )
                 : undefined

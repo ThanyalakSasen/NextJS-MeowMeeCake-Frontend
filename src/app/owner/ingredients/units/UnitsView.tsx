@@ -1,9 +1,9 @@
 "use client";
 // View ของ Manage Units — 2 คอลัมน์: หน่วยวัตถุดิบ | หน่วยสินค้า
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadingSpin } from "@/components/shared/feedback";
+import { RetryButton } from "@/components/shared/actions";
 import type { useUnitsViewModel } from "./useUnitsViewModel";
 import { UnitListCard } from "./_components/UnitListCard";
 import { UnitFormModal } from "./_components/UnitFormModal";
@@ -18,7 +18,7 @@ export function UnitsView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : vm.isLoading ? (
         <LoadingSpin />

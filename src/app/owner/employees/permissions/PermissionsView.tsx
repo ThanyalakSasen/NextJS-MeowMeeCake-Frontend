@@ -6,6 +6,7 @@ import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Tag, EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadingSpin, ConfirmDeletePopup } from "@/components/shared/feedback";
+import { DeleteButton, SaveButton, actionIcon } from "@/components/shared/actions";
 import type { usePermissionsViewModel } from "./usePermissionsViewModel";
 import { RoleListPanel } from "./_components/RoleListPanel";
 import { PermissionMatrix } from "./_components/PermissionMatrix";
@@ -68,18 +69,23 @@ export function PermissionsView(vm: VM) {
                         title={t("permissions.deleteRoleConfirm", { role: vm.selectedRole.role_name })}
                         onConfirm={vm.onDeleteRole}
                       >
-                        <Button size="small" danger>{t("permissions.deleteRole")}</Button>
+                        <DeleteButton size="small" label={t("permissions.deleteRole")} />
                       </ConfirmDeletePopup>
                     )}
                     {canEdit && (
-                      <Button size="small" onClick={vm.onReset} loading={vm.saving}>
+                      <Button size="small" icon={actionIcon("reset", "small")} onClick={vm.onReset} loading={vm.saving}>
                         {t("permissions.reset")}
                       </Button>
                     )}
                     {canEdit && (
-                      <Button size="small" type="primary" onClick={vm.onSave} loading={vm.saving} disabled={!vm.dirty}>
-                        {t("permissions.save")}
-                      </Button>
+                      <SaveButton
+                        size="small"
+                        type="primary"
+                        label={t("permissions.save")}
+                        onClick={vm.onSave}
+                        loading={vm.saving}
+                        disabled={!vm.dirty}
+                      />
                     )}
                   </div>
                 </div>

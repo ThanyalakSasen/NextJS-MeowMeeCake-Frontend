@@ -5,6 +5,7 @@ import { Modal } from "antd";
 import { Form, FormItem, useAntForm, Input, Select } from "@/components/base";
 import type { Rule } from "antd/es/form";
 import type { Role } from "@/types/role";
+import { modalButtonIcons } from "@/components/shared/actions";
 import type { AddRoleValues } from "../usePermissionsViewModel";
 
 export function RoleFormModal({
@@ -33,6 +34,7 @@ export function RoleFormModal({
     <Modal
       open={open}
       title={t("permissions.addRole")}
+      {...modalButtonIcons("add")}
       okText={t("common.create")}
       cancelText={t("common.cancel")}
       onOk={handleOk}

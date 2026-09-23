@@ -2,10 +2,11 @@
 // View ของ POS หน้าร้าน — 2-pane: กริดสินค้า (ซ้าย) + ตะกร้า (ขวา, sticky)
 import { useLocale, useTranslations } from "next-intl";
 import { QrCodeIcon } from "@heroicons/react/24/outline";
-import { Button, Input } from "@/components/base";
+import { Input } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { SearchInput, TypeTabBar } from "@/components/shared/data";
+import { RetryButton } from "@/components/shared/actions";
 import type { usePOSViewModel } from "./usePOSViewModel";
 import { ProductPickerGrid } from "./_components/ProductPickerGrid";
 import { CartPanel } from "./_components/CartPanel";
@@ -22,7 +23,7 @@ export function POSView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">

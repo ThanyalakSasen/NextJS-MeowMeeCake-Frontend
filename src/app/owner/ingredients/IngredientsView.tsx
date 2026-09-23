@@ -10,6 +10,7 @@ import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
+import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
 import type { IngredientRow, useIngredientsViewModel } from "./useIngredientsViewModel";
 import { IngredientFormModal } from "./_components/IngredientFormModal";
 
@@ -121,7 +122,7 @@ export function IngredientsView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <div className="flex flex-col gap-5">
@@ -142,18 +143,14 @@ export function IngredientsView(vm: VM) {
                 ? (r) => (
                     <div className="flex justify-end gap-2">
                       {vm.perm.update && (
-                        <Button size="small" onClick={() => vm.openEdit(r)}>
-                          {t("common.edit")}
-                        </Button>
+                        <EditButton size="small" onClick={() => vm.openEdit(r)} />
                       )}
                       {vm.perm.delete && (
                         <ConfirmDeletePopup
                           title={t("ingredients.deleteConfirm", { name: r.name })}
                           onConfirm={() => vm.onDelete(r._id)}
                         >
-                          <Button size="small" danger>
-                            {t("common.delete")}
-                          </Button>
+                          <DeleteButton size="small" />
                         </ConfirmDeletePopup>
                       )}
                     </div>

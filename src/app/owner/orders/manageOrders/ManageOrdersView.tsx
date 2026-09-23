@@ -15,6 +15,7 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import { PAYMENT_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import type { Order } from "@/types/order";
+import { RetryButton, ViewButton, actionIcon } from "@/components/shared/actions";
 import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
 import { STATUS_SELECT_OPTIONS } from "./orderStatus";
 import { OrderStatusFilter } from "./_components/OrderStatusFilter";
@@ -132,7 +133,7 @@ export function ManageOrdersView(vm: VM) {
           {vm.unreviewedCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
               <span className="text-sm text-amber-800">{t("orders.unreviewedPaymentAlert", { n: vm.unreviewedCount })}</span>
-              <Button size="small" onClick={() => vm.setPaymentFilter("pending")}>{t("orders.showList")}</Button>
+              <Button size="small" icon={actionIcon("filter", "small")} onClick={() => vm.setPaymentFilter("pending")}>{t("orders.showList")}</Button>
             </div>
           )}
         </div>
@@ -141,7 +142,7 @@ export function ManageOrdersView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <DataTable
@@ -151,9 +152,9 @@ export function ManageOrdersView(vm: VM) {
           emptyText={t("orders.empty")}
           actions={(o) => (
             <div className="flex justify-end gap-2">
-              <Button size="small" onClick={() => vm.onView(o)}>{t("common.view")}</Button>
+              <ViewButton size="small" onClick={() => vm.onView(o)} />
               {vm.perm.update && !vm.isFinalStatus(o.order_status) && (
-                <Button size="small" danger onClick={() => vm.onCancel(o)}>{t("orders.cancel")}</Button>
+                <Button size="small" danger icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancel(o)}>{t("orders.cancel")}</Button>
               )}
             </div>
           )}

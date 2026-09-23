@@ -7,6 +7,7 @@ import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
 import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel";
 
 type VM = ReturnType<typeof useEmployeesViewModel>;
@@ -95,7 +96,7 @@ export function EmployeesView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <div className="flex flex-col gap-5">
@@ -116,18 +117,14 @@ export function EmployeesView(vm: VM) {
                 ? (r) => (
                     <div className="flex justify-end gap-2">
                       {vm.perm.update && (
-                        <Button size="small" href={`/owner/employees/editEmployee?id=${r._id}`}>
-                          {t("common.edit")}
-                        </Button>
+                        <EditButton size="small" href={`/owner/employees/editEmployee?id=${r._id}`} />
                       )}
                       {vm.perm.delete && (
                         <ConfirmDeletePopup
                           title={t("employees.deleteConfirm", { name: r.name })}
                           onConfirm={() => vm.onDelete(r._id)}
                         >
-                          <Button size="small" danger>
-                            {t("common.delete")}
-                          </Button>
+                          <DeleteButton size="small" />
                         </ConfirmDeletePopup>
                       )}
                     </div>

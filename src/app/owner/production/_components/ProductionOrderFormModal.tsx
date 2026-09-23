@@ -11,6 +11,7 @@ import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import type { CreateProductionOrderItemInput } from "@/types/productionOrder";
+import { modalButtonIcons } from "@/components/shared/actions";
 import type { CreateProductionOrderValue } from "../useProductionViewModel";
 
 interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string }
@@ -88,6 +89,7 @@ export function ProductionOrderFormModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons("add")}
       okText={t("production.createSubmit")}
       cancelText={t("common.cancel")}
       width={640}

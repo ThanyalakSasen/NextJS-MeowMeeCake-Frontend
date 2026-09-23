@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Form, FormItem, useAntForm, Input, InputNumber, Select, Switch, RangePicker, Divider } from "@/components/base";
 import type { Rule } from "antd/es/form";
 import type { Promotion } from "@/types/promotion";
+import { modalButtonIcons } from "@/components/shared/actions";
 import { emptyCouponForm, fromPromotion, type CouponFormValue, type CouponScope } from "../couponForm";
 import { SelectedItemsList } from "./SelectedItemsList";
 
@@ -52,6 +53,7 @@ export function CouponFormModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons(editTarget ? "save" : "add")}
       okText={editTarget ? t("common.save") : t("coupons.addCoupon")}
       cancelText={t("common.cancel")}
       width={480}

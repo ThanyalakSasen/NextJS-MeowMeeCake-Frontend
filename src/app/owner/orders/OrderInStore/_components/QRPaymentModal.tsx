@@ -7,6 +7,7 @@ import QRCode from "qrcode";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/base";
 import { formatCurrency } from "@/i18n/format";
+import { actionIcon } from "@/components/shared/actions";
 
 export function QRPaymentModal({
   open,
@@ -57,7 +58,7 @@ export function QRPaymentModal({
           <div className="h-[240px] w-[240px] animate-pulse rounded-lg bg-gray-100" />
         )}
         <p className="text-lg font-bold text-brown-800">{formatCurrency(amount, locale)}</p>
-        <Button type="primary" block loading={submitting} onClick={onConfirmPaid}>
+        <Button type="primary" block icon={actionIcon("confirm")} loading={submitting} onClick={onConfirmPaid}>
           {t("pos.qrConfirmPaid")}
         </Button>
       </div>

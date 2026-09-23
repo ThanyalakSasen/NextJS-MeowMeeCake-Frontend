@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Form, FormItem, useAntForm, InputNumber, Select, Switch } from "@/components/base";
 import type { Product } from "@/types/product";
 import type { PreorderRound, PreorderRoundItem, RoundItemInput } from "@/types/preorderRound";
+import { modalButtonIcons } from "@/components/shared/actions";
 
 interface FormValues {
   product_id: string;
@@ -73,6 +74,7 @@ export function RoundItemFormModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons("save")}
       okText={t("common.save")}
       cancelText={t("common.cancel")}
       width={480}

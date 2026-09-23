@@ -2,6 +2,7 @@
 // View ของ Products List — JSX ล้วน รับ props จาก useProductsViewModel
 // i18n: ใช้ t ตัวเดียว, key = path เต็มใน messages json (t("products.title"), t("common.all"))
 import { useTranslations, useLocale } from "next-intl";
+import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, EmptyState, Switch } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
 import type { Product } from "@/types/product";
+import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
 import type { useProductsViewModel } from "./useProductsViewModel";
 import { ProductGrid } from "./_components/ProductGrid";
 import { CategoryChip } from "./_components/CategoryChip";
@@ -50,7 +52,13 @@ export function ProductsView(vm: VM) {
     <ListPageLayout
       title={t("products.title")}
       description={t("products.description")}
-      actions={vm.perm.create && <Button type="primary" href="/owner/products/addProducts">{t("products.addProduct")}</Button>}
+      actions={
+        vm.perm.create && (
+          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} href="/owner/products/addProducts">
+            {t("products.addProduct")}
+          </Button>
+        )
+      }
       toolbar={
         <div className="flex flex-col gap-3">
           <FilterToolbar
@@ -95,7 +103,7 @@ export function ProductsView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-500">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : vm.viewMode === "grid" ? (
         vm.isLoading ? (
@@ -121,14 +129,10 @@ export function ProductsView(vm: VM) {
               ? (p) => (
                   <>
                     {vm.perm.update && (
-                      <Button size="small" href={`/owner/products/${p._id}/edit`}>
-                        {t("common.edit")}
-                      </Button>
+                      <EditButton size="small" href={`/owner/products/${p._id}/edit`} />
                     )}
                     {vm.perm.delete && (
-                      <Button size="small" danger onClick={() => vm.onDelete(p._id)}>
-                        {t("common.delete")}
-                      </Button>
+                      <DeleteButton size="small" onClick={() => vm.onDelete(p._id)} />
                     )}
                   </>
                 )

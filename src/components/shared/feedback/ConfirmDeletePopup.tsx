@@ -1,6 +1,7 @@
 "use client";
 import { Popconfirm } from "antd";
 import { useTranslations } from "next-intl";
+import { actionIcon } from "@/components/shared/actions";
 /** ยืนยันก่อนลบ — ครอบปุ่ม/ไอคอนที่เป็น trigger */
 export function ConfirmDeletePopup({
   onConfirm,
@@ -17,7 +18,9 @@ export function ConfirmDeletePopup({
       title={title ?? t("confirmDelete")}
       okText={t("delete")}
       cancelText={t("cancel")}
-      okButtonProps={{ danger: true }}
+      // ปุ่มของ Popconfirm เป็นขนาด small เสมอ — ไอคอนชุดเดียวกับ DeleteButton / ปุ่ม Cancel ของ Modal
+      okButtonProps={{ danger: true, icon: actionIcon("delete", "small") }}
+      cancelButtonProps={{ icon: actionIcon("cancel", "small") }}
       onConfirm={onConfirm}
     >
       {children}

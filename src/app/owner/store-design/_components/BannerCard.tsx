@@ -1,12 +1,12 @@
 "use client";
 // การ์ดแบนเนอร์ 1 ใบ — พรีวิว (รูปจริง หรือ gradient placeholder) + สถานะ + ปุ่มจัดการ
 import { useTranslations, useLocale } from "next-intl";
-import { PencilSquareIcon } from "@heroicons/react/24/solid";
-import { Button, Switch, Tag } from "@/components/base";
+import { Switch, Tag } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { BANNER_STATUS_CONFIG } from "@/constants/enumConfig";
+import { EditButton, DeleteButton } from "@/components/shared/actions";
 import type { BannerRow } from "../useStoreDesignViewModel";
 
 const GRADIENTS = [
@@ -118,14 +118,12 @@ export function BannerCard({
 
       <div className="mt-auto flex items-center justify-between border-t border-gray-100 px-3 py-2">
         <div className="flex items-center gap-1.5">
-          <Button size="small" icon={<PencilSquareIcon className="h-3.5 w-3.5" />} onClick={() => onEdit(banner)}>
-            {t("common.edit")}
-          </Button>
+          <EditButton size="small" onClick={() => onEdit(banner)} />
           <ConfirmDeletePopup
             title={t("storeDesign.deleteConfirm", { name: banner.banner_name })}
             onConfirm={() => onDelete(banner._id)}
           >
-            <Button size="small" danger>{t("common.delete")}</Button>
+            <DeleteButton size="small" />
           </ConfirmDeletePopup>
         </div>
         {/* ผูกกับ is_active ตรง ๆ (สวิตช์ = "เปิดใช้งาน") — เดิมใช้ status === "active" แบนเนอร์ที่เปิดไว้แต่ยัง

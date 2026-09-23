@@ -8,6 +8,7 @@ import dayjs, { type Dayjs } from "dayjs";
 import { Form, FormItem, useAntForm, Input, DatePicker } from "@/components/base";
 import { alert } from "@/lib/alert";
 import type { PreorderRound, UpdateRoundInput } from "@/types/preorderRound";
+import { modalButtonIcons } from "@/components/shared/actions";
 
 interface FormValues {
   round_name: string;
@@ -68,6 +69,7 @@ export function EditRoundModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons("save")}
       okText={t("common.save")}
       cancelText={t("common.cancel")}
       width={520}

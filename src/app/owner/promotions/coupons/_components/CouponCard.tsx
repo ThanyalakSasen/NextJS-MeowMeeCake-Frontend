@@ -1,12 +1,12 @@
 "use client";
 // การ์ดคูปอง 1 ใบ — โค้ด, มูลค่าส่วนลด, ความคืบหน้าการใช้, ขอบเขต, ช่องทาง, สถานะ
 import { useTranslations, useLocale } from "next-intl";
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { BuildingStorefrontIcon, GlobeAltIcon } from "@heroicons/react/24/solid";
-import { Button, ProgressBar, Switch, Tag } from "@/components/base";
+import { ProgressBar, Switch, Tag } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { DISCOUNT_TYPE_CONFIG, COUPON_STATUS_CONFIG } from "@/constants/enumConfig";
+import { EditButton, DeleteButton } from "@/components/shared/actions";
 import type { CouponRow } from "../useCouponsViewModel";
 import { usagePct } from "../couponForm";
 
@@ -69,11 +69,11 @@ export function CouponCard({
             </div>
             <div className="flex items-center gap-1">
               {!isExpired && canUpdate && (
-                <Button type="text" size="small" icon={<PencilSquareIcon className="h-3.5 w-3.5" />} onClick={() => onEdit(coupon)} />
+                <EditButton type="text" size="small" onClick={() => onEdit(coupon)} />
               )}
               {canDelete && (
                 <ConfirmDeletePopup title={t("coupons.deleteConfirm", { code: coupon.promotion_code })} onConfirm={() => onDelete(coupon._id)}>
-                  <Button type="text" size="small" danger icon={<TrashIcon className="h-3.5 w-3.5" />} />
+                  <DeleteButton type="text" size="small" />
                 </ConfirmDeletePopup>
               )}
             </div>

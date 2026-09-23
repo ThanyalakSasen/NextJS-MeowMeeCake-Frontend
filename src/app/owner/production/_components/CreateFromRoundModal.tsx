@@ -10,6 +10,7 @@ import { Form, FormItem, useAntForm, TextArea, Select, DatePicker } from "@/comp
 import { formatDate } from "@/i18n/format";
 import type { PreorderRound } from "@/types/preorderRound";
 import type { ProductionOrderFromRoundInput } from "@/types/productionOrder";
+import { modalButtonIcons } from "@/components/shared/actions";
 
 interface StaffOption { _id: string; user_fullname: string }
 
@@ -65,6 +66,7 @@ export function CreateFromRoundModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons("add")}
       okText={t("production.createSubmit")}
       cancelText={t("common.cancel")}
       width={520}

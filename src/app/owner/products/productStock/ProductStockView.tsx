@@ -6,6 +6,7 @@ import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
+import { RetryButton, actionIcon } from "@/components/shared/actions";
 import { LOW_STOCK_THRESHOLD } from "./stockStatus";
 import type { StockProductRow, useProductStockViewModel } from "./useProductStockViewModel";
 import { StockProgressRow } from "./_components/StockProgressRow";
@@ -101,7 +102,7 @@ export function ProductStockView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : (
         <div className="flex flex-col gap-5">
@@ -138,7 +139,7 @@ export function ProductStockView(vm: VM) {
             actions={
               vm.perm.update
                 ? (r) => (
-                    <Button size="small" onClick={() => vm.openAdjust(r)}>
+                    <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAdjust(r)}>
                       {t("productStock.adjust")}
                     </Button>
                   )

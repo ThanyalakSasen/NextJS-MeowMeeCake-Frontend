@@ -7,6 +7,7 @@ import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { FilterToolbar, SearchInput, TypeTabBar } from "@/components/shared/data";
+import { RetryButton } from "@/components/shared/actions";
 import type { useCouponsViewModel } from "./useCouponsViewModel";
 import { CouponCard } from "./_components/CouponCard";
 import { CouponFormModal } from "./_components/CouponFormModal";
@@ -62,7 +63,7 @@ export function CouponsView(vm: VM) {
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={() => vm.refetch()}>{t("common.retry")}</Button>
+          <RetryButton onClick={() => vm.refetch()} />
         </div>
       ) : vm.isLoading ? (
         <LoadingSpin />

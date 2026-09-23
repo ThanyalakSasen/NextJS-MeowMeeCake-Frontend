@@ -7,6 +7,7 @@ import { Form, FormItem, useAntForm, Input, Select } from "@/components/base";
 import { UNIT_TYPES } from "@/utils/unitContext";
 import { isIngredientUnit, isProductUnit } from "@/utils/unitContext";
 import type { Unit } from "@/types/unit";
+import { modalButtonIcons } from "@/components/shared/actions";
 import type { UnitContext, UnitFormValues } from "../useUnitsViewModel";
 
 export function UnitFormModal({
@@ -59,6 +60,7 @@ export function UnitFormModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons(editTarget ? "save" : "add")}
       okText={editTarget ? t("common.save") : t("units.addUnit")}
       cancelText={t("common.cancel")}
       destroyOnHidden

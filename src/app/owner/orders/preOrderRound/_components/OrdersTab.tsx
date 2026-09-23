@@ -1,12 +1,13 @@
 "use client";
 // แท็บ 2: คำสั่งซื้อเค้กวันเกิด (Preorders) — presentational ล้วน รับ props จาก usePreOrderRoundViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { Avatar, Button, Select } from "@/components/base";
+import { Avatar, Select } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { OrderStatus } from "@/constants/enumConfig";
 import type { Preorder } from "@/types/preorder";
+import { RetryButton, ViewButton } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
@@ -109,7 +110,7 @@ export function OrdersTab(vm: VM) {
       {vm.isOrdersError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <Button onClick={vm.refetchOrders}>{t("common.retry")}</Button>
+          <RetryButton onClick={vm.refetchOrders} />
         </div>
       ) : (
         <DataTable
@@ -119,7 +120,7 @@ export function OrdersTab(vm: VM) {
           emptyText={t("preorderRound.ordersEmpty")}
           onRowClick={vm.onViewOrder}
           actions={(o) => (
-            <Button size="small" onClick={() => vm.onViewOrder(o)}>{t("common.view")}</Button>
+            <ViewButton size="small" onClick={() => vm.onViewOrder(o)} />
           )}
           pagination={{ page: vm.orderPage, pageSize: vm.orderPageSize, total: vm.orderTotal, onChange: vm.setOrderPagination }}
         />

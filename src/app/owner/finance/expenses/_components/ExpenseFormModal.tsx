@@ -8,6 +8,7 @@ import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DateP
 import { UploadImageBox } from "@/components/shared/form";
 import { EXPENSE_CATEGORIES, EXPENSE_PAYMENT_METHODS } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
+import { modalButtonIcons } from "@/components/shared/actions";
 import type { ExpenseFormValue } from "../expenseForm";
 import { emptyExpenseForm, fromExpense } from "../expenseForm";
 
@@ -39,6 +40,7 @@ export function ExpenseFormModal({
       onCancel={onClose}
       onOk={handleOk}
       confirmLoading={saving}
+      {...modalButtonIcons(editTarget ? "save" : "add")}
       okText={editTarget ? t("common.save") : t("finance.addExpense")}
       cancelText={t("common.cancel")}
       width={600}
