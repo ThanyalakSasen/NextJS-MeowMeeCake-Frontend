@@ -2,8 +2,9 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button, Input, PasswordInput, Logo, ErrorMessage } from "@/components/base";
+import { Button, Input, PasswordInput, Logo } from "@/components/base";
 import { login } from "@/lib/authClient";
+import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { HOME_PATH } from "@/constants/auth";
 
@@ -14,20 +15,20 @@ function Form() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !password) return;
     setBusy(true);
-    setErr(null);
     try {
       await login({ email: email.trim(), password });
       const next = params.get("next");
       router.replace(next && next.startsWith("/owner") ? next : HOME_PATH);
       router.refresh();
     } catch (e2) {
-      setErr(isApiError(e2) ? e2.message : t("auth.loginFailed"));
+      // แจ้งด้วย swal2 toast เหมือนหน้าอื่นทั้งหมด (เพิ่ม/แก้/ลบ) — เดิมใช้ ErrorMessage แถบแดง inline
+      // แยกออกไปคนละแพทเทิร์น (ดู docs/BACKLOG.md §9)
+      alert.error(isApiError(e2) ? e2.message : t("auth.loginFailed"));
     } finally {
       setBusy(false);
     }
@@ -42,7 +43,6 @@ function Form() {
       </div>
       <Input type="email" placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
       <PasswordInput placeholder={t("auth.password")} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
-      {err && <ErrorMessage>{err}</ErrorMessage>}
       <Button htmlType="submit" type="primary" loading={busy} block>
         {t("auth.submit")}
       </Button>
