@@ -17,5 +17,4 @@ export { Card } from "./Card";
 export { Form, FormItem, useAntForm } from "./Form";
 export { Logo } from "./Logo";
 export { EmptyState } from "./EmptyState";
-export { ErrorMessage } from "./ErrorMessage";
 export { LocaleSwitcher } from "./LocaleSwitcher";
