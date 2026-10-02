@@ -75,21 +75,22 @@ export interface TopProductRow {
   revenue: number;
 }
 
-/** GET /admin/dashboard/revenue-by-type — รายรับ (ออเดอร์ที่ชำระแล้ว) แยกตาม product_type เป็นบาท
- *  ผลรวมทุกช่องตรง total ของออเดอร์เสมอ (ค่าส่ง/ส่วนลดกระจายตามสัดส่วนที่ backend) */
-export interface RevenueByType {
-  in_store: number;
-  online: number;
-  preorder: number;
-  /** สินค้าที่หาไม่เจอ/ออเดอร์ไม่มีรายการ */
-  unclassified: number;
+export type RevenueChannel = "web" | "pos" | "preorder" | "other";
+
+/** GET /admin/dashboard/revenue-by-channel — รายรับ (ชำระแล้ว · ช่วงวันที่ตาม created_at) แยกตามช่องทางของ
+ *  "ออเดอร์" เป็นบาท (backend #52 — เลิกแยกตามประเภทสินค้าแล้ว) · ใช้ total_amount ทั้งก้อน ไม่กระจายสัดส่วน
+ *  web = ORD- (เว็บไซต์) · pos = POS- (หน้าร้าน) · preorder = PRE- (นับจาก collection พรีออเดอร์ด้วย)
+ *  · other = ออเดอร์เลขรุ่นเก่าก่อนแยก prefix (ระบุช่องทางย้อนหลังไม่ได้) */
+export interface RevenueByChannel extends Record<RevenueChannel, number> {
   total: number;
+  counts: Record<RevenueChannel, number>;
+  /** จำนวนออเดอร์ + พรีออเดอร์ที่ชำระแล้วในช่วงนี้ */
   orders: number;
 }
 
 export const reportsService = {
-  revenueByType: async (params: { date_from?: string; date_to?: string } = {}): Promise<RevenueByType> => {
-    const res = await http.get<{ data: RevenueByType }>("/admin/dashboard/revenue-by-type", { params });
+  revenueByChannel: async (params: { date_from?: string; date_to?: string } = {}): Promise<RevenueByChannel> => {
+    const res = await http.get<{ data: RevenueByChannel }>("/admin/dashboard/revenue-by-channel", { params });
     return res.data;
   },
 
