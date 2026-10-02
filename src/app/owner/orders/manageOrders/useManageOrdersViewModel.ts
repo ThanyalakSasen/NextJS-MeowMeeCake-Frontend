@@ -6,6 +6,7 @@
 // การชำระเงิน (verify/reject) เป็นคนละ resource (Payments) ไม่ใช่ field ที่แก้ตรง ๆ บน order ได้
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
 import { ordersService } from "@/services/orders";
@@ -32,8 +33,19 @@ export function useManageOrdersViewModel() {
   const [paymentFilter, setPaymentFilterState] = useState<PaymentStatus | "all">("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // drawer รายละเอียดผูกกับ ?id= ใน URL (BACKLOG2 §5) — ลิงก์จาก LINE / แจ้งเตือนในเว็บ
+  // (`/owner/orders/manageOrders?id=<orderId>`) เปิดออเดอร์นั้นทันที แม้ไม่อยู่ในหน้าแรกของตาราง (ดึงรายตัวด้วย id)
+  // · กดดูจากตาราง = ใส่ ?id= (แชร์ลิงก์ได้) · ปิด drawer = ลบ ?id= ออก
+  const router = useRouter();
+  const pathname = usePathname();
+  const urlId = useSearchParams().get("id");
+  const drawerOpen = !!urlId;
+  // จำ id ล่าสุดไว้แม้ปิด drawer แล้ว — เนื้อหาไม่หายวูบระหว่าง animation ปิด
+  // (ปรับ state ระหว่าง render ตอน urlId เปลี่ยน — แพทเทิร์นของ React แทน effect)
+  const [selectedId, setSelectedId] = useState<string | null>(urlId);
+  if (urlId && urlId !== selectedId) setSelectedId(urlId);
+  const openDetail = (id: string) => router.replace(`${pathname}?id=${encodeURIComponent(id)}`, { scroll: false });
+  const closeDrawer = () => router.replace(pathname, { scroll: false });
 
   const ordersQ = useQuery({
     queryKey: ["orders"],
@@ -174,8 +186,10 @@ export function useManageOrdersViewModel() {
     selectedPayment,
     isDetailLoading: detailQ.isLoading || paymentQ.isLoading,
     drawerOpen,
-    onView: (o: Order) => { setSelectedId(o._id); setDrawerOpen(true); },
-    closeDrawer: () => setDrawerOpen(false),
+    onView: (o: Order) => openDetail(o._id),
+    closeDrawer,
+    // id ใน URL ผิด/ไม่มีออเดอร์นี้ (404/400) — drawer ต้องบอก ไม่ใช่ว่างเปล่า
+    isDetailError: detailQ.isError,
 
     isFinalStatus,
     onStatusChange, onCancel, onVerifyPayment, onExport,

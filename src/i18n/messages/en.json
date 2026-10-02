@@ -625,6 +625,7 @@
     "slipAwaitingReview": "Customer attached a slip — awaiting review",
     "noSlipYet": "Customer hasn't attached a slip yet",
     "slipLoadFailed": "Can't open slip",
+    "orderNotFound": "Order not found, or the link is invalid",
     "totalLabel": "Total",
     "cancelledBanner": "This order has been cancelled",
     "unpaidPreorderWarning": "This pre-order needs payment before production can start"

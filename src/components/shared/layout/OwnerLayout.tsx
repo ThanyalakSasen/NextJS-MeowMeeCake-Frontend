@@ -27,7 +27,8 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     // แนบ next ไว้ด้วย — โหมด AUTH_GATE="client" ไม่มี proxy ช่วยใส่ ?next= ให้ (LoginForm รับเฉพาะ path ที่ขึ้นต้น /owner)
-    if (isError) router.replace(`${LOGIN_PATH}?reason=expired&next=${encodeURIComponent(pathname)}`);
+    // รวม query เดิม (เช่น ?id= จากลิงก์ LINE) — อ่านจาก window ใน effect แทน useSearchParams กัน layout ทั้งก้อนต้องอยู่ใต้ Suspense
+    if (isError) router.replace(`${LOGIN_PATH}?reason=expired&next=${encodeURIComponent(pathname + window.location.search)}`);
   }, [isError, router, pathname]);
 
   // กั้นหน้าตามสิทธิ์: path ที่ผูก menu_key (constants/menuKeys.ts ROUTE_MENU_MAP) แต่ไม่มีสิทธิ์ view → หน้า access-denied
