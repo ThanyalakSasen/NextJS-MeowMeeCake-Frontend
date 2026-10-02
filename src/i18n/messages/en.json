@@ -183,6 +183,7 @@
     "yield_per_batch": "Yield per batch",
     "product_type": "Product type",
     "product_stock_quantity": "Stock quantity",
+    "low_stock_threshold": "Alert when stock is at or below (pcs)",
     "avg_rating": "Average rating",
     "review_count": "Review count",
     "preorder_config": "Pre-order settings",
@@ -563,6 +564,8 @@
     "deleted": "Deleted",
     "deleteFailed": "Delete failed",
     "saleLtPrice": "Sale price must be lower than the price",
+    "lowStockThresholdHint": "Leave blank = 5",
+    "lowStockThresholdInvalid": "Must be a whole number, 0 or more",
     "imageUploadFailed": "Could not upload the image. Please try again."
   },
   "productStock": {

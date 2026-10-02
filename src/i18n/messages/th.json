@@ -183,6 +183,7 @@
     "yield_per_batch": "ผลผลิตต่อ Batch",
     "product_type": "ประเภทสินค้า",
     "product_stock_quantity": "จำนวนสต็อก",
+    "low_stock_threshold": "แจ้งเตือนเมื่อเหลือไม่เกิน (ชิ้น)",
     "avg_rating": "คะแนนเฉลี่ย",
     "review_count": "จำนวนรีวิว",
     "preorder_config": "การตั้งค่าพรีออเดอร์",
@@ -563,6 +564,8 @@
     "deleted": "ลบแล้ว",
     "deleteFailed": "ลบไม่สำเร็จ",
     "saleLtPrice": "ราคาโปรโมชันต้องน้อยกว่าราคาปกติ",
+    "lowStockThresholdHint": "เว้นว่าง = 5",
+    "lowStockThresholdInvalid": "ต้องเป็นจำนวนเต็มตั้งแต่ 0 ขึ้นไป",
     "imageUploadFailed": "อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่"
   },
   "productStock": {

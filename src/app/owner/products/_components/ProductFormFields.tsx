@@ -66,6 +66,17 @@ export function ProductFormFields() {
           <InputNumber min={0} />
         </FormItem>
       )}
+      {/* เกณฑ์สินค้าใกล้หมดรายสินค้า — มีความหมายเฉพาะสินค้าที่มีสต็อก (ไม่ใช่ preorder) */}
+      {!isPreorder && (
+        <FormItem
+          name="low_stock_threshold"
+          label={t("fields.low_stock_threshold")}
+          extra={t("products.lowStockThresholdHint")}
+          rules={[{ type: "integer", min: 0, message: t("products.lowStockThresholdInvalid") }]}
+        >
+          <InputNumber min={0} precision={0} placeholder="5" />
+        </FormItem>
+      )}
 
       <FormItem name="product_price" label={t("fields.product_price")} rules={price}>
         <InputNumber min={0} />

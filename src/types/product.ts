@@ -34,6 +34,9 @@ export interface Product {
   product_type: ProductType;
   /** มีค่าเฉพาะ type inStore/online — preorder จะเป็น null เสมอ */
   product_stock_quantity: number | null;
+  /** เกณฑ์ "สินค้าใกล้หมด" ของสินค้านี้ (จำนวนเต็ม ≥ 0) — null/ไม่มี = ใช้ค่ากลางของ backend (5)
+   *  ใช้เฉพาะ type inStore/online (preorder ไม่มีสต็อก) */
+  low_stock_threshold?: number | null;
   product_description?: string;
   /** array ของ URL รูปจริงที่อัปโหลดผ่าน POST /admin/products/images แล้ว (ไม่ใช่ base64) */
   product_img?: string[];

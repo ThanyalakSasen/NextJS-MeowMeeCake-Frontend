@@ -16,6 +16,8 @@ export interface ProductFormValue {
   sale_price?: number;
   /** ไม่มีความหมายตอน product_type = "preorder" (ซ่อนช่องนี้ในฟอร์ม, backend ห้ามส่งมาด้วย) */
   product_stock_quantity: number;
+  /** ว่าง (null/undefined) = ใช้ค่ากลางของ backend (5) · ซ่อนตอน preorder เหมือน stock */
+  low_stock_threshold?: number | null;
   product_description?: string;
   /** array ของ URL ที่อัปโหลดจริงแล้วผ่าน productsService.uploadImages() */
   product_img?: string[];
@@ -47,6 +49,7 @@ export function fromProduct(p: Product): ProductFormValue {
     product_price: p.product_price,
     sale_price: p.sale_price ?? undefined,
     product_stock_quantity: p.product_stock_quantity ?? 0,
+    low_stock_threshold: p.low_stock_threshold ?? null,
     product_description: p.product_description,
     product_img: p.product_img ?? [],
     preorder_config: p.preorder_config ?? undefined,
@@ -74,6 +77,8 @@ export function toInput(v: ProductFormValue): ProductInput {
     is_visible: v.is_visible,
     // exclusive กันเสมอ (validateTypeConsistency) — null อีกฝั่งเทียบเท่า "ไม่ส่งมา" (!= null ผ่านทั้งคู่)
     product_stock_quantity: isPreorder ? null : v.product_stock_quantity,
+    // preorder ไม่มีสต็อก → ไม่ส่ง key นี้เลย · ว่าง = null (backend ใช้ค่ากลาง 5)
+    low_stock_threshold: isPreorder ? undefined : (v.low_stock_threshold ?? null),
     preorder_config: isPreorder ? (v.preorder_config as PreorderConfig) : null,
   };
 }
