@@ -36,7 +36,9 @@ export function usePreOrderRoundViewModel() {
   const searchParams = useSearchParams();
 
   const tabParam = searchParams.get("tab");
-  const activeTab: TabKey = TAB_KEYS.includes(tabParam as TabKey) ? (tabParam as TabKey) : "rounds";
+  // ?id=<preorderId> (ลิงก์จากแจ้งเตือน/LINE — BACKLOG2 §8) เปิด drawer พรีออเดอร์นั้น · ไม่ระบุ tab มา = ไปแท็บคำสั่งซื้อ
+  const urlOrderId = searchParams.get("id");
+  const activeTab: TabKey = TAB_KEYS.includes(tabParam as TabKey) ? (tabParam as TabKey) : urlOrderId ? "orders" : "rounds";
   const setActiveTab = (key: string) => router.replace(`/owner/orders/preOrderRound?tab=${key}`, { scroll: false });
 
   // ── สินค้าพรีออเดอร์ (ใช้เป็นตัวเลือกตอนเพิ่มสินค้าเข้ารอบ) ──
@@ -219,8 +221,11 @@ export function usePreOrderRoundViewModel() {
 
   const roundOptions = useMemo(() => rounds.map((r) => ({ value: r._id, label: r.round_name })), [rounds]);
 
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [orderDrawerOpen, setOrderDrawerOpen] = useState(false);
+  // drawer พรีออเดอร์ผูกกับ ?id= (แพทเทิร์นเดียวกับ Manage Orders) — ดึงรายตัวด้วย id จึงเปิดได้แม้ไม่อยู่ในหน้าตาราง
+  // · จำ id ล่าสุดไว้แม้ปิดแล้ว (เนื้อหาไม่หายวูบระหว่าง animation ปิด) — ปรับ state ระหว่าง render ตอน id ใน URL เปลี่ยน
+  const orderDrawerOpen = !!urlOrderId;
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(urlOrderId);
+  if (urlOrderId && urlOrderId !== selectedOrderId) setSelectedOrderId(urlOrderId);
   const orderDetailQ = useQuery({
     queryKey: ["preorders", "detail", selectedOrderId],
     queryFn: () => preordersService.get(selectedOrderId as string),
@@ -275,8 +280,9 @@ export function usePreOrderRoundViewModel() {
     );
   };
 
-  const onViewOrder = (o: Preorder) => { setSelectedOrderId(o._id); setOrderDrawerOpen(true); };
-  const closeOrderDrawer = () => setOrderDrawerOpen(false);
+  const onViewOrder = (o: Preorder) =>
+    router.replace(`/owner/orders/preOrderRound?tab=orders&id=${encodeURIComponent(o._id)}`, { scroll: false });
+  const closeOrderDrawer = () => router.replace(`/owner/orders/preOrderRound?tab=${activeTab}`, { scroll: false });
 
   const invalidateOrders = () => {
     qc.invalidateQueries({ queryKey: ["preorders"] });
@@ -350,6 +356,7 @@ export function usePreOrderRoundViewModel() {
     isOrdersLoading: preordersQ.isLoading, isOrdersError: preordersQ.isError, refetchOrders: () => preordersQ.refetch(),
 
     selectedOrder, orderDrawerOpen, isOrderDetailLoading: orderDetailQ.isLoading || paymentQ.isLoading,
+    isOrderDetailError: orderDetailQ.isError,
     selectedPayment, canViewPayment: paymentPerm.view, canApprovePayment: paymentPerm.approve,
     verifyingPayment: verifyPayment.isPending, onApprovePayment, onRejectPayment,
     onViewOrder, closeOrderDrawer,

@@ -75,6 +75,7 @@ export function PreOrderRoundView(vm: VM) {
         onClose={vm.closeOrderDrawer}
       >
         {vm.isOrderDetailLoading && <p className="py-10 text-center text-gray-500">{t("common.loading")}</p>}
+        {vm.isOrderDetailError && !vm.isOrderDetailLoading && <p className="py-10 text-center text-gray-500">{t("orders.orderNotFound")}</p>}
         {vm.selectedOrder && !vm.isOrderDetailLoading && <PreorderDetailContent {...vm} order={vm.selectedOrder} />}
       </DetailDrawer>
     </>

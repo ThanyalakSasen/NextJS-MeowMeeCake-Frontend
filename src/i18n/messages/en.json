@@ -869,6 +869,7 @@
     "empty": "No stock movements yet"
   },
   "production": {
+    "orderNotFound": "Production order not found, or the link is invalid",
     "title": "Manage Production",
     "tabPlan": "Production Plan / Orders",
     "tabStatus": "Production Status",
