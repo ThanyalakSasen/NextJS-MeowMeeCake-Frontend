@@ -5,12 +5,17 @@
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
 
-// backend จริงใช้ "inStore" | "online" | "preorder" (src/models/productModel.ts) ไม่ใช่ "ready"
-export type ProductType = "inStore" | "online" | "preorder";
+// backend (#52, BACKLOG2 §14) เหลือสินค้า 2 แบบ ตัดสินด้วย is_preorder ตัวเดียว — ช่องทางขาย (เว็บ/หน้าร้าน)
+// ดูจากเลขออเดอร์ (ORD-/POS-/PRE-) ไม่ได้ผูกกับสินค้าแล้ว · backend ตอบ 400 ถ้าส่ง product_type/product_types มา
 
-/** บังคับเฉพาะตอน product_type === "preorder" (productService.ts validateTypeConsistency) —
- *  ต้องไม่มี (null/undefined) ตอน type เป็น inStore/online และ product_stock_quantity ต้องเป็น
- *  null/ไม่ส่งแทน ตอน type เป็น preorder (สองอย่างนี้ exclusive กันเสมอ) */
+/** ประเภทสินค้าสำหรับ UI เท่านั้น (ป้าย/ตัวกรอง/i18n enums.productType) — derive จาก is_preorder ไม่ได้ส่งไป API */
+export type ProductKind = "normal" | "preorder";
+
+export const productKindOf = (p: Pick<Product, "is_preorder">): ProductKind => (p.is_preorder ? "preorder" : "normal");
+
+/** บังคับเฉพาะตอน is_preorder = true (productService.ts validateTypeConsistency) —
+ *  ต้องไม่มี (null/undefined) ตอนเป็นสินค้าปกติ และ product_stock_quantity ต้องเป็น
+ *  null/ไม่ส่งแทน ตอนเป็นพรีออเดอร์ (สองอย่างนี้ exclusive กันเสมอ) */
 export interface PreorderConfig {
   min_order_qty: number;
   max_order_qty: number;
@@ -31,11 +36,12 @@ export interface Product {
   unit_id?: string | { _id: string; unit_name: string; unit_abbr: string };
   product_price: number;
   sale_price?: number | null;
-  product_type: ProductType;
-  /** มีค่าเฉพาะ type inStore/online — preorder จะเป็น null เสมอ */
+  /** true = พรีออเดอร์ (รหัส pre- · ไม่มีสต็อก · ต้องมี preorder_config) · false = สินค้าปกติ (รหัส pos-) */
+  is_preorder: boolean;
+  /** มีค่าเฉพาะสินค้าปกติ — พรีออเดอร์จะเป็น null เสมอ */
   product_stock_quantity: number | null;
   /** เกณฑ์ "สินค้าใกล้หมด" ของสินค้านี้ (จำนวนเต็ม ≥ 0) — null/ไม่มี = ใช้ค่ากลางของ backend (5)
-   *  ใช้เฉพาะ type inStore/online (preorder ไม่มีสต็อก) */
+   *  ใช้เฉพาะสินค้าปกติ (พรีออเดอร์ไม่มีสต็อก) */
   low_stock_threshold?: number | null;
   product_description?: string;
   /** array ของ URL รูปจริงที่อัปโหลดผ่าน POST /admin/products/images แล้ว (ไม่ใช่ base64) */
@@ -62,6 +68,7 @@ export type ProductInput = Omit<
 
 export interface ProductListParams extends ListParams {
   category_id?: string;
-  product_type?: ProductType;
+  /** true = เฉพาะพรีออเดอร์ · false = เฉพาะสินค้าปกติ · ไม่ส่ง = ทั้งหมด */
+  is_preorder?: boolean;
   is_visible?: boolean;
 }

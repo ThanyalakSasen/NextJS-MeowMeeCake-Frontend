@@ -1,6 +1,6 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ Product Stock — สต็อกสินค้าสำเร็จรูป (product_type "ready")
+// ViewModel ของ Product Stock — สต็อกสินค้าปกติ (is_preorder: false)
 // ไม่มี resource ใหม่: ใช้ productsService (list + update stock) + map category/unit
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
@@ -30,9 +30,8 @@ export interface StockProductRow {
 
 export type StatusFilter = "all" | StockStatus;
 
-// backend ไม่มี product_type "ready" (จริง ๆ คือ "inStore"/"online") และ query filter ใช้ค่าเดียวไม่ได้
-// สองค่าพร้อมกัน — โหลดทั้งหมดมาแล้วตัด "preorder" ออกฝั่ง client แทน (พรีออเดอร์ไม่มีสต็อกให้ปรับที่นี่)
-const ALL_PARAMS = { limit: 200 } as const;
+// เฉพาะสินค้าปกติ — พรีออเดอร์ไม่มีสต็อกให้ปรับที่นี่
+const ALL_PARAMS = { limit: 200, is_preorder: false } as const;
 
 export function useProductStockViewModel() {
   const t = useTranslations();
@@ -61,7 +60,7 @@ export function useProductStockViewModel() {
     const catMap = new Map((categoriesQ.data?.data ?? []).map((c) => [c._id, c.product_category_name]));
     const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, u.unit_abbr || u.unit_name]));
     return (productsQ.data?.data ?? [])
-      .filter((p) => p.product_type !== "preorder")
+      .filter((p) => !p.is_preorder) // กันซ้ำเผื่อ backend รุ่นเก่าที่ยังไม่รู้จัก ?is_preorder=
       .map((p) => {
         const stock = p.product_stock_quantity ?? 0;
         const categoryId = refId(p.category_id);

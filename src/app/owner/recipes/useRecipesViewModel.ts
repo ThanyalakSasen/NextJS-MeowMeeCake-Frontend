@@ -21,6 +21,7 @@ import { refId } from "@/lib/refId";
 import type { Recipe, RecipeInput } from "@/types/recipe";
 import type { RecipeComponent, RecipeComponentInput } from "@/types/recipeComponent";
 import { isApiError } from "@/types/api";
+import { productKindOf } from "@/types/product";
 import type { RecipeSubmitValue } from "./_components/MainRecipeModal";
 import type { ComponentSubmitValue } from "./_components/ComponentFormModal";
 
@@ -140,7 +141,7 @@ export function useRecipesViewModel() {
     const list = editingProductId
       ? products.filter((p) => p._id === editingProductId || !recipes.some((r) => r.product_id === p._id))
       : productsWithoutRecipe;
-    return list.map((p) => ({ _id: p._id, name: p.product_name_th, type: p.product_type }));
+    return list.map((p) => ({ _id: p._id, name: p.product_name_th, type: productKindOf(p) }));
   }, [products, recipes, productsWithoutRecipe, recipeEditTarget]);
 
   const filteredRecipes = useMemo(() => {

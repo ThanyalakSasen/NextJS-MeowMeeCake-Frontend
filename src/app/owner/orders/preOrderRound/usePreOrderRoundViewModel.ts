@@ -41,7 +41,7 @@ export function usePreOrderRoundViewModel() {
   // ── สินค้าพรีออเดอร์ (ใช้เป็นตัวเลือกตอนเพิ่มสินค้าเข้ารอบ) ──
   const productsQ = useQuery({
     queryKey: ["products", "preorder-type"],
-    queryFn: () => productsService.list({ limit: 200, product_type: "preorder" }),
+    queryFn: () => productsService.list({ limit: 200, is_preorder: true }),
   });
   const preorderProducts = productsQ.data?.data ?? [];
 

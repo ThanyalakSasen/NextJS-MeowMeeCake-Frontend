@@ -2,7 +2,7 @@
 // productForm.ts — helper ล้วนของฟอร์มสินค้า (ใช้ร่วม Add / Edit)
 // validation ทำที่ <Form.Item rules={...}> ใน ProductFormFields (antd Form)
 // ─────────────────────────────────────────────────────────────
-import type { PreorderConfig, Product, ProductInput, ProductType } from "@/types/product";
+import type { PreorderConfig, Product, ProductInput } from "@/types/product";
 import { refId } from "@/lib/refId";
 
 export interface ProductFormValue {
@@ -11,10 +11,11 @@ export interface ProductFormValue {
   product_name_eng: string;
   category_id: string;
   unit_id: string;
-  product_type: ProductType;
+  /** true = พรีออเดอร์ · false = สินค้าปกติ */
+  is_preorder: boolean;
   product_price: number;
   sale_price?: number;
-  /** ไม่มีความหมายตอน product_type = "preorder" (ซ่อนช่องนี้ในฟอร์ม, backend ห้ามส่งมาด้วย) */
+  /** ไม่มีความหมายตอนเป็นพรีออเดอร์ (ซ่อนช่องนี้ในฟอร์ม, backend ห้ามส่งมาด้วย) */
   product_stock_quantity: number;
   /** ว่าง (null/undefined) = ใช้ค่ากลางของ backend (5) · ซ่อนตอน preorder เหมือน stock */
   low_stock_threshold?: number | null;
@@ -31,7 +32,7 @@ export const emptyProductForm: ProductFormValue = {
   product_name_eng: "",
   category_id: "",
   unit_id: "",
-  product_type: "inStore",
+  is_preorder: false,
   product_price: 0,
   product_stock_quantity: 0,
   product_img: [],
@@ -45,7 +46,7 @@ export function fromProduct(p: Product): ProductFormValue {
     product_name_eng: p.product_name_eng ?? "",
     category_id: refId(p.category_id),
     unit_id: refId(p.unit_id),
-    product_type: p.product_type,
+    is_preorder: p.is_preorder,
     product_price: p.product_price,
     sale_price: p.sale_price ?? undefined,
     product_stock_quantity: p.product_stock_quantity ?? 0,
@@ -59,17 +60,18 @@ export function fromProduct(p: Product): ProductFormValue {
 
 /**
  * ค่าจากฟอร์ม → body ที่ส่งเข้า API — product_stock_quantity/preorder_config exclusive กันเสมอ
- * (productService.ts validateTypeConsistency): type preorder ต้องไม่ส่ง stock, type อื่นต้องไม่ส่ง
- * preorder_config เลย จึง omit key ที่ไม่เกี่ยวข้องแทนส่ง null/0 ไปเฉย ๆ
+ * (productService.ts validateTypeConsistency): พรีออเดอร์ต้องไม่ส่ง stock, สินค้าปกติต้องไม่ส่ง
+ * preorder_config จึงส่ง null ฝั่งที่ไม่เกี่ยวข้อง (backend เช็ค != null)
+ * ส่ง is_preorder ค่าเดิมซ้ำตอนแก้ไขได้ — backend สร้าง product_id ใหม่เฉพาะเมื่อ prefix pos-/pre- ไม่ตรงประเภท
  */
 export function toInput(v: ProductFormValue): ProductInput {
-  const isPreorder = v.product_type === "preorder";
+  const isPreorder = v.is_preorder;
   return {
     product_name_th: v.product_name_th.trim(),
     product_name_eng: v.product_name_eng.trim(),
     category_id: v.category_id,
     unit_id: v.unit_id,
-    product_type: v.product_type,
+    is_preorder: isPreorder,
     product_price: v.product_price,
     sale_price: v.sale_price ?? null,
     product_description: v.product_description?.trim() || undefined,

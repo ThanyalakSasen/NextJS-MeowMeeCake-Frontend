@@ -10,10 +10,10 @@ import { productsService } from "@/services/products";
 import { productCategoriesService } from "@/services/productCategories";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import type { Product, ProductType } from "@/types/product";
+import type { Product, ProductKind } from "@/types/product";
 import { isApiError } from "@/types/api";
 
-type TypeFilter = "all" | ProductType;
+type TypeFilter = "all" | ProductKind;
 
 export type SortValue = "-created_at" | "product_price" | "-product_price" | "-avg_rating";
 
@@ -34,7 +34,7 @@ export function useProductsViewModel() {
     () => ({
       search: search.trim() || undefined,
       category_id: categoryId ?? undefined,
-      product_type: type === "all" ? undefined : type,
+      is_preorder: type === "all" ? undefined : type === "preorder",
       sort,
       page,
       limit: pageSize,

@@ -11,7 +11,7 @@ import {
   type Column,
 } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
-import type { Product } from "@/types/product";
+import { productKindOf, type Product } from "@/types/product";
 import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
 import type { useProductsViewModel } from "./useProductsViewModel";
 import { ProductGrid } from "./_components/ProductGrid";
@@ -26,7 +26,7 @@ export function ProductsView(vm: VM) {
 
   const columns: Column<Product>[] = [
     { key: "product_name_th", title: t("products.colName") },
-    { key: "product_type", title: t("products.colType"), render: (p) => t(`enums.productType.${p.product_type}`) },
+    { key: "is_preorder", title: t("products.colType"), render: (p) => t(`enums.productType.${productKindOf(p)}`) },
     {
       key: "product_price", title: t("products.colPrice"), align: "right",
       render: (p) => formatCurrency(p.sale_price ?? p.product_price, locale),
@@ -71,8 +71,7 @@ export function ProductsView(vm: VM) {
                   onChange={vm.setType}
                   options={[
                     { value: "all", label: t("common.all") },
-                    { value: "inStore", label: t("enums.productType.inStore") },
-                    { value: "online", label: t("enums.productType.online") },
+                    { value: "normal", label: t("enums.productType.normal") },
                     { value: "preorder", label: t("enums.productType.preorder") },
                   ]}
                 />

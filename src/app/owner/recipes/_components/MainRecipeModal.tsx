@@ -10,7 +10,7 @@ import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, Divid
 import { alert } from "@/lib/alert";
 import type { Recipe, RecipeComponentRef } from "@/types/recipe";
 import type { RecipeIngredientLine, RecipeStep } from "@/types/recipeShared";
-import type { ProductType } from "@/types/product";
+import type { ProductKind } from "@/types/product";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { RecipeFormValue } from "../recipeForm";
 import { emptyRecipeForm, fromRecipe } from "../recipeForm";
@@ -36,7 +36,7 @@ export function MainRecipeModal({
 }: {
   open: boolean;
   editTarget: Recipe | null;
-  productOptions: { _id: string; name: string; type: ProductType }[];
+  productOptions: { _id: string; name: string; type: ProductKind }[];
   componentOptions: { _id: string; name: string }[];
   ingredientOptions: IngredientOption[];
   yieldUnitOptions: { value: string; label: string }[];

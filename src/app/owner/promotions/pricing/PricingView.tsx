@@ -36,7 +36,7 @@ export function PricingView(vm: VM) {
       render: (r) => <Tag color={tagColorFor(r.categoryId)}>{r.categoryName}</Tag>,
     },
     {
-      key: "product_type",
+      key: "productType",
       title: t("pricing.colType"),
       render: (r) => <Tag color={r.productType === "preorder" ? "processing" : "success"}>{t(`enums.productType.${r.productType}`)}</Tag>,
     },
@@ -98,8 +98,7 @@ export function PricingView(vm: VM) {
                   onChange={(v) => vm.setTypeFilter(v as VM["typeFilter"])}
                   options={[
                     { value: "all", label: t("common.all") },
-                    { value: "inStore", label: t("enums.productType.inStore") },
-                    { value: "online", label: t("enums.productType.online") },
+                    { value: "normal", label: t("enums.productType.normal") },
                     { value: "preorder", label: t("enums.productType.preorder") },
                   ]}
                 />

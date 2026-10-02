@@ -27,9 +27,8 @@ import { refId } from "@/lib/refId";
 import { thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import { addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, type CartLine } from "./posCart";
 
-// backend ไม่มี product_type "ready" (จริง ๆ คือ "inStore"/"online") และ filter ใช้ค่าเดียวไม่ได้
-// สองค่าพร้อมกัน — โหลดทั้งหมดมาแล้วตัด "preorder" ออกฝั่ง client แทน (POS ขายเฉพาะของพร้อมขาย)
-const CATALOG_PARAMS = { limit: 200 } as const;
+// POS ขายเฉพาะสินค้าปกติ (พร้อมขาย มีสต็อก) — พรีออเดอร์ขายผ่านรอบพรีออเดอร์เท่านั้น
+const CATALOG_PARAMS = { limit: 200, is_preorder: false } as const;
 
 /** ต้องตรงกับ GUEST_CUSTOMER_EMAIL ใน backend scripts/seed.ts */
 const GUEST_CUSTOMER_EMAIL = "guest@meowmeecake.local";
@@ -70,7 +69,8 @@ export function usePOSViewModel() {
     const q = search.trim().toLowerCase();
     return (catalogQ.data?.data ?? []).filter(
       (p) =>
-        p.product_type !== "preorder" &&
+        !p.is_preorder && // กันซ้ำเผื่อ backend รุ่นเก่าที่ยังไม่รู้จัก ?is_preorder=
+
         (categoryId === "all" || refId(p.category_id) === categoryId) &&
         (!q || p.product_name_th.toLowerCase().includes(q)),
     );

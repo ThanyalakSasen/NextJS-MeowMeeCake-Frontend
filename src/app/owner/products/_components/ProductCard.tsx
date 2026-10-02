@@ -5,8 +5,8 @@ import { Card, Switch } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency } from "@/i18n/format";
 import { resolveUploadUrl } from "@/lib/uploads";
-import { PRODUCT_TYPE_CONFIG, PRODUCT_TYPE_FALLBACK } from "@/constants/enumConfig";
-import type { Product } from "@/types/product";
+import { PRODUCT_TYPE_CONFIG } from "@/constants/enumConfig";
+import { productKindOf, type Product } from "@/types/product";
 import { EditButton, DeleteButton } from "@/components/shared/actions";
 import { RatingDisplay } from "./RatingDisplay";
 
@@ -26,7 +26,8 @@ export function ProductCard({
   const t = useTranslations();
   const locale = useLocale();
   const price = product.sale_price ?? product.product_price;
-  const typeCfg = PRODUCT_TYPE_CONFIG[product.product_type] ?? PRODUCT_TYPE_FALLBACK;
+  const kind = productKindOf(product);
+  const typeCfg = PRODUCT_TYPE_CONFIG[kind];
 
   return (
     // รูปติดขอบบน/ซ้าย/ขวาของการ์ด (padding อยู่ที่ส่วนเนื้อหาแทน) — overflow-hidden ให้มุมมนของการ์ดตัดมุมรูปด้วย
@@ -44,7 +45,7 @@ export function ProductCard({
           className="absolute left-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-sm font-semibold shadow-sm"
           style={{ color: typeCfg.color, background: typeCfg.bg }}
         >
-          {t(`enums.productType.${product.product_type}`)}
+          {t(`enums.productType.${kind}`)}
         </span>
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-4">

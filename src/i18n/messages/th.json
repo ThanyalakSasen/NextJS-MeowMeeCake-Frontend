@@ -333,8 +333,7 @@
       "takeaway": "รับที่ร้าน"
     },
     "productType": {
-      "inStore": "หน้าร้าน",
-      "online": "ออนไลน์",
+      "normal": "สินค้าปกติ",
       "preorder": "พรีออเดอร์"
     },
     "productionStatus": {

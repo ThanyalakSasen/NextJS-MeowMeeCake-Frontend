@@ -333,8 +333,7 @@
       "takeaway": "Takeaway"
     },
     "productType": {
-      "inStore": "In-store",
-      "online": "Online",
+      "normal": "Regular",
       "preorder": "Pre-order"
     },
     "productionStatus": {
