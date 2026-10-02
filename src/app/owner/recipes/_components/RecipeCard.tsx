@@ -1,7 +1,7 @@
 "use client";
 // การ์ดสูตรหลัก 1 สูตร — ผูกกับสินค้า แสดงส่วนประกอบ (สูตรส่วนประกอบ + วัตถุดิบตรง) แบบย่อ
 import { useTranslations, useLocale } from "next-intl";
-import { LinkIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { BookOpenIcon, LinkIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { Button, Card } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency, formatDate } from "@/i18n/format";
@@ -43,7 +43,9 @@ export function RecipeCard({
       <div className="border-b border-gray-100 px-3.5 py-3">
         {/* items-start: ไอคอนอยู่มุมซ้ายบนเสมอ ไม่ถูกจัดกึ่งกลางตามความสูงของชื่อ */}
         <div className="flex items-start gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-100 bg-violet-50 text-lg">📖</div>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-100 bg-violet-50">
+            <BookOpenIcon className="h-5 w-5 text-violet-500" aria-hidden="true" />
+          </div>
           {/* ชื่อสินค้าต่อใต้ชื่อสูตรทันที (ไม่มีช่องว่างคั่น) — ที่เผื่อไว้สำหรับชื่อสูตรบรรทัดที่ 2 ย้ายไปอยู่ท้ายส่วนหัวแทน
               min-h = ชื่อสูตร 2 บรรทัด (2 × 1.25rem) + mt-0.5 (0.125rem) + ชื่อสินค้า 1 บรรทัด (1.25rem) = 3.875rem */}
           <div className="min-h-[3.875rem] min-w-0 flex-1">

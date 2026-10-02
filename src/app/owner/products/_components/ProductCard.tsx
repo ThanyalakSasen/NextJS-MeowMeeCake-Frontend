@@ -1,5 +1,6 @@
 "use client";
 import { useTranslations, useLocale } from "next-intl";
+import { CakeIcon } from "@heroicons/react/24/outline";
 import { Card, Switch } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency } from "@/i18n/format";
@@ -36,7 +37,7 @@ export function ProductCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={resolveUploadUrl(product.product_img[0])} alt={product.product_name_th} className="h-full w-full object-cover" />
         ) : (
-          "🍰"
+          <CakeIcon className="h-10 w-10 text-gray-400" aria-hidden="true" />
         )}
         {/* ประเภทสินค้าเป็นป้ายสีทับมุมซ้ายบนของรูป — เห็นได้ทันที และไม่กินบรรทัดในส่วนเนื้อหา */}
         <span
