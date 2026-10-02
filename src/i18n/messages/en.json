@@ -629,6 +629,13 @@
     "unpaidPreorderWarning": "This pre-order needs payment before production can start"
   },
   "preorderRound": {
+    "paymentDue": "Payment due",
+    "paymentOverdue": "Payment overdue",
+    "rejectPayment": "Reject slip",
+    "rejectPaymentConfirm": "Reject this slip? The customer can upload a new one, but if the payment deadline has passed the pre-order will be cancelled automatically.",
+    "paymentRejected": "Rejected the slip for {no}",
+    "paymentRejectFailed": "Could not reject the slip",
+    "slipRejected": "Slip rejected — waiting for the customer to upload a new one",
     "title": "Pre-order Rounds",
     "description": "Manage advance birthday-cake ordering rounds and view customers' orders within each round",
     "tabRounds": "Pre-order Rounds",

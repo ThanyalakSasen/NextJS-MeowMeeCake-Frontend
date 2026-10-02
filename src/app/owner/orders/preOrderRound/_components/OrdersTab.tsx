@@ -64,7 +64,22 @@ export function OrdersTab(vm: VM) {
     {
       key: "payment_status",
       title: t("orders.colPayment"),
-      render: (o) => <StatusBadge group="paymentStatus" value={o.payment_status} />,
+      render: (o) => {
+        // ยังไม่จ่าย → โชว์กำหนดชำระใต้ badge (เลยกำหนด = ระบบจะยกเลิกอัตโนมัติ — backend #55)
+        const due = vm.paymentDueState(o);
+        return (
+          <div>
+            <StatusBadge group="paymentStatus" value={o.payment_status} />
+            {due && o.payment_due_at && (
+              <p className={`mt-0.5 text-sm ${due === "overdue" ? "text-danger" : "text-gray-600"}`}>
+                {due === "overdue"
+                  ? t("preorderRound.paymentOverdue")
+                  : `${t("preorderRound.paymentDue")}: ${formatDate(o.payment_due_at, locale, { withTime: true })}`}
+              </p>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
