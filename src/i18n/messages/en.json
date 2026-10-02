@@ -1439,5 +1439,24 @@
     "title": "You don't have access to this page",
     "description": "Your account hasn't been granted access to this menu. Please contact the shop owner or an administrator to request access.",
     "back": "Back to dashboard"
+  },
+  "profile": {
+    "title": "My profile",
+    "line": {
+      "title": "LINE notifications",
+      "statusLinked": "Connected",
+      "statusNotLinked": "Not connected",
+      "connect": "Connect LINE",
+      "unlink": "Disconnect",
+      "addFriendHint": "Connect LINE and add MeowMeeCake as a friend to get order notifications.",
+      "loginRequired": "Please sign in again, then tap Connect LINE again.",
+      "linkedHint": "Stay friends with MeowMeeCake on LINE — if you block it, you won't receive notifications.",
+      "linkedSuccess": "LINE connected",
+      "linkFailed": "Could not connect. Please try again.",
+      "unavailable": "LINE connection isn't available right now",
+      "unlinkConfirm": "Disconnect LINE? You will no longer get notifications on LINE.",
+      "unlinkedSuccess": "LINE disconnected",
+      "unlinkFailed": "Could not disconnect"
+    }
   }
 }

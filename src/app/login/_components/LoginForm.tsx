@@ -6,7 +6,7 @@ import { Button, Input, PasswordInput, Logo } from "@/components/base";
 import { login } from "@/lib/authClient";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
-import { HOME_PATH } from "@/constants/auth";
+import { HOME_PATH, PROFILE_PATH } from "@/constants/auth";
 
 function Form() {
   const t = useTranslations();
@@ -23,7 +23,9 @@ function Form() {
     try {
       await login({ email: email.trim(), password });
       const next = params.get("next");
-      router.replace(next && next.startsWith("/owner") ? next : HOME_PATH);
+      // รับเฉพาะ path ภายในแอป (/owner/*, /profile) — กัน open redirect ผ่าน ?next=
+      const allowed = !!next && (next.startsWith("/owner") || next === PROFILE_PATH || next.startsWith(`${PROFILE_PATH}?`));
+      router.replace(allowed && next ? next : HOME_PATH);
       router.refresh();
     } catch (e2) {
       // แจ้งด้วย swal2 toast เหมือนหน้าอื่นทั้งหมด (เพิ่ม/แก้/ลบ) — เดิมใช้ ErrorMessage แถบแดง inline

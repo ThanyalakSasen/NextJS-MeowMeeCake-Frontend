@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { AUTH_COOKIE, AUTH_GATE, LOGIN_PATH, HOME_PATH } from "@/constants/auth";
+import { AUTH_COOKIE, AUTH_GATE, LOGIN_PATH, HOME_PATH, PROFILE_PATH } from "@/constants/auth";
 import { LOCALE_COOKIE, defaultLocale, isLocale } from "@/i18n/config";
 
 const LOCALE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -36,10 +36,11 @@ export function proxy(req: NextRequest): NextResponse {
     return ensureLocaleCookie(req, NextResponse.redirect(new URL(hasAuth ? HOME_PATH : LOGIN_PATH, req.url)));
   }
 
-  if (pathname.startsWith("/owner")) {
+  if (pathname.startsWith("/owner") || pathname === PROFILE_PATH) {
     if (!hasAuth) {
       const url = new URL(LOGIN_PATH, req.url);
-      url.searchParams.set("next", pathname);
+      // เก็บ query ไว้ด้วย — กลับจาก LINE (/profile?line=linked) ตอน session หลุด จะได้ไม่ทิ้งผลลัพธ์
+      url.searchParams.set("next", pathname + req.nextUrl.search);
       return ensureLocaleCookie(req, NextResponse.redirect(url));
     }
     return ensureLocaleCookie(req, NextResponse.next());
@@ -54,5 +55,5 @@ export function proxy(req: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/", "/owner/:path*", "/login"],
+  matcher: ["/", "/owner/:path*", "/profile", "/login"],
 };
