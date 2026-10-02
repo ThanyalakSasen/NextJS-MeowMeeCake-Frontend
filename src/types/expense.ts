@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // src/types/expense.ts
 // DTO ของ resource /expenses (docs/API_CONTRACT.md §3) — ใช้ที่ Finance Expenses + Finance P&L (OPEX/COGS)
-// `category`/`payment_method` เป็น fixed enum ค่าไทย (แนวทาง A — เหมือน AttendanceStatus/RecipeCategory)
+// `category`/`payment_method` เป็น fixed enum ค่าไทย (แนวทาง A — เหมือน RecipeCategory)
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
 import type { ExpenseCategory, ExpensePaymentMethod } from "@/constants/enumConfig";

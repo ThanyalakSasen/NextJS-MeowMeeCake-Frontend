@@ -15,7 +15,7 @@ import { productCategoriesService } from "@/services/productCategories";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { refId } from "@/lib/refId";
-import type { ProductType } from "@/types/product";
+import { productKindOf, type ProductKind } from "@/types/product";
 import { isApiError } from "@/types/api";
 import { calcSalePrice, discountFromSalePrice, type Discount } from "./pricingHelpers";
 
@@ -24,7 +24,7 @@ export interface PricingRow {
   name: string;
   categoryId: string;
   categoryName: string;
-  productType: ProductType;
+  productType: ProductKind;
   basePrice: number;
   salePrice: number | null;
   discount: Discount | null;
@@ -33,7 +33,7 @@ export interface PricingRow {
 }
 
 type DiscFilter = "all" | "has" | "none";
-type TypeFilter = "all" | ProductType;
+type TypeFilter = "all" | ProductKind;
 type DraftPatch = Partial<Pick<PricingRow, "basePrice" | "salePrice" | "isVisible">>;
 
 export function usePricingViewModel() {
@@ -63,7 +63,7 @@ export function usePricingViewModel() {
         name: p.product_name_th,
         categoryId: refId(p.category_id),
         categoryName: categoryObj?.product_category_name ?? t("pricing.noCategory"),
-        productType: p.product_type,
+        productType: productKindOf(p),
         basePrice,
         salePrice,
         discount: discountFromSalePrice(basePrice, salePrice),

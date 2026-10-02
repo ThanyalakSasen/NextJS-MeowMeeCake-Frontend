@@ -48,6 +48,9 @@ export interface Preorder {
   delivery_fee: number;
   total_amount: number;
   cancelled_reason?: string | null;
+  /** กำหนดชำระ = min(สั่ง + 24 ชม., ปิดรอบ) — เลยแล้วยังไม่จ่าย (และไม่มีสลิปรอตรวจ) backend ยกเลิกอัตโนมัติ
+   *  · null = ข้อมูลก่อนมีฟิลด์นี้ (backend #55 — docs/preorder-round-flow.md ประเด็น 3) */
+  payment_due_at?: string | null;
   /** มีเฉพาะตอน preordersService.get(id) — list ไม่มี (อยู่คนละ collection) */
   items?: PreorderItem[];
   created_at: string;

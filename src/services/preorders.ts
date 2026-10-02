@@ -52,6 +52,7 @@ function toPreorder(raw: any): Preorder {
     delivery_fee: raw.delivery_fee ?? 0,
     total_amount: raw.total_amount,
     cancelled_reason: raw.cancelled_reason ?? null,
+    payment_due_at: raw.payment_due_at ?? null,
     items: Array.isArray(raw.items) ? raw.items.map(toPreorderItem) : undefined,
     created_at: raw.created_at,
     updated_at: raw.updated_at,

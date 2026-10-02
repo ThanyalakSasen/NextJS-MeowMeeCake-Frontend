@@ -1,6 +1,7 @@
 "use client";
 // กริดสินค้าฝั่งซ้ายของ POS — แตะการ์ดเพื่อเพิ่มลงตะกร้า (disable เมื่อหมดสต็อก)
 import { useTranslations, useLocale } from "next-intl";
+import { CakeIcon } from "@heroicons/react/24/outline";
 import { EmptyState } from "@/components/base";
 import { formatCurrency, formatNumber } from "@/i18n/format";
 import type { Product } from "@/types/product";
@@ -33,8 +34,8 @@ export function ProductPickerGrid({
               out ? "cursor-not-allowed opacity-50" : "hover:border-brown-200 hover:shadow-sm"
             }`}
           >
-            <div className="mb-2 flex h-20 items-center justify-center rounded-lg bg-brown-50 text-2xl" aria-hidden="true">
-              🧁
+            <div className="mb-2 flex h-20 items-center justify-center rounded-lg bg-brown-50" aria-hidden="true">
+              <CakeIcon className="h-8 w-8 text-gray-400" />
             </div>
             <p className="truncate text-sm font-medium text-brown-800">{p.product_name_th}</p>
             <p className="mt-0.5 flex items-center gap-1.5">

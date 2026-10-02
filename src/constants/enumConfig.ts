@@ -6,6 +6,7 @@
 //   const t = useTranslations("enums.orderStatus");
 //   <StatusBadge color={ORDER_STATUS_CONFIG[s].antColor} label={t(s)} />
 // ─────────────────────────────────────────────────────────────
+import type { ProductKind } from "@/types/product";
 
 /** ชื่อสีของ antd <Tag color> / <Badge status> */
 export type AntColor =
@@ -73,16 +74,12 @@ export const SOURCE_TYPE_CONFIG: Record<SourceType, { color: string; bg: string 
   preorder: { color: "#1d4ed8", bg: "#dbeafe" },
 };
 
-// ─── ประเภทสินค้า (Product.product_type) ─────────────────────────
-// ป้ายบนมุมรูปของการ์ดสินค้า — inStore ใช้โทนน้ำตาลของแบรนด์ (brown-600 บน brown-100)
-export const PRODUCT_TYPE_CONFIG: Record<"inStore" | "online" | "preorder", { color: string; bg: string }> = {
-  inStore:  { color: "#7C4F35", bg: "#F1E4DC" },
-  online:   { color: "#1d4ed8", bg: "#dbeafe" },
+// ─── ประเภทสินค้า (ProductKind — derive จาก Product.is_preorder) ──────
+// ป้ายบนมุมรูปของการ์ดสินค้า — สินค้าปกติใช้โทนน้ำตาลของแบรนด์ (brown-600 บน brown-100)
+export const PRODUCT_TYPE_CONFIG: Record<ProductKind, { color: string; bg: string }> = {
+  normal:   { color: "#7C4F35", bg: "#F1E4DC" },
   preorder: { color: "#7c3aed", bg: "#ede9fe" },
 };
-
-/** ข้อมูลเก่าใน DB อาจมีค่านอก enum (เช่น "ready" ที่ค้างมาก่อนแยกประเภท) — fallback สีเทา */
-export const PRODUCT_TYPE_FALLBACK = { color: "#4b5563", bg: "#f3f4f6" };
 
 // ─── สต็อกวัตถุดิบ ───────────────────────────────────────────
 export type StockStatus = "ok" | "low" | "out";
@@ -127,19 +124,6 @@ export const RECIPE_CATEGORY_COLORS: Record<RecipeCategory, { bg: string; text: 
   "ท็อปปิ้ง":  { bg: "#fef3c7", text: "#b45309" },
   "แป้ง":      { bg: "#ede9fe", text: "#7c3aed" },
   "อื่นๆ":     { bg: "#f1f5f9", text: "#64748b" },
-};
-
-// ─── บันทึกเวลาเข้างาน (ค่าเก็บใน DB เป็นไทย — label = i18n enums.attendanceStatus) ──
-export type AttendanceStatus =
-  | "มาทำงาน" | "มาสาย" | "ขาดงาน" | "ลาป่วย" | "ลากิจ" | "วันหยุด";
-
-export const ATTENDANCE_STATUS_CONFIG: Record<AttendanceStatus, { antColor: AntColor }> = {
-  "มาทำงาน": { antColor: "success" },
-  "มาสาย":   { antColor: "warning" },
-  "ขาดงาน":  { antColor: "error" },
-  "ลาป่วย":  { antColor: "purple" },
-  "ลากิจ":   { antColor: "blue" },
-  "วันหยุด": { antColor: "default" },
 };
 
 // ─── แบนเนอร์หน้าร้าน ───────────────────────────────────────

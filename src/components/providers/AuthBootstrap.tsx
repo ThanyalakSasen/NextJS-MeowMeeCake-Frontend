@@ -18,7 +18,10 @@ export function AuthBootstrap() {
   useEffect(() => {
     const uninstall = installAuthInterceptor(() => {
       qc.clear();
-      router.replace(`${LOGIN_PATH}?reason=expired`);
+      // พากลับหน้าเดิม (รวม query เช่น ?id= จากลิงก์ LINE) หลัง login ใหม่ — LoginForm กรอง next เองว่าเป็น path ในแอป
+      const here = window.location.pathname + window.location.search;
+      const next = here.startsWith(LOGIN_PATH) ? "" : `&next=${encodeURIComponent(here)}`;
+      router.replace(`${LOGIN_PATH}?reason=expired${next}`);
     });
     const off = onAuthBroadcast((msg) => {
       if (msg.type === "logout") {

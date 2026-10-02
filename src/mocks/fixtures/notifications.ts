@@ -19,10 +19,6 @@ export const notificationsFixture: NotificationDTO[] = [
     module: "finance", is_read: true, link: "/owner/orders/manageOrders", created_at: "2026-09-01T11:20:00.000Z", updated_at: "2026-09-01T11:20:00.000Z",
   },
   {
-    _id: "n5", title: "พนักงานเช็คอิน", message: "กานดา แสงเพชร เช็คอินเข้างานแล้ว", type: "info",
-    module: "employee", is_read: true, link: "/owner/attendance", created_at: "2026-09-01T09:02:00.000Z", updated_at: "2026-09-01T09:02:00.000Z",
-  },
-  {
     _id: "n6", title: "สต็อกสินค้าใกล้หมด", message: "มัทฉะเค้ก เหลือ 3 ชิ้น", type: "warning",
     module: "order", is_read: false, link: "/owner/products/productStock", created_at: "2026-08-31T18:40:00.000Z", updated_at: "2026-08-31T18:40:00.000Z",
   },
@@ -45,10 +41,6 @@ export const notificationsFixture: NotificationDTO[] = [
   {
     _id: "n11", title: "ผลิตล่าช้า", message: "ใบสั่งผลิต PO-0095 เกินกำหนด 1 วัน", type: "error",
     module: "production", is_read: true, link: "/owner/production", created_at: "2026-08-29T09:45:00.000Z", updated_at: "2026-08-29T09:45:00.000Z",
-  },
-  {
-    _id: "n12", title: "พนักงานลาป่วย", message: "วิชัย ศรีสมบัติ แจ้งลาป่วยวันนี้", type: "info",
-    module: "employee", is_read: true, link: "/owner/attendance", created_at: "2026-08-28T08:20:00.000Z", updated_at: "2026-08-28T08:20:00.000Z",
   },
   {
     _id: "n13", title: "ค่าใช้จ่ายประจำ", message: "ครบกำหนดชำระค่าเช่าร้านเดือนกันยายน", type: "warning",

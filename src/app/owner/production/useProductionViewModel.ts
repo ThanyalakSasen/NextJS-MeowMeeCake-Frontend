@@ -49,7 +49,10 @@ export function useProductionViewModel() {
   const searchParams = useSearchParams();
 
   const tabParam = searchParams.get("tab");
-  const activeTab: TabKey = TAB_KEYS.includes(tabParam as TabKey) ? (tabParam as TabKey) : "plan";
+  // ?id=<productionOrderId> (ลิงก์จากแจ้งเตือน/LINE — ปิดรอบ · จ่ายช้าหลังเริ่มผลิต · เพิ่ม/หักยอด — BACKLOG2 §8)
+  // เปิด drawer ใบนั้น · ไม่ระบุ tab มา = แท็บสถานะ (ดูใบที่กำลังทำอยู่)
+  const urlOrderId = searchParams.get("id");
+  const activeTab: TabKey = TAB_KEYS.includes(tabParam as TabKey) ? (tabParam as TabKey) : urlOrderId ? "status" : "plan";
   const setActiveTab = (key: string) => router.replace(`/owner/production?tab=${key}`, { scroll: false });
 
   // ── shared data (โหลดครั้งเดียว ใช้ทั้ง 3 แท็บ) ──
@@ -188,9 +191,15 @@ export function useProductionViewModel() {
   }), [orders]);
 
   // ── รายละเอียดใบสั่งผลิต (ใช้ร่วม: row บนแท็บ 1, การ์ดบนแท็บ 2, row บนแท็บ 3) ──
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // drawer ผูกกับ ?id= (แพทเทิร์นเดียวกับ Manage Orders) · ใบสั่งผลิตหาจาก list ที่โหลดไว้แล้ว (ใหม่สุด 200 ใบ —
+  // ลิงก์จากแจ้งเตือนชี้ใบล่าสุดเสมอ) · จำ id ล่าสุดไว้แม้ปิดแล้ว (เนื้อหาไม่หายวูบระหว่าง animation ปิด)
+  const drawerOpen = !!urlOrderId;
+  const [selectedId, setSelectedId] = useState<string | null>(urlOrderId);
+  if (urlOrderId && urlOrderId !== selectedId) setSelectedId(urlOrderId);
   const selectedOrder = orders.find((o) => o._id === selectedId) ?? null;
+  const openDetail = (id: string) =>
+    router.replace(`/owner/production?tab=${activeTab}&id=${encodeURIComponent(id)}`, { scroll: false });
+  const closeDrawer = () => router.replace(`/owner/production?tab=${activeTab}`, { scroll: false });
 
   // ── แท็บ 3: ประวัติการผลิต — เลือกดูแบบรายวัน/รายเดือน/รายปี ──
   const [historyViewMode, setHistoryViewMode] = useState<HistoryViewMode>("month");
@@ -321,8 +330,10 @@ export function useProductionViewModel() {
 
     // รายละเอียด (ใช้ร่วม)
     selectedOrder, drawerOpen,
-    onView: (o: ProductionOrder) => { setSelectedId(o._id); setDrawerOpen(true); },
-    closeDrawer: () => setDrawerOpen(false),
+    onView: (o: ProductionOrder) => openDetail(o._id),
+    closeDrawer,
+    // id ใน URL ไม่มีใน list (ผิด/ถูกลบ/เก่ากว่า 200 ใบ) — drawer ต้องบอก ไม่ใช่ว่างเปล่า
+    isDetailNotFound: drawerOpen && ordersQ.isSuccess && !selectedOrder,
 
     isFinalStatus, getNextStatus,
     onChangeStatus, onAdvanceStatus, onCancelOrder,

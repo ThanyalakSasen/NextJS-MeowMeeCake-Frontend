@@ -15,13 +15,14 @@ import { useTranslations, useLocale } from "next-intl";
 import { preorderRoundsService } from "@/services/preorderRounds";
 import { preordersService } from "@/services/preorders";
 import { productsService } from "@/services/products";
+import { paymentsService } from "@/services/payments";
 import { usePermission } from "@/context/PermissionsContext";
-import { alert } from "@/lib/alert";
+import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { OrderStatus, RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
 import type { Preorder } from "@/types/preorder";
-import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus } from "./preorderStatus";
+import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 
 export type TabKey = "rounds" | "orders";
 const TAB_KEYS: TabKey[] = ["rounds", "orders"];
@@ -35,13 +36,15 @@ export function usePreOrderRoundViewModel() {
   const searchParams = useSearchParams();
 
   const tabParam = searchParams.get("tab");
-  const activeTab: TabKey = TAB_KEYS.includes(tabParam as TabKey) ? (tabParam as TabKey) : "rounds";
+  // ?id=<preorderId> (ลิงก์จากแจ้งเตือน/LINE — BACKLOG2 §8) เปิด drawer พรีออเดอร์นั้น · ไม่ระบุ tab มา = ไปแท็บคำสั่งซื้อ
+  const urlOrderId = searchParams.get("id");
+  const activeTab: TabKey = TAB_KEYS.includes(tabParam as TabKey) ? (tabParam as TabKey) : urlOrderId ? "orders" : "rounds";
   const setActiveTab = (key: string) => router.replace(`/owner/orders/preOrderRound?tab=${key}`, { scroll: false });
 
   // ── สินค้าพรีออเดอร์ (ใช้เป็นตัวเลือกตอนเพิ่มสินค้าเข้ารอบ) ──
   const productsQ = useQuery({
     queryKey: ["products", "preorder-type"],
-    queryFn: () => productsService.list({ limit: 200, product_type: "preorder" }),
+    queryFn: () => productsService.list({ limit: 200, is_preorder: true }),
   });
   const preorderProducts = productsQ.data?.data ?? [];
 
@@ -218,8 +221,11 @@ export function usePreOrderRoundViewModel() {
 
   const roundOptions = useMemo(() => rounds.map((r) => ({ value: r._id, label: r.round_name })), [rounds]);
 
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [orderDrawerOpen, setOrderDrawerOpen] = useState(false);
+  // drawer พรีออเดอร์ผูกกับ ?id= (แพทเทิร์นเดียวกับ Manage Orders) — ดึงรายตัวด้วย id จึงเปิดได้แม้ไม่อยู่ในหน้าตาราง
+  // · จำ id ล่าสุดไว้แม้ปิดแล้ว (เนื้อหาไม่หายวูบระหว่าง animation ปิด) — ปรับ state ระหว่าง render ตอน id ใน URL เปลี่ยน
+  const orderDrawerOpen = !!urlOrderId;
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(urlOrderId);
+  if (urlOrderId && urlOrderId !== selectedOrderId) setSelectedOrderId(urlOrderId);
   const orderDetailQ = useQuery({
     queryKey: ["preorders", "detail", selectedOrderId],
     queryFn: () => preordersService.get(selectedOrderId as string),
@@ -227,8 +233,56 @@ export function usePreOrderRoundViewModel() {
   });
   const selectedOrder = orderDetailQ.data?.data ?? null;
 
-  const onViewOrder = (o: Preorder) => { setSelectedOrderId(o._id); setOrderDrawerOpen(true); };
-  const closeOrderDrawer = () => setOrderDrawerOpen(false);
+  // ── การชำระเงินของพรีออเดอร์ (backend #55) — ใบผลิตนับเฉพาะพรีออเดอร์ที่จ่ายแล้ว และที่ยังไม่จ่ายเมื่อเลย
+  //    payment_due_at / ปิดรอบ ถูกยกเลิกอัตโนมัติ → แอดมินต้องตรวจสลิปจากหน้านี้ได้ (เดิมไม่มีทางยืนยันเลย)
+  //    สลิป/สถานะอยู่ที่ resource Payments ไม่ใช่ field บน preorder (เหมือน Manage Orders)
+  const paymentPerm = usePermission("payments");
+  const paymentQ = useQuery({
+    queryKey: ["payments", "by-preorder", selectedOrderId],
+    queryFn: () => paymentsService.listByPreorder(selectedOrderId as string),
+    enabled: !!selectedOrderId && orderDrawerOpen && paymentPerm.view,
+  });
+  const selectedPayment = paymentQ.data?.data[0] ?? null; // ใหม่สุดก่อน
+
+  const verifyPayment = useMutation({
+    mutationFn: ({ paymentId, approved }: { paymentId: string; approved: boolean }) =>
+      paymentsService.verify(paymentId, approved),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["preorders"] });
+      qc.invalidateQueries({ queryKey: ["payments", "by-preorder", selectedOrderId] });
+    },
+  });
+
+  const onApprovePayment = (paymentId: string) => {
+    verifyPayment.mutate(
+      { paymentId, approved: true },
+      {
+        onSuccess: () => alert.success(t("orders.paymentVerified", { no: selectedOrder?.preorder_no ?? "" })),
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.paymentVerifyFailed")),
+      },
+    );
+  };
+
+  // ปฏิเสธ = payment "failed" — ลูกค้าแนบสลิปใหม่ได้ (กลับมา pending) แต่ถ้าเลยกำหนดชำระแล้วจะถูกยกเลิกอัตโนมัติ
+  const onRejectPayment = async (paymentId: string) => {
+    const ok = await confirmAlert(t("preorderRound.rejectPaymentConfirm"), {
+      title: t("preorderRound.rejectPayment"),
+      confirmText: t("preorderRound.rejectPayment"),
+      danger: true,
+    });
+    if (!ok) return;
+    verifyPayment.mutate(
+      { paymentId, approved: false },
+      {
+        onSuccess: () => alert.success(t("preorderRound.paymentRejected", { no: selectedOrder?.preorder_no ?? "" })),
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.paymentRejectFailed")),
+      },
+    );
+  };
+
+  const onViewOrder = (o: Preorder) =>
+    router.replace(`/owner/orders/preOrderRound?tab=orders&id=${encodeURIComponent(o._id)}`, { scroll: false });
+  const closeOrderDrawer = () => router.replace(`/owner/orders/preOrderRound?tab=${activeTab}`, { scroll: false });
 
   const invalidateOrders = () => {
     qc.invalidateQueries({ queryKey: ["preorders"] });
@@ -301,10 +355,13 @@ export function usePreOrderRoundViewModel() {
     orderRows, orderTotal: ordersFiltered.length, orderStats, roundOptions,
     isOrdersLoading: preordersQ.isLoading, isOrdersError: preordersQ.isError, refetchOrders: () => preordersQ.refetch(),
 
-    selectedOrder, orderDrawerOpen, isOrderDetailLoading: orderDetailQ.isLoading,
+    selectedOrder, orderDrawerOpen, isOrderDetailLoading: orderDetailQ.isLoading || paymentQ.isLoading,
+    isOrderDetailError: orderDetailQ.isError,
+    selectedPayment, canViewPayment: paymentPerm.view, canApprovePayment: paymentPerm.approve,
+    verifyingPayment: verifyPayment.isPending, onApprovePayment, onRejectPayment,
     onViewOrder, closeOrderDrawer,
 
-    isFinalOrderStatus, getNextOrderStatus,
+    isFinalOrderStatus, getNextOrderStatus, paymentDueState,
     onAdvanceOrderStatus, onCancelOrder,
   };
 }

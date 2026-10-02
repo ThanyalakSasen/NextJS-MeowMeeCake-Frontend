@@ -9,22 +9,22 @@
 // 2 จุดที่ต้อง normalize ทุกครั้งที่อ่าน:
 //  1) avg_rating — backend เก็บเป็น Mongoose Decimal128 คืนมาเป็น { $numberDecimal: "4.8" } ไม่ใช่
 //     number ตรง ๆ (RatingDisplay เรียก .toFixed() ตรง ๆ จะพังทันทีถ้าไม่แปลงก่อน)
-//  2) product_type — สินค้าเก่าในฐานข้อมูลจริงบางส่วนยังมีค่า "ready" ค้างอยู่ (ก่อน schema เปลี่ยน
-//     enum เป็น "inStore"/"online"/"preorder") Mongoose ไม่ validate ย้อนหลังตอนอ่าน จึงยังอ่านออกมา
-//     เป็น "ready" ได้อยู่ — map เป็น "inStore" ให้ที่นี่กัน UI hardcode enum ใหม่พังกับข้อมูลเก่า
-//     (แก้ที่ต้นตอจริง ๆ ต้อง migrate ข้อมูลใน DB — ยังไม่ได้ทำ)
+//  2) is_preorder — backend #52 เปลี่ยนจาก product_type (string) / product_types (array) เป็น boolean
+//     ถ้า response ยังเป็นรุ่นเก่า (backend ยังไม่ deploy / เอกสารที่ยังไม่ migrate) derive จากฟิลด์เดิมให้
+//     ที่นี่จุดเดียว — ที่เหลือของแอปอ่านแค่ is_preorder
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
-import type { Product, ProductInput, ProductListParams, ProductType } from "@/types/product";
+import type { Product, ProductInput, ProductListParams } from "@/types/product";
 
 const BASE = "/admin/products";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-function normalizeProductType(raw: unknown): ProductType {
-  if (raw === "ready") return "inStore"; // ข้อมูลเก่าก่อน schema เปลี่ยน enum
-  return raw as ProductType;
+function normalizeIsPreorder(raw: any): boolean {
+  if (typeof raw.is_preorder === "boolean") return raw.is_preorder;
+  if (Array.isArray(raw.product_types)) return raw.product_types.includes("preorder"); // รุ่น 2026-09-24
+  return raw.product_type === "preorder"; // รุ่นแรก
 }
 
 function normalizeRating(raw: any): number | undefined {
@@ -37,9 +37,13 @@ function normalizeRating(raw: any): number | undefined {
 /** export ไว้ให้ services/pos.ts เรียกซ้ำได้ — resolveScan() (backend) คืน product shape เดียวกับ
  *  list/get เป๊ะ (presentProduct() ใช้ร่วมกันฝั่ง backend) จึงต้อง normalize เหมือนกันทุกจุด */
 export function toProduct(raw: any): Product {
+  // ตัดฟิลด์ประเภทรุ่นเก่าทิ้ง — กันหลุดกลับไปใน body ของ PATCH แล้วโดน 400
+  const rest = { ...raw };
+  delete rest.product_type;
+  delete rest.product_types;
   return {
-    ...raw,
-    product_type: normalizeProductType(raw.product_type),
+    ...rest,
+    is_preorder: normalizeIsPreorder(raw),
     avg_rating: normalizeRating(raw.avg_rating),
   };
 }

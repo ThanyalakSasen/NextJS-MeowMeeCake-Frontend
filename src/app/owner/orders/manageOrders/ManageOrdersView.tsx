@@ -168,6 +168,7 @@ export function ManageOrdersView(vm: VM) {
         onClose={vm.closeDrawer}
       >
         {vm.isDetailLoading && <p className="py-10 text-center text-gray-500">{t("common.loading")}</p>}
+        {vm.isDetailError && !vm.isDetailLoading && <p className="py-10 text-center text-gray-500">{t("orders.orderNotFound")}</p>}
         {vm.selectedOrder && !vm.isDetailLoading && (
           <OrderDetailContent
             order={vm.selectedOrder}

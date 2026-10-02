@@ -24,11 +24,11 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { Product } from "@/types/product";
 import { refId } from "@/lib/refId";
+import { nextRawInput, thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import { addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, type CartLine } from "./posCart";
 
-// backend ไม่มี product_type "ready" (จริง ๆ คือ "inStore"/"online") และ filter ใช้ค่าเดียวไม่ได้
-// สองค่าพร้อมกัน — โหลดทั้งหมดมาแล้วตัด "preorder" ออกฝั่ง client แทน (POS ขายเฉพาะของพร้อมขาย)
-const CATALOG_PARAMS = { limit: 200 } as const;
+// POS ขายเฉพาะสินค้าปกติ (พร้อมขาย มีสต็อก) — พรีออเดอร์ขายผ่านรอบพรีออเดอร์เท่านั้น
+const CATALOG_PARAMS = { limit: 200, is_preorder: false } as const;
 
 /** ต้องตรงกับ GUEST_CUSTOMER_EMAIL ใน backend scripts/seed.ts */
 const GUEST_CUSTOMER_EMAIL = "guest@meowmeecake.local";
@@ -41,7 +41,10 @@ export function usePOSViewModel() {
   const perm = usePermission("orders");
 
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [scanCode, setScanCode] = useState("");
+  // เก็บ "ข้อความดิบ" ตามปุ่มที่กดจริง แล้วแปลงแป้นไทย→QWERTY รอบเดียวตอนโชว์ (scanCode) — ห้ามเก็บค่าที่แปลงแล้ว
+  // แล้วแปลงซ้ำ: "-"/"/" ที่แปลงไปแล้วจะถูกตีความเป็นปุ่ม 3/2 ของแป้นไทยอีกรอบ (ดู nextRawInput)
+  const [scanRaw, setScanRaw] = useState("");
+  const scanCode = thaiLayoutToQwerty(scanRaw);
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string>("all");
   const [customerName, setCustomerName] = useState("");
@@ -69,7 +72,8 @@ export function usePOSViewModel() {
     const q = search.trim().toLowerCase();
     return (catalogQ.data?.data ?? []).filter(
       (p) =>
-        p.product_type !== "preorder" &&
+        !p.is_preorder && // กันซ้ำเผื่อ backend รุ่นเก่าที่ยังไม่รู้จัก ?is_preorder=
+
         (categoryId === "all" || refId(p.category_id) === categoryId) &&
         (!q || p.product_name_th.toLowerCase().includes(q)),
     );
@@ -79,7 +83,9 @@ export function usePOSViewModel() {
   // ยังไม่รองรับ variants (0 สินค้าในระบบจริงใช้ variant เลย — ดู backend docs/BACKLOG2.md §9)
   // เจอ variants ค่อยว่ากันทีหลังตอนมีสินค้าจริงใช้งาน ตอนนี้เพิ่มตัวสินค้าหลักตรง ๆ
   const scan = useMutation({
-    mutationFn: (code: string) => posService.scan(code),
+    // แป้นพิมพ์ OS เป็นไทยตอนยิง → เครื่องสแกนส่ง "ยนหขจ..." แทน "pos-0..." (ดู constants/thaiKeyboard.ts)
+    // + lowercase กัน Caps Lock (รหัส pos-/pre- เป็นตัวเล็ก, _id เป็น hex ไม่สนตัวพิมพ์)
+    mutationFn: (code: string) => posService.scan(thaiLayoutToQwerty(code).trim().toLowerCase()),
     onSuccess: (res) => {
       const stock = res.product.product_stock_quantity ?? 0;
       if (stock <= 0) {
@@ -90,7 +96,7 @@ export function usePOSViewModel() {
       alert.success(t("pos.scanAdded", { name: res.product.product_name_th }));
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.scanFailed")),
-    onSettled: () => setScanCode(""),
+    onSettled: () => setScanRaw(""),
   });
 
   // scan.mutate เปลี่ยน reference ทุก render (useMutation ไม่การันตี stable identity) — เก็บผ่าน ref
@@ -108,7 +114,7 @@ export function usePOSViewModel() {
   // ตามปกติ ไม่ไปแทรก กัน hijack การพิมพ์จริงของผู้ใช้
   //
   // ⚠️ ต้อง mount effect นี้ "ครั้งเดียว" (dependency array ว่างเปล่า) ห้ามผูกกับ scan/scan.mutate ตรง ๆ
-  // เพราะ reference เปลี่ยนทุก render — ถ้าผูกไว้ effect จะ cleanup+re-run ใหม่ทุกครั้งที่ setScanCode
+  // เพราะ reference เปลี่ยนทุก render — ถ้าผูกไว้ effect จะ cleanup+re-run ใหม่ทุกครั้งที่ setScanRaw
   // ทำให้ re-render (คือทุกตัวอักษรที่พิมพ์เลย) แล้ว buffer ถูกรีเซ็ตเป็นค่าว่างใหม่ทุกครั้ง เหลือแค่
   // ตัวอักษรตัวสุดท้ายก่อนกด Enter เท่านั้น (เจอบั๊กนี้จริงตอนทดสอบเบราว์เซอร์ — ดู docs/BACKLOG.md)
   useEffect(() => {
@@ -134,7 +140,7 @@ export function usePOSViewModel() {
       }
       if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
         buffer += e.key;
-        setScanCode(buffer);
+        setScanRaw(buffer); // buffer = ข้อความดิบอยู่แล้ว
       }
     }
 
@@ -205,7 +211,10 @@ export function usePOSViewModel() {
     refetch: () => catalogQ.refetch(),
 
     cart, itemCount, subtotal, discount, total,
-    scanCode, setScanCode,
+    // ช่องสแกนโชว์รหัสที่แปลงจากแป้นไทยแล้ว (ผู้ใช้เห็น "pos-..." ไม่ใช่ "ยนห...")
+    // ช่องสแกน (controlled) โชว์ scanCode ที่แปลงแล้ว — onChange ได้ค่าแปลงแล้ว + ตัวใหม่ดิบ → ต่อเข้าข้อความดิบเดิม
+    scanCode,
+    setScanCode: (v: string) => setScanRaw((raw) => nextRawInput(raw, thaiLayoutToQwerty(raw), v)),
     onScan: (code: string) => { if (code.trim()) scan.mutate(code.trim()); },
     scanning: scan.isPending,
     search, setSearch,

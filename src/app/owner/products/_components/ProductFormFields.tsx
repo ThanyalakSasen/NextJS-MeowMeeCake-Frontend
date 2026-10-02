@@ -3,6 +3,7 @@
 // <FormItem> จัดการ label + error + validation ให้เอง
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
+import { Radio } from "antd";
 import type { Rule } from "antd/es/form";
 import { Input, TextArea, InputNumber, Select, Switch, Form, FormItem } from "@/components/base";
 import { productCategoriesService } from "@/services/productCategories";
@@ -13,10 +14,9 @@ export function ProductFormFields() {
   const t = useTranslations();
   const cats = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
   const units = useQuery({ queryKey: ["units", { usage: "Product" }], queryFn: () => unitsService.list({ usage_context: "Product" }) });
-  // ซ่อน/โชว์ field ตาม product_type ที่เลือกอยู่ (preorder ต้องการ preorder_config แทน stock)
+  // ซ่อน/โชว์ field ตามประเภทที่เลือกอยู่ (พรีออเดอร์ต้องการ preorder_config แทน stock)
   const form = Form.useFormInstance();
-  const productType = Form.useWatch("product_type", form);
-  const isPreorder = productType === "preorder";
+  const isPreorder = Form.useWatch("is_preorder", form) === true;
 
   const required: Rule[] = [{ required: true, message: t("validation.required") }];
   const price: Rule[] = [
@@ -51,19 +51,32 @@ export function ProductFormFields() {
         <Select loading={units.isLoading} options={(units.data?.data ?? []).map((u) => ({ value: u._id, label: u.unit_name }))} />
       </FormItem>
 
-      <FormItem name="product_type" label={t("fields.product_type")}>
-        <Select
+      {/* ช่องทางขาย (เว็บ/หน้าร้าน) ไม่ได้ผูกกับสินค้าแล้ว — เลือกแค่ปกติ/พรีออเดอร์ (ซ่อนจากเว็บใช้ "แสดงผล") */}
+      <FormItem name="is_preorder" label={t("fields.product_type")}>
+        <Radio.Group
+          optionType="button"
+          buttonStyle="solid"
           options={[
-            { value: "inStore", label: t("enums.productType.inStore") },
-            { value: "online", label: t("enums.productType.online") },
-            { value: "preorder", label: t("enums.productType.preorder") },
+            { value: false, label: t("enums.productType.normal") },
+            { value: true, label: t("enums.productType.preorder") },
           ]}
         />
       </FormItem>
-      {/* backend ห้ามส่ง product_stock_quantity ตอน type=preorder (ใช้ preorder_config แทน) */}
+      {/* backend ห้ามส่ง product_stock_quantity ตอนเป็นพรีออเดอร์ (ใช้ preorder_config แทน) */}
       {!isPreorder && (
         <FormItem name="product_stock_quantity" label={t("fields.product_stock_quantity")} rules={[{ type: "number", min: 0, message: t("validation.nonNegative") }]}>
           <InputNumber min={0} />
+        </FormItem>
+      )}
+      {/* เกณฑ์สินค้าใกล้หมดรายสินค้า — มีความหมายเฉพาะสินค้าที่มีสต็อก (ไม่ใช่ preorder) */}
+      {!isPreorder && (
+        <FormItem
+          name="low_stock_threshold"
+          label={t("fields.low_stock_threshold")}
+          extra={t("products.lowStockThresholdHint")}
+          rules={[{ type: "integer", min: 0, message: t("products.lowStockThresholdInvalid") }]}
+        >
+          <InputNumber min={0} precision={0} placeholder="5" />
         </FormItem>
       )}
 

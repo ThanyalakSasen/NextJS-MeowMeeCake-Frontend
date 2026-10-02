@@ -1,5 +1,6 @@
 "use client";
 // เนื้อหาใน DetailDrawer ของคำสั่งซื้อเค้กวันเกิด (Preorder) — presentational ล้วน
+// payment มาจาก paymentsService.listByPreorder (คนละ resource กับ preorder — สลิป/สถานะตรวจอยู่ในนั้น)
 import { Divider, Tag } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Button } from "@/components/base";
@@ -8,6 +9,7 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Preorder } from "@/types/preorder";
 import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
+import { SlipImage } from "../../_components/SlipImage";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -18,6 +20,8 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
   const isCancelled = order.order_status === "cancelled";
   const final = vm.isFinalOrderStatus(order.order_status);
   const next = vm.getNextOrderStatus(order.order_status);
+  const dueState = vm.paymentDueState(order);
+  const payment = vm.selectedPayment;
 
   return (
     <div className="flex flex-col gap-4">
@@ -64,7 +68,66 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
           <span className="text-gray-600">{t("orders.orderedAt")}</span>
           <span className="font-medium text-gray-800">{formatDate(order.created_at, locale, { withTime: true })}</span>
         </div>
+        {dueState && order.payment_due_at && (
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">{t("preorderRound.paymentDue")}</span>
+            <span className={`font-medium ${dueState === "overdue" ? "text-danger" : "text-gray-800"}`}>
+              {formatDate(order.payment_due_at, locale, { withTime: true })}
+              {dueState === "overdue" && ` · ${t("preorderRound.paymentOverdue")}`}
+            </span>
+          </div>
+        )}
       </div>
+
+      {vm.canViewPayment && (
+        <>
+          <Divider className="!my-0" />
+          <div>
+            <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.paymentProof")}</p>
+            {payment?.slip_image_url ? (
+              <div className="flex items-start gap-3">
+                <SlipImage url={payment.slip_image_url} />
+                <div className="min-w-0 flex-1">
+                  {/* ตัดสินจาก status ไม่ใช่ verified_at — สลิปที่ถูกปฏิเสธแล้วลูกค้าแนบใหม่ กลับเป็น pending แต่ verified_at ยังค้างค่าเดิม */}
+                  {payment.status === "pending" ? (
+                    <>
+                      <p className="mb-1.5 text-sm font-medium text-amber-700">{t("orders.slipAwaitingReview")}</p>
+                      {vm.canApprovePayment && (
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="small"
+                            type="primary"
+                            icon={actionIcon("verify", "small")}
+                            loading={vm.verifyingPayment}
+                            onClick={() => vm.onApprovePayment(payment._id)}
+                          >
+                            {t("orders.verifyPayment")}
+                          </Button>
+                          <Button
+                            size="small"
+                            danger
+                            icon={actionIcon("cancelAction", "small")}
+                            disabled={vm.verifyingPayment}
+                            onClick={() => vm.onRejectPayment(payment._id)}
+                          >
+                            {t("preorderRound.rejectPayment")}
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  ) : payment.status === "failed" ? (
+                    <p className="text-sm font-medium text-danger">{t("preorderRound.slipRejected")}</p>
+                  ) : (
+                    <StatusBadge group="paymentStatus" value={payment.status} />
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600">{t("orders.noSlipYet")}</p>
+            )}
+          </div>
+        </>
+      )}
 
       {order.order_type === "delivery" && order.delivery_address && (
         <>

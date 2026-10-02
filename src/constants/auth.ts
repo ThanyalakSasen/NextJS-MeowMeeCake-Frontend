@@ -19,6 +19,8 @@ export const AUTH_GATE: "cookie" | "client" = process.env.NEXT_PUBLIC_AUTH_GATE 
 export const LOGIN_PATH = "/login";
 export const HOME_PATH = "/owner/dashboard";
 export const ACCESS_DENIED_PATH = "/owner/access-denied";
+/** หน้าโปรไฟล์ (เชื่อม LINE) — ต้องตรงกับ LINE_LINK_RETURN_URL ของ backend */
+export const PROFILE_PATH = "/profile";
 
 /** ช่องทาง sync การ logout ข้ามแท็บ */
 export const AUTH_BROADCAST_CHANNEL = "mmc-auth";

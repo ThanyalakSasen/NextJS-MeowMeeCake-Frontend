@@ -6,7 +6,9 @@ import type { Payment, PaymentInput } from "@/types/payment";
 const BASE = "/admin/payments";
 
 export const paymentsService = {
+  /** เรียงใหม่สุดก่อน (backend sort created_at: -1) — [0] = รายการล่าสุด */
   listByOrder: (orderId: string) => http.getList<Payment>(BASE, { params: { order_id: orderId } }),
+  listByPreorder: (preorderId: string) => http.getList<Payment>(BASE, { params: { preorder_id: preorderId } }),
   create: (body: PaymentInput) => http.post<ItemResponse<Payment>>(BASE, body),
   /** approved=true → status "paid" (+ propagate ไป order.payment_status) · false → "failed" */
   verify: (id: string, approved: boolean) =>

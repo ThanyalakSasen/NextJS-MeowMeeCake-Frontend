@@ -75,7 +75,6 @@
     "employeesEdit": "Edit Employee",
     "permissions": "Permissions",
     "userLog": "Activity Log",
-    "attendance": "Attendance",
     "storeDesign": "Banners",
     "notificationsHistory": "Notification History",
     "logout": "Log out"
@@ -151,7 +150,6 @@
     "Bundle": "Bundle",
     "Banner": "Banner",
     "Expense": "Expense",
-    "Attendance": "Attendance record",
     "Notification": "Notification",
     "Review": "Customer review",
     "Address": "Delivery address",
@@ -183,6 +181,7 @@
     "yield_per_batch": "Yield per batch",
     "product_type": "Product type",
     "product_stock_quantity": "Stock quantity",
+    "low_stock_threshold": "Alert when stock is at or below (pcs)",
     "avg_rating": "Average rating",
     "review_count": "Review count",
     "preorder_config": "Pre-order settings",
@@ -334,8 +333,7 @@
       "takeaway": "Takeaway"
     },
     "productType": {
-      "inStore": "In-store",
-      "online": "Online",
+      "normal": "Regular",
       "preorder": "Pre-order"
     },
     "productionStatus": {
@@ -428,14 +426,6 @@
       "employee": "Employee",
       "finance": "Finance",
       "system": "System"
-    },
-    "attendanceStatus": {
-      "มาทำงาน": "Present",
-      "มาสาย": "Late",
-      "ขาดงาน": "Absent",
-      "ลาป่วย": "Sick leave",
-      "ลากิจ": "Personal leave",
-      "วันหยุด": "Day off"
     },
     "expenseCategory": {
       "วัตถุดิบ": "Ingredients",
@@ -563,6 +553,8 @@
     "deleted": "Deleted",
     "deleteFailed": "Delete failed",
     "saleLtPrice": "Sale price must be lower than the price",
+    "lowStockThresholdHint": "Leave blank = 5",
+    "lowStockThresholdInvalid": "Must be a whole number, 0 or more",
     "imageUploadFailed": "Could not upload the image. Please try again."
   },
   "productStock": {
@@ -632,11 +624,20 @@
     "slipAlt": "Payment slip {no}",
     "slipAwaitingReview": "Customer attached a slip — awaiting review",
     "noSlipYet": "Customer hasn't attached a slip yet",
+    "slipLoadFailed": "Can't open slip",
+    "orderNotFound": "Order not found, or the link is invalid",
     "totalLabel": "Total",
     "cancelledBanner": "This order has been cancelled",
     "unpaidPreorderWarning": "This pre-order needs payment before production can start"
   },
   "preorderRound": {
+    "paymentDue": "Payment due",
+    "paymentOverdue": "Payment overdue",
+    "rejectPayment": "Reject slip",
+    "rejectPaymentConfirm": "Reject this slip? The customer can upload a new one, but if the payment deadline has passed the pre-order will be cancelled automatically.",
+    "paymentRejected": "Rejected the slip for {no}",
+    "paymentRejectFailed": "Could not reject the slip",
+    "slipRejected": "Slip rejected — waiting for the customer to upload a new one",
     "title": "Pre-order Rounds",
     "description": "Manage advance birthday-cake ordering rounds and view customers' orders within each round",
     "tabRounds": "Pre-order Rounds",
@@ -868,6 +869,7 @@
     "empty": "No stock movements yet"
   },
   "production": {
+    "orderNotFound": "Production order not found, or the link is invalid",
     "title": "Manage Production",
     "tabPlan": "Production Plan / Orders",
     "tabStatus": "Production Status",
@@ -1200,27 +1202,6 @@
     "exportEmpty": "No data to export for this filter",
     "exportSuccess": "Exported {n} activity entries"
   },
-  "attendance": {
-    "title": "Time Clock",
-    "description": "Record your own check-in and check-out times",
-    "descriptionUser": "Check-in and check-out times for {name}",
-    "checkIn": "Check in",
-    "checkOut": "Check out",
-    "checkInTime": "Check-in time",
-    "checkOutTime": "Check-out time",
-    "checkedIn": "Checked in successfully",
-    "checkedOut": "Checked out successfully",
-    "checkInFailed": "Check-in failed",
-    "checkOutFailed": "Check-out failed",
-    "historyTitle": "My attendance history (last 30 days)",
-    "colDate": "Date",
-    "colIn": "In",
-    "colOut": "Out",
-    "colHours": "Hours",
-    "colStatus": "Status",
-    "hoursUnit": "h",
-    "empty": "No attendance history yet"
-  },
   "finance": {
     "expensesTitle": "Expense Log",
     "expensesDescription": "Tracking {n} expenses this month",
@@ -1289,9 +1270,10 @@
     "trendColProfit": "Profit",
     "statementTitle": "Profit & Loss Statement",
     "rowIncomeHeader": "Income",
-    "rowReadySales": "In-store Sales",
-    "rowOnlineSales": "Online Sales",
+    "rowWebSales": "Website Sales",
+    "rowPosSales": "In-store Sales",
     "rowPreorderSales": "Pre-order Sales",
+    "rowOtherSales": "Legacy orders (channel unknown)",
     "rowTotalIncome": "Total Income",
     "rowCogsHeader": "Cost of Goods Sold (COGS)",
     "rowTotalCogs": "Total COGS",
@@ -1436,5 +1418,24 @@
     "title": "You don't have access to this page",
     "description": "Your account hasn't been granted access to this menu. Please contact the shop owner or an administrator to request access.",
     "back": "Back to dashboard"
+  },
+  "profile": {
+    "title": "My profile",
+    "line": {
+      "title": "LINE notifications",
+      "statusLinked": "Connected",
+      "statusNotLinked": "Not connected",
+      "connect": "Connect LINE",
+      "unlink": "Disconnect",
+      "addFriendHint": "Connect LINE and add MeowMeeCake as a friend to get order notifications.",
+      "loginRequired": "Please sign in again, then tap Connect LINE again.",
+      "linkedHint": "Stay friends with MeowMeeCake on LINE — if you block it, you won't receive notifications.",
+      "linkedSuccess": "LINE connected",
+      "linkFailed": "Could not connect. Please try again.",
+      "unavailable": "LINE connection isn't available right now",
+      "unlinkConfirm": "Disconnect LINE? You will no longer get notifications on LINE.",
+      "unlinkedSuccess": "LINE disconnected",
+      "unlinkFailed": "Could not disconnect"
+    }
   }
 }
