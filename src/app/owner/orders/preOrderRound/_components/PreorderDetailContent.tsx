@@ -1,15 +1,15 @@
 "use client";
 // เนื้อหาใน DetailDrawer ของคำสั่งซื้อเค้กวันเกิด (Preorder) — presentational ล้วน
 // payment มาจาก paymentsService.listByPreorder (คนละ resource กับ preorder — สลิป/สถานะตรวจอยู่ในนั้น)
-import { Divider, Image, Tag } from "antd";
+import { Divider, Tag } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Button } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
-import { resolveUploadUrl } from "@/lib/uploads";
 import type { Preorder } from "@/types/preorder";
 import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
+import { SlipImage } from "../../_components/SlipImage";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -86,13 +86,7 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
             <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.paymentProof")}</p>
             {payment?.slip_image_url ? (
               <div className="flex items-start gap-3">
-                <Image
-                  src={resolveUploadUrl(payment.slip_image_url)}
-                  alt={t("orders.paymentProof")}
-                  width={72}
-                  height={72}
-                  className="rounded-lg border border-gray-200 !object-cover"
-                />
+                <SlipImage url={payment.slip_image_url} />
                 <div className="min-w-0 flex-1">
                   {/* ตัดสินจาก status ไม่ใช่ verified_at — สลิปที่ถูกปฏิเสธแล้วลูกค้าแนบใหม่ กลับเป็น pending แต่ verified_at ยังค้างค่าเดิม */}
                   {payment.status === "pending" ? (

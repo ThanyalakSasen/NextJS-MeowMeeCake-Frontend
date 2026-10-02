@@ -624,6 +624,7 @@
     "slipAlt": "Payment slip {no}",
     "slipAwaitingReview": "Customer attached a slip — awaiting review",
     "noSlipYet": "Customer hasn't attached a slip yet",
+    "slipLoadFailed": "Can't open slip",
     "totalLabel": "Total",
     "cancelledBanner": "This order has been cancelled",
     "unpaidPreorderWarning": "This pre-order needs payment before production can start"

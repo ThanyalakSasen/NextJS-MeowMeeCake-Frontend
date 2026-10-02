@@ -2,7 +2,7 @@
 // เนื้อหาข้างใน DetailDrawer ของ Manage Orders — presentational ล้วน
 // order มาจาก ordersService.get(id) เสมอ (มี items จริง) · payment มาจาก paymentsService.listByOrder
 // (คนละ resource กับ order — สลิป/verified_at อยู่ในนี้ ไม่ใช่ field บน order)
-import { Divider, Tag, Image } from "antd";
+import { Divider, Tag } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Button } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
@@ -11,6 +11,7 @@ import type { Order } from "@/types/order";
 import type { Payment } from "@/types/payment";
 import { actionIcon } from "@/components/shared/actions";
 import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
+import { SlipImage } from "../../_components/SlipImage";
 
 export function OrderDetailContent({
   order,
@@ -85,17 +86,11 @@ export function OrderDetailContent({
         <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.paymentProof")}</p>
         {payment?.slip_image_url ? (
           <div className="flex items-center gap-3">
-            <Image
-              src={payment.slip_image_url}
-              alt={t("orders.paymentProof")}
-              width={56}
-              height={56}
-              className="rounded-lg border border-gray-200 !object-cover"
-            />
+            <SlipImage url={payment.slip_image_url} size={56} />
             <div className="min-w-0 flex-1">
-              {payment.verified_at ? (
-                <StatusBadge group="paymentStatus" value={payment.status === "paid" ? "paid" : "failed"} />
-              ) : (
+              {/* ตัดสินจาก status ไม่ใช่ verified_at — สลิปที่ถูกปฏิเสธแล้วลูกค้าแนบใหม่ backend เปลี่ยนกลับเป็น
+                  pending แต่ verified_at ยังค้างค่าตอนปฏิเสธ (เดิมเลยไม่มีปุ่มให้ตรวจสลิปใหม่) */}
+              {payment.status === "pending" ? (
                 <>
                   <p className="mb-1.5 text-sm font-medium text-amber-700">{t("orders.slipAwaitingReview")}</p>
                   {canApprovePayment && (
@@ -104,6 +99,8 @@ export function OrderDetailContent({
                     </Button>
                   )}
                 </>
+              ) : (
+                <StatusBadge group="paymentStatus" value={payment.status} />
               )}
             </div>
           </div>
