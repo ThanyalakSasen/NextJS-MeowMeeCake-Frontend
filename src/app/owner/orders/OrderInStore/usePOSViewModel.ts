@@ -24,6 +24,7 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { Product } from "@/types/product";
 import { refId } from "@/lib/refId";
+import { thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import { addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, type CartLine } from "./posCart";
 
 // backend ไม่มี product_type "ready" (จริง ๆ คือ "inStore"/"online") และ filter ใช้ค่าเดียวไม่ได้
@@ -79,7 +80,9 @@ export function usePOSViewModel() {
   // ยังไม่รองรับ variants (0 สินค้าในระบบจริงใช้ variant เลย — ดู backend docs/BACKLOG2.md §9)
   // เจอ variants ค่อยว่ากันทีหลังตอนมีสินค้าจริงใช้งาน ตอนนี้เพิ่มตัวสินค้าหลักตรง ๆ
   const scan = useMutation({
-    mutationFn: (code: string) => posService.scan(code),
+    // แป้นพิมพ์ OS เป็นไทยตอนยิง → เครื่องสแกนส่ง "ยนหขจ..." แทน "pos-0..." (ดู constants/thaiKeyboard.ts)
+    // + lowercase กัน Caps Lock (รหัส pos-/pre- เป็นตัวเล็ก, _id เป็น hex ไม่สนตัวพิมพ์)
+    mutationFn: (code: string) => posService.scan(thaiLayoutToQwerty(code).trim().toLowerCase()),
     onSuccess: (res) => {
       const stock = res.product.product_stock_quantity ?? 0;
       if (stock <= 0) {
@@ -134,7 +137,7 @@ export function usePOSViewModel() {
       }
       if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
         buffer += e.key;
-        setScanCode(buffer);
+        setScanCode(thaiLayoutToQwerty(buffer));
       }
     }
 
@@ -205,7 +208,8 @@ export function usePOSViewModel() {
     refetch: () => catalogQ.refetch(),
 
     cart, itemCount, subtotal, discount, total,
-    scanCode, setScanCode,
+    // ช่องสแกนโชว์รหัสที่แปลงจากแป้นไทยแล้ว (ผู้ใช้เห็น "pos-..." ไม่ใช่ "ยนห...")
+    scanCode, setScanCode: (v: string) => setScanCode(thaiLayoutToQwerty(v)),
     onScan: (code: string) => { if (code.trim()) scan.mutate(code.trim()); },
     scanning: scan.isPending,
     search, setSearch,
