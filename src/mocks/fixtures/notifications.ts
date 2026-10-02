@@ -20,7 +20,7 @@ export const notificationsFixture: NotificationDTO[] = [
   },
   {
     _id: "n5", title: "พนักงานเช็คอิน", message: "กานดา แสงเพชร เช็คอินเข้างานแล้ว", type: "info",
-    module: "employee", is_read: true, link: "/owner/attendance", created_at: "2026-09-01T09:02:00.000Z", updated_at: "2026-09-01T09:02:00.000Z",
+    module: "employee", is_read: true, link: "/owner/employees", created_at: "2026-09-01T09:02:00.000Z", updated_at: "2026-09-01T09:02:00.000Z",
   },
   {
     _id: "n6", title: "สต็อกสินค้าใกล้หมด", message: "มัทฉะเค้ก เหลือ 3 ชิ้น", type: "warning",
@@ -48,7 +48,7 @@ export const notificationsFixture: NotificationDTO[] = [
   },
   {
     _id: "n12", title: "พนักงานลาป่วย", message: "วิชัย ศรีสมบัติ แจ้งลาป่วยวันนี้", type: "info",
-    module: "employee", is_read: true, link: "/owner/attendance", created_at: "2026-08-28T08:20:00.000Z", updated_at: "2026-08-28T08:20:00.000Z",
+    module: "employee", is_read: true, link: "/owner/employees", created_at: "2026-08-28T08:20:00.000Z", updated_at: "2026-08-28T08:20:00.000Z",
   },
   {
     _id: "n13", title: "ค่าใช้จ่ายประจำ", message: "ครบกำหนดชำระค่าเช่าร้านเดือนกันยายน", type: "warning",

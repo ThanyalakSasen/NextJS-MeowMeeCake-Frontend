@@ -21,7 +21,7 @@ export const ordersService = {
 
 ## กติกา
 - **ห้าม** ใส่ business logic (filter, คำนวณ, แปลงข้อมูล) — แค่ map endpoint · logic อยู่ ViewModel
-- endpoint พิเศษ (เช่น `POST /attendances/check-in`) เพิ่มเป็น method ใน object เดียวกัน
+- endpoint พิเศษ (เช่น `GET /admin/pos/scan`) เพิ่มเป็น method ใน object เดียวกัน
 - ทำ resource ใหม่: สร้าง `src/types/<resource>.ts` (DTO) ก่อน → แล้วค่อยเขียน service
 - ทดสอบ: MSW handler ต้อง implement endpoint เดียวกันนี้ (`src/mocks/handlers/<resource>.ts`)
 

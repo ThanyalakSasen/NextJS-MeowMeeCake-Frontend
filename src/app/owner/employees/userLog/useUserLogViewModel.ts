@@ -115,7 +115,7 @@ export function useUserLogViewModel() {
       r.roleName,
       t(`enums.userLogAction.${r.action_type}`),
       r.action,
-      r.entity ? t(`entities.${r.entity}`) : "",
+      r.entity ? (t.has(`entities.${r.entity}`) ? t(`entities.${r.entity}`) : t("entities.fallback")) : "",
       r.ip_address ?? "",
     ]);
     exportToCsv(`user-logs_${new Date().toISOString().slice(0, 10)}`, headers, body);

@@ -31,7 +31,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   }, [isError, router, pathname]);
 
   // กั้นหน้าตามสิทธิ์: path ที่ผูก menu_key (constants/menuKeys.ts ROUTE_MENU_MAP) แต่ไม่มีสิทธิ์ view → หน้า access-denied
-  // path ที่ไม่ผูก key (dashboard, attendance ฯลฯ) = login พอ · owner มี view ทุกเมนูเสมอ
+  // path ที่ไม่ผูก key (dashboard ฯลฯ) = login พอ · owner มี view ทุกเมนูเสมอ
   // นี่คือ UX gate — ข้อมูลจริงถูก backend กั้นอยู่แล้วทุก route (403) · สิทธิ์ถูกเพิกถอนระหว่างใช้งาน
   // จะมีผลเมื่อ useCurrentUser refetch (โฟกัสแท็บ / ทุก 60 วินาที)
   const menuKey = resolveMenuKey(pathname);

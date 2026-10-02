@@ -75,7 +75,6 @@
     "employeesEdit": "Edit Employee",
     "permissions": "Permissions",
     "userLog": "Activity Log",
-    "attendance": "Attendance",
     "storeDesign": "Banners",
     "notificationsHistory": "Notification History",
     "logout": "Log out"
@@ -151,7 +150,6 @@
     "Bundle": "Bundle",
     "Banner": "Banner",
     "Expense": "Expense",
-    "Attendance": "Attendance record",
     "Notification": "Notification",
     "Review": "Customer review",
     "Address": "Delivery address",
@@ -429,14 +427,6 @@
       "employee": "Employee",
       "finance": "Finance",
       "system": "System"
-    },
-    "attendanceStatus": {
-      "มาทำงาน": "Present",
-      "มาสาย": "Late",
-      "ขาดงาน": "Absent",
-      "ลาป่วย": "Sick leave",
-      "ลากิจ": "Personal leave",
-      "วันหยุด": "Day off"
     },
     "expenseCategory": {
       "วัตถุดิบ": "Ingredients",
@@ -1202,27 +1192,6 @@
     "changedFields": "Changed fields",
     "exportEmpty": "No data to export for this filter",
     "exportSuccess": "Exported {n} activity entries"
-  },
-  "attendance": {
-    "title": "Time Clock",
-    "description": "Record your own check-in and check-out times",
-    "descriptionUser": "Check-in and check-out times for {name}",
-    "checkIn": "Check in",
-    "checkOut": "Check out",
-    "checkInTime": "Check-in time",
-    "checkOutTime": "Check-out time",
-    "checkedIn": "Checked in successfully",
-    "checkedOut": "Checked out successfully",
-    "checkInFailed": "Check-in failed",
-    "checkOutFailed": "Check-out failed",
-    "historyTitle": "My attendance history (last 30 days)",
-    "colDate": "Date",
-    "colIn": "In",
-    "colOut": "Out",
-    "colHours": "Hours",
-    "colStatus": "Status",
-    "hoursUnit": "h",
-    "empty": "No attendance history yet"
   },
   "finance": {
     "expensesTitle": "Expense Log",
