@@ -24,7 +24,7 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { Product } from "@/types/product";
 import { refId } from "@/lib/refId";
-import { thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
+import { nextRawInput, thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import { addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, type CartLine } from "./posCart";
 
 // POS ขายเฉพาะสินค้าปกติ (พร้อมขาย มีสต็อก) — พรีออเดอร์ขายผ่านรอบพรีออเดอร์เท่านั้น
@@ -41,7 +41,10 @@ export function usePOSViewModel() {
   const perm = usePermission("orders");
 
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [scanCode, setScanCode] = useState("");
+  // เก็บ "ข้อความดิบ" ตามปุ่มที่กดจริง แล้วแปลงแป้นไทย→QWERTY รอบเดียวตอนโชว์ (scanCode) — ห้ามเก็บค่าที่แปลงแล้ว
+  // แล้วแปลงซ้ำ: "-"/"/" ที่แปลงไปแล้วจะถูกตีความเป็นปุ่ม 3/2 ของแป้นไทยอีกรอบ (ดู nextRawInput)
+  const [scanRaw, setScanRaw] = useState("");
+  const scanCode = thaiLayoutToQwerty(scanRaw);
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string>("all");
   const [customerName, setCustomerName] = useState("");
@@ -93,7 +96,7 @@ export function usePOSViewModel() {
       alert.success(t("pos.scanAdded", { name: res.product.product_name_th }));
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.scanFailed")),
-    onSettled: () => setScanCode(""),
+    onSettled: () => setScanRaw(""),
   });
 
   // scan.mutate เปลี่ยน reference ทุก render (useMutation ไม่การันตี stable identity) — เก็บผ่าน ref
@@ -111,7 +114,7 @@ export function usePOSViewModel() {
   // ตามปกติ ไม่ไปแทรก กัน hijack การพิมพ์จริงของผู้ใช้
   //
   // ⚠️ ต้อง mount effect นี้ "ครั้งเดียว" (dependency array ว่างเปล่า) ห้ามผูกกับ scan/scan.mutate ตรง ๆ
-  // เพราะ reference เปลี่ยนทุก render — ถ้าผูกไว้ effect จะ cleanup+re-run ใหม่ทุกครั้งที่ setScanCode
+  // เพราะ reference เปลี่ยนทุก render — ถ้าผูกไว้ effect จะ cleanup+re-run ใหม่ทุกครั้งที่ setScanRaw
   // ทำให้ re-render (คือทุกตัวอักษรที่พิมพ์เลย) แล้ว buffer ถูกรีเซ็ตเป็นค่าว่างใหม่ทุกครั้ง เหลือแค่
   // ตัวอักษรตัวสุดท้ายก่อนกด Enter เท่านั้น (เจอบั๊กนี้จริงตอนทดสอบเบราว์เซอร์ — ดู docs/BACKLOG.md)
   useEffect(() => {
@@ -137,7 +140,7 @@ export function usePOSViewModel() {
       }
       if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
         buffer += e.key;
-        setScanCode(thaiLayoutToQwerty(buffer));
+        setScanRaw(buffer); // buffer = ข้อความดิบอยู่แล้ว
       }
     }
 
@@ -209,7 +212,9 @@ export function usePOSViewModel() {
 
     cart, itemCount, subtotal, discount, total,
     // ช่องสแกนโชว์รหัสที่แปลงจากแป้นไทยแล้ว (ผู้ใช้เห็น "pos-..." ไม่ใช่ "ยนห...")
-    scanCode, setScanCode: (v: string) => setScanCode(thaiLayoutToQwerty(v)),
+    // ช่องสแกน (controlled) โชว์ scanCode ที่แปลงแล้ว — onChange ได้ค่าแปลงแล้ว + ตัวใหม่ดิบ → ต่อเข้าข้อความดิบเดิม
+    scanCode,
+    setScanCode: (v: string) => setScanRaw((raw) => nextRawInput(raw, thaiLayoutToQwerty(raw), v)),
     onScan: (code: string) => { if (code.trim()) scan.mutate(code.trim()); },
     scanning: scan.isPending,
     search, setSearch,
