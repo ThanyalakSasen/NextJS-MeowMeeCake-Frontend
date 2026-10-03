@@ -30,7 +30,7 @@ export function ScanSearchBox({
 
   return (
     <div className="relative">
-      <label className="flex min-h-14 items-center gap-2.5 rounded-2xl border-2 border-brown-900 bg-white px-4">
+      <label className="flex min-h-14 items-center gap-2.5 rounded-2xl bg-white px-4">
         <span className="whitespace-nowrap text-sm font-semibold text-brown-800">{t("pos.scanLabel")}</span>
         <input
           type="search"
