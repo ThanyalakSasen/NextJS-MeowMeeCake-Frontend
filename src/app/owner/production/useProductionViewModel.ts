@@ -40,6 +40,44 @@ export interface CreateProductionOrderValue {
   items: CreateProductionOrderItemInput[];
 }
 
+/** raw ใบสั่งผลิตจาก backend → ProductionOrder ของหน้า (ใช้ทั้ง list และใบที่ดึงรายตัวจาก ?id=) */
+function toProductionOrder(
+  o: RawProductionOrder,
+  productsById: Map<string, { name: string; unit_abbr: string }>,
+): ProductionOrder {
+  return {
+    _id: o._id,
+    production_no: o.production_no,
+    production_date: o.production_date,
+    source_type: o.source_type,
+    round_id: refId(o.round_id) || null,
+    round_name: typeof o.round_id === "object" && o.round_id ? o.round_id.round_name : null,
+    production_status: o.production_status,
+    assigned_to: refId(o.assigned_to) || null,
+    assignee_name: typeof o.assigned_to === "object" && o.assigned_to ? o.assigned_to.user_fullname : null,
+    production_note: o.production_note ?? null,
+    started_at: o.started_at ?? null,
+    completed_at: o.completed_at ?? null,
+    created_at: o.created_at,
+    updated_at: o.updated_at,
+    items: (o.items ?? []).map((it) => {
+      const pid = refId(it.product_id);
+      const info = productsById.get(pid);
+      return {
+        _id: it._id,
+        product_id: pid,
+        recipe_id: refId(it.recipe_id),
+        product_name: info?.name ?? (typeof it.product_id === "object" && it.product_id ? it.product_id.product_name_th : ""),
+        unit_abbr: info?.unit_abbr ?? "",
+        planned_qty: it.planned_qty,
+        actual_qty: it.actual_qty ?? null,
+        item_status: it.item_status,
+        notes: it.notes ?? null,
+      };
+    }),
+  };
+}
+
 export function useProductionViewModel() {
   const t = useTranslations();
   const locale = useLocale();
@@ -87,40 +125,10 @@ export function useProductionViewModel() {
     return map;
   }, [recipesQ.data]);
 
-  const orders: ProductionOrder[] = useMemo(() => {
-    const raw = (ordersQ.data?.data ?? []) as RawProductionOrder[];
-    return raw.map((o) => ({
-      _id: o._id,
-      production_no: o.production_no,
-      production_date: o.production_date,
-      source_type: o.source_type,
-      round_id: refId(o.round_id) || null,
-      round_name: typeof o.round_id === "object" && o.round_id ? o.round_id.round_name : null,
-      production_status: o.production_status,
-      assigned_to: refId(o.assigned_to) || null,
-      assignee_name: typeof o.assigned_to === "object" && o.assigned_to ? o.assigned_to.user_fullname : null,
-      production_note: o.production_note ?? null,
-      started_at: o.started_at ?? null,
-      completed_at: o.completed_at ?? null,
-      created_at: o.created_at,
-      updated_at: o.updated_at,
-      items: (o.items ?? []).map((it) => {
-        const pid = refId(it.product_id);
-        const info = productsById.get(pid);
-        return {
-          _id: it._id,
-          product_id: pid,
-          recipe_id: refId(it.recipe_id),
-          product_name: info?.name ?? (typeof it.product_id === "object" && it.product_id ? it.product_id.product_name_th : ""),
-          unit_abbr: info?.unit_abbr ?? "",
-          planned_qty: it.planned_qty,
-          actual_qty: it.actual_qty ?? null,
-          item_status: it.item_status,
-          notes: it.notes ?? null,
-        };
-      }),
-    }));
-  }, [ordersQ.data, productsById]);
+  const orders: ProductionOrder[] = useMemo(
+    () => ((ordersQ.data?.data ?? []) as RawProductionOrder[]).map((o) => toProductionOrder(o, productsById)),
+    [ordersQ.data, productsById],
+  );
 
   /** ตัวเลือกสินค้าตอนสร้างใบสั่งผลิต — เฉพาะสินค้าที่มีสูตรผูกแล้วเท่านั้น (ไม่งั้น backend reject ทันที) */
   const productOptions = useMemo(() => (
@@ -191,12 +199,21 @@ export function useProductionViewModel() {
   }), [orders]);
 
   // ── รายละเอียดใบสั่งผลิต (ใช้ร่วม: row บนแท็บ 1, การ์ดบนแท็บ 2, row บนแท็บ 3) ──
-  // drawer ผูกกับ ?id= (แพทเทิร์นเดียวกับ Manage Orders) · ใบสั่งผลิตหาจาก list ที่โหลดไว้แล้ว (ใหม่สุด 200 ใบ —
-  // ลิงก์จากแจ้งเตือนชี้ใบล่าสุดเสมอ) · จำ id ล่าสุดไว้แม้ปิดแล้ว (เนื้อหาไม่หายวูบระหว่าง animation ปิด)
+  // drawer ผูกกับ ?id= (แพทเทิร์นเดียวกับ Manage Orders) · หาจาก list ที่โหลดไว้ก่อน (ใหม่สุด 200 ใบ) ถ้าไม่เจอ
+  // (ใบเก่ากว่านั้น) ค่อยดึงใบนั้นตรง ๆ ด้วย GET /admin/production-orders/{id} · จำ id ล่าสุดไว้แม้ปิดแล้ว
+  // (เนื้อหาไม่หายวูบระหว่าง animation ปิด)
   const drawerOpen = !!urlOrderId;
   const [selectedId, setSelectedId] = useState<string | null>(urlOrderId);
   if (urlOrderId && urlOrderId !== selectedId) setSelectedId(urlOrderId);
-  const selectedOrder = orders.find((o) => o._id === selectedId) ?? null;
+  const selectedInList = orders.find((o) => o._id === selectedId) ?? null;
+  // key อยู่ใต้ ["production-orders"] — mutation ที่ invalidate ทั้งก้อนอยู่แล้ว (เริ่ม/เสร็จ/ยกเลิก) อัปเดตใบนี้ด้วย
+  const detailQ = useQuery({
+    queryKey: ["production-orders", "detail", selectedId],
+    queryFn: () => productionOrdersService.get(selectedId as string),
+    enabled: drawerOpen && !!selectedId && ordersQ.isSuccess && !selectedInList,
+  });
+  const selectedOrder =
+    selectedInList ?? (detailQ.data ? toProductionOrder(detailQ.data.data, productsById) : null);
   const openDetail = (id: string) =>
     router.replace(`/owner/production?tab=${activeTab}&id=${encodeURIComponent(id)}`, { scroll: false });
   const closeDrawer = () => router.replace(`/owner/production?tab=${activeTab}`, { scroll: false });
@@ -333,7 +350,9 @@ export function useProductionViewModel() {
     onView: (o: ProductionOrder) => openDetail(o._id),
     closeDrawer,
     // id ใน URL ไม่มีใน list (ผิด/ถูกลบ/เก่ากว่า 200 ใบ) — drawer ต้องบอก ไม่ใช่ว่างเปล่า
-    isDetailNotFound: drawerOpen && ordersQ.isSuccess && !selectedOrder,
+    // ไม่อยู่ใน list และดึงรายตัวก็ไม่เจอ (id ผิด/ถูกลบ) — drawer ต้องบอก ไม่ใช่ว่างเปล่า
+    isDetailNotFound: drawerOpen && !selectedOrder && detailQ.isError,
+    isDetailLoading: drawerOpen && !selectedOrder && (ordersQ.isLoading || detailQ.isLoading),
 
     isFinalStatus, getNextStatus,
     onChangeStatus, onAdvanceStatus, onCancelOrder,

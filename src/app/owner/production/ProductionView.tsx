@@ -53,6 +53,7 @@ export function ProductionView(vm: VM) {
         title={vm.selectedOrder ? t("production.drawerTitle", { no: vm.selectedOrder.production_no }) : ""}
         onClose={vm.closeDrawer}
       >
+        {vm.isDetailLoading && <p className="py-10 text-center text-gray-500">{t("common.loading")}</p>}
         {vm.isDetailNotFound && <p className="py-10 text-center text-gray-500">{t("production.orderNotFound")}</p>}
         {vm.selectedOrder && (
           <ProductionOrderDetail
