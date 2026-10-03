@@ -250,6 +250,7 @@ export function usePreOrderRoundViewModel() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["preorders"] });
       qc.invalidateQueries({ queryKey: ["payments", "by-preorder", selectedOrderId] });
+      qc.invalidateQueries({ queryKey: ["reports"] }); // ชำระแล้ว/ไม่ผ่าน เปลี่ยนรายรับในหน้าสรุปการเงิน
     },
   });
 

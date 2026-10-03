@@ -626,6 +626,11 @@
     "noSlipYet": "Customer hasn't attached a slip yet",
     "slipLoadFailed": "Can't open slip",
     "orderNotFound": "Order not found, or the link is invalid",
+    "rejectPayment": "Reject slip",
+    "rejectPaymentConfirm": "Reject this slip? The customer will need to upload a new one before the payment can be confirmed.",
+    "paymentRejected": "Rejected the slip for {no}",
+    "paymentRejectFailed": "Could not reject the slip",
+    "slipRejected": "Slip rejected — waiting for the customer to upload a new one",
     "totalLabel": "Total",
     "cancelledBanner": "This order has been cancelled",
     "unpaidPreorderWarning": "This pre-order needs payment before production can start"
