@@ -16,7 +16,7 @@ export function EditProductView(vm: ReturnType<typeof useEditProductViewModel>) 
     <div className="flex flex-col gap-5">
       <h1 className="text-xl font-medium text-brown-900">{t("common.edit")}</h1>
       <Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}>
-        <ProductFormFields />
+        <ProductFormFields mode="edit" />
         <div className="flex gap-2 mt-4">
           <SaveButton type="primary" htmlType="submit" loading={vm.submitting} />
           <CancelButton onClick={vm.onCancel} />

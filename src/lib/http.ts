@@ -110,6 +110,7 @@ export const http = {
   getList,
   post:   <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => client.post<T>(url, body, config).then((r) => r.data),
   patch:  <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => client.patch<T>(url, body, config).then((r) => r.data),
+  put:    <T>(url: string, body?: unknown, config?: AxiosRequestConfig) => client.put<T>(url, body, config).then((r) => r.data),
   delete: <T>(url: string, config?: AxiosRequestConfig) => client.delete<T>(url, config).then((r) => r.data),
   /** axios instance ตรง ๆ — สำหรับกรณีพิเศษที่ facade ไม่พอ (ตอนนี้ยังไม่มีผู้ใช้) */
   raw: client,

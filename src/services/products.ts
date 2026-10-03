@@ -62,8 +62,20 @@ export const productsService = {
   create: (body: ProductInput) =>
     http.post<ItemResponse<Product>>(BASE, body),
 
-  update: (id: string, body: Partial<ProductInput>) =>
+  /** PATCH ทั่วไป — ⚠️ ห้ามส่ง product_stock_quantity (backend จะปฏิเสธ — ใช้ setStock/adjustStock แทน) */
+  update: (id: string, body: Partial<Omit<ProductInput, "product_stock_quantity">>) =>
     http.patch<ItemResponse<Product>>(`${BASE}/${id}`, body),
+
+  /**
+   * PUT /admin/products/{id}/stock { quantity } — ตั้งสต็อกเป็นจำนวนที่ระบุ (นับสต็อกจริงแล้วไม่ตรงระบบ)
+   * สิทธิ์ stock.update · แจ้งเตือนสินค้าใกล้หมดเมื่อข้ามเกณฑ์ · สินค้าพรีออเดอร์/มีตัวเลือก backend ปฏิเสธ (409)
+   */
+  setStock: (id: string, quantity: number) =>
+    http.put<ItemResponse<Product>>(`${BASE}/${id}/stock`, { quantity }),
+
+  /** PATCH /admin/products/{id}/stock { delta } — ปรับด้วยส่วนต่าง (+ รับเข้า / − ตัดออก) แบบ atomic */
+  adjustStock: (id: string, delta: number) =>
+    http.patch<ItemResponse<Product>>(`${BASE}/${id}/stock`, { delta }),
 
   remove: (id: string) =>
     http.delete<EmptyResponse>(`${BASE}/${id}`),

@@ -99,9 +99,10 @@ export function useProductStockViewModel() {
     [rows],
   );
 
+  // ตั้งสต็อกเป็นค่าที่นับได้ผ่าน endpoint สต็อกโดยเฉพาะ (BACKLOG2 §15.2 ข้อ 5) — เดิมใช้ PATCH สินค้าทั่วไป
+  // ซึ่งไม่แจ้งเตือนสินค้าใกล้หมด · ข้ามกติกาสินค้ามีตัวเลือก · เช็คสิทธิ์ products แทน stock · และ backend จะเลิกรับ
   const adjust = useMutation({
-    mutationFn: ({ id, qty }: { id: string; qty: number }) =>
-      productsService.update(id, { product_stock_quantity: qty }),
+    mutationFn: ({ id, qty }: { id: string; qty: number }) => productsService.setStock(id, qty),
     onSuccess: () => {
       alert.success(t("productStock.adjusted"));
       qc.invalidateQueries({ queryKey: ["products"] });

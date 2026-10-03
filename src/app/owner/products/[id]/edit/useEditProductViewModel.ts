@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { productsService } from "@/services/products";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
-import { fromProduct, toInput, type ProductFormValue } from "../../productForm";
+import { fromProduct, toUpdateInput, type ProductFormValue } from "../../productForm";
 
 export function useEditProductViewModel() {
   const t = useTranslations();
@@ -19,7 +19,8 @@ export function useEditProductViewModel() {
   });
 
   const update = useMutation({
-    mutationFn: (v: ProductFormValue) => productsService.update(id, toInput(v)),
+    // ไม่ส่งสต็อกใน PATCH — ปรับสต็อกที่หน้าสต็อกสินค้า (PUT …/stock) เท่านั้น
+    mutationFn: (v: ProductFormValue) => productsService.update(id, toUpdateInput(v)),
     onSuccess: () => {
       alert.success(t("products.saved"));
       router.push("/owner/products");

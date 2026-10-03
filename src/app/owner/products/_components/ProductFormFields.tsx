@@ -10,7 +10,8 @@ import { productCategoriesService } from "@/services/productCategories";
 import { unitsService } from "@/services/units";
 import { ProductImageUpload } from "./ProductImageUpload";
 
-export function ProductFormFields() {
+/** mode "edit": สต็อกโชว์อย่างเดียว (แก้ไม่ได้) — ปรับที่หน้าสต็อกสินค้าเท่านั้น (PUT …/stock) */
+export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit" }) {
   const t = useTranslations();
   const cats = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
   const units = useQuery({ queryKey: ["units", { usage: "Product" }], queryFn: () => unitsService.list({ usage_context: "Product" }) });
@@ -62,10 +63,16 @@ export function ProductFormFields() {
           ]}
         />
       </FormItem>
-      {/* backend ห้ามส่ง product_stock_quantity ตอนเป็นพรีออเดอร์ (ใช้ preorder_config แทน) */}
+      {/* backend ห้ามส่ง product_stock_quantity ตอนเป็นพรีออเดอร์ (ใช้ preorder_config แทน)
+          ตอนแก้ไข: โชว์อย่างเดียว ไม่ส่งไปกับ PATCH (toUpdateInput) — สต็อกตั้งได้ตอนสร้าง หรือที่หน้าสต็อกสินค้า */}
       {!isPreorder && (
-        <FormItem name="product_stock_quantity" label={t("fields.product_stock_quantity")} rules={[{ type: "number", min: 0, message: t("validation.nonNegative") }]}>
-          <InputNumber min={0} />
+        <FormItem
+          name="product_stock_quantity"
+          label={t("fields.product_stock_quantity")}
+          extra={mode === "edit" ? t("products.stockEditHint") : undefined}
+          rules={[{ type: "number", min: 0, message: t("validation.nonNegative") }]}
+        >
+          <InputNumber min={0} precision={0} disabled={mode === "edit"} />
         </FormItem>
       )}
       {/* เกณฑ์สินค้าใกล้หมดรายสินค้า — มีความหมายเฉพาะสินค้าที่มีสต็อก (ไม่ใช่ preorder) */}

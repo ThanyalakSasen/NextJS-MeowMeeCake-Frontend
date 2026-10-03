@@ -62,7 +62,7 @@ export function AdjustStockModal({
               label={t("productStock.adjustNewQty", { unit: target.unit })}
               rules={[{ required: true, message: t("validation.required") }]}
             >
-              <InputNumber min={0} />
+              <InputNumber min={0} precision={0} />
             </FormItem>
           </Form>
         </>

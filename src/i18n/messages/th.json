@@ -554,6 +554,7 @@
     "deleteFailed": "ลบไม่สำเร็จ",
     "saleLtPrice": "ราคาโปรโมชันต้องน้อยกว่าราคาปกติ",
     "lowStockThresholdHint": "เว้นว่าง = 5",
+    "stockEditHint": "ปรับจำนวนสต็อกได้ที่หน้า \"สต็อกสินค้า\"",
     "lowStockThresholdInvalid": "ต้องเป็นจำนวนเต็มตั้งแต่ 0 ขึ้นไป",
     "imageUploadFailed": "อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่"
   },
