@@ -17,12 +17,16 @@ export function OrderDetailContent({
   order,
   payment,
   canApprovePayment,
+  verifyingPayment,
   onVerifyPayment,
+  onRejectPayment,
 }: {
   order: Order;
   payment: Payment | null;
   canApprovePayment: boolean;
+  verifyingPayment: boolean;
   onVerifyPayment: (paymentId: string) => void;
+  onRejectPayment: (paymentId: string) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -94,11 +98,30 @@ export function OrderDetailContent({
                 <>
                   <p className="mb-1.5 text-sm font-medium text-amber-700">{t("orders.slipAwaitingReview")}</p>
                   {canApprovePayment && (
-                    <Button size="small" type="primary" icon={actionIcon("verify", "small")} onClick={() => onVerifyPayment(payment._id)}>
-                      {t("orders.verifyPayment")}
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="small"
+                        type="primary"
+                        icon={actionIcon("verify", "small")}
+                        loading={verifyingPayment}
+                        onClick={() => onVerifyPayment(payment._id)}
+                      >
+                        {t("orders.verifyPayment")}
+                      </Button>
+                      <Button
+                        size="small"
+                        danger
+                        icon={actionIcon("cancelAction", "small")}
+                        disabled={verifyingPayment}
+                        onClick={() => onRejectPayment(payment._id)}
+                      >
+                        {t("orders.rejectPayment")}
+                      </Button>
+                    </div>
                   )}
                 </>
+              ) : payment.status === "failed" ? (
+                <p className="text-sm font-medium text-danger">{t("orders.slipRejected")}</p>
               ) : (
                 <StatusBadge group="paymentStatus" value={payment.status} />
               )}

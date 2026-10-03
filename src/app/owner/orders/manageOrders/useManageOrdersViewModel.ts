@@ -12,7 +12,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { ordersService } from "@/services/orders";
 import { paymentsService } from "@/services/payments";
 import { usePermission } from "@/context/PermissionsContext";
-import { alert } from "@/lib/alert";
+import { alert, confirmAlert } from "@/lib/alert";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
 import { formatDate } from "@/i18n/format";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
@@ -140,6 +140,23 @@ export function useManageOrdersViewModel() {
     );
   };
 
+  // ปฏิเสธสลิป = payment "failed" (backend propagate ไป order.payment_status) — ลูกค้าแนบสลิปใหม่ได้ (กลับเป็น pending)
+  const onRejectPayment = async (paymentId: string) => {
+    const ok = await confirmAlert(t("orders.rejectPaymentConfirm"), {
+      title: t("orders.rejectPayment"),
+      confirmText: t("orders.rejectPayment"),
+      danger: true,
+    });
+    if (!ok) return;
+    verifyMutation.mutate(
+      { paymentId, approved: false },
+      {
+        onSuccess: () => alert.success(t("orders.paymentRejected", { no: selectedOrder?.order_no ?? "" })),
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.paymentRejectFailed")),
+      },
+    );
+  };
+
   const onExport = () => {
     if (filtered.length === 0) {
       alert.info(t("orders.exportEmpty"));
@@ -192,6 +209,7 @@ export function useManageOrdersViewModel() {
     isDetailError: detailQ.isError,
 
     isFinalStatus,
-    onStatusChange, onCancel, onVerifyPayment, onExport,
+    onStatusChange, onCancel, onVerifyPayment, onRejectPayment, onExport,
+    verifyingPayment: verifyMutation.isPending,
   };
 }
