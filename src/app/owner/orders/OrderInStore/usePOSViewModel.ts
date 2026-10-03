@@ -1,6 +1,6 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ POS หน้าร้าน — สแกน/ค้นหาสินค้า → รายการที่สแกน → (โปรโมชัน) → ชำระ (เงินสด / QR mock) → POST /admin/orders
+// ViewModel ของ POS หน้าร้าน — สแกน/ค้นหา → บิล → โปรโมชัน → ชำระ (เงินสด: รับเงิน+ทอน / QR mock) → POST /admin/orders
 // สร้างออเดอร์ order_type "takeaway" แล้วจ่าย+ปิดงานทันที (ลูกค้าจ่าย+รับของที่เคาน์เตอร์):
 //   1) POST /admin/orders (backend ตัดสต็อก + คิดส่วนลดโปรโมชันเอง — ห้ามตัดซ้ำ/คิดเองฝั่ง client)
 //   2) POST /admin/payments (สร้างรายการชำระเงินผูกกับออเดอร์)
@@ -9,10 +9,9 @@
 // backend บังคับทุกออเดอร์ต้องมี user_id จริง — ไม่มีแนวคิด "ลูกค้าไม่ระบุตัวตน" จึงผูกกับบัญชี
 // "ลูกค้าทั่วไป" ตายตัว (สร้างไว้แล้วผ่าน scripts/seed.ts, ดูค่าคงที่ GUEST_CUSTOMER_EMAIL ที่นั่น)
 //
-// ไม่มีกริดเมนูสินค้าแล้ว (BACKLOG2 §13) — เพิ่มสินค้าได้ 2 ทาง: ยิงบาร์โค้ด / ช่องค้นหาตามรหัสหรือชื่อสินค้า
-// โปรโมชัน: โหลดที่ใช้ได้ตอนนี้ (activeNow) เฉพาะช่องทางหน้าร้าน · พรีวิวส่วนลดด้วย posPromotion.ts แต่ตัวเลขจริง
-// backend คิดเองจาก promotion_id · ใช้ได้ทีละ 1 โปร และใช้คู่กับส่วนลดกรอกมือไม่ได้ (backend รับอย่างใดอย่างหนึ่ง)
-// bundle/ประวัติวันนี้/Omise QR จริง → นอกขอบเขต #8 (ดู SCREEN_MAP.md §4)
+// หน้าจอตามดีไซน์ใหม่ (BACKLOG2 §14): ช่อง "สแกน / ค้นหา" ช่องเดียว (บาร์โค้ด + รหัส/ชื่อ) · บิล (ปุ่ม −/+) ·
+// การ์ดโปรโมชัน · ปุ่มชำระเงินสด/QR · หน้าต่างรับเงินสด (คีย์แพด + ทอน) / QR / ชำระสำเร็จ
+// โปรโมชัน: พรีวิวด้วย posPromotion.ts แต่ตัวเลขจริง backend คิดเองจาก promotion_id · ใช้ได้ทีละ 1 โปร
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +23,7 @@ import { paymentsService } from "@/services/payments";
 import { usersService } from "@/services/users";
 import { posService } from "@/services/pos";
 import { usePermission } from "@/context/PermissionsContext";
-import { alert } from "@/lib/alert";
+import { alert, confirmAlert } from "@/lib/alert";
 import { refId } from "@/lib/refId";
 import { isApiError } from "@/types/api";
 import type { Product } from "@/types/product";
@@ -36,16 +35,29 @@ import {
 import { posPromotions, promotionsForProduct, evaluateAll, isScoped } from "./posPromotion";
 
 // POS ขายเฉพาะสินค้าปกติ (พร้อมขาย มีสต็อก) — พรีออเดอร์ขายผ่านรอบพรีออเดอร์เท่านั้น
-// ใช้เป็นแหล่งของช่องค้นหาตามรหัส/ชื่อ (ไม่ได้แสดงเป็นกริดแล้ว)
+// ใช้เป็นแหล่งของคำแนะนำในช่อง "สแกน / ค้นหา" (ไม่ได้แสดงเป็นกริดแล้ว)
 const CATALOG_PARAMS = { limit: 200, is_preorder: false } as const;
 const PROMO_PARAMS = { activeNow: true, limit: 100 } as const;
-/** ผลค้นหาสูงสุดที่โชว์ใน dropdown */
-const MAX_SEARCH_RESULTS = 8;
+/** คำแนะนำสูงสุดใต้ช่องค้นหา */
+const MAX_SUGGESTIONS = 6;
+/** หลักสูงสุดของ "รับเงินมา" (999,999 บาท) */
+const MAX_RECEIVED_DIGITS = 6;
 
 /** ต้องตรงกับ GUEST_CUSTOMER_EMAIL ใน backend scripts/seed.ts */
 const GUEST_CUSTOMER_EMAIL = "guest@meowmeecake.local";
 
 export type PaymentMethod = "cash" | "qr";
+export type PayDialog = null | PaymentMethod | "done";
+
+export interface PaymentDone {
+  orderNo: string;
+  method: PaymentMethod;
+  /** ยอดจริงจาก backend (order.total_amount) */
+  total: number;
+  discount: number;
+  received: number;
+  change: number;
+}
 
 export function usePOSViewModel() {
   const t = useTranslations();
@@ -54,16 +66,15 @@ export function usePOSViewModel() {
   const promoPerm = usePermission("promotions");
 
   const [cart, setCart] = useState<CartLine[]>([]);
-  // เก็บ "ข้อความดิบ" ตามปุ่มที่กดจริง แล้วแปลงแป้นไทย→QWERTY รอบเดียวตอนโชว์ (scanCode) — ห้ามเก็บค่าที่แปลงแล้ว
-  // แล้วแปลงซ้ำ: "-"/"/" ที่แปลงไปแล้วจะถูกตีความเป็นปุ่ม 3/2 ของแป้นไทยอีกรอบ (ดู nextRawInput)
-  const [scanRaw, setScanRaw] = useState("");
-  const scanCode = thaiLayoutToQwerty(scanRaw);
-  const [filter, setFilter] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [extraDiscount, setExtraDiscount] = useState(0);
+  // ช่อง "สแกน / ค้นหา" — เก็บ "ข้อความดิบ" ตามปุ่มที่กดจริง แล้วแปลงแป้นไทย→QWERTY รอบเดียวตอนโชว์ (query) —
+  // ห้ามเก็บค่าที่แปลงแล้วแล้วแปลงซ้ำ: "-"/"/" จะถูกตีความเป็นปุ่ม 3/2 ของแป้นไทยอีกรอบ (ดู nextRawInput)
+  const [queryRaw, setQueryRaw] = useState("");
+  const query = thaiLayoutToQwerty(queryRaw);
   const [selectedPromoId, setSelectedPromoId] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
-  const [qrOpen, setQrOpen] = useState(false);
+  const [payDialog, setPayDialog] = useState<PayDialog>(null);
+  /** "รับเงินมา" (เงินสด) — เก็บเป็นตัวเลขหลักแบบคีย์แพด */
+  const [receivedDigits, setReceivedDigits] = useState("");
+  const [done, setDone] = useState<PaymentDone | null>(null);
 
   const catalogQ = useQuery({
     queryKey: ["products", CATALOG_PARAMS],
@@ -90,22 +101,21 @@ export function usePOSViewModel() {
     [catalogQ.data],
   );
   const promotions = useMemo(() => posPromotions(promotionsQ.data?.data ?? []), [promotionsQ.data]);
-  /** โปรโมชันลดทั้งบิล (ไม่จำกัดสินค้า/หมวด) — โชว์แยกเป็นแถบแจ้ง ไม่ผูกกับสินค้าตัวไหน */
-  const billPromotions = useMemo(() => promotions.filter((p) => !isScoped(p)), [promotions]);
+  const promotionsEnabled = promoPerm.view && !promotionsQ.isError;
 
   const promosOf = (productId: string, categoryId: string | null): Promotion[] =>
-    promotionsForProduct(promotions, productId, categoryId);
+    promotionEnabledList(promotionsEnabled, promotionsForProduct(promotions, productId, categoryId));
 
-  // ── ค้นหาตามรหัสสินค้าหรือชื่อ (แทนกริดเมนูเดิม) ──
-  const searchResults = useMemo(() => {
-    const q = filter.trim().toLowerCase();
+  // ── คำแนะนำใต้ช่อง "สแกน / ค้นหา" — ตามรหัสสินค้าหรือชื่อ ──
+  const suggestions = useMemo(() => {
+    const q = query.trim().toLowerCase();
     if (!q) return [];
     return catalog
       .filter((p) => (p.product_id ?? "").toLowerCase().includes(q) || p.product_name_th.toLowerCase().includes(q))
-      .slice(0, MAX_SEARCH_RESULTS);
-  }, [catalog, filter]);
+      .slice(0, MAX_SUGGESTIONS);
+  }, [catalog, query]);
 
-  /** เพิ่มสินค้าลงรายการ (ใช้ทั้งสแกนและเลือกจากผลค้นหา) — แจ้งหมดสต็อก/เต็มสต็อก และแจ้งโปรโมชันของสินค้านั้น */
+  /** เพิ่มสินค้าลงบิล (สแกน / เลือกคำแนะนำ / Enter) — แจ้งหมดสต็อก/เต็มสต็อก และแจ้งโปรโมชันของสินค้านั้น */
   const addProduct = (p: Product) => {
     const stock = p.product_stock_quantity ?? 0;
     if (stock <= 0) {
@@ -118,92 +128,74 @@ export function usePOSViewModel() {
     }
     setCart((c) => addLine(c, p));
     const promos = promosOf(p._id, refId(p.category_id) || null);
-    alert.success(t("pos.scanAdded", { name: p.product_name_th }), {
-      note: promos.length ? t("pos.productHasPromotion", { names: promos.map((x) => x.promotion_name).join(", ") }) : undefined,
-    });
+    // สแกนต่อเนื่องได้โดยไม่ต้องปิด popup ทุกชิ้น — แจ้งเฉพาะสินค้าที่มีโปรโมชัน
+    if (promos.length) {
+      alert.info(t("pos.productHasPromotion", { names: promos.map((x) => x.promotion_name).join(", ") }), {
+        title: p.product_name_th,
+      });
+    }
   };
 
-  // ยิงบาร์โค้ด → GET /admin/pos/scan?code=... → เพิ่มลงรายการทันที
+  // รหัสที่ไม่อยู่ในรายการที่โหลดไว้ (เกิน 200 รายการ / ยิงด้วย _id) → ถาม backend ทีละรหัส
   // ยังไม่รองรับ variants (0 สินค้าในระบบจริงใช้ variant เลย — ดู BACKLOG2 §6)
   const scan = useMutation({
-    // แป้นพิมพ์ OS เป็นไทยตอนยิง → เครื่องสแกนส่ง "ยนหขจ..." แทน "pos-0..." (ดู constants/thaiKeyboard.ts)
     // + lowercase กัน Caps Lock (รหัส pos-/pre- เป็นตัวเล็ก, _id เป็น hex ไม่สนตัวพิมพ์)
     mutationFn: (code: string) => posService.scan(thaiLayoutToQwerty(code).trim().toLowerCase()),
     onSuccess: (res) => addProduct(res.product),
     onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.scanFailed")),
-    onSettled: () => setScanRaw(""),
+    onSettled: () => setQueryRaw(""),
   });
 
-  // scan.mutate เปลี่ยน reference ทุก render (useMutation ไม่การันตี stable identity) — เก็บผ่าน ref
-  // ให้ effect ด้านล่าง mount แค่ครั้งเดียวได้จริง (ดูเหตุผลเต็มที่คอมเมนต์ของ effect นั้น) — ต้องอัปเดต
-  // ref ใน effect เอง ห้ามเขียนตรงกลาง render (React จะ error "Cannot update ref during render")
-  const scanMutateRef = useRef(scan.mutate);
-  useEffect(() => {
-    scanMutateRef.current = scan.mutate;
-  }, [scan.mutate]);
-
-  // ยิงบาร์โค้ดได้จากทุกที่ในหน้าโดยไม่ต้องคลิกช่องกรอกก่อน — เครื่องสแกนจริงพิมพ์เร็วมากแล้วปิดท้าย
-  // ด้วย Enter เสมอ (จำลองคีย์บอร์ด) ถ้าตอนนั้น focus ไม่ได้อยู่ใน input/textarea อื่นจริง ๆ capture คีย์เข้ามา
-  // เป็นบัฟเฟอร์เอง แล้วอัปเดต scanCode ให้เห็นด้วย — แต่ถ้า focus อยู่ใน input จริง (ค้นหา/ชื่อลูกค้า/ช่องสแกนเอง)
-  // ปล่อยให้ input นั้นทำงานตามปกติ ไม่ไปแทรก กัน hijack การพิมพ์จริงของผู้ใช้
-  //
-  // ⚠️ ต้อง mount effect นี้ "ครั้งเดียว" (dependency array ว่างเปล่า) ห้ามผูกกับ scan/scan.mutate ตรง ๆ
-  // เพราะ reference เปลี่ยนทุก render — ถ้าผูกไว้ effect จะ cleanup+re-run ใหม่ทุกครั้งที่ setScanRaw
-  // ทำให้ re-render (คือทุกตัวอักษรที่พิมพ์เลย) แล้ว buffer ถูกรีเซ็ตเป็นค่าว่างใหม่ทุกครั้ง เหลือแค่
-  // ตัวอักษรตัวสุดท้ายก่อนกด Enter เท่านั้น (เจอบั๊กนี้จริงตอนทดสอบเบราว์เซอร์ — ดู docs/BACKLOG.md)
-  useEffect(() => {
-    let buffer = "";
-    // antd เอง (Segmented, Switch, Radio) ใช้ <input type="radio"/"checkbox"> ที่ซ่อนไว้เป็นตัวรับ focus จริง —
-    // ไม่ใช่ input ที่ผู้ใช้ "พิมพ์" อะไร ต้องแยกออก ไม่งั้นแค่คลิกเลือกโปรโมชัน/วิธีชำระ ระบบจะคิดว่ามี input
-    // พิมพ์อยู่แล้ว แล้วไม่ capture การยิงบาร์โค้ดให้เลย
-    const NON_TEXT_INPUT_TYPES = new Set(["radio", "checkbox", "button", "submit", "reset", "range", "file", "color", "hidden"]);
-    const isTextEditable = (el: Element | null) => {
-      if (!(el instanceof HTMLElement)) return false;
-      if (el.tagName === "TEXTAREA" || el.isContentEditable) return true;
-      if (el.tagName === "INPUT") return !NON_TEXT_INPUT_TYPES.has((el as HTMLInputElement).type);
-      return false;
-    };
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (isTextEditable(document.activeElement)) return;
-      if (e.key === "Enter") {
-        const code = buffer.trim();
-        buffer = "";
-        if (code) scanMutateRef.current(code);
-        return;
-      }
-      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        buffer += e.key;
-        setScanRaw(buffer); // buffer = ข้อความดิบอยู่แล้ว
-      }
+  /** Enter ในช่อง "สแกน / ค้นหา" (หรือเครื่องสแกนที่ปิดท้ายด้วย Enter):
+   *  รหัสตรงกับสินค้าในรายการ หรือคำแนะนำเหลือตัวเดียว → เพิ่มทันที · ไม่งั้นถาม backend (/admin/pos/scan) */
+  const submitQuery = (rawText: string) => {
+    const code = thaiLayoutToQwerty(rawText).trim().toLowerCase();
+    if (!code) return;
+    const exact = catalog.find((p) => (p.product_id ?? "").toLowerCase() === code || p._id === code);
+    const matches = catalog.filter(
+      (p) => (p.product_id ?? "").toLowerCase().includes(code) || p.product_name_th.toLowerCase().includes(code),
+    );
+    const local = exact ?? (matches.length === 1 ? matches[0] : null);
+    if (local) {
+      addProduct(local);
+      setQueryRaw("");
+      return;
     }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []); // ตั้งใจว่างเปล่า — mount ครั้งเดียวเท่านั้น (ดูคำอธิบายเต็มด้านบน)
-
-  const subtotal = cartSubtotal(cart);
-  const itemCount = cart.reduce((s, c) => s + c.qty, 0);
+    scan.mutate(code);
+  };
 
   // ── โปรโมชันกับบิลปัจจุบัน ──
-  const promoEvals = useMemo(() => evaluateAll(promotions, toPromoLines(cart)), [promotions, cart]);
+  const subtotal = cartSubtotal(cart);
+  const itemCount = cart.reduce((s, c) => s + c.qty, 0);
+  const promoEvals = useMemo(
+    () => (promotionsEnabled ? evaluateAll(promotions, toPromoLines(cart)) : []),
+    [promotionsEnabled, promotions, cart],
+  );
   const selectedEval = promoEvals.find((e) => e.promotion._id === selectedPromoId) ?? null;
-  // เลือกไว้แต่บิลเปลี่ยนจนใช้ไม่ได้แล้ว (ลบสินค้า/ลดจำนวน) → ไม่ใช้โปร (ส่วนลดกรอกมือกลับมาใช้ได้) + แจ้งในแผง
+  // เลือกไว้แต่บิลเปลี่ยนจนใช้ไม่ได้แล้ว (ลบสินค้า/ลดจำนวน) → ไม่ใช้โปร + แจ้งในการ์ด
   const appliedPromo = selectedEval?.eligible ? selectedEval : null;
   const bestPromo = promoEvals.find((e) => e.eligible) ?? null;
-
-  const manualDiscount = Math.min(Math.max(extraDiscount, 0), subtotal);
-  const discount = appliedPromo ? appliedPromo.discount : manualDiscount;
+  const discount = appliedPromo?.discount ?? 0;
   const total = Math.max(subtotal - discount, 0);
 
+  const received = Number(receivedDigits || "0");
+  const receivedShort = received < total;
+
+  const resetBill = () => {
+    setCart([]);
+    setSelectedPromoId(null);
+    setReceivedDigits("");
+    setQueryRaw("");
+  };
+
   const checkout = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ method, received: cash }: { method: PaymentMethod; received: number }): Promise<PaymentDone> => {
       // ข้อความนี้ไม่โชว์ผู้ใช้ตรง ๆ (onError ใช้ t("pos.saveFailed") แทน) — ไว้ debug ใน console เท่านั้น
       if (!guestUserId) throw new Error("Guest customer account not found — run `npm run seed` on the backend");
 
       // 1) สร้างออเดอร์ — backend ตัดสต็อก + คำนวณ subtotal/ส่วนลดโปรโมชัน/total_amount ให้เองทั้งหมด
       const orderRes = await ordersService.create(
-        buildOrderInput({ cart, guestUserId, discount: manualDiscount, promotionId: appliedPromo?.promotion._id ?? null }),
+        buildOrderInput({ cart, guestUserId, discount: 0, promotionId: appliedPromo?.promotion._id ?? null }),
       );
       const order = orderRes.data;
 
@@ -223,16 +215,20 @@ export function usePOSViewModel() {
       await ordersService.updateStatus(order._id, "ready");
       await ordersService.updateStatus(order._id, "completed");
 
-      return order.order_no;
+      const paid = method === "cash" ? cash : order.total_amount;
+      return {
+        orderNo: order.order_no,
+        method,
+        total: order.total_amount,
+        discount: order.discount_amount ?? 0,
+        received: paid,
+        change: Math.max(paid - order.total_amount, 0),
+      };
     },
-    onSuccess: (orderNo) => {
-      alert.success(t("pos.saved", { no: orderNo }));
-      setCart([]);
-      setCustomerName("");
-      setExtraDiscount(0);
-      setSelectedPromoId(null);
-      setPaymentMethod("cash");
-      setQrOpen(false);
+    onSuccess: (result) => {
+      setDone(result);
+      setPayDialog("done");
+      resetBill();
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["products"] });
       // used_count ของโปรเปลี่ยน (usage_limit)
@@ -243,60 +239,124 @@ export function usePOSViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.saveFailed")),
   });
 
-  const onConfirm = () => {
-    if (cart.length === 0) return;
-    if (paymentMethod === "qr") {
-      setQrOpen(true);
-      return;
-    }
-    checkout.mutate();
+  // ── คีย์แพด "รับเงินมา" ──
+  const pressKey = (k: string) => {
+    if (k === "back") setReceivedDigits((v) => v.slice(0, -1));
+    else setReceivedDigits((v) => (v.length >= MAX_RECEIVED_DIGITS ? v : (v === "0" ? "" : v) + k));
   };
+  const confirmCash = () => {
+    if (receivedShort || checkout.isPending) return;
+    checkout.mutate({ method: "cash", received });
+  };
+
+  // ── คีย์บอร์ด: ยิงบาร์โค้ดได้จากทุกที่ + พิมพ์ตัวเลขในหน้าต่างรับเงินสด ──
+  // ฟังก์ชันพวกนี้เปลี่ยน reference ทุก render — เก็บผ่าน ref ให้ effect ด้านล่าง mount แค่ครั้งเดียวได้จริง
+  // (อัปเดต ref ใน effect เอง ห้ามเขียนตรงกลาง render — React จะ error "Cannot update ref during render")
+  const handlersRef = useRef({ submitQuery, pressKey, confirmCash, payDialog });
+  useEffect(() => {
+    handlersRef.current = { submitQuery, pressKey, confirmCash, payDialog };
+  });
+
+  // ยิงบาร์โค้ดได้จากทุกที่ในหน้าโดยไม่ต้องคลิกช่องกรอกก่อน — เครื่องสแกนจริงพิมพ์เร็วมากแล้วปิดท้ายด้วย Enter เสมอ
+  // ถ้า focus ไม่ได้อยู่ใน input จริง ๆ capture คีย์เป็นบัฟเฟอร์เอง แล้วโชว์ในช่อง "สแกน / ค้นหา" ด้วย — แต่ถ้า focus
+  // อยู่ใน input จริง ปล่อยให้ input นั้นทำงานตามปกติ กัน hijack การพิมพ์จริงของผู้ใช้
+  // หน้าต่างรับเงินสดเปิดอยู่ → ตัวเลข/Backspace/Enter ใช้กับ "รับเงินมา" แทน · หน้าต่างอื่นเปิดอยู่ → ไม่ capture
+  //
+  // ⚠️ ต้อง mount effect นี้ "ครั้งเดียว" (dependency array ว่างเปล่า) — ถ้าผูกกับ state/ฟังก์ชันที่เปลี่ยนทุก render
+  // effect จะ cleanup+re-run ทุกตัวอักษรที่พิมพ์ แล้ว buffer ถูกรีเซ็ตเหลือแค่ตัวสุดท้าย (เจอบั๊กนี้จริง — ดู docs/BACKLOG.md)
+  useEffect(() => {
+    let buffer = "";
+    // antd (Segmented, Switch, Radio, Checkbox) ใช้ <input type="radio"/"checkbox"> ที่ซ่อนไว้เป็นตัวรับ focus จริง —
+    // ไม่ใช่ input ที่ผู้ใช้ "พิมพ์" ต้องแยกออก ไม่งั้นแค่คลิกปุ่มพวกนั้น ระบบจะไม่ capture การยิงบาร์โค้ดให้เลย
+    const NON_TEXT_INPUT_TYPES = new Set(["radio", "checkbox", "button", "submit", "reset", "range", "file", "color", "hidden"]);
+    const isTextEditable = (el: Element | null) => {
+      if (!(el instanceof HTMLElement)) return false;
+      if (el.tagName === "TEXTAREA" || el.isContentEditable) return true;
+      if (el.tagName === "INPUT") return !NON_TEXT_INPUT_TYPES.has((el as HTMLInputElement).type);
+      return false;
+    };
+
+    function handleKeyDown(e: KeyboardEvent) {
+      const h = handlersRef.current;
+      if (h.payDialog === "cash") {
+        if (/^\d$/.test(e.key)) { e.preventDefault(); h.pressKey(e.key); }
+        else if (e.key === "Backspace") { e.preventDefault(); h.pressKey("back"); }
+        else if (e.key === "Enter") { e.preventDefault(); h.confirmCash(); }
+        return;
+      }
+      if (h.payDialog) return;
+      if (isTextEditable(document.activeElement)) return;
+      if (e.key === "Enter") {
+        const code = buffer;
+        buffer = "";
+        if (code.trim()) h.submitQuery(code);
+        return;
+      }
+      if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        buffer += e.key;
+        setQueryRaw(buffer); // buffer = ข้อความดิบอยู่แล้ว
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []); // ตั้งใจว่างเปล่า — mount ครั้งเดียวเท่านั้น (ดูคำอธิบายเต็มด้านบน)
+
+  const canPay = perm.create && cart.length > 0 && !checkout.isPending;
 
   return {
     perm,
-    isLoading: catalogQ.isLoading,
-    isError: catalogQ.isError,
-    refetch: () => catalogQ.refetch(),
+    isCatalogError: catalogQ.isError,
+    refetchCatalog: () => catalogQ.refetch(),
 
-    cart, itemCount, subtotal, discount, total,
-    // ช่องสแกน (controlled) โชว์ scanCode ที่แปลงแล้ว — onChange ได้ค่าแปลงแล้ว + ตัวใหม่ดิบ → ต่อเข้าข้อความดิบเดิม
-    scanCode,
-    setScanCode: (v: string) => setScanRaw((raw) => nextRawInput(raw, thaiLayoutToQwerty(raw), v)),
-    onScan: (code: string) => { if (code.trim()) scan.mutate(code.trim()); },
+    // ช่อง "สแกน / ค้นหา" (controlled) — onChange ได้ค่าแปลงแล้ว + ตัวใหม่ดิบ → ต่อเข้าข้อความดิบเดิม
+    query,
+    setQuery: (v: string) => setQueryRaw((raw) => nextRawInput(raw, thaiLayoutToQwerty(raw), v)),
+    onSubmitQuery: () => submitQuery(queryRaw),
     scanning: scan.isPending,
+    suggestions,
+    onPickSuggestion: (p: Product) => { addProduct(p); setQueryRaw(""); },
 
-    // ค้นหาตามรหัส/ชื่อ
-    filter, setFilter,
-    searchResults,
-    onPickProduct: (id: string) => {
-      const p = catalog.find((x) => x._id === id);
-      if (p) addProduct(p);
-      setFilter("");
+    // บิล
+    cart, itemCount, subtotal, discount, total,
+    promosOf,
+    increaseQty: (line: CartLine) => setCart((c) => setLineQty(c, line.productId, line.qty + 1)),
+    // ลดจนเหลือ 0 = เอาออกจากบิล (ตามดีไซน์ — ไม่มีปุ่มลบแยก)
+    decreaseQty: (line: CartLine) =>
+      setCart((c) => (line.qty <= 1 ? removeLine(c, line.productId) : setLineQty(c, line.productId, line.qty - 1))),
+    onClearBill: async () => {
+      if (cart.length === 0) return;
+      const ok = await confirmAlert(t("pos.clearBillConfirm"), { title: t("pos.clearBill"), danger: true });
+      if (ok) resetBill();
     },
 
-    // โปรโมชัน
-    promotionsEnabled: promoPerm.view && !promotionsQ.isError,
+    // โปรโมชัน (ใช้ได้ทีละ 1 — backend รับ promotion_id เดียว)
+    promotionsEnabled,
     promoEvals,
-    billPromotions,
-    bestPromo,
+    billPromotions: promotions.filter((p) => !isScoped(p)),
+    bestPromoId: bestPromo?.promotion._id ?? null,
     selectedPromoId,
     appliedPromo,
     selectedPromoInvalid: !!selectedPromoId && !appliedPromo,
-    setSelectedPromoId,
-    promosOf,
+    togglePromo: (id: string) => setSelectedPromoId((cur) => (cur === id ? null : id)),
 
-    customerName, setCustomerName,
-    extraDiscount, setExtraDiscount,
-    paymentMethod, setPaymentMethod,
-
-    changeQty: (id: string, qty: number) => setCart((c) => setLineQty(c, id, qty)),
-    removeFromCart: (id: string) => setCart((c) => removeLine(c, id)),
-    clearCart: () => { setCart([]); setSelectedPromoId(null); },
-
-    qrOpen,
-    closeQr: () => setQrOpen(false),
-    onConfirm,
-    confirmPaid: () => checkout.mutate(),
+    // ชำระเงิน
+    canPay,
+    payDialog,
+    openCash: () => { if (canPay) { setReceivedDigits(""); setPayDialog("cash"); } },
+    openQr: () => { if (canPay) setPayDialog("qr"); },
+    closeDialog: () => { if (!checkout.isPending) setPayDialog(null); },
+    received, receivedShort,
+    pressKey,
+    pickCash: (amount: number) => setReceivedDigits(String(Math.ceil(amount))),
+    confirmCash,
+    confirmQr: () => checkout.mutate({ method: "qr", received: total }),
     submitting: checkout.isPending,
+    done,
   };
+}
+
+/** ไม่มีสิทธิ์ดูโปรโมชัน → ไม่ติดป้าย/แจ้งเตือนโปรของสินค้า */
+function promotionEnabledList(enabled: boolean, list: Promotion[]): Promotion[] {
+  return enabled ? list : [];
 }
