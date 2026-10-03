@@ -409,8 +409,8 @@
     },
     "expensePaymentMethod": {
       "เงินสด": "Cash",
-      "โอนเงิน": "Bank Transfer",
-      "บัตรเครดิต": "Credit Card",
+      "โอนเงิน": "Bank transfer",
+      "บัตรเครดิต": "Credit card",
       "QR Code": "QR Code"
     },
     "notificationType": {
@@ -426,22 +426,6 @@
       "employee": "Employee",
       "finance": "Finance",
       "system": "System"
-    },
-    "expenseCategory": {
-      "วัตถุดิบ": "Ingredients",
-      "บรรจุภัณฑ์": "Packaging",
-      "ค่าจ้างแรงงาน": "Labor",
-      "ค่าสาธารณูปโภค": "Utilities",
-      "ค่าเช่า": "Rent",
-      "ค่าการตลาด": "Marketing",
-      "ค่าซ่อมบำรุง": "Maintenance",
-      "อื่นๆ": "Other"
-    },
-    "expensePaymentMethod": {
-      "เงินสด": "Cash",
-      "โอนเงิน": "Bank transfer",
-      "บัตรเครดิต": "Credit card",
-      "QR Code": "QR Code"
     },
     "employmentType": {
       "full_time": "Full-time",
@@ -647,7 +631,6 @@
     "description": "Manage advance birthday-cake ordering rounds and view customers' orders within each round",
     "tabRounds": "Pre-order Rounds",
     "tabOrders": "Birthday Cake Orders",
-
     "roundsDescription": "{n} rounds total",
     "createRound": "Create Round",
     "statClosedOrCancelled": "Closed/Cancelled",
@@ -658,7 +641,6 @@
     "colOpenClose": "Open - Close",
     "colPickupDate": "Pickup Date",
     "deleteConfirm": "Confirm delete this round?",
-
     "createTitle": "Create New Pre-order Round",
     "editTitle": "Edit Pre-order Round",
     "fieldRoundName": "Round Name",
@@ -668,7 +650,6 @@
     "fieldPickupDate": "Pickup Date",
     "openBeforeCloseRequired": "Open date must be before close date",
     "pickupAfterCloseRequired": "Pickup date must not be before close date",
-
     "itemsTitle": "Products ({n})",
     "addItem": "Add Product",
     "selectProduct": "Select product",
@@ -677,7 +658,6 @@
     "colPriceOverride": "Special Price",
     "colMinQty": "Min/order",
     "colMaxQty": "Total quota",
-
     "addItemTitle": "Add Product to Round",
     "editItemTitle": "Edit Product in Round",
     "fieldPriceOverride": "Special Price",
@@ -685,7 +665,6 @@
     "fieldMinOrderQty": "Minimum order per line",
     "fieldMaxQtyTotal": "Total quota for round",
     "fieldIsActive": "On sale",
-
     "created": "Pre-order round created",
     "createFailed": "Failed to create pre-order round",
     "updated": "Pre-order round updated",
@@ -700,7 +679,6 @@
     "advanceTo": "→ {status}",
     "goToProductionHint": "This round is closed and ready for a production order.",
     "goToProduction": "Go to Production →",
-
     "overridden": "special price",
     "itemInactive": "Off sale",
     "qtyProgress": "Booked {current}/{max}",
@@ -712,7 +690,6 @@
     "itemRemoved": "Product removed from round",
     "itemSaveFailed": "Failed to save product in round",
     "itemRemoveFailed": "Failed to remove product from round",
-
     "ordersDescription": "{n} orders total",
     "statInProgress": "In Progress",
     "searchOrderPlaceholder": "Search order number or customer name...",
@@ -734,13 +711,11 @@
     "scanAdded": "Added \"{name}\" to the cart",
     "scanOutOfStock": "\"{name}\" is out of stock — cannot add to cart",
     "scanFailed": "No product found for the scanned code",
-    "searchPlaceholder": "Search products...",
+    "searchPlaceholder": "Search by product code or name",
     "outOfStock": "Out of stock",
     "stockLeft": "{n} left",
-    "cart": "Cart",
     "itemCount": "{n} items",
     "clearCart": "Clear cart",
-    "cartEmpty": "Tap a product on the left to add it to the cart",
     "subtotal": "Subtotal",
     "extraDiscount": "Extra discount",
     "payable": "Amount due",
@@ -754,7 +729,38 @@
     "qrHint": "Ask the customer to scan this QR to pay",
     "qrConfirmPaid": "Customer has paid",
     "saved": "Saved order {no}",
-    "saveFailed": "Could not save the order"
+    "saveFailed": "Could not save the order",
+    "searchNoResult": "No products match \"{q}\"",
+    "searchLoadFailed": "Couldn't load products — scanning still works, but searching by name doesn't",
+    "scannedTitle": "Scanned items",
+    "scannedEmpty": "Scan a barcode, or search by code/name to add items",
+    "colProduct": "Product",
+    "colPrice": "Unit price",
+    "colQty": "Qty",
+    "colTotal": "Total",
+    "atStockLimit": "\"{name}\" is already at its full stock in the list ({n} pcs)",
+    "productHasPromotion": "This product has a promotion: {names}",
+    "promoTag": "Promo: {name}",
+    "billPromoBanner": "Whole-bill promotions today: {names}",
+    "checkoutTitle": "Checkout",
+    "promotion": "Promotion",
+    "promoAvailable": "{n} usable on this bill",
+    "noPromotion": "No promotion",
+    "bestPromo": "Best deal",
+    "promoPercent": "{n}% off",
+    "promoAmount": "{amount} off",
+    "promoBlock": {
+      "noEligibleItems": "No participating items in this bill yet",
+      "minAmount": "Participating items must reach {min}",
+      "minQty": "Needs at least {min} participating items (now {current})",
+      "usedUp": "Usage limit reached",
+      "zero": "No discount for this bill"
+    },
+    "promoPerUserNote": "Limited per customer — in-store sales share one walk-in account, so this may be rejected",
+    "selectedPromoInvalid": "The selected promotion no longer applies — priced without a promotion",
+    "promoDiscountLine": "Promotion discount ({name})",
+    "manualDiscountDisabled": "A promotion is applied — extra discount can't be combined",
+    "promoBackendNote": "The final amount is recalculated when the order is confirmed"
   },
   "ingredients": {
     "title": "Ingredients",

@@ -427,22 +427,6 @@
       "finance": "การเงิน",
       "system": "ระบบ"
     },
-    "expenseCategory": {
-      "วัตถุดิบ": "วัตถุดิบ",
-      "บรรจุภัณฑ์": "บรรจุภัณฑ์",
-      "ค่าจ้างแรงงาน": "ค่าจ้างแรงงาน",
-      "ค่าสาธารณูปโภค": "ค่าสาธารณูปโภค",
-      "ค่าเช่า": "ค่าเช่า",
-      "ค่าการตลาด": "ค่าการตลาด",
-      "ค่าซ่อมบำรุง": "ค่าซ่อมบำรุง",
-      "อื่นๆ": "อื่นๆ"
-    },
-    "expensePaymentMethod": {
-      "เงินสด": "เงินสด",
-      "โอนเงิน": "โอนเงิน",
-      "บัตรเครดิต": "บัตรเครดิต",
-      "QR Code": "QR Code"
-    },
     "employmentType": {
       "full_time": "เต็มเวลา",
       "part_time": "พาร์ทไทม์",
@@ -647,7 +631,6 @@
     "description": "จัดการรอบเปิดรับสั่งเค้กวันเกิดล่วงหน้า และดูคำสั่งซื้อของลูกค้าในแต่ละรอบ",
     "tabRounds": "รอบพรีออเดอร์",
     "tabOrders": "คำสั่งซื้อเค้กวันเกิด",
-
     "roundsDescription": "ทั้งหมด {n} รอบ",
     "createRound": "สร้างรอบใหม่",
     "statClosedOrCancelled": "ปิด/ยกเลิกแล้ว",
@@ -658,7 +641,6 @@
     "colOpenClose": "ช่วงเปิดรับ",
     "colPickupDate": "วันนัดรับ",
     "deleteConfirm": "ยืนยันการลบรอบนี้?",
-
     "createTitle": "สร้างรอบพรีออเดอร์ใหม่",
     "editTitle": "แก้ไขรอบพรีออเดอร์",
     "fieldRoundName": "ชื่อรอบ",
@@ -668,7 +650,6 @@
     "fieldPickupDate": "วันนัดรับ",
     "openBeforeCloseRequired": "วันเปิดรับต้องมาก่อนวันปิดรับ",
     "pickupAfterCloseRequired": "วันนัดรับต้องไม่มาก่อนวันปิดรับ",
-
     "itemsTitle": "รายการสินค้า ({n})",
     "addItem": "เพิ่มสินค้า",
     "selectProduct": "เลือกสินค้า",
@@ -677,7 +658,6 @@
     "colPriceOverride": "ราคาพิเศษ",
     "colMinQty": "ขั้นต่ำ/รายการ",
     "colMaxQty": "โควตารวม",
-
     "addItemTitle": "เพิ่มสินค้าเข้ารอบ",
     "editItemTitle": "แก้ไขสินค้าในรอบ",
     "fieldPriceOverride": "ราคาพิเศษ",
@@ -685,7 +665,6 @@
     "fieldMinOrderQty": "สั่งขั้นต่ำต่อรายการ",
     "fieldMaxQtyTotal": "โควตารวมในรอบ",
     "fieldIsActive": "เปิดขาย",
-
     "created": "สร้างรอบพรีออเดอร์แล้ว",
     "createFailed": "สร้างรอบพรีออเดอร์ไม่สำเร็จ",
     "updated": "แก้ไขรอบพรีออเดอร์แล้ว",
@@ -700,7 +679,6 @@
     "advanceTo": "→ {status}",
     "goToProductionHint": "รอบนี้ปิดรับแล้ว พร้อมสร้างใบสั่งผลิตได้",
     "goToProduction": "ไปที่จัดการผลิต →",
-
     "overridden": "ราคาพิเศษ",
     "itemInactive": "ปิดขาย",
     "qtyProgress": "จองแล้ว {current}/{max}",
@@ -712,7 +690,6 @@
     "itemRemoved": "ลบสินค้าออกจากรอบแล้ว",
     "itemSaveFailed": "บันทึกสินค้าในรอบไม่สำเร็จ",
     "itemRemoveFailed": "ลบสินค้าออกจากรอบไม่สำเร็จ",
-
     "ordersDescription": "ทั้งหมด {n} รายการ",
     "statInProgress": "กำลังดำเนินการ",
     "searchOrderPlaceholder": "ค้นหาเลขคำสั่งซื้อ หรือชื่อลูกค้า...",
@@ -734,13 +711,11 @@
     "scanAdded": "เพิ่ม \"{name}\" ลงตะกร้าแล้ว",
     "scanOutOfStock": "\"{name}\" หมดสต็อก — เพิ่มลงตะกร้าไม่ได้",
     "scanFailed": "ไม่พบสินค้าตามรหัสที่สแกน",
-    "searchPlaceholder": "ค้นหาสินค้า...",
+    "searchPlaceholder": "ค้นหาด้วยรหัสสินค้าหรือชื่อสินค้า",
     "outOfStock": "หมดสต็อก",
     "stockLeft": "เหลือ {n}",
-    "cart": "ตะกร้าสินค้า",
     "itemCount": "{n} ชิ้น",
     "clearCart": "ล้างตะกร้า",
-    "cartEmpty": "แตะสินค้าด้านซ้ายเพื่อเพิ่มลงตะกร้า",
     "subtotal": "ยอดรวมสินค้า",
     "extraDiscount": "ส่วนลดเพิ่มเติม",
     "payable": "ยอดชำระ",
@@ -754,7 +729,38 @@
     "qrHint": "ให้ลูกค้าสแกน QR นี้เพื่อชำระเงิน",
     "qrConfirmPaid": "ลูกค้าชำระเงินแล้ว",
     "saved": "บันทึกคำสั่งซื้อ {no} แล้ว",
-    "saveFailed": "บันทึกคำสั่งซื้อไม่สำเร็จ"
+    "saveFailed": "บันทึกคำสั่งซื้อไม่สำเร็จ",
+    "searchNoResult": "ไม่พบสินค้าที่ตรงกับ \"{q}\"",
+    "searchLoadFailed": "โหลดรายการสินค้าไม่สำเร็จ — ยังยิงบาร์โค้ดได้ตามปกติ แต่ค้นหาด้วยชื่อไม่ได้",
+    "scannedTitle": "รายการสินค้าที่สแกน",
+    "scannedEmpty": "ยิงบาร์โค้ด หรือค้นหาด้วยรหัส/ชื่อสินค้าเพื่อเพิ่มรายการ",
+    "colProduct": "สินค้า",
+    "colPrice": "ราคา/ชิ้น",
+    "colQty": "จำนวน",
+    "colTotal": "รวม",
+    "atStockLimit": "\"{name}\" อยู่ในรายการครบจำนวนสต็อกแล้ว ({n} ชิ้น)",
+    "productHasPromotion": "สินค้านี้มีโปรโมชัน: {names}",
+    "promoTag": "โปร: {name}",
+    "billPromoBanner": "โปรโมชันทั้งบิลวันนี้: {names}",
+    "checkoutTitle": "ชำระเงิน",
+    "promotion": "โปรโมชัน",
+    "promoAvailable": "ใช้กับบิลนี้ได้ {n} รายการ",
+    "noPromotion": "ไม่ใช้โปรโมชัน",
+    "bestPromo": "คุ้มสุด",
+    "promoPercent": "ลด {n}%",
+    "promoAmount": "ลด {amount}",
+    "promoBlock": {
+      "noEligibleItems": "ยังไม่มีสินค้าที่ร่วมรายการในบิล",
+      "minAmount": "ยอดสินค้าที่ร่วมรายการต้องถึง {min}",
+      "minQty": "ต้องมีสินค้าที่ร่วมรายการอย่างน้อย {min} ชิ้น (ตอนนี้ {current})",
+      "usedUp": "ใช้ครบจำนวนสิทธิ์แล้ว",
+      "zero": "ไม่ได้ส่วนลดกับบิลนี้"
+    },
+    "promoPerUserNote": "จำกัดสิทธิ์ต่อลูกค้า — ขายหน้าร้านใช้บัญชีลูกค้าทั่วไปบัญชีเดียว อาจใช้ไม่ได้",
+    "selectedPromoInvalid": "โปรโมชันที่เลือกใช้กับบิลนี้ไม่ได้แล้ว — คิดราคาแบบไม่ใช้โปรโมชัน",
+    "promoDiscountLine": "ส่วนลดโปรโมชัน ({name})",
+    "manualDiscountDisabled": "ใช้โปรโมชันอยู่ — ใช้ส่วนลดเพิ่มเติมคู่กันไม่ได้",
+    "promoBackendNote": "ยอดสุดท้ายระบบคำนวณใหม่ตอนยืนยันคำสั่งซื้อ"
   },
   "ingredients": {
     "title": "จัดการข้อมูลวัตถุดิบ",
