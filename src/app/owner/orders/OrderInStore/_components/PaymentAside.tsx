@@ -1,7 +1,10 @@
 "use client";
 // แผงขวา: การ์ดโปรโมชัน (เลือกได้ทีละ 1 — backend รับ promotion_id เดียว) · สรุปยอด · ปุ่มชำระเงินสด/QR · ยกเลิกบิล
+import { ConfigProvider } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { CheckIcon } from "@heroicons/react/24/outline";
+import { BanknotesIcon, CheckIcon, QrCodeIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/components/base";
+import { color } from "@/theme";
 import { formatCurrency } from "@/i18n/format";
 import type { Promotion } from "@/types/promotion";
 import type { PromoBlock, PromoEval } from "../posPromotion";
@@ -140,22 +143,12 @@ export function PaymentAside({
 
         {canCreate ? (
           <div className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={onPayCash}
-              disabled={!canPay}
-              className="min-h-[76px] cursor-pointer rounded-[14px] border-none bg-success text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
-            >
+            <PayButton tone={color.success} icon={<BanknotesIcon className="h-4 w-4" />} disabled={!canPay} onClick={onPayCash}>
               {t("pos.cash")}
-            </button>
-            <button
-              type="button"
-              onClick={onPayQr}
-              disabled={!canPay}
-              className="min-h-[76px] cursor-pointer rounded-[14px] border-none bg-info text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
-            >
+            </PayButton>
+            <PayButton tone={color.info} icon={<QrCodeIcon className="h-4 w-4" />} disabled={!canPay} onClick={onPayQr}>
               {t("pos.qr")}
-            </button>
+            </PayButton>
           </div>
         ) : (
           <p className="m-0 text-center text-sm text-gray-600">{t("pos.noPermission")}</p>
@@ -171,5 +164,29 @@ export function PaymentAside({
         </button>
       </div>
     </aside>
+  );
+}
+
+/** ปุ่มชำระเงิน — base Button (antd) ขนาด/ตัวอักษรมาตรฐานเท่าปุ่มอื่นทั้งระบบ (ตาม theme control) · สีตามโทเคนสถานะ
+ *  ของแอป: ConfigProvider ซ้อนเปลี่ยนแค่ colorPrimary ให้ปุ่มนี้ (hover/active/disabled antd คำนวณจากสีนี้ให้เอง) */
+function PayButton({
+  tone,
+  icon,
+  disabled,
+  onClick,
+  children,
+}: {
+  tone: string;
+  icon: React.ReactNode;
+  disabled: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <ConfigProvider theme={{ token: { colorPrimary: tone } }}>
+      <Button type="primary" block icon={icon} disabled={disabled} onClick={onClick}>
+        {children}
+      </Button>
+    </ConfigProvider>
   );
 }
