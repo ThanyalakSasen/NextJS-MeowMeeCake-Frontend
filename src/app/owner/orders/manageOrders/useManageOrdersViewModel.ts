@@ -127,6 +127,7 @@ export function useManageOrdersViewModel() {
     onSuccess: () => {
       invalidate();
       qc.invalidateQueries({ queryKey: ["payments", "by-order", selectedId] });
+      qc.invalidateQueries({ queryKey: ["reports"] }); // ชำระแล้ว/ไม่ผ่าน เปลี่ยนรายรับในหน้าสรุปการเงิน
     },
   });
 

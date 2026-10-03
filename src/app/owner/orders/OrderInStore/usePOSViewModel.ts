@@ -189,6 +189,8 @@ export function usePOSViewModel() {
       setQrOpen(false);
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["products"] });
+      // ยอดขายหน้าร้าน (POS-) เข้ารายรับทันที — หน้าสรุปการเงินที่เปิดค้างไว้ต้องดึงใหม่
+      qc.invalidateQueries({ queryKey: ["reports"] });
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.saveFailed")),
   });
