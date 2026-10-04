@@ -22,5 +22,8 @@ export const ACCESS_DENIED_PATH = "/owner/access-denied";
 /** หน้าโปรไฟล์ (เชื่อม LINE) — ต้องตรงกับ LINE_LINK_RETURN_URL ของ backend */
 export const PROFILE_PATH = "/profile";
 
+/** ความยาวรหัสผ่านขั้นต่ำ — ต้องตรงกับ MIN_PASSWORD_LENGTH ของ backend (src/services/userService.ts) */
+export const MIN_PASSWORD_LENGTH = 8;
+
 /** ช่องทาง sync การ logout ข้ามแท็บ */
 export const AUTH_BROADCAST_CHANNEL = "mmc-auth";

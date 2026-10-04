@@ -21,11 +21,23 @@ export interface AppUser {
   start_working_date?: string;
   last_working_date?: string;
   last_login_at?: string | null;
+  /** login ผิดติดกันกี่ครั้ง (ครบ 5 ครั้ง backend ล็อก 15 นาที) — รีเซ็ตเป็น 0 เมื่อ login สำเร็จ/ปลดล็อก */
+  failed_login_attempts?: number;
+  /** ล็อกถึงเวลานี้ (ISO) · null/อดีต = ไม่ล็อก — ปลดได้ด้วย POST /admin/users/{id}/unlock หรือตั้งรหัสผ่านใหม่ */
+  lockout_until?: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export type AppUserInput = Omit<AppUser, "_id" | "created_at" | "updated_at">;
+export type AppUserInput = Omit<
+  AppUser,
+  "_id" | "created_at" | "updated_at" | "failed_login_attempts" | "lockout_until"
+>;
+
+/** บัญชีถูกล็อกจาก login ผิดหลายครั้งอยู่ตอนนี้ไหม (ล็อกหมดอายุเองเมื่อเลย lockout_until) */
+export function isUserLocked(u: Pick<AppUser, "lockout_until">, now: number = Date.now()): boolean {
+  return !!u.lockout_until && new Date(u.lockout_until).getTime() > now;
+}
 
 /**
  * body เฉพาะตอน POST /admin/users (สร้างพนักงานใหม่) — backend (schemas/user.ts createUserBody)

@@ -8,8 +8,8 @@ import { useTranslations } from "next-intl";
 import { usersService } from "@/services/users";
 import { rolesService } from "@/services/roles";
 import { usePermission } from "@/context/PermissionsContext";
-import { alert } from "@/lib/alert";
-import type { EmploymentType } from "@/types/user";
+import { alert, confirmAlert } from "@/lib/alert";
+import { isUserLocked, type EmploymentType } from "@/types/user";
 import { isApiError } from "@/types/api";
 
 export interface EmployeeRow {
@@ -20,6 +20,10 @@ export interface EmployeeRow {
   roleName: string;
   employmentType: EmploymentType | null;
   working: boolean;
+  /** ถูกล็อกจาก login ผิดหลายครั้งอยู่ตอนนี้ */
+  locked: boolean;
+  /** ล็อกถึงเมื่อไร (ISO) — มีเฉพาะตอน locked */
+  lockedUntil: string | null;
 }
 
 type StatusFilter = "all" | "working" | "left";
@@ -66,6 +70,8 @@ export function useEmployeesViewModel() {
         roleName: (u.role_id && roleMap.get(u.role_id)?.role_name) || "—",
         employmentType: u.employment_type ?? null,
         working: u.emp_status,
+        locked: isUserLocked(u),
+        lockedUntil: isUserLocked(u) ? (u.lockout_until ?? null) : null,
       }));
   }, [usersQ.data, rolesQ.data]);
 
@@ -99,6 +105,34 @@ export function useEmployeesViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("employees.deleteFailed")),
   });
 
+  // ── ปลดล็อก / ตั้งรหัสผ่านใหม่ (BACKLOG2 §15.2 ข้อ 4) — สิทธิ์ employees.update ทั้งคู่ ──
+  // เดิมพนักงานที่ login ผิดจนโดนล็อก (5 ครั้ง → 15 นาที) หรือลืมรหัส เจ้าของร้านแก้ผ่านเว็บไม่ได้เลย
+  const unlock = useMutation({
+    mutationFn: (id: string) => usersService.unlock(id),
+    onSuccess: () => {
+      alert.success(t("employees.unlocked"));
+      qc.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("employees.unlockFailed")),
+  });
+
+  const onUnlock = async (r: EmployeeRow) => {
+    const ok = await confirmAlert(t("employees.unlockConfirm", { name: r.name }), { title: t("employees.unlock") });
+    if (ok) unlock.mutate(r._id);
+  };
+
+  const [passwordTarget, setPasswordTarget] = useState<{ id: string; name: string } | null>(null);
+  const setPassword = useMutation({
+    mutationFn: ({ id, password }: { id: string; password: string }) => usersService.setPassword(id, password),
+    onSuccess: () => {
+      alert.success(t("employees.passwordReset"));
+      setPasswordTarget(null);
+      // backend ปลดล็อกให้ด้วย — ดึงสถานะล็อกใหม่
+      qc.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("employees.passwordResetFailed")),
+  });
+
   return {
     perm,
     rows: filtered,
@@ -113,5 +147,13 @@ export function useEmployeesViewModel() {
     status, setStatus,
 
     onDelete: (id: string) => remove.mutate(id),
+
+    onUnlock,
+    unlockingId: unlock.isPending ? unlock.variables : null,
+    passwordTarget,
+    openPassword: (r: EmployeeRow) => setPasswordTarget({ id: r._id, name: r.name }),
+    closePassword: () => setPasswordTarget(null),
+    onSavePassword: (id: string, password: string) => setPassword.mutate({ id, password }),
+    savingPassword: setPassword.isPending,
   };
 }
