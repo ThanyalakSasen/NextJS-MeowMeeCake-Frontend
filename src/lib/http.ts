@@ -73,7 +73,16 @@ function toApiError(err: AxiosError<BackendErrorBody>): ApiError {
  */
 const NO_EXPIRY_REDIRECT_PATHS = ["/auth/login", "/auth/logout", "/auth/register", "/auth/google"];
 
+// ส่ง { skipAuthRedirect: true } ใน config เพื่อบอกว่า 401 ของ request นี้ "ไม่ใช่ session หมดอายุ"
+// (เช่นหน้าร้านเช็คว่า guest ล็อกอินหรือยัง — authClient.meOptional) → ไม่เด้งไป login
+declare module "axios" {
+  interface AxiosRequestConfig {
+    skipAuthRedirect?: boolean;
+  }
+}
+
 function skipsUnauthorizedHandler(config: AxiosRequestConfig | undefined): boolean {
+  if (config?.skipAuthRedirect) return true;
   const url = config?.url ?? "";
   // config.url อาจเป็น relative ("/auth/login") หรือเต็ม (baseURL + path) — ตัด query แล้วเทียบท้าย path
   const path = url.split("?")[0].replace(/\/+$/, "");

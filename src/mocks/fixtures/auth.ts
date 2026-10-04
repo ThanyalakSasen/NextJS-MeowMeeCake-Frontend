@@ -22,6 +22,7 @@ export const MOCK_USER: CurrentUser = {
   fullname: "เจ้าของร้าน (Mock)",
   roleId: "mock-role-owner",
   roleName: "เจ้าของร้าน",
+  roleType: "owner",
   menuAccess: MOCK_MENU_ACCESS,
 };
 

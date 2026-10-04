@@ -12,7 +12,7 @@ import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { PermissionsProvider } from "@/context/PermissionsContext";
 import { logout } from "@/lib/authClient";
 import { confirmAlert } from "@/lib/alert";
-import { ACCESS_DENIED_PATH, LOGIN_PATH } from "@/constants/auth";
+import { ACCESS_DENIED_PATH, CUSTOMER_HOME_PATH, LOGIN_PATH } from "@/constants/auth";
 import { resolveMenuKey } from "@/constants/menuKeys";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { Sidebar } from "./Sidebar";
@@ -30,6 +30,12 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
     // รวม query เดิม (เช่น ?id= จากลิงก์ LINE) — อ่านจาก window ใน effect แทน useSearchParams กัน layout ทั้งก้อนต้องอยู่ใต้ Suspense
     if (isError) router.replace(`${LOGIN_PATH}?reason=expired&next=${encodeURIComponent(pathname + window.location.search)}`);
   }, [isError, router, pathname]);
+
+  // ลูกค้าที่ login อยู่ (เช่นพิมพ์ URL /owner เอง) → ส่งกลับหน้าร้าน — หลังร้านไม่มีอะไรให้ลูกค้าใช้
+  const isCustomer = user?.roleType === "customer";
+  useEffect(() => {
+    if (isCustomer) router.replace(CUSTOMER_HOME_PATH);
+  }, [isCustomer, router]);
 
   // กั้นหน้าตามสิทธิ์: path ที่ผูก menu_key (constants/menuKeys.ts ROUTE_MENU_MAP) แต่ไม่มีสิทธิ์ view → หน้า access-denied
   // path ที่ไม่ผูก key (dashboard ฯลฯ) = login พอ · owner มี view ทุกเมนูเสมอ
@@ -73,7 +79,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   useIdleTimeout({ enabled: !!user, onWarn, onTimeout });
 
   // denied: ไม่ render เนื้อหาหน้านั้นเลยระหว่างรอ redirect (กัน flash + กันหน้ายิง API ที่จะได้ 403)
-  if (isLoading || !user || denied) {
+  if (isLoading || !user || denied || isCustomer) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpin />
