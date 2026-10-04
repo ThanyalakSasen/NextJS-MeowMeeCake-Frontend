@@ -10,7 +10,7 @@
 // ordersService.get(id) ถึงจะได้ items จริง
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
-import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
+import type { DeliveryStatus, OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 
 // ตรงกับ backend จริง (orderModel.order_type) — ไม่ใช่ "ready"/"preorder" (นั่นคือ product_type)
 export type OrderType = "delivery" | "takeaway";
@@ -36,7 +36,35 @@ export interface DeliveryAddress {
   zip_code: string;
 }
 
-export interface Order {
+/** ข้อมูลจัดส่ง — มีความหมายเฉพาะ order_type = "delivery" (ฟิลด์ชุดเดียวกันทั้ง orderModel และ preorderModel) */
+export interface DeliveryInfo {
+  delivery_status: DeliveryStatus;
+  tracking_no: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
+  delivered_note: string | null;
+}
+
+/** body ของ PATCH /admin/orders/{id}/delivery และ /admin/preorders/{id}/delivery (schemas/order.ts updateDeliveryBody)
+ *  backend ตั้ง shipped_at ให้เองตอนเปลี่ยนเป็น shipping ครั้งแรก · delivered_at ตอนเปลี่ยนเป็น delivered
+ *  · แจ้งลูกค้าเฉพาะตอน delivery_status เปลี่ยนจริง · ตอบ 400 ถ้าไม่ใช่ออเดอร์จัดส่ง */
+export interface DeliveryUpdateInput {
+  delivery_status?: DeliveryStatus;
+  tracking_no?: string | null;
+  delivered_note?: string | null;
+}
+
+/** ดึง DeliveryInfo จาก raw ของ backend — ใช้ร่วมกันใน services/orders.ts + services/preorders.ts */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const toDeliveryInfo = (raw: any): DeliveryInfo => ({
+  delivery_status: raw.delivery_status ?? "pending",
+  tracking_no: raw.tracking_no ?? null,
+  shipped_at: raw.shipped_at ?? null,
+  delivered_at: raw.delivered_at ?? null,
+  delivered_note: raw.delivered_note ?? null,
+});
+
+export interface Order extends DeliveryInfo {
   _id: string;
   order_no: string;
   order_type: OrderType;

@@ -10,6 +10,7 @@ import type { Preorder } from "@/types/preorder";
 import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { SlipImage } from "../../_components/SlipImage";
+import { DeliverySection } from "../../_components/DeliverySection";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -142,6 +143,19 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
               {order.delivery_address.province} {order.delivery_address.zip_code}
             </p>
           </div>
+        </>
+      )}
+
+      {order.order_type === "delivery" && (
+        <>
+          <Divider className="!my-0" />
+          <DeliverySection
+            key={order.updated_at}
+            info={order}
+            canUpdate={vm.perm.update && !isCancelled}
+            saving={vm.savingDelivery}
+            onSave={vm.onSaveDelivery}
+          />
         </>
       )}
 

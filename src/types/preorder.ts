@@ -14,7 +14,7 @@
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
 import type { OrderStatus, PaymentStatus, RoundStatus } from "@/constants/enumConfig";
-import type { OrderType, DeliveryAddress } from "@/types/order";
+import type { OrderType, DeliveryAddress, DeliveryInfo } from "@/types/order";
 
 export interface PreorderItem {
   _id: string;
@@ -29,7 +29,7 @@ export interface PreorderItem {
   total_price: number;
 }
 
-export interface Preorder {
+export interface Preorder extends DeliveryInfo {
   _id: string;
   preorder_no: string;
   user_id: string;

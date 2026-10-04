@@ -177,6 +177,9 @@ export function ManageOrdersView(vm: VM) {
             onVerifyPayment={vm.onVerifyPayment}
             onRejectPayment={vm.onRejectPayment}
             verifyingPayment={vm.verifyingPayment}
+            canUpdateDelivery={vm.perm.update}
+            savingDelivery={vm.savingDelivery}
+            onSaveDelivery={vm.onSaveDelivery}
           />
         )}
       </DetailDrawer>

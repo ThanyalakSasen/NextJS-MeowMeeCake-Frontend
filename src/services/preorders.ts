@@ -9,6 +9,7 @@
 import { http } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
 import type { Preorder, PreorderItem, PreorderListParams } from "@/types/preorder";
+import { toDeliveryInfo, type DeliveryUpdateInput } from "@/types/order";
 import { refId } from "@/lib/refId";
 
 const BASE = "/admin/preorders";
@@ -47,6 +48,7 @@ function toPreorder(raw: any): Preorder {
     order_status: raw.order_status,
     payment_status: raw.payment_status,
     delivery_address: raw.delivery_address ?? null,
+    ...toDeliveryInfo(raw),
     subtotal: raw.subtotal,
     discount_amount: raw.discount_amount ?? 0,
     delivery_fee: raw.delivery_fee ?? 0,
@@ -73,6 +75,12 @@ export const preordersService = {
   // backend ไม่มี PATCH /admin/preorders/[id] ตรง ๆ — เปลี่ยนสถานะต้องผ่าน /status เท่านั้น (เหมือน orders.ts)
   updateStatus: async (id: string, order_status: string, cancelled_reason?: string) => {
     const res = await http.patch<ItemResponse<any>>(`${BASE}/${id}/status`, { order_status, cancelled_reason });
+    return { data: toPreorder(res.data) };
+  },
+
+  // คู่ขนานกับ ordersService.updateDelivery — เฉพาะพรีออเดอร์แบบจัดส่ง
+  updateDelivery: async (id: string, body: DeliveryUpdateInput) => {
+    const res = await http.patch<ItemResponse<any>>(`${BASE}/${id}/delivery`, body);
     return { data: toPreorder(res.data) };
   },
 };
