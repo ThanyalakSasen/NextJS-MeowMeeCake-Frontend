@@ -11,6 +11,7 @@ import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components
 import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
 import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
+import { CategoryManagerButton } from "@/components/shared/categories";
 import type { IngredientRow, useIngredientsViewModel } from "./useIngredientsViewModel";
 import { IngredientFormModal } from "./_components/IngredientFormModal";
 
@@ -82,11 +83,14 @@ export function IngredientsView(vm: VM) {
       title={t("ingredients.title")}
       description={t("ingredients.description")}
       actions={
-        vm.perm.create && (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
-            {t("ingredients.addIngredient")}
-          </Button>
-        )
+        <div className="flex flex-wrap gap-2">
+          <CategoryManagerButton kind="ingredient" />
+          {vm.perm.create && (
+            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+              {t("ingredients.addIngredient")}
+            </Button>
+          )}
+        </div>
       }
       toolbar={
         <FilterToolbar

@@ -1475,5 +1475,22 @@
       "unlinkedSuccess": "LINE disconnected",
       "unlinkFailed": "Could not disconnect"
     }
+  },
+  "categories": {
+    "manage": "Manage categories",
+    "titleProduct": "Product categories",
+    "titleIngredient": "Ingredient categories",
+    "titleComponent": "Component categories",
+    "newPlaceholder": "New category name",
+    "empty": "No categories yet",
+    "renameLabel": "Rename category {name}",
+    "deleteConfirm": "Delete category \"{name}\"?",
+    "deleteHint": "Only categories with no items can be deleted — move items to another category first",
+    "created": "Category added",
+    "renamed": "Category renamed",
+    "deleted": "Category deleted",
+    "saveFailed": "Failed to save category",
+    "deleteFailed": "Failed to delete category",
+    "inUse": "Cannot delete \"{name}\": {n} products still use this category"
   }
 }
