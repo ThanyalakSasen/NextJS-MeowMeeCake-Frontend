@@ -1,7 +1,10 @@
 "use client";
-// View ของ Employees List — JSX ล้วน (component กลางล้วน ไม่มี _components เฉพาะหน้า)
-import { useTranslations } from "next-intl";
+// View ของ Employees List — JSX ล้วน (+ ResetPasswordModal สำหรับตั้งรหัสผ่านใหม่)
+import { useTranslations, useLocale } from "next-intl";
 import { PlusIcon } from "@heroicons/react/24/solid";
+import { KeyIcon, LockOpenIcon } from "@heroicons/react/24/outline";
+import { formatDate } from "@/i18n/format";
+import { ResetPasswordModal } from "./_components/ResetPasswordModal";
 import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
@@ -14,6 +17,7 @@ type VM = ReturnType<typeof useEmployeesViewModel>;
 
 export function EmployeesView(vm: VM) {
   const t = useTranslations();
+  const locale = useLocale();
 
   const columns: Column<EmployeeRow>[] = [
     {
@@ -44,9 +48,20 @@ export function EmployeesView(vm: VM) {
       key: "status",
       title: t("employees.colStatus"),
       render: (r) => (
-        <Tag color={r.working ? "success" : "default"}>
-          {r.working ? t("employees.statusWorking") : t("employees.statusLeft")}
-        </Tag>
+        <div className="flex flex-wrap items-center gap-1">
+          <Tag color={r.working ? "success" : "default"} className="!m-0">
+            {r.working ? t("employees.statusWorking") : t("employees.statusLeft")}
+          </Tag>
+          {r.locked && r.lockedUntil && (
+            <Tag
+              color="error"
+              className="!m-0"
+              title={t("employees.lockedUntil", { time: formatDate(r.lockedUntil, locale, { withTime: true }) })}
+            >
+              {t("employees.statusLocked")}
+            </Tag>
+          )}
+        </div>
       ),
     },
   ];
@@ -116,6 +131,25 @@ export function EmployeesView(vm: VM) {
               vm.perm.update || vm.perm.delete
                 ? (r) => (
                     <div className="flex justify-end gap-2">
+                      {vm.perm.update && r.locked && (
+                        <Button
+                          size="small"
+                          icon={<LockOpenIcon className="h-3.5 w-3.5" />}
+                          loading={vm.unlockingId === r._id}
+                          onClick={() => vm.onUnlock(r)}
+                        >
+                          {t("employees.unlock")}
+                        </Button>
+                      )}
+                      {vm.perm.update && (
+                        <Button
+                          size="small"
+                          icon={<KeyIcon className="h-3.5 w-3.5" />}
+                          onClick={() => vm.openPassword(r)}
+                        >
+                          {t("employees.resetPassword")}
+                        </Button>
+                      )}
                       {vm.perm.update && (
                         <EditButton size="small" href={`/owner/employees/editEmployee?id=${r._id}`} />
                       )}
@@ -134,6 +168,13 @@ export function EmployeesView(vm: VM) {
           />
         </div>
       )}
+
+      <ResetPasswordModal
+        target={vm.passwordTarget}
+        saving={vm.savingPassword}
+        onClose={vm.closePassword}
+        onSave={vm.onSavePassword}
+      />
     </ListPageLayout>
   );
 }

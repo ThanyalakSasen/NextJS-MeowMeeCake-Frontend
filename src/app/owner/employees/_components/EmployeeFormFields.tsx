@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Rule } from "antd/es/form";
 import { Input, InputNumber, PasswordInput, Select, Switch, DatePicker, FormItem } from "@/components/base";
 import { rolesService } from "@/services/roles";
+import { MIN_PASSWORD_LENGTH } from "@/constants/auth";
 
 export function EmployeeFormFields({ isEdit = false }: { isEdit?: boolean }) {
   const t = useTranslations();
@@ -17,10 +18,10 @@ export function EmployeeFormFields({ isEdit = false }: { isEdit?: boolean }) {
   // backend (schemas/user.ts createUserBody) บังคับ email จริง (ไม่ optional) ทั้งตอนสร้างและแก้ไข
   const emailRule: Rule[] = [{ required: true, message: t("validation.required") }, { type: "email", message: t("validation.email") }];
   const nonNegative: Rule[] = [{ type: "number", min: 0, message: t("validation.nonNegative") }];
-  // backend (schemas/user.ts createUserBody → userService.assertPasswordStrength) บังคับอย่างน้อย 8 ตัวอักษร
+  // backend (schemas/user.ts createUserBody → userService.assertPasswordStrength) บังคับอย่างน้อย MIN_PASSWORD_LENGTH ตัวอักษร
   const passwordRule: Rule[] = [
     { required: true, message: t("validation.required") },
-    { min: 8, message: t("employees.passwordHint") },
+    { min: MIN_PASSWORD_LENGTH, message: t("employees.passwordHint") },
   ];
 
   return (
