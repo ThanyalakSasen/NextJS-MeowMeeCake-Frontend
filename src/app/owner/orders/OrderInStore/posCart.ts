@@ -4,9 +4,15 @@
 // ─────────────────────────────────────────────────────────────
 import type { Product } from "@/types/product";
 import type { OrderInput } from "@/types/order";
+import { refId } from "@/lib/refId";
+import type { PromoLine } from "./posPromotion";
 
 export interface CartLine {
   productId: string;
+  /** รหัสสินค้า/บาร์โค้ด เช่น "pos-0126264" — ไม่ใช่ทุกสินค้าจะมี */
+  code: string | null;
+  /** ใช้เช็คโปรโมชันที่จำกัดตามหมวด */
+  categoryId: string | null;
   name: string;
   /** ราคาต่อหน่วยที่ใช้ขาย (sale_price ถ้ามี ไม่งั้น product_price) */
   price: number;
@@ -25,7 +31,29 @@ export function addLine(cart: CartLine[], p: Product): CartLine[] {
       c.productId === p._id ? { ...c, qty: Math.min(c.qty + 1, c.stock) } : c,
     );
   }
-  return [...cart, { productId: p._id, name: p.product_name_th, price: priceOf(p), qty: 1, stock }];
+  return [
+    ...cart,
+    {
+      productId: p._id,
+      code: p.product_id ?? null,
+      categoryId: refId(p.category_id) || null,
+      name: p.product_name_th,
+      price: priceOf(p),
+      qty: 1,
+      stock,
+    },
+  ];
+}
+
+/** สินค้าเต็มสต็อกในตะกร้าแล้ว (เพิ่มอีกไม่ได้) */
+export function isAtStock(cart: CartLine[], productId: string): boolean {
+  const line = cart.find((c) => c.productId === productId);
+  return !!line && line.qty >= line.stock;
+}
+
+/** ตะกร้า → รายการสำหรับคิดโปรโมชัน (posPromotion.ts) */
+export function toPromoLines(cart: CartLine[]): PromoLine[] {
+  return cart.map((c) => ({ productId: c.productId, categoryId: c.categoryId, qty: c.qty, lineTotal: c.price * c.qty }));
 }
 
 export function setLineQty(cart: CartLine[], productId: string, qty: number): CartLine[] {
@@ -52,6 +80,8 @@ export function buildOrderInput(args: {
   cart: CartLine[];
   guestUserId: string;
   discount: number;
+  /** เลือกโปรโมชัน → ส่ง promotion_id แทน discount_amount (backend คิดส่วนลดเอง · ใช้คู่กับส่วนลดกรอกมือไม่ได้) */
+  promotionId?: string | null;
 }): OrderInput {
   return {
     user_id: args.guestUserId,
@@ -59,6 +89,8 @@ export function buildOrderInput(args: {
     order_type: "takeaway",
     channel: "instore",
     items: args.cart.map((c) => ({ product_id: c.productId, quantity: c.qty })),
-    discount_amount: args.discount || undefined,
+    ...(args.promotionId
+      ? { promotion_id: args.promotionId }
+      : { discount_amount: args.discount || undefined }),
   };
 }

@@ -66,6 +66,8 @@ export interface OrderInput {
   items: { product_id: string; quantity: number }[];
   /** ส่วนลดกรอกมือ (ใช้เมื่อไม่ได้ระบุโปรโมชัน) */
   discount_amount?: number;
+  /** ใช้โปรโมชัน — backend คิดส่วนลดเอง (ไม่สนใจ discount_amount) · ส่ง promotion_code หรือ promotion_id อย่างใดอย่างหนึ่ง */
+  promotion_id?: string;
   channel?: "online" | "instore";
 }
 

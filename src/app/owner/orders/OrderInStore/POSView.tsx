@@ -1,88 +1,93 @@
 "use client";
-// View ของ POS หน้าร้าน — 2-pane: กริดสินค้า (ซ้าย) + ตะกร้า (ขวา, sticky)
-import { useLocale, useTranslations } from "next-intl";
-import { QrCodeIcon } from "@heroicons/react/24/outline";
-import { Input } from "@/components/base";
+// View ของ POS หน้าร้าน — ตามดีไซน์ใหม่ (เฉพาะส่วนเนื้อหา — header/เมนูใช้ OwnerLayout ของแอป):
+// ซ้าย = ช่อง "สแกน / ค้นหา" + บิลปัจจุบัน · ขวา = โปรโมชัน + สรุปยอด + ปุ่มชำระ · หน้าต่าง เงินสด / QR / สำเร็จ
+import { useTranslations } from "next-intl";
 import { DashboardPageLayout } from "@/components/shared/layout";
-import { LoadingSpin } from "@/components/shared/feedback";
-import { SearchInput, TypeTabBar } from "@/components/shared/data";
 import { RetryButton } from "@/components/shared/actions";
 import type { usePOSViewModel } from "./usePOSViewModel";
-import { ProductPickerGrid } from "./_components/ProductPickerGrid";
-import { CartPanel } from "./_components/CartPanel";
+import { ScanSearchBox } from "./_components/ScanSearchBox";
+import { BillCard } from "./_components/BillCard";
+import { PaymentAside } from "./_components/PaymentAside";
+import { CashPaymentModal } from "./_components/CashPaymentModal";
 import { QRPaymentModal } from "./_components/QRPaymentModal";
+import { PaymentDoneModal } from "./_components/PaymentDoneModal";
 
 type VM = ReturnType<typeof usePOSViewModel>;
 
 export function POSView(vm: VM) {
   const t = useTranslations();
-  const locale = useLocale();
 
   return (
     <DashboardPageLayout title={t("pos.title")} description={t("pos.description")}>
-      {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">
-          <div className="flex flex-col gap-3">
-            <Input
-              autoFocus
-              allowClear
-              value={vm.scanCode}
-              onChange={(e) => vm.setScanCode(e.target.value)}
-              onPressEnter={() => vm.onScan(vm.scanCode)}
-              disabled={vm.scanning}
-              placeholder={t("pos.scanPlaceholder")}
-              prefix={<QrCodeIcon className="w-4 h-4 text-gray-400" />}
-              size="large"
-            />
-            <div className="flex flex-wrap items-center gap-2">
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("pos.searchPlaceholder")} />
-              <TypeTabBar
-                value={vm.categoryId}
-                onChange={vm.setCategoryId}
-                options={[
-                  { value: "all", label: t("common.all") },
-                  ...[...vm.categories]
-                    .sort((a, b) => a.product_category_name.localeCompare(b.product_category_name, locale))
-                    .map((c) => ({ value: c._id, label: c.product_category_name })),
-                ]}
-              />
-            </div>
-            {vm.isLoading ? <LoadingSpin /> : <ProductPickerGrid products={vm.catalog} onAdd={vm.addToCart} />}
-          </div>
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <section aria-label={t("pos.billTitle")} className="flex min-w-0 flex-col gap-3.5">
+          <ScanSearchBox
+            value={vm.query}
+            scanning={vm.scanning}
+            suggestions={vm.suggestions}
+            promosOf={vm.promosOf}
+            onChange={vm.setQuery}
+            onSubmit={vm.onSubmitQuery}
+            onPick={vm.onPickSuggestion}
+          />
 
-          <CartPanel
+          {vm.isCatalogError && (
+            // ค้นหาด้วยชื่อใช้ไม่ได้ถ้าโหลดรายการสินค้าไม่สำเร็จ — ยิงบาร์โค้ด/พิมพ์รหัสแล้ว Enter ยังใช้ได้ (ถาม backend ทีละรหัส)
+            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3">
+              <p className="m-0 text-sm text-gray-600">{t("pos.searchLoadFailed")}</p>
+              <RetryButton onClick={() => vm.refetchCatalog()} />
+            </div>
+          )}
+
+          <BillCard
             cart={vm.cart}
             itemCount={vm.itemCount}
-            subtotal={vm.subtotal}
-            total={vm.total}
-            customerName={vm.customerName}
-            extraDiscount={vm.extraDiscount}
-            paymentMethod={vm.paymentMethod}
-            canCreate={vm.perm.create}
-            submitting={vm.submitting}
-            onChangeQty={vm.changeQty}
-            onRemove={vm.removeFromCart}
-            onClear={vm.clearCart}
-            onCustomerName={vm.setCustomerName}
-            onExtraDiscount={vm.setExtraDiscount}
-            onPaymentMethod={vm.setPaymentMethod}
-            onConfirm={vm.onConfirm}
+            promosOf={vm.promosOf}
+            onIncrease={vm.increaseQty}
+            onDecrease={vm.decreaseQty}
           />
-        </div>
-      )}
+        </section>
 
+        <PaymentAside
+          promotionsEnabled={vm.promotionsEnabled}
+          promoEvals={vm.promoEvals}
+          billPromotions={vm.billPromotions}
+          bestPromoId={vm.bestPromoId}
+          selectedPromoId={vm.selectedPromoId}
+          selectedPromoInvalid={vm.selectedPromoInvalid}
+          subtotal={vm.subtotal}
+          discount={vm.discount}
+          total={vm.total}
+          canPay={vm.canPay}
+          canCreate={vm.perm.create}
+          hasItems={vm.cart.length > 0}
+          onTogglePromo={vm.togglePromo}
+          onPayCash={vm.openCash}
+          onPayQr={vm.openQr}
+          onClearBill={vm.onClearBill}
+        />
+      </div>
+
+      <CashPaymentModal
+        open={vm.payDialog === "cash"}
+        total={vm.total}
+        received={vm.received}
+        short={vm.receivedShort}
+        submitting={vm.submitting}
+        onPressKey={vm.pressKey}
+        onPick={vm.pickCash}
+        onConfirm={vm.confirmCash}
+        onClose={vm.closeDialog}
+      />
       <QRPaymentModal
-        open={vm.qrOpen}
+        open={vm.payDialog === "qr"}
         amount={vm.total}
         submitting={vm.submitting}
-        onClose={vm.closeQr}
-        onConfirmPaid={vm.confirmPaid}
+        onClose={vm.closeDialog}
+        onConfirmPaid={vm.confirmQr}
+        onSwitchToCash={vm.openCash}
       />
+      <PaymentDoneModal open={vm.payDialog === "done"} done={vm.done} onNewBill={vm.closeDialog} />
     </DashboardPageLayout>
   );
 }
