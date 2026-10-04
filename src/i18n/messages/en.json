@@ -538,6 +538,7 @@
     "deleteFailed": "Delete failed",
     "saleLtPrice": "Sale price must be lower than the price",
     "lowStockThresholdHint": "Leave blank = 5",
+    "stockEditHint": "Adjust stock on the Product Stock page",
     "lowStockThresholdInvalid": "Must be a whole number, 0 or more",
     "imageUploadFailed": "Could not upload the image. Please try again."
   },

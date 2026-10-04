@@ -84,3 +84,14 @@ export function toInput(v: ProductFormValue): ProductInput {
     preorder_config: isPreorder ? (v.preorder_config as PreorderConfig) : null,
   };
 }
+
+/**
+ * ค่าจากฟอร์ม → body ของ PATCH ตอนแก้ไข — เหมือน toInput แต่ **ไม่ส่ง product_stock_quantity**
+ * สต็อกปรับที่หน้าสต็อกสินค้า (PUT …/stock) เท่านั้น — backend จะปฏิเสธฟิลด์นี้ใน PATCH ทั่วไป (BACKLOG2 §15.2 ข้อ 5)
+ * เปลี่ยนประเภทปกติ↔พรีออเดอร์ได้โดยไม่ต้องส่ง: backend ตั้งสต็อกเป็น null (พรีออเดอร์) / 0 (กลับเป็นปกติ) ให้เอง
+ */
+export function toUpdateInput(v: ProductFormValue): Omit<ProductInput, "product_stock_quantity"> {
+  const { product_stock_quantity: _omit, ...rest } = toInput(v);
+  void _omit;
+  return rest;
+}
