@@ -37,6 +37,7 @@ function toCurrentUser(raw: RawAuthUser, perms?: RawMenuPermissions): CurrentUse
     fullname: raw.user_fullname,
     roleId: role?._id ?? (typeof raw.role_id === "string" ? raw.role_id : ""),
     roleName: role?.role_name ?? "",
+    roleType: role?.role_type ?? null,
     menuAccess: buildMenuAccess(role?.role_type, perms),
   };
 }
@@ -63,6 +64,28 @@ export function onAuthBroadcast(handler: (msg: AuthBroadcast) => void): () => vo
 export async function me(): Promise<CurrentUser> {
   const res = await http.get<ItemResponse<{ user: RawAuthUser; permissions?: RawMenuPermissions }>>("/auth/me");
   return toCurrentUser(res.data.user, res.data.permissions);
+}
+
+/**
+ * ผู้ใช้ปัจจุบันแบบ "ไม่บังคับ login" — สำหรับหน้าร้านที่ guest เปิดดูได้
+ * ยังไม่ login (401) → null โดยไม่เด้งไปหน้า login (ข้าม 401 handler กลางด้วย skipAuthRedirect)
+ */
+export async function meOptional(): Promise<CurrentUser | null> {
+  try {
+    const res = await http.get<ItemResponse<{ user: RawAuthUser; permissions?: RawMenuPermissions }>>("/auth/me", {
+      skipAuthRedirect: true,
+    });
+    return toCurrentUser(res.data.user, res.data.permissions);
+  } catch (e) {
+    if ((e as { status?: number })?.status === 401) return null;
+    throw e;
+  }
+}
+
+/** POST /auth/register — ลูกค้าสมัครสมาชิกเอง (backend บังคับ role customer + ตั้ง cookie ให้เลย = login ทันที) */
+export async function register(input: { user_fullname: string; email: string; password: string; user_phone?: string }) {
+  await http.post("/auth/register", input);
+  return me();
 }
 
 export async function login(input: LoginInput): Promise<CurrentUser> {

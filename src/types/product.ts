@@ -44,6 +44,8 @@ export interface Product {
    *  ใช้เฉพาะสินค้าปกติ (พรีออเดอร์ไม่มีสต็อก) */
   low_stock_threshold?: number | null;
   product_description?: string;
+  /** วิธีเตรียม/อุ่น — แสดงที่แท็บ "ขั้นตอนการอุ่น" ในหน้าสินค้าของหน้าร้าน */
+  preparation_heating?: string | null;
   /** array ของ URL รูปจริงที่อัปโหลดผ่าน POST /admin/products/images แล้ว (ไม่ใช่ base64) */
   product_img?: string[];
   preorder_config?: PreorderConfig | null;

@@ -20,6 +20,10 @@ const ALLOW_DIRS = [
   "src/mocks",          // MSW fixture (D17)
   "src/types",          // interface/union ที่มีค่าไทยเป็น literal type (แนวทาง A)
   "src/constants",      // *_CONFIG ที่ key ด้วยค่า DB enum ภาษาไทย (แนวทาง A)
+  // หน้าร้าน (ย้ายมาจาก FrontOffice) — ข้อความไทยเขียนตรงในโค้ด ~1,400 จุด · ตัดสินใจ (2026-10-04, แบบ ข)
+  // ยกเว้นไว้ก่อนแล้วทยอยย้ายเข้า src/i18n/messages ทีหลัง — โค้ดหน้าร้านใหม่ควรใช้ t() ตั้งแต่แรก
+  "src/app/customer",
+  "src/components/customer",
 ];
 const ALLOW_FILES = [
   "src/app/layout.tsx", // metadata.description — จะย้ายไป generateMetadata ทีหลัง

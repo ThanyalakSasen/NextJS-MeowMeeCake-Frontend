@@ -19,6 +19,9 @@ export const AUTH_GATE: "cookie" | "client" = process.env.NEXT_PUBLIC_AUTH_GATE 
 export const LOGIN_PATH = "/login";
 export const HOME_PATH = "/owner/dashboard";
 export const ACCESS_DENIED_PATH = "/owner/access-denied";
+/** หน้าแรกของหน้าร้าน (ลูกค้า + guest) — ย้ายมาจาก FrontOffice (เลิกใช้ backend port 4000) */
+export const CUSTOMER_HOME_PATH = "/customer";
+
 /** หน้าโปรไฟล์ (เชื่อม LINE) — ต้องตรงกับ LINE_LINK_RETURN_URL ของ backend */
 export const PROFILE_PATH = "/profile";
 

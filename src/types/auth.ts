@@ -18,8 +18,12 @@ export interface CurrentUser {
   fullname: string;
   roleId: string;
   roleName: string;
+  /** owner / staff = หลังร้าน · customer = หน้าร้าน (ใช้เลือกปลายทางหลัง login และกันลูกค้าเข้า /owner) */
+  roleType: RoleType | null;
   menuAccess: MenuAccess;
 }
+
+export type RoleType = "owner" | "staff" | "customer";
 
 /**
  * shape ดิบที่ backend ส่งจริง (POST /api/auth/login, GET /api/auth/me → { user: RawAuthUser })
@@ -29,7 +33,7 @@ export interface RawAuthUser {
   _id: string;
   email: string;
   user_fullname: string;
-  role_id: { _id: string; role_name: string; role_type: "owner" | "staff" | "customer" } | string;
+  role_id: { _id: string; role_name: string; role_type: RoleType } | string;
 }
 
 /**
