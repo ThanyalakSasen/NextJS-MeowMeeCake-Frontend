@@ -22,6 +22,7 @@ import { isApiError } from "@/types/api";
 import type { OrderStatus, RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
 import type { Preorder } from "@/types/preorder";
+import type { DeliveryUpdateInput } from "@/types/order";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 
 export type TabKey = "rounds" | "orders";
@@ -318,8 +319,28 @@ export function usePreOrderRoundViewModel() {
     );
   };
 
+  // สถานะจัดส่ง/เลขพัสดุ (BACKLOG2 §15.2 ข้อ 3) — เฉพาะพรีออเดอร์แบบจัดส่ง · backend แจ้งลูกค้าเองเมื่อสถานะเปลี่ยน
+  const deliveryMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: DeliveryUpdateInput }) => preordersService.updateDelivery(id, input),
+    onSuccess: invalidateOrders,
+  });
+
+  const onSaveDelivery = (input: DeliveryUpdateInput) => {
+    if (!selectedOrder) return;
+    const no = selectedOrder.preorder_no;
+    deliveryMutation.mutate(
+      { id: selectedOrder._id, input },
+      {
+        onSuccess: () => alert.success(t("orders.deliverySaved", { no })),
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.deliverySaveFailed")),
+      },
+    );
+  };
+
   return {
     t, locale, perm,
+    onSaveDelivery,
+    savingDelivery: deliveryMutation.isPending,
     activeTab, setActiveTab,
     preorderProducts,
 

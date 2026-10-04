@@ -13,6 +13,7 @@ import {
 import { formatCurrency } from "@/i18n/format";
 import { productKindOf, type Product } from "@/types/product";
 import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
+import { CategoryManagerButton } from "@/components/shared/categories";
 import type { useProductsViewModel } from "./useProductsViewModel";
 import { ProductGrid } from "./_components/ProductGrid";
 import { CategoryChip } from "./_components/CategoryChip";
@@ -54,11 +55,14 @@ export function ProductsView(vm: VM) {
       title={t("products.title")}
       description={t("products.description")}
       actions={
-        vm.perm.create && (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} href="/owner/products/addProducts">
-            {t("products.addProduct")}
-          </Button>
-        )
+        <div className="flex flex-wrap gap-2">
+          <CategoryManagerButton kind="product" />
+          {vm.perm.create && (
+            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} href="/owner/products/addProducts">
+              {t("products.addProduct")}
+            </Button>
+          )}
+        </div>
       }
       toolbar={
         <div className="flex flex-col gap-3">

@@ -16,7 +16,7 @@ import { alert, confirmAlert } from "@/lib/alert";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
 import { formatDate } from "@/i18n/format";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
-import type { Order, OrderType } from "@/types/order";
+import type { DeliveryUpdateInput, Order, OrderType } from "@/types/order";
 import { isApiError } from "@/types/api";
 import { isFinalStatus } from "./orderStatus";
 
@@ -158,6 +158,24 @@ export function useManageOrdersViewModel() {
     );
   };
 
+  // สถานะจัดส่ง/เลขพัสดุ (BACKLOG2 §15.2 ข้อ 3) — เฉพาะออเดอร์จัดส่ง · backend แจ้งลูกค้าเองเมื่อสถานะเปลี่ยน
+  const deliveryMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: DeliveryUpdateInput }) => ordersService.updateDelivery(id, input),
+    onSuccess: invalidate,
+  });
+
+  const onSaveDelivery = (input: DeliveryUpdateInput) => {
+    if (!selectedOrder) return;
+    const no = selectedOrder.order_no;
+    deliveryMutation.mutate(
+      { id: selectedOrder._id, input },
+      {
+        onSuccess: () => alert.success(t("orders.deliverySaved", { no })),
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.deliverySaveFailed")),
+      },
+    );
+  };
+
   const onExport = () => {
     if (filtered.length === 0) {
       alert.info(t("orders.exportEmpty"));
@@ -212,5 +230,7 @@ export function useManageOrdersViewModel() {
     isFinalStatus,
     onStatusChange, onCancel, onVerifyPayment, onRejectPayment, onExport,
     verifyingPayment: verifyMutation.isPending,
+    onSaveDelivery,
+    savingDelivery: deliveryMutation.isPending,
   };
 }

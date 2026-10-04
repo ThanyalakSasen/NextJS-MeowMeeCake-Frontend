@@ -46,6 +46,18 @@ export const PAYMENT_STATUS_CONFIG: Record<PaymentStatus, StatusStyle> = {
   refunded: { color: "#475569", antColor: "default" },
 };
 
+// ─── สถานะจัดส่ง (เฉพาะ order_type = "delivery") — orderModel/preorderModel.delivery_status ───
+export type DeliveryStatus = "pending" | "shipping" | "delivered" | "failed";
+
+export const DELIVERY_STATUSES: DeliveryStatus[] = ["pending", "shipping", "delivered", "failed"];
+
+export const DELIVERY_STATUS_CONFIG: Record<DeliveryStatus, StatusStyle> = {
+  pending:   { color: "#b45309", antColor: "warning" },
+  shipping:  { color: "#1d4ed8", antColor: "processing" },
+  delivered: { color: "#15803d", antColor: "success" },
+  failed:    { color: "#dc2626", antColor: "error" },
+};
+
 // ─── การผลิต ─────────────────────────────────────────────────
 export type ProductionStatus = "planned" | "in_progress" | "done" | "cancelled";
 

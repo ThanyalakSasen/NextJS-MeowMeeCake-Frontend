@@ -480,6 +480,12 @@
       "employees": "Employees",
       "promotions": "Promotions",
       "reports": "Reports & Finance"
+    },
+    "deliveryStatus": {
+      "pending": "Awaiting shipment",
+      "shipping": "Shipping",
+      "delivered": "Delivered",
+      "failed": "Delivery failed"
     }
   },
   "dashboard": {
@@ -618,7 +624,19 @@
     "slipRejected": "Slip rejected — waiting for the customer to upload a new one",
     "totalLabel": "Total",
     "cancelledBanner": "This order has been cancelled",
-    "unpaidPreorderWarning": "This pre-order needs payment before production can start"
+    "unpaidPreorderWarning": "This pre-order needs payment before production can start",
+    "deliveryTitle": "Delivery",
+    "deliveryStatusLabel": "Delivery status",
+    "trackingNo": "Tracking no.",
+    "trackingPlaceholder": "e.g. TH1234567890",
+    "deliveryNote": "Delivery note",
+    "deliveryNotePlaceholder": "e.g. Left with security",
+    "shippedAt": "Shipped at",
+    "deliveredAt": "Delivered at",
+    "deliverySave": "Save delivery",
+    "deliverySaved": "Saved delivery for {no}",
+    "deliverySaveFailed": "Failed to save delivery",
+    "deliveryNotifyHint": "The customer is notified automatically when the delivery status changes"
   },
   "preorderRound": {
     "paymentDue": "Payment due",
@@ -1475,5 +1493,22 @@
       "unlinkedSuccess": "LINE disconnected",
       "unlinkFailed": "Could not disconnect"
     }
+  },
+  "categories": {
+    "manage": "Manage categories",
+    "titleProduct": "Product categories",
+    "titleIngredient": "Ingredient categories",
+    "titleComponent": "Component categories",
+    "newPlaceholder": "New category name",
+    "empty": "No categories yet",
+    "renameLabel": "Rename category {name}",
+    "deleteConfirm": "Delete category \"{name}\"?",
+    "deleteHint": "Only categories with no items can be deleted — move items to another category first",
+    "created": "Category added",
+    "renamed": "Category renamed",
+    "deleted": "Category deleted",
+    "saveFailed": "Failed to save category",
+    "deleteFailed": "Failed to delete category",
+    "inUse": "Cannot delete \"{name}\": {n} products still use this category"
   }
 }

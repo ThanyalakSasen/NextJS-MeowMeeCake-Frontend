@@ -7,11 +7,12 @@ import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Button } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
-import type { Order } from "@/types/order";
+import type { DeliveryUpdateInput, Order } from "@/types/order";
 import type { Payment } from "@/types/payment";
 import { actionIcon } from "@/components/shared/actions";
 import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
 import { SlipImage } from "../../_components/SlipImage";
+import { DeliverySection } from "../../_components/DeliverySection";
 
 export function OrderDetailContent({
   order,
@@ -20,6 +21,9 @@ export function OrderDetailContent({
   verifyingPayment,
   onVerifyPayment,
   onRejectPayment,
+  canUpdateDelivery,
+  savingDelivery,
+  onSaveDelivery,
 }: {
   order: Order;
   payment: Payment | null;
@@ -27,6 +31,9 @@ export function OrderDetailContent({
   verifyingPayment: boolean;
   onVerifyPayment: (paymentId: string) => void;
   onRejectPayment: (paymentId: string) => void;
+  canUpdateDelivery: boolean;
+  savingDelivery: boolean;
+  onSaveDelivery: (input: DeliveryUpdateInput) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -83,6 +90,19 @@ export function OrderDetailContent({
           <span className="font-medium text-gray-800">{formatDate(order.created_at, locale, { withTime: true })}</span>
         </div>
       </div>
+
+      {order.order_type === "delivery" && (
+        <>
+          <Divider className="!my-0" />
+          <DeliverySection
+            key={order.updated_at}
+            info={order}
+            canUpdate={canUpdateDelivery && !isCancelled}
+            saving={savingDelivery}
+            onSave={onSaveDelivery}
+          />
+        </>
+      )}
 
       <Divider className="!my-0" />
 

@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
-import type { Order, OrderInput, OrderLineItem, OrderListParams } from "@/types/order";
+import { toDeliveryInfo, type DeliveryUpdateInput, type Order, type OrderInput, type OrderLineItem, type OrderListParams } from "@/types/order";
 import { refId } from "@/lib/refId";
 
 const BASE = "/admin/orders";
@@ -42,6 +42,7 @@ function toOrder(raw: any): Order {
     order_status: raw.order_status,
     payment_status: raw.payment_status,
     delivery_address: raw.delivery_address ?? null,
+    ...toDeliveryInfo(raw),
     created_at: raw.created_at,
     updated_at: raw.updated_at,
   };
@@ -66,6 +67,12 @@ export const ordersService = {
   // backend ไม่มี PATCH /admin/orders/[id] ตรง ๆ — เปลี่ยนสถานะออเดอร์ต้องผ่าน /status เท่านั้น
   updateStatus: async (id: string, order_status: string, cancelled_reason?: string) => {
     const res = await http.patch<ItemResponse<any>>(`${BASE}/${id}/status`, { order_status, cancelled_reason });
+    return { data: toOrder(res.data) };
+  },
+
+  // สถานะจัดส่ง/เลขพัสดุ — เฉพาะออเดอร์ order_type = "delivery" (backend ตอบ 400 ถ้าไม่ใช่)
+  updateDelivery: async (id: string, body: DeliveryUpdateInput) => {
+    const res = await http.patch<ItemResponse<any>>(`${BASE}/${id}/delivery`, body);
     return { data: toOrder(res.data) };
   },
 

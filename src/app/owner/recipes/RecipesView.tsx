@@ -11,6 +11,7 @@ import { DetailDrawer, ConfirmDeletePopup, LoadingSpin } from "@/components/shar
 import { formatDate } from "@/i18n/format";
 import type { RecipeComponent } from "@/types/recipeComponent";
 import { EditButton, DeleteButton } from "@/components/shared/actions";
+import { CategoryManagerButton } from "@/components/shared/categories";
 import type { useRecipesViewModel } from "./useRecipesViewModel";
 import { RecipeCard } from "./_components/RecipeCard";
 import { RecipeDetail } from "./_components/RecipeDetail";
@@ -143,11 +144,14 @@ function ComponentsTab(vm: VM) {
     <div className="flex flex-col gap-5">
       <div className="flex items-start justify-between gap-4">
         <p className="text-base text-gray-600">{t("recipes.subDescription", { n: vm.filteredComponents.length })}</p>
-        {vm.perm.create && (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAddComponent}>
-            {t("recipes.addComponent")}
-          </Button>
-        )}
+        <div className="flex flex-wrap justify-end gap-2">
+          <CategoryManagerButton kind="component" />
+          {vm.perm.create && (
+            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAddComponent}>
+              {t("recipes.addComponent")}
+            </Button>
+          )}
+        </div>
       </div>
 
       <StatCardsGrid>

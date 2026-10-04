@@ -3,7 +3,7 @@
 // ผสมสถานะ/การชำระเงินให้ครบเคส — โครงตรงกับ /admin/orders จริง (orderModel.ts ฝั่ง backend)
 // พรีออเดอร์ไม่รวมที่นี่ — คนละ collection ทั้งหมด ยังไม่เชื่อมกับ frontend (ดู types/order.ts)
 // ─────────────────────────────────────────────────────────────
-import type { Order } from "@/types/order";
+import { toDeliveryInfo, type DeliveryInfo, type Order } from "@/types/order";
 
 let seq = 0;
 const item = (product_name: string, quantity: number, unit_price: number) => {
@@ -18,7 +18,7 @@ const item = (product_name: string, quantity: number, unit_price: number) => {
   };
 };
 
-export const ordersFixture: Order[] = [
+const baseOrders: Omit<Order, keyof DeliveryInfo>[] = [
   {
     _id: "o_2101", order_no: "OP-20260831-2101", order_type: "delivery",
     user_id: "u_1", customer_name: "คุณสมชาย ใจดี", customer_phone: "081-234-5678",
@@ -60,3 +60,6 @@ export const ordersFixture: Order[] = [
     created_at: "2026-08-28T11:20:00.000Z", updated_at: "2026-08-28T11:45:00.000Z",
   },
 ];
+
+// ฟิลด์จัดส่งตั้งค่าเริ่มต้นเหมือน backend (delivery_status "pending" ที่เหลือ null)
+export const ordersFixture: Order[] = baseOrders.map((o) => ({ ...toDeliveryInfo({}), ...o }));

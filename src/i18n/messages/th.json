@@ -480,6 +480,12 @@
       "employees": "จัดการข้อมูลพนักงาน",
       "promotions": "จัดการโปรโมชัน",
       "reports": "รายงาน & การเงิน"
+    },
+    "deliveryStatus": {
+      "pending": "รอจัดส่ง",
+      "shipping": "กำลังจัดส่ง",
+      "delivered": "ส่งถึงแล้ว",
+      "failed": "จัดส่งไม่สำเร็จ"
     }
   },
   "dashboard": {
@@ -618,7 +624,19 @@
     "slipRejected": "สลิปถูกปฏิเสธ รอลูกค้าแนบใหม่",
     "totalLabel": "ยอดรวม",
     "cancelledBanner": "ออเดอร์นี้ถูกยกเลิกแล้ว",
-    "unpaidPreorderWarning": "พรีออเดอร์นี้ต้องรอลูกค้าชำระเงินก่อน จึงจะเริ่มขั้นตอนผลิตได้"
+    "unpaidPreorderWarning": "พรีออเดอร์นี้ต้องรอลูกค้าชำระเงินก่อน จึงจะเริ่มขั้นตอนผลิตได้",
+    "deliveryTitle": "การจัดส่ง",
+    "deliveryStatusLabel": "สถานะจัดส่ง",
+    "trackingNo": "เลขพัสดุ",
+    "trackingPlaceholder": "เช่น TH1234567890",
+    "deliveryNote": "หมายเหตุการส่ง",
+    "deliveryNotePlaceholder": "เช่น ฝากไว้กับ รปภ.",
+    "shippedAt": "เวลาจัดส่ง",
+    "deliveredAt": "เวลาส่งถึง",
+    "deliverySave": "บันทึกการจัดส่ง",
+    "deliverySaved": "บันทึกการจัดส่ง {no} แล้ว",
+    "deliverySaveFailed": "บันทึกการจัดส่งไม่สำเร็จ",
+    "deliveryNotifyHint": "เปลี่ยนสถานะจัดส่งแล้วระบบจะแจ้งลูกค้าอัตโนมัติ"
   },
   "preorderRound": {
     "paymentDue": "กำหนดชำระ",
@@ -1475,5 +1493,22 @@
       "unlinkedSuccess": "ยกเลิกการเชื่อม LINE แล้ว",
       "unlinkFailed": "ยกเลิกการเชื่อมไม่สำเร็จ"
     }
+  },
+  "categories": {
+    "manage": "จัดการหมวดหมู่",
+    "titleProduct": "จัดการหมวดหมู่สินค้า",
+    "titleIngredient": "จัดการหมวดหมู่วัตถุดิบ",
+    "titleComponent": "จัดการหมวดหมู่ส่วนประกอบ",
+    "newPlaceholder": "ชื่อหมวดหมู่ใหม่",
+    "empty": "ยังไม่มีหมวดหมู่",
+    "renameLabel": "เปลี่ยนชื่อหมวดหมู่ {name}",
+    "deleteConfirm": "ลบหมวดหมู่ \"{name}\"?",
+    "deleteHint": "ลบได้เฉพาะหมวดหมู่ที่ไม่มีรายการใช้อยู่ — ย้ายรายการไปหมวดอื่นก่อนลบ",
+    "created": "เพิ่มหมวดหมู่แล้ว",
+    "renamed": "เปลี่ยนชื่อหมวดหมู่แล้ว",
+    "deleted": "ลบหมวดหมู่แล้ว",
+    "saveFailed": "บันทึกหมวดหมู่ไม่สำเร็จ",
+    "deleteFailed": "ลบหมวดหมู่ไม่สำเร็จ",
+    "inUse": "ลบ \"{name}\" ไม่ได้ เพราะยังมีสินค้า {n} รายการในหมวดนี้"
   }
 }
