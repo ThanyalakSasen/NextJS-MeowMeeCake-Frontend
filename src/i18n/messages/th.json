@@ -307,11 +307,7 @@
     "transaction_type": "ประเภทรายการ",
     "qty_change": "จำนวนที่เปลี่ยน",
     "reason": "เหตุผล",
-    "reference_id": "อ้างอิงถึง",
-    "work_date": "วันที่ทำงาน",
-    "check_in_at": "เวลาเข้างาน",
-    "check_out_at": "เวลาออกงาน",
-    "recorded_by": "ผู้บันทึก"
+    "reference_id": "อ้างอิงถึง"
   },
   "enums": {
     "orderStatus": {
