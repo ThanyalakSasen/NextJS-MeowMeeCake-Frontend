@@ -70,10 +70,14 @@ function toApiError(err: AxiosError<BackendErrorBody>): ApiError {
  * endpoint ที่ 401 = "คำตอบของมันเอง" ไม่ใช่ "session หมดอายุ" → ห้ามเด้งไป login
  *  - /auth/login: 401 คือรหัสผ่านผิด ต้องส่ง error ของ backend ("อีเมลหรือรหัสผ่านไม่ถูกต้อง") กลับให้ฟอร์มแสดงตรง ๆ
  *    (ถ้าปล่อยเข้า handler จะเด้ง /login?reason=expired + ล้าง cache ทุกครั้งที่พิมพ์รหัสผิด)
- *  - /auth/logout, /auth/register, /auth/google, /auth/resend-verification: ไม่มี session ให้หมดอายุตั้งแต่แรก
+ *  - /auth/logout, /auth/register, /auth/google, /auth/resend-verification และหน้าบัญชีจากลิงก์ในอีเมล
+ *    (verify-email · forgot-password · reset-password): ไม่มี session ให้หมดอายุตั้งแต่แรก
  * (/auth/me ไม่อยู่ในลิสต์นี้ — 401 ตรงนั้นคือ session หมดอายุจริง ให้เด้งไป login)
  */
-const NO_EXPIRY_REDIRECT_PATHS = ["/auth/login", "/auth/logout", "/auth/register", "/auth/google", "/auth/resend-verification"];
+const NO_EXPIRY_REDIRECT_PATHS = [
+  "/auth/login", "/auth/logout", "/auth/register", "/auth/google", "/auth/resend-verification",
+  "/auth/verify-email", "/auth/forgot-password", "/auth/reset-password",
+];
 
 // ส่ง { skipAuthRedirect: true } ใน config เพื่อบอกว่า 401 ของ request นี้ "ไม่ใช่ session หมดอายุ"
 // (เช่นหน้าร้านเช็คว่า guest ล็อกอินหรือยัง — authClient.meOptional) → ไม่เด้งไป login

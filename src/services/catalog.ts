@@ -65,6 +65,12 @@ export const catalogService = {
     (await http.getList<CatalogReview>(`/catalog/products/${encodeURIComponent(id)}/reviews`, { params: { limit: 100, ...params } }))
       .data,
 
+  /** GET /catalog/ingredients — รายชื่อวัตถุดิบ (สาธารณะ) ให้ลูกค้าเลือกอาหารที่แพ้ · ไม่มีต้นทุน/สต็อก */
+  ingredients: async (): Promise<{ _id: string; ingredient_name: string }[]> => {
+    const res = await http.get<ItemResponse<{ ingredients?: { _id: string; ingredient_name: string }[] }>>("/catalog/ingredients");
+    return res.data?.ingredients ?? [];
+  },
+
   /** GET /catalog/products/{id}/reviews/summary — คะแนนเฉลี่ย + จำนวนรีวิว */
   reviewSummary: async (id: string): Promise<ReviewSummary> => {
     const res = await http.get<ItemResponse<any>>(`/catalog/products/${encodeURIComponent(id)}/reviews/summary`);
