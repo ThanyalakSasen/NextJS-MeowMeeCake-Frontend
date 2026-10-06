@@ -445,6 +445,7 @@
       "production": "Production",
       "employee": "Employee",
       "finance": "Finance",
+      "customer": "Customer",
       "system": "System"
     },
     "employmentType": {
@@ -499,7 +500,8 @@
       "production": "Production",
       "employees": "Employees",
       "promotions": "Promotions",
-      "reports": "Reports & Finance"
+      "reports": "Reports & Finance",
+      "store_info": "Store info"
     },
     "deliveryStatus": {
       "pending": "Awaiting shipment",

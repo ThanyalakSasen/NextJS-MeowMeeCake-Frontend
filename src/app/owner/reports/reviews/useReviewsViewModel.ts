@@ -27,7 +27,8 @@ type VisibilityFilter = "all" | "visible" | "hidden";
 export function useReviewsViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("products");
+  // /admin/reviews ตรวจสิทธิ์เมนู reports (backend customer-backend-merge.md §8.20 — เดิม products)
+  const perm = usePermission("reports");
 
   const [search, setSearch] = useState("");
   const [productId, setProductId] = useState("all");

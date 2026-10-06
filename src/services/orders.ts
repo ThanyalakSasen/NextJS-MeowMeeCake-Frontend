@@ -20,6 +20,13 @@ function toOrder(raw: any): Order {
         product_id: refId(it.product_id),
         product_name: it.product_snapshot?.product_name_th ?? "",
         variant_name: it.product_snapshot?.variant_name ?? null,
+        selected_options: Array.isArray(it.selected_options)
+          ? it.selected_options.map((o: any) => ({
+              option_name: o.option_name ?? "",
+              extra_price: o.extra_price ?? 0,
+              text_value: o.text_value ?? null,
+            }))
+          : [],
         quantity: it.quantity,
         unit_price: it.unit_price,
         total_price: it.total_price,
@@ -42,6 +49,22 @@ function toOrder(raw: any): Order {
     order_status: raw.order_status,
     payment_status: raw.payment_status,
     delivery_address: raw.delivery_address ?? null,
+    payment_due_at: raw.payment_due_at ?? null,
+    cancelled_reason: raw.cancelled_reason ?? null,
+    cancelled_at: raw.cancelled_at ?? null,
+    pickup_point: raw.pickup_point
+      ? {
+          point_id: raw.pickup_point.point_id ? String(raw.pickup_point.point_id) : null,
+          point_name: raw.pickup_point.point_name ?? "",
+          address: raw.pickup_point.address ?? null,
+          note: raw.pickup_point.note ?? null,
+        }
+      : null,
+    pickup_date: raw.pickup_date ?? null,
+    points_redeemed: raw.points_redeemed ?? 0,
+    points_discount: raw.points_discount ?? 0,
+    user_coupon_id: raw.user_coupon_id ? refId(raw.user_coupon_id) : null,
+    coupon_discount: raw.coupon_discount ?? 0,
     ...toDeliveryInfo(raw),
     created_at: raw.created_at,
     updated_at: raw.updated_at,

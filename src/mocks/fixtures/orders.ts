@@ -18,7 +18,15 @@ const item = (product_name: string, quantity: number, unit_price: number) => {
   };
 };
 
-const baseOrders: Omit<Order, keyof DeliveryInfo>[] = [
+// field ของออเดอร์เว็บ (กำหนดชำระ · จุดรับ · แต้ม/คูปอง) — ออเดอร์ตัวอย่างไม่มี
+const WEB_ORDER_DEFAULTS = {
+  payment_due_at: null, cancelled_reason: null, cancelled_at: null, pickup_point: null, pickup_date: null,
+  points_redeemed: 0, points_discount: 0, user_coupon_id: null, coupon_discount: 0,
+} satisfies Partial<Order>;
+
+type BaseOrder = Omit<Order, keyof DeliveryInfo | keyof typeof WEB_ORDER_DEFAULTS>;
+
+const baseOrders: BaseOrder[] = [
   {
     _id: "o_2101", order_no: "OP-20260831-2101", order_type: "delivery",
     user_id: "u_1", customer_name: "คุณสมชาย ใจดี", customer_phone: "081-234-5678",
@@ -62,4 +70,4 @@ const baseOrders: Omit<Order, keyof DeliveryInfo>[] = [
 ];
 
 // ฟิลด์จัดส่งตั้งค่าเริ่มต้นเหมือน backend (delivery_status "pending" ที่เหลือ null)
-export const ordersFixture: Order[] = baseOrders.map((o) => ({ ...toDeliveryInfo({}), ...o }));
+export const ordersFixture: Order[] = baseOrders.map((o) => ({ ...toDeliveryInfo({}), ...WEB_ORDER_DEFAULTS, ...o }));

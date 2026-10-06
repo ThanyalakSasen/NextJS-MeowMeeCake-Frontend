@@ -16,7 +16,7 @@ export const PERMISSION_GROUPS: { sectionKey: SectionKey; keys: MenuKey[] }[] = 
   { sectionKey: "sectionProductsOrders", keys: ["products", "orders", "preorder", "payments", "promotions"] },
   { sectionKey: "sectionProductionIngredients", keys: ["production", "ingredients", "stock", "recipes"] },
   { sectionKey: "sectionEmployees", keys: ["employees"] },
-  { sectionKey: "sectionOther", keys: ["dashboard"] },
+  { sectionKey: "sectionOther", keys: ["dashboard", "store_info"] },
 ];
 
 export const PERM_MENU_KEYS: MenuKey[] = PERMISSION_GROUPS.flatMap((g) => g.keys);

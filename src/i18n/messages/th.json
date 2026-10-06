@@ -445,6 +445,7 @@
       "production": "การผลิต",
       "employee": "พนักงาน",
       "finance": "การเงิน",
+      "customer": "ลูกค้า",
       "system": "ระบบ"
     },
     "employmentType": {
@@ -499,7 +500,8 @@
       "production": "จัดการข้อมูลการผลิต",
       "employees": "จัดการข้อมูลพนักงาน",
       "promotions": "จัดการโปรโมชัน",
-      "reports": "รายงาน & การเงิน"
+      "reports": "รายงาน & การเงิน",
+      "store_info": "ข้อมูลร้านค้า"
     },
     "deliveryStatus": {
       "pending": "รอจัดส่ง",
