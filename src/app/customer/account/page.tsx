@@ -1,0 +1,378 @@
+"use client";
+// ─────────────────────────────────────────────────────────────
+// /customer/account — บัญชีของฉัน (BACKLOG3-merge B2) · ยกจาก FrontOffice src/app/customer/account/page.tsx
+//   + LineConnectCard + line-welcome (กรอกอีเมลของบัญชี LINE) — ชั้น API เป็น /shop/me* ของ backend หลัก
+//   ข้อมูลส่วนตัว: PATCH /shop/me (ชื่อ · เบอร์ · วันเกิด) · อีเมลแก้ไม่ได้ (FrontOffice แก้ผ่าน /api/users ซึ่งหลักไม่เปิดให้ลูกค้า)
+//   อาหารที่แพ้: PATCH /shop/me { user_allergies } — ตัวเลือกจาก /catalog/ingredients
+//   LINE: /shop/me/line (ผูก → หน้ายินยอมของ LINE → backend กลับมาที่ /profile → /profile ส่งลูกค้าต่อมาที่นี่พร้อม ?line=)
+//   บัญชีที่สมัครด้วย LINE แล้วไม่มีอีเมล: POST /shop/me/email (ตั้งอีเมลจริง + ส่งลิงก์ยืนยัน)
+// ไม่ยกมา: บัญชีพร้อมเพย์รับเงินคืน — backend หลักยังไม่มี field refund_promptpay_* (BACKLOG3-merge B2)
+// ─────────────────────────────────────────────────────────────
+import { Suspense, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Modal } from "antd";
+import { MailWarning, Pencil, X } from "lucide-react";
+import { isLinePlaceholderEmail, shopProfileService, type ShopProfile } from "@/services/shopProfile";
+import { shopLineService } from "@/services/shopLine";
+import { catalogService } from "@/services/catalog";
+import { resendVerification } from "@/lib/authClient";
+import { alert, confirmAlert } from "@/lib/alert";
+import { isApiError } from "@/types/api";
+import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
+import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
+import AccountSideMenu from "@/components/customer/AccountSideMenu";
+import { shopButton, shopButtonPrimary, shopInput, shopPage } from "@/components/customer/shopStyles";
+import { shopEmailStatusKey, shopLineStatusKey, shopProfileKey } from "../lib/shopQueries";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^0\d{8,9}$/;
+const section = "rounded-2xl border border-stone-200/80 bg-white p-5 shadow-xs sm:p-7";
+const field = "space-y-1 rounded-xl border border-stone-100 bg-stone-50/50 p-3.5";
+
+const LINE_RESULT: Record<string, { type: "success" | "info" | "error"; text: string }> = {
+  linked: { type: "success", text: "เชื่อมต่อ LINE เรียบร้อยแล้ว" },
+  cancelled: { type: "info", text: "ยกเลิกการเชื่อมต่อ LINE" },
+  error: { type: "error", text: "เชื่อมต่อ LINE ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" },
+};
+
+const birthdayText = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" }) : "-";
+
+export default function AccountPage() {
+  return (
+    <CustomerAuthGate message="กรุณาเข้าสู่ระบบเพื่อจัดการบัญชีของคุณ">
+      <Suspense fallback={null}>
+        <AccountContent />
+      </Suspense>
+    </CustomerAuthGate>
+  );
+}
+
+function AccountContent() {
+  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: shopProfileService.get });
+  const emailQ = useQuery({ queryKey: shopEmailStatusKey, queryFn: shopProfileService.emailStatus });
+  useLineResultToast();
+
+  const profile = profileQ.data;
+  return (
+    <div className={shopPage}>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+        <CustomerBreadcrumb items={[{ label: "บัญชีของฉัน" }]} className="!mb-0" />
+        <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
+          <AccountSideMenu />
+          <div className="flex min-w-0 flex-1 flex-col gap-5">
+            <h1 className="m-0 text-xl font-bold tracking-tight text-stone-900 sm:text-2xl">ข้อมูลส่วนตัว</h1>
+            {profileQ.isLoading ? (
+              <div className="h-10 w-10 animate-spin self-center rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label="กำลังโหลด" />
+            ) : !profile ? (
+              <p className="text-sm text-red-700">โหลดข้อมูลบัญชีไม่สำเร็จ กรุณารีเฟรชหน้านี้</p>
+            ) : (
+              <>
+                {emailQ.data?.auth_provider === "line" && <LineAccountEmail status={emailQ.data} />}
+                <ProfileSection profile={profile} />
+                <LineSection authProvider={profile.auth_provider} />
+                <AllergySection profile={profile} />
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** ผลจากการผูก LINE (backend → /profile → ที่นี่พร้อม ?line=) — แจ้งครั้งเดียวแล้วลบ query */
+function useLineResultToast() {
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const qc = useQueryClient();
+  const done = useRef(false);
+  useEffect(() => {
+    const result = params.get("line");
+    if (!result || done.current) return;
+    done.current = true;
+    const msg =
+      result === "error" && params.get("reason") === "login_required"
+        ? { type: "error" as const, text: "เซสชันหมดอายุระหว่างเชื่อมต่อ LINE — กรุณาเข้าสู่ระบบแล้วลองใหม่" }
+        : LINE_RESULT[result] ?? LINE_RESULT.error;
+    alert[msg.type](msg.text);
+    qc.invalidateQueries({ queryKey: shopLineStatusKey });
+    qc.invalidateQueries({ queryKey: shopEmailStatusKey });
+    router.replace(pathname, { scroll: false });
+  }, [params, router, pathname, qc]);
+}
+
+// ── บัญชีที่สมัครด้วย LINE: กรอกอีเมลจริง / รอยืนยัน (แทนหน้า line-welcome ของ FrontOffice) ──
+function LineAccountEmail({ status }: { status: { needs_email: boolean; email: string | null; email_verified: boolean } }) {
+  const qc = useQueryClient();
+  const [email, setEmail] = useState("");
+  const save = useMutation({
+    mutationFn: () => shopProfileService.setEmail(email.trim().toLowerCase()),
+    onSuccess: (message) => {
+      alert.success(message ?? "บันทึกอีเมลแล้ว — กรุณากดลิงก์ยืนยันในอีเมล");
+      setEmail("");
+      qc.invalidateQueries({ queryKey: shopEmailStatusKey });
+      qc.invalidateQueries({ queryKey: shopProfileKey });
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : "บันทึกอีเมลไม่สำเร็จ"),
+  });
+  const resend = useMutation({
+    mutationFn: () => resendVerification(status.email ?? ""),
+    onSuccess: () => alert.success("ส่งลิงก์ยืนยันอีกครั้งแล้ว กรุณาตรวจกล่องจดหมาย"),
+    onError: (e) => alert.error(isApiError(e) ? e.message : "ส่งลิงก์ยืนยันไม่สำเร็จ"),
+  });
+
+  if (!status.needs_email && status.email_verified) return null;
+  const canEdit = status.needs_email || !status.email_verified;
+  return (
+    <section className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
+      <div className="flex items-start gap-3">
+        <MailWarning className="mt-0.5 h-6 w-6 shrink-0 text-amber-700" />
+        <div>
+          <h2 className="m-0 text-base font-bold text-amber-900">
+            {status.needs_email ? "เพิ่มอีเมลให้บัญชีของคุณ" : "รอยืนยันอีเมล"}
+          </h2>
+          <p className="m-0 mt-1 text-sm leading-relaxed text-amber-900/80">
+            {status.needs_email
+              ? "บัญชีนี้สมัครด้วย LINE และยังไม่มีอีเมล — ใช้สำหรับรับใบเสร็จ แจ้งเตือน และกู้บัญชี"
+              : <>เราส่งลิงก์ยืนยันไปที่ <strong>{status.email}</strong> แล้ว — กดลิงก์ในอีเมลเพื่อยืนยัน หรือแก้อีเมลด้านล่าง</>}
+          </p>
+        </div>
+      </div>
+      {canEdit && (
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            type="email"
+            className={shopInput}
+            placeholder="you@example.com"
+            aria-label="อีเมล"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <button
+            type="button"
+            className={`${shopButtonPrimary} shrink-0`}
+            disabled={!EMAIL_RE.test(email.trim()) || save.isPending}
+            onClick={() => save.mutate()}
+          >
+            {save.isPending ? "กำลังบันทึก..." : "บันทึกและส่งลิงก์ยืนยัน"}
+          </button>
+          {!status.needs_email && status.email && (
+            <button type="button" className={`${shopButton} shrink-0`} disabled={resend.isPending} onClick={() => resend.mutate()}>
+              {resend.isPending ? "กำลังส่ง..." : "ส่งลิงก์อีกครั้ง"}
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ── ข้อมูลส่วนตัว + หน้าต่างแก้ไข ──
+function ProfileSection({ profile }: { profile: ShopProfile }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  // today = YYYY-MM-DD ณ ตอนเปิดหน้าต่าง (อ่านเวลาใน handler ไม่ใช่ตอน render — กติกา React Compiler)
+  const [form, setForm] = useState({ name: "", phone: "", birthday: "", today: "" });
+  const openEdit = () => {
+    setForm({
+      name: profile.user_fullname,
+      phone: profile.user_phone ?? "",
+      birthday: profile.user_birthdate ? profile.user_birthdate.slice(0, 10) : "",
+      today: new Date().toISOString().slice(0, 10),
+    });
+    setOpen(true);
+  };
+  const save = useMutation({
+    mutationFn: () =>
+      shopProfileService.update({
+        user_fullname: form.name.trim(),
+        user_phone: form.phone.trim() || null,
+        user_birthdate: form.birthday || null,
+      }),
+    onSuccess: (p) => {
+      qc.setQueryData(shopProfileKey, p);
+      setOpen(false);
+      alert.success("บันทึกข้อมูลส่วนตัวแล้ว");
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : "บันทึกข้อมูลไม่สำเร็จ"),
+  });
+
+  const name = form.name.trim();
+  const problem =
+    !name || name.length > 120
+      ? "กรุณากรอกชื่อ (ไม่เกิน 120 ตัวอักษร)"
+      : form.phone && !PHONE_RE.test(form.phone.trim())
+        ? "เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 9–10 หลัก"
+        : form.birthday && form.birthday > form.today
+          ? "วันเกิดต้องไม่อยู่ในอนาคต"
+          : null;
+  const shownEmail = isLinePlaceholderEmail(profile.email) ? "ยังไม่ได้ระบุ" : profile.email;
+
+  return (
+    <section className={section}>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="m-0 text-base font-bold text-stone-900">ข้อมูลบัญชี</h2>
+        <button type="button" onClick={openEdit} className={`${shopButton} !px-3 !py-1.5 text-sm`}>
+          <Pencil className="h-3.5 w-3.5" /> แก้ไข
+        </button>
+      </div>
+      <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+        {[
+          { label: "ชื่อ - นามสกุล", value: profile.user_fullname || "-" },
+          { label: "อีเมล", value: shownEmail },
+          { label: "เบอร์โทรศัพท์", value: profile.user_phone || "-" },
+          { label: "วันเดือนปีเกิด", value: birthdayText(profile.user_birthdate) },
+        ].map(({ label, value }) => (
+          <div key={label} className={field}>
+            <span className="block text-xs font-medium text-stone-400">{label}</span>
+            <span className="block break-all font-semibold text-stone-800">{value}</span>
+          </div>
+        ))}
+      </div>
+
+      <Modal
+        open={open}
+        title="แก้ไขข้อมูลส่วนตัว"
+        onCancel={() => setOpen(false)}
+        onOk={() => save.mutate()}
+        okText={save.isPending ? "กำลังบันทึก..." : "บันทึก"}
+        cancelText="ยกเลิก"
+        okButtonProps={{ disabled: !!problem || save.isPending }}
+        destroyOnHidden
+      >
+        <div className="flex flex-col gap-3 text-sm">
+          <label className="space-y-1">
+            <span className="block font-semibold text-stone-700">ชื่อ - นามสกุล</span>
+            <input className={shopInput} maxLength={120} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </label>
+          <label className="space-y-1">
+            <span className="block font-semibold text-stone-700">อีเมล</span>
+            <input className={`${shopInput} cursor-not-allowed bg-stone-100 text-stone-500`} value={shownEmail} disabled readOnly />
+            <span className="block text-xs text-stone-400">เปลี่ยนอีเมลไม่ได้ — ติดต่อร้านหากต้องการเปลี่ยน</span>
+          </label>
+          <label className="space-y-1">
+            <span className="block font-semibold text-stone-700">เบอร์โทรศัพท์</span>
+            <input className={shopInput} inputMode="tel" maxLength={10} placeholder="0812345678" value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "") })} />
+          </label>
+          <label className="space-y-1">
+            <span className="block font-semibold text-stone-700">วันเดือนปีเกิด</span>
+            <input type="date" className={shopInput} max={form.today} value={form.birthday}
+              onChange={(e) => setForm({ ...form, birthday: e.target.value })} />
+          </label>
+          {problem && <p className="m-0 text-xs text-red-600">{problem}</p>}
+          <p className="m-0 text-xs text-stone-400">กรอกชื่อ เบอร์ และวันเกิดครบครั้งแรก รับแต้มโบนัส</p>
+        </div>
+      </Modal>
+    </section>
+  );
+}
+
+// ── LINE: ผูก / ยกเลิก (ย่อจาก FrontOffice LineConnectCard) ──
+function LineSection({ authProvider }: { authProvider: ShopProfile["auth_provider"] }) {
+  const qc = useQueryClient();
+  const statusQ = useQuery({ queryKey: shopLineStatusKey, queryFn: shopLineService.status });
+  // ขอ authorize_url ใหม่ทุกครั้งที่กด (อายุ 10 นาที) แล้วเปลี่ยนหน้าทั้งหน้าไป LINE
+  const connect = useMutation({
+    mutationFn: shopLineService.status,
+    onSuccess: (s) => {
+      if (s.linked) return void qc.setQueryData(shopLineStatusKey, s);
+      if (!s.authorize_url) return void alert.error("ร้านยังไม่ได้ตั้งค่าการเชื่อมต่อ LINE");
+      window.location.href = s.authorize_url;
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : "เชื่อมต่อ LINE ไม่สำเร็จ"),
+  });
+  const unlink = useMutation({
+    mutationFn: shopLineService.unlink,
+    onSuccess: () => {
+      alert.success("ยกเลิกการเชื่อมต่อ LINE แล้ว");
+      qc.invalidateQueries({ queryKey: shopLineStatusKey });
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : "ยกเลิกการเชื่อมต่อไม่สำเร็จ"),
+  });
+  const onUnlink = async () => {
+    const ok = await confirmAlert("ยกเลิกการเชื่อมต่อ LINE? คุณจะไม่ได้รับแจ้งเตือนคำสั่งซื้อทาง LINE", {
+      title: "ยกเลิกการเชื่อมต่อ LINE",
+      confirmText: "ยกเลิกการเชื่อมต่อ",
+      cancelText: "ไม่ใช่",
+      danger: true,
+    });
+    if (ok) unlink.mutate();
+  };
+
+  const linked = !!statusQ.data?.linked;
+  return (
+    <section className={`${section} flex flex-wrap items-center justify-between gap-3`}>
+      <div>
+        <h2 className="m-0 flex items-center gap-2 text-base font-bold text-stone-900">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#06C755] text-[10px] font-black text-white">LINE</span>
+          LINE
+        </h2>
+        <p className="m-0 mt-1 text-xs text-stone-500">
+          {linked ? "เชื่อมต่อแล้ว — เข้าสู่ระบบด้วย LINE ได้ และรับแจ้งเตือนคำสั่งซื้อทาง LINE" : "เชื่อมต่อเพื่อเข้าสู่ระบบด้วย LINE และรับแจ้งเตือนคำสั่งซื้อทาง LINE"}
+        </p>
+      </div>
+      {statusQ.isLoading ? null : linked ? (
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-[#06C755]">✓ เชื่อมต่อแล้ว</span>
+          {/* บัญชีที่สมัครด้วย LINE ยกเลิกไม่ได้ — จะเข้าสู่ระบบไม่ได้อีก (ไม่มีรหัสผ่าน) */}
+          {authProvider !== "line" && (
+            <button type="button" onClick={() => void onUnlink()} disabled={unlink.isPending}
+              className="rounded-xl border border-red-600/30 bg-white px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+              ยกเลิกการเชื่อมต่อ
+            </button>
+          )}
+        </div>
+      ) : (
+        <button type="button" onClick={() => connect.mutate()} disabled={connect.isPending}
+          className="rounded-xl bg-[#06C755] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#05b14c] disabled:opacity-60">
+          {connect.isPending ? "กำลังไปที่ LINE..." : "เชื่อมต่อ LINE"}
+        </button>
+      )}
+    </section>
+  );
+}
+
+// ── วัตถุดิบที่แพ้ — เพิ่ม/ลบแล้วบันทึกทันที ──
+function AllergySection({ profile }: { profile: ShopProfile }) {
+  const qc = useQueryClient();
+  const ingredientsQ = useQuery({ queryKey: ["catalog", "ingredients"], queryFn: catalogService.ingredients, staleTime: 10 * 60_000 });
+  const save = useMutation({
+    mutationFn: (list: string[]) => shopProfileService.update({ user_allergies: list }),
+    onSuccess: (p) => qc.setQueryData(shopProfileKey, p),
+    onError: (e) => alert.error(isApiError(e) ? e.message : "บันทึกวัตถุดิบที่แพ้ไม่สำเร็จ"),
+  });
+  const list = profile.user_allergies;
+  const options = (ingredientsQ.data ?? []).map((i) => i.ingredient_name).filter((n) => !list.includes(n));
+
+  return (
+    <section className={section}>
+      <h2 className="m-0 text-base font-bold text-stone-900">วัตถุดิบที่แพ้</h2>
+      <p className="m-0 mb-4 mt-1 text-xs text-stone-500">ใช้เตือนเมื่อสินค้ามีวัตถุดิบที่คุณแพ้ และไม่แนะนำสินค้านั้นให้</p>
+      <select className={`${shopInput} mb-3 max-w-sm`} value="" disabled={save.isPending} aria-label="เพิ่มวัตถุดิบที่แพ้"
+        onChange={(e) => e.target.value && save.mutate([...list, e.target.value])}>
+        <option value="" disabled>{ingredientsQ.isLoading ? "กำลังโหลด..." : "+ เพิ่มวัตถุดิบที่แพ้"}</option>
+        {options.map((n) => <option key={n} value={n}>{n}</option>)}
+      </select>
+      {list.length === 0 ? (
+        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-400">ไม่มีประวัติแพ้อาหาร</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {list.map((name) => (
+            <span key={name} className="inline-flex items-center gap-1.5 rounded-xl bg-[#FFF8E7] py-1.5 pl-3.5 pr-2 text-xs font-semibold text-[#5C3A21]">
+              {name}
+              <button type="button" aria-label={`ลบ ${name}`} disabled={save.isPending}
+                onClick={() => save.mutate(list.filter((a) => a !== name))}
+                className="flex h-4 w-4 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-200/60 hover:text-red-500">
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}

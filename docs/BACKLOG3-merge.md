@@ -30,7 +30,7 @@
 | 4 | I2 | ปุ่มคืนเงิน — ออเดอร์ "ยกเลิก + ชำระแล้ว" ค้างรอโอนคืน | ✅ 2026-10-06 — ป้าย "รอโอนคืน" ในตาราง + แถบเตือนพร้อมปุ่มกรอง · drawer มี `RefundSection` (ยอด · เหตุผลยกเลิก · ปุ่มยืนยันโอนคืน + popup ยืนยัน · ต้องมีสิทธิ์ `payments.approve`) ทั้งออเดอร์และพรีออเดอร์ · **ยังไม่ทดสอบกับ backend จริง** |
 | 5 | G1 · G2 | ส่งคำถาม path หน้าออเดอร์ลูกค้า + ทางเข้าโปรไฟล์ (กระทบ 9 เรื่อง) | ⏸ |
 | 6 | ~~I4 + E1~~ | ✅ (branch `feat/product-customization` · รอทดสอบกับ backend) — หมวด I เหลือ I8–I11 | — |
-| 7 | ~~B1~~ ✅ → B2 | บัญชีของฉัน (โปรไฟล์ · เปลี่ยนรหัสผ่าน · ผูก LINE · กรอกอีเมลของบัญชี LINE) | ▢ |
+| 7 | ~~B1 · B2~~ | ✅ (B1 = PR #28 · B2 = branch `feat/customer-account`) | — |
 | 8 | D1 → D2 → C3 → D3 → C1 | ประวัติออเดอร์ · ที่อยู่ · checkout เต็ม · พรีออเดอร์ · รายละเอียดสินค้าเต็ม | ▢ |
 | 9 | ที่เหลือ | D4–D10 · E2–E6 · I8–I11 | ▢ / ⏸ |
 
@@ -121,10 +121,15 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 - **ทดสอบ 14/14** กับ backend จริง + **SMTP ปลอมบนเครื่อง** (อ่านลิงก์จากอีเมลจริง ไม่มีอีเมลส่งออก): สมัคร → อีเมลมีลิงก์ → ก่อนยืนยันล็อกอินไม่ได้ → ยืนยัน → ใช้ token ซ้ำ 400 → ล็อกอินได้ · บันทึกเบอร์/วันเกิด · อีเมลซ้ำ 409 · ลืมรหัส → ลิงก์ → ตั้งใหม่ → รหัสเดิมเข้าไม่ได้/ใหม่เข้าได้ · ลิงก์ใช้ซ้ำไม่ได้ · อีเมลที่ไม่มีตอบเหมือนเดิม · ทุกหน้า 200
 - ยังไม่ได้ทดสอบ: บันทึกอาหารที่แพ้ (DB ทดสอบไม่มีวัตถุดิบ) · คลิกหน้าจอจริง
 
-### B2 ▢ บัญชีของฉัน · เปลี่ยนรหัสผ่าน · ผูก LINE
-- **ต้นแบบ:** `customer/account/page.tsx` (671) · `customer/changepassword` (+`verify`) · `customer/line-welcome` · `LineConnectCard`
-- **API:** `GET/PATCH /shop/me` · `PATCH /shop/me/password` · `/shop/me/email` · `/shop/me/line` (+`callback`)
-- **ขึ้นกับ:** G2 (ทางเข้าโปรไฟล์ลูกค้า — `/profile` ของหลังร้าน หรือ `/customer/account`)
+### B2 ✅ บัญชีของฉัน · เปลี่ยนรหัสผ่าน · ผูก LINE · อีเมลของบัญชี LINE (2026-10-06 · branch `feat/customer-account` ต่อจาก B1)
+- **path:** `/customer/account` ตาม FrontOffice (ตัดสิน **G2** = ทางนี้ — ลิงก์แจ้งเตือนของ backend ก็อยู่ใต้ `/customer/account/...`) · `/profile` เดิมคงไว้ให้พนักงาน
+- **`/customer/account`** (ยกจาก `customer/account/page.tsx` + `LineConnectCard` + `line-welcome`): ข้อมูลส่วนตัว + หน้าต่างแก้ (ชื่อ · เบอร์ · วันเกิด → `PATCH /shop/me` · อีเมลแก้ไม่ได้) · LINE (ผูก/ยกเลิก `/shop/me/line` · บัญชีที่สมัครด้วย LINE ไม่มีปุ่มยกเลิก) · อาหารที่แพ้ (เพิ่ม/ลบ บันทึกทันที) · บัญชี LINE ที่ไม่มีอีเมล → กล่องกรอกอีเมลจริง (`POST /shop/me/email` + ลิงก์ยืนยัน · ส่งลิงก์ซ้ำได้)
+- **`/customer/changepassword`**: เปลี่ยนด้วยรหัสเดิม `PATCH /shop/me/password` (FrontOffice ทำผ่านลิงก์อีเมลเพราะ backend เดิมไม่มี API) + ลิงก์ "ลืมรหัสผ่านปัจจุบัน?" → `/customer/forgot-password` · บัญชี Google/LINE แสดงคำอธิบายแทนฟอร์ม
+- **เมนูบัญชี** `AccountSideMenu` (ข้อมูลส่วนตัว · เปลี่ยนรหัสผ่าน · ออกจากระบบ) — เมนูอื่นของต้นแบบเพิ่มตามหมวด D
+- **LINE:** backend ส่งกลับ `/profile` หลังผูก (`LINE_LINK_RETURN_URL` ค่าเดียว) → `/profile` ส่งลูกค้าต่อมา `/customer/account?line=` · ล็อกอินด้วย LINE แล้วยังเป็นอีเมลชั่วคราว → `/login/line` พามาหน้าบัญชีให้กรอกอีเมล (แทน `line-welcome`)
+- **ทดสอบ 12/12** กับ backend จริง (+ บัญชี LINE จำลองด้วย `authService.loginWithLine` บน DB local · SMTP ปลอม): โปรไฟล์ · แก้ข้อมูล · อาหารที่แพ้ · เบอร์ผิด 400 · สถานะ/ลิงก์ผูก LINE · รหัสเดิมผิด 400 · เปลี่ยนรหัส (รหัสเดิม 401 / ใหม่ 200 / เครื่องนี้ได้ cookie ใหม่ / session เก่าหลุด) · บัญชี LINE: needs_email · เปลี่ยนรหัสไม่ได้ · ตั้งอีเมลจริง → รอยืนยัน · อีเมลซ้ำ 409 · หน้า 200
+- **ยังไม่ได้ทดสอบ:** ผูก LINE ด้วยบัญชีจริง · คลิกหน้าจอจริง · ส่งต่อจาก `/profile` (เกิดฝั่งเบราว์เซอร์)
+- **ไม่ยกมา:** บัญชีพร้อมเพย์รับเงินคืน — backend ยังไม่มี `refund_promptpay_id/name` ([Q-BE12](#ถาม-backend))
 
 ### B3 🟡 หน้า login แบบ FrontOffice + เข้าสู่ระบบด้วย Google / LINE (โค้ดเสร็จ 2026-10-06 · รอตั้งค่า + ทดสอบด้วยบัญชีจริง)
 - **หน้าตา:** ยกจาก `src/app/login/page.jsx` ของ FrontOffice — ภาพพื้นหลัง (`public/login.png`) · การ์ดโปร่ง/ขาว · แม่กุญแจ · ปุ่มเด้ง · ลิงก์ลืมรหัส/สมัคร · ปุ่ม Google + LINE
@@ -277,7 +282,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 - **ผลกระทบ:** ลิงก์ในกระดิ่ง/LINE ของ backend ชี้ไป (ข) อยู่แล้ว (BE §8.12) · เลือก (ก) = ขอ backend แก้ `link` · เลือก (ข) = ย้ายหน้า A1 ไป path ใหม่
 - **ขึ้นกับเรื่องนี้:** C4 · D1 · D3 · D6 · D10 · **คำถาม:** [Q-OWN1](#ถาม-เจ้าของร้าน--ทีม)
 
-### G2 ⏸ ทางเข้าโปรไฟล์ของลูกค้า
+### G2 ✅ ทางเข้าโปรไฟล์ของลูกค้า — ใช้ `/customer/account` (ตาม FrontOffice · 2026-10-06 · B2)
 - **ตัวเลือก:** `/profile` (มีอยู่ — ผูก LINE · ใช้ร่วมกับพนักงาน) หรือ `/customer/account` แบบ FrontOffice
 - ค้างจาก BACKLOG2 §16.4 · **ขึ้นกับเรื่องนี้:** B2 · D2 · D4 · D5 · **คำถาม:** [Q-OWN2](#ถาม-เจ้าของร้าน--ทีม)
 
@@ -363,6 +368,8 @@ deploy พร้อมกันได้ (backend ก่อน) · แต่ PR 
 | Q-BE6 | ถ้าเลือก G1 (ก) ช่วยเปลี่ยน `link` ของแจ้งเตือนลูกค้าเป็น `/customer/order/<id>` ได้ไหม | ตอนนี้ `/customer/account/purchases/<id>` | G1 · D6 | | |
 | Q-BE9 | เพิ่ม flag `has_customization` (หรือจำนวนกลุ่ม/ออปชัน) ใน `GET /admin/products` ได้ไหม — POS จะได้ไม่ต้องถาม customization ทีละสินค้าก่อนลงบิล | ตอนนี้มีแค่ใน `/admin/pos/scan` · `/customization` รายตัว | I4 | | |
 | Q-BE10 | ขอ endpoint รายการสินค้าสำหรับ POS ใต้สิทธิ์ orders (เช่น `GET /admin/pos/products?search=`) — ตอนนี้ POS ใช้ `/admin/products` ที่ต้อง products.view | พนักงานหน้าร้านที่มีแค่ orders ได้ 403 ในช่องค้นหา | I15 | | |
+| Q-BE11 | `DELETE /shop/me/line` ไม่กันบัญชีที่สมัครด้วย LINE (ไม่มีรหัสผ่าน) — ยกเลิกแล้วเข้าสู่ระบบไม่ได้อีก · หน้าเว็บซ่อนปุ่มไว้แล้ว แต่ควรกันที่ backend ด้วย · ข้อความ "บัญชีนี้เข้าสู่ระบบด้วย Google…" ของเปลี่ยนรหัสใช้กับบัญชี LINE ด้วย | userService.unlinkLineAccount · changePassword | B2 | | |
+| Q-BE12 | จะย้าย `refund_promptpay_id/name` (บัญชีรับเงินคืนของลูกค้า) จากฝั่งลูกค้ามาไหม — ใช้คู่กับคืนเงินออเดอร์ที่ลูกค้ายกเลิก (I2) | BE §7.1 ข้อ 21 · ไม่อยู่ใน `updateProfileBody` | B2 · I2 | | |
 | Q-BE8 | frontend เลิกส่ง `product_stock_quantity` ใน PATCH แล้ว (PR #19) — เปิดการปฏิเสธฝั่ง backend ได้เลยไหม | BACKLOG5 §4 ยังรอ FrontEnd | I12 | | |
 | Q-BE7 | รีวิว + merge endpoint ล็อกอินด้วย LINE (`/api/auth/line` + `/callback` — branch `feat/line-login-endpoint`) · ตั้ง `LINE_AUTH_*` + Callback URL ใน Console ตอน deploy | ทำให้แล้ว 2026-10-06 รอรีวิว | B3 | | |
 

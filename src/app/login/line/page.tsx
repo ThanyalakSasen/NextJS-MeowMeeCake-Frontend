@@ -14,6 +14,7 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { LOGIN_PATH } from "@/constants/auth";
 import { nextPathFor } from "../nextPath";
+import { isLinePlaceholderEmail } from "@/services/shopProfile";
 
 function LineReturn() {
   const t = useTranslations();
@@ -31,6 +32,12 @@ function LineReturn() {
     }
     me()
       .then((user) => {
+        // บัญชี LINE ใหม่ที่ LINE ไม่ให้อีเมล (อีเมลชั่วคราว) → ไปกรอกอีเมลจริงที่หน้าบัญชีก่อน (แทน line-welcome ของ FrontOffice)
+        if (user.roleType === "customer" && isLinePlaceholderEmail(user.email)) {
+          router.replace("/customer/account");
+          router.refresh();
+          return;
+        }
         router.replace(nextPathFor(user.roleType, params.get("next")));
         router.refresh();
       })
