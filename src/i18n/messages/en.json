@@ -1542,6 +1542,10 @@
     "deleted": "Category deleted",
     "saveFailed": "Failed to save category",
     "deleteFailed": "Failed to delete category",
-    "inUse": "Cannot delete \"{name}\": {n} products still use this category"
+    "inUse": "Cannot delete \"{name}\": {n} products still use this category",
+    "shipsNationwide": "Ships nationwide",
+    "shipsNationwideAuto": "Not set yet — guessed from the name (sourdough = nationwide). Toggle to set it.",
+    "shipsNationwideHint": "Ships nationwide = web orders can be delivered to any province · off = store province only (pickup is always allowed)",
+    "shippingSaved": "Category shipping saved"
   }
 }

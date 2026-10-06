@@ -20,12 +20,20 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { MenuKey } from "@/constants/menuKeys";
+import { guessShipsNationwide } from "@/constants/shipping";
 
 export type CategoryKind = "product" | "ingredient" | "component";
 
 export interface CategoryItem {
   id: string;
   name: string;
+  /**
+   * เฉพาะหมวดสินค้า: ออเดอร์เว็บส่งทั่วประเทศได้ไหม (ค่าที่มีผลจริง) · undefined = ชนิดอื่น
+   * backend ใช้ค่าที่ตั้งไว้ · ไม่ได้ตั้ง = เดาจากชื่อ (ซาวโดว์/sourdough = ได้) — shipping.ts categoryShipsNationwide
+   */
+  shipsNationwide?: boolean;
+  /** true = ยังไม่เคยตั้ง ใช้ค่าที่เดาจากชื่อ */
+  shipsNationwideAuto?: boolean;
 }
 
 interface KindConfig {
@@ -35,11 +43,14 @@ interface KindConfig {
   create: (name: string) => Promise<unknown>;
   rename: (id: string, name: string) => Promise<unknown>;
   remove: (id: string) => Promise<unknown>;
+  /** ตั้งค่าส่งทั่วประเทศ — เฉพาะหมวดสินค้า (customer-backend-merge.md §8.7) */
+  setShipsNationwide?: (id: string, value: boolean) => Promise<unknown>;
   /** จำนวนของที่ยังใช้หมวดนี้ — มีเฉพาะชนิดที่ backend ยังไม่กันเอง */
   usageCount?: (id: string) => Promise<number>;
 }
 
 const byName = (a: CategoryItem, b: CategoryItem) => a.name.localeCompare(b.name, "th");
+
 
 // queryKey ต้องตรงกับที่หน้าอื่นใช้อยู่ (["product-categories"] ฯลฯ) — แก้หมวดแล้วตัวกรอง/ฟอร์มทุกหน้าอัปเดตตาม
 const CONFIG: Record<CategoryKind, KindConfig> = {
@@ -47,9 +58,17 @@ const CONFIG: Record<CategoryKind, KindConfig> = {
     queryKey: ["product-categories"],
     menu: "products",
     list: async () =>
-      (await productCategoriesService.list()).data.map((c) => ({ id: c._id, name: c.product_category_name })).sort(byName),
+      (await productCategoriesService.list()).data
+        .map((c) => ({
+          id: c._id,
+          name: c.product_category_name,
+          shipsNationwide: typeof c.ships_nationwide === "boolean" ? c.ships_nationwide : guessShipsNationwide(c.product_category_name),
+          shipsNationwideAuto: typeof c.ships_nationwide !== "boolean",
+        }))
+        .sort(byName),
     create: (name) => productCategoriesService.create({ product_category_name: name }),
     rename: (id, name) => productCategoriesService.update(id, { product_category_name: name }),
+    setShipsNationwide: (id, value) => productCategoriesService.update(id, { ships_nationwide: value }),
     remove: (id) => productCategoriesService.remove(id),
     usageCount: async (id) => (await productsService.list({ category_id: id, limit: 1 })).meta.total,
   },
@@ -109,6 +128,18 @@ export function useCategoryManager(kind: CategoryKind, { enabled = true }: { ena
     onError: onError("categories.saveFailed"),
   });
 
+  const shipping = useMutation({
+    mutationFn: ({ id, value }: { id: string; value: boolean }) => {
+      if (!cfg.setShipsNationwide) throw new Error("unsupported");
+      return cfg.setShipsNationwide(id, value);
+    },
+    onSuccess: () => {
+      alert.success(t("categories.shippingSaved"));
+      invalidate();
+    },
+    onError: onError("categories.saveFailed"),
+  });
+
   const remove = useMutation({
     mutationFn: async (item: CategoryItem) => {
       if (cfg.usageCount) {
@@ -134,6 +165,11 @@ export function useCategoryManager(kind: CategoryKind, { enabled = true }: { ena
     onCreate: (name: string) => create.mutateAsync(name).then(() => true, () => false),
     onRename: (id: string, name: string) => rename.mutateAsync({ id, name }).then(() => true, () => false),
     onDelete: (item: CategoryItem) => remove.mutate(item),
+    /** undefined = ชนิดนี้ไม่มีตัวเลือกส่งทั่วประเทศ */
+    onToggleShipping: cfg.setShipsNationwide
+      ? (id: string, value: boolean) => shipping.mutate({ id, value })
+      : undefined,
+    shippingId: shipping.isPending ? shipping.variables?.id ?? null : null,
     creating: create.isPending,
     savingId: rename.isPending ? rename.variables?.id ?? null : null,
     deletingId: remove.isPending ? remove.variables?.id ?? null : null,

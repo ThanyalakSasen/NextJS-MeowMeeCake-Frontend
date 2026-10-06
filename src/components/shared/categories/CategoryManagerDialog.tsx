@@ -4,10 +4,10 @@
 // presentational: ข้อมูล/สิทธิ์/การบันทึกมาจาก useCategoryManager(kind)
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
-import { Modal } from "antd";
+import { Modal, Tooltip } from "antd";
 import { useTranslations } from "next-intl";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Button, Input, EmptyState } from "@/components/base";
+import { Button, Input, EmptyState, Switch } from "@/components/base";
 import { LoadingSpin, ConfirmDeletePopup } from "@/components/shared/feedback";
 import { EditButton, DeleteButton, RetryButton, actionIcon } from "@/components/shared/actions";
 import type { useCategoryManager } from "@/hooks/useCategoryManager";
@@ -117,6 +117,21 @@ export function CategoryManagerDialog({
                 ) : (
                   <>
                     <span className="min-w-0 flex-1 truncate text-sm text-gray-800">{c.name}</span>
+                    {manager.onToggleShipping && c.shipsNationwide !== undefined && (
+                      <Tooltip title={c.shipsNationwideAuto ? t("categories.shipsNationwideAuto") : undefined}>
+                        <label className="flex shrink-0 items-center gap-1.5 text-xs text-gray-600">
+                          <Switch
+                            size="small"
+                            checked={c.shipsNationwide}
+                            disabled={!perm.update}
+                            loading={manager.shippingId === c.id}
+                            onChange={(v) => manager.onToggleShipping?.(c.id, v)}
+                          />
+                          {t("categories.shipsNationwide")}
+                          {c.shipsNationwideAuto && <span className="text-gray-400">*</span>}
+                        </label>
+                      </Tooltip>
+                    )}
                     {perm.update && (
                       <EditButton
                         size="small"
@@ -141,6 +156,7 @@ export function CategoryManagerDialog({
           </ul>
         )}
 
+        {manager.onToggleShipping && <p className="m-0 text-xs text-gray-500">{t("categories.shipsNationwideHint")}</p>}
         <p className="m-0 text-xs text-gray-500">{t("categories.deleteHint")}</p>
       </div>
     </Modal>
