@@ -7,3 +7,5 @@ export const shopProfileKey = ["shop", "me"] as const;
 export const shopEmailStatusKey = ["shop", "me", "email"] as const;
 /** ต้องตรงกับ LINE_STATUS_KEY ของ /profile (useProfileViewModel) — ใช้ cache เดียวกัน */
 export const shopLineStatusKey = ["shop", "me", "line"] as const;
+/** ประวัติการสั่งซื้อ (ทุกหน้า/ตัวกรอง) — ขึ้นต้นเหมือนกันให้ invalidate ชุดเดียวได้ */
+export const shopOrdersKey = ["shop", "orders", "list"] as const;

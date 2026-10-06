@@ -168,7 +168,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 - **กติกา:** คูปองส่วนตัว **หรือ** โค้ด อย่างใดอย่างหนึ่ง + ใช้แต้มร่วมได้ (≤ 30% ของยอดสินค้า · ขั้นต่ำ 100 แต้ม)
 - **ขึ้นกับ:** D5 (หน้าแต้ม/คูปอง) ไม่บังคับ
 
-### C4 ▢ หน้าออเดอร์: ยกเลิกออเดอร์
+### C4 ✅ หน้าออเดอร์: ยกเลิกออเดอร์ (2026-10-07 · ทำพร้อม D1 · ทดสอบแล้ว)
 - **API:** `POST /shop/orders/:id/cancel` — pending/confirmed เท่านั้น · ชำระแล้วก็ยกเลิกได้ = รอร้านโอนคืน (BE §8.8)
 - **ขึ้นกับ:** G1 (หน้าออเดอร์อยู่ path ไหน)
 
@@ -178,7 +178,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 | รหัส | หน้า | ต้นแบบ FrontOffice | API | ขึ้นกับ | สถานะ |
 |---|---|---|---|---|---|
-| D1 | ประวัติคำสั่งซื้อ | `account/purchases` (+`[id]`) | `/shop/orders` · `/shop/orders/:id` | G1 | ⏸ |
+| D1 | ประวัติคำสั่งซื้อ | `account/purchases` (+`[id]`) | `/shop/orders` (กรองสถานะ + แบ่งหน้าที่ server) · `/shop/orders/:id` | — | ✅ 2026-10-07 (branch `feat/purchases`) — รายการ + รายละเอียด (ย้ายหน้าออเดอร์เดิมมา · `/customer/order/[id]` redirect) · ทดสอบ 11/11 · ไม่มีรูปสินค้า/ปุ่มรีวิว (Q-BE13 · D7) |
 | D2 | สมุดที่อยู่ | `account/address` (541) | `/shop/addresses` (+`:id`, `:id/default`) | B2 | ▢ |
 | D3 | พรีออเดอร์ทั้ง flow | `preorder/*` · `account/preorders/*` (~2,700 บรรทัด) | `/catalog/preorder-rounds` (+`:id`) · `/shop/preorders` (+`cancel`, `payment`) · `delivery-quote` ส่ง `product_ids` | G1 · C1 | ⏸ |
 | D4 | แต้มสะสม · คูปอง · แชร์แต้ม | `account/member` (567) | `/shop/points` (+`share`) · `/shop/coupons` (+`check`, `redeem`) | B2 | ▢ |
@@ -277,7 +277,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 ## G. ตัดสินใจทีม
 
-### G1 ⏸ หน้าออเดอร์ของลูกค้าอยู่ path ไหน
+### G1 ✅ หน้าออเดอร์ของลูกค้าอยู่ path ไหน — `/customer/account/purchases/[id]` (แบบ FrontOffice · 2026-10-07 · D1) · `/customer/order/[id]` redirect มาที่นี่
 - **ตัวเลือก:** (ก) `customer/order/[id]` ของ repo นี้ · (ข) `customer/account/purchases/[id]` แบบ FrontOffice
 - **ผลกระทบ:** ลิงก์ในกระดิ่ง/LINE ของ backend ชี้ไป (ข) อยู่แล้ว (BE §8.12) · เลือก (ก) = ขอ backend แก้ `link` · เลือก (ข) = ย้ายหน้า A1 ไป path ใหม่
 - **ขึ้นกับเรื่องนี้:** C4 · D1 · D3 · D6 · D10 · **คำถาม:** [Q-OWN1](#ถาม-เจ้าของร้าน--ทีม)
@@ -370,6 +370,7 @@ deploy พร้อมกันได้ (backend ก่อน) · แต่ PR 
 | Q-BE10 | ขอ endpoint รายการสินค้าสำหรับ POS ใต้สิทธิ์ orders (เช่น `GET /admin/pos/products?search=`) — ตอนนี้ POS ใช้ `/admin/products` ที่ต้อง products.view | พนักงานหน้าร้านที่มีแค่ orders ได้ 403 ในช่องค้นหา | I15 | | |
 | Q-BE11 | `DELETE /shop/me/line` ไม่กันบัญชีที่สมัครด้วย LINE (ไม่มีรหัสผ่าน) — ยกเลิกแล้วเข้าสู่ระบบไม่ได้อีก · หน้าเว็บซ่อนปุ่มไว้แล้ว แต่ควรกันที่ backend ด้วย · ข้อความ "บัญชีนี้เข้าสู่ระบบด้วย Google…" ของเปลี่ยนรหัสใช้กับบัญชี LINE ด้วย | userService.unlinkLineAccount · changePassword | B2 | | |
 | Q-BE12 | จะย้าย `refund_promptpay_id/name` (บัญชีรับเงินคืนของลูกค้า) จากฝั่งลูกค้ามาไหม — ใช้คู่กับคืนเงินออเดอร์ที่ลูกค้ายกเลิก (I2) | BE §7.1 ข้อ 21 · ไม่อยู่ใน `updateProfileBody` | B2 · I2 | | |
+| Q-BE13 | `GET /shop/orders` (รายการ) ไม่ส่งรายการสินค้า + snapshot สินค้าในออเดอร์ไม่มีรูป — หน้า "ประวัติการสั่งซื้อ" ต้องดึงรายละเอียดทีละใบ (10 คำขอต่อหน้า) และแสดงไอคอนแทนรูป · ขอ `items` แบบย่อ (ชื่อ · จำนวน · ราคา · รูป) ใน list ได้ไหม | orderService.listOrders · productSnapshot | D1 | | |
 | Q-BE8 | frontend เลิกส่ง `product_stock_quantity` ใน PATCH แล้ว (PR #19) — เปิดการปฏิเสธฝั่ง backend ได้เลยไหม | BACKLOG5 §4 ยังรอ FrontEnd | I12 | | |
 | Q-BE7 | รีวิว + merge endpoint ล็อกอินด้วย LINE (`/api/auth/line` + `/callback` — branch `feat/line-login-endpoint`) · ตั้ง `LINE_AUTH_*` + Callback URL ใน Console ตอน deploy | ทำให้แล้ว 2026-10-06 รอรีวิว | B3 | | |
 
