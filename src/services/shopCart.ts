@@ -4,7 +4,7 @@
 // shape จริง: cartService.getCartDetail() ฝั่ง backend
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
-import type { ItemResponse } from "@/types/api";
+import type { ItemResponse, EmptyResponse } from "@/types/api";
 
 export interface ShopCartItem {
   _id: string;
@@ -38,4 +38,11 @@ export const shopCartService = {
    */
   addItem: (body: { product_id: string; quantity: number; variant_id?: string }) =>
     http.post<ItemResponse<ShopCartItem>>("/shop/cart/items", body),
+
+  /** PATCH /shop/cart/items/{id} { quantity } — quantity = 0 = ลบรายการ */
+  updateQuantity: (itemId: string, quantity: number) =>
+    http.patch<ItemResponse<ShopCartItem>>(`/shop/cart/items/${itemId}`, { quantity }),
+
+  /** DELETE /shop/cart/items/{id} */
+  removeItem: (itemId: string) => http.delete<EmptyResponse>(`/shop/cart/items/${itemId}`),
 };
