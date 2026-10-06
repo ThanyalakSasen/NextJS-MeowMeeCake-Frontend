@@ -6,12 +6,13 @@
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { UserIcon, KeyIcon, ShoppingBagIcon } from "@heroicons/react/24/solid";
+import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon } from "@heroicons/react/24/solid";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import DoorLogoutIcon from "./DoorLogoutIcon";
 
 const ITEMS = [
   { href: "/customer/account", label: "ข้อมูลส่วนตัว", icon: UserIcon },
+  { href: "/customer/account/address", label: "ที่อยู่", icon: MapPinIcon },
   { href: "/customer/changepassword", label: "เปลี่ยนรหัสผ่าน", icon: KeyIcon },
   { href: "/customer/account/purchases", label: "ประวัติการสั่งซื้อ", icon: ShoppingBagIcon },
 ] as const;
