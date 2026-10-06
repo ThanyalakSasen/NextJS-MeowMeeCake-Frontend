@@ -831,7 +831,16 @@
     "orderNo": "Order no.",
     "payMethod": "Payment method",
     "newBill": "Start a new bill",
-    "saveFailed": "Could not save the order"
+    "saveFailed": "Could not save the order",
+    "pickAdd": "Add to bill · {price}",
+    "pickCount": "{n}/{max} picked",
+    "pickGroupRequired": "Choose \"{group}\"",
+    "pickGroupMin": "Choose at least {n} for \"{group}\"",
+    "pickGroupMax": "\"{group}\" allows up to {n}",
+    "pickOptionRequired": "Choose \"{option}\"",
+    "pickTextRequired": "Fill in \"{option}\"",
+    "pickTextTooLong": "\"{option}\" is longer than {n} characters",
+    "customizationLoadFailed": "Could not load product options. Please try again."
   },
   "ingredients": {
     "title": "Ingredients",

@@ -3,16 +3,15 @@
 // DTO ของ GET /admin/pos/scan — ดูโค้ดจริง productService.resolveScan() ฝั่ง backend
 // ─────────────────────────────────────────────────────────────
 import type { Product } from "@/types/product";
+import type { ProductCustomization } from "@/types/productCustomization";
 
-/** ยังไม่มีสินค้าไหนในระบบจริงใช้ variant เลย (0 แถวใน productvariants — ดู backend
- *  docs/BACKLOG2.md §9) จึงยังไม่มี types/service แยกของ variant — พอ type คร่าว ๆ ให้ตรงกับ
- *  field ที่ backend select() มาจริง (variant_name/variant_price/variant_stock/unit_id) */
+/** ตัวเลือกดิบของสินค้า (productvariants) — ไม่มี variant_stock แล้ว (สต็อกอยู่ที่ตัวสินค้า · backend §8.3)
+ *  POS ใช้ customization (จัดกลุ่มแล้ว) แทน */
 export interface PosScanVariant {
   _id: string;
+  group_id?: string | null;
   variant_name: string;
   variant_price: number;
-  variant_stock: number;
-  unit_id?: string | { _id: string; unit_name: string; unit_abbr: string };
 }
 
 export interface PosScanResult {
@@ -20,4 +19,6 @@ export interface PosScanResult {
   current_price: number;
   stock: number | null;
   variants: PosScanVariant[];
+  /** กลุ่มตัวเลือก + ออปชันเสริม — มี = ต้องให้พนักงานเลือกก่อนลงบิล */
+  customization: ProductCustomization;
 }

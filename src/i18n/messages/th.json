@@ -831,7 +831,16 @@
     "orderNo": "เลขที่คำสั่งซื้อ",
     "payMethod": "วิธีชำระ",
     "newBill": "เริ่มบิลใหม่",
-    "saveFailed": "บันทึกคำสั่งซื้อไม่สำเร็จ"
+    "saveFailed": "บันทึกคำสั่งซื้อไม่สำเร็จ",
+    "pickAdd": "เพิ่มลงบิล · {price}",
+    "pickCount": "เลือกแล้ว {n}/{max}",
+    "pickGroupRequired": "เลือก \"{group}\"",
+    "pickGroupMin": "เลือก \"{group}\" อย่างน้อย {n} อย่าง",
+    "pickGroupMax": "\"{group}\" เลือกได้ไม่เกิน {n} อย่าง",
+    "pickOptionRequired": "เลือก \"{option}\"",
+    "pickTextRequired": "กรอก \"{option}\"",
+    "pickTextTooLong": "\"{option}\" ยาวเกิน {n} ตัวอักษร",
+    "customizationLoadFailed": "โหลดตัวเลือกของสินค้าไม่สำเร็จ กรุณาลองใหม่"
   },
   "ingredients": {
     "title": "จัดการข้อมูลวัตถุดิบ",

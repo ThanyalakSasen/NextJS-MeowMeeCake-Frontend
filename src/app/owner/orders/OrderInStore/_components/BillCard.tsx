@@ -12,12 +12,15 @@ export function BillCard({
   promosOf,
   onIncrease,
   onDecrease,
+  isProductAtStock,
 }: {
   cart: CartLine[];
   itemCount: number;
   promosOf: (productId: string, categoryId: string | null) => Promotion[];
   onIncrease: (line: CartLine) => void;
   onDecrease: (line: CartLine) => void;
+  /** จำนวนรวมทุกบรรทัดของสินค้านี้เต็มสต็อกแล้ว (สินค้าเดียวกันคนละตัวเลือก = คนละบรรทัด) */
+  isProductAtStock: (productId: string) => boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -40,12 +43,19 @@ export function BillCard({
         {cart.length === 0 && <p className="m-0 px-2.5 py-20 text-center text-gray-600">{t("pos.billEmpty")}</p>}
         {cart.map((l) => {
           const promos = promosOf(l.productId, l.categoryId);
-          const atMax = l.qty >= l.stock;
+          const atMax = isProductAtStock(l.productId);
           return (
-            <div key={l.productId} className="flex items-center gap-2.5 border-b border-gray-100 py-2.5">
+            <div key={l.lineKey} className="flex items-center gap-2.5 border-b border-gray-100 py-2.5">
               <span className="w-24 shrink-0 truncate font-mono text-xs text-gray-500">{l.code ?? "—"}</span>
               <div className="flex min-w-0 flex-1 flex-col leading-snug">
                 <span className="font-medium text-brown-900">{l.name}</span>
+                {l.variantLabel && <span className="text-xs text-gray-600">{l.variantLabel}</span>}
+                {l.options.map((o) => (
+                  <span key={o.option_id} className="text-xs text-gray-600">
+                    + {o.option_name}
+                    {o.text_value ? `: "${o.text_value}"` : ""}
+                  </span>
+                ))}
                 <span className="text-sm text-gray-600">{t("pos.unitPrice", { price: formatCurrency(l.price, locale) })}</span>
                 {promos.length > 0 && (
                   <span className="text-xs font-medium text-pink-700">

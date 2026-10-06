@@ -122,7 +122,13 @@ export interface OrderInput {
   source: "items";
   order_type: OrderType;
   delivery_address?: DeliveryAddress | null;
-  items: { product_id: string; quantity: number }[];
+  /** variant_ids = ตัวเลือกที่เลือกทุกกลุ่ม · selected_options = ออปชันเสริม (backend ตรวจ + คิดราคาเอง — §8.3) */
+  items: {
+    product_id: string;
+    quantity: number;
+    variant_ids?: string[];
+    selected_options?: { option_id: string; text_value?: string }[];
+  }[];
   /** ส่วนลดกรอกมือ (ใช้เมื่อไม่ได้ระบุโปรโมชัน) */
   discount_amount?: number;
   /** ใช้โปรโมชัน — backend คิดส่วนลดเอง (ไม่สนใจ discount_amount) · ส่ง promotion_code หรือ promotion_id อย่างใดอย่างหนึ่ง */

@@ -17,6 +17,13 @@ export const posService = {
    */
   scan: async (code: string): Promise<PosScanResult> => {
     const res = await http.get<ItemResponse<any>>("/admin/pos/scan", { params: { code } });
-    return { ...res.data, product: toProduct(res.data.product) };
+    return {
+      ...res.data,
+      product: toProduct(res.data.product),
+      customization: {
+        groups: res.data.customization?.groups ?? [],
+        options: res.data.customization?.options ?? [],
+      },
+    };
   },
 };
