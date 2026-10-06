@@ -71,7 +71,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | [F](#f-ต้องขอ-backend-ก่อน) | ต้องขอ backend ก่อน | 4 | ⏸ |
 | [G](#g-ตัดสินใจทีม) | ตัดสินใจทีม | 3 | ⏸ |
 | [H](#h-ไม่ทำ-ตัดสินแล้ว) | ไม่ทำ (ตัดสินแล้ว) | 6 | ❌ |
-| [I](#i-แก้ตาม-backend-main-ตรวจ-2026-10-06) | แก้ตาม backend `main` (ไม่เกี่ยวกับ FrontOffice โดยตรง) | 14 | ✅ 5 · 🟡 5 (เหลือ UI) · ▢ 4 |
+| [I](#i-แก้ตาม-backend-main-ตรวจ-2026-10-06) | แก้ตาม backend `main` (ไม่เกี่ยวกับ FrontOffice โดยตรง) | 15 | ✅ 5 · 🟡 5 (เหลือ UI) · ▢ 4 |
 
 **ลำดับที่แนะนำ:** A4 → I1 · I2 (🔴) → G1 · G2 (ถามก่อน เพราะกระทบหลายเรื่อง) → I3–I7 → B1 → B2 → D1 → D2 → C3 → D3 → C1 → ที่เหลือ
 
@@ -321,6 +321,23 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | I14 | ✅ | สิทธิ์หน้ารีวิว: backend ย้าย `/admin/reviews*` จาก `products.*` เป็น **`reports.*`** แต่เมนู + ViewModel ยังเช็ค `products` → ปุ่ม/เมนูไม่ตรงสิทธิ์จริง | `constants/menu.ts` · `useReviewsViewModel.ts` | BE §8.20 | ✅ 2026-10-06 |
 | I12 | ✅ แจ้ง backend | **frontend ไม่ส่ง `product_stock_quantity` ใน PATCH แล้ว** (`productForm.toUpdateInput` ตัดออก · ปรับสต็อกผ่าน `PUT /stock` ตั้งแต่ PR #19) → backend เปิดการปฏิเสธใน `PATCH /admin/products/:id` ได้เลย (BACKLOG5 §4 แถวแรกยังเขียนว่ารอ FrontEnd) | — | BE §8.21 · [Q-BE8](#ถาม-backend) | ✅ |
 
+| I15 | 🟡 | **POS โหลดรายการสินค้าไม่ได้ถ้าพนักงานไม่มีสิทธิ์ `products.view`** — POS ใช้ `GET /admin/products` (สิทธิ์ products) เป็นคำแนะนำในช่องค้นหา · ทดสอบ 2026-10-06: พนักงานที่มีแค่ orders + payments ได้ 403 (สแกนรหัส/บาร์โค้ด + เลือกตัวเลือกยังใช้ได้ผ่าน `/admin/pos/scan`) · มีมาก่อน PR ชุดนี้ | `OrderInStore/usePOSViewModel.ts` (`catalogQ`) | ขอ backend: endpoint รายการสินค้าสำหรับ POS ใต้สิทธิ์ orders (เช่น `GET /admin/pos/products`) — [Q-BE10](#ถาม-backend) · หรือกำหนดให้พนักงานหน้าร้านต้องมี products.view | ⏸ |
+
+### ผลทดสอบ PR #25–#27 กับ backend จริง (2026-10-06)
+
+> backend `feat/line-login-endpoint` (= `main` + #66) + MongoDB local · frontend `feat/product-customization` (รวม #25 + #26 + #27) ·
+> สคริปต์เรียก **service / pure function ของ frontend ตรง ๆ** (ไม่ใช่ยิง API เอง) · ยังไม่ได้คลิกหน้าจอในเบราว์เซอร์
+
+| ชุด | ผล | ที่ตรวจ |
+|---|---|---|
+| #25 regression (A1–A3) | ✅ 17/17 | ชำระเงิน/หมดเวลา/เปิดกลับ · ค่าส่ง `deliverable` · ยืนยันอีเมล (ข้ามการส่งอีเมลจริง) |
+| #25 ใหม่ | ✅ 5/5 | `store_info` ใน menuAccess · **`LIST_ALL` ได้ 125/125 ไม่ซ้ำ** (limit 100 = 100) · ลูกค้ายกเลิกหลังจ่าย → `isAwaitingRefund` → `paymentsService.refund` → refunded · field ออเดอร์เว็บใน `toOrder` · รีวิวสิทธิ์ reports |
+| #26 | ✅ 2/2 | สวิตช์ส่งทั่วประเทศ → `delivery-quote` เปลี่ยนตาม · `points_cost` 100 → ล้างช่อง = null |
+| #27 | ✅ 5/5 + 1 | บันทึกกลุ่มผ่าน `customizationForm` (บันทึกซ้ำ id เดิม) · POS scan → เลือก → `posCart` → ออเดอร์ **ราคา POS = backend (380)** + ข้อความตัวเลือก/ออปชันตรง · ไม่เลือกกลุ่มบังคับ → หน้าจอจับได้ + backend 400 · สินค้าไม่มีตัวเลือกลงบิลตรง · **พนักงานไม่มี products.view สแกนได้ตัวเลือกครบ** (`/customization` ได้ 403 ตามที่คาด) |
+| หน้าเว็บ | ✅ 12/12 | ทุกหน้าที่ PR แตะ เปิดได้ 200 (หลังรีสตาร์ท dev server — รอบแรกได้ 404 เพราะสถานะ dev server ค้าง ไม่ใช่โค้ด) |
+
+พบใหม่: **I15** (ด้านบน)
+
 **สถานะ deploy (อัปเดต BACKLOG2 §16.1):** backend `main` merge PR #52–#57 แล้ว (2026-10-06) → ข้อห้าม "frontend `main` ห้าม deploy ก่อน backend" หมดไป —
 deploy พร้อมกันได้ (backend ก่อน) · แต่ PR #16–#19 ของ frontend **ยังไม่เคยทดสอบกับ backend จริง** (BACKLOG2 §16.2) · branch นี้ทดสอบ A1–A3 แล้ว (หมวด A)
 
@@ -343,6 +360,7 @@ deploy พร้อมกันได้ (backend ก่อน) · แต่ PR 
 | Q-BE5 | จะมี endpoint สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบไหม | FrontOffice ใช้ `/owner/preorder-rounds/dashboard` · `/:id/customers` | F4 | | |
 | Q-BE6 | ถ้าเลือก G1 (ก) ช่วยเปลี่ยน `link` ของแจ้งเตือนลูกค้าเป็น `/customer/order/<id>` ได้ไหม | ตอนนี้ `/customer/account/purchases/<id>` | G1 · D6 | | |
 | Q-BE9 | เพิ่ม flag `has_customization` (หรือจำนวนกลุ่ม/ออปชัน) ใน `GET /admin/products` ได้ไหม — POS จะได้ไม่ต้องถาม customization ทีละสินค้าก่อนลงบิล | ตอนนี้มีแค่ใน `/admin/pos/scan` · `/customization` รายตัว | I4 | | |
+| Q-BE10 | ขอ endpoint รายการสินค้าสำหรับ POS ใต้สิทธิ์ orders (เช่น `GET /admin/pos/products?search=`) — ตอนนี้ POS ใช้ `/admin/products` ที่ต้อง products.view | พนักงานหน้าร้านที่มีแค่ orders ได้ 403 ในช่องค้นหา | I15 | | |
 | Q-BE8 | frontend เลิกส่ง `product_stock_quantity` ใน PATCH แล้ว (PR #19) — เปิดการปฏิเสธฝั่ง backend ได้เลยไหม | BACKLOG5 §4 ยังรอ FrontEnd | I12 | | |
 | Q-BE7 | รีวิว + merge endpoint ล็อกอินด้วย LINE (`/api/auth/line` + `/callback` — branch `feat/line-login-endpoint`) · ตั้ง `LINE_AUTH_*` + Callback URL ใน Console ตอน deploy | ทำให้แล้ว 2026-10-06 รอรีวิว | B3 | | |
 
