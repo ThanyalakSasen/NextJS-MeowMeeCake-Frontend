@@ -55,11 +55,13 @@ function toApiError(err: AxiosError<BackendErrorBody>): ApiError {
   const status = err.response?.status ?? 0;
   const body = err.response?.data;
   const backendError = body?.success === false ? body.error : undefined;
+  const reason = (backendError?.details as { reason?: unknown } | null | undefined)?.reason;
   return {
     status,
     code: backendError?.code,
     message: backendError?.message ?? (status === 0 ? "network error" : `request failed (${status})`),
     fieldErrors: toFieldErrors(backendError?.details ?? null),
+    reason: typeof reason === "string" ? reason : undefined,
     cause: err,
   };
 }
@@ -68,10 +70,10 @@ function toApiError(err: AxiosError<BackendErrorBody>): ApiError {
  * endpoint ที่ 401 = "คำตอบของมันเอง" ไม่ใช่ "session หมดอายุ" → ห้ามเด้งไป login
  *  - /auth/login: 401 คือรหัสผ่านผิด ต้องส่ง error ของ backend ("อีเมลหรือรหัสผ่านไม่ถูกต้อง") กลับให้ฟอร์มแสดงตรง ๆ
  *    (ถ้าปล่อยเข้า handler จะเด้ง /login?reason=expired + ล้าง cache ทุกครั้งที่พิมพ์รหัสผิด)
- *  - /auth/logout, /auth/register, /auth/google: ไม่มี session ให้หมดอายุตั้งแต่แรก
+ *  - /auth/logout, /auth/register, /auth/google, /auth/resend-verification: ไม่มี session ให้หมดอายุตั้งแต่แรก
  * (/auth/me ไม่อยู่ในลิสต์นี้ — 401 ตรงนั้นคือ session หมดอายุจริง ให้เด้งไป login)
  */
-const NO_EXPIRY_REDIRECT_PATHS = ["/auth/login", "/auth/logout", "/auth/register", "/auth/google"];
+const NO_EXPIRY_REDIRECT_PATHS = ["/auth/login", "/auth/logout", "/auth/register", "/auth/google", "/auth/resend-verification"];
 
 // ส่ง { skipAuthRedirect: true } ใน config เพื่อบอกว่า 401 ของ request นี้ "ไม่ใช่ session หมดอายุ"
 // (เช่นหน้าร้านเช็คว่า guest ล็อกอินหรือยัง — authClient.meOptional) → ไม่เด้งไป login

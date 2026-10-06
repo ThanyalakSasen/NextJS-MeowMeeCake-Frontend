@@ -82,15 +82,48 @@ export async function meOptional(): Promise<CurrentUser | null> {
   }
 }
 
-/** POST /auth/register — ลูกค้าสมัครสมาชิกเอง (backend บังคับ role customer + ตั้ง cookie ให้เลย = login ทันที) */
+/**
+ * POST /auth/register — ลูกค้าสมัครสมาชิกเอง (backend บังคับ role customer)
+ * backend ส่งลิงก์ยืนยันทางอีเมล (24 ชม.) และ**ไม่ตั้ง cookie** — ยืนยันก่อนจึงล็อกอินได้
+ * (backend docs/customer-backend-merge.md §8.9) · คืน message ของ backend ไว้แสดง "กรุณาตรวจอีเมล"
+ */
 export async function register(input: { user_fullname: string; email: string; password: string; user_phone?: string }) {
-  await http.post("/auth/register", input);
-  return me();
+  const res = await http.post<ItemResponse<{ message?: string }>>("/auth/register", input);
+  return res.data;
+}
+
+/** login แล้วได้ 403 + reason นี้ = ลูกค้ายังไม่ยืนยันอีเมล (เจ้าของร้าน/พนักงานไม่โดน) */
+export const EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
+
+/**
+ * POST /auth/resend-verification { email } — ขอลิงก์ยืนยันอีเมลใหม่
+ * backend ตอบข้อความเดียวกันทุกกรณี (กันเดาอีเมล) · จำกัด 3 ครั้ง/นาที ต่อ IP (เกิน = 429)
+ */
+export async function resendVerification(email: string): Promise<void> {
+  await http.post("/auth/resend-verification", { email });
 }
 
 export async function login(input: LoginInput): Promise<CurrentUser> {
   await http.post("/auth/login", input); // backend ตั้ง cookie
   return me();
+}
+
+/**
+ * POST /auth/google { credential } — ID token จาก Google Identity Services (ปุ่ม Google ในหน้า login)
+ * backend ตรวจ token กับ GOOGLE_CLIENT_ID แล้วตั้ง cookie `session` (ไม่มีบัญชี = สร้างลูกค้าให้)
+ */
+export async function loginWithGoogle(credential: string): Promise<CurrentUser> {
+  await http.post("/auth/google", { credential });
+  return me();
+}
+
+/**
+ * URL เริ่มเข้าสู่ระบบด้วย LINE — ต้องพาเบราว์เซอร์ไปทั้งหน้า (window.location) ไม่ใช่ fetch
+ * backend redirect ไปหน้ายินยอมของ LINE → ตั้ง cookie `session` → กลับมา /login/line (LINE_AUTH_RETURN_URL ของ backend)
+ */
+export function lineLoginUrl(next: string | null): string {
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/+$/, "");
+  return `${base}/auth/line${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 }
 
 export async function logout(opts: { broadcast?: boolean } = {}): Promise<void> {
