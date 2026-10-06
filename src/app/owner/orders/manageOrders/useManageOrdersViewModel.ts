@@ -14,9 +14,9 @@ import { paymentsService } from "@/services/payments";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert, confirmAlert } from "@/lib/alert";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
-import { formatDate } from "@/i18n/format";
+import { formatCurrency, formatDate } from "@/i18n/format";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
-import type { DeliveryUpdateInput, Order, OrderType } from "@/types/order";
+import { isAwaitingRefund, type DeliveryUpdateInput, type Order, type OrderType } from "@/types/order";
 import { isApiError } from "@/types/api";
 import { isFinalStatus } from "./orderStatus";
 import { LIST_ALL } from "@/lib/http";
@@ -77,6 +77,7 @@ export function useManageOrdersViewModel() {
   );
 
   const unreviewedCount = typeOrders.filter((o) => o.payment_status === "pending").length;
+  const awaitingRefundCount = typeOrders.filter(isAwaitingRefund).length;
 
   // รายละเอียดเต็ม (มี items จริง) + รายการชำระเงินที่ผูกไว้ — ดึงเฉพาะตอนเปิด drawer (กัน N+1 ในตาราง)
   const detailQ = useQuery({
@@ -91,6 +92,8 @@ export function useManageOrdersViewModel() {
   });
   const selectedOrder = detailQ.data?.data ?? null;
   const selectedPayment = paymentQ.data?.data[0] ?? null;
+  // รายการที่ชำระแล้ว (ตัวที่ต้องคืนเงิน) — อาจไม่ใช่ใบล่าสุด
+  const paidPayment = paymentQ.data?.data.find((p) => p.status === "paid") ?? null;
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["orders"] });
 
@@ -159,6 +162,31 @@ export function useManageOrdersViewModel() {
     );
   };
 
+  // คืนเงิน — ออเดอร์ "ยกเลิก + ชำระแล้ว" (ลูกค้ายกเลิกเอง · backend ไม่คืนอัตโนมัติ — customer-backend-merge.md §8.8)
+  // ร้านโอนคืนนอกระบบแล้วกดยืนยัน → payment refunded + order.payment_status refunded
+  const refundMutation = useMutation({
+    mutationFn: (paymentId: string) => paymentsService.refund(paymentId),
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["payments", "by-order", selectedId] });
+      qc.invalidateQueries({ queryKey: ["reports"] }); // คืนเงิน = รายรับลดในหน้าสรุปการเงิน
+    },
+  });
+
+  const onRefund = async (paymentId: string) => {
+    if (!selectedOrder) return;
+    const no = selectedOrder.order_no;
+    const ok = await confirmAlert(
+      t("orders.refundConfirm", { amount: formatCurrency(selectedOrder.total_amount, locale), no }),
+      { title: t("orders.confirmRefund"), confirmText: t("orders.confirmRefund"), cancelText: t("common.cancel") },
+    );
+    if (!ok) return;
+    refundMutation.mutate(paymentId, {
+      onSuccess: () => alert.success(t("orders.refunded", { no })),
+      onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.refundFailed")),
+    });
+  };
+
   // สถานะจัดส่ง/เลขพัสดุ (BACKLOG2 §15.2 ข้อ 3) — เฉพาะออเดอร์จัดส่ง · backend แจ้งลูกค้าเองเมื่อสถานะเปลี่ยน
   const deliveryMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: DeliveryUpdateInput }) => ordersService.updateDelivery(id, input),
@@ -213,7 +241,7 @@ export function useManageOrdersViewModel() {
     orders: paged,
     ordersForStats: typeOrders,
     total: filtered.length,
-    deliveryCount, takeawayCount, unreviewedCount,
+    deliveryCount, takeawayCount, unreviewedCount, awaitingRefundCount,
 
     isLoading: ordersQ.isLoading,
     isError: ordersQ.isError,
@@ -221,6 +249,7 @@ export function useManageOrdersViewModel() {
 
     selectedOrder,
     selectedPayment,
+    paidPayment,
     isDetailLoading: detailQ.isLoading || paymentQ.isLoading,
     drawerOpen,
     onView: (o: Order) => openDetail(o._id),
@@ -231,6 +260,8 @@ export function useManageOrdersViewModel() {
     isFinalStatus,
     onStatusChange, onCancel, onVerifyPayment, onRejectPayment, onExport,
     verifyingPayment: verifyMutation.isPending,
+    onRefund,
+    refunding: refundMutation.isPending,
     onSaveDelivery,
     savingDelivery: deliveryMutation.isPending,
   };

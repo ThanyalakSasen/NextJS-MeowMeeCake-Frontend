@@ -658,7 +658,18 @@
     "deliverySave": "Save delivery",
     "deliverySaved": "Saved delivery for {no}",
     "deliverySaveFailed": "Failed to save delivery",
-    "deliveryNotifyHint": "The customer is notified automatically when the delivery status changes"
+    "deliveryNotifyHint": "The customer is notified automatically when the delivery status changes",
+    "awaitingRefund": "Awaiting refund",
+    "awaitingRefundTitle": "Refund owed to customer",
+    "awaitingRefundDetail": "The customer cancelled after paying — transfer {amount} back, then confirm below",
+    "cancelReasonLabel": "Cancellation reason: {reason}",
+    "confirmRefund": "Confirm refund sent",
+    "refundConfirm": "Confirm you have refunded {amount} to the customer of {no}? The payment will be marked \"Refunded\" and this cannot be undone.",
+    "refunded": "Refund recorded for {no}",
+    "refundFailed": "Could not record the refund",
+    "noPaidPayment": "No paid payment found — check the finance page",
+    "refundNoPermission": "Approving payments permission is required to confirm refunds",
+    "awaitingRefundAlert": "{n} cancelled orders were already paid — refunds are owed"
   },
   "preorderRound": {
     "paymentDue": "Payment due",

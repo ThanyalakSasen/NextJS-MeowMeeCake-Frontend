@@ -2,7 +2,9 @@
 // แท็บ 2: คำสั่งซื้อเค้กวันเกิด (Preorders) — presentational ล้วน รับ props จาก usePreOrderRoundViewModel
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Select } from "@/components/base";
+import { Tag } from "antd";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
+import { isAwaitingRefund } from "@/types/order";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { OrderStatus } from "@/constants/enumConfig";
@@ -69,7 +71,11 @@ export function OrdersTab(vm: VM) {
         const due = vm.paymentDueState(o);
         return (
           <div>
-            <StatusBadge group="paymentStatus" value={o.payment_status} />
+            {isAwaitingRefund(o) ? (
+              <Tag color="warning">{t("orders.awaitingRefund")}</Tag>
+            ) : (
+              <StatusBadge group="paymentStatus" value={o.payment_status} />
+            )}
             {due && o.payment_due_at && (
               <p className={`mt-0.5 text-sm ${due === "overdue" ? "text-danger" : "text-gray-600"}`}>
                 {due === "overdue"

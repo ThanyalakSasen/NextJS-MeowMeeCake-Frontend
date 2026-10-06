@@ -23,9 +23,10 @@ import type { OrderStatus, RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
 import type { Preorder } from "@/types/preorder";
 import type { DeliveryUpdateInput } from "@/types/order";
+import { formatCurrency } from "@/i18n/format";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
-
 import { LIST_ALL } from "@/lib/http";
+
 export type TabKey = "rounds" | "orders";
 const TAB_KEYS: TabKey[] = ["rounds", "orders"];
 
@@ -245,6 +246,32 @@ export function usePreOrderRoundViewModel() {
     enabled: !!selectedOrderId && orderDrawerOpen && paymentPerm.view,
   });
   const selectedPayment = paymentQ.data?.data[0] ?? null; // ใหม่สุดก่อน
+  // รายการที่ชำระแล้ว — ใช้คืนเงินเมื่อ "ยกเลิก + ชำระแล้ว" (backend คืนพรีออเดอร์อัตโนมัติตอนยกเลิก แต่ข้อมูลที่
+  // backend ฝั่งลูกค้า (พอร์ต 4000) ยกเลิกไว้ / คืนอัตโนมัติไม่สำเร็จ อาจค้างสถานะนี้ — ให้ร้านปิดเองได้)
+  const paidPayment = paymentQ.data?.data.find((p) => p.status === "paid") ?? null;
+
+  const refundPayment = useMutation({
+    mutationFn: (paymentId: string) => paymentsService.refund(paymentId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["preorders"] });
+      qc.invalidateQueries({ queryKey: ["payments", "by-preorder", selectedOrderId] });
+      qc.invalidateQueries({ queryKey: ["reports"] });
+    },
+  });
+
+  const onRefund = async (paymentId: string) => {
+    if (!selectedOrder) return;
+    const no = selectedOrder.preorder_no;
+    const ok = await confirmAlert(
+      t("orders.refundConfirm", { amount: formatCurrency(selectedOrder.total_amount, locale), no }),
+      { title: t("orders.confirmRefund"), confirmText: t("orders.confirmRefund"), cancelText: t("common.cancel") },
+    );
+    if (!ok) return;
+    refundPayment.mutate(paymentId, {
+      onSuccess: () => alert.success(t("orders.refunded", { no })),
+      onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.refundFailed")),
+    });
+  };
 
   const verifyPayment = useMutation({
     mutationFn: ({ paymentId, approved }: { paymentId: string; approved: boolean }) =>
@@ -382,6 +409,7 @@ export function usePreOrderRoundViewModel() {
     isOrderDetailError: orderDetailQ.isError,
     selectedPayment, canViewPayment: paymentPerm.view, canApprovePayment: paymentPerm.approve,
     verifyingPayment: verifyPayment.isPending, onApprovePayment, onRejectPayment,
+    paidPayment, onRefund, refunding: refundPayment.isPending,
     onViewOrder, closeOrderDrawer,
 
     isFinalOrderStatus, getNextOrderStatus, paymentDueState,
