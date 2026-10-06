@@ -669,7 +669,15 @@
     "refundFailed": "Could not record the refund",
     "noPaidPayment": "No paid payment found — check the finance page",
     "refundNoPermission": "Approving payments permission is required to confirm refunds",
-    "awaitingRefundAlert": "{n} cancelled orders were already paid — refunds are owed"
+    "awaitingRefundAlert": "{n} cancelled orders were already paid — refunds are owed",
+    "paymentDueAt": "Pay by",
+    "pickupPoint": "Pickup point",
+    "pickupOn": "Pickup date",
+    "subtotal": "Subtotal",
+    "deliveryFee": "Delivery fee",
+    "discount": "Discount",
+    "pointsUsed": "{n} points used ({amount} off)",
+    "couponUsed": "Personal coupon used ({amount} off)"
   },
   "preorderRound": {
     "paymentDue": "Payment due",
