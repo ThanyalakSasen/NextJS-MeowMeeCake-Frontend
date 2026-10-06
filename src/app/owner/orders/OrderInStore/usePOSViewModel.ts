@@ -28,11 +28,13 @@ import { refId } from "@/lib/refId";
 import { isApiError } from "@/types/api";
 import type { Product } from "@/types/product";
 import type { Promotion } from "@/types/promotion";
+import type { ProductCustomization } from "@/types/productCustomization";
 import { nextRawInput, thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import {
   addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoLines, type CartLine,
 } from "./posCart";
 import { posPromotions, promotionsForProduct, evaluateAll, isScoped } from "./posPromotion";
+import { EMPTY_SELECTION, hasCustomization, toSelection, type CartSelection, type Picked } from "./customizationSelection";
 import { LIST_ALL } from "@/lib/http";
 
 // POS ขายเฉพาะสินค้าปกติ (พร้อมขาย มีสต็อก) — พรีออเดอร์ขายผ่านรอบพรีออเดอร์เท่านั้น
@@ -46,6 +48,11 @@ const MAX_RECEIVED_DIGITS = 6;
 
 /** ต้องตรงกับ GUEST_CUSTOMER_EMAIL ใน backend scripts/seed.ts */
 const GUEST_CUSTOMER_EMAIL = "guest@meowmeecake.local";
+
+/** cache กลุ่มตัวเลือกต่อสินค้า — ดึงผ่าน /admin/pos/scan (สิทธิ์ orders.view เหมือน POS) ไม่ใช่ /admin/products/:id/customization
+ *  (ต้อง products.view ซึ่งพนักงานหน้าร้านอาจไม่มี) */
+const customizationKey = (productId: string) => ["pos", "customization", productId] as const;
+const CUSTOMIZATION_STALE_MS = 5 * 60_000;
 
 export type PaymentMethod = "cash" | "qr";
 export type PayDialog = null | PaymentMethod | "done";
@@ -76,6 +83,10 @@ export function usePOSViewModel() {
   /** "รับเงินมา" (เงินสด) — เก็บเป็นตัวเลขหลักแบบคีย์แพด */
   const [receivedDigits, setReceivedDigits] = useState("");
   const [done, setDone] = useState<PaymentDone | null>(null);
+  /** หน้าต่างเลือกตัวเลือกของสินค้าที่กำลังจะลงบิล (BACKLOG3-merge I4) */
+  const [picker, setPicker] = useState<{ product: Product; customization: ProductCustomization } | null>(null);
+  /** กำลังดึงกลุ่มตัวเลือกของสินค้านี้ก่อนลงบิล */
+  const [preparingId, setPreparingId] = useState<string | null>(null);
 
   const catalogQ = useQuery({
     queryKey: ["products", CATALOG_PARAMS],
@@ -116,18 +127,13 @@ export function usePOSViewModel() {
       .slice(0, MAX_SUGGESTIONS);
   }, [catalog, query]);
 
-  /** เพิ่มสินค้าลงบิล (สแกน / เลือกคำแนะนำ / Enter) — แจ้งหมดสต็อก/เต็มสต็อก และแจ้งโปรโมชันของสินค้านั้น */
-  const addProduct = (p: Product) => {
-    const stock = p.product_stock_quantity ?? 0;
-    if (stock <= 0) {
-      alert.warning(t("pos.scanOutOfStock", { name: p.product_name_th }));
-      return;
-    }
+  /** ลงบิลจริง (หลังเลือกตัวเลือกแล้ว ถ้ามี) — แจ้งโปรโมชันของสินค้านั้น */
+  const commitAdd = (p: Product, sel: CartSelection) => {
     if (isAtStock(cart, p._id)) {
-      alert.warning(t("pos.atStockLimit", { name: p.product_name_th, n: stock }));
+      alert.warning(t("pos.atStockLimit", { name: p.product_name_th, n: p.product_stock_quantity ?? 0 }));
       return;
     }
-    setCart((c) => addLine(c, p));
+    setCart((c) => addLine(c, p, sel));
     const promos = promosOf(p._id, refId(p.category_id) || null);
     // สแกนต่อเนื่องได้โดยไม่ต้องปิด popup ทุกชิ้น — แจ้งเฉพาะสินค้าที่มีโปรโมชัน
     if (promos.length) {
@@ -137,12 +143,48 @@ export function usePOSViewModel() {
     }
   };
 
+  /** เพิ่มสินค้าลงบิล (สแกน / เลือกคำแนะนำ / Enter) — แจ้งหมดสต็อก/เต็มสต็อก · มีกลุ่มตัวเลือก/ออปชัน = เปิดหน้าต่างเลือกก่อน
+   *  known = customization ที่ได้มากับผลสแกนแล้ว (ไม่ต้องถามซ้ำ) */
+  const addProduct = async (p: Product, known?: ProductCustomization) => {
+    const stock = p.product_stock_quantity ?? 0;
+    if (stock <= 0) {
+      alert.warning(t("pos.scanOutOfStock", { name: p.product_name_th }));
+      return;
+    }
+    if (isAtStock(cart, p._id)) {
+      alert.warning(t("pos.atStockLimit", { name: p.product_name_th, n: stock }));
+      return;
+    }
+    let customization = known;
+    if (!customization) {
+      setPreparingId(p._id);
+      try {
+        customization = await qc.fetchQuery({
+          queryKey: customizationKey(p._id),
+          queryFn: async () => (await posService.scan(p._id)).customization,
+          staleTime: CUSTOMIZATION_STALE_MS,
+        });
+      } catch (e) {
+        // ไม่รู้ว่าต้องเลือกอะไร → ไม่ลงบิล (ลงไปก็โดน backend ปฏิเสธถ้ามีกลุ่มบังคับ)
+        alert.error(isApiError(e) ? e.message : t("pos.customizationLoadFailed"));
+        return;
+      } finally {
+        setPreparingId(null);
+      }
+    }
+    if (customization && hasCustomization(customization)) setPicker({ product: p, customization });
+    else commitAdd(p, EMPTY_SELECTION);
+  };
+
   // รหัสที่ไม่อยู่ในรายการที่โหลดไว้ (เกิน 200 รายการ / ยิงด้วย _id) → ถาม backend ทีละรหัส
-  // ยังไม่รองรับ variants (0 สินค้าในระบบจริงใช้ variant เลย — ดู BACKLOG2 §6)
+  // ผลสแกนมี customization มาด้วย — เก็บลง cache แล้วส่งต่อ (ไม่ต้องถามซ้ำ)
   const scan = useMutation({
     // + lowercase กัน Caps Lock (รหัส pos-/pre- เป็นตัวเล็ก, _id เป็น hex ไม่สนตัวพิมพ์)
     mutationFn: (code: string) => posService.scan(thaiLayoutToQwerty(code).trim().toLowerCase()),
-    onSuccess: (res) => addProduct(res.product),
+    onSuccess: (res) => {
+      qc.setQueryData(customizationKey(res.product._id), res.customization);
+      void addProduct(res.product, res.customization);
+    },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.scanFailed")),
     onSettled: () => setQueryRaw(""),
   });
@@ -158,7 +200,7 @@ export function usePOSViewModel() {
     );
     const local = exact ?? (matches.length === 1 ? matches[0] : null);
     if (local) {
-      addProduct(local);
+      void addProduct(local);
       setQueryRaw("");
       return;
     }
@@ -187,6 +229,7 @@ export function usePOSViewModel() {
     setSelectedPromoId(null);
     setReceivedDigits("");
     setQueryRaw("");
+    setPicker(null);
   };
 
   const checkout = useMutation({
@@ -316,15 +359,27 @@ export function usePOSViewModel() {
     onSubmitQuery: () => submitQuery(queryRaw),
     scanning: scan.isPending,
     suggestions,
-    onPickSuggestion: (p: Product) => { addProduct(p); setQueryRaw(""); },
+    onPickSuggestion: (p: Product) => { void addProduct(p); setQueryRaw(""); },
+    preparingId,
+
+    // หน้าต่างเลือกตัวเลือก
+    picker,
+    onPickConfirm: (picked: Picked) => {
+      if (!picker) return;
+      commitAdd(picker.product, toSelection(picker.customization, picked));
+      setPicker(null);
+    },
+    onPickCancel: () => setPicker(null),
 
     // บิล
     cart, itemCount, subtotal, discount, total,
     promosOf,
-    increaseQty: (line: CartLine) => setCart((c) => setLineQty(c, line.productId, line.qty + 1)),
+    increaseQty: (line: CartLine) => setCart((c) => setLineQty(c, line.lineKey, line.qty + 1)),
+    /** สินค้านี้ในบิล (ทุกบรรทัด) เต็มสต็อกแล้ว */
+    isProductAtStock: (productId: string) => isAtStock(cart, productId),
     // ลดจนเหลือ 0 = เอาออกจากบิล (ตามดีไซน์ — ไม่มีปุ่มลบแยก)
     decreaseQty: (line: CartLine) =>
-      setCart((c) => (line.qty <= 1 ? removeLine(c, line.productId) : setLineQty(c, line.productId, line.qty - 1))),
+      setCart((c) => (line.qty <= 1 ? removeLine(c, line.lineKey) : setLineQty(c, line.lineKey, line.qty - 1))),
     onClearBill: async () => {
       if (cart.length === 0) return;
       const ok = await confirmAlert(t("pos.clearBillConfirm"), { title: t("pos.clearBill"), danger: true });

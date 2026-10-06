@@ -11,6 +11,7 @@ import { PaymentAside } from "./_components/PaymentAside";
 import { CashPaymentModal } from "./_components/CashPaymentModal";
 import { QRPaymentModal } from "./_components/QRPaymentModal";
 import { PaymentDoneModal } from "./_components/PaymentDoneModal";
+import { CustomizationPickerModal } from "./_components/CustomizationPickerModal";
 
 type VM = ReturnType<typeof usePOSViewModel>;
 
@@ -23,7 +24,7 @@ export function POSView(vm: VM) {
         <section aria-label={t("pos.billTitle")} className="flex min-w-0 flex-col gap-3.5">
           <ScanSearchBox
             value={vm.query}
-            scanning={vm.scanning}
+            scanning={vm.scanning || !!vm.preparingId}
             suggestions={vm.suggestions}
             promosOf={vm.promosOf}
             onChange={vm.setQuery}
@@ -45,6 +46,7 @@ export function POSView(vm: VM) {
             promosOf={vm.promosOf}
             onIncrease={vm.increaseQty}
             onDecrease={vm.decreaseQty}
+            isProductAtStock={vm.isProductAtStock}
           />
         </section>
 
@@ -88,6 +90,16 @@ export function POSView(vm: VM) {
         onSwitchToCash={vm.openCash}
       />
       <PaymentDoneModal open={vm.payDialog === "done"} done={vm.done} onNewBill={vm.closeDialog} />
+
+      {vm.picker && (
+        <CustomizationPickerModal
+          key={vm.picker.product._id}
+          product={vm.picker.product}
+          customization={vm.picker.customization}
+          onConfirm={vm.onPickConfirm}
+          onCancel={vm.onPickCancel}
+        />
+      )}
     </DashboardPageLayout>
   );
 }

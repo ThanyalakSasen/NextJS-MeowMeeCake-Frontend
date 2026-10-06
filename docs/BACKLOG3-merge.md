@@ -1,4 +1,4 @@
-✅ 2026-10-06 — ช่อง "แลกด้วยแต้ม" ในฟอร์มคูปอง (ว่าง = ส่ง null ปิดการแลก)
+✅ 2026-10-06 (branch `feat/product-customization`) — หน้าต่างเลือกตัวเลือกก่อนลงบิล · ดึงผ่าน `/admin/pos/scan` (สิทธิ์ orders.view) + cache · บรรทัดแยกตามชุดตัวเลือก · สต็อกรวมต่อสินค้า · ยังไม่ทดสอบกับ backend จริง
 
 > สร้าง: 2026-10-06 · ขอบเขต: ฝั่ง Frontend (`src/**`)
 > - repo นี้: `D:\1.2569\FrontEnd\NextJS-MeowMeeCake-Frontend` (branch `feat/storefront-checkout`)
@@ -29,7 +29,7 @@
 | 3 | I1 | ~~เมนูสิทธิ์ `store_info`~~ ✅ | — |
 | 4 | I2 | ปุ่มคืนเงิน — ออเดอร์ "ยกเลิก + ชำระแล้ว" ค้างรอโอนคืน | ✅ 2026-10-06 — ป้าย "รอโอนคืน" ในตาราง + แถบเตือนพร้อมปุ่มกรอง · drawer มี `RefundSection` (ยอด · เหตุผลยกเลิก · ปุ่มยืนยันโอนคืน + popup ยืนยัน · ต้องมีสิทธิ์ `payments.approve`) ทั้งออเดอร์และพรีออเดอร์ · **ยังไม่ทดสอบกับ backend จริง** |
 | 5 | G1 · G2 | ส่งคำถาม path หน้าออเดอร์ลูกค้า + ทางเข้าโปรไฟล์ (กระทบ 9 เรื่อง) | ⏸ |
-| 6 | I4 | POS กลุ่มตัวเลือก (+E1) — I3 · I5 · I6 · I7 ✅ แล้ว | 🟡 |
+| 6 | ~~I4 + E1~~ | ✅ (branch `feat/product-customization` · รอทดสอบกับ backend) — หมวด I เหลือ I8–I11 | — |
 | 7 | B1 → B2 | หน้าสมัคร/ลืมรหัส/ยืนยันอีเมล (ลิงก์ในหน้า login ยัง 404) → บัญชีของฉัน | ▢ |
 | 8 | D1 → D2 → C3 → D3 → C1 | ประวัติออเดอร์ · ที่อยู่ · checkout เต็ม · พรีออเดอร์ · รายละเอียดสินค้าเต็ม | ▢ |
 | 9 | ที่เหลือ | D4–D10 · E2–E6 · I8–I11 | ▢ / ⏸ |
@@ -71,7 +71,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | [F](#f-ต้องขอ-backend-ก่อน) | ต้องขอ backend ก่อน | 4 | ⏸ |
 | [G](#g-ตัดสินใจทีม) | ตัดสินใจทีม | 3 | ⏸ |
 | [H](#h-ไม่ทำ-ตัดสินแล้ว) | ไม่ทำ (ตัดสินแล้ว) | 6 | ❌ |
-| [I](#i-แก้ตาม-backend-main-ตรวจ-2026-10-06) | แก้ตาม backend `main` (ไม่เกี่ยวกับ FrontOffice โดยตรง) | 14 | ✅ 5 · 🟡 5 (เหลือ UI) · ▢ 4 |
+| [I](#i-แก้ตาม-backend-main-ตรวจ-2026-10-06) | แก้ตาม backend `main` (ไม่เกี่ยวกับ FrontOffice โดยตรง) | 15 | ✅ 5 · 🟡 5 (เหลือ UI) · ▢ 4 |
 
 **ลำดับที่แนะนำ:** A4 → I1 · I2 (🔴) → G1 · G2 (ถามก่อน เพราะกระทบหลายเรื่อง) → I3–I7 → B1 → B2 → D1 → D2 → C3 → D3 → C1 → ที่เหลือ
 
@@ -201,7 +201,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 ---
 
-### E1 + I4 — แผนงาน: กลุ่มตัวเลือกสินค้า (หลังร้าน) + เลือกตัวเลือกใน POS (วางแผน 2026-10-06)
+### E1 + I4 — กลุ่มตัวเลือกสินค้า (หลังร้าน) + เลือกตัวเลือกใน POS (วางแผน + ทำแล้ว 2026-10-06 · รอทดสอบกับ backend)
 
 **ทำไมต้องทำ:** backend เลิกระบบตัวเลือกแบบมีสต็อกแยก (Y9) แล้วเปลี่ยนเป็น **กลุ่มตัวเลือกบวกราคา** (BE §8.3) — ตอนนี้ frontend
 (1) ตั้งกลุ่มตัวเลือกให้สินค้าไม่ได้เลย และ (2) POS ไม่ส่ง `variant_ids` / `selected_options` → ถ้าสินค้ามีกลุ่ม "บังคับเลือก"
@@ -231,7 +231,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 |---|---|---|
 | 1 | `types/pos.ts`: เพิ่ม `customization` · ตัด `variant_stock` | `types/pos.ts` · `services/pos.ts` |
 | 2 | ตะกร้า: บรรทัดใหม่มี `variantIds` · `options` · `extraPrice` · `label` (ข้อความตัวเลือก) · **key ของบรรทัด = สินค้า + ชุดตัวเลือก** (สินค้าเดียวกันคนละตัวเลือก = คนละบรรทัด) · ราคา/หน่วย = ราคาขาย + ราคาบวกเพิ่ม · สต็อกนับรวมทุกบรรทัดของสินค้าเดียวกัน | `posCart.ts` (`addLine` · `setLineQty` · `removeLine` · `isAtStock` · `buildOrderInput` ส่ง `variant_ids`/`selected_options`) |
-| 3 | เพิ่มสินค้า: ก่อนลงบิลดึง customization ของสินค้านั้น (scan มีให้แล้ว · เลือกจากคำแนะนำ = `GET …/customization` + cache React Query) → ไม่มีกลุ่ม/ออปชัน = ลงบิลทันทีเหมือนเดิม · มี = เปิด modal เลือก | `usePOSViewModel.ts` |
+| 3 | เพิ่มสินค้า: ก่อนลงบิลดึง customization ของสินค้านั้น (scan มีให้แล้ว · เลือกจากคำแนะนำ = `GET /admin/pos/scan?code=<_id>` + cache React Query — **ไม่ใช้** `…/customization` เพราะต้องสิทธิ์ products.view ซึ่งพนักงานหน้าร้านอาจไม่มี) → ไม่มีกลุ่ม/ออปชัน = ลงบิลทันทีเหมือนเดิม · มี = เปิด modal เลือก | `usePOSViewModel.ts` |
 | 4 | modal เลือกตัวเลือก: แต่ละกลุ่ม radio (max 1) / checkbox (max > 1) + บอก "บังคับ / เลือกได้ไม่เกิน N" · ออปชันติ๊ก/กรอกข้อความ · ราคารวมสด · ปุ่มเพิ่มลงบิลกดได้เมื่อครบเงื่อนไข (ตรวจแบบเดียวกับ backend `resolveCustomization`) | ใหม่ `OrderInStore/_components/CustomizationPickerModal.tsx` |
 | 5 | บิล: แสดงตัวเลือกใต้ชื่อสินค้า · โปรโมชันคิดจากยอดบรรทัดที่รวมราคาบวกเพิ่มแล้ว (`toPromoLines`) | `BillCard.tsx` · `posPromotion.ts` |
 | 6 | เทส pure function ของตะกร้า/ตรวจตัวเลือก (ถ้าจะเริ่มมีเทสฝั่ง frontend) หรือทดสอบมือกับ backend local | — |
@@ -321,6 +321,23 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | I14 | ✅ | สิทธิ์หน้ารีวิว: backend ย้าย `/admin/reviews*` จาก `products.*` เป็น **`reports.*`** แต่เมนู + ViewModel ยังเช็ค `products` → ปุ่ม/เมนูไม่ตรงสิทธิ์จริง | `constants/menu.ts` · `useReviewsViewModel.ts` | BE §8.20 | ✅ 2026-10-06 |
 | I12 | ✅ แจ้ง backend | **frontend ไม่ส่ง `product_stock_quantity` ใน PATCH แล้ว** (`productForm.toUpdateInput` ตัดออก · ปรับสต็อกผ่าน `PUT /stock` ตั้งแต่ PR #19) → backend เปิดการปฏิเสธใน `PATCH /admin/products/:id` ได้เลย (BACKLOG5 §4 แถวแรกยังเขียนว่ารอ FrontEnd) | — | BE §8.21 · [Q-BE8](#ถาม-backend) | ✅ |
 
+| I15 | 🟡 | **POS โหลดรายการสินค้าไม่ได้ถ้าพนักงานไม่มีสิทธิ์ `products.view`** — POS ใช้ `GET /admin/products` (สิทธิ์ products) เป็นคำแนะนำในช่องค้นหา · ทดสอบ 2026-10-06: พนักงานที่มีแค่ orders + payments ได้ 403 (สแกนรหัส/บาร์โค้ด + เลือกตัวเลือกยังใช้ได้ผ่าน `/admin/pos/scan`) · มีมาก่อน PR ชุดนี้ | `OrderInStore/usePOSViewModel.ts` (`catalogQ`) | ขอ backend: endpoint รายการสินค้าสำหรับ POS ใต้สิทธิ์ orders (เช่น `GET /admin/pos/products`) — [Q-BE10](#ถาม-backend) · หรือกำหนดให้พนักงานหน้าร้านต้องมี products.view | ⏸ |
+
+### ผลทดสอบ PR #25–#27 กับ backend จริง (2026-10-06)
+
+> backend `feat/line-login-endpoint` (= `main` + #66) + MongoDB local · frontend `feat/product-customization` (รวม #25 + #26 + #27) ·
+> สคริปต์เรียก **service / pure function ของ frontend ตรง ๆ** (ไม่ใช่ยิง API เอง) · ยังไม่ได้คลิกหน้าจอในเบราว์เซอร์
+
+| ชุด | ผล | ที่ตรวจ |
+|---|---|---|
+| #25 regression (A1–A3) | ✅ 17/17 | ชำระเงิน/หมดเวลา/เปิดกลับ · ค่าส่ง `deliverable` · ยืนยันอีเมล (ข้ามการส่งอีเมลจริง) |
+| #25 ใหม่ | ✅ 5/5 | `store_info` ใน menuAccess · **`LIST_ALL` ได้ 125/125 ไม่ซ้ำ** (limit 100 = 100) · ลูกค้ายกเลิกหลังจ่าย → `isAwaitingRefund` → `paymentsService.refund` → refunded · field ออเดอร์เว็บใน `toOrder` · รีวิวสิทธิ์ reports |
+| #26 | ✅ 2/2 | สวิตช์ส่งทั่วประเทศ → `delivery-quote` เปลี่ยนตาม · `points_cost` 100 → ล้างช่อง = null |
+| #27 | ✅ 5/5 + 1 | บันทึกกลุ่มผ่าน `customizationForm` (บันทึกซ้ำ id เดิม) · POS scan → เลือก → `posCart` → ออเดอร์ **ราคา POS = backend (380)** + ข้อความตัวเลือก/ออปชันตรง · ไม่เลือกกลุ่มบังคับ → หน้าจอจับได้ + backend 400 · สินค้าไม่มีตัวเลือกลงบิลตรง · **พนักงานไม่มี products.view สแกนได้ตัวเลือกครบ** (`/customization` ได้ 403 ตามที่คาด) |
+| หน้าเว็บ | ✅ 12/12 | ทุกหน้าที่ PR แตะ เปิดได้ 200 (หลังรีสตาร์ท dev server — รอบแรกได้ 404 เพราะสถานะ dev server ค้าง ไม่ใช่โค้ด) |
+
+พบใหม่: **I15** (ด้านบน)
+
 **สถานะ deploy (อัปเดต BACKLOG2 §16.1):** backend `main` merge PR #52–#57 แล้ว (2026-10-06) → ข้อห้าม "frontend `main` ห้าม deploy ก่อน backend" หมดไป —
 deploy พร้อมกันได้ (backend ก่อน) · แต่ PR #16–#19 ของ frontend **ยังไม่เคยทดสอบกับ backend จริง** (BACKLOG2 §16.2) · branch นี้ทดสอบ A1–A3 แล้ว (หมวด A)
 
@@ -343,6 +360,7 @@ deploy พร้อมกันได้ (backend ก่อน) · แต่ PR 
 | Q-BE5 | จะมี endpoint สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบไหม | FrontOffice ใช้ `/owner/preorder-rounds/dashboard` · `/:id/customers` | F4 | | |
 | Q-BE6 | ถ้าเลือก G1 (ก) ช่วยเปลี่ยน `link` ของแจ้งเตือนลูกค้าเป็น `/customer/order/<id>` ได้ไหม | ตอนนี้ `/customer/account/purchases/<id>` | G1 · D6 | | |
 | Q-BE9 | เพิ่ม flag `has_customization` (หรือจำนวนกลุ่ม/ออปชัน) ใน `GET /admin/products` ได้ไหม — POS จะได้ไม่ต้องถาม customization ทีละสินค้าก่อนลงบิล | ตอนนี้มีแค่ใน `/admin/pos/scan` · `/customization` รายตัว | I4 | | |
+| Q-BE10 | ขอ endpoint รายการสินค้าสำหรับ POS ใต้สิทธิ์ orders (เช่น `GET /admin/pos/products?search=`) — ตอนนี้ POS ใช้ `/admin/products` ที่ต้อง products.view | พนักงานหน้าร้านที่มีแค่ orders ได้ 403 ในช่องค้นหา | I15 | | |
 | Q-BE8 | frontend เลิกส่ง `product_stock_quantity` ใน PATCH แล้ว (PR #19) — เปิดการปฏิเสธฝั่ง backend ได้เลยไหม | BACKLOG5 §4 ยังรอ FrontEnd | I12 | | |
 | Q-BE7 | รีวิว + merge endpoint ล็อกอินด้วย LINE (`/api/auth/line` + `/callback` — branch `feat/line-login-endpoint`) · ตั้ง `LINE_AUTH_*` + Callback URL ใน Console ตอน deploy | ทำให้แล้ว 2026-10-06 รอรีวิว | B3 | | |
 

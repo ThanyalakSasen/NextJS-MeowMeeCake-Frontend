@@ -5,8 +5,12 @@ import { SaveButton, CancelButton } from "@/components/shared/actions";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { ProductFormFields } from "../../_components/ProductFormFields";
 import type { useEditProductViewModel } from "./useEditProductViewModel";
+import type { useCustomizationEditor } from "./useCustomizationEditor";
+import { CustomizationEditor } from "./_components/CustomizationEditor";
 
-export function EditProductView(vm: ReturnType<typeof useEditProductViewModel>) {
+export function EditProductView(
+  vm: ReturnType<typeof useEditProductViewModel> & { customization: ReturnType<typeof useCustomizationEditor> },
+) {
   const t = useTranslations();
 
   if (vm.isLoading) return <LoadingSpin />;
@@ -22,6 +26,8 @@ export function EditProductView(vm: ReturnType<typeof useEditProductViewModel>) 
           <CancelButton onClick={vm.onCancel} />
         </div>
       </Form>
+      {/* ตัวเลือกสินค้า — บันทึกแยกจากฟอร์มสินค้า (PUT …/customization) */}
+      <CustomizationEditor {...vm.customization} />
     </div>
   );
 }
