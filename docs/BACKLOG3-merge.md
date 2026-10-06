@@ -30,7 +30,7 @@
 | 4 | I2 | ปุ่มคืนเงิน — ออเดอร์ "ยกเลิก + ชำระแล้ว" ค้างรอโอนคืน | ✅ 2026-10-06 — ป้าย "รอโอนคืน" ในตาราง + แถบเตือนพร้อมปุ่มกรอง · drawer มี `RefundSection` (ยอด · เหตุผลยกเลิก · ปุ่มยืนยันโอนคืน + popup ยืนยัน · ต้องมีสิทธิ์ `payments.approve`) ทั้งออเดอร์และพรีออเดอร์ · **ยังไม่ทดสอบกับ backend จริง** |
 | 5 | G1 · G2 | ส่งคำถาม path หน้าออเดอร์ลูกค้า + ทางเข้าโปรไฟล์ (กระทบ 9 เรื่อง) | ⏸ |
 | 6 | ~~I4 + E1~~ | ✅ (branch `feat/product-customization` · รอทดสอบกับ backend) — หมวด I เหลือ I8–I11 | — |
-| 7 | B1 → B2 | หน้าสมัคร/ลืมรหัส/ยืนยันอีเมล (ลิงก์ในหน้า login ยัง 404) → บัญชีของฉัน | ▢ |
+| 7 | ~~B1~~ ✅ → B2 | บัญชีของฉัน (โปรไฟล์ · เปลี่ยนรหัสผ่าน · ผูก LINE · กรอกอีเมลของบัญชี LINE) | ▢ |
 | 8 | D1 → D2 → C3 → D3 → C1 | ประวัติออเดอร์ · ที่อยู่ · checkout เต็ม · พรีออเดอร์ · รายละเอียดสินค้าเต็ม | ▢ |
 | 9 | ที่เหลือ | D4–D10 · E2–E6 · I8–I11 | ▢ / ⏸ |
 
@@ -112,12 +112,14 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 ## B. พื้นฐานที่ต้องมีก่อน
 
-### B1 ▢ หน้าสมัคร · ยืนยันอีเมล · ลืมรหัสผ่าน · ตั้งรหัสใหม่
-- **เป้าหมาย:** ลูกค้าสมัครเองได้ครบวงจร (ตอนนี้ repo นี้ไม่มีหน้าสมัครเลย)
-- **ต้นแบบ FrontOffice:** `src/app/register/page.jsx` · `customer/verify-email` · `customer/forgot-password` · `customer/reset-password`
-- **API:** `POST /auth/register` (ไม่ตั้ง cookie) · `GET/POST /auth/verify-email` · `POST /auth/resend-verification` · `POST /auth/forgot-password` · `POST /auth/reset-password`
-- **ขั้นตอน:** หน้า `/register` → "ตรวจอีเมล" · `/customer/verify-email?token=` · `/customer/forgot-password` · `/customer/reset-password?token=` (มีใน `HIDE_CHROME_ROUTES` แล้ว)
-- **ขึ้นกับ:** — · **คำถาม:** [Q-BE3](#ถาม-backend) (URL ในอีเมลชี้ไป frontend ตัวไหน)
+### B1 ✅ หน้าสมัคร · ยืนยันอีเมล · ลืมรหัสผ่าน · ตั้งรหัสใหม่ (2026-10-06 · branch `feat/account-pages`)
+- **ยกจาก FrontOffice:** `src/app/register/page.jsx` · `customer/verify-email` · `customer/forgot-password` (โหมด guest) · `customer/reset-password` — เปลี่ยนชั้น API เป็น `authClient` ของ repo นี้
+- **`/register`** (MVVM + i18n · พื้นหลังเดียวกับ `/login` ผ่าน `AuthBackdrop` ที่แยกออกมาใช้ร่วม): ชื่อ · อีเมล · วันเกิด (วัน/เดือน/ปี ค.ศ.) · เบอร์ · รหัสผ่าน · ประวัติแพ้อาหาร (`/catalog/ingredients`) → `POST /auth/register` → หน้า "ตรวจอีเมล" + ปุ่มส่งลิงก์อีกครั้ง (backend ไม่ล็อกอินให้)
+- **`/customer/verify-email?token=`**: `GET /auth/verify-email` (เดิม FrontOffice `/api/user/verify-email`) · กันยิงซ้ำด้วย ref (dev เรียก effect 2 รอบ → token ใช้แล้ว = ขึ้น "หมดอายุ") · สำเร็จ → ไปหน้า login (ต่างจาก FrontOffice ที่ไป `/customer` — backend ไม่ล็อกอินให้)
+- **`/customer/forgot-password`** → `POST /auth/forgot-password` · ล็อกอินอยู่ = เติมอีเมลให้ (โหมด "เปลี่ยนรหัสผ่าน" + เมนูบัญชี → B2)
+- **`/customer/reset-password?token=`** → เช็คลิงก์ `GET` ก่อนแสดงฟอร์ม · `POST { token, newPassword }` · ลิงก์ใช้ไม่ได้ = ปุ่ม "ขอลิงก์ใหม่"
+- **ทดสอบ 14/14** กับ backend จริง + **SMTP ปลอมบนเครื่อง** (อ่านลิงก์จากอีเมลจริง ไม่มีอีเมลส่งออก): สมัคร → อีเมลมีลิงก์ → ก่อนยืนยันล็อกอินไม่ได้ → ยืนยัน → ใช้ token ซ้ำ 400 → ล็อกอินได้ · บันทึกเบอร์/วันเกิด · อีเมลซ้ำ 409 · ลืมรหัส → ลิงก์ → ตั้งใหม่ → รหัสเดิมเข้าไม่ได้/ใหม่เข้าได้ · ลิงก์ใช้ซ้ำไม่ได้ · อีเมลที่ไม่มีตอบเหมือนเดิม · ทุกหน้า 200
+- ยังไม่ได้ทดสอบ: บันทึกอาหารที่แพ้ (DB ทดสอบไม่มีวัตถุดิบ) · คลิกหน้าจอจริง
 
 ### B2 ▢ บัญชีของฉัน · เปลี่ยนรหัสผ่าน · ผูก LINE
 - **ต้นแบบ:** `customer/account/page.tsx` (671) · `customer/changepassword` (+`verify`) · `customer/line-welcome` · `LineConnectCard`
@@ -139,7 +141,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
   - [ ] LINE Developers Console → LINE Login channel → Callback URL เพิ่ม `http://localhost:3000/api/auth/line/callback` (คนละ URL กับการผูก LINE)
 - **ข้อจำกัด:** บัญชี LINE ใหม่ที่ไม่ให้อีเมล → backend ตั้งอีเมลชั่วคราว `*@line-user.invalid` · FrontOffice มีหน้า `customer/line-welcome` ให้กรอกอีเมลจริง (`/shop/me/email`) — repo นี้ยังไม่มี (รวมกับ B2)
 - **ไม่ยกมา (ตัดสินแล้ว):** วิดีโอห้องอบขนมตอนกดเข้าสู่ระบบ (`PreloaderOverlay` + `Preloader.mp4`) · ม่านขนมตอน logout (`LogoutCurtain`)
-- ⚠️ ลิงก์ "ลืมรหัสผ่าน?" (`/customer/forgot-password`) และ "สมัครสมาชิก" (`/register`) ยัง **404** จนกว่าจะทำ B1
+- ✅ ลิงก์ "ลืมรหัสผ่าน?" และ "สมัครสมาชิก" ใช้ได้แล้ว (B1)
 
 ---
 

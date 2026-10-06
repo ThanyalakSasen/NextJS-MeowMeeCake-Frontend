@@ -87,7 +87,18 @@ export async function meOptional(): Promise<CurrentUser | null> {
  * backend ส่งลิงก์ยืนยันทางอีเมล (24 ชม.) และ**ไม่ตั้ง cookie** — ยืนยันก่อนจึงล็อกอินได้
  * (backend docs/customer-backend-merge.md §8.9) · คืน message ของ backend ไว้แสดง "กรุณาตรวจอีเมล"
  */
-export async function register(input: { user_fullname: string; email: string; password: string; user_phone?: string }) {
+export interface RegisterInput {
+  user_fullname: string;
+  email: string;
+  password: string;
+  user_phone?: string;
+  /** YYYY-MM-DD */
+  user_birthdate?: string;
+  /** ชื่อวัตถุดิบที่แพ้ (จาก /catalog/ingredients) */
+  user_allergies?: string[];
+}
+
+export async function register(input: RegisterInput) {
   const res = await http.post<ItemResponse<{ message?: string }>>("/auth/register", input);
   return res.data;
 }
@@ -101,6 +112,35 @@ export const EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
  */
 export async function resendVerification(email: string): Promise<void> {
   await http.post("/auth/resend-verification", { email });
+}
+
+// ── บัญชีลูกค้า: ยืนยันอีเมล · ลืมรหัสผ่าน (backend accountService · customer-backend-merge.md §8.9) ──
+// ข้อความตอบกลับของ backend เป็นภาษาไทยพร้อมแสดง · ลิงก์ในอีเมลชี้มาที่ /customer/verify-email · /customer/reset-password
+
+/** GET /auth/verify-email?token= — token ผิด/ใช้แล้ว/หมดอายุ = 400 · ยืนยันแล้วยังต้องล็อกอินเอง */
+export async function verifyEmail(token: string): Promise<string | undefined> {
+  const res = await http.get<ItemResponse<{ message?: string }>>("/auth/verify-email", { params: { token } });
+  return res.data?.message;
+}
+
+/** POST /auth/forgot-password { email } — ตอบเหมือนกันไม่ว่าอีเมลจะมีในระบบไหม · บัญชี Google/LINE ไม่มีรหัสผ่าน = 400 · 3 ครั้ง/นาที */
+export async function requestPasswordReset(email: string): Promise<void> {
+  await http.post("/auth/forgot-password", { email });
+}
+
+/** GET /auth/reset-password?token= — ลิงก์ยังใช้ได้ไหม (ใช้ครั้งเดียว · 1 ชม.) · ใช้ไม่ได้ = 400 */
+export async function checkResetToken(token: string): Promise<boolean> {
+  try {
+    await http.get("/auth/reset-password", { params: { token } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** POST /auth/reset-password { token, newPassword } — ห้ามซ้ำรหัสเดิม · ปลดล็อกบัญชีด้วย */
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await http.post("/auth/reset-password", { token, newPassword });
 }
 
 export async function login(input: LoginInput): Promise<CurrentUser> {
