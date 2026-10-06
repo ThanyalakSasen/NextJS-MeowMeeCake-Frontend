@@ -3,3 +3,7 @@ export const shopCartKey = ["shop", "cart"] as const;
 export const shopAddressesKey = ["shop", "addresses"] as const;
 export const shopOrderKey = (id: string) => ["shop", "orders", id] as const;
 export const shopOrderPaymentPageKey = (id: string) => ["shop", "orders", id, "payment-page"] as const;
+export const shopProfileKey = ["shop", "me"] as const;
+export const shopEmailStatusKey = ["shop", "me", "email"] as const;
+/** ต้องตรงกับ LINE_STATUS_KEY ของ /profile (useProfileViewModel) — ใช้ cache เดียวกัน */
+export const shopLineStatusKey = ["shop", "me", "line"] as const;

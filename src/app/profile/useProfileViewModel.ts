@@ -36,17 +36,26 @@ export function useProfileViewModel() {
     router.replace(`${LOGIN_PATH}?reason=expired&next=${encodeURIComponent(next)}`);
   }, [userError, router, pathname, params]);
 
+  // ลูกค้ามีหน้าบัญชีของตัวเอง (/customer/account · BACKLOG3-merge B2) — backend ส่งกลับมาที่ /profile หลังผูก LINE
+  // (LINE_LINK_RETURN_URL ตั้งได้ค่าเดียว) → ส่งต่อพร้อม ?line= ไปให้หน้านั้นแจ้งผล
+  const isCustomer = user?.roleType === "customer";
+  useEffect(() => {
+    if (!isCustomer) return;
+    const qs = params.toString();
+    router.replace(`/customer/account${qs ? `?${qs}` : ""}`);
+  }, [isCustomer, params, router]);
+
   const statusQ = useQuery({
     queryKey: LINE_STATUS_KEY,
     queryFn: shopLineService.status,
-    enabled: !!user,
+    enabled: !!user && !isCustomer,
   });
 
   // ผลลัพธ์จาก backend หลังกลับจาก LINE — ref กัน StrictMode รัน effect ซ้ำแล้วแจ้งเตือน 2 รอบ
   const lineResult = params.get("line") as LineLinkResult | null;
   const handledRef = useRef(false);
   useEffect(() => {
-    if (!user || !lineResult || handledRef.current) return;
+    if (!user || isCustomer || !lineResult || handledRef.current) return;
     handledRef.current = true;
     if (lineResult === "linked") {
       alert.success(t("profile.line.linkedSuccess"));
@@ -59,7 +68,7 @@ export function useProfileViewModel() {
     }
     // "cancelled" = ลูกค้ากดยกเลิกเองที่หน้า LINE → ไม่ต้องแจ้งอะไร
     router.replace(pathname);
-  }, [user, lineResult, params, t, qc, router, pathname]);
+  }, [user, isCustomer, lineResult, params, t, qc, router, pathname]);
 
   const connect = useMutation({
     mutationFn: shopLineService.status,
