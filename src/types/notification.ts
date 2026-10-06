@@ -5,7 +5,7 @@ import type { NotificationType } from "@/types";
 // "employee" — backend เลิกใช้แล้ว (LINE.md §9.10: ไม่มีจุดไหนสร้างใหม่) แต่เอกสารเก่ายังอ่านได้ → คงไว้ใน type
 // + i18n เพื่อแสดงป้ายเอกสารเก่า · ไม่อยู่ในตัวกรองหน้า Notification History แล้ว
 export type NotificationModule =
-  | "order" | "ingredient" | "production" | "employee" | "finance" | "system";
+  | "order" | "ingredient" | "production" | "employee" | "finance" | "customer" | "system";
 
 export interface NotificationDTO {
   _id: string;

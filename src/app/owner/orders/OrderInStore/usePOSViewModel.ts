@@ -33,11 +33,12 @@ import {
   addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoLines, type CartLine,
 } from "./posCart";
 import { posPromotions, promotionsForProduct, evaluateAll, isScoped } from "./posPromotion";
+import { LIST_ALL } from "@/lib/http";
 
 // POS ขายเฉพาะสินค้าปกติ (พร้อมขาย มีสต็อก) — พรีออเดอร์ขายผ่านรอบพรีออเดอร์เท่านั้น
 // ใช้เป็นแหล่งของคำแนะนำในช่อง "สแกน / ค้นหา" (ไม่ได้แสดงเป็นกริดแล้ว)
-const CATALOG_PARAMS = { limit: 200, is_preorder: false } as const;
-const PROMO_PARAMS = { activeNow: true, limit: 100 } as const;
+const CATALOG_PARAMS = { limit: LIST_ALL, is_preorder: false } as const;
+const PROMO_PARAMS = { activeNow: true, limit: LIST_ALL } as const;
 /** คำแนะนำสูงสุดใต้ช่องค้นหา */
 const MAX_SUGGESTIONS = 6;
 /** หลักสูงสุดของ "รับเงินมา" (999,999 บาท) */

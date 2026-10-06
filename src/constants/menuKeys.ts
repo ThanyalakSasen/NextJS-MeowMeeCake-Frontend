@@ -7,11 +7,13 @@
 // ต้องตรงกับ MENU_KEYS ของ backend (src/services/permissionService.ts) ทุกตัว — backend เช็คสิทธิ์ด้วย key เหล่านี้
 export type MenuKey =
   | "dashboard" | "products" | "orders" | "preorder" | "payments" | "ingredients"
-  | "stock" | "recipes" | "production" | "employees" | "promotions" | "reports";
+  | "stock" | "recipes" | "production" | "employees" | "promotions" | "reports"
+  /** ข้อมูลร้าน (ที่อยู่ · ตลาดนัด · โลโก้ · พร้อมเพย์) — backend MENU_KEYS เพิ่ม 2026-10-05 (customer-backend-merge.md §8.19) */
+  | "store_info";
 
 export const ALL_MENU_KEYS: MenuKey[] = [
   "dashboard", "products", "orders", "preorder", "payments", "ingredients",
-  "stock", "recipes", "production", "employees", "promotions", "reports",
+  "stock", "recipes", "production", "employees", "promotions", "reports", "store_info",
 ];
 
 /** สิทธิ์ 5 อย่างของ menu_key เดียว — ตรงกับ can_view/create/update/delete/approve ของ backend */

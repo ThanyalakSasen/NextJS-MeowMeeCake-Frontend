@@ -10,6 +10,7 @@ import { useTranslations, useLocale } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
 import { productionOrdersService } from "@/services/productionOrders";
 import { productsService } from "@/services/products";
+import { LIST_ALL } from "@/lib/http";
 import { unitsService } from "@/services/units";
 import { usersService } from "@/services/users";
 import { rolesService } from "@/services/roles";
@@ -94,16 +95,16 @@ export function useProductionViewModel() {
   const setActiveTab = (key: string) => router.replace(`/owner/production?tab=${key}`, { scroll: false });
 
   // ── shared data (โหลดครั้งเดียว ใช้ทั้ง 3 แท็บ) ──
-  const ordersQ = useQuery({ queryKey: ["production-orders"], queryFn: () => productionOrdersService.list({ limit: 200 }) });
-  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: 200 }) });
+  const ordersQ = useQuery({ queryKey: ["production-orders"], queryFn: () => productionOrdersService.list({ limit: LIST_ALL }) });
+  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: LIST_ALL }) });
   const unitsQ = useQuery({ queryKey: ["units"], queryFn: () => unitsService.list() });
-  const usersQ = useQuery({ queryKey: ["users"], queryFn: () => usersService.list({ limit: 200 }) });
+  const usersQ = useQuery({ queryKey: ["users"], queryFn: () => usersService.list({ limit: LIST_ALL }) });
   const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list() });
-  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: 100 }) });
+  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: LIST_ALL }) });
   // รอบพรีออเดอร์ที่ "ปิดรับแล้ว" — ตัวเลือกตอนสร้างใบสั่งผลิตจากรอบ (เฉพาะที่ยังไม่มีใบสั่งผลิตอยู่)
   const closedRoundsQ = useQuery({
     queryKey: ["preorder-rounds", "closed"],
-    queryFn: () => preorderRoundsService.list({ status: "closed", limit: 100 }),
+    queryFn: () => preorderRoundsService.list({ status: "closed", limit: LIST_ALL }),
   });
 
   /** ชื่อ/หน่วยของทุกสินค้า (ไม่กรอง) — ใช้ enrich รายการของใบสั่งผลิตเก่าด้วย แม้สินค้านั้นจะไม่มีสูตรแล้วก็ตาม */

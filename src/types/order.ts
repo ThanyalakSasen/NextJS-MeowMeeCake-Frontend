@@ -19,7 +19,10 @@ export interface OrderLineItem {
   _id: string;
   product_id: string;
   product_name: string;
+  /** ข้อความรวมของตัวเลือกที่เลือก เช่น "ขนาด: 2 ปอนด์ · รสชาติ: วานิลลา" (product_snapshot.variant_name) */
   variant_name?: string | null;
+  /** ออปชันเสริมที่เลือก (ข้อความบนเค้ก ฯลฯ) — backend §8.3 */
+  selected_options?: { option_name: string; extra_price: number; text_value: string | null }[];
   quantity: number;
   unit_price: number;
   total_price: number;
@@ -81,9 +84,37 @@ export interface Order extends DeliveryInfo {
   order_status: OrderStatus;
   payment_status: PaymentStatus;
   delivery_address?: DeliveryAddress | null;
+  /** ออเดอร์เว็บ: หมดเขตชำระ (สั่ง + 30 นาที) · POS/แอดมินสร้าง/ออเดอร์เก่า = null (backend §8.8) */
+  payment_due_at: string | null;
+  /** เช่น "หมดเวลาชำระเงิน (ระบบยกเลิกอัตโนมัติ)" · ลูกค้ายกเลิกเอง · แอดมินยกเลิก */
+  cancelled_reason: string | null;
+  cancelled_at: string | null;
+  /** takeaway ของเว็บ: จุดรับ (หน้าร้านประจำสัปดาห์) + วันรับ YYYY-MM-DD (backend §8.7) */
+  pickup_point: PickupPoint | null;
+  pickup_date: string | null;
+  /** แต้มที่ใช้ + ส่วนลดจากแต้ม (บาท) · คูปองส่วนตัว + ส่วนลดจากคูปอง (backend §8.11) */
+  points_redeemed: number;
+  points_discount: number;
+  user_coupon_id: string | null;
+  coupon_discount: number;
   created_at: string;
   updated_at: string;
 }
+
+/** snapshot จุดรับสินค้า ณ ตอนสั่ง (orderModel.pickupPointSnapshotSchema) */
+export interface PickupPoint {
+  point_id: string | null;
+  point_name: string;
+  address?: string | null;
+  note?: string | null;
+}
+
+/**
+ * ยกเลิกแล้วแต่เงินยังอยู่ที่ร้าน = รอร้านโอนคืนเอง (ลูกค้ายกเลิกออเดอร์ที่ชำระแล้ว — backend ไม่คืนอัตโนมัติ §8.8)
+ * ร้านโอนคืนแล้วกด paymentsService.refund() → payment_status "refunded"
+ */
+export const isAwaitingRefund = (o: Pick<Order, "order_status" | "payment_status">) =>
+  o.order_status === "cancelled" && o.payment_status === "paid";
 
 /** body ตอน POST /admin/orders จริง — ต่างจาก Order มาก (backend gen order_no/subtotal/total_amount เอง) */
 export interface OrderInput {

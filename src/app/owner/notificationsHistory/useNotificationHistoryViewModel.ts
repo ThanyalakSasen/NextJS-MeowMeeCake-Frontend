@@ -11,6 +11,7 @@ import { alert, confirmAlert } from "@/lib/alert";
 import type { NotificationDTO, NotificationModule } from "@/types/notification";
 import type { NotificationType } from "@/types";
 import { isApiError } from "@/types/api";
+import { LIST_ALL } from "@/lib/http";
 
 type TabFilter = "all" | "unread" | "read";
 type ModuleFilter = "all" | NotificationModule;
@@ -29,7 +30,7 @@ export function useNotificationHistoryViewModel() {
 
   const q = useQuery({
     queryKey: ["notifications", { history: true }],
-    queryFn: () => notificationsService.list({ limit: 200, sort: "-created_at" }),
+    queryFn: () => notificationsService.list({ limit: LIST_ALL, sort: "-created_at" }),
   });
 
   const all = useMemo(() => q.data?.data ?? [], [q.data]);

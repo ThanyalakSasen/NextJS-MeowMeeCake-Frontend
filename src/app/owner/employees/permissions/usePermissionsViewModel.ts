@@ -12,6 +12,7 @@ import { permissionsService } from "@/services/permissions";
 import { usePermission } from "@/context/PermissionsContext";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { alert, confirmAlert } from "@/lib/alert";
+import { LIST_ALL } from "@/lib/http";
 import type { MenuKey } from "@/constants/menuKeys";
 import type { PermissionInput } from "@/types/permission";
 import type { RoleInput, RoleType } from "@/types/role";
@@ -38,8 +39,8 @@ export function usePermissionsViewModel() {
   const [saving, setSaving] = useState(false);
 
   const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list() });
-  const usersQ = useQuery({ queryKey: ["users"], queryFn: () => usersService.list({ limit: 200 }) });
-  const permsQ = useQuery({ queryKey: ["permissions"], queryFn: () => permissionsService.list({ limit: 500 }) });
+  const usersQ = useQuery({ queryKey: ["users"], queryFn: () => usersService.list({ limit: LIST_ALL }) });
+  const permsQ = useQuery({ queryKey: ["permissions"], queryFn: () => permissionsService.list({ limit: LIST_ALL }) });
 
   const roles = useMemo(
     () => (rolesQ.data?.data ?? []).filter((r) => r.role_type !== "customer"),

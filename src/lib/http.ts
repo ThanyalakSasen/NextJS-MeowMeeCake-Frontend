@@ -55,11 +55,13 @@ function toApiError(err: AxiosError<BackendErrorBody>): ApiError {
   const status = err.response?.status ?? 0;
   const body = err.response?.data;
   const backendError = body?.success === false ? body.error : undefined;
+  const reason = (backendError?.details as { reason?: unknown } | null | undefined)?.reason;
   return {
     status,
     code: backendError?.code,
     message: backendError?.message ?? (status === 0 ? "network error" : `request failed (${status})`),
     fieldErrors: toFieldErrors(backendError?.details ?? null),
+    reason: typeof reason === "string" ? reason : undefined,
     cause: err,
   };
 }
@@ -68,10 +70,10 @@ function toApiError(err: AxiosError<BackendErrorBody>): ApiError {
  * endpoint ที่ 401 = "คำตอบของมันเอง" ไม่ใช่ "session หมดอายุ" → ห้ามเด้งไป login
  *  - /auth/login: 401 คือรหัสผ่านผิด ต้องส่ง error ของ backend ("อีเมลหรือรหัสผ่านไม่ถูกต้อง") กลับให้ฟอร์มแสดงตรง ๆ
  *    (ถ้าปล่อยเข้า handler จะเด้ง /login?reason=expired + ล้าง cache ทุกครั้งที่พิมพ์รหัสผิด)
- *  - /auth/logout, /auth/register, /auth/google: ไม่มี session ให้หมดอายุตั้งแต่แรก
+ *  - /auth/logout, /auth/register, /auth/google, /auth/resend-verification: ไม่มี session ให้หมดอายุตั้งแต่แรก
  * (/auth/me ไม่อยู่ในลิสต์นี้ — 401 ตรงนั้นคือ session หมดอายุจริง ให้เด้งไป login)
  */
-const NO_EXPIRY_REDIRECT_PATHS = ["/auth/login", "/auth/logout", "/auth/register", "/auth/google"];
+const NO_EXPIRY_REDIRECT_PATHS = ["/auth/login", "/auth/logout", "/auth/register", "/auth/google", "/auth/resend-verification"];
 
 // ส่ง { skipAuthRedirect: true } ใน config เพื่อบอกว่า 401 ของ request นี้ "ไม่ใช่ session หมดอายุ"
 // (เช่นหน้าร้านเช็คว่า guest ล็อกอินหรือยัง — authClient.meOptional) → ไม่เด้งไป login
@@ -100,17 +102,47 @@ client.interceptors.response.use(
 );
 
 /**
- * list endpoint จริงของ backend ห่อ { items, meta } ไว้ใน data (src/lib/crudRoutes.ts → okList)
- * ไม่ใช่ data: T[] ตรง ๆ — ฟังก์ชันนี้แกะให้เป็น ListResponse<T> ที่ ViewModel ทั้งแอปใช้อยู่แล้ว
- * (`.data` = array, `.meta` = อยู่ระดับบนสุด) ทุก service ต้องเรียกอันนี้แทน http.get สำหรับ .list()
+ * backend ตัด ?limit= ไว้ไม่เกินเท่านี้ต่อคำขอ (src/lib/queryParams.ts parsePagination maxLimit) · ไม่ส่ง limit = 20
+ * ขอเกินนี้ → getList ไล่ขอทีละหน้าแล้วรวมให้ (ไม่งั้นได้แค่ 100 รายการแรกโดยไม่รู้ตัว)
  */
-async function getList<T>(url: string, config?: AxiosRequestConfig): Promise<ListResponse<T>> {
+export const PAGE_MAX = 100;
+
+/** "โหลดทั้งหมด" สำหรับ dropdown / ตารางที่กรองฝั่ง client — ใช้แทนเลขลอย ๆ (200/500) · เพดานกันโหลดไม่จบ */
+export const LIST_ALL = 1000;
+
+async function getPage<T>(url: string, config: AxiosRequestConfig | undefined): Promise<ListResponse<T>> {
   const body = await client.get<RawListResponse<T>>(url, config).then((r) => r.data);
   const items = body?.data?.items ?? [];
   return {
     data: items,
     meta: body?.data?.meta ?? { page: 1, limit: items.length, total: items.length },
   };
+}
+
+/**
+ * list endpoint จริงของ backend ห่อ { items, meta } ไว้ใน data (src/lib/crudRoutes.ts → okList)
+ * ไม่ใช่ data: T[] ตรง ๆ — ฟังก์ชันนี้แกะให้เป็น ListResponse<T> ที่ ViewModel ทั้งแอปใช้อยู่แล้ว
+ * (`.data` = array, `.meta` = อยู่ระดับบนสุด) ทุก service ต้องเรียกอันนี้แทน http.get สำหรับ .list()
+ *
+ * params.limit > PAGE_MAX (เช่น LIST_ALL) → ขอหน้า 1, 2, … ทีละ PAGE_MAX จนครบจำนวนที่ขอหรือหมดข้อมูล
+ * (เริ่มจาก params.page ถ้ามี) · meta ที่คืน = { page, limit: ที่ขอ, total: ของ backend }
+ */
+async function getList<T>(url: string, config?: AxiosRequestConfig): Promise<ListResponse<T>> {
+  const params = (config?.params ?? {}) as Record<string, unknown>;
+  const wanted = Number(params.limit);
+  if (!Number.isFinite(wanted) || wanted <= PAGE_MAX) return getPage<T>(url, config);
+
+  const startPage = Math.max(1, Number(params.page) || 1);
+  const data: T[] = [];
+  let total = 0;
+  for (let page = startPage; data.length < wanted; page++) {
+    const res = await getPage<T>(url, { ...config, params: { ...params, page, limit: PAGE_MAX } });
+    data.push(...res.data);
+    total = res.meta.total;
+    // หมดข้อมูล (หน้าไม่เต็ม / ครบ total) · endpoint ที่ไม่แบ่งหน้าคืนทั้งหมดในรอบเดียว (ได้ ≠ PAGE_MAX) → จบรอบแรก ไม่ขอซ้ำ
+    if (res.data.length !== PAGE_MAX || page * PAGE_MAX >= total) break;
+  }
+  return { data: data.slice(0, wanted), meta: { page: startPage, limit: wanted, total } };
 }
 
 /** facade — คืน body ของ response (envelope { data, meta } / { data }) ตรง ๆ */

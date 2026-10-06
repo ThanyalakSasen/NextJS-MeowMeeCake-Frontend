@@ -100,6 +100,11 @@ export interface ApiError {
   message: string;
   /** error ราย field (path → message) แปลงจาก error.details.issues[] ของ backend — มีเฉพาะตอน validation ไม่ผ่าน */
   fieldErrors?: Record<string, string>;
+  /**
+   * error.details.reason ของ backend — แยกเคสย่อยของ code เดียวกัน เช่น 403 FORBIDDEN + "EMAIL_NOT_VERIFIED"
+   * (ลูกค้ายังไม่ยืนยันอีเมล — backend userService.verifyCredentials)
+   */
+  reason?: string;
   /** error ดิบ เผื่อ debug */
   cause?: unknown;
 }

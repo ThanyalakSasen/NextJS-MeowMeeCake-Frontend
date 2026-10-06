@@ -26,6 +26,8 @@ export interface Promotion {
   usage_limit?: number | null;
   used_count: number;
   max_user_per_user?: number | null;
+  /** แต้มที่ลูกค้าใช้แลกเป็นคูปองส่วนตัว · null = ไม่เปิดให้แลก (customer-backend-merge.md §8.11) */
+  points_cost?: number | null;
   start_date: string;
   end_date: string;
   created_at: string;
@@ -47,6 +49,8 @@ export interface PromotionInput {
   min_quantity?: number;
   usage_limit?: number;
   max_user_per_user?: number;
+  /** จำนวนเต็มบวก · null = ปิดการแลกด้วยแต้ม */
+  points_cost?: number | null;
   start_date: string;
   end_date: string;
 }

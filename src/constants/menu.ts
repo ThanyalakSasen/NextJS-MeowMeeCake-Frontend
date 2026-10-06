@@ -39,10 +39,9 @@ export const MENU_SECTIONS: MenuSection[] = [
         icon: "PresentationChartBarIcon",
         children: [
           { labelKey: "reportsSales", href: "/owner/reports/sales", icon: "ArrowTrendingUpIcon", menuKey: "reports" },
-          // menuKey: "products" ไม่ใช่ "reports" — endpoint จริงที่หน้านี้ยิงคือ /admin/reviews ใต้
-          // products.* (ดู useReviewsViewModel.ts) ต้องตรงกับสิทธิ์จริง ไม่ใช่แค่หมวดที่โชว์ใน sidebar
-          // (docs/BACKLOG.md §1)
-          { labelKey: "reportsReviews", href: "/owner/reports/reviews", icon: "ChatBubbleLeftRightIcon", menuKey: "products" },
+          // menuKey ต้องตรงกับสิทธิ์ที่ /admin/reviews ตรวจจริง — backend ย้ายจาก products.* เป็น reports.*
+          // (customer-backend-merge.md §8.20) · เดิม "products" ตาม docs/BACKLOG.md §1
+          { labelKey: "reportsReviews", href: "/owner/reports/reviews", icon: "ChatBubbleLeftRightIcon", menuKey: "reports" },
         ],
       },
       {

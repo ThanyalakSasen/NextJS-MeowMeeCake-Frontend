@@ -11,6 +11,8 @@ import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { SlipImage } from "../../_components/SlipImage";
 import { DeliverySection } from "../../_components/DeliverySection";
+import { RefundSection } from "../../_components/RefundSection";
+import { isAwaitingRefund } from "@/types/order";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -39,13 +41,26 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
       {isCancelled ? (
         <div>
           <Tag color="error" className="w-fit">{t("orders.cancelledBanner")}</Tag>
-          {order.cancelled_reason && <p className="mt-1.5 text-sm text-gray-600">{order.cancelled_reason}</p>}
+          {order.cancelled_reason && !isAwaitingRefund(order) && (
+            <p className="mt-1.5 text-sm text-gray-600">{order.cancelled_reason}</p>
+          )}
         </div>
       ) : (
         <div className="flex items-center justify-between">
           <StatusBadge group="orderStatus" value={order.order_status} />
           <StatusBadge group="paymentStatus" value={order.payment_status} />
         </div>
+      )}
+
+      {isAwaitingRefund(order) && (
+        <RefundSection
+          amount={order.total_amount}
+          reason={order.cancelled_reason}
+          paidPaymentId={vm.paidPayment?._id ?? null}
+          canRefund={vm.canApprovePayment}
+          refunding={vm.refunding}
+          onRefund={vm.onRefund}
+        />
       )}
 
       <Divider className="!my-0" />

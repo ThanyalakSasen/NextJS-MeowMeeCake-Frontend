@@ -3,7 +3,7 @@
 // payment_status แสดงเป็น badge อ่านอย่างเดียว (แก้ตรง ๆ ไม่ได้ — backend จัดการผ่าน resource
 // Payments/verify เท่านั้น) · คอลัมน์ items/สลิปเอาออกจากตาราง (ต้องเรียก getById ต่อแถว ไม่คุ้ม
 // N+1 — ดูรายละเอียดเต็มได้ที่ drawer ผ่านปุ่ม "ดู")
-import { Tooltip } from "antd";
+import { Tag, Tooltip } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Avatar, Button, Select } from "@/components/base";
@@ -14,7 +14,7 @@ import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { PAYMENT_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
-import type { Order } from "@/types/order";
+import { isAwaitingRefund, type Order } from "@/types/order";
 import { RetryButton, ViewButton, actionIcon } from "@/components/shared/actions";
 import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
 import { STATUS_SELECT_OPTIONS } from "./orderStatus";
@@ -80,7 +80,13 @@ export function ManageOrdersView(vm: VM) {
     {
       key: "payment_status",
       title: t("orders.colPayment"),
-      render: (o) => <StatusBadge group="paymentStatus" value={o.payment_status} />,
+      // ยกเลิก + ชำระแล้ว = ร้านยังต้องโอนคืน (ป้าย "ชำระแล้ว" เฉย ๆ ทำให้ดูเหมือนเรียบร้อย)
+      render: (o) =>
+        isAwaitingRefund(o) ? (
+          <Tag color="warning">{t("orders.awaitingRefund")}</Tag>
+        ) : (
+          <StatusBadge group="paymentStatus" value={o.payment_status} />
+        ),
     },
   ];
 
@@ -129,6 +135,22 @@ export function ManageOrdersView(vm: VM) {
               </>
             }
           />
+
+          {vm.awaitingRefundCount > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+              <span className="text-sm text-amber-800">{t("orders.awaitingRefundAlert", { n: vm.awaitingRefundCount })}</span>
+              <Button
+                size="small"
+                icon={actionIcon("filter", "small")}
+                onClick={() => {
+                  vm.setStatusFilter("cancelled");
+                  vm.setPaymentFilter("paid");
+                }}
+              >
+                {t("orders.showList")}
+              </Button>
+            </div>
+          )}
 
           {vm.unreviewedCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
@@ -180,6 +202,9 @@ export function ManageOrdersView(vm: VM) {
             canUpdateDelivery={vm.perm.update}
             savingDelivery={vm.savingDelivery}
             onSaveDelivery={vm.onSaveDelivery}
+            paidPaymentId={vm.paidPayment?._id ?? null}
+            refunding={vm.refunding}
+            onRefund={vm.onRefund}
           />
         )}
       </DetailDrawer>

@@ -7,12 +7,13 @@ import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Button } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
-import type { DeliveryUpdateInput, Order } from "@/types/order";
+import { isAwaitingRefund, type DeliveryUpdateInput, type Order } from "@/types/order";
 import type { Payment } from "@/types/payment";
 import { actionIcon } from "@/components/shared/actions";
 import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
 import { SlipImage } from "../../_components/SlipImage";
 import { DeliverySection } from "../../_components/DeliverySection";
+import { RefundSection } from "../../_components/RefundSection";
 
 export function OrderDetailContent({
   order,
@@ -24,6 +25,9 @@ export function OrderDetailContent({
   canUpdateDelivery,
   savingDelivery,
   onSaveDelivery,
+  paidPaymentId,
+  refunding,
+  onRefund,
 }: {
   order: Order;
   payment: Payment | null;
@@ -34,6 +38,10 @@ export function OrderDetailContent({
   canUpdateDelivery: boolean;
   savingDelivery: boolean;
   onSaveDelivery: (input: DeliveryUpdateInput) => void;
+  /** รายการที่ชำระแล้ว — ใช้คืนเงินเมื่อ "ยกเลิก + ชำระแล้ว" */
+  paidPaymentId: string | null;
+  refunding: boolean;
+  onRefund: (paymentId: string) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -52,9 +60,26 @@ export function OrderDetailContent({
       <Divider className="!my-0" />
 
       {isCancelled ? (
-        <Tag color="error" className="w-fit">{t("orders.cancelledBanner")}</Tag>
+        <div>
+          <Tag color="error" className="w-fit">{t("orders.cancelledBanner")}</Tag>
+          {/* เหตุผลแสดงใน RefundSection แทนเมื่อรอโอนคืน (ไม่ซ้ำสองที่) */}
+          {order.cancelled_reason && !isAwaitingRefund(order) && (
+            <p className="mt-1.5 text-sm text-gray-600">{order.cancelled_reason}</p>
+          )}
+        </div>
       ) : (
         <OrderLifecycleSteps status={order.order_status} />
+      )}
+
+      {isAwaitingRefund(order) && (
+        <RefundSection
+          amount={order.total_amount}
+          reason={order.cancelled_reason}
+          paidPaymentId={paidPaymentId}
+          canRefund={canApprovePayment}
+          refunding={refunding}
+          onRefund={onRefund}
+        />
       )}
 
       <Divider className="!my-0" />

@@ -18,7 +18,8 @@ import { NotificationDetailContent } from "./_components/NotificationDetailConte
 type VM = ReturnType<typeof useNotificationHistoryViewModel>;
 
 // ไม่มี "employee" — backend เลิกสร้างหมวดนี้แล้ว (ดู types/notification.ts)
-const MODULES: NotificationModule[] = ["order", "ingredient", "production", "finance", "system"];
+// "customer" = ลูกค้าติดต่อร้าน · ลูกค้ายกเลิกออเดอร์ ฯลฯ (backend customer-backend-merge.md §8.17)
+const MODULES: NotificationModule[] = ["order", "ingredient", "production", "finance", "customer", "system"];
 const TYPES: NotificationType[] = ["warning", "info", "success", "error"];
 
 export function NotificationHistoryView(vm: VM) {

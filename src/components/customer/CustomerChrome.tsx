@@ -9,11 +9,9 @@ import Footer from "./Footer";
 // usePathname() คืนเฉพาะ path ไม่รวม query string จึงครอบคลุม ?token=... ด้วย
 const HIDE_CHROME_ROUTES = ["/customer/reset-password"];
 
-// route ที่ไม่ต้องแสดงเฉพาะ Navbar (ยังคง Footer ไว้) — หน้า flow สั่งซื้อ/ชำระเงิน
+// route ที่ไม่ต้องแสดงเฉพาะ Navbar (ยังคง Footer ไว้) — หน้า flow พรีออเดอร์ (ยังไม่ได้ย้ายมา)
+// ตะกร้า/checkout/ออเดอร์ของที่นี่ใช้ Navbar ปกติ (FrontOffice เดิมมี header ของตัวเองในหน้าเหล่านั้น)
 const HIDE_NAVBAR_ROUTES = [
-  "/customer/cart",
-  "/customer/checkout",
-  "/customer/payment",
   "/customer/preorder/checkout",
   "/customer/preorder/payment",
 ];

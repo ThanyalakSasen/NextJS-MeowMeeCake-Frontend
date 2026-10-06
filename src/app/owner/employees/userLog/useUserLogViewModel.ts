@@ -18,6 +18,7 @@ import { refId } from "@/lib/refId";
 import { formatDate } from "@/i18n/format";
 import type { UserLog } from "@/types/userLog";
 import type { UserLogAction } from "@/constants/enumConfig";
+import { LIST_ALL } from "@/lib/http";
 
 export interface LogRow extends UserLog {
   userName: string;
@@ -41,11 +42,11 @@ export function useUserLogViewModel() {
 
   const logsQ = useQuery({
     queryKey: ["user-logs"],
-    queryFn: () => userLogsService.list({ limit: 200 }),
+    queryFn: () => userLogsService.list({ limit: LIST_ALL }),
   });
   const usersQ = useQuery({
     queryKey: ["users"],
-    queryFn: () => usersService.list({ limit: 100 }),
+    queryFn: () => usersService.list({ limit: LIST_ALL }),
   });
   const rolesQ = useQuery({
     queryKey: ["roles"],

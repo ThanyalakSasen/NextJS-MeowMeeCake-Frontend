@@ -1,0 +1,333 @@
+🟡 type พร้อม (`status` · `order_item_id` populate) · ▢ UI (E4)
+
+> สร้าง: 2026-10-06 · ขอบเขต: ฝั่ง Frontend (`src/**`)
+> - repo นี้: `D:\1.2569\FrontEnd\NextJS-MeowMeeCake-Frontend` (branch `feat/storefront-checkout`)
+> - FrontOffice (อีกผู้พัฒนา): `C:\Users\KimThanyalak\Downloads\frontend\frontend` (**ไม่ใช่ git repo** · ~47,000 บรรทัด)
+> - backend หลัก: `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake` (branch `main`, `e3fb9bd`)
+> - เอกสารคู่ฝั่ง backend: [`customer-backend-merge.md`](../../../MeowMeeCake/NextJS-MeowMeeCake/docs/customer-backend-merge.md) (อ้างเป็น **BE §x.x**)
+>
+> ก่อนหน้า: [`BACKLOG2.md`](BACKLOG2.md)
+
+## สรุปล่าสุด (2026-10-06)
+
+**ภาพรวม**
+- endpoint ที่ frontend เรียก**มีครบทุกเส้น**ใน backend `main` (path + method) · หน่วยเงินใน API ยังเป็น**บาท** → ไม่มีอะไรพังทันที
+- backend `main` merge PR #52–#57 แล้ว → ข้อห้าม deploy ใน BACKLOG2 §16.1 หมดไป · deploy พร้อมกันได้ (backend ก่อน) แต่ PR #16–#19 ของ frontend ยังไม่เคยทดสอบกับ backend จริง
+- FrontOffice (`Downloads`) copy ทับไม่ได้ — ต่อ backend พอร์ต 4000 + next-auth · เอามาได้แค่ UI / flow / logic หน้าจอ แล้วเขียนชั้น API ใหม่
+
+**ทำแล้วบน branch `feat/storefront-checkout` (ยังไม่ commit)**
+- A1–A3: หน้าชำระเงินใช้ QR + กำหนดชำระ 30 นาทีของ backend · ค่าส่งแบบใหม่ (`deliverable`) · ล็อกอินลูกค้าที่ยังไม่ยืนยันอีเมล → ขอลิงก์ใหม่ — **ทดสอบระดับ API ผ่าน 19/19** (backend + MongoDB local)
+- B3: หน้า `/login` หน้าตาแบบ FrontOffice + ปุ่ม Google (GIS → `/auth/google`) + ปุ่ม LINE (endpoint ใหม่ใน backend branch `feat/line-login-endpoint` · เทส backend ผ่าน 45 ข้อ) — **รอตั้งค่า Google/LINE แล้วลองด้วยบัญชีจริง**
+- เอกสารนี้ (หมวด A–I + แบบฟอร์มสอบถาม)
+
+**ต้องทำต่อ (เรียงตามความสำคัญ)**
+
+| ลำดับ | รหัส | งาน | ระดับ |
+|---|---|---|---|
+| 1 | A4 | ลบ `src/lib/promptpay.ts` · คลิกดูหน้าจอจริง · commit | — |
+| 2 | B3 | ตั้ง `NEXT_PUBLIC_GOOGLE_CLIENT_ID` + origin ใน Google Console · `LINE_AUTH_*` + Callback URL ใน LINE Console · commit/PR branch backend | — |
+| 3 | I1 | ~~เมนูสิทธิ์ `store_info`~~ ✅ | — |
+| 4 | I2 | ปุ่มคืนเงิน — ออเดอร์ "ยกเลิก + ชำระแล้ว" ค้างรอโอนคืน | ✅ 2026-10-06 — ป้าย "รอโอนคืน" ในตาราง + แถบเตือนพร้อมปุ่มกรอง · drawer มี `RefundSection` (ยอด · เหตุผลยกเลิก · ปุ่มยืนยันโอนคืน + popup ยืนยัน · ต้องมีสิทธิ์ `payments.approve`) ทั้งออเดอร์และพรีออเดอร์ · **ยังไม่ทดสอบกับ backend จริง** |
+| 5 | G1 · G2 | ส่งคำถาม path หน้าออเดอร์ลูกค้า + ทางเข้าโปรไฟล์ (กระทบ 9 เรื่อง) | ⏸ |
+| 6 | I3–I7 | แจ้งเตือนหมวด `customer` · POS กลุ่มตัวเลือก (+E1) · สวิตช์ส่งทั่วประเทศ · drawer ออเดอร์เว็บ · คูปองแลกแต้ม | 🟡 |
+| 7 | B1 → B2 | หน้าสมัคร/ลืมรหัส/ยืนยันอีเมล (ลิงก์ในหน้า login ยัง 404) → บัญชีของฉัน | ▢ |
+| 8 | D1 → D2 → C3 → D3 → C1 | ประวัติออเดอร์ · ที่อยู่ · checkout เต็ม · พรีออเดอร์ · รายละเอียดสินค้าเต็ม | ▢ |
+| 9 | ที่เหลือ | D4–D10 · E2–E6 · I8–I11 | ▢ / ⏸ |
+
+**รอคนอื่น:** backend — F1 แนบสลิปย้อนหลัง · F2 admin API ค่าส่งเว็บ · F3 รีวิว analytics · F4 dashboard รอบพรีออเดอร์ · Q-BE8 เปิดปฏิเสธ `product_stock_quantity` ใน PATCH (frontend พร้อมแล้ว — I12) ·
+ทีม — G3 หลังร้านใช้ตัวไหน / ปิดพอร์ต 4000 · ผู้พัฒนา FrontOffice — Q-FO1–4
+
+**ข้อควรระวัง**
+- `.env.example` ของ frontend แก้แล้ว (เอา PromptPay ออก ใส่ Google) — **ห้าม** `git checkout -- .env.example`
+- ทดสอบใช้ MongoDB local `meowmeecake-test` เท่านั้น (สคริปต์ใน scratchpad ปฏิเสธ DB อื่น) · ระหว่างทดสอบ A3 มีอีเมลยืนยันจริงส่งผ่านบัญชีอีเมลของร้านไป `test.unverified@meowmeecake.test` ~3 ฉบับ (ส่งไม่ถึงใคร · อาจมีอีเมลตีกลับในกล่องผู้ส่ง)
+
+## วิธีใช้เอกสารนี้
+
+- งานแบ่งเป็น **9 หมวด (A–I)** · แต่ละเรื่องมีรหัส (เช่น `C4`) ใช้อ้างใน commit / PR / คำถาม
+- ทุกเรื่องมีหัวข้อเดียวกัน: **เป้าหมาย · ไฟล์/ต้นแบบ · API · ขั้นตอน · ขึ้นกับ · คำถาม**
+- เรื่องที่ติดคำถาม → ไปกรอกใน **[§แบบฟอร์มสอบถาม](#แบบฟอร์มสอบถาม)** ท้ายเอกสาร (แยกตามคนที่ต้องถาม) แล้วกลับมาอัปเดตสถานะ
+- สถานะ: ✅ เสร็จ · 🟡 กำลังทำ · ▢ พร้อมทำ · ⏸ ติดคำถาม/รอคนอื่น · ❌ ไม่ทำ
+
+## กติกาที่ใช้กับทุกเรื่องที่พอร์ตจาก FrontOffice
+
+FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/owner/*`) + next-auth จึง **copy ทับไม่ได้** — ทุกหน้าต้อง:
+
+1. เปลี่ยน path เป็น `/shop/*` · `/catalog/*` · `/admin/*` (ตาราง path เก่า → ใหม่: BE §8.9 · §8.14–§8.20)
+2. `useSession()` → `useCustomerSession()` · `signIn()` → `login()` ใน `src/lib/authClient.ts`
+3. เรียกผ่าน `src/services/shop*.ts` (axios `http.ts`) แทน `apiFetch` — แกะ `data` / `data.items` ของ envelope `{ success, data }`
+4. หน้าร้าน (`/customer`) ยกเว้น check-i18n ได้ · หลังร้าน (`/owner`) ต้อง MVVM + i18n + `base/` ให้ผ่าน `npm run check`
+
+---
+
+## สารบัญงาน
+
+| หมวด | เรื่อง | จำนวน | สถานะรวม |
+|---|---|---|---|
+| [A](#a-งานที่เสร็จแล้วบน-branch-นี้) | งานที่เสร็จแล้วบน branch นี้ | 4 | ✅ (A4 รอคุณลบไฟล์) |
+| [B](#b-พื้นฐานที่ต้องมีก่อน) | พื้นฐานที่ต้องมีก่อน (บัญชี · ล็อกอิน) | 3 | ▢ / ⏸ (หน้า login ยกหน้าตาแล้ว) |
+| [C](#c-หน้าร้าน--เสริมหน้าที่มีอยู่แล้ว) | หน้าร้าน — เสริมหน้าที่มีอยู่แล้ว | 4 | ▢ |
+| [D](#d-หน้าร้าน--หน้าใหม่) | หน้าร้าน — หน้าใหม่ | 10 | ▢ / ⏸ |
+| [E](#e-หลังร้าน--หน้าใหม่) | หลังร้าน — หน้าใหม่ | 6 | ▢ / ⏸ |
+| [F](#f-ต้องขอ-backend-ก่อน) | ต้องขอ backend ก่อน | 4 | ⏸ |
+| [G](#g-ตัดสินใจทีม) | ตัดสินใจทีม | 3 | ⏸ |
+| [H](#h-ไม่ทำ-ตัดสินแล้ว) | ไม่ทำ (ตัดสินแล้ว) | 6 | ❌ |
+| [I](#i-แก้ตาม-backend-main-ตรวจ-2026-10-06) | แก้ตาม backend `main` (ไม่เกี่ยวกับ FrontOffice โดยตรง) | 14 | ✅ 5 · 🟡 5 (เหลือ UI) · ▢ 4 |
+
+**ลำดับที่แนะนำ:** A4 → I1 · I2 (🔴) → G1 · G2 (ถามก่อน เพราะกระทบหลายเรื่อง) → I3–I7 → B1 → B2 → D1 → D2 → C3 → D3 → C1 → ที่เหลือ
+
+---
+
+## A. งานที่เสร็จแล้วบน branch นี้
+
+> แก้ 2026-10-06 · ผ่าน `npm run check` · **ยังไม่ commit**
+>
+> **ทดสอบ 2026-10-06 — ผ่าน 19/19 ระดับ API** กับ backend `main` + MongoDB local (`meowmeecake-test` · ไม่ใช่ Atlas):
+> ยิง API ตามลำดับเดียวกับหน้าเว็บแล้วเช็คค่าที่หน้าเว็บใช้แสดงผล (A3 ×5 · A2 ×5 · A1 ×9 รวมหมดเวลา/เปิดกลับ/ช่องโหว่ F1) ·
+> หน้า `/login` `/customer/cart` `/customer/checkout` `/customer/order/[id]` คอมไพล์และเปิดได้ (200) ·
+> **ยังไม่ได้คลิกดูหน้าจอในเบราว์เซอร์** (popup · นับถอยหลัง · ข้อความ) · ข้อสังเกต: `account_name` ว่างเมื่อใช้ env `PROMPTPAY_ID`
+> (ชื่อบัญชีมาจาก StoreProfile เท่านั้น — หน้าเว็บซ่อนบรรทัดชื่อบัญชีให้แล้ว)
+
+### A1 ✅ QR พร้อมเพย์ + กำหนดชำระ 30 นาที ใช้ของ backend
+- **เป้าหมาย:** เลิกสร้าง QR ที่ frontend · มีนับถอยหลัง · แนบสลิปหลังหมดเวลาเพื่อเปิดออเดอร์กลับ
+- **ไฟล์:** `src/services/shopPayments.ts` (`orderPaymentPage`) · `src/app/customer/order/[id]/page.tsx` · `src/app/customer/lib/shopQueries.ts`
+- **API:** `GET /shop/orders/:id/payment` (BE §8.8)
+- **ข้อจำกัด:** ลูกค้าที่ไม่เคยส่งสลิปก่อนหมดเวลา เปิดออเดอร์กลับเองไม่ได้ → [F1](#f1--แนบสลิปย้อนหลังเมื่อยังไม่มีรายการชำระเงิน)
+
+### A2 ✅ `delivery-quote` แบบใหม่
+- **ไฟล์:** `src/services/shopOrders.ts` (`DeliveryQuote`) · `src/app/customer/checkout/page.tsx`
+- **ผล:** จังหวัดที่ส่งไม่ได้ (`deliverable: false`) → แสดง `message` + ปิดปุ่มสั่งซื้อ · ลบ "ส่งฟรีเมื่อซื้อครบ…" (BE §8.7)
+
+### A3 ✅ ลูกค้าต้องยืนยันอีเมลก่อนล็อกอิน
+- **ไฟล์:** `src/types/api.ts` (`ApiError.reason`) · `src/lib/http.ts` · `src/lib/authClient.ts` (`resendVerification` · `register`) · `src/app/login/_components/LoginForm.tsx` · i18n `auth.emailNotVerified*` / `auth.resendVerification*`
+- **ผล:** 403 `EMAIL_NOT_VERIFIED` → popup + ปุ่มส่งลิงก์ยืนยันใหม่ (BE §8.9)
+
+### A4 ▢ เก็บกวาดที่ต้องทำเอง (ระบบไม่อนุญาตให้ลบไฟล์ระหว่างแก้)
+- [ ] ลบ `src/lib/promptpay.ts` (ไม่มีใครเรียกแล้ว)
+- [x] เอา `NEXT_PUBLIC_PROMPTPAY_*` ออกจาก `.env.example` แล้ว (แทนด้วย `NEXT_PUBLIC_GOOGLE_CLIENT_ID` ของ B3 — **ห้าม** `git checkout` ไฟล์นี้แล้ว)
+- [ ] **อย่า**ลบ `qrcode` จาก `package.json` — POS `QRPaymentModal` ยังใช้
+- [x] ทดสอบ A1–A3 ระดับ API กับ backend + DB local (19/19)
+- [ ] คลิกดูหน้าจอจริงในเบราว์เซอร์ (popup ยืนยันอีเมล · นับถอยหลัง · กล่องข้อความแต่ละสถานะ) แล้ว commit
+
+---
+
+## B. พื้นฐานที่ต้องมีก่อน
+
+### B1 ▢ หน้าสมัคร · ยืนยันอีเมล · ลืมรหัสผ่าน · ตั้งรหัสใหม่
+- **เป้าหมาย:** ลูกค้าสมัครเองได้ครบวงจร (ตอนนี้ repo นี้ไม่มีหน้าสมัครเลย)
+- **ต้นแบบ FrontOffice:** `src/app/register/page.jsx` · `customer/verify-email` · `customer/forgot-password` · `customer/reset-password`
+- **API:** `POST /auth/register` (ไม่ตั้ง cookie) · `GET/POST /auth/verify-email` · `POST /auth/resend-verification` · `POST /auth/forgot-password` · `POST /auth/reset-password`
+- **ขั้นตอน:** หน้า `/register` → "ตรวจอีเมล" · `/customer/verify-email?token=` · `/customer/forgot-password` · `/customer/reset-password?token=` (มีใน `HIDE_CHROME_ROUTES` แล้ว)
+- **ขึ้นกับ:** — · **คำถาม:** [Q-BE3](#ถาม-backend) (URL ในอีเมลชี้ไป frontend ตัวไหน)
+
+### B2 ▢ บัญชีของฉัน · เปลี่ยนรหัสผ่าน · ผูก LINE
+- **ต้นแบบ:** `customer/account/page.tsx` (671) · `customer/changepassword` (+`verify`) · `customer/line-welcome` · `LineConnectCard`
+- **API:** `GET/PATCH /shop/me` · `PATCH /shop/me/password` · `/shop/me/email` · `/shop/me/line` (+`callback`)
+- **ขึ้นกับ:** G2 (ทางเข้าโปรไฟล์ลูกค้า — `/profile` ของหลังร้าน หรือ `/customer/account`)
+
+### B3 🟡 หน้า login แบบ FrontOffice + เข้าสู่ระบบด้วย Google / LINE (โค้ดเสร็จ 2026-10-06 · รอตั้งค่า + ทดสอบด้วยบัญชีจริง)
+- **หน้าตา:** ยกจาก `src/app/login/page.jsx` ของ FrontOffice — ภาพพื้นหลัง (`public/login.png`) · การ์ดโปร่ง/ขาว · แม่กุญแจ · ปุ่มเด้ง · ลิงก์ลืมรหัส/สมัคร · ปุ่ม Google + LINE
+- **Google:** `GoogleLoginButton.tsx` — Google Identity Services (ปุ่มที่ Google วาด ธีม outline) → `POST /auth/google { credential }` → cookie `session`
+- **LINE (endpoint ใหม่ใน backend — branch `feat/line-login-endpoint` ยังไม่ commit):** ปุ่มพาเบราว์เซอร์ไป `GET /api/auth/line?next=` → หน้ายินยอม LINE →
+  `GET /api/auth/line/callback` (state ผูก nonce ใน cookie กัน login CSRF · `oauthService.signInWithLine` · ตั้ง cookie `session`) → กลับ `/login/line` ของ frontend → ไปหน้าตาม role
+  · ใช้ `/login/line` แทน `/login` เพราะ `proxy.ts` เด้ง `/login` ที่มี cookie แล้วไปแดชบอร์ด
+- **ทดสอบแล้ว:** backend unit 27 + integration 18 ผ่าน · ยิงจริงกับ backend local: เริ่ม flow ได้ 307 ไป LINE (scope `openid profile email` + cookie nonce) · `next=//evil.com` ถูกตัด · กดยกเลิก → `?line=cancelled` · state ปลอม → `?error=` · `/auth/google` ต่อถึง (token ปลอม → 400) · frontend `npm run check` ผ่าน
+- **ยังไม่ได้ทดสอบ:** กดล็อกอินจริงด้วยบัญชี Google / LINE (ต้องตั้งค่าข้างล่างก่อน)
+- **ต้องตั้งค่าเอง:**
+  - [ ] frontend `.env.local`: `NEXT_PUBLIC_GOOGLE_CLIENT_ID` = ค่าเดียวกับ `GOOGLE_CLIENT_ID` ของ backend
+  - [ ] Google Cloud Console → OAuth client → Authorized JavaScript origins เพิ่ม `http://localhost:3001` (+ โดเมนจริงตอน deploy)
+  - [ ] backend `.env.local`: `LINE_AUTH_CALLBACK_URL=http://localhost:3000/api/auth/line/callback` · `LINE_AUTH_RETURN_URL=http://localhost:3001/login/line`
+  - [ ] LINE Developers Console → LINE Login channel → Callback URL เพิ่ม `http://localhost:3000/api/auth/line/callback` (คนละ URL กับการผูก LINE)
+- **ข้อจำกัด:** บัญชี LINE ใหม่ที่ไม่ให้อีเมล → backend ตั้งอีเมลชั่วคราว `*@line-user.invalid` · FrontOffice มีหน้า `customer/line-welcome` ให้กรอกอีเมลจริง (`/shop/me/email`) — repo นี้ยังไม่มี (รวมกับ B2)
+- **ไม่ยกมา (ตัดสินแล้ว):** วิดีโอห้องอบขนมตอนกดเข้าสู่ระบบ (`PreloaderOverlay` + `Preloader.mp4`) · ม่านขนมตอน logout (`LogoutCurtain`)
+- ⚠️ ลิงก์ "ลืมรหัสผ่าน?" (`/customer/forgot-password`) และ "สมัครสมาชิก" (`/register`) ยัง **404** จนกว่าจะทำ B1
+
+---
+
+## C. หน้าร้าน — เสริมหน้าที่มีอยู่แล้ว
+
+### C1 ▢ รายละเอียดสินค้า: ตัวเลือก/ออปชัน · รีวิว · สินค้าคล้าย · สารก่อภูมิแพ้
+- **ไฟล์ของเรา:** `src/app/customer/product/[id]/page.tsx` · `hooks/useAddToCart.ts` · `services/shopCart.ts`
+- **ต้นแบบ:** `ProductDetailClient.tsx` (1,108) · `ProductCustomizationPicker.tsx`
+- **API:** `/catalog/products/:id/customization` · `/reviews` (+`summary`) · `/similar` · `/sentiment` · `/catalog/ingredients` · ตะกร้ารับ `variant_ids[]` + `selected_options` (BE §8.3)
+- **ขั้นตอน:** (1) ตัวเลือกในหน้า + ส่งตะกร้า (2) แสดงตัวเลือกในตะกร้า/checkout/ออเดอร์ (3) รีวิว (4) สินค้าคล้าย + สารก่อภูมิแพ้
+
+### C2 ▢ หน้าแรก: สินค้าแนะนำ
+- **ต้นแบบ:** `HomeRecommendations.tsx` · **API:** `/catalog/products/recommended` · `/shop/recommendations` (BE §8.15)
+
+### C3 ▢ checkout: จุดรับสินค้า · คูปองส่วนตัว · ใช้แต้ม
+- **ไฟล์ของเรา:** `src/app/customer/checkout/page.tsx`
+- **ต้นแบบ:** `customer/checkout/page.tsx` (843) · `PickupLocationPicker` · `CouponSelectBox` · `PointsRedeemBox`
+- **API:** `/catalog/pickup-locations` → ส่ง `pickup_location_id` + `pickup_date` · `/shop/coupons` (+`check`) · `/shop/points` (BE §8.7 · §8.11)
+- **กติกา:** คูปองส่วนตัว **หรือ** โค้ด อย่างใดอย่างหนึ่ง + ใช้แต้มร่วมได้ (≤ 30% ของยอดสินค้า · ขั้นต่ำ 100 แต้ม)
+- **ขึ้นกับ:** D5 (หน้าแต้ม/คูปอง) ไม่บังคับ
+
+### C4 ▢ หน้าออเดอร์: ยกเลิกออเดอร์
+- **API:** `POST /shop/orders/:id/cancel` — pending/confirmed เท่านั้น · ชำระแล้วก็ยกเลิกได้ = รอร้านโอนคืน (BE §8.8)
+- **ขึ้นกับ:** G1 (หน้าออเดอร์อยู่ path ไหน)
+
+---
+
+## D. หน้าร้าน — หน้าใหม่
+
+| รหัส | หน้า | ต้นแบบ FrontOffice | API | ขึ้นกับ | สถานะ |
+|---|---|---|---|---|---|
+| D1 | ประวัติคำสั่งซื้อ | `account/purchases` (+`[id]`) | `/shop/orders` · `/shop/orders/:id` | G1 | ⏸ |
+| D2 | สมุดที่อยู่ | `account/address` (541) | `/shop/addresses` (+`:id`, `:id/default`) | B2 | ▢ |
+| D3 | พรีออเดอร์ทั้ง flow | `preorder/*` · `account/preorders/*` (~2,700 บรรทัด) | `/catalog/preorder-rounds` (+`:id`) · `/shop/preorders` (+`cancel`, `payment`) · `delivery-quote` ส่ง `product_ids` | G1 · C1 | ⏸ |
+| D4 | แต้มสะสม · คูปอง · แชร์แต้ม | `account/member` (567) | `/shop/points` (+`share`) · `/shop/coupons` (+`check`, `redeem`) | B2 | ▢ |
+| D5 | รายการโปรด | `account/favorites` | `/shop/favorites` (`data.items`) | B2 | ▢ |
+| D6 | กระดิ่งแจ้งเตือน | `account/notifications` · `CustomerNotifications` | `/shop/notifications` (+`:id`) → `{ items, unread_count }` | G1 (ลิงก์ในแจ้งเตือน) | ⏸ |
+| D7 | เขียนรีวิว + รูป/วิดีโอ | `account/pendingreview/[id]` (705) | `/shop/reviews` · `/shop/reviews/upload` · `/catalog/review-aspects` | D1 | ▢ |
+| D8 | ติดต่อร้าน | `contact-us` | `/shop/contact` · `/catalog/contact-topics` | — | ▢ |
+| D9 | ตารางค่าส่ง · ข้อมูลร้าน | `shipping` · `StoreLogo` | `/catalog/shipping-zones` · `/catalog/store-info` · `/catalog/store-logo` | — | ▢ |
+| D10 | ลิงก์ชำระเงินใช้ครั้งเดียว | `customer/payment` | `/shop/payment-link` (+`redeem`) | G1 · Q-FO2 | ⏸ |
+
+**หมายเหตุ D3:** พรีออเดอร์ใช้กติกาของ backend หลัก (กำหนดชำระ + ยกเลิกอัตโนมัติ · ไม่ใช่ 30 นาที) · หน้าชำระเงินใช้ `GET /shop/preorders/:id/payment` แบบเดียวกับ A1
+
+---
+
+## E. หลังร้าน — หน้าใหม่
+
+> เขียนใหม่แบบ MVVM โดยดู UI ของ FrontOffice · ไม่เอาโค้ดมาตรง ๆ
+
+| รหัส | หน้า | ต้นแบบ | API | หมายเหตุ | สถานะ |
+|---|---|---|---|---|---|
+| E1 | กลุ่มตัวเลือกสินค้า + POS | `ProductCustomizationEditor.tsx` | `GET/PUT /admin/products/:id/customization` · `pos/scan` คืน `customization` | แทน BACKLOG2 §6 · POS ต้องส่ง `variant_ids` (BE §8.3) | ▢ **ทำก่อน** — สินค้าที่มีตัวเลือกขายใน POS ไม่ได้ |
+| E2 | ข้อมูลร้าน (ที่อยู่ · พิกัด · ตลาดนัด · แผนที่ · โลโก้ · พร้อมเพย์) | `owner/store-info/*` | `/admin/store-profile` · `/admin/store-settings` · `/admin/weekly-markets` · `/admin/map-link` | เมนูใหม่ `store_info` · เลขพร้อมเพย์ของ A1 ตั้งที่นี่ (BE §8.19) | ▢ |
+| E3 | คำค้นเทียบเคียง | `products/search-synonyms` | `/admin/search-synonyms` (+`:id`) | สิทธิ์ `products` (BE §8.16) | ▢ |
+| E4 | จัดการรีวิวขั้นสูง | `reports/reviews/*` | `/admin/reviews/bulk` · `filter-options` · `:id/visibility` · `:id/sentiment` · `/admin/aspects/reorder` · `/admin/semantic-terms` | ไม่รวม analytics → F3 | ▢ |
+| E5 | ออเดอร์พร้อมส่ง | `orders/readyReders` | `/admin/orders?order_status=ready` | อาจทำเป็นตัวกรองในหน้า `manageOrders` แทน | ▢ |
+| E6 | ตัวกรองหมวด "ลูกค้า" ในแจ้งเตือน | — | `/admin/notifications?module=customer` | BE §8.17 · งานเล็ก | ▢ |
+
+---
+
+## F. ต้องขอ backend ก่อน
+
+### F1 ⏸ แนบสลิปย้อนหลังเมื่อยังไม่มีรายการชำระเงิน
+- **ปัญหา:** ออเดอร์หมดเวลา → `POST /shop/payments` ต้องมี `slip_image_url` (ไม่งั้น 400) แต่สลิปเป็นไฟล์ส่วนตัว อัปโหลดได้ผ่าน `/shop/payments/:id/slip` เท่านั้น (ต้องมี payment ก่อน) → วนไม่จบ
+- **ตอนนี้:** หน้าออเดอร์แสดง "กรุณาติดต่อร้านพร้อมสลิป"
+- **ทางแก้ที่เสนอ:** (ก) `POST /shop/payments` รับ multipart พร้อมไฟล์ · (ข) ยอมสร้าง payment ไม่มีสลิปให้ออเดอร์ที่ `late_upload` · (ค) frontend สร้าง payment ทันทีที่เปิดหน้าชำระเงิน (ไม่แนะนำ — GET มีผลข้างเคียง)
+- **คำถาม:** [Q-BE1](#ถาม-backend)
+
+### F2 ⏸ หน้าจัดการโซนค่าส่งของเว็บ (ShippingZones)
+- **ปัญหา:** backend มีแค่ `/catalog/shipping-zones` (อ่าน) · หลังร้านแก้ได้เฉพาะ `DeliveryZones` (POS) · FrontOffice มี `owner/shipping` แต่เรียก `/api/owner/shipping-zones`
+- **คำถาม:** [Q-BE2](#ถาม-backend) · ทำหน้าแล้วรวมกับ BACKLOG2 §16.3 "หน้าจัดการโซนค่าส่ง"
+
+### F3 ⏸ รีวิว analytics · dashboard · รายสินค้า
+- **ปัญหา:** BE §8.20 รอทีม (R5) · ต้นแบบ `ReviewAnalyticsTab` · `reviews/products/[id]` (~900 บรรทัด)
+- **คำถาม:** [Q-BE4](#ถาม-backend)
+
+### F4 ⏸ dashboard รอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ
+- **ปัญหา:** FrontOffice เรียก `/api/owner/preorder-rounds/dashboard` · `/:id/customers` — ไม่มีใน backend หลัก (ตอนนี้กรองพรีออเดอร์ตามรอบได้ในหน้า `preOrderRound`)
+- **คำถาม:** [Q-BE5](#ถาม-backend) · [Q-OWN3](#ถาม-เจ้าของร้าน--ทีม)
+
+---
+
+## G. ตัดสินใจทีม
+
+### G1 ⏸ หน้าออเดอร์ของลูกค้าอยู่ path ไหน
+- **ตัวเลือก:** (ก) `customer/order/[id]` ของ repo นี้ · (ข) `customer/account/purchases/[id]` แบบ FrontOffice
+- **ผลกระทบ:** ลิงก์ในกระดิ่ง/LINE ของ backend ชี้ไป (ข) อยู่แล้ว (BE §8.12) · เลือก (ก) = ขอ backend แก้ `link` · เลือก (ข) = ย้ายหน้า A1 ไป path ใหม่
+- **ขึ้นกับเรื่องนี้:** C4 · D1 · D3 · D6 · D10 · **คำถาม:** [Q-OWN1](#ถาม-เจ้าของร้าน--ทีม)
+
+### G2 ⏸ ทางเข้าโปรไฟล์ของลูกค้า
+- **ตัวเลือก:** `/profile` (มีอยู่ — ผูก LINE · ใช้ร่วมกับพนักงาน) หรือ `/customer/account` แบบ FrontOffice
+- ค้างจาก BACKLOG2 §16.4 · **ขึ้นกับเรื่องนี้:** B2 · D2 · D4 · D5 · **คำถาม:** [Q-OWN2](#ถาม-เจ้าของร้าน--ทีม)
+
+### G3 ⏸ หลังร้านใช้ตัวไหน + ปิดพอร์ต 4000 เมื่อไหร่
+- BE §8.1 ⏳ · แนะนำ: ใช้ repo นี้ ทำเฉพาะหมวด E · ปิดพอร์ต 4000 ได้เมื่อ FrontOffice เลิกใช้หรือย้าย path ครบ
+- **คำถาม:** [Q-OWN4](#ถาม-เจ้าของร้าน--ทีม) · [Q-FO1](#ถาม-ผู้พัฒนา-frontoffice)
+
+---
+
+## H. ไม่ทำ (ตัดสินแล้ว)
+
+| รหัส | เรื่อง | เหตุผล |
+|---|---|---|
+| H1 | ชุดสินค้า (`dessert-set` · `promotions/bundles` · แพ็กเกจในตะกร้า) | ร้านเลิกใช้ · backend ไม่ย้าย (BE §8.13) |
+| H2 | `/employee/*` | ใช้ `/owner` + `usePermission` แทน |
+| H3 | สิทธิ์ชั่วคราว (`/permissions/temporary`) | backend ใช้ `expires_at` บน permission |
+| H4 | `reports/sales` | ไม่มี route · repo นี้ใช้ `/admin/dashboard/*` |
+| H5 | POS แบบ `pos-checkout` ครั้งเดียว | backend ใช้ สร้างออเดอร์ → ชำระ → ยืนยัน (repo นี้ทำแล้ว) |
+| H6 | ค้นคำเทียบเคียงฝั่ง client (`lib/search/*`) | `/catalog/products?search=` ขยายคำค้นที่ server แล้ว (BE §8.16) |
+
+---
+
+## I. แก้ตาม backend `main` (ตรวจ 2026-10-06)
+
+> ตรวจ: backend `main` `e3fb9bd` (merge PR #52–#65 ครบ 2026-10-06) เทียบกับ frontend `main` `1be98ed` + branch นี้ ·
+> endpoint ที่ frontend เรียก **มีครบทุกเส้น** (เทียบ path + method ทั้ง 145 call กับ route จริง 212 ไฟล์ · รวม route ที่สร้างจาก `collectionRoutes`/`itemRoutes`) · หน่วยเงินใน API ยังเป็น**บาท** (`money-units.md`
+> — #64 แก้ข้อมูลใน DB ไม่ได้เปลี่ยน API) → ไม่ต้องแก้ · ที่เหลือคือ field/สถานะ/ฟีเจอร์ใหม่ที่ frontend ยังไม่รู้จัก
+
+| รหัส | ระดับ | เรื่อง | ไฟล์ frontend | API / อ้างอิง backend | สถานะ |
+|---|---|---|---|---|---|
+| I1 | 🔴 | **เมนูสิทธิ์ `store_info` ไม่มีใน frontend** — backend เพิ่มใน `MENU_KEYS` แล้ว (`/auth/me` ส่งมา) แต่ frontend ทิ้ง → หน้าสิทธิ์ตั้งค่าเมนูนี้ให้พนักงานไม่ได้ · ต้องมีก่อนทำหน้า E2 | `constants/menuKeys.ts` (`MenuKey` · `ALL_MENU_KEYS`) · `employees/permissions/permissionGroups.ts` · i18n `nav.*` | `permissionService.MENU_KEYS` · BE §8.19 | ▢ |
+| I2 | 🔴 | **คืนเงินไม่มีปุ่ม** — ลูกค้ายกเลิกออเดอร์ที่ชำระแล้วได้เอง → สถานะ "ยกเลิก + ชำระแล้ว" = รอร้านโอนคืน (backend **ไม่**คืนอัตโนมัติ) แต่หลังร้านไม่มีทางกดยืนยันคืนเงิน → ค้างตลอด | `orders/manageOrders` + `preOrderRound` drawer · `services/payments.ts` (+ `refund`) | `POST /admin/payments/:id/refund` (`payments.approve`) · BE §8.8 · BACKLOG2 §15.3 ข้อ 7 | ▢ |
+| I3 | 🟡 | ประเภทแจ้งเตือน: frontend ยังมี `employee` (backend เลิกแล้ว) และ**ไม่มี `customer`** (ลูกค้าติดต่อร้าน · ยกเลิกออเดอร์) → ตัวกรองไม่มีหมวดนี้ · ป้ายเป็น key ดิบ | `types/notification.ts` · `notificationsHistory` · i18n `enums` | enum `Notifications.module` · BE §8.17 | ▢ |
+| I4 | 🟡 | **POS ไม่รองรับกลุ่มตัวเลือก** — `scan` คืน `customization` แล้ว แต่ POS ไม่ให้เลือก (`usePOSViewModel.ts:140`) · ถ้า FrontOffice (หลังร้านพอร์ต 4000) ตั้งกลุ่มบังคับเลือกให้สินค้าไว้ → ขายใน POS ได้ 400 | `OrderInStore/*` · `services/pos.ts` | `POST /admin/pos/scan` · ออเดอร์รับ `variant_ids` + `selected_options` · BE §8.3 | ▢ (ทำคู่ E1) |
+| I5 | 🟡 | สวิตช์ "ส่งทั่วประเทศ" ของหมวดสินค้า — ค่าส่งเว็บตัดสินจาก `ships_nationwide` · ไม่ตั้ง = เดาจากชื่อหมวด ("ซาวโดว์") | `components/shared/categories/CategoryManagerDialog.tsx` · `services/productCategories.ts` · `types/productCategory.ts` | `PATCH /admin/product-categories/:id { ships_nationwide }` · BE §8.7 | ▢ |
+| I6 | 🟡 | drawer ออเดอร์ไม่แสดง field ของออเดอร์เว็บ: `payment_due_at` · `cancelled_reason` (เช่น "หมดเวลาชำระเงิน (ระบบยกเลิกอัตโนมัติ)") · จุดรับ `pickup_point` + `pickup_date` · แต้มที่ใช้ `points_redeemed`/`points_discount` · คูปองส่วนตัว | `types/order.ts` · `services/orders.ts` (`toOrder`) · `manageOrders/_components/OrderDetailContent.tsx` | BE §8.7 · §8.8 · §8.11 | ▢ |
+| I7 | 🟡 | คูปองแลกแต้ม — โปรโมชันมี `points_cost` (ลูกค้าใช้แต้มแลกเป็นคูปองส่วนตัว) แต่ฟอร์มคูปองหลังร้านตั้งไม่ได้ | `promotions/coupons/couponForm.ts` · `CouponFormModal.tsx` · `types/promotion.ts` | `schemas/promotion.ts` `points_cost` · BE §8.11 | ▢ |
+| I8 | 🟢 | หน้าจัดการโซนค่าส่งของหลังร้าน/POS (`DeliveryZones`) ยังไม่มี (ค้างจาก BACKLOG2 §16.3) · คนละตารางกับค่าส่งเว็บ (F2) | ใหม่ `owner/...` | `/admin/delivery-zones` (+`:id`, `restore`) · `/admin/delivery-fee` | ▢ |
+| I9 | 🟢 | รายการรีวิวหลังร้าน: response มี `data.summary` เพิ่ม (frontend ทิ้ง) · สถานะ/ปักหมุด/ตอบกลับ → รวมใน E4 | `services/reviews.ts` | BE §8.20 | ▢ (ทำคู่ E4) |
+| I10 | 🟢 | บัญชีลูกค้าจาก LINE ที่ไม่มีอีเมลได้อีเมลชั่วคราว `*@line-user.invalid` · `auth_provider: "line"` → ที่ไหนแสดงอีเมลผู้ใช้ (ออเดอร์ · รีวิว) ควรซ่อน/แสดง "บัญชี LINE" | `OrderDetailContent` · `reviews` · `types/user.ts` | `oauthService.isPlaceholderEmail` · BE §8.9 | ▢ |
+| I11 | 🟢 | mock (MSW) ใช้ไม่ได้แล้ว (path เก่า ไม่มี `/admin`) — ค้างจาก BACKLOG2 §16.5 · ตัดสินใจเขียนใหม่หรือลบ | `src/mocks/*` · `MSWReady` | — | ⏸ ตัดสินใจ |
+| I13 | ✅ | **รายการถูกตัดเงียบ ๆ** — backend ตัด `?limit=` ไว้ ≤ 100 (`parsePagination` maxLimit · ไม่ส่ง = 20) แต่ frontend ขอ 200/500 อยู่ 24 จุด + ขอ 100 เพื่อ "โหลดทั้งหมด" อีก 15 จุด (ออเดอร์ · วัตถุดิบ · พนักงาน · หมวด · role) + หน่วยนับไม่ส่ง limit (ได้ 20) → แก้ที่ `http.getList` ไล่ขอทีละหน้าเมื่อ limit > `PAGE_MAX` · ใช้ `LIST_ALL` (1,000) แทนเลขลอย | `lib/http.ts` · ViewModel/service 26 ไฟล์ | `src/lib/queryParams.ts` | ✅ 2026-10-06 |
+| I14 | ✅ | สิทธิ์หน้ารีวิว: backend ย้าย `/admin/reviews*` จาก `products.*` เป็น **`reports.*`** แต่เมนู + ViewModel ยังเช็ค `products` → ปุ่ม/เมนูไม่ตรงสิทธิ์จริง | `constants/menu.ts` · `useReviewsViewModel.ts` | BE §8.20 | ✅ 2026-10-06 |
+| I12 | ✅ แจ้ง backend | **frontend ไม่ส่ง `product_stock_quantity` ใน PATCH แล้ว** (`productForm.toUpdateInput` ตัดออก · ปรับสต็อกผ่าน `PUT /stock` ตั้งแต่ PR #19) → backend เปิดการปฏิเสธใน `PATCH /admin/products/:id` ได้เลย (BACKLOG5 §4 แถวแรกยังเขียนว่ารอ FrontEnd) | — | BE §8.21 · [Q-BE8](#ถาม-backend) | ✅ |
+
+**สถานะ deploy (อัปเดต BACKLOG2 §16.1):** backend `main` merge PR #52–#57 แล้ว (2026-10-06) → ข้อห้าม "frontend `main` ห้าม deploy ก่อน backend" หมดไป —
+deploy พร้อมกันได้ (backend ก่อน) · แต่ PR #16–#19 ของ frontend **ยังไม่เคยทดสอบกับ backend จริง** (BACKLOG2 §16.2) · branch นี้ทดสอบ A1–A3 แล้ว (หมวด A)
+
+**งานใน repo backend ที่เกิดจาก BACKLOG นี้:** branch `feat/line-login-endpoint` (B3 · ยังไม่ commit) — ต้อง commit + PR + merge ก่อน deploy ปุ่ม LINE
+
+---
+
+## แบบฟอร์มสอบถาม
+
+> คัดลอกส่วนของแต่ละคนไปส่งได้เลย · ได้คำตอบแล้วกรอกช่อง **คำตอบ** แล้วอัปเดตสถานะเรื่องที่ "ใช้กับ"
+
+### ถาม backend
+
+| รหัส | คำถาม | ตัวเลือก / บริบท | ใช้กับ | คำตอบ | ผู้ตอบ · วันที่ |
+|---|---|---|---|---|---|
+| Q-BE1 | ออเดอร์ที่หมดเวลาและยังไม่มีรายการชำระเงิน ลูกค้าจะแนบสลิปเพื่อเปิดกลับได้อย่างไร | (ก) `POST /shop/payments` รับ multipart · (ข) สร้าง payment ไม่มีสลิปได้เมื่อ `late_upload` · (ค) ไม่รองรับ — ให้ติดต่อร้าน | F1 · A1 | | |
+| Q-BE2 | จะมี admin API แก้ `ShippingZones` (ค่าส่งเว็บ) ไหม หรือให้แก้ใน DB/ฝั่งอื่น | ตอนนี้มีแค่ `/catalog/shipping-zones` | F2 | | |
+| Q-BE3 | ลิงก์ในอีเมลยืนยัน/ตั้งรหัสใหม่ (`STOREFRONT_URL`) จะชี้ไปที่ frontend ตัวไหนตอน deploy | repo นี้ใช้ path `/customer/verify-email` · `/customer/reset-password` ตรงกับ FrontOffice | B1 | | |
+| Q-BE4 | รีวิว analytics / dashboard / รายสินค้า จะย้ายเมื่อไหร่ · shape ของ response | BE §8.20 (R5) | F3 | | |
+| Q-BE5 | จะมี endpoint สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบไหม | FrontOffice ใช้ `/owner/preorder-rounds/dashboard` · `/:id/customers` | F4 | | |
+| Q-BE6 | ถ้าเลือก G1 (ก) ช่วยเปลี่ยน `link` ของแจ้งเตือนลูกค้าเป็น `/customer/order/<id>` ได้ไหม | ตอนนี้ `/customer/account/purchases/<id>` | G1 · D6 | | |
+| Q-BE8 | frontend เลิกส่ง `product_stock_quantity` ใน PATCH แล้ว (PR #19) — เปิดการปฏิเสธฝั่ง backend ได้เลยไหม | BACKLOG5 §4 ยังรอ FrontEnd | I12 | | |
+| Q-BE7 | รีวิว + merge endpoint ล็อกอินด้วย LINE (`/api/auth/line` + `/callback` — branch `feat/line-login-endpoint`) · ตั้ง `LINE_AUTH_*` + Callback URL ใน Console ตอน deploy | ทำให้แล้ว 2026-10-06 รอรีวิว | B3 | | |
+
+### ถาม ผู้พัฒนา FrontOffice
+
+| รหัส | คำถาม | ตัวเลือก / บริบท | ใช้กับ | คำตอบ | ผู้ตอบ · วันที่ |
+|---|---|---|---|---|---|
+| Q-FO1 | ยังพัฒนา FrontOffice ต่อไหม · โค้ดใน `Downloads` ตรงกับตัวที่รันจริงหรือเปล่า · มี git repo ไหม | ไม่มี git ให้เทียบ | G3 · ทุกเรื่องที่พอร์ต | | |
+| Q-FO2 | ลิงก์ชำระเงินแบบ token ใช้ตอนไหน (ส่งทาง LINE / แชต?) ยังต้องมีไหม | `customer/payment?token=` | D10 | | |
+| Q-FO3 | หน้าไหนที่ลูกค้าใช้จริงบ่อย / หน้าไหนเลิกใช้แล้ว | ช่วยจัดลำดับหมวด C · D | C · D | | |
+| Q-FO4 | ยินดีให้นำ UI/โค้ดหน้าร้านมาปรับใช้ใน repo นี้ไหม | ใส่เครดิตในเอกสาร | ทั้งหมด | | |
+
+### ถาม เจ้าของร้าน / ทีม
+
+| รหัส | คำถาม | ตัวเลือก / บริบท | ใช้กับ | คำตอบ | ผู้ตอบ · วันที่ |
+|---|---|---|---|---|---|
+| Q-OWN1 | หน้าออเดอร์ลูกค้าใช้ path ไหน | (ก) `/customer/order/<id>` · (ข) `/customer/account/purchases/<id>` | G1 | | |
+| Q-OWN2 | ลูกค้าเข้าโปรไฟล์ทางไหน | (ก) `/profile` ร่วมกับพนักงาน · (ข) `/customer/account` แยก | G2 | | |
+| Q-OWN3 | ต้องการหน้าสรุปรอบพรีออเดอร์ไหม (ยอดต่อรอบ · รายชื่อลูกค้า) | ตอนนี้ดูได้ด้วยตัวกรองในหน้าพรีออเดอร์ | F4 | | |
+| Q-OWN4 | หลังร้านใช้ repo นี้ตัวเดียว และปิด FrontOffice พอร์ต 4000 เมื่อหน้าลูกค้าย้ายครบ — เห็นด้วยไหม | BE §8.1 ⏳ | G3 | | |
+
+---
+
+## เทมเพลตเพิ่มเรื่องใหม่
+
+```md
+### <รหัส> <สถานะ> <ชื่อเรื่อง>
+- **เป้าหมาย:**
+- **ไฟล์ของเรา / ต้นแบบ FrontOffice:**
+- **API:** (อ้าง BE §)
+- **ขั้นตอน:**
+- **ขึ้นกับ:**
+- **คำถาม:** Q-xxx (เพิ่มในแบบฟอร์มด้วย)
+```

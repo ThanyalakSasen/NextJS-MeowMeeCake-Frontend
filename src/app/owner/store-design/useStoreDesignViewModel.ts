@@ -12,6 +12,7 @@ import { isApiError } from "@/types/api";
 import type { Banner } from "@/types/banner";
 import type { BannerStatus } from "@/constants/enumConfig";
 import { getBannerStatus, toInput, type BannerFormValue } from "./bannerForm";
+import { LIST_ALL } from "@/lib/http";
 
 export interface BannerRow extends Banner {
   status: BannerStatus;
@@ -30,7 +31,7 @@ export function useStoreDesignViewModel() {
 
   const q = useQuery({
     queryKey: ["banners"],
-    queryFn: () => bannersService.list({ limit: 100, sort: "sort_order" }),
+    queryFn: () => bannersService.list({ limit: LIST_ALL, sort: "sort_order" }),
   });
 
   const rows = useMemo<BannerRow[]>(
