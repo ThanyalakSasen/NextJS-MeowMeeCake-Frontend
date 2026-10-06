@@ -31,7 +31,7 @@
 | 5 | G1 · G2 | ส่งคำถาม path หน้าออเดอร์ลูกค้า + ทางเข้าโปรไฟล์ (กระทบ 9 เรื่อง) | ⏸ |
 | 6 | ~~I4 + E1~~ | ✅ (branch `feat/product-customization` · รอทดสอบกับ backend) — หมวด I เหลือ I8–I11 | — |
 | 7 | ~~B1 · B2~~ | ✅ (B1 = PR #28 · B2 = branch `feat/customer-account`) | — |
-| 8 | D1 → D2 → C3 → D3 → C1 | ประวัติออเดอร์ · ที่อยู่ · checkout เต็ม · พรีออเดอร์ · รายละเอียดสินค้าเต็ม | ▢ |
+| 8 | ~~D1 → D2~~ → C3 → D3 → C1 | ~~ประวัติออเดอร์ · ที่อยู่~~ ✅ · checkout เต็ม · พรีออเดอร์ · รายละเอียดสินค้าเต็ม | ▢ |
 | 9 | ที่เหลือ | D4–D10 · E2–E6 · I8–I11 | ▢ / ⏸ |
 
 **รอคนอื่น:** backend — F1 แนบสลิปย้อนหลัง · F2 admin API ค่าส่งเว็บ · F3 รีวิว analytics · F4 dashboard รอบพรีออเดอร์ · Q-BE8 เปิดปฏิเสธ `product_stock_quantity` ใน PATCH (frontend พร้อมแล้ว — I12) ·
@@ -179,7 +179,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | รหัส | หน้า | ต้นแบบ FrontOffice | API | ขึ้นกับ | สถานะ |
 |---|---|---|---|---|---|
 | D1 | ประวัติคำสั่งซื้อ | `account/purchases` (+`[id]`) | `/shop/orders` (กรองสถานะ + แบ่งหน้าที่ server) · `/shop/orders/:id` | — | ✅ 2026-10-07 (branch `feat/purchases`) — รายการ + รายละเอียด (ย้ายหน้าออเดอร์เดิมมา · `/customer/order/[id]` redirect) · ทดสอบ 11/11 · ไม่มีรูปสินค้า/ปุ่มรีวิว (Q-BE13 · D7) |
-| D2 | สมุดที่อยู่ | `account/address` (541) | `/shop/addresses` (+`:id`, `:id/default`) | B2 | ▢ |
+| D2 | สมุดที่อยู่ | `account/address` (541) | `/shop/addresses` (+`:id`, `:id/default`) | B2 | ✅ 2026-10-07 (branch `feat/address-book`) — รายการ · เพิ่ม/แก้ (modal) · ตั้งค่าเริ่มต้น · ลบ (ยืนยันก่อน) · เมนู "ที่อยู่" ใน AccountSideMenu · cache ร่วมกับ checkout · ทดสอบ 8/8 · **ไม่มีชื่อ/เบอร์ผู้รับ** (backend หลักไม่เก็บในที่อยู่ — กรอกตอน checkout) |
 | D3 | พรีออเดอร์ทั้ง flow | `preorder/*` · `account/preorders/*` (~2,700 บรรทัด) | `/catalog/preorder-rounds` (+`:id`) · `/shop/preorders` (+`cancel`, `payment`) · `delivery-quote` ส่ง `product_ids` | G1 · C1 | ⏸ |
 | D4 | แต้มสะสม · คูปอง · แชร์แต้ม | `account/member` (567) | `/shop/points` (+`share`) · `/shop/coupons` (+`check`, `redeem`) | B2 | ▢ |
 | D5 | รายการโปรด | `account/favorites` | `/shop/favorites` (`data.items`) | B2 | ▢ |
