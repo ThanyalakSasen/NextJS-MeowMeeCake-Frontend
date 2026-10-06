@@ -14,6 +14,7 @@ import { alert } from "@/lib/alert";
 import { refId } from "@/lib/refId";
 import type { Review } from "@/types/review";
 import { isApiError } from "@/types/api";
+import { LIST_ALL } from "@/lib/http";
 
 export interface ReviewRow extends Review {
   userName: string;
@@ -35,8 +36,8 @@ export function useReviewsViewModel() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const reviewsQ = useQuery({ queryKey: ["reviews"], queryFn: () => reviewsService.list({ limit: 200 }) });
-  const productsQ = useQuery({ queryKey: ["products", { limit: 200 }], queryFn: () => productsService.list({ limit: 200 }) });
+  const reviewsQ = useQuery({ queryKey: ["reviews"], queryFn: () => reviewsService.list({ limit: LIST_ALL }) });
+  const productsQ = useQuery({ queryKey: ["products", { limit: LIST_ALL }], queryFn: () => productsService.list({ limit: LIST_ALL }) });
 
   const rows: ReviewRow[] = useMemo(() => {
     return (reviewsQ.data?.data ?? []).map((r) => {

@@ -19,6 +19,7 @@ import type { Expense, ExpenseInput } from "@/types/expense";
 import { isApiError } from "@/types/api";
 import { toExpenseInput, type ExpenseFormValue } from "./expenseForm";
 import type { RecurringReminder } from "./_components/RecurringRemindersList";
+import { LIST_ALL } from "@/lib/http";
 
 export function useFinanceExpensesViewModel() {
   const t = useTranslations();
@@ -26,8 +27,8 @@ export function useFinanceExpensesViewModel() {
   const qc = useQueryClient();
   const perm = usePermission("reports");
 
-  const expensesQ = useQuery({ queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: 200 }) });
-  const ordersQ = useQuery({ queryKey: ["orders"], queryFn: () => ordersService.list({ limit: 200 }) });
+  const expensesQ = useQuery({ queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: LIST_ALL }) });
+  const ordersQ = useQuery({ queryKey: ["orders"], queryFn: () => ordersService.list({ limit: LIST_ALL }) });
 
   const expenses = useMemo(() => expensesQ.data?.data ?? [], [expensesQ.data]);
   const orders = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);

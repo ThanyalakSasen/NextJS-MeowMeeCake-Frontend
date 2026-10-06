@@ -17,6 +17,7 @@ import type { StockStatus, IngredientTxnType } from "@/constants/enumConfig";
 import { getIngredientStatus, stockPercent } from "../ingredientStatus";
 import { refId } from "@/lib/refId";
 import { isApiError } from "@/types/api";
+import { LIST_ALL } from "@/lib/http";
 
 export interface StockRow {
   _id: string;
@@ -48,7 +49,7 @@ export function useIngredientStockViewModel() {
 
   const ingredientsQ = useQuery({
     queryKey: ["ingredients"],
-    queryFn: () => ingredientsService.list({ limit: 100 }),
+    queryFn: () => ingredientsService.list({ limit: LIST_ALL }),
   });
   const unitsQ = useQuery({
     queryKey: ["units"],

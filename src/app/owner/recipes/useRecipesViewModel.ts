@@ -24,6 +24,7 @@ import { isApiError } from "@/types/api";
 import { productKindOf } from "@/types/product";
 import type { RecipeSubmitValue } from "./_components/MainRecipeModal";
 import type { ComponentSubmitValue } from "./_components/ComponentFormModal";
+import { LIST_ALL } from "@/lib/http";
 
 export type RecipeTab = "main" | "components";
 
@@ -34,13 +35,13 @@ export function useRecipesViewModel() {
 
   const [activeTab, setActiveTab] = useState<RecipeTab>("main");
 
-  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: 200 }) });
-  const componentsQ = useQuery({ queryKey: ["components"], queryFn: () => recipeComponentsService.list({ limit: 200 }) });
+  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: LIST_ALL }) });
+  const componentsQ = useQuery({ queryKey: ["components"], queryFn: () => recipeComponentsService.list({ limit: LIST_ALL }) });
   const componentCategoriesQ = useQuery({ queryKey: ["component-categories"], queryFn: () => componentCategoriesService.list() });
-  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: 200 }) });
+  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: LIST_ALL }) });
   const productCategoriesQ = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
   const unitsQ = useQuery({ queryKey: ["units"], queryFn: () => unitsService.list() });
-  const ingredientsQ = useQuery({ queryKey: ["ingredients"], queryFn: () => ingredientsService.list({ limit: 200 }) });
+  const ingredientsQ = useQuery({ queryKey: ["ingredients"], queryFn: () => ingredientsService.list({ limit: LIST_ALL }) });
 
   const rawRecipes = useMemo(() => recipesQ.data?.data ?? [], [recipesQ.data]);
   const rawComponents = useMemo(() => componentsQ.data?.data ?? [], [componentsQ.data]);

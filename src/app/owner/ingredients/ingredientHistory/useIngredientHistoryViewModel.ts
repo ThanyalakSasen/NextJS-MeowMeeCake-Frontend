@@ -11,6 +11,7 @@ import { unitsService } from "@/services/units";
 import { usePermission } from "@/context/PermissionsContext";
 import type { IngredientTxnType } from "@/constants/enumConfig";
 import { refId } from "@/lib/refId";
+import { LIST_ALL } from "@/lib/http";
 
 export interface HistoryRow {
   _id: string;
@@ -34,11 +35,11 @@ export function useIngredientHistoryViewModel() {
 
   const txnsQ = useQuery({
     queryKey: ["ingredient-transactions"],
-    queryFn: () => ingredientTransactionsService.list({ limit: 100 }),
+    queryFn: () => ingredientTransactionsService.list({ limit: LIST_ALL }),
   });
   const ingredientsQ = useQuery({
     queryKey: ["ingredients"],
-    queryFn: () => ingredientsService.list({ limit: 100 }),
+    queryFn: () => ingredientsService.list({ limit: LIST_ALL }),
   });
   const unitsQ = useQuery({
     queryKey: ["units"],

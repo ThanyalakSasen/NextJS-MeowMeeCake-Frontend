@@ -17,6 +17,7 @@ import type { IngredientInput } from "@/types/ingredient";
 import { getIngredientStatus, stockPercent } from "./ingredientStatus";
 import { refId } from "@/lib/refId";
 import { isApiError } from "@/types/api";
+import { LIST_ALL } from "@/lib/http";
 
 export interface IngredientRow {
   _id: string;
@@ -53,7 +54,7 @@ export function useIngredientsViewModel() {
 
   const ingredientsQ = useQuery({
     queryKey: ["ingredients"],
-    queryFn: () => ingredientsService.list({ limit: 100 }),
+    queryFn: () => ingredientsService.list({ limit: LIST_ALL }),
   });
   const categoriesQ = useQuery({
     queryKey: ["ingredient-categories"],

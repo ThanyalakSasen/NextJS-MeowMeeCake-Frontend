@@ -11,6 +11,7 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isUserLocked, type EmploymentType } from "@/types/user";
 import { isApiError } from "@/types/api";
+import { LIST_ALL } from "@/lib/http";
 
 export interface EmployeeRow {
   _id: string;
@@ -41,7 +42,7 @@ export function useEmployeesViewModel() {
   // key แยก ["users","staff"] เพราะหน้าอื่นใช้ ["users"] เดิมกับชุดข้อมูล/limit ต่างกัน (แคชจะปนกัน) — invalidate ["users"] ยังครอบถึง
   const usersQ = useQuery({
     queryKey: ["users", "staff"],
-    queryFn: () => usersService.list({ limit: 100, role_type: "owner,staff" }),
+    queryFn: () => usersService.list({ limit: LIST_ALL, role_type: "owner,staff" }),
   });
   const rolesQ = useQuery({
     queryKey: ["roles"],

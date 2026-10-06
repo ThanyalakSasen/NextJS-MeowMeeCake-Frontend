@@ -15,6 +15,7 @@ import type { StockStatus } from "@/constants/enumConfig";
 import { getStockStatus } from "./stockStatus";
 import { refId } from "@/lib/refId";
 import { isApiError } from "@/types/api";
+import { LIST_ALL } from "@/lib/http";
 
 export interface StockProductRow {
   _id: string;
@@ -31,7 +32,7 @@ export interface StockProductRow {
 export type StatusFilter = "all" | StockStatus;
 
 // เฉพาะสินค้าปกติ — พรีออเดอร์ไม่มีสต็อกให้ปรับที่นี่
-const ALL_PARAMS = { limit: 200, is_preorder: false } as const;
+const ALL_PARAMS = { limit: LIST_ALL, is_preorder: false } as const;
 
 export function useProductStockViewModel() {
   const t = useTranslations();

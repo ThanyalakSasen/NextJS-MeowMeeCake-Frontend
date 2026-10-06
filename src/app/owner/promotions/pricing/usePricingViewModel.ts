@@ -18,6 +18,7 @@ import { refId } from "@/lib/refId";
 import { productKindOf, type ProductKind } from "@/types/product";
 import { isApiError } from "@/types/api";
 import { calcSalePrice, discountFromSalePrice, type Discount } from "./pricingHelpers";
+import { LIST_ALL } from "@/lib/http";
 
 export interface PricingRow {
   _id: string;
@@ -41,7 +42,7 @@ export function usePricingViewModel() {
   const qc = useQueryClient();
   const perm = usePermission("products");
 
-  const productsQ = useQuery({ queryKey: ["products", { limit: 200 }], queryFn: () => productsService.list({ limit: 200 }) });
+  const productsQ = useQuery({ queryKey: ["products", { limit: LIST_ALL }], queryFn: () => productsService.list({ limit: LIST_ALL }) });
   const catsQ = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
 
   const [search, setSearch] = useState("");

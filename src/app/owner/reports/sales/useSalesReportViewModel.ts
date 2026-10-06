@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
 import { reportsService } from "@/services/reports";
 import { productsService } from "@/services/products";
+import { LIST_ALL } from "@/lib/http";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import {
   enrichWithCategory, valueOf, CATEGORY_ALL,
@@ -34,7 +35,7 @@ export function useSalesReportViewModel() {
         date_to: rangeEnd.toISOString(),
       }),
   });
-  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: 200 }) });
+  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: LIST_ALL }) });
 
   const isLoading = topProductsQ.isLoading || productsQ.isLoading;
   const isError = topProductsQ.isError;

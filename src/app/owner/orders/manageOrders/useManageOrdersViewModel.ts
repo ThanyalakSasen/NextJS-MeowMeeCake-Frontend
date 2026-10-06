@@ -19,6 +19,7 @@ import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import type { DeliveryUpdateInput, Order, OrderType } from "@/types/order";
 import { isApiError } from "@/types/api";
 import { isFinalStatus } from "./orderStatus";
+import { LIST_ALL } from "@/lib/http";
 
 export function useManageOrdersViewModel() {
   const t = useTranslations();
@@ -49,7 +50,7 @@ export function useManageOrdersViewModel() {
 
   const ordersQ = useQuery({
     queryKey: ["orders"],
-    queryFn: () => ordersService.list({ limit: 100 }),
+    queryFn: () => ordersService.list({ limit: LIST_ALL }),
   });
 
   const all = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);

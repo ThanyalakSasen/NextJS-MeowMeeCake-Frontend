@@ -16,6 +16,7 @@ import { isApiError } from "@/types/api";
 import type { Promotion } from "@/types/promotion";
 import type { CouponStatus, DiscountType } from "@/constants/enumConfig";
 import { deriveCouponStatus, toInput, type CouponFormValue } from "./couponForm";
+import { LIST_ALL } from "@/lib/http";
 
 export interface CouponRow extends Promotion {
   status: CouponStatus;
@@ -35,8 +36,8 @@ export function useCouponsViewModel() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Promotion | null>(null);
 
-  const q = useQuery({ queryKey: ["promotions"], queryFn: () => promotionsService.list({ limit: 200 }) });
-  const productsQ = useQuery({ queryKey: ["products", { limit: 200 }], queryFn: () => productsService.list({ limit: 200 }) });
+  const q = useQuery({ queryKey: ["promotions"], queryFn: () => promotionsService.list({ limit: LIST_ALL }) });
+  const productsQ = useQuery({ queryKey: ["products", { limit: LIST_ALL }], queryFn: () => productsService.list({ limit: LIST_ALL }) });
   const categoriesQ = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
 
   const rows = useMemo<CouponRow[]>(

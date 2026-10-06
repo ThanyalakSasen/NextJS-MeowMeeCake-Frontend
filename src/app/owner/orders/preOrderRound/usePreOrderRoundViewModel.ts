@@ -25,6 +25,7 @@ import type { Preorder } from "@/types/preorder";
 import type { DeliveryUpdateInput } from "@/types/order";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 
+import { LIST_ALL } from "@/lib/http";
 export type TabKey = "rounds" | "orders";
 const TAB_KEYS: TabKey[] = ["rounds", "orders"];
 
@@ -45,12 +46,12 @@ export function usePreOrderRoundViewModel() {
   // ── สินค้าพรีออเดอร์ (ใช้เป็นตัวเลือกตอนเพิ่มสินค้าเข้ารอบ) ──
   const productsQ = useQuery({
     queryKey: ["products", "preorder-type"],
-    queryFn: () => productsService.list({ limit: 200, is_preorder: true }),
+    queryFn: () => productsService.list({ limit: LIST_ALL, is_preorder: true }),
   });
   const preorderProducts = productsQ.data?.data ?? [];
 
   // ══════════════════ แท็บ 1: รอบพรีออเดอร์ ══════════════════
-  const roundsQ = useQuery({ queryKey: ["preorder-rounds"], queryFn: () => preorderRoundsService.list({ limit: 100 }) });
+  const roundsQ = useQuery({ queryKey: ["preorder-rounds"], queryFn: () => preorderRoundsService.list({ limit: LIST_ALL }) });
   const rounds = useMemo(() => roundsQ.data?.data ?? [], [roundsQ.data]);
 
   const [roundSearch, setRoundSearchState] = useState("");
@@ -189,7 +190,7 @@ export function usePreOrderRoundViewModel() {
   };
 
   // ══════════════════ แท็บ 2: คำสั่งซื้อเค้กวันเกิด (Preorders) ══════════════════
-  const preordersQ = useQuery({ queryKey: ["preorders"], queryFn: () => preordersService.list({ limit: 200 }) });
+  const preordersQ = useQuery({ queryKey: ["preorders"], queryFn: () => preordersService.list({ limit: LIST_ALL }) });
   const preorders = useMemo(() => preordersQ.data?.data ?? [], [preordersQ.data]);
 
   const [orderSearch, setOrderSearchState] = useState("");

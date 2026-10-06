@@ -20,6 +20,7 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import { COGS_EXPENSE_CATEGORIES } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
+import { LIST_ALL } from "@/lib/http";
 
 export interface PnLRow {
   key: string;
@@ -32,7 +33,7 @@ export function useFinanceSummaryViewModel() {
   const t = useTranslations();
   const locale = useLocale();
 
-  const expensesQ = useQuery({ queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: 200 }) });
+  const expensesQ = useQuery({ queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: LIST_ALL }) });
   const expenses = useMemo(() => expensesQ.data?.data ?? [], [expensesQ.data]);
 
   const [period, setPeriod] = useState<PeriodType>("month");
