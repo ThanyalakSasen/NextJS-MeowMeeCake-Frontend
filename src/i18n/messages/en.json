@@ -665,7 +665,15 @@
     "refundFailed": "Could not record the refund",
     "noPaidPayment": "No paid payment found — check the finance page",
     "refundNoPermission": "Approving payments permission is required to confirm refunds",
-    "awaitingRefundAlert": "{n} cancelled orders were already paid — refunds are owed"
+    "awaitingRefundAlert": "{n} cancelled orders were already paid — refunds are owed",
+    "paymentDueAt": "Pay by",
+    "pickupPoint": "Pickup point",
+    "pickupOn": "Pickup date",
+    "subtotal": "Subtotal",
+    "deliveryFee": "Delivery fee",
+    "discount": "Discount",
+    "pointsUsed": "{n} points used ({amount} off)",
+    "couponUsed": "Personal coupon used ({amount} off)"
   },
   "preorderRound": {
     "paymentDue": "Payment due",
@@ -1098,7 +1106,10 @@
     "fieldUsageLimit": "Maximum redemptions",
     "unlimitedPlaceholder": "Unlimited",
     "fieldPerCustomer": "Uses per customer",
-    "percentMax": "Percent discount must not exceed 100"
+    "percentMax": "Percent discount must not exceed 100",
+    "fieldPointsCost": "Redeem with points",
+    "pointsCostHint": "Customers can redeem this as a personal coupon on the website · leave empty to disable",
+    "pointsCostPlaceholder": "e.g. 100 points"
   },
   "recipes": {
     "title": "Manage Recipes",
@@ -1538,6 +1549,10 @@
     "deleted": "Category deleted",
     "saveFailed": "Failed to save category",
     "deleteFailed": "Failed to delete category",
-    "inUse": "Cannot delete \"{name}\": {n} products still use this category"
+    "inUse": "Cannot delete \"{name}\": {n} products still use this category",
+    "shipsNationwide": "Ships nationwide",
+    "shipsNationwideAuto": "Not set yet — guessed from the name (sourdough = nationwide). Toggle to set it.",
+    "shipsNationwideHint": "Ships nationwide = web orders can be delivered to any province · off = store province only (pickup is always allowed)",
+    "shippingSaved": "Category shipping saved"
   }
 }

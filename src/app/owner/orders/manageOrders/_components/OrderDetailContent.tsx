@@ -92,6 +92,12 @@ export function OrderDetailContent({
               <span className="text-gray-700">
                 {it.product_name}
                 {it.variant_name ? ` (${it.variant_name})` : ""}
+                {(it.selected_options ?? []).map((o) => (
+                  <span key={o.option_name} className="block text-xs text-gray-500">
+                    + {o.option_name}
+                    {o.text_value ? `: "${o.text_value}"` : ""}
+                  </span>
+                ))}
               </span>
               <span className="text-gray-600">×{it.quantity}</span>
             </div>
@@ -114,6 +120,28 @@ export function OrderDetailContent({
           <span className="text-gray-600">{t("orders.orderedAt")}</span>
           <span className="font-medium text-gray-800">{formatDate(order.created_at, locale, { withTime: true })}</span>
         </div>
+        {/* ออเดอร์เว็บ: ต้องจ่ายภายใน 30 นาที — เลยแล้วยังไม่ส่งสลิป backend ยกเลิกให้ (customer-backend-merge.md §8.8) */}
+        {order.payment_due_at && order.payment_status !== "paid" && order.payment_status !== "refunded" && !isCancelled && (
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">{t("orders.paymentDueAt")}</span>
+            <span className="font-medium text-gray-800">{formatDate(order.payment_due_at, locale, { withTime: true })}</span>
+          </div>
+        )}
+        {order.order_type === "takeaway" && order.pickup_point && (
+          <div className="flex items-start justify-between gap-3">
+            <span className="shrink-0 text-gray-600">{t("orders.pickupPoint")}</span>
+            <span className="text-right font-medium text-gray-800">
+              {order.pickup_point.point_name}
+              {order.pickup_point.address && <span className="block text-xs font-normal text-gray-500">{order.pickup_point.address}</span>}
+            </span>
+          </div>
+        )}
+        {order.order_type === "takeaway" && order.pickup_date && (
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">{t("orders.pickupOn")}</span>
+            <span className="font-medium text-gray-800">{formatDate(order.pickup_date, locale)}</span>
+          </div>
+        )}
       </div>
 
       {order.order_type === "delivery" && (
@@ -179,10 +207,36 @@ export function OrderDetailContent({
 
       <Divider className="!my-0" />
 
+      <div className="flex flex-col gap-1.5 text-sm">
+        <AmountRow label={t("orders.subtotal")} value={order.subtotal} locale={locale} />
+        {order.delivery_fee > 0 && <AmountRow label={t("orders.deliveryFee")} value={order.delivery_fee} locale={locale} />}
+        {/* discount_amount = ส่วนลดรวม (โค้ด/คูปอง/แต้ม) — แตกที่มาเมื่อเป็นออเดอร์เว็บที่ใช้แต้มหรือคูปอง */}
+        {order.discount_amount > 0 && <AmountRow label={t("orders.discount")} value={-order.discount_amount} locale={locale} />}
+        {order.points_redeemed > 0 && (
+          <p className="m-0 text-right text-xs text-gray-500">
+            {t("orders.pointsUsed", { n: order.points_redeemed, amount: formatCurrency(order.points_discount, locale) })}
+          </p>
+        )}
+        {order.coupon_discount > 0 && (
+          <p className="m-0 text-right text-xs text-gray-500">
+            {t("orders.couponUsed", { amount: formatCurrency(order.coupon_discount, locale) })}
+          </p>
+        )}
+      </div>
+
       <div className="flex items-center justify-between">
         <span className="font-medium text-gray-700">{t("orders.totalLabel")}</span>
         <span className="text-lg font-bold text-brown-800">{formatCurrency(order.total_amount, locale)}</span>
       </div>
+    </div>
+  );
+}
+
+function AmountRow({ label, value, locale }: { label: string; value: number; locale: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-gray-600">{label}</span>
+      <span className="text-gray-800">{formatCurrency(value, locale)}</span>
     </div>
   );
 }

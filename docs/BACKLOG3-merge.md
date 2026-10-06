@@ -1,4 +1,4 @@
-🟡 type พร้อม (`status` · `order_item_id` populate) · ▢ UI (E4)
+✅ 2026-10-06 — ช่อง "แลกด้วยแต้ม" ในฟอร์มคูปอง (ว่าง = ส่ง null ปิดการแลก)
 
 > สร้าง: 2026-10-06 · ขอบเขต: ฝั่ง Frontend (`src/**`)
 > - repo นี้: `D:\1.2569\FrontEnd\NextJS-MeowMeeCake-Frontend` (branch `feat/storefront-checkout`)
@@ -29,7 +29,7 @@
 | 3 | I1 | ~~เมนูสิทธิ์ `store_info`~~ ✅ | — |
 | 4 | I2 | ปุ่มคืนเงิน — ออเดอร์ "ยกเลิก + ชำระแล้ว" ค้างรอโอนคืน | ✅ 2026-10-06 — ป้าย "รอโอนคืน" ในตาราง + แถบเตือนพร้อมปุ่มกรอง · drawer มี `RefundSection` (ยอด · เหตุผลยกเลิก · ปุ่มยืนยันโอนคืน + popup ยืนยัน · ต้องมีสิทธิ์ `payments.approve`) ทั้งออเดอร์และพรีออเดอร์ · **ยังไม่ทดสอบกับ backend จริง** |
 | 5 | G1 · G2 | ส่งคำถาม path หน้าออเดอร์ลูกค้า + ทางเข้าโปรไฟล์ (กระทบ 9 เรื่อง) | ⏸ |
-| 6 | I3–I7 | แจ้งเตือนหมวด `customer` · POS กลุ่มตัวเลือก (+E1) · สวิตช์ส่งทั่วประเทศ · drawer ออเดอร์เว็บ · คูปองแลกแต้ม | 🟡 |
+| 6 | I4 | POS กลุ่มตัวเลือก (+E1) — I3 · I5 · I6 · I7 ✅ แล้ว | 🟡 |
 | 7 | B1 → B2 | หน้าสมัคร/ลืมรหัส/ยืนยันอีเมล (ลิงก์ในหน้า login ยัง 404) → บัญชีของฉัน | ▢ |
 | 8 | D1 → D2 → C3 → D3 → C1 | ประวัติออเดอร์ · ที่อยู่ · checkout เต็ม · พรีออเดอร์ · รายละเอียดสินค้าเต็ม | ▢ |
 | 9 | ที่เหลือ | D4–D10 · E2–E6 · I8–I11 | ▢ / ⏸ |
@@ -201,6 +201,51 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 ---
 
+### E1 + I4 — แผนงาน: กลุ่มตัวเลือกสินค้า (หลังร้าน) + เลือกตัวเลือกใน POS (วางแผน 2026-10-06)
+
+**ทำไมต้องทำ:** backend เลิกระบบตัวเลือกแบบมีสต็อกแยก (Y9) แล้วเปลี่ยนเป็น **กลุ่มตัวเลือกบวกราคา** (BE §8.3) — ตอนนี้ frontend
+(1) ตั้งกลุ่มตัวเลือกให้สินค้าไม่ได้เลย และ (2) POS ไม่ส่ง `variant_ids` / `selected_options` → ถ้าสินค้ามีกลุ่ม "บังคับเลือก"
+(ตั้งจากหลังร้านฝั่ง FrontOffice พอร์ต 4000 หรือหน้าเว็บลูกค้า) **ขายใน POS ได้ 400** ("กรุณาเลือก … ของ …")
+
+**สัญญา API (backend `productCustomizationService.ts`)**
+- `GET /admin/products/:id/customization` (products.view) → `{ groups: [{ _id, group_name, min_select, max_select, variants: [{ _id, variant_name, variant_price }] }], options: [{ _id, option_name, is_text_input, max_text_length, extra_price, is_required }] }`
+- `PUT` (products.update) ส่ง**ทั้งชุด**: มี `_id` = แก้ · ไม่มี = เพิ่ม · หายไป = ลบ · `min_select` 0 = ไม่บังคับ · `variant_price` / `extra_price` = ราคาที่**บวกเพิ่ม**
+- ตัวเลือกเก่าที่ไม่มีกลุ่ม → backend รวมเป็นกลุ่ม `_id: "legacy"` ชื่อ "ตัวเลือก" เลือก 1 (บังคับ)
+- `GET /admin/pos/scan` คืน `customization` เพิ่ม · `variants[]` **ไม่มี `variant_stock` แล้ว** (สต็อกอยู่ที่ตัวสินค้าอย่างเดียว)
+- รายการออเดอร์ (`POST /admin/orders` items[]) รับ `variant_ids: string[]` + `selected_options: [{ option_id, text_value? }]` · backend ตรวจ min/max · ออปชันบังคับ · ความยาวข้อความ แล้วคิดราคาเอง
+- ⚠️ `GET /admin/products` (รายการ) **ไม่บอกว่าสินค้าไหนมีกลุ่มตัวเลือก** → POS ต้องถามทีละสินค้า (ดู Q-BE9)
+
+**E1 — หน้าแก้สินค้า: ตัวแก้กลุ่มตัวเลือก**
+
+| ขั้น | งาน | ไฟล์ |
+|---|---|---|
+| 1 | type + service: `ProductCustomization` · `productCustomizationService.get/save` | ใหม่ `types/productCustomization.ts` · `services/productCustomization.ts` |
+| 2 | ViewModel: โหลดชุดปัจจุบัน · แก้ในหน่วยความจำ · บันทึกทั้งชุดด้วย PUT · ตรวจก่อนส่ง (ชื่อไม่ว่าง · `0 ≤ min ≤ max` · `max ≥ 1` · ราคา ≥ 0 · กลุ่มต้องมีตัวเลือก ≥ max) | ใหม่ `products/[id]/edit/useCustomizationEditor.ts` |
+| 3 | UI: การ์ด "ตัวเลือกสินค้า" ในหน้าแก้สินค้า — รายการกลุ่ม (ชื่อ · บังคับ/ไม่บังคับ · เลือกได้สูงสุด · ตัวเลือก + ราคาบวกเพิ่ม · เพิ่ม/ลบ/เรียง) + รายการออปชันเสริม (ชื่อ · ช่องกรอกข้อความ/ติ๊ก · ความยาวสูงสุด · ราคาบวกเพิ่ม · บังคับ) · ปุ่มบันทึกแยกจากฟอร์มสินค้า (คนละ endpoint) | ใหม่ `products/[id]/edit/_components/CustomizationEditor.tsx` (+ `GroupEditor` · `OptionEditor`) · `EditProductView.tsx` |
+| 4 | ต้นแบบหน้าตา: FrontOffice `src/app/components/products/ProductCustomizationEditor.tsx` (ยก UX มา เขียนใหม่แบบ MVVM + i18n) | — |
+| 5 | สิทธิ์: ดู = `products.view` · แก้ = `products.update` · กลุ่ม `legacy` แสดงได้ แต่ตอนบันทึกต้องส่งตัวเลือกเดิมกลับไปในกลุ่มใหม่ (backend สร้างกลุ่มจริงให้) | — |
+
+**I4 — POS: เลือกตัวเลือกก่อนลงบิล**
+
+| ขั้น | งาน | ไฟล์ |
+|---|---|---|
+| 1 | `types/pos.ts`: เพิ่ม `customization` · ตัด `variant_stock` | `types/pos.ts` · `services/pos.ts` |
+| 2 | ตะกร้า: บรรทัดใหม่มี `variantIds` · `options` · `extraPrice` · `label` (ข้อความตัวเลือก) · **key ของบรรทัด = สินค้า + ชุดตัวเลือก** (สินค้าเดียวกันคนละตัวเลือก = คนละบรรทัด) · ราคา/หน่วย = ราคาขาย + ราคาบวกเพิ่ม · สต็อกนับรวมทุกบรรทัดของสินค้าเดียวกัน | `posCart.ts` (`addLine` · `setLineQty` · `removeLine` · `isAtStock` · `buildOrderInput` ส่ง `variant_ids`/`selected_options`) |
+| 3 | เพิ่มสินค้า: ก่อนลงบิลดึง customization ของสินค้านั้น (scan มีให้แล้ว · เลือกจากคำแนะนำ = `GET …/customization` + cache React Query) → ไม่มีกลุ่ม/ออปชัน = ลงบิลทันทีเหมือนเดิม · มี = เปิด modal เลือก | `usePOSViewModel.ts` |
+| 4 | modal เลือกตัวเลือก: แต่ละกลุ่ม radio (max 1) / checkbox (max > 1) + บอก "บังคับ / เลือกได้ไม่เกิน N" · ออปชันติ๊ก/กรอกข้อความ · ราคารวมสด · ปุ่มเพิ่มลงบิลกดได้เมื่อครบเงื่อนไข (ตรวจแบบเดียวกับ backend `resolveCustomization`) | ใหม่ `OrderInStore/_components/CustomizationPickerModal.tsx` |
+| 5 | บิล: แสดงตัวเลือกใต้ชื่อสินค้า · โปรโมชันคิดจากยอดบรรทัดที่รวมราคาบวกเพิ่มแล้ว (`toPromoLines`) | `BillCard.tsx` · `posPromotion.ts` |
+| 6 | เทส pure function ของตะกร้า/ตรวจตัวเลือก (ถ้าจะเริ่มมีเทสฝั่ง frontend) หรือทดสอบมือกับ backend local | — |
+
+**ทดสอบ (ต้องมีสินค้าที่ตั้งกลุ่มแล้ว — ทำ E1 ก่อน)**
+- [ ] ตั้งกลุ่ม "ขนาด" (บังคับ 1) + "ท็อปปิ้ง" (ไม่บังคับ สูงสุด 2) + ออปชัน "ข้อความบนเค้ก" (กรอกข้อความ) → บันทึก → โหลดใหม่ค่าตรง
+- [ ] POS: สแกนสินค้านั้น → modal → ไม่เลือกขนาดกดไม่ได้ · เลือกครบ → ลงบิลราคาถูก → ชำระ → ออเดอร์มี `variant_name` + ออปชัน (drawer I6)
+- [ ] สินค้าเดียวกันคนละตัวเลือก = 2 บรรทัด · รวมจำนวนไม่เกินสต็อก
+- [ ] สินค้าไม่มีกลุ่ม: ลงบิลทันทีเหมือนเดิม (ไม่มี modal)
+
+**ลำดับ:** E1 ก่อน (ต้องมีที่ตั้งกลุ่ม) → I4 · ประมาณ 2 PR
+
+---
+
 ## F. ต้องขอ backend ก่อน
 
 ### F1 ⏸ แนบสลิปย้อนหลังเมื่อยังไม่มีรายการชำระเงิน
@@ -297,6 +342,7 @@ deploy พร้อมกันได้ (backend ก่อน) · แต่ PR 
 | Q-BE4 | รีวิว analytics / dashboard / รายสินค้า จะย้ายเมื่อไหร่ · shape ของ response | BE §8.20 (R5) | F3 | | |
 | Q-BE5 | จะมี endpoint สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบไหม | FrontOffice ใช้ `/owner/preorder-rounds/dashboard` · `/:id/customers` | F4 | | |
 | Q-BE6 | ถ้าเลือก G1 (ก) ช่วยเปลี่ยน `link` ของแจ้งเตือนลูกค้าเป็น `/customer/order/<id>` ได้ไหม | ตอนนี้ `/customer/account/purchases/<id>` | G1 · D6 | | |
+| Q-BE9 | เพิ่ม flag `has_customization` (หรือจำนวนกลุ่ม/ออปชัน) ใน `GET /admin/products` ได้ไหม — POS จะได้ไม่ต้องถาม customization ทีละสินค้าก่อนลงบิล | ตอนนี้มีแค่ใน `/admin/pos/scan` · `/customization` รายตัว | I4 | | |
 | Q-BE8 | frontend เลิกส่ง `product_stock_quantity` ใน PATCH แล้ว (PR #19) — เปิดการปฏิเสธฝั่ง backend ได้เลยไหม | BACKLOG5 §4 ยังรอ FrontEnd | I12 | | |
 | Q-BE7 | รีวิว + merge endpoint ล็อกอินด้วย LINE (`/api/auth/line` + `/callback` — branch `feat/line-login-endpoint`) · ตั้ง `LINE_AUTH_*` + Callback URL ใน Console ตอน deploy | ทำให้แล้ว 2026-10-06 รอรีวิว | B3 | | |
 

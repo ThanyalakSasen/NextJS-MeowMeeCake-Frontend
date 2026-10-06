@@ -22,6 +22,8 @@ export interface CouponFormValue {
   dateRange?: [Dayjs, Dayjs] | null;
   usageLimit?: number;
   perCustomer?: number;
+  /** แต้มที่ลูกค้าใช้แลกเป็นคูปองส่วนตัว (หน้าเว็บ) · ว่าง = แลกไม่ได้ — backend points_cost (§8.11) */
+  pointsCost?: number;
   chInstore: boolean;
   chOnline: boolean;
 }
@@ -51,6 +53,7 @@ export function fromPromotion(p: Promotion): CouponFormValue {
     dateRange: p.start_date && p.end_date ? [dayjs(p.start_date), dayjs(p.end_date)] : null,
     usageLimit: p.usage_limit ?? undefined,
     perCustomer: p.max_user_per_user ?? undefined,
+    pointsCost: p.points_cost ?? undefined,
     chInstore: p.applicable_channels.includes("instore"),
     chOnline: p.applicable_channels.includes("online"),
   };
@@ -80,6 +83,8 @@ export function toInput(v: CouponFormValue): PromotionInput {
     min_quantity: isProductScope || isCategoryScope ? v.minQuantity : undefined,
     usage_limit: v.usageLimit || undefined,
     max_user_per_user: v.perCustomer || undefined,
+    // null (ไม่ใช่ undefined) — ล้างช่องตอนแก้ไขต้องปิดการแลกจริง ไม่ใช่คงค่าเดิมไว้
+    points_cost: v.pointsCost && v.pointsCost > 0 ? Math.round(v.pointsCost) : null,
     applicable_channels: channels.length > 0 ? channels : ["online", "instore"],
     start_date: (start ?? dayjs()).startOf("day").toISOString(),
     end_date: (end ?? dayjs().add(1, "year")).endOf("day").toISOString(),
