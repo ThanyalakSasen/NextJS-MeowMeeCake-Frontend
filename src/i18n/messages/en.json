@@ -1110,7 +1110,10 @@
     "fieldUsageLimit": "Maximum redemptions",
     "unlimitedPlaceholder": "Unlimited",
     "fieldPerCustomer": "Uses per customer",
-    "percentMax": "Percent discount must not exceed 100"
+    "percentMax": "Percent discount must not exceed 100",
+    "fieldPointsCost": "Redeem with points",
+    "pointsCostHint": "Customers can redeem this as a personal coupon on the website · leave empty to disable",
+    "pointsCostPlaceholder": "e.g. 100 points"
   },
   "recipes": {
     "title": "Manage Recipes",

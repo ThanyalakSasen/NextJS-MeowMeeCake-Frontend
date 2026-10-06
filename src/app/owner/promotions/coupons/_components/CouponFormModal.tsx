@@ -176,6 +176,10 @@ export function CouponFormModal({
             <InputNumber min={1} placeholder="1" />
           </FormItem>
         </div>
+
+        <FormItem name="pointsCost" label={t("coupons.fieldPointsCost")} extra={t("coupons.pointsCostHint")}>
+          <InputNumber min={1} precision={0} placeholder={t("coupons.pointsCostPlaceholder")} />
+        </FormItem>
       </Form>
     </Modal>
   );

@@ -1110,7 +1110,10 @@
     "fieldUsageLimit": "จำนวนสิทธิ์สูงสุด",
     "unlimitedPlaceholder": "ไม่จำกัด",
     "fieldPerCustomer": "ใช้ได้ต่อลูกค้า (ครั้ง)",
-    "percentMax": "ส่วนลด % ต้องไม่เกิน 100"
+    "percentMax": "ส่วนลด % ต้องไม่เกิน 100",
+    "fieldPointsCost": "แลกด้วยแต้ม",
+    "pointsCostHint": "ลูกค้าใช้แต้มแลกคูปองนี้เป็นคูปองส่วนตัวในหน้าเว็บได้ · เว้นว่าง = แลกด้วยแต้มไม่ได้",
+    "pointsCostPlaceholder": "เช่น 100 แต้ม"
   },
   "recipes": {
     "title": "จัดการข้อมูลสูตร",
