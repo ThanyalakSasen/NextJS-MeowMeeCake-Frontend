@@ -3,7 +3,7 @@
 // ยืนยันคำสั่งซื้อ — แทน FrontOffice customer/checkout/page.tsx (เขียนใหม่บน /shop/* ของ backend หลัก)
 // 1) วิธีรับสินค้า: จัดส่ง (เลือก/เพิ่มที่อยู่ในสมุด + ชื่อ/เบอร์ผู้รับ) หรือรับที่ร้าน
 // 2) ค่าส่ง: POST /shop/orders/delivery-quote ตามจังหวัด · 3) โค้ดส่วนลด: POST /shop/promotions/validate
-// 4) สั่งซื้อ: POST /shop/orders (source "cart") → ไปหน้าออเดอร์เพื่อชำระเงิน/แนบสลิป
+// 4) สั่งซื้อ: POST /shop/orders (source "cart") → ไปหน้าออเดอร์ (/customer/account/purchases/[id]) เพื่อชำระเงิน/แนบสลิป
 // ยอดที่แสดงเป็นยอดประมาณ — backend คิดค่าส่ง/ส่วนลดใหม่เองตอนสร้างออเดอร์เสมอ
 // ตัดออก (backend ยังไม่รองรับ): จุดรับสินค้าหลายสาขา · คูปองในกระเป๋า · แต้มสะสม · วันเวลานัดรับ
 // ─────────────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ function CheckoutContent() {
     onSuccess: (order) => {
       setCount(0);
       qc.invalidateQueries({ queryKey: shopCartKey });
-      router.replace(`/customer/order/${order._id}?new=1`);
+      router.replace(`/customer/account/purchases/${order._id}?new=1`);
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : "สั่งซื้อไม่สำเร็จ กรุณาลองใหม่"),
   });

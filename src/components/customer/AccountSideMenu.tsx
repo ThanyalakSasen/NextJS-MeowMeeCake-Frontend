@@ -6,19 +6,22 @@
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { UserIcon, KeyIcon } from "@heroicons/react/24/solid";
+import { UserIcon, KeyIcon, ShoppingBagIcon } from "@heroicons/react/24/solid";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import DoorLogoutIcon from "./DoorLogoutIcon";
 
 const ITEMS = [
   { href: "/customer/account", label: "ข้อมูลส่วนตัว", icon: UserIcon },
   { href: "/customer/changepassword", label: "เปลี่ยนรหัสผ่าน", icon: KeyIcon },
+  { href: "/customer/account/purchases", label: "ประวัติการสั่งซื้อ", icon: ShoppingBagIcon },
 ] as const;
 
 export default function AccountSideMenu() {
   const pathname = usePathname();
   const router = useRouter();
   const { signOut } = useCustomerSession();
+  // ประวัติการสั่งซื้อ = รวมหน้ารายละเอียด /customer/account/purchases/[id]
+  const isActive = (href: string) => pathname === href || (href.endsWith("/purchases") && !!pathname?.startsWith(`${href}/`));
 
   const onLogout = async () => {
     await signOut();
@@ -35,7 +38,7 @@ export default function AccountSideMenu() {
       <div className="flex gap-2 overflow-x-auto rounded-2xl border border-stone-100 bg-white p-2 shadow-sm md:flex-col md:overflow-visible">
         <p className="m-0 hidden px-3.5 pb-1 pt-2 text-xs font-bold uppercase tracking-wide text-stone-400 md:block">บัญชีของฉัน</p>
         {ITEMS.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href} className={item(pathname === href)} aria-current={pathname === href ? "page" : undefined}>
+          <Link key={href} href={href} className={item(isActive(href))} aria-current={isActive(href) ? "page" : undefined}>
             <Icon className="h-4 w-4 shrink-0" />
             {label}
           </Link>
