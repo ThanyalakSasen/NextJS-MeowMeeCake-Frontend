@@ -205,7 +205,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | E2 | ข้อมูลร้าน (ที่อยู่ · พิกัด · ตลาดนัด · แผนที่ · โลโก้ · พร้อมเพย์) | `owner/store-info/*` | `/admin/store-profile` · `/admin/store-settings` · `/admin/weekly-markets` · `/admin/map-link` | เมนูใหม่ `store_info` · เลขพร้อมเพย์ของ A1 ตั้งที่นี่ (BE §8.19) | ✅ 2026-10-09 — ดู [BACKLOG4 E2](BACKLOG4-merge.md#4-หลังร้าน--หน้าที่ยังไม่มี) |
 | E3 | คำค้นเทียบเคียง | `products/search-synonyms` | `/admin/search-synonyms` (+`:id`) | สิทธิ์ `products` (BE §8.16) | ✅ 2026-10-09 — ดู [BACKLOG4 E3](BACKLOG4-merge.md#4-หลังร้าน--หน้าที่ยังไม่มี) |
 | E4 | จัดการรีวิวขั้นสูง | `reports/reviews/*` | `/admin/reviews/bulk` · `filter-options` · `:id/visibility` · `:id/sentiment` · `/admin/aspects/reorder` · `/admin/semantic-terms` | ไม่รวม analytics → F3 | ✅ 2026-10-09 — ดู [BACKLOG4 E4](BACKLOG4-merge.md#4-หลังร้าน--หน้าที่ยังไม่มี) |
-| E5 | ออเดอร์พร้อมส่ง | `orders/readyReders` | `/admin/orders?order_status=ready` | อาจทำเป็นตัวกรองในหน้า `manageOrders` แทน | ▢ |
+| E5 | ออเดอร์พร้อมส่ง | `orders/readyReders` | `/admin/orders?order_status=ready` | อาจทำเป็นตัวกรองในหน้า `manageOrders` แทน | ✅ 2026-10-09 — ดู [BACKLOG4 E5](BACKLOG4-merge.md#4-หลังร้าน--หน้าที่ยังไม่มี) |
 | E6 | ตัวกรองหมวด "ลูกค้า" ในแจ้งเตือน | — | `/admin/notifications?module=customer` | BE §8.17 · งานเล็ก | ✅ (PR #25 · `0f2f936`) — หมวด "ข้อความลูกค้า" ในตัวกรองหน้าประวัติแจ้งเตือน |
 
 ---

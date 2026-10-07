@@ -669,6 +669,8 @@
     "noPaidPayment": "No paid payment found — check the finance page",
     "refundNoPermission": "Approving payments permission is required to confirm refunds",
     "awaitingRefundAlert": "{n} cancelled orders were already paid — refunds are owed",
+    "readyDeliveryAlert": "{n} orders ready — waiting to be shipped (add the tracking number in the order details)",
+    "readyTakeawayAlert": "{n} orders ready — waiting for customer pickup",
     "paymentDueAt": "Pay by",
     "pickupPoint": "Pickup point",
     "pickupOn": "Pickup date",
