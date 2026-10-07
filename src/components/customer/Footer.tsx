@@ -1,5 +1,5 @@
 // Footer ของหน้าร้าน — ย้ายมาจาก FrontOffice (components/customer/Footer.tsx)
-// ลิงก์ "การจัดส่ง" / "ติดต่อเรา" ซ่อนไว้ก่อน จนกว่าจะย้ายหน้านั้นมา (ข้อมูลร้าน/ฟอร์มติดต่อ backend ยังไม่รองรับ)
+// ลิงก์ "การจัดส่ง" ซ่อนไว้ก่อน จนกว่าจะย้ายหน้านั้นมา (D9) · "ติดต่อเรา" → /customer/contact-us (D8)
 import Link from "next/link";
 import { FaFacebook } from "react-icons/fa";
 
@@ -34,6 +34,9 @@ export default function Footer() {
             <div className="flex flex-col gap-2">
               <Link href="/customer/product" className="text-gray-700 hover:text-gray-900 hover:underline transition-colors">
                 สินค้าทั้งหมด
+              </Link>
+              <Link href="/customer/contact-us" className="text-gray-700 hover:text-gray-900 hover:underline transition-colors">
+                ติดต่อเรา
               </Link>
             </div>
           </div>

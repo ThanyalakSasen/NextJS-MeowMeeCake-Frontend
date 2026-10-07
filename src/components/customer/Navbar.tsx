@@ -26,6 +26,7 @@ const NAV_LINKS = [
   { href: "/customer", label: "หน้าแรก" },
   { href: "/customer/product", label: "สินค้าทั้งหมด" },
   { href: "/customer/preorder", label: "พรีออเดอร์" },
+  { href: "/customer/contact-us", label: "ติดต่อเรา" },
 ] as const;
 
 export default function Navbar() {

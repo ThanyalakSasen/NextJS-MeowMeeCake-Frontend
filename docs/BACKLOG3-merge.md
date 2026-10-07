@@ -187,7 +187,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | D5 | รายการโปรด | `account/favorites` | `/shop/favorites` (`data.items`) | B2 | ▢ |
 | D6 | กระดิ่งแจ้งเตือน | `account/notifications` · `CustomerNotifications` | `/shop/notifications` (+`:id`) → `{ items, unread_count }` | G1 (ลิงก์ในแจ้งเตือน) | ⏸ |
 | D7 | เขียนรีวิว + รูป/วิดีโอ | `account/pendingreview/[id]` (705) | `/shop/reviews` · `/shop/reviews/upload` · `/catalog/review-aspects` | D1 | ✅ 2026-10-09 — ดู [BACKLOG4 D7](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
-| D8 | ติดต่อร้าน | `contact-us` | `/shop/contact` · `/catalog/contact-topics` | — | ▢ |
+| D8 | ติดต่อร้าน | `contact-us` | `/shop/contact` · `/catalog/contact-topics` | — | ✅ 2026-10-09 — ดู [BACKLOG4 D8](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
 | D9 | ตารางค่าส่ง · ข้อมูลร้าน | `shipping` · `StoreLogo` | `/catalog/shipping-zones` · `/catalog/store-info` · `/catalog/store-logo` | — | ▢ |
 | D10 | ลิงก์ชำระเงินใช้ครั้งเดียว | `customer/payment` | `/shop/payment-link` (+`redeem`) | G1 · Q-FO2 | ⏸ |
 
