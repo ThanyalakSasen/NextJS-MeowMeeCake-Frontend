@@ -116,6 +116,8 @@ export const MENU_SECTIONS: MenuSection[] = [
         ],
       },
       { labelKey: "storeDesign", icon: "PaintBrushIcon", href: "/owner/store-design" },
+      // พนักงานเห็นเมื่อมี store_info.view (แก้ได้เฉพาะหน้าร้านประจำสัปดาห์) · owner เห็นทุกหัวข้อ
+      { labelKey: "storeInfo", icon: "BuildingStorefrontIcon", href: "/owner/store-info", menuKey: "store_info" },
     ],
   },
 ];

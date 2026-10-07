@@ -55,6 +55,8 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/reports/reviews", menuKey: "products" },
   { prefix: "/owner/reports", menuKey: "reports" },
   { prefix: "/owner/finance", menuKey: "reports" },
+  // ข้อมูลร้าน (E2) — /admin/weekly-markets ใช้ store_info · ส่วนอื่น backend ให้ owner เท่านั้น
+  { prefix: "/owner/store-info", menuKey: "store_info" },
 ];
 
 export function resolveMenuKey(pathname: string): MenuKey | null {
