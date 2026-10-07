@@ -1,4 +1,4 @@
-✅ 2026-10-06 (branch `feat/product-customization`) — หน้าต่างเลือกตัวเลือกก่อนลงบิล · ดึงผ่าน `/admin/pos/scan` (สิทธิ์ orders.view) + cache · บรรทัดแยกตามชุดตัวเลือก · สต็อกรวมต่อสินค้า · ยังไม่ทดสอบกับ backend จริง
+# MeowMeeCake Frontend — BACKLOG 3: รวม FrontOffice (หน้าร้าน) + งานตาม backend `main`
 
 > สร้าง: 2026-10-06 · ขอบเขต: ฝั่ง Frontend (`src/**`)
 > - repo นี้: `D:\1.2569\FrontEnd\NextJS-MeowMeeCake-Frontend` (branch `feat/storefront-checkout`)
@@ -6,7 +6,7 @@
 > - backend หลัก: `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake` (branch `main`, `e3fb9bd`)
 > - เอกสารคู่ฝั่ง backend: [`customer-backend-merge.md`](../../../MeowMeeCake/NextJS-MeowMeeCake/docs/customer-backend-merge.md) (อ้างเป็น **BE §x.x**)
 >
-> ก่อนหน้า: [`BACKLOG2.md`](BACKLOG2.md)
+> ก่อนหน้า: [`BACKLOG2.md`](BACKLOG2.md) · **ถัดไป: [`BACKLOG4-merge.md`](BACKLOG4-merge.md)** — งานที่เหลือทั้งหมด (ตรวจ 2026-10-08 เทียบ FrontOffice ทุกหน้า) ดูที่นั่น
 
 ## สรุปล่าสุด (2026-10-06)
 
@@ -24,7 +24,7 @@
 
 | ลำดับ | รหัส | งาน | ระดับ |
 |---|---|---|---|
-| 1 | A4 | ลบ `src/lib/promptpay.ts` · คลิกดูหน้าจอจริง · commit | — |
+| 1 | A4 | ~~ลบ `src/lib/promptpay.ts`~~ ✅ · คลิกดูหน้าจอจริง · ~~commit~~ (PR #25) | — |
 | 2 | B3 | ตั้ง `NEXT_PUBLIC_GOOGLE_CLIENT_ID` + origin ใน Google Console · `LINE_AUTH_*` + Callback URL ใน LINE Console · commit/PR branch backend | — |
 | 3 | I1 | ~~เมนูสิทธิ์ `store_info`~~ ✅ | — |
 | 4 | I2 | ปุ่มคืนเงิน — ออเดอร์ "ยกเลิก + ชำระแล้ว" ค้างรอโอนคืน | ✅ 2026-10-06 — ป้าย "รอโอนคืน" ในตาราง + แถบเตือนพร้อมปุ่มกรอง · drawer มี `RefundSection` (ยอด · เหตุผลยกเลิก · ปุ่มยืนยันโอนคืน + popup ยืนยัน · ต้องมีสิทธิ์ `payments.approve`) ทั้งออเดอร์และพรีออเดอร์ · **ยังไม่ทดสอบกับ backend จริง** |
@@ -63,7 +63,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 | หมวด | เรื่อง | จำนวน | สถานะรวม |
 |---|---|---|---|
-| [A](#a-งานที่เสร็จแล้วบน-branch-นี้) | งานที่เสร็จแล้วบน branch นี้ | 4 | ✅ (A4 รอคุณลบไฟล์) |
+| [A](#a-งานที่เสร็จแล้วบน-branch-นี้) | งานที่เสร็จแล้วบน branch นี้ | 4 | ✅ (A4 เหลือคลิกดูหน้าจอจริง) |
 | [B](#b-พื้นฐานที่ต้องมีก่อน) | พื้นฐานที่ต้องมีก่อน (บัญชี · ล็อกอิน) | 3 | ▢ / ⏸ (หน้า login ยกหน้าตาแล้ว) |
 | [C](#c-หน้าร้าน--เสริมหน้าที่มีอยู่แล้ว) | หน้าร้าน — เสริมหน้าที่มีอยู่แล้ว | 4 | ▢ |
 | [D](#d-หน้าร้าน--หน้าใหม่) | หน้าร้าน — หน้าใหม่ | 10 | ▢ / ⏸ |
@@ -71,7 +71,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | [F](#f-ต้องขอ-backend-ก่อน) | ต้องขอ backend ก่อน | 4 | ⏸ |
 | [G](#g-ตัดสินใจทีม) | ตัดสินใจทีม | 3 | ⏸ |
 | [H](#h-ไม่ทำ-ตัดสินแล้ว) | ไม่ทำ (ตัดสินแล้ว) | 6 | ❌ |
-| [I](#i-แก้ตาม-backend-main-ตรวจ-2026-10-06) | แก้ตาม backend `main` (ไม่เกี่ยวกับ FrontOffice โดยตรง) | 15 | ✅ 5 · 🟡 5 (เหลือ UI) · ▢ 4 |
+| [I](#i-แก้ตาม-backend-main-ตรวจ-2026-10-06) | แก้ตาม backend `main` (ไม่เกี่ยวกับ FrontOffice โดยตรง) | 15 | ✅ 9 · 🟡 1 (I3) · ▢ 3 (I8–I10) · ⏸ 2 (I11 · I15) — ตรวจ 2026-10-08 |
 
 **ลำดับที่แนะนำ:** A4 → I1 · I2 (🔴) → G1 · G2 (ถามก่อน เพราะกระทบหลายเรื่อง) → I3–I7 → B1 → B2 → D1 → D2 → C3 → D3 → C1 → ที่เหลือ
 
@@ -101,8 +101,8 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 - **ไฟล์:** `src/types/api.ts` (`ApiError.reason`) · `src/lib/http.ts` · `src/lib/authClient.ts` (`resendVerification` · `register`) · `src/app/login/_components/LoginForm.tsx` · i18n `auth.emailNotVerified*` / `auth.resendVerification*`
 - **ผล:** 403 `EMAIL_NOT_VERIFIED` → popup + ปุ่มส่งลิงก์ยืนยันใหม่ (BE §8.9)
 
-### A4 ▢ เก็บกวาดที่ต้องทำเอง (ระบบไม่อนุญาตให้ลบไฟล์ระหว่างแก้)
-- [ ] ลบ `src/lib/promptpay.ts` (ไม่มีใครเรียกแล้ว)
+### A4 🟡 เก็บกวาดที่ต้องทำเอง (ระบบไม่อนุญาตให้ลบไฟล์ระหว่างแก้) — เหลือคลิกดูหน้าจอจริง
+- [x] ลบ `src/lib/promptpay.ts` (ไม่มีใครเรียกแล้ว) — ตรวจ 2026-10-08: ไม่มีไฟล์แล้ว
 - [x] เอา `NEXT_PUBLIC_PROMPTPAY_*` ออกจาก `.env.example` แล้ว (แทนด้วย `NEXT_PUBLIC_GOOGLE_CLIENT_ID` ของ B3 — **ห้าม** `git checkout` ไฟล์นี้แล้ว)
 - [ ] **อย่า**ลบ `qrcode` จาก `package.json` — POS `QRPaymentModal` ยังใช้
 - [x] ทดสอบ A1–A3 ระดับ API กับ backend + DB local (19/19)
@@ -161,7 +161,9 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 ### C2 ▢ หน้าแรก: สินค้าแนะนำ
 - **ต้นแบบ:** `HomeRecommendations.tsx` · **API:** `/catalog/products/recommended` · `/shop/recommendations` (BE §8.15)
 
-### C3 ▢ checkout: จุดรับสินค้า · คูปองส่วนตัว · ใช้แต้ม
+### C3 ✅ checkout: จุดรับสินค้า · คูปองส่วนตัว · ใช้แต้ม (2026-10-08 · branch `feat/checkout-full` · ทดสอบกับ backend 39/39 — รายละเอียด + ข้อควรระวังก่อน deploy ดู [BACKLOG4 §1.1](BACKLOG4-merge.md#11--c3-checkout-จุดรับสินค้า--คูปองของฉัน--ใช้แต้ม-branch-featcheckout-full--ทดสอบ--commit-2026-10-08))
+- **ทำแล้ว:** `checkout/_components/` `PickupLocationPicker` (จุด + วันจาก `order_pickup_dates` · มีจุดเปิดอยู่ = บังคับเลือก · ไม่มีเลย = รับที่ร้านแบบเดิม) · `CouponSelectBox` (เลือก 1 ใบ · ล้างโค้ดส่วนลด และกลับกัน · ใช้ไม่ได้ = ไม่ส่ง) · `PointsRedeemBox` (ปัดทีละ 10 · ตัดลงเมื่อเพดานลด) · services `pickupLocations.ts` `shopLoyalty.ts` · สั่งซื้อแล้ว/ล้มเหลว → โหลดแต้ม/คูปองใหม่
+- **ฐานคิดแต้ม** = ยอดสินค้า − min(ส่วนลดคูปอง/โค้ด, ยอดสินค้า) ตาม backend `orderService` จริง — คูปอง/โค้ด**ส่งฟรี**ก็ลดฐานด้วย (comment ใน backend บอกว่า "ส่วนลดส่งฟรีไม่ลดฐาน" แต่โค้ดไม่ได้แยก · FrontOffice หักแค่ส่วนลดสินค้า) → ถาม backend ว่าตั้งใจแบบไหน
 - **ไฟล์ของเรา:** `src/app/customer/checkout/page.tsx`
 - **ต้นแบบ:** `customer/checkout/page.tsx` (843) · `PickupLocationPicker` · `CouponSelectBox` · `PointsRedeemBox`
 - **API:** `/catalog/pickup-locations` → ส่ง `pickup_location_id` + `pickup_date` · `/shop/coupons` (+`check`) · `/shop/points` (BE §8.7 · §8.11)
@@ -199,12 +201,12 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 | รหัส | หน้า | ต้นแบบ | API | หมายเหตุ | สถานะ |
 |---|---|---|---|---|---|
-| E1 | กลุ่มตัวเลือกสินค้า + POS | `ProductCustomizationEditor.tsx` | `GET/PUT /admin/products/:id/customization` · `pos/scan` คืน `customization` | แทน BACKLOG2 §6 · POS ต้องส่ง `variant_ids` (BE §8.3) | ▢ **ทำก่อน** — สินค้าที่มีตัวเลือกขายใน POS ไม่ได้ |
+| E1 | กลุ่มตัวเลือกสินค้า + POS | `ProductCustomizationEditor.tsx` | `GET/PUT /admin/products/:id/customization` · `pos/scan` คืน `customization` | แทน BACKLOG2 §6 · POS ต้องส่ง `variant_ids` (BE §8.3) | ✅ 2026-10-06 (PR #27 · `a53114b`) — ตัวแก้กลุ่มตัวเลือกในหน้าแก้สินค้า · ทดสอบกับ backend แล้ว (ดู "ผลทดสอบ PR #25–#27") |
 | E2 | ข้อมูลร้าน (ที่อยู่ · พิกัด · ตลาดนัด · แผนที่ · โลโก้ · พร้อมเพย์) | `owner/store-info/*` | `/admin/store-profile` · `/admin/store-settings` · `/admin/weekly-markets` · `/admin/map-link` | เมนูใหม่ `store_info` · เลขพร้อมเพย์ของ A1 ตั้งที่นี่ (BE §8.19) | ▢ |
 | E3 | คำค้นเทียบเคียง | `products/search-synonyms` | `/admin/search-synonyms` (+`:id`) | สิทธิ์ `products` (BE §8.16) | ▢ |
 | E4 | จัดการรีวิวขั้นสูง | `reports/reviews/*` | `/admin/reviews/bulk` · `filter-options` · `:id/visibility` · `:id/sentiment` · `/admin/aspects/reorder` · `/admin/semantic-terms` | ไม่รวม analytics → F3 | ▢ |
 | E5 | ออเดอร์พร้อมส่ง | `orders/readyReders` | `/admin/orders?order_status=ready` | อาจทำเป็นตัวกรองในหน้า `manageOrders` แทน | ▢ |
-| E6 | ตัวกรองหมวด "ลูกค้า" ในแจ้งเตือน | — | `/admin/notifications?module=customer` | BE §8.17 · งานเล็ก | ▢ |
+| E6 | ตัวกรองหมวด "ลูกค้า" ในแจ้งเตือน | — | `/admin/notifications?module=customer` | BE §8.17 · งานเล็ก | ✅ (PR #25 · `0f2f936`) — หมวด "ข้อความลูกค้า" ในตัวกรองหน้าประวัติแจ้งเตือน |
 
 ---
 
@@ -313,13 +315,13 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 | รหัส | ระดับ | เรื่อง | ไฟล์ frontend | API / อ้างอิง backend | สถานะ |
 |---|---|---|---|---|---|
-| I1 | 🔴 | **เมนูสิทธิ์ `store_info` ไม่มีใน frontend** — backend เพิ่มใน `MENU_KEYS` แล้ว (`/auth/me` ส่งมา) แต่ frontend ทิ้ง → หน้าสิทธิ์ตั้งค่าเมนูนี้ให้พนักงานไม่ได้ · ต้องมีก่อนทำหน้า E2 | `constants/menuKeys.ts` (`MenuKey` · `ALL_MENU_KEYS`) · `employees/permissions/permissionGroups.ts` · i18n `nav.*` | `permissionService.MENU_KEYS` · BE §8.19 | ▢ |
-| I2 | 🔴 | **คืนเงินไม่มีปุ่ม** — ลูกค้ายกเลิกออเดอร์ที่ชำระแล้วได้เอง → สถานะ "ยกเลิก + ชำระแล้ว" = รอร้านโอนคืน (backend **ไม่**คืนอัตโนมัติ) แต่หลังร้านไม่มีทางกดยืนยันคืนเงิน → ค้างตลอด | `orders/manageOrders` + `preOrderRound` drawer · `services/payments.ts` (+ `refund`) | `POST /admin/payments/:id/refund` (`payments.approve`) · BE §8.8 · BACKLOG2 §15.3 ข้อ 7 | ▢ |
-| I3 | 🟡 | ประเภทแจ้งเตือน: frontend ยังมี `employee` (backend เลิกแล้ว) และ**ไม่มี `customer`** (ลูกค้าติดต่อร้าน · ยกเลิกออเดอร์) → ตัวกรองไม่มีหมวดนี้ · ป้ายเป็น key ดิบ | `types/notification.ts` · `notificationsHistory` · i18n `enums` | enum `Notifications.module` · BE §8.17 | ▢ |
-| I4 | 🟡 | **POS ไม่รองรับกลุ่มตัวเลือก** — `scan` คืน `customization` แล้ว แต่ POS ไม่ให้เลือก (`usePOSViewModel.ts:140`) · ถ้า FrontOffice (หลังร้านพอร์ต 4000) ตั้งกลุ่มบังคับเลือกให้สินค้าไว้ → ขายใน POS ได้ 400 | `OrderInStore/*` · `services/pos.ts` | `POST /admin/pos/scan` · ออเดอร์รับ `variant_ids` + `selected_options` · BE §8.3 | ▢ (ทำคู่ E1) |
-| I5 | 🟡 | สวิตช์ "ส่งทั่วประเทศ" ของหมวดสินค้า — ค่าส่งเว็บตัดสินจาก `ships_nationwide` · ไม่ตั้ง = เดาจากชื่อหมวด ("ซาวโดว์") | `components/shared/categories/CategoryManagerDialog.tsx` · `services/productCategories.ts` · `types/productCategory.ts` | `PATCH /admin/product-categories/:id { ships_nationwide }` · BE §8.7 | ▢ |
-| I6 | 🟡 | drawer ออเดอร์ไม่แสดง field ของออเดอร์เว็บ: `payment_due_at` · `cancelled_reason` (เช่น "หมดเวลาชำระเงิน (ระบบยกเลิกอัตโนมัติ)") · จุดรับ `pickup_point` + `pickup_date` · แต้มที่ใช้ `points_redeemed`/`points_discount` · คูปองส่วนตัว | `types/order.ts` · `services/orders.ts` (`toOrder`) · `manageOrders/_components/OrderDetailContent.tsx` | BE §8.7 · §8.8 · §8.11 | ▢ |
-| I7 | 🟡 | คูปองแลกแต้ม — โปรโมชันมี `points_cost` (ลูกค้าใช้แต้มแลกเป็นคูปองส่วนตัว) แต่ฟอร์มคูปองหลังร้านตั้งไม่ได้ | `promotions/coupons/couponForm.ts` · `CouponFormModal.tsx` · `types/promotion.ts` | `schemas/promotion.ts` `points_cost` · BE §8.11 | ▢ |
+| I1 | 🔴 | **เมนูสิทธิ์ `store_info` ไม่มีใน frontend** — backend เพิ่มใน `MENU_KEYS` แล้ว (`/auth/me` ส่งมา) แต่ frontend ทิ้ง → หน้าสิทธิ์ตั้งค่าเมนูนี้ให้พนักงานไม่ได้ · ต้องมีก่อนทำหน้า E2 | `constants/menuKeys.ts` (`MenuKey` · `ALL_MENU_KEYS`) · `employees/permissions/permissionGroups.ts` · i18n `nav.*` | `permissionService.MENU_KEYS` · BE §8.19 | ✅ PR #25 (`0f2f936`) · ทดสอบแล้ว |
+| I2 | 🔴 | **คืนเงินไม่มีปุ่ม** — ลูกค้ายกเลิกออเดอร์ที่ชำระแล้วได้เอง → สถานะ "ยกเลิก + ชำระแล้ว" = รอร้านโอนคืน (backend **ไม่**คืนอัตโนมัติ) แต่หลังร้านไม่มีทางกดยืนยันคืนเงิน → ค้างตลอด | `orders/manageOrders` + `preOrderRound` drawer · `services/payments.ts` (+ `refund`) | `POST /admin/payments/:id/refund` (`payments.approve`) · BE §8.8 · BACKLOG2 §15.3 ข้อ 7 | ✅ PR #25 (`1e1e68c` · `RefundSection`) · ทดสอบแล้ว |
+| I3 | 🟡 | ประเภทแจ้งเตือน: frontend ยังมี `employee` (backend เลิกแล้ว) และ**ไม่มี `customer`** (ลูกค้าติดต่อร้าน · ยกเลิกออเดอร์) → ตัวกรองไม่มีหมวดนี้ · ป้ายเป็น key ดิบ | `types/notification.ts` · `notificationsHistory` · i18n `enums` | enum `Notifications.module` · BE §8.17 | 🟡 เพิ่ม `customer` แล้ว (PR #25 · `0f2f936` · = E6) · ยังเหลือลบ `employee` → BACKLOG4 §5 |
+| I4 | 🟡 | **POS ไม่รองรับกลุ่มตัวเลือก** — `scan` คืน `customization` แล้ว แต่ POS ไม่ให้เลือก (`usePOSViewModel.ts:140`) · ถ้า FrontOffice (หลังร้านพอร์ต 4000) ตั้งกลุ่มบังคับเลือกให้สินค้าไว้ → ขายใน POS ได้ 400 | `OrderInStore/*` · `services/pos.ts` | `POST /admin/pos/scan` · ออเดอร์รับ `variant_ids` + `selected_options` · BE §8.3 | ✅ 2026-10-06 (PR #27 · `398f7cb`) — หน้าต่างเลือกตัวเลือกก่อนลงบิล · ดึงผ่าน `/admin/pos/scan` (สิทธิ์ orders.view) + cache · บรรทัดแยกตามชุดตัวเลือก · สต็อกรวมต่อสินค้า · ทดสอบแล้ว |
+| I5 | 🟡 | สวิตช์ "ส่งทั่วประเทศ" ของหมวดสินค้า — ค่าส่งเว็บตัดสินจาก `ships_nationwide` · ไม่ตั้ง = เดาจากชื่อหมวด ("ซาวโดว์") | `components/shared/categories/CategoryManagerDialog.tsx` · `services/productCategories.ts` · `types/productCategory.ts` | `PATCH /admin/product-categories/:id { ships_nationwide }` · BE §8.7 | ✅ PR #26 (`a842444`) · ทดสอบแล้ว |
+| I6 | 🟡 | drawer ออเดอร์ไม่แสดง field ของออเดอร์เว็บ: `payment_due_at` · `cancelled_reason` (เช่น "หมดเวลาชำระเงิน (ระบบยกเลิกอัตโนมัติ)") · จุดรับ `pickup_point` + `pickup_date` · แต้มที่ใช้ `points_redeemed`/`points_discount` · คูปองส่วนตัว | `types/order.ts` · `services/orders.ts` (`toOrder`) · `manageOrders/_components/OrderDetailContent.tsx` | BE §8.7 · §8.8 · §8.11 | ✅ PR #26 (`bfe3073`) · ทดสอบแล้ว |
+| I7 | 🟡 | คูปองแลกแต้ม — โปรโมชันมี `points_cost` (ลูกค้าใช้แต้มแลกเป็นคูปองส่วนตัว) แต่ฟอร์มคูปองหลังร้านตั้งไม่ได้ | `promotions/coupons/couponForm.ts` · `CouponFormModal.tsx` · `types/promotion.ts` | `schemas/promotion.ts` `points_cost` · BE §8.11 | ✅ PR #26 (`72d8a6c`) · ทดสอบแล้ว |
 | I8 | 🟢 | หน้าจัดการโซนค่าส่งของหลังร้าน/POS (`DeliveryZones`) ยังไม่มี (ค้างจาก BACKLOG2 §16.3) · คนละตารางกับค่าส่งเว็บ (F2) | ใหม่ `owner/...` | `/admin/delivery-zones` (+`:id`, `restore`) · `/admin/delivery-fee` | ▢ |
 | I9 | 🟢 | รายการรีวิวหลังร้าน: response มี `data.summary` เพิ่ม (frontend ทิ้ง) · สถานะ/ปักหมุด/ตอบกลับ → รวมใน E4 | `services/reviews.ts` | BE §8.20 | ▢ (ทำคู่ E4) |
 | I10 | 🟢 | บัญชีลูกค้าจาก LINE ที่ไม่มีอีเมลได้อีเมลชั่วคราว `*@line-user.invalid` · `auth_provider: "line"` → ที่ไหนแสดงอีเมลผู้ใช้ (ออเดอร์ · รีวิว) ควรซ่อน/แสดง "บัญชี LINE" | `OrderDetailContent` · `reviews` · `types/user.ts` | `oauthService.isPlaceholderEmail` · BE §8.9 | ▢ |

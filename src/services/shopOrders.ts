@@ -64,7 +64,15 @@ export interface CreateShopOrderInput {
   address_id?: string;
   recipient_name?: string;
   recipient_phone?: string;
+  /** โค้ดส่วนลด — ใช้คู่กับ user_coupon_id ไม่ได้ */
   promotion_code?: string;
+  /** คูปองของฉัน (แลกด้วยแต้ม) */
+  user_coupon_id?: string;
+  /** ใช้แต้มเป็นส่วนลด (ทีละ 10 · ≤ 30% ของยอดสินค้าหลังหักคูปอง/โค้ด) */
+  points_to_redeem?: number;
+  /** takeaway: จุดรับ + วันรับ YYYY-MM-DD (จาก order_pickup_dates ของจุดนั้น) */
+  pickup_location_id?: string;
+  pickup_date?: string;
 }
 
 /**
