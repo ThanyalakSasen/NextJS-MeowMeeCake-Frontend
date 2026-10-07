@@ -26,3 +26,6 @@ export const preorderRoundsKey = ["catalog", "preorder-rounds"] as const;
 export const preorderRoundKey = (id: string) => ["catalog", "preorder-rounds", id] as const;
 /** กระดิ่งแจ้งเตือน (D6) — ต่อท้ายด้วย limit (กระดิ่ง 8 · หน้าเต็ม 100) · อ่านแล้วแก้ทุกชุดพร้อมกัน */
 export const shopNotificationsKey = ["shop", "notifications"] as const;
+/** รีวิวของฉัน (D7) — ใช้ดูว่ารายการไหนรีวิวแล้ว · ส่งรีวิวแล้ว invalidate */
+export const shopReviewsKey = ["shop", "reviews"] as const;
+export const reviewAspectsKey = ["catalog", "review-aspects"] as const;

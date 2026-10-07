@@ -22,6 +22,7 @@ import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
 import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
+import ReviewLink from "../../_components/ReviewLink";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { DELIVERY_STATUS_LABEL, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, pickupDateText } from "../orderLabels";
 
@@ -204,6 +205,7 @@ function OrderContent() {
           <Link href="/customer/product" className={shopButton}>
             เลือกซื้อสินค้าต่อ
           </Link>
+          <ReviewLink kind="order" doc={order} itemIds={order.items.map((it) => it._id)} href={`/customer/account/purchases/${order._id}/review`} className={shopButtonPrimary} />
           {canCustomerCancel(order) && <CancelOrderButton orderId={order._id} orderNo={order.order_no} paid={order.payment_status === "paid"} />}
         </div>
       </div>

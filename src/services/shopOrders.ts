@@ -12,6 +12,7 @@ import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 
 export interface ShopOrderItem {
   _id: string;
+  product_id: string;
   product_name: string;
   variant_name: string | null;
   product_name_eng: string | null;
@@ -113,6 +114,7 @@ function toShopOrder(raw: any): ShopOrder {
     items: Array.isArray(raw.items)
       ? raw.items.map((it: any) => ({
           _id: it._id,
+          product_id: String(it.product_id?._id ?? it.product_id ?? ""),
           product_name: it.product_snapshot?.product_name_th ?? "",
           variant_name: it.product_snapshot?.variant_name ?? null,
           product_name_eng: it.product_snapshot?.product_name_eng ?? null,

@@ -17,6 +17,7 @@ import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { shopPreorderKey, shopPreordersKey } from "../../lib/shopQueries";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE, pickupDateText } from "../purchases/orderLabels";
 import { thaiDate } from "../../preorder/lib/preorderDates";
+import ReviewLink from "../_components/ReviewLink";
 
 const PAGE_SIZE = 10;
 const FILTERS: { value: OrderStatus | "all"; label: string }[] = [
@@ -173,6 +174,7 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {unpaid && <Link href={href} className={actionLink}>{p.has_payment ? "ชำระเงิน / อัปโหลดสลิปใหม่" : "ชำระเงิน / อัปโหลดสลิป"}</Link>}
+          <ReviewLink kind="preorder" doc={p} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={actionLink} />
           <Link href={href} className={actionLink}>ดูรายละเอียด</Link>
         </div>
       </div>
