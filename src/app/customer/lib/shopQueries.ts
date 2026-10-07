@@ -9,3 +9,7 @@ export const shopEmailStatusKey = ["shop", "me", "email"] as const;
 export const shopLineStatusKey = ["shop", "me", "line"] as const;
 /** ประวัติการสั่งซื้อ (ทุกหน้า/ตัวกรอง) — ขึ้นต้นเหมือนกันให้ invalidate ชุดเดียวได้ */
 export const shopOrdersKey = ["shop", "orders", "list"] as const;
+/** checkout (C3): แต้ม + คูปองที่ใช้ได้ — สร้างออเดอร์แล้วต้อง invalidate (ถูกหัก/ใช้ไป) */
+export const shopPointsKey = ["shop", "points"] as const;
+export const shopCouponsKey = ["shop", "coupons"] as const;
+export const pickupLocationsKey = ["catalog", "pickup-locations"] as const;
