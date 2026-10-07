@@ -1,12 +1,12 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // เมนูบัญชีของลูกค้า (ด้านซ้ายบนจอใหญ่ · แถบบนสุดบนมือถือ) — ย่อจาก FrontOffice src/app/components/customer/SideBarMenu.tsx
-// ใส่เฉพาะหน้าที่มีแล้วใน repo นี้ · หน้าอื่นของต้นแบบ (ประวัติพรีออเดอร์ · รายการโปรด · แจ้งเตือน)
+// ใส่เฉพาะหน้าที่มีแล้วใน repo นี้ · หน้าอื่นของต้นแบบ (ประวัติพรีออเดอร์ · แจ้งเตือน)
 // เพิ่มตามลำดับ BACKLOG4-merge หมวด 2 (U2)
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, GiftIcon } from "@heroicons/react/24/solid";
+import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, GiftIcon, HeartIcon } from "@heroicons/react/24/solid";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import DoorLogoutIcon from "./DoorLogoutIcon";
 
@@ -16,6 +16,7 @@ const ITEMS = [
   { href: "/customer/changepassword", label: "เปลี่ยนรหัสผ่าน", icon: KeyIcon },
   { href: "/customer/account/member", label: "สมาชิกของฉัน", icon: GiftIcon },
   { href: "/customer/account/purchases", label: "ประวัติการสั่งซื้อ", icon: ShoppingBagIcon },
+  { href: "/customer/account/favorites", label: "รายการโปรด", icon: HeartIcon },
 ] as const;
 
 export default function AccountSideMenu() {

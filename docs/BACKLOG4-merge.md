@@ -26,7 +26,7 @@
 | หน้าร้าน (ลูกค้า) | 16 หน้า (หน้าแรก · รายการสินค้า · รายละเอียดสินค้า · ตะกร้า · checkout · บัญชี · ที่อยู่ · ประวัติ/รายละเอียดออเดอร์ · เปลี่ยน/ลืม/ตั้งรหัส · ยืนยันอีเมล · login · สมัคร · `/login/line`) | 15 หน้า (พรีออเดอร์ 8 · แต้ม · รายการโปรด · แจ้งเตือน · เขียนรีวิว · ติดต่อร้าน · ค่าส่ง · ลิงก์ชำระเงิน) | 9 จุด (หมวด 3) |
 | หลังร้าน (เจ้าของร้าน) | ทุกหน้าที่มีในระบบเดิม | 5 หน้า (ข้อมูลร้าน · คำค้นเทียบเคียง · รีวิวขั้นสูง · ออเดอร์พร้อมส่ง · โซนค่าส่ง) | รีวิว (FO ~4,160 บรรทัด vs 374) |
 
-**ลำดับที่แนะนำ:** ~~1.1 (ปิด C3)~~ ✅ → ~~K1–K4 (เอกสาร)~~ ✅ → ~~D4~~ ✅ → D5 + U3 → C1 → D3 → D6 + U4 → D7 → D8 + D9 + U5 → C2 → หลังร้าน E2 → E3 → E4 → E5 → ที่เหลือ
+**ลำดับที่แนะนำ:** ~~1.1 (ปิด C3)~~ ✅ → ~~K1–K4 (เอกสาร)~~ ✅ → ~~D4~~ ✅ → ~~D5 + U3 (หัวใจ)~~ ✅ → C1 → D3 → D6 + U4 → D7 → D8 + D9 + U5 → C2 → หลังร้าน E2 → E3 → E4 → E5 → ที่เหลือ
 
 ---
 
@@ -54,7 +54,7 @@
 |---|---|---|---|---|---|
 | D3 | พรีออเดอร์ทั้ง flow: รายการรอบ · รอบ · checkout · ชำระเงิน · สำเร็จ · ประวัติ + รายละเอียด + ชำระเงินย้อนหลัง | `customer/preorder/*` (5 หน้า) · `account/preorders/*` (3 หน้า) · `account/_components/SlipPaymentView.tsx` · ~2,700 บรรทัด | `/catalog/preorder-rounds` (+`:id`) · `/shop/preorders` (+`cancel`, `payment`) · `delivery-quote` ส่ง `product_ids` · จุดรับใช้ `preorderPickupDateOptions` (วันในช่วงรอบ) | C1 (ตัวเลือกสินค้า) · ใช้ `PickupLocationPicker` ของ C3 ได้ | ▢ |
 | D4 | สมาชิกของฉัน: ยอดแต้ม · แต้มใกล้หมดอายุ · ประวัติ · แลกคูปอง · แชร์แต้ม · คูปองของฉัน | `account/member` (567) | `/shop/points` (+`share`) · `/shop/coupons` (+`check`, `redeem`) | — | ✅ 2026-10-08 (branch `feat/member-points`) — `/customer/account/member`: บัตรสมาชิก + ความคืบหน้าถึงขั้นต่ำ · แต้มใกล้หมดอายุ · วิธีสะสม (+ โบนัสได้แล้ว/ยัง) · กติกาใช้แต้ม · แลกคูปอง (ยืนยันก่อน · แต้มไม่พอ/ครบสิทธิ์ปิดปุ่ม) · คูปองของฉันทุกสถานะ · ประวัติ 50 รายการ · cache ร่วมกับ checkout · **ทดสอบกับ backend 20/20** (+ C3 ซ้ำ 39/39) · ปุ่มแชร์รับแต้มไปอยู่ใน C1 · ยังไม่คลิกดูหน้าจอจริง |
-| D5 | รายการโปรด | `account/favorites` | `/shop/favorites` (`data.items`) | ทำคู่ U3 | ▢ |
+| D5 | รายการโปรด | `account/favorites` | `/shop/favorites` (`data.items`) | ทำคู่ U3 | ✅ 2026-10-08 (branch `feat/favorites`) — `/customer/account/favorites`: grid · เอาออก · หยิบใส่ตะกร้าใช้ได้จริง (ต้นแบบไม่มี onClick) · พรีออเดอร์ = ปุ่มดูสินค้า · หมดชั่วคราว · เมนู "รายการโปรด" · `useFavorites` cache เดียวทั้งหน้า (ต้นแบบยิงขอต่อบัตร) · **ทดสอบกับ backend 10/11** (ข้อที่ไม่ผ่านคือสมมติฐานของเทสเรื่องลำดับ — ดู Q-BE16) · ยังไม่คลิกดูหน้าจอจริง |
 | D6 | การแจ้งเตือน (หน้า + กระดิ่งใน Navbar) | `account/notifications` · `components/customer/CustomerNotifications.tsx` (234) | `/shop/notifications` (+`:id`) → `{ items, unread_count }` | ลิงก์ในแจ้งเตือนชี้ `/customer/account/purchases/<id>` แล้ว (G1 ✅) | ▢ |
 | D7 | เขียนรีวิว + รูป/วิดีโอ | `account/pendingreview/[id]` (705) · `components/AspectIcon.tsx` | `/shop/reviews` · `/shop/reviews/upload` · `/catalog/review-aspects` | D1 ✅ · ปุ่ม "รีวิว" ในประวัติออเดอร์ | ▢ |
 | D8 | ติดต่อร้าน | `customer/contact-us` (411) | `/shop/contact` · `/catalog/contact-topics` | ทำคู่ U5 | ▢ |
@@ -80,8 +80,8 @@
 | C1 | รายละเอียดสินค้า `customer/product/[id]` | ตัวเลือก/ออปชันก่อนลงตะกร้า · รีวิว + สรุปคะแนน · สินค้าคล้าย · sentiment · สารก่อภูมิแพ้ · แสดงตัวเลือกในตะกร้า/checkout/ออเดอร์ | `ProductDetailClient.tsx` (1,108) · `ProductCustomizationPicker.tsx` (131) | API: `/catalog/products/:id/customization` · `/reviews` (+`summary`) · `/similar` · `/sentiment` · ตะกร้ารับ `variant_ids[]` + `selected_options` | ▢ |
 | C2 | หน้าแรก `customer/page.tsx` | ส่วน "สินค้าแนะนำ" | `HomeRecommendations.tsx` (152) | `/catalog/products/recommended` · `/shop/recommendations` (ล็อกอินแล้ว) | ▢ |
 | U1 | Navbar `components/customer/Navbar.tsx` | เมนู **พรีออเดอร์** · **ติดต่อเรา** · **กระดิ่งแจ้งเตือน** (FO มีเมนูชุดสินค้าด้วย — ไม่ทำ H1) | `components/customer/Navbar.tsx` (373) | D3 · D8 · D6 | ▢ เพิ่มทีละเมนูตามหน้าที่เสร็จ |
-| U2 | เมนูบัญชี `components/customer/AccountSideMenu.tsx` | มี 5/8 (เพิ่ม **สมาชิกของฉัน** แล้ว — D4) — ขาด **ประวัติพรีออเดอร์** · **รายการโปรด** · **การแจ้งเตือน** · FO จัดเป็น 2 หัวข้อ ("บัญชีของฉัน" / "คำสั่งซื้อของฉัน") | `components/customer/SideBarMenu.tsx` (232) | D4 · D3 · D5 · D6 | ▢ |
-| U3 | การ์ดสินค้า `components/customer/ProductCard.tsx` | ปุ่มหัวใจ (เพิ่ม/ลบรายการโปรด) · ป้ายสารก่อภูมิแพ้ตามที่ลูกค้าบันทึกไว้ | `components/customer/ProductCard.tsx` (350) | D5 · อาหารที่แพ้ของลูกค้า (`/shop/me` มีแล้ว) | ▢ |
+| U2 | เมนูบัญชี `components/customer/AccountSideMenu.tsx` | มี 6/8 (เพิ่ม **สมาชิกของฉัน** — D4 · **รายการโปรด** — D5) — ขาด **ประวัติพรีออเดอร์** · **การแจ้งเตือน** · FO จัดเป็น 2 หัวข้อ ("บัญชีของฉัน" / "คำสั่งซื้อของฉัน") | `components/customer/SideBarMenu.tsx` (232) | D4 · D3 · D5 · D6 | ▢ |
+| U3 | การ์ดสินค้า `components/customer/ProductCard.tsx` | ~~ปุ่มหัวใจ (เพิ่ม/ลบรายการโปรด)~~ ✅ D5 (optimistic · guest → login) · ป้ายสารก่อภูมิแพ้ | `components/customer/ProductCard.tsx` (350) | ป้ายสารก่อภูมิแพ้มาจาก `allergenWarning` ของ recommendation engine เท่านั้น (`/shop/recommendations` · `/catalog/products/:id/similar`) → ทำพร้อม C2 / C1 | 🟡 หัวใจเสร็จ · ป้ายรอ C2 |
 | U4 | หน้ารายการสินค้า `customer/product` | ตรวจตัวกรองหมวด/เรียงลำดับ/สินค้าหมดให้ตรง FO (FO มีตัวกรองหมวดละเอียดกว่า · คำค้นมีครบแล้ว) · แสดงหัวใจ (U3) | `customer/product/page.tsx` (363) | U3 | ▢ เทียบหน้าจอจริงก่อน |
 | U5 | Footer `components/customer/Footer.tsx` | ลิงก์ **ติดต่อเรา** · **ค่าจัดส่ง** · **Facebook ร้าน** | `components/customer/Footer.tsx` (64) | D8 · D9 | ▢ (ลิงก์ Facebook ใส่ได้เลย) |
 | U6 | ตะกร้า `customer/cart` | ช่องค้นหาสินค้าบนหัวตะกร้า · ตรวจป้าย "ซื้อไม่ได้" (`cartItemBlocked` — หมด/ปิดขาย/สต็อกไม่พอ) ให้ครบเท่า FO | `customer/cart/page.tsx` · `components/cart/CartItem.tsx` (215) | — | ▢ |
@@ -167,7 +167,8 @@
 ### 9.1 🔴 บั๊กที่ต้องแก้ก่อน deploy
 | รหัส | เรื่อง | ไฟล์ backend | สถานะ |
 |---|---|---|---|
-| Q-BE15 | regex `pickup_date` ผิดบน `main` (`/^d{4}-d{2}-d{2}$/` ไม่มี `\`) → ออเดอร์/พรีออเดอร์ที่เลือกวันรับได้ 400 ทุกครั้ง · ค้นทั้ง `src/` แล้วไม่มี regex ผิดแบบเดียวกันที่อื่น | `src/schemas/order.ts:38` · `src/schemas/preorder.ts:36` | 🟡 แก้แล้วใน `fix/pickup-date-regex` (+ เทส) · backend PR [#67](https://github.com/ThanyalakSasen/NextJS-MeowMeeCake/pull/67) (2026-10-08) · **ต้อง merge ก่อน frontend PR #32** |
+| Q-BE15 | regex `pickup_date` ผิดบน `main` (`/^d{4}-d{2}-d{2}$/` ไม่มี `\`) → ออเดอร์/พรีออเดอร์ที่เลือกวันรับได้ 400 ทุกครั้ง · ค้นทั้ง `src/` แล้วไม่มี regex ผิดแบบเดียวกันที่อื่น | `src/schemas/order.ts:38` · `src/schemas/preorder.ts:36` | ✅ backend PR [#67](https://github.com/ThanyalakSasen/NextJS-MeowMeeCake/pull/67) merge แล้ว 2026-10-08 (`38b57c6`) · ทดสอบ C3 กับ `main` ซ้ำ 39/39 |
+| Q-BE16 | 🟢 รายการโปรด: เอาออกแล้วเพิ่มกลับ = กู้แถวเดิม (`created_at` เดิม) → กลับไปอยู่ตำแหน่งเดิม ไม่ขึ้นบนสุดตามที่ GET บอกว่า "ล่าสุดก่อน" · เสนอ: ตั้ง `created_at` ใหม่ตอนกู้ (หรือเรียงด้วย `updated_at`) | `src/services/favoriteService.ts` `addFavorite` | ▢ เล็กน้อย |
 
 ### 9.2 🟠 ช่องโหว่ (แก้เล็ก)
 | รหัส | เรื่อง | ไฟล์ backend | สถานะ |
