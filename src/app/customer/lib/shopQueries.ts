@@ -24,3 +24,5 @@ export const shopPreorderPaymentPageKey = (id: string) => ["shop", "preorders", 
 /** รอบพรีออเดอร์ (สาธารณะ) */
 export const preorderRoundsKey = ["catalog", "preorder-rounds"] as const;
 export const preorderRoundKey = (id: string) => ["catalog", "preorder-rounds", id] as const;
+/** กระดิ่งแจ้งเตือน (D6) — ต่อท้ายด้วย limit (กระดิ่ง 8 · หน้าเต็ม 100) · อ่านแล้วแก้ทุกชุดพร้อมกัน */
+export const shopNotificationsKey = ["shop", "notifications"] as const;

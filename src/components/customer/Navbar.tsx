@@ -17,6 +17,7 @@ import { useCartCountStore } from "@/app/customer/store/cartCountStore";
 import { useSidebarMenuStore } from "@/app/customer/store/sidebarMenuStore";
 import { LOGIN_PATH } from "@/constants/auth";
 import DoorLogoutIcon from "./DoorLogoutIcon";
+import { NotificationBell } from "./CustomerNotifications";
 
 const noopSubscribe = () => () => {};
 
@@ -241,7 +242,7 @@ export default function Navbar() {
               </li>
             </ul>
 
-            {/* แถวล่าง: ปุ่มค้นหา (มือถือ) + ตะกร้า */}
+            {/* แถวล่าง: ปุ่มค้นหา (มือถือ) + กระดิ่ง + ตะกร้า */}
             <ul className="flex items-center justify-end md:justify-start gap-3 md:gap-4 text-base font-medium">
               <li className="md:hidden">
                 <button
@@ -254,6 +255,12 @@ export default function Navbar() {
                   <AiOutlineSearch size={26} className="!text-white" />
                 </button>
               </li>
+              {/* กระดิ่งแจ้งเตือน (D6) — เฉพาะลูกค้าที่ login (guest ไม่มีแจ้งเตือน) */}
+              {status === "authenticated" && (
+                <li>
+                  <NotificationBell />
+                </li>
+              )}
               <li>
                 <Link
                   href="/customer/cart"
