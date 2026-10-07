@@ -172,8 +172,8 @@
 ### 9.2 🟠 ช่องโหว่ (แก้เล็ก)
 | รหัส | เรื่อง | ไฟล์ backend | สถานะ |
 |---|---|---|---|
-| Q-BE11 | `unlinkLineAccount` ไม่เช็คว่าเป็นบัญชีที่สมัครด้วย LINE (ไม่มีรหัสผ่าน) → ยกเลิกแล้วเข้าบัญชีไม่ได้อีก · หน้าเว็บซ่อนปุ่มแล้ว แต่ backend ต้องกัน | `src/services/userService.ts:405` | ▢ |
-| Q-BE8 | `PATCH /admin/products/:id` ยังเขียน `product_stock_quantity` ตรง ๆ (ไม่ผ่าน `PUT /stock` → ไม่มีประวัติสต็อก) · frontend เลิกส่งแล้ว (I12) → ปฏิเสธได้เลย | `src/services/productService.ts` `updateProduct` (~บรรทัด 525) | ▢ |
+| Q-BE11 | `unlinkLineAccount` ไม่เช็คว่าเป็นบัญชีที่สมัครด้วย LINE (ไม่มีรหัสผ่าน) → ยกเลิกแล้วเข้าบัญชีไม่ได้อีก · หน้าเว็บซ่อนปุ่มแล้ว แต่ backend ต้องกัน | `src/services/userService.ts:405` | 🟡 backend PR [#68](https://github.com/ThanyalakSasen/NextJS-MeowMeeCake/pull/68) (2026-10-08) — 409 · รอ merge |
+| Q-BE8 | `PATCH /admin/products/:id` ยังเขียน `product_stock_quantity` ตรง ๆ (ไม่ผ่าน `PUT /stock` → ไม่มีประวัติสต็อก) · frontend เลิกส่งแล้ว (I12) → ปฏิเสธได้เลย | `src/services/productService.ts` `updateProduct` (~บรรทัด 525) | 🟡 backend PR [#68](https://github.com/ThanyalakSasen/NextJS-MeowMeeCake/pull/68) — 400 ให้ใช้ `/stock` · **แก้บั๊กไปด้วย:** หน้าแก้สินค้าเปลี่ยนสินค้าที่มีสต็อกเป็นพรีออเดอร์เคยได้ 400 · รอ merge |
 
 ### 9.3 🟠 ทางตันใน flow ลูกค้า
 | รหัส | เรื่อง | ไฟล์ backend | สถานะ |
@@ -207,7 +207,7 @@
 - Q-BE7 — endpoint LINE login merge แล้ว (backend PR #66)
 - Q-BE6 — ไม่ต้องทำ (G1 เลือก `/customer/account/purchases/<id>` ที่ลิงก์ของ backend ใช้อยู่แล้ว)
 
-**ลำดับที่แนะนำ (backend):** Q-BE15 (merge) → Q-BE11 · Q-BE8 → ตั้ง `STOREFRONT_URL` → Q-BE1 → Q-BE10 · Q-BE13 → Q-BE14 (ตัดสินใจ) → ที่เหลือ
+**ลำดับที่แนะนำ (backend):** Q-BE15 (merge #67) → ~~Q-BE11 · Q-BE8~~ (#68) → ตั้ง `STOREFRONT_URL` → Q-BE1 → Q-BE10 · Q-BE13 → Q-BE14 (ตัดสินใจ) → ที่เหลือ
 
 ---
 
