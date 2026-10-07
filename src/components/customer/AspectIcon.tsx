@@ -1,6 +1,6 @@
 // ไอคอนของแง่มุมรีวิว — key ตาม ASPECT_ICON_KEYS ของ backend (src/lib/aspectIcons.ts)
 // GET /catalog/review-aspects แปลงค่าเริ่มต้นให้แล้ว · key ที่ไม่รู้จัก = จุดสามจุด ("more")
-// ย้ายมาจาก FrontOffice src/app/components/AspectIcon.tsx
+// ย้ายมาจาก FrontOffice src/app/components/AspectIcon.tsx · ใช้ทั้งฟอร์มรีวิวหน้าร้าน (D7) และหน้าตั้งค่าหัวข้อหลังร้าน (E4)
 import {
   Wallet, BadgePercent, Cookie, Cake, CakeSlice, Croissant, Candy, IceCreamCone, Coffee, Utensils,
   Package, Gift, Truck, Clock, Store, Smile, Heart, Star, Sparkles, Eye,
@@ -37,6 +37,18 @@ const ICONS: Record<string, LucideIcon> = {
   "message-circle": MessageCircle,
   more: Ellipsis,
 };
+
+/** key ทั้งหมดที่เลือกได้ (ตัวเลือกไอคอนในหน้าตั้งค่าหัวข้อรีวิวหลังร้าน — BACKLOG4 E4) */
+export const ASPECT_ICON_KEYS = Object.keys(ICONS);
+
+// ไอคอนเริ่มต้นของหัวข้อชุด seed (ตามชื่ออังกฤษ) — สำเนา backend resolveAspectIconKey · /admin/aspects ส่ง icon: null มาตรง ๆ
+const DEFAULT_BY_ENG_NAME: Record<string, string> = { price: "wallet", taste: "cookie", packaging: "package", others: "more" };
+
+/** ไอคอนที่ลูกค้าเห็นจริง: ที่ร้านเลือก → ค่าเริ่มต้นตามชื่ออังกฤษ → "more" */
+export function resolveAspectIcon(icon: string | null | undefined, nameEng?: string | null): string {
+  if (icon && ICONS[icon]) return icon;
+  return DEFAULT_BY_ENG_NAME[(nameEng ?? "").trim().toLowerCase()] ?? "more";
+}
 
 export default function AspectIcon({ icon, size = 16, className }: { icon?: string | null; size?: number; className?: string }) {
   const Icon = (icon && ICONS[icon]) || Ellipsis;

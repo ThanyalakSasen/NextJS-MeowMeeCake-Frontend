@@ -1,30 +1,39 @@
 // ─────────────────────────────────────────────────────────────
-// src/types/review.ts — DTO ของ /admin/reviews (reviewModel.ts จริงฝั่ง backend)
-// admin สร้าง/แก้เนื้อหารีวิวไม่ได้ · จัดการได้: ซ่อน/แสดง (/visibility) + PATCH /admin/reviews/:id (สถานะ · ปักหมุด ·
-// ตอบกลับ · แท็ก/โน้ตภายใน — backend §8.20 · หน้าจอยังไม่ใช้ → BACKLOG3-merge E4) · สิทธิ์เมนู reports
-// (รีวิวสร้างได้จากลูกค้าที่ออเดอร์ completed แล้วเท่านั้น ผ่าน /api/shop/reviews คนละ endpoint)
-// backend populate user_id/product_id เป็น object เต็มตอน GET/list ใช้ refId() ดึง id ตอนต้องใช้เทียบ
+// src/types/review.ts — DTO ของ /admin/reviews (backend reviewModerationService · customer-backend-merge.md §8.20)
+// admin สร้าง/แก้เนื้อหารีวิวไม่ได้ · จัดการได้ (PATCH /admin/reviews/:id): สถานะ · ปักหมุด · ตอบกลับ (ลูกค้าเห็น) ·
+// แท็ก/โน้ตภายใน · อ่านแล้ว — สิทธิ์เมนู reports (BACKLOG4 E4)
+// list populate user_id/product_id/เลขออเดอร์ · product_img เหลือรูปแรก (string) · มี status + analysis_source เสมอ
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
 import type { SentimentLabel } from "@/constants/enumConfig";
 
 export type ReviewStatus = "pending" | "approved" | "hidden";
+export type ReviewSort = "newest" | "oldest" | "lowest" | "highest" | "needs_reply";
+/** ที่มาของผลวิเคราะห์หัวข้อ: ลูกค้าเลือกเอง · โมเดล NLP · อนุมานจากประโยคสำเร็จรูป (รีวิวเก่า) · ไม่มี */
+export type AnalysisSource = "customer" | "model" | "inferred" | null;
 
 export interface Review {
   _id: string;
-  user_id: string | { _id: string; user_fullname: string; user_img?: string | null };
-  product_id: string | { _id: string; product_name_th: string; product_name_eng?: string; product_img?: string | null };
-  /** list ของหลังร้าน populate ถึงเลขออเดอร์ · รีวิวพรีออเดอร์ = null (ใช้ preorder_order_item_id) */
-  order_item_id: string | { _id: string; order_id?: { _id: string; order_no: string } | null } | null;
-  preorder_order_item_id?: string | { _id: string; preorder_id?: { _id: string; preorder_no: string } | null } | null;
-  /** status กับ is_visible เปลี่ยนคู่กัน (approved = แสดง · hidden = ซ่อน) — backend §8.20 */
-  status?: ReviewStatus;
-  video?: string | null;
-  is_pinned?: boolean;
-  /** 1-5 เต็ม เป็นตัวเลขธรรมดา ไม่ใช่ Decimal128 (ต่างจาก Product.avg_rating) */
+  user_id: { _id: string; user_fullname: string; user_img?: string | null } | string | null;
+  product_id: { _id: string; product_name_th: string; product_name_eng?: string; product_img?: string | null } | string | null;
+  /** รีวิวพรีออเดอร์ = null (ใช้ preorder_order_item_id) */
+  order_item_id: { _id: string; order_id?: { _id: string; order_no: string } | null } | string | null;
+  preorder_order_item_id?: { _id: string; preorder_id?: { _id: string; preorder_no: string } | null } | string | null;
+  /** status กับ is_visible เปลี่ยนคู่กัน (approved = แสดง · hidden = ซ่อน) */
+  status: ReviewStatus;
   rating: number;
   review_text?: string | null;
   image?: string[];
+  video?: string | null;
+  is_pinned?: boolean;
+  aspect_feedback?: { aspect_id: string | null; aspect_name_th?: string; sentiment: "positive" | "negative" }[];
+  /** ประโยคสำเร็จรูปของรีวิวเก่า (backend เติมชื่อหัวข้อให้) */
+  selected_presets?: { aspect_id: { _id: string; aspect_name_th: string } | string | null; rating_level: number; text: string }[];
+  shop_reply?: { text: string; replied_at: string } | null;
+  internal_tags?: string[];
+  internal_note?: { text: string; updated_at: string } | null;
+  read_at?: string | null;
+  analysis_source?: AnalysisSource;
   is_analyzed: boolean;
   is_visible: boolean;
   created_at: string;
@@ -32,23 +41,91 @@ export interface Review {
 }
 
 export interface ReviewListParams extends ListParams {
+  sort?: ReviewSort;
+  q?: string;
   product_id?: string;
-  user_id?: string;
-  rating?: number;
-  is_visible?: boolean;
-  is_analyzed?: boolean;
-  /** ตัวกรองเพิ่มของ backend §8.20 (reviewModerationService.listAdminReviews) */
-  status?: ReviewStatus;
   category_id?: string;
+  status?: ReviewStatus;
+  rating?: number;
+  sentiment_group?: "positive" | "neutral" | "negative";
+  aspect_id?: string;
+  sentiment?: "positive" | "negative";
+  replied?: 0 | 1;
+  read?: 0 | 1;
+  has_media?: 0 | 1;
+  order_kind?: "order" | "preorder";
+  source?: "customer" | "inferred" | "model" | "none";
+  since?: string;
+  until?: string;
 }
 
-/** GET /admin/reviews/[id]/sentiment เท่านั้น — ไม่มาใน list/get ของ review เอง (fetch แยกตอนเปิดดูรายละเอียด) */
+/** summary=1 — สรุปของชุดที่กรองทั้งหมด (ไม่ใช่แค่หน้าปัจจุบัน) */
+export interface ReviewSummary {
+  count: number;
+  avg_rating: number | null;
+  /** 0–1 · รีวิว 1-2 ดาว */
+  negative_rate: number | null;
+  unreplied_negative: number;
+}
+
+/** PATCH /admin/reviews/:id — ส่งบางส่วน · ตอบกลับ = นับว่าอ่านแล้ว · ข้อความว่าง = ลบคำตอบ/โน้ต */
+export interface ReviewModeration {
+  status?: ReviewStatus;
+  is_pinned?: boolean;
+  shop_reply_text?: string;
+  internal_tags?: string[];
+  internal_note_text?: string;
+  read?: boolean;
+}
+
+export interface ReplySuggestion {
+  text: string;
+  used_count: number;
+  rating_avg: number;
+}
+
+export interface ReviewFilterOptions {
+  products: { product_id: string; product_name_th: string; is_deleted: boolean; review_count: number; avg_rating: number }[];
+  categories: { category_id: string; category_name: string; review_count: number; avg_rating: number }[];
+  reply_suggestions: ReplySuggestion[];
+}
+
+/** GET /admin/reviews/[id]/sentiment เท่านั้น — fetch แยกตอนเปิดดูรายละเอียด */
 export interface SentimentResult {
   _id: string;
   aspect_id: string | { _id: string; aspect_name_th: string; aspect_name_eng?: string };
-  /** normalize เป็น number แล้วที่ services/reviews.ts (backend ส่ง Mongoose Decimal128 ดิบ) */
+  /** normalize เป็น number แล้วที่ services/reviews.ts (backend ส่ง Decimal128 ดิบ) */
   sentiment_score: number;
   sentiment_label: SentimentLabel;
   sentiment_result?: string;
   extracted_aspects?: string[];
+}
+
+/** แง่มุมรีวิว (/admin/aspects) — ปุ่มชอบ/ควรปรับปรุงในฟอร์มรีวิวของลูกค้า · สูงสุด 20 */
+export interface ReviewAspect {
+  _id: string;
+  aspect_name_th: string;
+  aspect_name_eng: string;
+  is_active: boolean;
+  display_order: number;
+  /** key ไอคอน (backend lib/aspectIcons) · null = ค่าเริ่มต้นตามชื่ออังกฤษ */
+  icon: string | null;
+  placeholder_text: string | null;
+  deleted_at: string | null;
+}
+
+export type ReviewAspectInput = Partial<Pick<ReviewAspect, "aspect_name_th" | "aspect_name_eng" | "is_active" | "icon" | "placeholder_text">>;
+
+/** คำสำหรับวิเคราะห์ (/admin/semantic-terms) — คำ/วลีในรีวิว → แง่มุม (ให้ระบบวิเคราะห์ข้อความ) */
+export interface SemanticTerm {
+  _id: string;
+  term: string;
+  synonyms: string[];
+  aspect: { _id: string; aspect_name_th: string } | null;
+}
+
+export interface SemanticTermInput {
+  term: string;
+  synonyms: string[];
+  aspect_id: string;
 }

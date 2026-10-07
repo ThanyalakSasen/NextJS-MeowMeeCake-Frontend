@@ -7,7 +7,7 @@ import { LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import { reviewsService } from "@/services/reviews";
 import { SENTIMENT_LABEL_CONFIG } from "@/constants/enumConfig";
-import type { ReviewRow } from "../useReviewsViewModel";
+import type { ReviewRow } from "../reviewRow";
 import { StarRating } from "./StarRating";
 
 export function ReviewDetailContent({ review }: { review: ReviewRow }) {
@@ -23,9 +23,9 @@ export function ReviewDetailContent({ review }: { review: ReviewRow }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Avatar name={review.userName} size={44} />
+        <Avatar name={review.userName || t("reviews.customer")} size={44} />
         <div>
-          <p className="font-semibold text-brown-800">{review.userName}</p>
+          <p className="font-semibold text-brown-800">{review.userName || t("reviews.customer")}</p>
           <p className="text-sm text-gray-500">{formatDate(review.created_at, locale, { withTime: true })}</p>
         </div>
       </div>
@@ -34,7 +34,7 @@ export function ReviewDetailContent({ review }: { review: ReviewRow }) {
 
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-500">{t("reviews.colProduct")}</span>
-        <span className="font-medium text-gray-800">{review.productName}</span>
+        <span className="font-medium text-gray-800">{review.productName || t("reviews.unknownProduct")}</span>
       </div>
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-500">{t("reviews.colRating")}</span>
@@ -42,8 +42,8 @@ export function ReviewDetailContent({ review }: { review: ReviewRow }) {
       </div>
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-500">{t("reviews.colStatus")}</span>
-        <Tag color={review.is_visible ? "success" : "default"}>
-          {t(review.is_visible ? "reviews.statusVisible" : "reviews.statusHidden")}
+        <Tag color={review.status === "approved" ? "success" : review.status === "pending" ? "warning" : "default"}>
+          {t(`reviews.status.${review.status}`)}
         </Tag>
       </div>
 
@@ -54,9 +54,9 @@ export function ReviewDetailContent({ review }: { review: ReviewRow }) {
         <p className="text-sm text-gray-700">{review.review_text || t("reviews.noComment")}</p>
       </div>
 
-      {review.image && review.image.length > 0 && (
+      {review.images.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {review.image.map((url) => (
+          {review.images.map((url) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={url} src={url} alt="" className="h-16 w-16 rounded-lg border border-gray-200 object-cover" />
           ))}
