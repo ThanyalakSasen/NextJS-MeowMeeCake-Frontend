@@ -158,7 +158,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 - **API:** `/catalog/products/:id/customization` · `/reviews` (+`summary`) · `/similar` · `/sentiment` · `/catalog/ingredients` · ตะกร้ารับ `variant_ids[]` + `selected_options` (BE §8.3)
 - **ขั้นตอน:** (1) ตัวเลือกในหน้า + ส่งตะกร้า (2) แสดงตัวเลือกในตะกร้า/checkout/ออเดอร์ (3) รีวิว (4) สินค้าคล้าย + สารก่อภูมิแพ้
 
-### C2 ▢ หน้าแรก: สินค้าแนะนำ
+### C2 ✅ หน้าแรก: สินค้าแนะนำ (2026-10-09 — ดู [BACKLOG4 C2](BACKLOG4-merge.md#3-หน้าร้าน--เติม-ui-ในหน้าที่มีแล้ว))
 - **ต้นแบบ:** `HomeRecommendations.tsx` · **API:** `/catalog/products/recommended` · `/shop/recommendations` (BE §8.15)
 
 ### C3 ✅ checkout: จุดรับสินค้า · คูปองส่วนตัว · ใช้แต้ม (2026-10-08 · branch `feat/checkout-full` · ทดสอบกับ backend 39/39 — รายละเอียด + ข้อควรระวังก่อน deploy ดู [BACKLOG4 §1.1](BACKLOG4-merge.md#11--c3-checkout-จุดรับสินค้า--คูปองของฉัน--ใช้แต้ม-branch-featcheckout-full--ทดสอบ--commit-2026-10-08))

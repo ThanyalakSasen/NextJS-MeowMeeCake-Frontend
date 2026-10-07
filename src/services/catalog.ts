@@ -147,4 +147,28 @@ export const catalogService = {
       .filter((r) => r?.product)
       .map((r) => ({ product: toRecommendedProduct(r.product), reasons: r.reasons ?? [], allergenWarning: r.allergenWarning ?? null }));
   },
+
+  /**
+   * GET /catalog/products/recommended — สินค้าแนะนำหน้าแรกสำหรับ guest (BACKLOG3-merge C2) → { products } 10 ชิ้น
+   * เรียงตามคะแนนรีวิว · ไม่มีเหตุผล/คำเตือนแพ้อาหาร
+   */
+  recommended: async (): Promise<SimilarProduct[]> => {
+    const res = await http.get<ItemResponse<{ products?: any[] }>>("/catalog/products/recommended");
+    return (res.data?.products ?? []).map((p) => ({ product: toRecommendedProduct(p), reasons: [], allergenWarning: null }));
+  },
+
+  /**
+   * GET /shop/recommendations — แนะนำเฉพาะตัว (ต้อง login · C2) · hybrid คำนวณเกิน 4.5 วิ backend ถอยเป็น popular เอง
+   * ได้เหตุผล + คำเตือนแพ้อาหารจากที่ลูกค้าบันทึกไว้ (ไม่ตัดสินค้าที่แพ้ทิ้ง — แสดงป้ายแทน)
+   * skipAuthRedirect: session หมดอายุบนหน้าแรก (สาธารณะ) ไม่ต้องเด้งไป login — ผู้เรียกถอยไปรายการสาธารณะเอง
+   */
+  recommendedForMe: async (limit = 10): Promise<SimilarProduct[]> => {
+    const res = await http.get<ItemResponse<{ recommendations?: any[] }>>("/shop/recommendations", {
+      params: { limit, strategy: "hybrid", excludeAllergens: false },
+      skipAuthRedirect: true,
+    });
+    return (res.data?.recommendations ?? [])
+      .filter((r) => r?.product)
+      .map((r) => ({ product: toRecommendedProduct(r.product), reasons: r.reasons ?? [], allergenWarning: r.allergenWarning ?? null }));
+  },
 };
