@@ -4,7 +4,9 @@
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import type { Rule } from "antd/es/form";
+import { Form } from "antd";
 import { Input, InputNumber, PasswordInput, Select, Switch, DatePicker, FormItem } from "@/components/base";
+import { isLinePlaceholderEmail } from "@/lib/lineAccount";
 import { rolesService } from "@/services/roles";
 import { MIN_PASSWORD_LENGTH } from "@/constants/auth";
 
@@ -13,6 +15,8 @@ export function EmployeeFormFields({ isEdit = false }: { isEdit?: boolean }) {
   const roles = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list() });
   // เลือกได้เฉพาะตำแหน่งพนักงาน — ตัด role ลูกค้าออก (เหมือนหน้ารายชื่อ)
   const staffRoles = (roles.data?.data ?? []).filter((r) => r.role_type !== "customer");
+  // บัญชีที่สมัครผ่าน LINE ไม่มีอีเมลจริง (I10) — เตือนให้กรอกอีเมลจริงก่อนบันทึก (backend บังคับมีอีเมล)
+  const email = Form.useWatch<string | undefined>("email");
 
   const required: Rule[] = [{ required: true, message: t("validation.required") }];
   // backend (schemas/user.ts createUserBody) บังคับ email จริง (ไม่ optional) ทั้งตอนสร้างและแก้ไข
@@ -33,7 +37,12 @@ export function EmployeeFormFields({ isEdit = false }: { isEdit?: boolean }) {
         <Input />
       </FormItem>
 
-      <FormItem name="email" label={t("fields.email")} rules={emailRule}>
+      <FormItem
+        name="email"
+        label={t("fields.email")}
+        rules={emailRule}
+        extra={isLinePlaceholderEmail(email) ? <span className="text-amber-600">{t("employees.lineNoEmail")}</span> : undefined}
+      >
         <Input />
       </FormItem>
       {!isEdit && (

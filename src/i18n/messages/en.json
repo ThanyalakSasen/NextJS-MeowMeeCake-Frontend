@@ -1248,7 +1248,8 @@
     "passwordResetFailed": "Could not set the new password",
     "fieldCanLogin": "Allow sign-in",
     "fieldCanLoginHint": "Turn off to revoke sign-in access immediately (separate from employment status below)",
-    "fieldEmpStatusHint": "Just records employment status — has no effect on sign-in access"
+    "fieldEmpStatusHint": "Just records employment status — has no effect on sign-in access",
+    "lineNoEmail": "This account signed up with LINE — this is a temporary system email; please enter the employee’s real email"
   },
   "permissions": {
     "title": "Access Permissions",
@@ -1903,7 +1904,8 @@
       "unlinkConfirm": "Disconnect LINE? You will no longer get notifications on LINE.",
       "unlinkedSuccess": "LINE disconnected",
       "unlinkFailed": "Could not disconnect"
-    }
+    },
+    "lineNoEmail": "LINE account — no email provided"
   },
   "categories": {
     "manage": "Manage categories",

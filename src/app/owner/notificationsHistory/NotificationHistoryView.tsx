@@ -9,7 +9,7 @@ import { DetailDrawer, ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
 import { NOTIFICATION_TYPE_COLOR } from "@/constants/enumConfig";
-import type { NotificationDTO, NotificationModule } from "@/types/notification";
+import { NOTIFICATION_MODULES, type NotificationDTO } from "@/types/notification";
 import type { NotificationType } from "@/types";
 import { DeleteButton, RetryButton, actionIcon } from "@/components/shared/actions";
 import type { useNotificationHistoryViewModel } from "./useNotificationHistoryViewModel";
@@ -17,9 +17,9 @@ import { NotificationDetailContent } from "./_components/NotificationDetailConte
 
 type VM = ReturnType<typeof useNotificationHistoryViewModel>;
 
-// ไม่มี "employee" — backend เลิกสร้างหมวดนี้แล้ว (ดู types/notification.ts)
+// ตัวกรองหมวด = หมวดที่ backend ยังสร้างอยู่ (ไม่มี "employee" ที่เลิกใช้ — ดู types/notification.ts)
 // "customer" = ลูกค้าติดต่อร้าน · ลูกค้ายกเลิกออเดอร์ ฯลฯ (backend customer-backend-merge.md §8.17)
-const MODULES: NotificationModule[] = ["order", "ingredient", "production", "finance", "customer", "system"];
+const MODULES = NOTIFICATION_MODULES;
 const TYPES: NotificationType[] = ["warning", "info", "success", "error"];
 
 export function NotificationHistoryView(vm: VM) {

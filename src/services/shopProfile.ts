@@ -40,9 +40,8 @@ export interface EmailStatus {
   email_verified: boolean;
 }
 
-/** อีเมลชั่วคราวของบัญชี LINE ที่ไม่ได้ให้อีเมล — ต้องตรงกับ backend oauthService (PLACEHOLDER_DOMAIN) */
-export const isLinePlaceholderEmail = (email: string | null | undefined) =>
-  !!email && email.toLowerCase().endsWith("@line-user.invalid");
+/** อีเมลชั่วคราวของบัญชี LINE ที่ไม่ได้ให้อีเมล — ย้ายไป lib/lineAccount.ts (ใช้ร่วมกับหลังร้าน · I10) · re-export ให้โค้ดเดิม */
+export { isLinePlaceholderEmail } from "@/lib/lineAccount";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function toProfile(raw: any): ShopProfile {

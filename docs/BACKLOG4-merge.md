@@ -117,9 +117,9 @@
 
 | รหัส | ระดับ | เรื่อง | สถานะจริง (ตรวจ 2026-10-08) |
 |---|---|---|---|
-| I3 | 🟢 | ประเภทแจ้งเตือน: เพิ่ม `customer` แล้ว แต่ `NotificationModule` (`types/notification.ts`) ยังมี `employee` ที่ backend เลิกแล้ว | 🟡 เหลือลบ `employee` (+ ป้าย/i18n ที่ใช้) |
+| I3 | 🟢 | ประเภทแจ้งเตือน: เพิ่ม `customer` แล้ว แต่ `NotificationModule` (`types/notification.ts`) ยังมี `employee` ที่ backend เลิกแล้ว | ✅ 2026-10-09 — `NotificationModule` = 6 หมวดที่ backend สร้างได้ (+ `NOTIFICATION_MODULES` ใช้เป็นตัวกรอง) · `employee` แยกเป็น `LegacyNotificationModule` ใช้แสดงแถวเก่าเท่านั้น (คงป้าย i18n ไว้ — backend ก็ยังมีป้ายของเอกสารเก่า · ลบแล้วแถวเก่าจะขึ้น key ผิด) |
 | I9 | 🟢 | รายการรีวิวหลังร้าน: `data.summary` ยังถูกทิ้ง (`services/reviews.ts`) | ✅ 2026-10-09 (E4) — `reviewsService.list` อ่าน `data.summary` (ส่ง `summary=1`) แสดงในแถบสรุป |
-| I10 | 🟢 | อีเมลชั่วคราวของบัญชี LINE (`*@line-user.invalid`) ยังแสดงดิบในหลังร้าน (drawer ออเดอร์ · รีวิว · พนักงาน) | ▢ |
+| I10 | 🟢 | อีเมลชั่วคราวของบัญชี LINE (`*@line-user.invalid`) ยังแสดงดิบในหลังร้าน (drawer ออเดอร์ · รีวิว · พนักงาน) | ✅ 2026-10-09 — `lib/lineAccount.ts` (`isLinePlaceholderEmail` ย้ายจาก services/shopProfile — re-export ไว้) · `/profile` แสดง "บัญชี LINE — ยังไม่ได้ระบุอีเมล" · ฟอร์มแก้พนักงานเตือนให้ใส่อีเมลจริง · ตรวจแล้ว: drawer ออเดอร์/รีวิวหลังร้านไม่ได้แสดงอีเมลลูกค้า (backend ก็ตัดอีเมลชั่วคราวออกจากข้อความติดต่อร้านแล้ว) |
 | I11 | 🟢 | mock (MSW) ใช้ไม่ได้ (path เก่า ไม่มี `/admin`) — ตอนนี้ `.env.local` ตั้ง `NEXT_PUBLIC_API_MOCK=0` อยู่แล้ว | ⏸ ตัดสินใจ: เขียนใหม่ หรือลบ `src/mocks/*` + `MSWReady` + `public/mockServiceWorker.js` + `msw` |
 | I15 | 🟡 | POS: ช่องค้นหาสินค้าได้ 403 ถ้าพนักงานไม่มี `products.view` | ⏸ [Q-BE10](BACKLOG3-merge.md#ถาม-backend) |
 
@@ -133,8 +133,8 @@
 | K2 | `BACKLOG3-merge.md` ตาราง I | I1 · I2 · I4 · I5 · I6 · I7 ยังเป็น ▢ — โค้ดเสร็จแล้วทั้งหมด (I1 `store_info` ใน `menuKeys.ts` · I2 `RefundSection` · I4 `CustomizationPickerModal` · I5 `ships_nationwide` · I6 field ออเดอร์เว็บใน `types/order.ts` · I7 `points_cost`) และผ่านการทดสอบชุด PR #25–#27 · I3 → 🟡 | ✅ 2026-10-08 — ใส่ PR + commit ทุกแถว · สรุปหมวด I ในสารบัญเป็น ✅ 9 · 🟡 1 · ▢ 3 · ⏸ 2 |
 | K3 | `BACKLOG3-merge.md` บรรทัดแรก | ไม่มีหัวเรื่อง (`#`) — บรรทัดแรกเป็นข้อความสถานะ I4 ที่หลุดมา (หายตั้งแต่ commit แรก `c66e269`) · ควรมีหัวเรื่องแบบ BACKLOG2 + ลิงก์ "ถัดไป: BACKLOG4-merge.md" | ✅ 2026-10-08 — ข้อความที่หลุดย้ายไปไว้ในแถว I4 |
 | K4 | `BACKLOG3-merge.md` A4 | `src/lib/promptpay.ts` ถูกลบแล้ว → ติ๊ก checkbox | ✅ 2026-10-08 — A4 เป็น 🟡 (เหลือคลิกดูหน้าจอจริง) |
-| K5 | `README.md` §1 · §4 | ยังบอกว่าเป็นระบบหลังร้านอย่างเดียว (27 หน้า) · พอร์ต `3000` (จริง `3001`) · ไม่มีหน้าร้าน `/customer/*` · `services/shop*` · `components/customer` | ▢ |
-| K6 | `docs/SCREEN_MAP.md` · `COMPONENT_MAP.md` | ยังไม่มีหน้าจอ/คอมโพเนนต์ของหน้าร้าน | ▢ |
+| K5 | `README.md` §1 · §4 | ยังบอกว่าเป็นระบบหลังร้านอย่างเดียว (27 หน้า) · พอร์ต `3000` (จริง `3001`) · ไม่มีหน้าร้าน `/customer/*` · `services/shop*` · `components/customer` | ✅ 2026-10-09 — §1 (หน้าร้าน + หลังร้าน · จำนวนหน้า · API 3 กลุ่ม · สถานะ mock) · §2 (พอร์ต 3001 · env จริง) · §4 (โฟลเดอร์ customer · services shop* · components/customer · providers) |
+| K6 | `docs/SCREEN_MAP.md` · `COMPONENT_MAP.md` | ยังไม่มีหน้าจอ/คอมโพเนนต์ของหน้าร้าน | ✅ 2026-10-09 — SCREEN_MAP §2b หลังร้านที่เพิ่ม (8 หน้า + profile/register) · §2c หน้าร้านทุก route (ทางเข้า · API · รหัสงาน) · แก้ข้อมูลเก่า (Attendance ไม่มีแล้ว) · COMPONENT_MAP: components/customer + page-local หน้าร้าน/หลังร้านใหม่ + base Logo `src` |
 
 ---
 
