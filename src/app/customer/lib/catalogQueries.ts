@@ -10,3 +10,6 @@ export const productCustomizationKey = (id: string) => ["catalog", "product", id
 /** ข้อมูลร้าน (ติดต่อเรา D8 · ค่าส่ง/โลโก้ D9) + หัวข้อฟอร์มติดต่อ */
 export const storeInfoKey = ["catalog", "store-info"] as const;
 export const contactTopicsKey = ["catalog", "contact-topics"] as const;
+/** หน้าค่าจัดส่ง (D9) + โลโก้ร้าน (Navbar/Footer) */
+export const shippingZonesKey = ["catalog", "shipping-zones"] as const;
+export const storeLogoKey = ["catalog", "store-logo"] as const;

@@ -1,5 +1,7 @@
 // รูปแบบข้อความของข้อมูลร้าน (ติดต่อเรา D8 · ค่าส่ง/ข้อมูลร้าน D9) — ข้อมูลจาก services/storeInfo.ts
 import type { StoreAddress, StoreInfo, WeekDay } from "@/services/storeInfo";
+import { resolveUploadUrl } from "@/lib/uploads";
+import { guessShipsNationwide } from "@/constants/shipping";
 
 const DAY_ORDER: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const DAY_LABELS: Record<WeekDay, string> = {
@@ -50,4 +52,26 @@ export function formatStoreAddress(a: StoreAddress): string {
 export function storeMapUrl(info: Pick<StoreInfo, "location" | "address">): string | null {
   const query = info.location ? `${info.location.latitude},${info.location.longitude}` : formatStoreAddress(info.address);
   return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : null;
+}
+
+const DEFAULT_LOGO = "/pictures/logoMoewMeeCake.png";
+
+/**
+ * src ของโลโก้ร้าน — ยังไม่อัปโหลด/โหลดไม่ได้ = โลโก้เริ่มต้นใน public/ ของหน้าเว็บ (backend ส่ง path เดียวกันมา)
+ * ไฟล์ที่ร้านอัปโหลดอยู่ที่ backend (คนละ origin) + ?v=<updated_at> — อัปโหลดใหม่แล้วเห็นทันที ไม่ติด cache
+ */
+export function storeLogoSrc(logo: { url: string; updated_at: string | null } | undefined): string {
+  if (!logo?.url || logo.url === DEFAULT_LOGO) return DEFAULT_LOGO;
+  const src = resolveUploadUrl(logo.url) ?? DEFAULT_LOGO;
+  return logo.updated_at ? `${src}${src.includes("?") ? "&" : "?"}v=${encodeURIComponent(logo.updated_at)}` : src;
+}
+
+/**
+ * ชื่อหมวดที่ส่งทั่วประเทศได้ — ตั้งไว้ = ใช้ค่านั้น · ยังไม่ตั้ง (null) = เดาจากชื่อหมวดแบบเดียวกับ backend
+ * (src/lib/shipping.ts categoryShipsNationwide) ไม่งั้นหน้าค่าส่งบอกขอบเขตไม่ตรงกับที่ checkout คิดจริง
+ */
+export function nationwideCategoryNames(cats: { product_category_name: string; ships_nationwide?: boolean | null }[]): string[] {
+  return cats
+    .filter((c) => (typeof c.ships_nationwide === "boolean" ? c.ships_nationwide : guessShipsNationwide(c.product_category_name)))
+    .map((c) => c.product_category_name);
 }

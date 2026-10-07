@@ -5,6 +5,8 @@
 //   GET  /catalog/contact-topics   หัวข้อฟอร์มติดต่อ + ความยาวข้อความสูงสุด
 //   POST /shop/contact             { topic, message } (ต้อง login) → แจ้งเตือนหลังร้านหมวด "ลูกค้า" + LINE เจ้าของร้าน
 //                                  ชื่อ/เบอร์/อีเมลผู้ส่ง backend ดึงจากบัญชีเอง · 1 ข้อความ/นาที (429)
+//   GET  /catalog/shipping-zones   โซนค่าส่งเว็บ A–D ตามจังหวัด (D9 · โซนที่ไม่มีจังหวัด = จังหวัดที่เหลือ)
+//   GET  /catalog/store-logo       { url, updated_at } โลโก้ล่าสุด (D9 · ยังไม่อัปโหลด = /pictures/logoMoewMeeCake.png ของหน้าเว็บ)
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
@@ -56,4 +58,21 @@ export const storeInfoService = {
   sendContact: async (body: { topic: string; message: string }): Promise<void> => {
     await http.post("/shop/contact", body);
   },
+
+  shippingZones: async (): Promise<ShippingZone[]> => (await http.getList<ShippingZone>("/catalog/shipping-zones")).data,
+
+  logo: async (): Promise<StoreLogo> => (await http.get<ItemResponse<StoreLogo>>("/catalog/store-logo")).data,
 };
+
+export interface ShippingZone {
+  zone_code: string;
+  zone_label: string;
+  /** ว่าง = จังหวัดที่ไม่อยู่ในโซนอื่น */
+  provinces: string[];
+  fee: number;
+}
+
+export interface StoreLogo {
+  url: string;
+  updated_at: string | null;
+}
