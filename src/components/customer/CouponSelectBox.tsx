@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { couponDiscount, type CouponUnusableReason, type MyCoupon } from "@/services/shopLoyalty";
 import { baht } from "@/components/customer/shopStyles";
-import { couponLabel } from "../../lib/couponLabel";
+import { couponLabel } from "@/app/customer/lib/couponLabel";
 
 const expiryText = (iso: string) =>
   new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });

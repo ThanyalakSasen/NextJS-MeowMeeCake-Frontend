@@ -159,9 +159,15 @@ export const shopOrdersService = {
     return toShopOrder(res.data);
   },
 
-  /** POST /shop/orders/delivery-quote { province } — ค่าส่งจากจังหวัด + ขอบเขตจัดส่งของสินค้าในตะกร้าปัจจุบัน */
-  deliveryQuote: async (province: string): Promise<DeliveryQuote> => {
-    const res = await http.post<ItemResponse<DeliveryQuote>>("/shop/orders/delivery-quote", { province });
+  /**
+   * POST /shop/orders/delivery-quote { province, product_ids? } — ค่าส่งจากจังหวัด + ขอบเขตจัดส่งของสินค้า
+   * ไม่ส่ง productIds = สินค้าในตะกร้าปัจจุบัน · พรีออเดอร์ส่ง product_ids ของรายการในรอบเอง
+   */
+  deliveryQuote: async (province: string, productIds?: string[]): Promise<DeliveryQuote> => {
+    const res = await http.post<ItemResponse<DeliveryQuote>>("/shop/orders/delivery-quote", {
+      province,
+      ...(productIds ? { product_ids: productIds } : {}),
+    });
     return res.data;
   },
 

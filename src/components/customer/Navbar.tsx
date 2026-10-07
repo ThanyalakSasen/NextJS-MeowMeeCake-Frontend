@@ -24,6 +24,7 @@ const noopSubscribe = () => () => {};
 const NAV_LINKS = [
   { href: "/customer", label: "หน้าแรก" },
   { href: "/customer/product", label: "สินค้าทั้งหมด" },
+  { href: "/customer/preorder", label: "พรีออเดอร์" },
 ] as const;
 
 export default function Navbar() {
@@ -286,7 +287,7 @@ export default function Navbar() {
                   <Link
                     href={l.href}
                     className={`pb-1 transition inline-block ${
-                      pathname === l.href
+                      pathname === l.href || (l.href === "/customer/preorder" && !!pathname?.startsWith("/customer/preorder/"))
                         ? "font-bold border-b-2 border-[#e2d7c7] !text-[#e2d7c7]"
                         : "!text-white hover:!text-[#e2d7c7]"
                     }`}

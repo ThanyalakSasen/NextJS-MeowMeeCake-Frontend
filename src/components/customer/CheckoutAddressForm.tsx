@@ -1,0 +1,82 @@
+"use client";
+// ─────────────────────────────────────────────────────────────
+// เพิ่มที่อยู่ใหม่ระหว่างสั่งซื้อ — ใช้ร่วมกันหน้า checkout ปกติ และ checkout พรีออเดอร์ (D3)
+// POST /shop/addresses · cache ร่วมกับสมุดที่อยู่ (shopAddressesKey — ผู้เรียก invalidate เองใน onCreated)
+// ─────────────────────────────────────────────────────────────
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { shopAddressesService, type ShopAddress, type ShopAddressInput } from "@/services/shopAddresses";
+import { alert } from "@/lib/alert";
+import { isApiError } from "@/types/api";
+import { shopButton, shopButtonPrimary, shopInput } from "@/components/customer/shopStyles";
+
+const ZIP_RE = /^\d{5}$/;
+
+const EMPTY_ADDRESS: ShopAddressInput = { house_no: "", sub_district: "", district: "", province: "", zip_code: "" };
+
+export default function CheckoutAddressForm({ onCreated, onCancel }: { onCreated: (a: ShopAddress) => void; onCancel: () => void }) {
+  const [form, setForm] = useState<ShopAddressInput>(EMPTY_ADDRESS);
+  const [isDefault, setIsDefault] = useState(false);
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      shopAddressesService.create({
+        house_no: form.house_no.trim(),
+        sub_district: form.sub_district.trim(),
+        district: form.district.trim(),
+        province: form.province.trim(),
+        zip_code: form.zip_code.trim(),
+        is_default: isDefault,
+      }),
+    onSuccess: (a) => {
+      alert.success("บันทึกที่อยู่แล้ว");
+      onCreated(a);
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : "บันทึกที่อยู่ไม่สำเร็จ"),
+  });
+
+  const fields: { key: keyof ShopAddressInput; label: string; max: number; wide?: boolean }[] = [
+    { key: "house_no", label: "บ้านเลขที่ / หมู่ / ถนน", max: 200, wide: true },
+    { key: "sub_district", label: "ตำบล / แขวง", max: 120 },
+    { key: "district", label: "อำเภอ / เขต", max: 120 },
+    { key: "province", label: "จังหวัด", max: 120 },
+    { key: "zip_code", label: "รหัสไปรษณีย์", max: 5 },
+  ];
+  const filled = fields.every((f) => String(form[f.key] ?? "").trim()) && ZIP_RE.test(form.zip_code.trim());
+
+  return (
+    <div className="space-y-3 rounded-xl border border-dashed border-[#8C5A3C]/30 p-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        {fields.map((f) => (
+          <label key={f.key} className={`space-y-1 text-sm ${f.wide ? "sm:col-span-2" : ""}`}>
+            <span className="font-semibold">{f.label}</span>
+            <input
+              className={shopInput}
+              value={String(form[f.key] ?? "")}
+              maxLength={f.max}
+              inputMode={f.key === "zip_code" ? "numeric" : undefined}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  [f.key]: f.key === "zip_code" ? e.target.value.replace(/\D/g, "") : e.target.value,
+                }))
+              }
+            />
+          </label>
+        ))}
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
+        ตั้งเป็นที่อยู่เริ่มต้น
+      </label>
+      <div className="flex justify-end gap-2">
+        <button type="button" className={shopButton} onClick={onCancel} disabled={createMutation.isPending}>
+          ยกเลิก
+        </button>
+        <button type="button" className={shopButtonPrimary} disabled={!filled || createMutation.isPending} onClick={() => createMutation.mutate()}>
+          {createMutation.isPending ? "กำลังบันทึก..." : "บันทึกที่อยู่"}
+        </button>
+      </div>
+    </div>
+  );
+}

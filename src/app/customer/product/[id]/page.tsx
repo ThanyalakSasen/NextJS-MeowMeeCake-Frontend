@@ -4,17 +4,18 @@
 // API: /catalog/products/{id} · /customization (ตัวเลือก) · /reviews (+summary) · /sentiment · /similar
 //      ตะกร้า POST /shop/cart/items { variant_ids, selected_options } · แชร์ POST /shop/points/share
 // (FrontOffice เดิมเป็น Server Component + ISR — ทำ SEO ทีหลังได้ด้วย generateMetadata เมื่อ backend เป็น same-site)
-// ยังไม่ยกมา: รอบพรีออเดอร์ + ตะกร้าพรีออเดอร์ (D3) · หมายเหตุต่อชิ้น (ตะกร้าไม่มีฟิลด์นี้ — ใช้ออปชันกรอกข้อความแทน)
+// พรีออเดอร์ (D3): ?round=<id> → ราคาของรอบ + เพิ่มลงรายการพรีออเดอร์ (_components/PreorderOrderBox)
+// ยังไม่ยกมา: หมายเหตุต่อชิ้นของสินค้าปกติ (ตะกร้าไม่มีฟิลด์นี้ — ใช้ออปชันกรอกข้อความแทน)
 // · รายการส่วนประกอบ (/catalog/products/{id} ไม่ส่งวัตถุดิบ — มีแค่ในผลของระบบแนะนำ)
 // ─────────────────────────────────────────────────────────────
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaHeart, FaRegHeart, FaShareAlt, FaSpinner } from "react-icons/fa";
 import { catalogService } from "@/services/catalog";
 import { shopLoyaltyService } from "@/services/shopLoyalty";
 import { resolveUploadUrl } from "@/lib/uploads";
-import { effectivePrice, hasSalePrice, salePercent } from "@/lib/pricing";
+import { effectivePrice, hasSalePrice } from "@/lib/pricing";
 import { checkPicked, hasCustomization, initialPicked, toSelection, type Picked } from "@/lib/customizationSelection";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
@@ -23,7 +24,9 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { useAddToCart } from "../../hooks/useAddToCart";
 import { useFavorites } from "../../hooks/useFavorites";
 import { catalogProductKey, productCustomizationKey } from "../../lib/catalogQueries";
-import { shopPointsKey } from "../../lib/shopQueries";
+import { preorderRoundKey, shopPointsKey } from "../../lib/shopQueries";
+import { shopPreordersService } from "@/services/shopPreorders";
+import PreorderOrderBox from "./_components/PreorderOrderBox";
 import CustomizationPicker from "./_components/CustomizationPicker";
 import { pickProblemText } from "../../lib/pickProblemText";
 import ReviewsSection from "./_components/ReviewsSection";
@@ -35,10 +38,21 @@ const iconButton =
   "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#8C5A3C]/20 bg-white shadow-sm transition hover:scale-105 hover:bg-[#FAF6F0] disabled:opacity-60";
 
 export default function ProductDetailPage() {
+  return (
+    // useSearchParams (?round=) ต้องอยู่ใต้ Suspense (ไม่งั้น next build error)
+    <Suspense fallback={null}>
+      <ProductDetailContent />
+    </Suspense>
+  );
+}
+
+function ProductDetailContent() {
   const { id } = useParams<{ id: string }>();
+  const roundParam = useSearchParams().get("round");
   const router = useRouter();
   const qc = useQueryClient();
   const validId = isObjectId(id ?? "");
+  const validRound = !!roundParam && isObjectId(roundParam);
   const { status: authStatus } = useCustomerSession();
 
   const productQ = useQuery({
@@ -52,6 +66,13 @@ export default function ProductDetailPage() {
     queryFn: () => catalogService.customization(id),
     enabled: validId && productQ.isSuccess,
     staleTime: 5 * 60_000,
+  });
+  // โหมดพรีออเดอร์ (D3): เปิดจากหน้ารอบ ?round= → ราคา/โควตาของรอบ
+  const roundQ = useQuery({
+    queryKey: preorderRoundKey(roundParam ?? ""),
+    queryFn: () => shopPreordersService.round(roundParam!),
+    enabled: validRound && productQ.data?.is_preorder === true,
+    retry: (count, e) => !(isApiError(e) && e.status === 404) && count < 2,
   });
 
   const { addToCart, status } = useAddToCart();
@@ -123,8 +144,12 @@ export default function ProductDetailPage() {
   const problems = customization && customizable ? checkPicked(customization, picked) : [];
   const selection = customization && customizable ? toSelection(customization, picked) : null;
   const extra = selection?.extra ?? 0;
-  const price = effectivePrice(product) + extra;
-  const discounted = hasSalePrice(product);
+  const roundItem = isPreorder ? roundQ.data?.items.find((it) => it.product._id === product._id) : undefined;
+  // พรีออเดอร์ในรอบ = ราคาของรอบ (price_override หรือราคาขายจริง) · ไม่ใช่ราคาหน้าร้าน
+  const price = (roundItem ? roundItem.current_price : effectivePrice(product)) + extra;
+  const discounted = roundItem ? roundItem.current_price < effectivePrice(product) : hasSalePrice(product);
+  // ราคาที่ขีดฆ่า: พรีออเดอร์ = ราคาขายจริงหน้าร้าน · ปกติ = ราคาเต็มก่อนลด
+  const regularPrice = roundItem ? effectivePrice(product) : product.product_price;
   const unitName = typeof product.unit_id === "object" && product.unit_id ? product.unit_id.unit_name : "";
   const rating = Number(product.avg_rating ?? 0);
   const isLoading = status === "loading";
@@ -283,17 +308,28 @@ export default function ProductDetailPage() {
               <span className="text-xl font-semibold text-gray-600">บาท {unitName ? `/ ${unitName}` : ""}</span>
               {discounted && (
                 <>
-                  <span className="text-base text-gray-400 line-through">{(product.product_price + extra).toLocaleString("th-TH")} บาท</span>
-                  <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2.5 py-1 rounded-xl">ลดราคา -{salePercent(product)}%</span>
+                  <span className="text-base text-gray-400 line-through">{(regularPrice + extra).toLocaleString("th-TH")} บาท</span>
+                  <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2.5 py-1 rounded-xl">ลดราคา -{Math.round((1 - (price - extra) / regularPrice) * 100)}%</span>
                 </>
               )}
               {extra > 0 && <span className="w-full text-xs text-gray-500">รวมตัวเลือก +฿{extra.toLocaleString("th-TH")}</span>}
             </div>
 
             {isPreorder ? (
-              <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
-                สินค้านี้เป็นสินค้าพรีออเดอร์ สั่งได้ผ่านรอบพรีออเดอร์เท่านั้น
-              </p>
+              <PreorderOrderBox
+                productId={product._id}
+                productName={product.product_name_th}
+                productImg={product.product_img?.[0] ?? ""}
+                hasRoundParam={validRound}
+                round={roundQ.data}
+                roundItem={roundItem}
+                loading={roundQ.isLoading || customQ.isLoading}
+                customization={customization && customizable ? customization : null}
+                picked={picked}
+                onPick={setPicked}
+                problems={problems}
+                selection={selection}
+              />
             ) : (
               <>
                 {customQ.isLoading ? (
