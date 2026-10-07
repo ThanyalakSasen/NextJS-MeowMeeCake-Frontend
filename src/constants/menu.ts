@@ -64,6 +64,8 @@ export const MENU_SECTIONS: MenuSection[] = [
         children: [
           { labelKey: "products", href: "/owner/products", icon: "ShoppingBagIcon", menuKey: "products" },
           { labelKey: "productStock", href: "/owner/products/productStock", icon: "ArchiveBoxIcon", menuKey: "stock" },
+          // คำพ้องค้นหา (E3) — /admin/search-synonyms ใช้สิทธิ์ products.*
+          { labelKey: "searchSynonyms", href: "/owner/products/search-synonyms", icon: "TagIcon", menuKey: "products" },
         ],
       },
       { labelKey: "ordersManage", icon: "ClipboardDocumentListIcon", href: "/owner/orders/manageOrders", menuKey: "orders", 
