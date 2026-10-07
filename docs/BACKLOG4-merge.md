@@ -158,6 +158,59 @@
 
 ---
 
+## 9. ฝั่ง backend — ต้องแก้/เพิ่ม (ตรวจ 2026-10-08)
+
+> ตรวจ repo backend `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake` branch `fix/pickup-date-regex` (`2746063` = `main` `7ef6362` + 1 commit) ·
+> `tsc --noEmit` ผ่าน · unit 228/228 · integration 393/393 (mongodb-memory-server) ·
+> endpoint ที่งานใน BACKLOG4 จะเรียก (หมวด 2–4 · 43 เส้น) **มีครบทุกเส้น** — ที่เหลือคือบั๊ก · ช่องโหว่ · API เสริม · ค่าตั้ง
+
+### 9.1 🔴 บั๊กที่ต้องแก้ก่อน deploy
+| รหัส | เรื่อง | ไฟล์ backend | สถานะ |
+|---|---|---|---|
+| Q-BE15 | regex `pickup_date` ผิดบน `main` (`/^d{4}-d{2}-d{2}$/` ไม่มี `\`) → ออเดอร์/พรีออเดอร์ที่เลือกวันรับได้ 400 ทุกครั้ง · ค้นทั้ง `src/` แล้วไม่มี regex ผิดแบบเดียวกันที่อื่น | `src/schemas/order.ts:38` · `src/schemas/preorder.ts:36` | 🟡 แก้แล้วใน `fix/pickup-date-regex` (+ เทส) · backend PR [#67](https://github.com/ThanyalakSasen/NextJS-MeowMeeCake/pull/67) (2026-10-08) · **ต้อง merge ก่อน frontend PR #32** |
+
+### 9.2 🟠 ช่องโหว่ (แก้เล็ก)
+| รหัส | เรื่อง | ไฟล์ backend | สถานะ |
+|---|---|---|---|
+| Q-BE11 | `unlinkLineAccount` ไม่เช็คว่าเป็นบัญชีที่สมัครด้วย LINE (ไม่มีรหัสผ่าน) → ยกเลิกแล้วเข้าบัญชีไม่ได้อีก · หน้าเว็บซ่อนปุ่มแล้ว แต่ backend ต้องกัน | `src/services/userService.ts:405` | ▢ |
+| Q-BE8 | `PATCH /admin/products/:id` ยังเขียน `product_stock_quantity` ตรง ๆ (ไม่ผ่าน `PUT /stock` → ไม่มีประวัติสต็อก) · frontend เลิกส่งแล้ว (I12) → ปฏิเสธได้เลย | `src/services/productService.ts` `updateProduct` (~บรรทัด 525) | ▢ |
+
+### 9.3 🟠 ทางตันใน flow ลูกค้า
+| รหัส | เรื่อง | ไฟล์ backend | สถานะ |
+|---|---|---|---|
+| Q-BE1 (F1) | ออเดอร์หมดเวลาแล้วต้องแนบ `slip_image_url` แต่ URL ได้จาก `POST /shop/payments/:id/slip` เท่านั้น (ต้องมี payment ก่อน) → ลูกค้าที่ไม่เคยส่งสลิปเปิดออเดอร์กลับเองไม่ได้ · เสนอ: `POST /shop/payments` รับ multipart หรือยอมสร้าง payment ไม่มีสลิป | `src/services/paymentService.ts:49` · `:118` | ▢ |
+
+### 9.4 🟡 API ที่ควรเพิ่ม
+| รหัส | เรื่อง | ตอนนี้ | ใช้กับ |
+|---|---|---|---|
+| Q-BE10 | รายการสินค้าสำหรับ POS ใต้สิทธิ์ `orders` (เช่น `GET /admin/pos/products?search=`) | `admin/pos` มีแค่ `scan` | I15 |
+| Q-BE13 | `GET /shop/orders` ส่ง items แบบย่อ (ชื่อ · จำนวน · ราคา · รูป) | `orderService.listOrders` (`:616`) ไม่ส่ง items · `productSnapshotSchema` (`orderItemModel.ts:4`) ไม่มีรูป | U7 · D1 |
+| Q-BE9 | flag `has_customization` ใน `GET /admin/products` | ไม่มี | I4 (POS) |
+| Q-BE2 | admin API แก้ `ShippingZones` (ค่าส่งเว็บ) | มีแค่ `admin/delivery-zones` (POS) | F2 |
+| Q-BE4 | รีวิว analytics · dashboard · รายสินค้า | `admin/reviews` มี `bulk` · `filter-options` · `[id]` | F3 |
+| Q-BE5 | สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ | `admin/preorder-rounds` มี CRUD · `items` · `status` · `restore` | F4 |
+| Q-BE12 | `refund_promptpay_id/name` ของลูกค้า | ไม่มี field | U9 · I2 |
+
+### 9.5 ต้องตัดสินใจ
+| รหัส | เรื่อง | ไฟล์ backend |
+|---|---|---|
+| Q-BE14 | ฐานคิดเพดานแต้ม — comment "ส่วนลดส่งฟรีไม่ลดฐานคิดแต้ม" แต่โค้ด `min(discount_amount, subtotal)` หักส่วนลดค่าส่งด้วย · แก้โค้ด (frontend ต้องแก้ตาม) หรือแก้ comment | `src/services/orderService.ts:403` |
+
+### 9.6 ค่าตั้ง (env)
+| ตัวแปร | ปัญหา | ต้องตั้ง |
+|---|---|---|
+| `STOREFRONT_URL` | ไม่ได้ตั้งใน `.env.local` → `storefrontUrl()` ใช้ `NEXTAUTH_URL=http://localhost:3000` (= backend) → ลิงก์ในอีเมลยืนยัน/ตั้งรหัสใหม่ชี้ผิดที่ (Q-BE3) | dev `http://localhost:3001` · deploy = โดเมนหน้าร้าน |
+| `LINE_AUTH_CALLBACK_URL` · `LINE_AUTH_RETURN_URL` | ไม่ได้ตั้ง → ปุ่ม LINE login (B3) ใช้ไม่ได้ (โค้ด merge แล้ว #66) | ตาม B3 ใน BACKLOG3 |
+| `CRON_SECRET` | ไม่ได้ตั้ง → cron ปิดทั้ง 5 (`order-expiry` · `preorder-rounds` · `preorder-reminders` · `monthly-summary` · `data-integrity`) · dev ไม่เป็นไร | **deploy ต้องตั้ง** — ไม่งั้นรอบพรีออเดอร์ไม่เปลี่ยนสถานะเอง + ไม่มีแจ้งเตือนล่วงหน้า |
+
+### 9.7 ปิดแล้ว
+- Q-BE7 — endpoint LINE login merge แล้ว (backend PR #66)
+- Q-BE6 — ไม่ต้องทำ (G1 เลือก `/customer/account/purchases/<id>` ที่ลิงก์ของ backend ใช้อยู่แล้ว)
+
+**ลำดับที่แนะนำ (backend):** Q-BE15 (merge) → Q-BE11 · Q-BE8 → ตั้ง `STOREFRONT_URL` → Q-BE1 → Q-BE10 · Q-BE13 → Q-BE14 (ตัดสินใจ) → ที่เหลือ
+
+---
+
 ## คำถามใหม่
 
 | รหัส | ถามใคร | คำถาม | บริบท | ใช้กับ | คำตอบ | ผู้ตอบ · วันที่ |
