@@ -5,17 +5,10 @@
 // ─────────────────────────────────────────────────────────────
 import { couponDiscount, type CouponUnusableReason, type MyCoupon } from "@/services/shopLoyalty";
 import { baht } from "@/components/customer/shopStyles";
+import { couponLabel } from "../../lib/couponLabel";
 
 const expiryText = (iso: string) =>
   new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
-
-function couponLabel(c: Pick<MyCoupon, "discount_type" | "discount_value" | "max_discount_amount">): string {
-  if (c.discount_type === "Percentage") {
-    return `ลด ${c.discount_value}%${c.max_discount_amount ? ` (สูงสุด ${baht(c.max_discount_amount)})` : ""}`;
-  }
-  if (c.discount_type === "Amount") return `ลด ${baht(c.discount_value)}`;
-  return "ส่งฟรี";
-}
 
 function reasonText(reason: CouponUnusableReason, c: MyCoupon): string {
   if (reason === "min_order") return `ยอดสินค้ายังไม่ถึงขั้นต่ำ ${baht(c.min_order_amount)}`;

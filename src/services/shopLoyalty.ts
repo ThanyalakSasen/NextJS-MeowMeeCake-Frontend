@@ -1,6 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // src/services/shopLoyalty.ts — แต้มสะสม + คูปองของฉัน (/shop/points · /shop/coupons) · หน้าร้าน
 // ใช้ในหน้า checkout (BACKLOG3-merge C3): ส่ง user_coupon_id / points_to_redeem ตอนสร้างออเดอร์
+// และหน้าสมาชิก /customer/account/member (D4): ยอด · แต้มใกล้หมดอายุ · ประวัติ · แลกคูปองด้วยแต้ม
 // สูตรด้านล่างใช้แสดงยอดล่วงหน้าเท่านั้น — ต้องตรงกับ backend (pointsService.maxRedeemablePoints ·
 // discountEngine.computeDiscount) · backend คิดใหม่เองทุกครั้งตอนสร้างออเดอร์
 // ─────────────────────────────────────────────────────────────
@@ -9,18 +10,59 @@ import type { ItemResponse } from "@/types/api";
 
 export type DiscountType = "Percentage" | "Amount" | "FreeShipping";
 
+/** = pointsService.POINT_RULES ของ backend */
 export interface PointRules {
+  /** ทุกกี่บาทได้ 1 แต้ม (25) */
+  BAHT_PER_POINT: number;
   /** 1 แต้ม = กี่บาท (0.1) */
   POINT_VALUE_BAHT: number;
   MIN_BALANCE_TO_REDEEM: number;
   REDEEM_STEP: number;
   /** ใช้แต้มลดได้ไม่เกินสัดส่วนนี้ของยอดสินค้า (0.3) */
   MAX_REDEEM_RATIO: number;
+  /** อายุแต้ม (วัน) */
+  EXPIRY_DAYS: number;
+  WELCOME: number;
+  REVIEW: number;
+  REVIEW_PHOTO: number;
+  SHARE: number;
+  PROFILE: number;
 }
 
+export interface PointHistoryItem {
+  _id: string;
+  type: "earn" | "redeem" | "expire" | "refund" | "revoke";
+  /** ใช้/หมดอายุ/ถูกยกเลิก = ติดลบ */
+  points: number;
+  description: string;
+  created_at: string;
+}
+
+/** GET /shop/points (pointsService.getMyPoints) — ประวัติ 50 รายการล่าสุด */
 export interface MyPoints {
   balance: number;
+  /** แต้มที่จะหมดอายุภายใน 30 วัน + วันแรกที่หมด */
+  expiring_soon: { points: number; first_date: string | null };
+  history: PointHistoryItem[];
+  /** ได้โบนัสสมัครสมาชิก / กรอกข้อมูลครบ แล้วหรือยัง */
+  bonuses: { welcome: boolean; profile: boolean };
+  profile_complete: boolean;
   rules: PointRules;
+}
+
+/** คูปองที่แลกด้วยแต้มได้ (GET /shop/coupons → catalog) */
+export interface CatalogCoupon {
+  _id: string;
+  promotion_name: string;
+  promotion_desc: string;
+  discount_type: DiscountType;
+  discount_value: number;
+  min_order_amount: number;
+  max_discount_amount: number | null;
+  points_cost: number;
+  end_date: string;
+  /** แลกครบสิทธิ์ต่อคนแล้ว */
+  limit_reached: boolean;
 }
 
 export interface MyCoupon {
@@ -74,14 +116,20 @@ export function couponDiscount(
 }
 
 export const shopLoyaltyService = {
-  /** GET /shop/points — ยอดแต้ม + กติกา (ประวัติ/โบนัสใช้ในหน้าแต้ม D5) */
-  points: async (): Promise<MyPoints> => {
-    const res = await http.get<ItemResponse<MyPoints>>("/shop/points");
-    return { balance: res.data.balance, rules: res.data.rules };
-  },
-  /** GET /shop/coupons → คูปองของฉันที่ยังใช้ได้ (catalog แลกแต้มใช้ในหน้าแต้ม D5) */
+  /** GET /shop/points — ยอด · ใกล้หมดอายุ · ประวัติ · โบนัส · กติกา (checkout ใช้แค่ balance + rules — cache key เดียวกัน) */
+  points: async (): Promise<MyPoints> => (await http.get<ItemResponse<MyPoints>>("/shop/points")).data,
+  /** GET /shop/coupons → คูปองของฉันที่ยังใช้ได้ (checkout) */
   availableCoupons: async (): Promise<MyCoupon[]> => {
     const res = await http.get<ItemResponse<{ coupons: MyCoupon[] }>>("/shop/coupons");
     return (res.data.coupons ?? []).filter((c) => c.state === "available");
+  },
+  /** GET /shop/coupons — คูปองที่แลกได้ + คูปองของฉันทุกสถานะ (ใหม่สุดก่อน · 100 ใบ) */
+  overview: async (): Promise<{ catalog: CatalogCoupon[]; coupons: MyCoupon[] }> => {
+    const res = await http.get<ItemResponse<{ catalog: CatalogCoupon[]; coupons: MyCoupon[] }>>("/shop/coupons");
+    return { catalog: res.data.catalog ?? [], coupons: res.data.coupons ?? [] };
+  },
+  /** POST /shop/coupons/redeem { promotion_id } — หักแต้มแล้วได้คูปองของฉัน 1 ใบ (แต้มไม่พอ/ครบสิทธิ์ = 400) */
+  redeem: async (promotionId: string): Promise<void> => {
+    await http.post("/shop/coupons/redeem", { promotion_id: promotionId });
   },
 };
