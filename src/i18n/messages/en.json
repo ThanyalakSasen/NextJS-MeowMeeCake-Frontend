@@ -1677,6 +1677,7 @@
     "title": "Store info",
     "description": "General info, contact channels, payment account, address and weekly markets shown on the online store — click \"Edit\" and save one section at a time",
     "staffDescription": "Weekly markets (pickup points) — other store info can be edited by the owner only",
+    "notSet": "— not set",
     "finishOtherFirst": "Save or cancel the section you are editing first",
     "unsavedTitle": "Unsaved changes",
     "unsavedConfirm": "This section has unsaved changes. Discard them?",

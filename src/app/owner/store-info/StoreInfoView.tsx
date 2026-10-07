@@ -40,6 +40,8 @@ export function StoreInfoView(vm: VM) {
     );
 
   const p = vm.profile;
+  // ตัวอย่างค่า (placeholder) แสดงเฉพาะตอนแก้ไข — โหมดดูแสดง "ยังไม่ได้ตั้งค่า" ไม่งั้นช่องว่างดูเหมือนตั้งค่าไว้แล้ว
+  const ph = (section: SectionKey, example: string) => (vm.editing === section ? example : t("storeInfo.notSet"));
   const phoneHint = (id: string) => {
     if (!id) return undefined;
     const s = vm.staffOptions.find((o) => o.value === id);
@@ -83,6 +85,8 @@ export function StoreInfoView(vm: VM) {
 
   return (
     <ListPageLayout title={t("storeInfo.title")} description={vm.isOwner ? t("storeInfo.description") : t("storeInfo.staffDescription")}>
+      {/* โหมดดู: ค่าที่บันทึกแล้วเป็นตัวเข้ม (antd disabled จางเกินจนแยกจาก placeholder ไม่ออก) */}
+      <div className="[&_.ant-input-disabled]:!text-gray-800 [&_.ant-select-disabled_.ant-select-content]:!text-gray-800 [&_.ant-select-disabled_.ant-select-selection-item]:!text-gray-800">
       {vm.isError ? (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-gray-600">{t("common.loadFailed")}</p>
@@ -101,7 +105,7 @@ export function StoreInfoView(vm: VM) {
                   value={p.store_name}
                   maxLength={100}
                   disabled={vm.editing !== "general"}
-                  placeholder="MeowMee Cake"
+                  placeholder={ph("general", "MeowMee Cake")}
                   onChange={(e) => vm.setProfileField("store_name", e.target.value)}
                 />
               </FormField>
@@ -144,7 +148,7 @@ export function StoreInfoView(vm: VM) {
                       optionFilterProp="label"
                       value={p[key] || undefined}
                       disabled={vm.editing !== "contact"}
-                      placeholder={t("storeInfo.contact.pickStaff")}
+                      placeholder={ph("contact", t("storeInfo.contact.pickStaff"))}
                       options={vm.staffOptions}
                       onChange={(v?: string) => vm.setProfileField(key, v ?? "")}
                     />
@@ -156,7 +160,7 @@ export function StoreInfoView(vm: VM) {
                     type="email"
                     value={p.contact_email}
                     disabled={vm.editing !== "contact"}
-                    placeholder="hello@meowmeecake.com"
+                    placeholder={ph("contact", "hello@meowmeecake.com")}
                     onChange={(e) => vm.setProfileField("contact_email", e.target.value)}
                   />
                 </FormField>
@@ -171,7 +175,7 @@ export function StoreInfoView(vm: VM) {
                       type="url"
                       value={p.social_links[k]}
                       disabled={vm.editing !== "contact"}
-                      placeholder="https://..."
+                      placeholder={ph("contact", "https://...")}
                       onChange={(e) => vm.setSocial(k, e.target.value)}
                     />
                   </FormField>
@@ -189,7 +193,7 @@ export function StoreInfoView(vm: VM) {
                   value={p.promptpay_id}
                   disabled={vm.editing !== "promptpay"}
                   inputMode="numeric"
-                  placeholder="0812345678"
+                  placeholder={ph("promptpay", "0812345678")}
                   onChange={(e) => vm.setProfileField("promptpay_id", e.target.value)}
                 />
                 <span className="text-xs text-gray-500">{t("storeInfo.promptpay.idHint")}</span>
@@ -199,6 +203,7 @@ export function StoreInfoView(vm: VM) {
                   value={p.promptpay_account_name}
                   maxLength={100}
                   disabled={vm.editing !== "promptpay"}
+                  placeholder={ph("promptpay", "")}
                   onChange={(e) => vm.setProfileField("promptpay_account_name", e.target.value)}
                 />
               </FormField>
@@ -207,6 +212,7 @@ export function StoreInfoView(vm: VM) {
           </div>
         </div>
       )}
+      </div>
     </ListPageLayout>
   );
 }

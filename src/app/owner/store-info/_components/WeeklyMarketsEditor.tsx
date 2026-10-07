@@ -66,7 +66,7 @@ export function WeeklyMarketsEditor({
                   value={m.name}
                   maxLength={100}
                   disabled={!editable}
-                  placeholder={t("storeInfo.markets.namePlaceholder")}
+                  placeholder={editable ? t("storeInfo.markets.namePlaceholder") : t("storeInfo.notSet")}
                   onChange={(e) => onField(i, "name", e.target.value)}
                 />
               </FormField>
@@ -75,7 +75,7 @@ export function WeeklyMarketsEditor({
                   value={m.location}
                   maxLength={200}
                   disabled={!editable}
-                  placeholder={t("storeInfo.markets.locationPlaceholder")}
+                  placeholder={editable ? t("storeInfo.markets.locationPlaceholder") : "—"}
                   onChange={(e) => onField(i, "location", e.target.value)}
                 />
               </FormField>
@@ -107,7 +107,7 @@ export function WeeklyMarketsEditor({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3">
               <div className="flex flex-col gap-1">
                 <span className="text-sm text-brown-800">
                   {t("storeInfo.markets.hours")}
@@ -126,7 +126,7 @@ export function WeeklyMarketsEditor({
                   type="url"
                   value={m.map_url}
                   disabled={!editable}
-                  placeholder="https://maps.app.goo.gl/..."
+                  placeholder={editable ? "https://maps.app.goo.gl/..." : "—"}
                   onChange={(e) => onField(i, "map_url", e.target.value)}
                 />
               </FormField>

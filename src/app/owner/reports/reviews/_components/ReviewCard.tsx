@@ -59,8 +59,9 @@ export function ReviewCard({
 
   return (
     <li className={`flex gap-3 rounded-xl border bg-white p-3 ${selected ? "border-brown-300 ring-1 ring-brown-200" : "border-gray-100"}`}>
-      <Checkbox checked={selected} onChange={onSelect} className="mt-1" aria-label={t("reviews.selectOne")} />
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+      <Checkbox checked={selected} onChange={onSelect} className="mt-1 self-start" aria-label={t("reviews.selectOne")} />
+      {/* รูปสินค้า — ซ่อนบนจอแคบ ให้เนื้อหารีวิวได้ความกว้างเต็ม */}
+      <div className="hidden h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100 sm:flex">
         {r.productImage ? (
           // eslint-disable-next-line @next/next/no-img-element -- รูปจาก backend (คนละ origin)
           <img src={r.productImage} alt={r.productName} className="h-full w-full object-cover" />
@@ -163,8 +164,11 @@ export function ReviewCard({
           </div>
         )}
 
-        <NoteBox key={`n-${r.internal_note?.updated_at ?? ""}`} note={r.internal_note} canEdit={canUpdate} onSave={onSaveNote} />
-        <ReplyBox key={`r-${r.shop_reply?.replied_at ?? ""}`} rating={r.rating} reply={r.shop_reply} suggestions={suggestions} canEdit={canUpdate} onSave={onSaveReply} />
+        {/* ปุ่ม "บันทึกภายใน" กับ "ตอบกลับ" ตอนยังว่างอยู่แถวเดียวกัน — ห่อด้วย flex ให้มีระยะห่าง · เปิดแก้แล้วขยายเต็มแถว */}
+        <div className="flex flex-wrap items-start gap-x-4 [&>*]:max-w-full [&>div]:basis-full">
+          <NoteBox key={`n-${r.internal_note?.updated_at ?? ""}`} note={r.internal_note} canEdit={canUpdate} onSave={onSaveNote} />
+          <ReplyBox key={`r-${r.shop_reply?.replied_at ?? ""}`} rating={r.rating} reply={r.shop_reply} suggestions={suggestions} canEdit={canUpdate} onSave={onSaveReply} />
+        </div>
 
         <div className="mt-2 flex flex-wrap items-center justify-end gap-1">
           {canUpdate && (

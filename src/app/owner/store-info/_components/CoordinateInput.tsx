@@ -81,7 +81,7 @@ export function CoordinateInput({ lat, lng, onChange, onResolveShortLink, disabl
         value={draft ?? format(lat, lng)}
         disabled={disabled}
         status={error ? "error" : undefined}
-        placeholder={t("storeInfo.coord.placeholder")}
+        placeholder={disabled ? t("storeInfo.notSet") : t("storeInfo.coord.placeholder")}
         onChange={(e) => handleChange(e.target.value)}
         onBlur={handleBlur}
       />

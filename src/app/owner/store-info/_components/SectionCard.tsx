@@ -9,8 +9,8 @@ export function SectionCard({ title, description, actions, children }: {
 }) {
   return (
     <Card className="flex flex-col gap-4 p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 pb-3">
-        <div className="min-w-0">
+      <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
+        <div className="min-w-0 flex-1">
           <h2 className="m-0 text-base font-semibold text-brown-900">{title}</h2>
           {description && <p className="m-0 mt-1 text-sm text-gray-500">{description}</p>}
         </div>

@@ -33,7 +33,7 @@ export function StoreAddressFields({ address, editable, onField, onCoordinates, 
                 maxLength={key === "zip_code" ? 5 : 200}
                 inputMode={key === "zip_code" ? "numeric" : undefined}
                 status={fieldError(key) ? "error" : undefined}
-                placeholder={t(`storeInfo.address.${key}Placeholder`)}
+                placeholder={editable ? t(`storeInfo.address.${key}Placeholder`) : t("storeInfo.notSet")}
                 onChange={(e) => onField(key, e.target.value)}
               />
             </FormField>
