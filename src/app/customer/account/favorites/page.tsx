@@ -77,7 +77,7 @@ function FavoritesContent() {
 }
 
 function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removing: boolean; onRemove: () => void }) {
-  const { addToCart, status } = useAddToCart();
+  const { quickAdd, status } = useAddToCart();
   const [imgFailed, setImgFailed] = useState(false);
   const href = `/customer/product/${item.id}`;
   const img = resolveUploadUrl(item.image);
@@ -143,7 +143,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
             <button
               type="button"
               disabled={!item.inStock || status === "loading" || status === "success"}
-              onClick={() => void addToCart(item.id, 1)}
+              onClick={() => void quickAdd(item.id)}
               className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-200 ${
                 status === "success"
                   ? "border border-emerald-600 bg-emerald-600 text-white"

@@ -34,7 +34,7 @@ import {
   addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoLines, type CartLine,
 } from "./posCart";
 import { posPromotions, promotionsForProduct, evaluateAll, isScoped } from "./posPromotion";
-import { EMPTY_SELECTION, hasCustomization, toSelection, type CartSelection, type Picked } from "./customizationSelection";
+import { EMPTY_SELECTION, hasCustomization, toSelection, type CartSelection, type Picked } from "@/lib/customizationSelection";
 import { LIST_ALL } from "@/lib/http";
 
 // POS ขายเฉพาะสินค้าปกติ (พร้อมขาย มีสต็อก) — พรีออเดอร์ขายผ่านรอบพรีออเดอร์เท่านั้น

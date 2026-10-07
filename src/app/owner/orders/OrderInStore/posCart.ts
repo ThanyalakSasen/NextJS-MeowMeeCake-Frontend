@@ -7,7 +7,7 @@ import type { Product } from "@/types/product";
 import type { OrderInput } from "@/types/order";
 import { refId } from "@/lib/refId";
 import type { PromoLine } from "./posPromotion";
-import { EMPTY_SELECTION, type CartSelection, type SelectedOptionLine } from "./customizationSelection";
+import { EMPTY_SELECTION, type CartSelection, type SelectedOptionLine } from "@/lib/customizationSelection";
 
 export interface CartLine {
   /** สินค้า + ชุดตัวเลือก — ใช้แยก/อ้างบรรทัด (สินค้าไม่มีตัวเลือก = productId) */

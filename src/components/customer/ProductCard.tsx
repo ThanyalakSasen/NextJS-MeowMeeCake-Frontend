@@ -4,7 +4,9 @@
 // เปลี่ยนจากเดิม: ใช้ Product ของ backend หลัก (is_preorder แทน product_type) · รูปผ่าน resolveUploadUrl
 // · คะแนนรีวิวแสดง avg_rating (เดิมแสดง review_count ผิดช่อง)
 // · ปุ่มหัวใจ (รายการโปรด D5/U3) อ่านจาก cache เดียวของ useFavorites — ไม่ยิงขอรายการต่อใบแบบต้นแบบ
-// ตัดออก: ป้ายสารก่อภูมิแพ้ + เหตุผลที่แนะนำ — มาจาก recommendation engine (/shop/recommendations · similar) → ทำพร้อม C2/C1
+// · ป้ายแพ้อาหาร + เหตุผลที่แนะนำ: ส่งมาเป็น props จากผลของระบบแนะนำ (สินค้าคล้าย C1 · แนะนำสำหรับคุณ C2) เท่านั้น
+//   — /catalog/products ทั่วไปไม่มีข้อมูลนี้
+// · "เพิ่มลงตะกร้า" = quickAdd: สินค้ามีตัวเลือก → พาไปหน้าสินค้าให้เลือกก่อน
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
@@ -14,6 +16,7 @@ import { resolveUploadUrl } from "@/lib/uploads";
 import { effectivePrice, hasSalePrice, salePercent } from "@/lib/pricing";
 import { useAddToCart } from "@/app/customer/hooks/useAddToCart";
 import { useFavorites } from "@/app/customer/hooks/useFavorites";
+import type { AllergenWarning, AllergenWarningLevel } from "@/services/catalog";
 
 /**
  * สินค้านี้จะถูกแสดงเป็นบัตรหรือไม่ — ProductCard จะ return null ถ้าได้ false
@@ -30,16 +33,35 @@ export function categoryNameOf(p: Pick<Product, "category_id">): string | undefi
   return typeof p.category_id === "object" && p.category_id ? p.category_id.product_category_name?.trim() : undefined;
 }
 
+const ALLERGEN_TONE: Record<Exclude<AllergenWarningLevel, "none">, string> = {
+  caution: "bg-amber-100 text-amber-900 border-amber-300",
+  warning: "bg-orange-100 text-orange-900 border-orange-300",
+  danger: "bg-red-600 text-white border-red-700",
+};
+
+/** ป้ายแพ้อาหาร — ชื่อวัตถุดิบที่ตรงกับที่ลูกค้าบันทึกไว้ (2 ชื่อแรก + ที่เหลือ) */
+function allergenLabel(w: AllergenWarning): string {
+  const names = w.matchedAllergens.map((m) => m.name);
+  if (names.length === 0) return "มีสารก่อภูมิแพ้";
+  return `แพ้: ${names.slice(0, 2).join(", ")}${names.length > 2 ? ` +${names.length - 2}` : ""}`;
+}
+
 export default function ProductCard({
   product,
   showAddToCart = true,
   showFavorite = true,
+  allergenWarning = null,
+  reasons,
 }: {
   product: Product;
   showAddToCart?: boolean;
   showFavorite?: boolean;
+  /** จากระบบแนะนำ (สินค้าคล้าย · แนะนำสำหรับคุณ) — มีเมื่อ login + บันทึกอาหารที่แพ้ไว้ */
+  allergenWarning?: AllergenWarning | null;
+  /** เหตุผลที่แนะนำ — แสดงข้อแรก */
+  reasons?: string[];
 }) {
-  const { addToCart, status } = useAddToCart();
+  const { quickAdd, status } = useAddToCart();
   const favorites = useFavorites();
   const isLoading = status === "loading";
   const isSuccess = status === "success";
@@ -102,6 +124,15 @@ export default function ProductCard({
             )}
           </button>
         )}
+
+        {allergenWarning && allergenWarning.level !== "none" && (
+          <span
+            title={allergenWarning.message ?? undefined}
+            className={`absolute left-2 top-2 max-w-[70%] truncate rounded-full border px-2 py-0.5 text-[11px] font-bold shadow-sm ${ALLERGEN_TONE[allergenWarning.level]}`}
+          >
+            ⚠ {allergenLabel(allergenWarning)}
+          </span>
+        )}
       </div>
 
       <div className="p-5 sm:p-3 flex flex-col justify-between !bg-[#fff]">
@@ -109,6 +140,7 @@ export default function ProductCard({
           <p className="text-md font-medium text-black mb-0.5 truncate">{categoryName || "หมวดหมู่ไม่ระบุ"}</p>
           <h3 className="text-lg font-semibold text-black line-clamp-1">{product.product_name_th}</h3>
           <p className="text-md text-black line-clamp-1 mb-2">{product.product_name_eng || " "}</p>
+          {reasons?.[0] && <p className="-mt-1 mb-2 line-clamp-1 text-xs text-[#8C5A3C]">{reasons[0]}</p>}
         </div>
 
         <div>
@@ -145,7 +177,7 @@ export default function ProductCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                void addToCart(product._id, 1);
+                void quickAdd(product._id);
               }}
               className={`w-full py-1.5 px-2 mt-1 text-md font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1 ${
                 isSuccess

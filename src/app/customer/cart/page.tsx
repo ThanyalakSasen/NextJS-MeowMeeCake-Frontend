@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaImage, FaTrashAlt } from "react-icons/fa";
-import { shopCartService, type ShopCart, type ShopCartItem } from "@/services/shopCart";
+import { cartItemOptionText, shopCartService, type ShopCart, type ShopCartItem } from "@/services/shopCart";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
@@ -114,7 +114,7 @@ function CartContent() {
               {cart.items.map((item) => {
                 const product = productOf(item);
                 const img = resolveUploadUrl(product?.product_img?.[0]);
-                const variant = typeof item.variant_id === "object" && item.variant_id ? item.variant_id.variant_name : null;
+                const variant = cartItemOptionText(item);
                 const busy = busyId === item._id;
                 return (
                   <div key={item._id} className={`${shopCard} flex gap-4 ${busy ? "opacity-60" : ""}`}>

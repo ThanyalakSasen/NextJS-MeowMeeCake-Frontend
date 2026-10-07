@@ -8,6 +8,7 @@ import type { ItemResponse } from "@/types/api";
 import type { Product } from "@/types/product";
 import type { ProductCategory } from "@/types/productCategory";
 import type { Banner } from "@/types/banner";
+import type { ProductCustomization } from "@/types/productCustomization";
 import { toProduct } from "@/services/products";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -30,15 +31,62 @@ export interface ReviewSummary {
   distribution: Record<string, number>;
 }
 
-/** รีวิวที่ is_visible ของสินค้า — reviewService.listReviews (publicOnly) ฝั่ง backend */
+/** รีวิวที่แสดงได้ของสินค้า — reviewService.toPublicReview ฝั่ง backend (ปักหมุดก่อน แล้วใหม่ก่อน) */
 export interface CatalogReview {
   _id: string;
   rating: number;
   review_text?: string | null;
   image?: string[];
-  /** backend populate { user_fullname, user_img } — ชื่อเต็ม ⚠️ หน้าร้านต้องปิดบังเองก่อนแสดง */
-  user_id?: { _id: string; user_fullname?: string; user_img?: string | null } | string | null;
+  /** path วิดีโอ (ผ่าน resolveUploadUrl) */
+  video?: string | null;
+  /** ชื่อผู้รีวิวที่ backend ปิดบางส่วนแล้ว ("K. Som***") — แสดงตรง ๆ ได้ */
+  reviewer_name?: string;
+  /** รูปเดิม (populate) — user_fullname = ชื่อที่ปิดบางส่วนแล้วเหมือน reviewer_name */
+  user_id?: { _id?: string; user_fullname?: string; user_img?: string | null } | string | null;
+  /** แง่มุมที่ลูกค้าเลือกตอนรีวิว (รสชาติ · บรรจุภัณฑ์ ฯลฯ) */
+  aspect_feedback?: { aspect_id: string; aspect_name_th: string; sentiment: string }[];
+  is_pinned?: boolean;
+  shop_reply?: { text: string; replied_at: string | null } | null;
+  from_preorder?: boolean;
   created_at: string;
+}
+
+/** GET /catalog/products/{id}/sentiment — สรุปความรู้สึกรายแง่มุม (sentimentService.getProductAspectSummary) */
+export interface AspectSentiment {
+  aspect_id: string;
+  aspect: { aspect_name_th?: string; aspect_name_eng?: string } | null;
+  total: number;
+  positive: number;
+  negative: number;
+  neutral: number;
+}
+
+export type AllergenWarningLevel = "none" | "caution" | "warning" | "danger";
+
+/** คำเตือนแพ้อาหารของระบบแนะนำ (backend types/recommendation.ts) — มีเมื่อ login + บันทึกอาหารที่แพ้ไว้ */
+export interface AllergenWarning {
+  level: AllergenWarningLevel;
+  message: string | null;
+  matchedAllergens: { name: string; severity: "moderate" | "severe"; isMainIngredient: boolean }[];
+}
+
+export interface SimilarProduct {
+  product: Product;
+  /** เหตุผลที่แนะนำ (ภาษาไทยจาก backend) */
+  reasons: string[];
+  allergenWarning: AllergenWarning | null;
+}
+
+/**
+ * สินค้าจากระบบแนะนำมี category_name แทน category_id ที่ populate → แปลงให้เหมือน /catalog/products
+ * (ProductCard อ่านชื่อหมวดจาก category_id.product_category_name)
+ */
+function toRecommendedProduct(raw: any): Product {
+  const p = toProduct(raw);
+  if (raw?.category_name && (typeof p.category_id !== "object" || !p.category_id)) {
+    return { ...p, category_id: { _id: String(raw.category_id ?? ""), product_category_name: String(raw.category_name) } } as Product;
+  }
+  return p;
 }
 
 export const catalogService = {
@@ -76,5 +124,27 @@ export const catalogService = {
     const res = await http.get<ItemResponse<any>>(`/catalog/products/${encodeURIComponent(id)}/reviews/summary`);
     const d = res.data ?? {};
     return { average: Number(d.average) || 0, count: Number(d.count) || 0, distribution: d.distribution ?? {} };
+  },
+
+  /** GET /catalog/products/{id}/customization — กลุ่มตัวเลือก + ออปชันเสริม (ไม่มี = ว่างทั้งคู่) */
+  customization: async (id: string): Promise<ProductCustomization> => {
+    const res = await http.get<ItemResponse<ProductCustomization>>(`/catalog/products/${encodeURIComponent(id)}/customization`);
+    return { groups: res.data?.groups ?? [], options: res.data?.options ?? [] };
+  },
+
+  /** GET /catalog/products/{id}/sentiment — แง่มุมที่ลูกค้าพูดถึงในรีวิว (บวก/ลบ/กลาง) */
+  sentiment: async (id: string): Promise<AspectSentiment[]> => {
+    const res = await http.get<ItemResponse<{ aspects?: AspectSentiment[] }>>(`/catalog/products/${encodeURIComponent(id)}/sentiment`);
+    return res.data?.aspects ?? [];
+  },
+
+  /** GET /catalog/products/{id}/similar — สินค้าคล้ายกัน · login แล้ว = ปรับตามผู้ใช้ + คำเตือนแพ้อาหาร (ส่ง cookie อยู่แล้ว) */
+  similar: async (id: string, limit = 10): Promise<SimilarProduct[]> => {
+    const res = await http.get<ItemResponse<{ recommendations?: any[] }>>(`/catalog/products/${encodeURIComponent(id)}/similar`, {
+      params: { limit },
+    });
+    return (res.data?.recommendations ?? [])
+      .filter((r) => r?.product)
+      .map((r) => ({ product: toRecommendedProduct(r.product), reasons: r.reasons ?? [], allergenWarning: r.allergenWarning ?? null }));
   },
 };

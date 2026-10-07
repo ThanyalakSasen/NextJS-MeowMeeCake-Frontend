@@ -4,3 +4,6 @@ import { LIST_ALL } from "@/lib/http";
 export const CATALOG_PRODUCT_PARAMS = { is_preorder: false, limit: LIST_ALL } as const;
 export const catalogProductsKey = ["catalog", "products", CATALOG_PRODUCT_PARAMS] as const;
 export const catalogCategoriesKey = ["catalog", "categories"] as const;
+/** หน้ารายละเอียดสินค้า (C1) — ตัวเลือก cache ร่วมกับ useAddToCart.quickAdd (บัตรสินค้าเช็คก่อนใส่ตะกร้า) */
+export const catalogProductKey = (id: string) => ["catalog", "product", id] as const;
+export const productCustomizationKey = (id: string) => ["catalog", "product", id, "customization"] as const;

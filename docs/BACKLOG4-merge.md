@@ -26,7 +26,7 @@
 | หน้าร้าน (ลูกค้า) | 16 หน้า (หน้าแรก · รายการสินค้า · รายละเอียดสินค้า · ตะกร้า · checkout · บัญชี · ที่อยู่ · ประวัติ/รายละเอียดออเดอร์ · เปลี่ยน/ลืม/ตั้งรหัส · ยืนยันอีเมล · login · สมัคร · `/login/line`) | 15 หน้า (พรีออเดอร์ 8 · แต้ม · รายการโปรด · แจ้งเตือน · เขียนรีวิว · ติดต่อร้าน · ค่าส่ง · ลิงก์ชำระเงิน) | 9 จุด (หมวด 3) |
 | หลังร้าน (เจ้าของร้าน) | ทุกหน้าที่มีในระบบเดิม | 5 หน้า (ข้อมูลร้าน · คำค้นเทียบเคียง · รีวิวขั้นสูง · ออเดอร์พร้อมส่ง · โซนค่าส่ง) | รีวิว (FO ~4,160 บรรทัด vs 374) |
 
-**ลำดับที่แนะนำ:** ~~1.1 (ปิด C3)~~ ✅ → ~~K1–K4 (เอกสาร)~~ ✅ → ~~D4~~ ✅ → ~~D5 + U3 (หัวใจ)~~ ✅ → C1 → D3 → D6 + U4 → D7 → D8 + D9 + U5 → C2 → หลังร้าน E2 → E3 → E4 → E5 → ที่เหลือ
+**ลำดับที่แนะนำ:** ~~1.1 (ปิด C3)~~ ✅ → ~~K1–K4 (เอกสาร)~~ ✅ → ~~D4~~ ✅ → ~~D5 + U3 (หัวใจ)~~ ✅ → ~~C1~~ ✅ (รอ backend Q-BE17) → D3 → D6 + U4 → D7 → D8 + D9 + U5 → C2 → หลังร้าน E2 → E3 → E4 → E5 → ที่เหลือ
 
 ---
 
@@ -77,11 +77,11 @@
 
 | รหัส | หน้า / component | ที่ขาด (เทียบ FrontOffice) | ต้นแบบ | ขึ้นกับ | สถานะ |
 |---|---|---|---|---|---|
-| C1 | รายละเอียดสินค้า `customer/product/[id]` | ตัวเลือก/ออปชันก่อนลงตะกร้า · รีวิว + สรุปคะแนน · สินค้าคล้าย · sentiment · สารก่อภูมิแพ้ · แสดงตัวเลือกในตะกร้า/checkout/ออเดอร์ | `ProductDetailClient.tsx` (1,108) · `ProductCustomizationPicker.tsx` (131) | API: `/catalog/products/:id/customization` · `/reviews` (+`summary`) · `/similar` · `/sentiment` · ตะกร้ารับ `variant_ids[]` + `selected_options` | ▢ |
+| C1 | รายละเอียดสินค้า `customer/product/[id]` | ตัวเลือก/ออปชันก่อนลงตะกร้า · รีวิว + สรุปคะแนน · สินค้าคล้าย · sentiment · สารก่อภูมิแพ้ · แสดงตัวเลือกในตะกร้า/checkout/ออเดอร์ | `ProductDetailClient.tsx` (1,108) · `ProductCustomizationPicker.tsx` (131) | API: `/catalog/products/:id/customization` · `/reviews` (+`summary`) · `/similar` · `/sentiment` · ตะกร้ารับ `variant_ids[]` + `selected_options` | ✅ 2026-10-09 (branch `feat/product-detail` · **ต้องมี backend Q-BE17**) — เลือกตัวเลือก/ออปชัน (ตรวจด้วย `src/lib/customizationSelection.ts` ที่ย้ายมาใช้ร่วมกับ POS) · ราคารวมตัวเลือก · หัวใจ · แชร์รับแต้ม · รีวิว (การกระจายดาว · แง่มุม · ปักหมุด · ร้านตอบ · วิดีโอ · ชื่อปิดบางส่วนจาก backend) · สินค้าคล้าย + ป้ายแพ้อาหาร · ตัวเลือกในตะกร้า/checkout · บัตรสินค้า/รายการโปรดที่มีตัวเลือก → พาไปเลือกก่อน (`quickAdd`) · **ทดสอบกับ backend 28/28** (+ C3 ซ้ำ 39/39) · ไม่ยกมา: รอบพรีออเดอร์ (D3) · หมายเหตุต่อชิ้น · รายการส่วนประกอบ (API ไม่ส่ง) |
 | C2 | หน้าแรก `customer/page.tsx` | ส่วน "สินค้าแนะนำ" | `HomeRecommendations.tsx` (152) | `/catalog/products/recommended` · `/shop/recommendations` (ล็อกอินแล้ว) | ▢ |
 | U1 | Navbar `components/customer/Navbar.tsx` | เมนู **พรีออเดอร์** · **ติดต่อเรา** · **กระดิ่งแจ้งเตือน** (FO มีเมนูชุดสินค้าด้วย — ไม่ทำ H1) | `components/customer/Navbar.tsx` (373) | D3 · D8 · D6 | ▢ เพิ่มทีละเมนูตามหน้าที่เสร็จ |
 | U2 | เมนูบัญชี `components/customer/AccountSideMenu.tsx` | มี 6/8 (เพิ่ม **สมาชิกของฉัน** — D4 · **รายการโปรด** — D5) — ขาด **ประวัติพรีออเดอร์** · **การแจ้งเตือน** · FO จัดเป็น 2 หัวข้อ ("บัญชีของฉัน" / "คำสั่งซื้อของฉัน") | `components/customer/SideBarMenu.tsx` (232) | D4 · D3 · D5 · D6 | ▢ |
-| U3 | การ์ดสินค้า `components/customer/ProductCard.tsx` | ~~ปุ่มหัวใจ (เพิ่ม/ลบรายการโปรด)~~ ✅ D5 (optimistic · guest → login) · ป้ายสารก่อภูมิแพ้ | `components/customer/ProductCard.tsx` (350) | ป้ายสารก่อภูมิแพ้มาจาก `allergenWarning` ของ recommendation engine เท่านั้น (`/shop/recommendations` · `/catalog/products/:id/similar`) → ทำพร้อม C2 / C1 | 🟡 หัวใจเสร็จ · ป้ายรอ C2 |
+| U3 | การ์ดสินค้า `components/customer/ProductCard.tsx` | ~~ปุ่มหัวใจ (เพิ่ม/ลบรายการโปรด)~~ ✅ D5 · ~~ป้ายสารก่อภูมิแพ้~~ ✅ C1 (prop `allergenWarning` + `reasons`) | `components/customer/ProductCard.tsx` (350) | ป้ายมาจากผลของระบบแนะนำเท่านั้น — ตอนนี้แสดงในสินค้าคล้าย (C1) · หน้าแรกจะได้ตอนทำ C2 | ✅ |
 | U4 | หน้ารายการสินค้า `customer/product` | ตรวจตัวกรองหมวด/เรียงลำดับ/สินค้าหมดให้ตรง FO (FO มีตัวกรองหมวดละเอียดกว่า · คำค้นมีครบแล้ว) · แสดงหัวใจ (U3) | `customer/product/page.tsx` (363) | U3 | ▢ เทียบหน้าจอจริงก่อน |
 | U5 | Footer `components/customer/Footer.tsx` | ลิงก์ **ติดต่อเรา** · **ค่าจัดส่ง** · **Facebook ร้าน** | `components/customer/Footer.tsx` (64) | D8 · D9 | ▢ (ลิงก์ Facebook ใส่ได้เลย) |
 | U6 | ตะกร้า `customer/cart` | ช่องค้นหาสินค้าบนหัวตะกร้า · ตรวจป้าย "ซื้อไม่ได้" (`cartItemBlocked` — หมด/ปิดขาย/สต็อกไม่พอ) ให้ครบเท่า FO | `customer/cart/page.tsx` · `components/cart/CartItem.tsx` (215) | — | ▢ |
@@ -169,6 +169,7 @@
 |---|---|---|---|
 | Q-BE15 | regex `pickup_date` ผิดบน `main` (`/^d{4}-d{2}-d{2}$/` ไม่มี `\`) → ออเดอร์/พรีออเดอร์ที่เลือกวันรับได้ 400 ทุกครั้ง · ค้นทั้ง `src/` แล้วไม่มี regex ผิดแบบเดียวกันที่อื่น | `src/schemas/order.ts:38` · `src/schemas/preorder.ts:36` | ✅ backend PR [#67](https://github.com/ThanyalakSasen/NextJS-MeowMeeCake/pull/67) merge แล้ว 2026-10-08 (`38b57c6`) · ทดสอบ C3 กับ `main` ซ้ำ 39/39 |
 | Q-BE16 | 🟢 รายการโปรด: เอาออกแล้วเพิ่มกลับ = กู้แถวเดิม (`created_at` เดิม) → กลับไปอยู่ตำแหน่งเดิม ไม่ขึ้นบนสุดตามที่ GET บอกว่า "ล่าสุดก่อน" · เสนอ: ตั้ง `created_at` ใหม่ตอนกู้ (หรือเรียงด้วย `updated_at`) | `src/services/favoriteService.ts` `addFavorite` | ▢ เล็กน้อย |
+| Q-BE17 | 🔴 `POST /shop/cart/items` ไม่ส่ง `variant_ids` ต่อให้ `cartService` (schema รับ แต่ route ส่งแค่ `variant_id`) → **สินค้าที่มีกลุ่มบังคับเลือกใส่ตะกร้าจากหน้าเว็บไม่ได้เลย** (400 "กรุณาเลือก …") · เจอตอนทดสอบ C1 · ตรวจ route อื่นแล้ว (orders · preorders) ไม่เป็น | `src/app/api/shop/cart/items/route.ts` | 🟡 แก้แล้ว branch `fix/cart-variant-ids` (`4f3a35c` + เทส route · fail เมื่อไม่มีตัวแก้) · **ต้อง merge ก่อน frontend C1** |
 
 ### 9.2 🟠 ช่องโหว่ (แก้เล็ก)
 | รหัส | เรื่อง | ไฟล์ backend | สถานะ |
