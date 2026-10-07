@@ -12,7 +12,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { shopCartService } from "@/services/shopCart";
+import { cartItemOptionText, shopCartService } from "@/services/shopCart";
 import { shopAddressesService, type ShopAddress, type ShopAddressInput } from "@/services/shopAddresses";
 import { shopOrdersService, type CreateShopOrderInput } from "@/services/shopOrders";
 import { pickupLocationsService } from "@/services/pickupLocations";
@@ -328,10 +328,14 @@ function CheckoutContent() {
               <h2 className="text-lg font-bold">รายการสินค้า</h2>
               {cart.items.map((it) => {
                 const name = typeof it.product_id === "object" && it.product_id ? it.product_id.product_name_th : "สินค้า";
+                const options = cartItemOptionText(it);
                 return (
                   <div key={it._id} className="flex items-center justify-between gap-3 text-sm">
-                    <span className="min-w-0 truncate">
-                      {name} <span className="text-gray-500">×{it.quantity}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate">
+                        {name} <span className="text-gray-500">×{it.quantity}</span>
+                      </span>
+                      {options && <span className="block truncate text-xs text-gray-500">{options}</span>}
                     </span>
                     <span className="font-semibold">{baht(it.line_total)}</span>
                   </div>

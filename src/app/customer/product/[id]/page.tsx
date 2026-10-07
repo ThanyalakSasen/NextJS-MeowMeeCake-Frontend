@@ -1,66 +1,69 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// รายละเอียดสินค้า — ย้ายมาจาก FrontOffice (customer/product/[id]/ProductDetailClient.tsx)
-// เปลี่ยนจากเดิม: ข้อมูลจาก /catalog/products/{id} + /catalog/products/{id}/reviews (backend หลัก) ฝั่ง client
+// รายละเอียดสินค้า (BACKLOG3-merge C1) — ยกจาก FrontOffice customer/product/[id]/ProductDetailClient.tsx
+// API: /catalog/products/{id} · /customization (ตัวเลือก) · /reviews (+summary) · /sentiment · /similar
+//      ตะกร้า POST /shop/cart/items { variant_ids, selected_options } · แชร์ POST /shop/points/share
 // (FrontOffice เดิมเป็น Server Component + ISR — ทำ SEO ทีหลังได้ด้วย generateMetadata เมื่อ backend เป็น same-site)
-// ตัดออก (backend ยังไม่รองรับ): รายการโปรด · แชร์รับแต้ม · สินค้าคล้ายกัน · ตัวเลือกสินค้า (variant — BACKLOG2 §6)
-// · หมายเหตุต่อชิ้น (ตะกร้าไม่มีฟิลด์นี้) · รายการวัตถุดิบ · ตัวกรองรีวิวตามหัวข้อ/สื่อวิดีโอ · คำตอบจากร้าน
-// สินค้าพรีออเดอร์: ไม่เข้าตะกร้าปกติ — แจ้งให้สั่งผ่านหน้าพรีออเดอร์ (ย้ายมาในช่วงถัดไป)
+// ยังไม่ยกมา: รอบพรีออเดอร์ + ตะกร้าพรีออเดอร์ (D3) · หมายเหตุต่อชิ้น (ตะกร้าไม่มีฟิลด์นี้ — ใช้ออปชันกรอกข้อความแทน)
+// · รายการส่วนประกอบ (/catalog/products/{id} ไม่ส่งวัตถุดิบ — มีแค่ในผลของระบบแนะนำ)
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { FaImage } from "react-icons/fa";
-import { catalogService, type CatalogReview } from "@/services/catalog";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { FaHeart, FaRegHeart, FaShareAlt, FaSpinner } from "react-icons/fa";
+import { catalogService } from "@/services/catalog";
+import { shopLoyaltyService } from "@/services/shopLoyalty";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { effectivePrice, hasSalePrice, salePercent } from "@/lib/pricing";
+import { checkPicked, hasCustomization, initialPicked, toSelection, type Picked } from "@/lib/customizationSelection";
+import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
+import { useCustomerSession } from "@/hooks/useCustomerSession";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { useAddToCart } from "../../hooks/useAddToCart";
+import { useFavorites } from "../../hooks/useFavorites";
+import { catalogProductKey, productCustomizationKey } from "../../lib/catalogQueries";
+import { shopPointsKey } from "../../lib/shopQueries";
+import CustomizationPicker from "./_components/CustomizationPicker";
+import { pickProblemText } from "../../lib/pickProblemText";
+import ReviewsSection from "./_components/ReviewsSection";
+import SimilarProducts from "./_components/SimilarProducts";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
-/** ปิดชื่อผู้รีวิวบางส่วน (backend ส่งชื่อเต็มมา) — "สมชาย ใจดี" → "ส***ย" */
-function maskName(name: string | undefined): string {
-  const n = (name ?? "").trim();
-  if (n.length <= 1) return n ? `${n}***` : "ลูกค้า";
-  return `${n[0]}***${n[n.length - 1]}`;
-}
-
-function reviewerName(r: CatalogReview): string {
-  return maskName(typeof r.user_id === "object" && r.user_id ? r.user_id.user_fullname : undefined);
-}
-
-const reviewFilterCls = (active: boolean) =>
-  `py-1.5 rounded-xl text-xs sm:text-sm font-semibold border transition-all ${
-    active ? "bg-[#4A342E] text-white border-[#4A342E]" : "bg-white text-[#4A342E] border-[#8C5A3C]/20 hover:bg-[#8C5A3C]/10"
-  }`;
-
-type ReviewFilter = "all" | 1 | 2 | 3 | 4 | 5 | "media";
+const iconButton =
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#8C5A3C]/20 bg-white shadow-sm transition hover:scale-105 hover:bg-[#FAF6F0] disabled:opacity-60";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const qc = useQueryClient();
   const validId = isObjectId(id ?? "");
+  const { status: authStatus } = useCustomerSession();
 
   const productQ = useQuery({
-    queryKey: ["catalog", "product", id],
+    queryKey: catalogProductKey(id),
     queryFn: () => catalogService.product(id),
     enabled: validId,
     retry: (count, e) => !(isApiError(e) && e.status === 404) && count < 2,
   });
-  const reviewsQ = useQuery({
-    queryKey: ["catalog", "product", id, "reviews"],
-    queryFn: () => catalogService.reviews(id),
+  const customQ = useQuery({
+    queryKey: productCustomizationKey(id),
+    queryFn: () => catalogService.customization(id),
     enabled: validId && productQ.isSuccess,
+    staleTime: 5 * 60_000,
   });
 
   const { addToCart, status } = useAddToCart();
+  const favorites = useFavorites();
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState<"description" | "heating">("description");
   const [slideIndex, setSlideIndex] = useState(0);
   const [slidePaused, setSlidePaused] = useState(false);
-  const [filter, setFilter] = useState<ReviewFilter>("all");
+  // ตัวเลือกที่ลูกค้าเลือก · null = ยังไม่แตะ (ใช้ค่าตั้งต้นจาก initialPicked)
+  const [pickedState, setPicked] = useState<Picked | null>(null);
+  const [showProblems, setShowProblems] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const product = productQ.data;
   const images = useMemo(
@@ -74,13 +77,6 @@ export default function ProductDetailPage() {
     const t = setInterval(() => setSlideIndex((i) => (i + 1) % images.length), 4000);
     return () => clearInterval(t);
   }, [images.length, slidePaused]);
-
-  const reviews = useMemo(() => reviewsQ.data ?? [], [reviewsQ.data]);
-  const filteredReviews = useMemo(() => {
-    if (filter === "all") return reviews;
-    if (filter === "media") return reviews.filter((r) => (r.image?.length ?? 0) > 0);
-    return reviews.filter((r) => Math.round(Number(r.rating)) === filter);
-  }, [reviews, filter]);
 
   if (!validId || (productQ.isError && isApiError(productQ.error) && productQ.error.status === 404)) {
     return (
@@ -121,13 +117,56 @@ export default function ProductDetailPage() {
   const stock = product.product_stock_quantity ?? 0;
   const isPreorder = product.is_preorder;
   const outOfStock = !isPreorder && stock <= 0;
-  const price = effectivePrice(product);
+  const customization = customQ.data;
+  const customizable = hasCustomization(customization);
+  const picked = pickedState ?? (customization ? initialPicked(customization) : { variantIds: [], options: {} });
+  const problems = customization && customizable ? checkPicked(customization, picked) : [];
+  const selection = customization && customizable ? toSelection(customization, picked) : null;
+  const extra = selection?.extra ?? 0;
+  const price = effectivePrice(product) + extra;
   const discounted = hasSalePrice(product);
   const unitName = typeof product.unit_id === "object" && product.unit_id ? product.unit_id.unit_name : "";
   const rating = Number(product.avg_rating ?? 0);
   const isLoading = status === "loading";
   const isSuccess = status === "success";
   const changeQty = (d: number) => setQty((q) => Math.min(Math.max(1, q + d), Math.max(1, stock)));
+  const favorite = favorites.isFavorite(product._id);
+
+  const onAdd = async () => {
+    if (customQ.isLoading) return;
+    if (problems.length > 0) {
+      setShowProblems(true);
+      alert.warning(pickProblemText(problems[0]));
+      return;
+    }
+    const ok = await addToCart(product._id, qty, {
+      variant_ids: selection?.variantIds ?? [],
+      selected_options: (selection?.options ?? []).map((o) => ({ option_id: o.option_id, text_value: o.text_value })),
+    });
+    if (ok) setShowProblems(false);
+  };
+
+  // แชร์ลิงก์สินค้า (share sheet ของมือถือ หรือคัดลอกลิงก์) — สมาชิกได้แต้มครั้งเดียวต่อสินค้า
+  const onShare = async () => {
+    const url = window.location.href;
+    const canNativeShare = typeof navigator.share === "function";
+    try {
+      if (canNativeShare) await navigator.share({ title: product.product_name_th, url });
+      else await navigator.clipboard.writeText(url);
+    } catch {
+      return; // กดยกเลิกหน้าต่างแชร์ = ไม่ถือว่าแชร์
+    }
+    let awarded = 0;
+    if (authStatus === "authenticated") {
+      setSharing(true);
+      // ให้แต้มไม่สำเร็จ → ยังแชร์ได้ แค่ไม่ได้แต้ม
+      awarded = await shopLoyaltyService.share(product._id).catch(() => 0);
+      setSharing(false);
+      if (awarded > 0) void qc.invalidateQueries({ queryKey: shopPointsKey });
+    }
+    const done = canNativeShare ? "แชร์สินค้าเรียบร้อย" : "คัดลอกลิงก์สินค้าแล้ว";
+    alert.success(awarded > 0 ? `${done} รับ ${awarded} แต้ม!` : done);
+  };
 
   return (
     <div className="w-full min-h-screen text-[#4A342E] pt-46 sm:pt-50 md:pt-44 pb-16">
@@ -187,16 +226,55 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="w-full flex-1 flex flex-col gap-5">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] leading-tight">{product.product_name_th}</h1>
-              <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">{product.product_name_eng}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] leading-tight">{product.product_name_th}</h1>
+                <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">{product.product_name_eng}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => void onShare()}
+                  disabled={sharing}
+                  aria-label="แชร์สินค้า"
+                  title="แชร์สินค้า (สมาชิกได้แต้ม)"
+                  className={iconButton}
+                >
+                  {sharing ? <FaSpinner className="animate-spin text-sm text-gray-400" /> : <FaShareAlt className="text-sm text-[#8C5A3C]" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void favorites.toggle(product._id, {
+                      name: product.product_name_th,
+                      nameeg: product.product_name_eng ?? "",
+                      price: effectivePrice(product),
+                      image: product.product_img?.[0] ?? "",
+                      is_preorder: !!product.is_preorder,
+                    })
+                  }
+                  disabled={favorites.pendingId === product._id}
+                  aria-pressed={favorite}
+                  aria-label={favorite ? "ลบออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
+                  title={favorite ? "ลบออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
+                  className={iconButton}
+                >
+                  {favorites.pendingId === product._id ? (
+                    <FaSpinner className="animate-spin text-sm text-gray-400" />
+                  ) : favorite ? (
+                    <FaHeart className="text-base text-red-500" />
+                  ) : (
+                    <FaRegHeart className="text-base text-black" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#4A342E]">
               <span>คะแนน:</span>
               <span className="text-[#8C5A3C] font-bold">{rating.toFixed(1)}</span>
               <span className="text-gray-400">|</span>
-              <span className="text-gray-500 font-normal">{product.review_count || 0} รีวิว</span>
+              <a href="#reviews-title" className="text-gray-500 font-normal hover:underline">{product.review_count || 0} รีวิว</a>
             </div>
 
             <div className="bg-[#FAF6F0]/80 p-4 rounded-xl border border-[#8C5A3C]/10 flex items-baseline gap-2 flex-wrap">
@@ -205,10 +283,11 @@ export default function ProductDetailPage() {
               <span className="text-xl font-semibold text-gray-600">บาท {unitName ? `/ ${unitName}` : ""}</span>
               {discounted && (
                 <>
-                  <span className="text-base text-gray-400 line-through">{product.product_price.toLocaleString("th-TH")} บาท</span>
+                  <span className="text-base text-gray-400 line-through">{(product.product_price + extra).toLocaleString("th-TH")} บาท</span>
                   <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2.5 py-1 rounded-xl">ลดราคา -{salePercent(product)}%</span>
                 </>
               )}
+              {extra > 0 && <span className="w-full text-xs text-gray-500">รวมตัวเลือก +฿{extra.toLocaleString("th-TH")}</span>}
             </div>
 
             {isPreorder ? (
@@ -217,6 +296,24 @@ export default function ProductDetailPage() {
               </p>
             ) : (
               <>
+                {customQ.isLoading ? (
+                  <p className="text-xs text-gray-500 animate-pulse">กำลังโหลดตัวเลือกสินค้า...</p>
+                ) : customization && customizable ? (
+                  <CustomizationPicker
+                    customization={customization}
+                    picked={picked}
+                    onChange={setPicked}
+                    disabled={isLoading || outOfStock}
+                  />
+                ) : null}
+                {showProblems && problems.length > 0 && (
+                  <ul className="-mt-2 m-0 list-none space-y-0.5 p-0 text-xs text-red-600" role="alert">
+                    {problems.map((p) => (
+                      <li key={`${p.key}-${JSON.stringify(p.params)}`}>{pickProblemText(p)}</li>
+                    ))}
+                  </ul>
+                )}
+
                 <div className="flex items-center gap-3 pt-2">
                   <div className="flex items-center border border-[#8C5A3C]/30 rounded-xl overflow-hidden bg-white shrink-0">
                     <button
@@ -242,11 +339,17 @@ export default function ProductDetailPage() {
 
                   <button
                     type="button"
-                    disabled={isLoading || isSuccess || outOfStock}
-                    onClick={() => void addToCart(product._id, qty)}
+                    disabled={isLoading || isSuccess || outOfStock || customQ.isLoading}
+                    onClick={() => void onAdd()}
                     className="flex-1 h-11 px-2 text-sm sm:text-base bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
-                    {outOfStock ? "สินค้าหมด" : isLoading ? "กำลังเพิ่ม..." : isSuccess ? "เพิ่มแล้ว" : "เพิ่มลงตะกร้า"}
+                    {outOfStock
+                      ? "สินค้าหมด"
+                      : isLoading
+                        ? "กำลังเพิ่ม..."
+                        : isSuccess
+                          ? "เพิ่มแล้ว"
+                          : `เพิ่มลงตะกร้า · ฿${(price * qty).toLocaleString("th-TH")}`}
                   </button>
                 </div>
                 {!outOfStock && <p className="-mt-2 text-xs text-gray-500">คงเหลือ {stock.toLocaleString("th-TH")} ชิ้น</p>}
@@ -288,85 +391,10 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* รีวิวลูกค้า */}
-        <div className="bg-white rounded-xl p-6 sm:p-8 shadow-sm border border-[#8C5A3C]/10 flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
-            <h2 className="text-lg sm:text-xl font-bold text-[#4A342E]">รีวิวจากคุณลูกค้า ({product.review_count || 0} รีวิว)</h2>
-            <div className="flex items-center gap-1.5 text-[#4A342E]">
-              <span className="text-xs font-medium">คะแนนเฉลี่ย:</span>
-              <span className="text-xl font-black text-[#8C5A3C]">{rating.toFixed(1)}</span>
-            </div>
-          </div>
+        <ReviewsSection productId={product._id} />
 
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setFilter("all")} aria-pressed={filter === "all"} className={`px-3.5 ${reviewFilterCls(filter === "all")}`}>
-              ทั้งหมด
-            </button>
-            {([5, 4, 3, 2, 1] as const).map((star) => (
-              <button
-                key={star}
-                type="button"
-                onClick={() => setFilter(star)}
-                aria-pressed={filter === star}
-                className={`px-3.5 ${reviewFilterCls(filter === star)}`}
-              >
-                {star} ดาว
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setFilter("media")}
-              aria-pressed={filter === "media"}
-              className={`flex items-center gap-1.5 px-3.5 ${reviewFilterCls(filter === "media")}`}
-            >
-              <FaImage />
-              <span>มีรูปภาพ</span>
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            {reviewsQ.isLoading ? (
-              <p className="text-center py-8 text-sm text-[#8C5A3C] animate-pulse">กำลังโหลดรีวิว...</p>
-            ) : filteredReviews.length > 0 ? (
-              filteredReviews.map((r) => {
-                const name = reviewerName(r);
-                const photos = (r.image ?? []).map((u) => resolveUploadUrl(u)).filter((u): u is string => !!u);
-                return (
-                  <div key={r._id} className="p-4 sm:p-5 rounded-xl bg-gray-50/60 border border-gray-100 flex flex-col gap-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-[#8C5A3C] text-white flex items-center justify-center font-bold text-sm" aria-hidden="true">
-                          {name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-bold text-[#4A342E]">{name}</span>
-                          <div className="text-xs font-semibold text-[#8C5A3C]">คะแนน: {Number(r.rating || 0).toFixed(1)}</div>
-                        </div>
-                      </div>
-                      <span className="text-[11px] text-gray-400">{r.created_at ? new Date(r.created_at).toLocaleDateString("th-TH") : ""}</span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-600 sm:pl-12">{r.review_text || "ไม่มีความเห็นเพิ่มเติม"}</p>
-                    {photos.length > 0 && (
-                      <div className="flex flex-wrap gap-2 sm:pl-12 pt-1">
-                        {photos.map((url, idx) => (
-                          <div key={idx} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-gray-200 bg-black/5">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={url} alt={`รูปจากรีวิว ${idx + 1}`} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-12 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
-                <p className="text-sm font-bold text-[#4A342E]">{reviews.length ? "ไม่พบรีวิวในตัวกรองนี้" : "ยังไม่มีรีวิว"}</p>
-                {reviews.length > 0 && <span className="text-xs text-gray-400 block mt-1">ลองเลือกตัวกรองอื่นเพื่อดูรีวิวเพิ่มเติม</span>}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* สินค้าพรีออเดอร์ไม่แสดงสินค้าคล้ายกัน (เหมือนต้นแบบ) */}
+        {!isPreorder && <SimilarProducts productId={product._id} />}
       </div>
     </div>
   );

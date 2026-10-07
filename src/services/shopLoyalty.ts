@@ -128,6 +128,11 @@ export const shopLoyaltyService = {
     const res = await http.get<ItemResponse<{ catalog: CatalogCoupon[]; coupons: MyCoupon[] }>>("/shop/coupons");
     return { catalog: res.data.catalog ?? [], coupons: res.data.coupons ?? [] };
   },
+  /** POST /shop/points/share { product_id } — แชร์สินค้าได้แต้ม ครั้งเดียวต่อสินค้า → แต้มที่ได้ (0 = เคยได้แล้ว) */
+  share: async (productId: string): Promise<number> => {
+    const res = await http.post<ItemResponse<{ awarded: number }>>("/shop/points/share", { product_id: productId });
+    return Number(res.data?.awarded ?? 0);
+  },
   /** POST /shop/coupons/redeem { promotion_id } — หักแต้มแล้วได้คูปองของฉัน 1 ใบ (แต้มไม่พอ/ครบสิทธิ์ = 400) */
   redeem: async (promotionId: string): Promise<void> => {
     await http.post("/shop/coupons/redeem", { promotion_id: promotionId });

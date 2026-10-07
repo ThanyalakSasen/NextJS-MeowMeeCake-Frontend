@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// customizationSelection.ts — pure: ตัวเลือกที่พนักงานเลือกใน POS → ตรวจ + ราคาเพิ่ม + ข้อความแสดง + key ของบรรทัด
+// src/lib/customizationSelection.ts — pure: ตัวเลือกที่เลือก (POS · หน้าสินค้าของหน้าร้าน) → ตรวจ + ราคาเพิ่ม + ข้อความแสดง + key ของบรรทัด
 // กติกาตรงกับ backend productCustomizationService.resolveCustomization() (BACKLOG3-merge I4) — backend ตรวจซ้ำเสมอ
 // ─────────────────────────────────────────────────────────────
 import { CUSTOMIZATION_LIMITS, type ProductCustomization } from "@/types/productCustomization";

@@ -12,7 +12,7 @@ import { modalButtonIcons } from "@/components/shared/actions";
 import { formatCurrency } from "@/i18n/format";
 import type { Product } from "@/types/product";
 import { CUSTOMIZATION_LIMITS, type ProductCustomization } from "@/types/productCustomization";
-import { checkPicked, initialPicked, toSelection, toggleVariant, type Picked } from "../customizationSelection";
+import { checkPicked, initialPicked, toSelection, toggleVariant, type Picked } from "@/lib/customizationSelection";
 
 export function CustomizationPickerModal({
   product,
