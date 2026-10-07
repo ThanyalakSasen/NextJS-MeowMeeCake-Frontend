@@ -12,4 +12,6 @@ export const shopOrdersKey = ["shop", "orders", "list"] as const;
 /** checkout (C3): แต้ม + คูปองที่ใช้ได้ — สร้างออเดอร์แล้วต้อง invalidate (ถูกหัก/ใช้ไป) */
 export const shopPointsKey = ["shop", "points"] as const;
 export const shopCouponsKey = ["shop", "coupons"] as const;
+/** หน้าสมาชิก (D4): คูปองที่แลกได้ + คูปองของฉันทุกสถานะ — ขึ้นต้นด้วย shopCouponsKey (invalidate ชุดเดียวกัน) */
+export const shopCouponOverviewKey = ["shop", "coupons", "overview"] as const;
 export const pickupLocationsKey = ["catalog", "pickup-locations"] as const;
