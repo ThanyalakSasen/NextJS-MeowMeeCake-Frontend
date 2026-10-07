@@ -3,15 +3,17 @@
 // บัตรสินค้าของหน้าร้าน — ย้ายมาจาก FrontOffice (components/customer/ProductCard.tsx)
 // เปลี่ยนจากเดิม: ใช้ Product ของ backend หลัก (is_preorder แทน product_type) · รูปผ่าน resolveUploadUrl
 // · คะแนนรีวิวแสดง avg_rating (เดิมแสดง review_count ผิดช่อง)
-// ตัดออก (backend ยังไม่รองรับ): ปุ่มรายการโปรด · ป้ายสารก่อภูมิแพ้ · เหตุผลที่แนะนำ (recommendation engine)
+// · ปุ่มหัวใจ (รายการโปรด D5/U3) อ่านจาก cache เดียวของ useFavorites — ไม่ยิงขอรายการต่อใบแบบต้นแบบ
+// ตัดออก: ป้ายสารก่อภูมิแพ้ + เหตุผลที่แนะนำ — มาจาก recommendation engine (/shop/recommendations · similar) → ทำพร้อม C2/C1
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
-import { FaSpinner, FaCheck, FaStar } from "react-icons/fa";
+import { FaSpinner, FaCheck, FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import type { Product } from "@/types/product";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { effectivePrice, hasSalePrice, salePercent } from "@/lib/pricing";
 import { useAddToCart } from "@/app/customer/hooks/useAddToCart";
+import { useFavorites } from "@/app/customer/hooks/useFavorites";
 
 /**
  * สินค้านี้จะถูกแสดงเป็นบัตรหรือไม่ — ProductCard จะ return null ถ้าได้ false
@@ -28,8 +30,17 @@ export function categoryNameOf(p: Pick<Product, "category_id">): string | undefi
   return typeof p.category_id === "object" && p.category_id ? p.category_id.product_category_name?.trim() : undefined;
 }
 
-export default function ProductCard({ product, showAddToCart = true }: { product: Product; showAddToCart?: boolean }) {
+export default function ProductCard({
+  product,
+  showAddToCart = true,
+  showFavorite = true,
+}: {
+  product: Product;
+  showAddToCart?: boolean;
+  showFavorite?: boolean;
+}) {
   const { addToCart, status } = useAddToCart();
+  const favorites = useFavorites();
   const isLoading = status === "loading";
   const isSuccess = status === "success";
   const [failedImg, setFailedImg] = useState<string | null>(null);
@@ -39,6 +50,7 @@ export default function ProductCard({ product, showAddToCart = true }: { product
   const categoryName = categoryNameOf(product);
   const imgSrc = resolveUploadUrl(product.product_img?.[0]);
   const rating = Number(product.avg_rating ?? 0);
+  const favorite = favorites.isFavorite(product._id);
 
   return (
     <Link
@@ -57,6 +69,38 @@ export default function ProductCard({ product, showAddToCart = true }: { product
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-black text-xs font-medium">ไม่มีรูปภาพ</div>
+        )}
+
+        {showFavorite && (
+          <button
+            type="button"
+            aria-pressed={favorite}
+            aria-label={favorite ? "ลบออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
+            title={favorite ? "ลบออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
+            disabled={favorites.pendingId === product._id}
+            onClick={(e) => {
+              // บัตรทั้งใบเป็นลิงก์ — กันไม่ให้กดหัวใจแล้วเปิดหน้าสินค้า
+              e.preventDefault();
+              e.stopPropagation();
+              void favorites.toggle(product._id, {
+                name: product.product_name_th,
+                nameeg: product.product_name_eng ?? "",
+                category: categoryName ?? "",
+                price: effectivePrice(product),
+                image: product.product_img?.[0] ?? "",
+                is_preorder: !!product.is_preorder,
+              });
+            }}
+            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-sm transition hover:scale-110 hover:bg-white disabled:opacity-60"
+          >
+            {favorites.pendingId === product._id ? (
+              <FaSpinner className="animate-spin text-xs text-stone-400" />
+            ) : favorite ? (
+              <FaHeart className="text-sm text-red-500" />
+            ) : (
+              <FaRegHeart className="text-sm text-black hover:text-red-500" />
+            )}
+          </button>
         )}
       </div>
 

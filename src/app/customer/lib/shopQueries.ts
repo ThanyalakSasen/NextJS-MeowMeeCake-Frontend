@@ -15,3 +15,5 @@ export const shopCouponsKey = ["shop", "coupons"] as const;
 /** หน้าสมาชิก (D4): คูปองที่แลกได้ + คูปองของฉันทุกสถานะ — ขึ้นต้นด้วย shopCouponsKey (invalidate ชุดเดียวกัน) */
 export const shopCouponOverviewKey = ["shop", "coupons", "overview"] as const;
 export const pickupLocationsKey = ["catalog", "pickup-locations"] as const;
+/** รายการโปรด (D5) — หน้า favorites + ปุ่มหัวใจในบัตรสินค้าทุกใบใช้ cache เดียวกัน (โหลดครั้งเดียวทั้งหน้า) */
+export const shopFavoritesKey = ["shop", "favorites"] as const;
