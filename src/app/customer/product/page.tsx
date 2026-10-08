@@ -11,6 +11,7 @@ import { Suspense, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { FaFilter, FaSortAmountDown } from "react-icons/fa";
 import { catalogService } from "@/services/catalog";
 import { effectivePrice } from "@/lib/pricing";
@@ -18,15 +19,11 @@ import ProductCard, { categoryNameOf, isProductCardVisible } from "@/components/
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from "../lib/catalogQueries";
 
-const ALL = "ทั้งหมด";
+/** หมวด "ทั้งหมด" — ค่าภายใน (ชื่อที่แสดงมาจาก i18n) */
+const ALL = "__all__";
 type SortKey = "latest" | "rating" | "price-asc" | "price-desc";
-const SORTS: { key: SortKey; label: string }[] = [
-  { key: "latest", label: "มาใหม่ล่าสุด" },
-  { key: "rating", label: "คะแนนรีวิวสูงสุด" },
-  { key: "price-asc", label: "ราคา: ต่ำ → สูง" },
-  { key: "price-desc", label: "ราคา: สูง → ต่ำ" },
-];
-const isSortKey = (v: string | null): v is SortKey => SORTS.some((s) => s.key === v);
+const SORTS: SortKey[] = ["latest", "rating", "price-asc", "price-desc"];
+const isSortKey = (v: string | null): v is SortKey => SORTS.some((s) => s === v);
 
 // ใช้ useSearchParams จึงต้องครอบด้วย Suspense (ไม่งั้น next build จะ error)
 export default function ProductListPage() {
@@ -38,6 +35,7 @@ export default function ProductListPage() {
 }
 
 function ProductListContent() {
+  const t = useTranslations("shop.products");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -95,11 +93,11 @@ function ProductListContent() {
   return (
     <div className="w-full min-h-screen text-[#4A342E] pt-54 sm:pt-52 md:pt-50 pb-36">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <CustomerBreadcrumb items={[{ label: "สินค้าทั้งหมด" }]} />
+        <CustomerBreadcrumb items={[{ label: t("allProducts") }]} />
 
         <div className="mb-6 md:mb-8">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] tracking-tight">
-            {searchQuery ? `ผลการค้นหา: "${searchQuery}"` : "สินค้าทั้งหมด"}
+            {searchQuery ? t("searchResult", { q: searchQuery }) : t("allProducts")}
           </h1>
         </div>
 
@@ -108,10 +106,10 @@ function ProductListContent() {
           <aside className="w-full lg:w-64 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#8C5A3C]/10 shrink-0 lg:sticky lg:top-56">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-100 font-bold text-[#4A342E]">
               <FaFilter className="text-[#8C5A3C] text-sm" />
-              <span>หมวดหมู่สินค้า</span>
+              <span>{t("categories")}</span>
             </div>
             {loading || categoriesQ.isLoading ? (
-              <div className="py-4 text-center text-xs text-[#8C5A3C] animate-pulse">กำลังเตรียมหมวดหมู่...</div>
+              <div className="py-4 text-center text-xs text-[#8C5A3C] animate-pulse">{t("loadingCategories")}</div>
             ) : (
               <div className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
                 {categoryCards.map((c) => {
@@ -130,7 +128,7 @@ function ProductListContent() {
                         isActive ? "bg-[#8C5A3C] text-white shadow-sm font-semibold" : "text-[#4A342E] hover:bg-[#8C5A3C]/10"
                       }`}
                     >
-                      <span>{c.name}</span>
+                      <span>{c.name === ALL ? t("all") : c.name}</span>
                       <span
                         className={`text-[11px] px-2 py-0.5 rounded-full ml-2 ${
                           isActive ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
@@ -149,20 +147,20 @@ function ProductListContent() {
             <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-[#8C5A3C]/10 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#4A342E]">
                 <FaSortAmountDown className="text-[#8C5A3C]" />
-                <span>เรียงตาม:</span>
+                <span>{t("sortBy")}</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs sm:text-sm">
                 {SORTS.map((s) => (
                   <button
-                    key={s.key}
+                    key={s}
                     type="button"
-                    onClick={() => setSortBy(s.key)}
-                    aria-pressed={sortBy === s.key}
+                    onClick={() => setSortBy(s)}
+                    aria-pressed={sortBy === s}
                     className={`px-3.5 py-2 rounded-xl transition-all font-medium ${
-                      sortBy === s.key ? "bg-[#8C5A3C] text-white shadow-sm" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                      sortBy === s ? "bg-[#8C5A3C] text-white shadow-sm" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                     }`}
                   >
-                    {s.label}
+                    {t(`sort.${s}`)}
                   </button>
                 ))}
               </div>
@@ -170,17 +168,17 @@ function ProductListContent() {
 
             {loading ? (
               <div className="flex justify-center items-center py-20">
-                <p className="text-base text-[#8C5A3C] font-medium animate-pulse">กำลังโหลดสินค้า...</p>
+                <p className="text-base text-[#8C5A3C] font-medium animate-pulse">{t("loading")}</p>
               </div>
             ) : productsQ.isError ? (
               <div className="flex flex-col items-center gap-3 py-16">
-                <p className="text-base text-gray-600">โหลดรายการสินค้าไม่สำเร็จ</p>
+                <p className="text-base text-gray-600">{t("loadFailed")}</p>
                 <button
                   type="button"
                   onClick={() => productsQ.refetch()}
                   className="px-5 py-2 rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
                 >
-                  ลองใหม่
+                  {t("retry")}
                 </button>
               </div>
             ) : visible.length > 0 ? (
@@ -192,12 +190,12 @@ function ProductListContent() {
             ) : (
               <div className="flex flex-col items-center justify-center py-16 bg-white/60 rounded-2xl border border-dashed border-[#8C5A3C]/20 text-center px-4">
                 <p className="text-base text-gray-500 font-medium mb-1">
-                  {searchQuery ? `ไม่พบสินค้าที่ตรงกับ "${searchQuery}"` : "ไม่พบสินค้าในหมวดหมู่นี้"}
+                  {searchQuery ? t("noMatch", { q: searchQuery }) : t("noInCategory")}
                 </p>
                 <p className="text-xs text-gray-400">
                   {searchQuery
-                    ? "ลองพิมพ์คำค้นหาอื่น หรือเลือกหมวดหมู่เพื่อดูสินค้าทั้งหมด"
-                    : "ลองเลือกหมวดหมู่อื่นเพื่อค้นหาเบเกอรี่ที่คุณชื่นชอบ"}
+                    ? t("tryOtherSearch")
+                    : t("tryOtherCategory")}
                 </p>
               </div>
             )}

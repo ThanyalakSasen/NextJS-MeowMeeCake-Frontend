@@ -4,6 +4,7 @@
 // account/pendingreview/[id]?kind=preorder) · รีวิวได้เมื่อ completed + ชำระแล้ว · ส่ง preorder_item_ids
 // ─────────────────────────────────────────────────────────────
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { shopPreordersService } from "@/services/shopPreorders";
 import { isApiError } from "@/types/api";
@@ -17,14 +18,17 @@ import { shopPreorderKey } from "../../../../lib/shopQueries";
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
 export default function PreorderReviewPage() {
+  const t = useTranslations("shop.orders");
   return (
-    <CustomerAuthGate message="กรุณาเข้าสู่ระบบเพื่อรีวิวสินค้า">
+    <CustomerAuthGate message={t("loginToReview")}>
       <PreorderReviewContent />
     </CustomerAuthGate>
   );
 }
 
 function PreorderReviewContent() {
+  const t = useTranslations("shop.preorders");
+  const to = useTranslations("shop.orders");
   const { id } = useParams<{ id: string }>();
   const validId = isObjectId(id ?? "");
   const preorderQ = useQuery({
@@ -41,19 +45,19 @@ function PreorderReviewContent() {
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
         <CustomerBreadcrumb
           items={[
-            { label: "บัญชีของฉัน", href: "/customer/account" },
-            { label: "ประวัติพรีออเดอร์", href: "/customer/account/preorders" },
-            { label: p?.preorder_no ?? "พรีออเดอร์", href: backHref },
-            { label: "รีวิวสินค้า" },
+            { label: to("myAccount"), href: "/customer/account" },
+            { label: t("history"), href: "/customer/account/preorders" },
+            { label: p?.preorder_no ?? t("preorder"), href: backHref },
+            { label: to("reviewProducts") },
           ]}
           className="!mb-0"
         />
         {validId && preorderQ.isLoading ? (
           <ReviewLoading />
         ) : !p ? (
-          <ReviewNotice text="ไม่พบพรีออเดอร์นี้" href="/customer/account/preorders" link="ดูพรีออเดอร์ทั้งหมด" />
+          <ReviewNotice text={t("notFound")} href="/customer/account/preorders" link={t("viewAll")} />
         ) : !canReview(p) ? (
-          <ReviewNotice text="รีวิวได้เมื่อพรีออเดอร์เสร็จสิ้นและชำระเงินแล้ว" href={backHref} link="กลับไปหน้ารายละเอียด" />
+          <ReviewNotice text={t("reviewOnlyCompleted")} href={backHref} link={to("backToDetail")} />
         ) : (
           <WriteReviewForm kind="preorder" docNo={p.preorder_no} items={p.items} backHref={backHref} />
         )}

@@ -8,6 +8,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { catalogService } from "@/services/catalog";
 import HeroCarousel from "@/components/customer/HeroCarousel";
 import { categoryNameOf, isProductCardVisible } from "@/components/customer/ProductCard";
@@ -16,6 +17,7 @@ import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from
 
 
 export default function CustomerHomePage() {
+  const t = useTranslations("shop");
   const productsQ = useQuery({
     queryKey: catalogProductsKey,
     queryFn: () => catalogService.products(CATALOG_PRODUCT_PARAMS),
@@ -46,13 +48,13 @@ export default function CustomerHomePage() {
         <div className="mt-6 pt-6">
           <div className="mb-4">
             <span className="inline-block !text-base font-bold tracking-wider uppercase bg-[#8C5A3C]/10 text-[#8C5A3C] px-3.5 py-1 rounded-full">
-              หมวดหมู่ทั้งหมด
+              {t("home.allCategories")}
             </span>
           </div>
 
           {/* รอสินค้าโหลดด้วย เพราะต้องใช้จำนวนสินค้าในการซ่อน/เรียงหมวด */}
           {categoriesQ.isLoading || loading ? (
-            <p className="text-center py-6 text-[#8C5A3C] animate-pulse !text-base">กำลังโหลดหมวดหมู่...</p>
+            <p className="text-center py-6 text-[#8C5A3C] animate-pulse !text-base">{t("home.loadingCategories")}</p>
           ) : categoryCards.length > 0 ? (
             // มือถือ 3 · แท็บเล็ต 4 · จอคอม 6 คอลัมน์ — แสดงสูงสุด 12 หมวด
             <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
@@ -71,7 +73,7 @@ export default function CustomerHomePage() {
               ))}
             </div>
           ) : (
-            <p className="text-center py-6 text-sm text-gray-500">ขออภัย ยังไม่มีหมวดหมู่ในขณะนี้</p>
+            <p className="text-center py-6 text-sm text-gray-500">{t("home.noCategories")}</p>
           )}
         </div>
       </section>
@@ -84,7 +86,7 @@ export default function CustomerHomePage() {
             href="/customer/product"
             className="inline-flex items-center justify-center gap-2 text-sm sm:text-base px-8 py-3.5 group bg-white border border-[#8C5A3C]/30 !text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:!bg-[#4A342E] hover:!text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200"
           >
-            <span>สินค้าทั้งหมด</span>
+            <span>{t("common.allProducts")}</span>
             <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
           </Link>
         </div>

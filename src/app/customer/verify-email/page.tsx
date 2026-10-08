@@ -8,6 +8,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { verifyEmail } from "@/lib/authClient";
 import { isApiError } from "@/types/api";
@@ -22,6 +23,8 @@ const button =
 type Status = { kind: "loading" } | { kind: "success"; message?: string } | { kind: "error"; message?: string };
 
 function VerifyEmailContent() {
+  const t = useTranslations("shop.verify");
+  const tc = useTranslations("shop.common");
   const router = useRouter();
   const token = useSearchParams().get("token") ?? "";
   const [status, setStatus] = useState<Status>(token ? { kind: "loading" } : { kind: "error" });
@@ -44,29 +47,29 @@ function VerifyEmailContent() {
         {status.kind === "loading" && (
           <>
             <Loader2 className="mx-auto mb-3 h-10 w-10 animate-spin text-[#8C5A3C]" />
-            <p className="m-0 text-base font-medium text-[#8C5A3C]">กำลังยืนยันอีเมล...</p>
+            <p className="m-0 text-base font-medium text-[#8C5A3C]">{t("verifying")}</p>
           </>
         )}
         {status.kind === "success" && (
           <>
             <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-green-600" />
-            <h1 className="mb-2 text-xl font-bold text-green-700">ยืนยันอีเมลสำเร็จ!</h1>
+            <h1 className="mb-2 text-xl font-bold text-green-700">{t("success")}</h1>
             <p className="m-0 text-sm leading-relaxed text-[#77665e]">
-              {status.message ?? "บัญชีของคุณพร้อมใช้งานแล้ว"} — กำลังพาไปหน้าเข้าสู่ระบบ...
+              {t("redirecting", { message: status.message ?? t("ready") })}
             </p>
-            <Link href={LOGIN_PATH} className={button}>เข้าสู่ระบบ</Link>
+            <Link href={LOGIN_PATH} className={button}>{tc("login")}</Link>
           </>
         )}
         {status.kind === "error" && (
           <>
             <XCircle className="mx-auto mb-3 h-10 w-10 text-red-600" />
-            <h1 className="mb-2 text-xl font-bold text-red-700">ลิงก์ไม่ถูกต้องหรือหมดอายุ</h1>
+            <h1 className="mb-2 text-xl font-bold text-red-700">{t("invalid")}</h1>
             <p className="m-0 text-sm leading-relaxed text-[#77665e]">
-              {status.message ?? "ลิงก์ยืนยันใช้ได้ครั้งเดียวและหมดอายุใน 24 ชั่วโมง"}
+              {status.message ?? t("rule")}
               <br />
-              ขอลิงก์ใหม่ได้ที่หน้าเข้าสู่ระบบ — ล็อกอินด้วยอีเมลและรหัสผ่าน แล้วกด &quot;ส่งลิงก์ยืนยันอีกครั้ง&quot;
+              {t("howToResend")}
             </p>
-            <Link href={LOGIN_PATH} className={button}>กลับหน้าเข้าสู่ระบบ</Link>
+            <Link href={LOGIN_PATH} className={button}>{t("backToLogin")}</Link>
           </>
         )}
       </div>

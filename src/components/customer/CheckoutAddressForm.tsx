@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { shopAddressesService, type ShopAddress, type ShopAddressInput } from "@/services/shopAddresses";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
@@ -15,6 +16,8 @@ const ZIP_RE = /^\d{5}$/;
 const EMPTY_ADDRESS: ShopAddressInput = { house_no: "", sub_district: "", district: "", province: "", zip_code: "" };
 
 export default function CheckoutAddressForm({ onCreated, onCancel }: { onCreated: (a: ShopAddress) => void; onCancel: () => void }) {
+  const t = useTranslations("shop.address");
+  const tc = useTranslations("shop.common");
   const [form, setForm] = useState<ShopAddressInput>(EMPTY_ADDRESS);
   const [isDefault, setIsDefault] = useState(false);
 
@@ -29,18 +32,18 @@ export default function CheckoutAddressForm({ onCreated, onCancel }: { onCreated
         is_default: isDefault,
       }),
     onSuccess: (a) => {
-      alert.success("บันทึกที่อยู่แล้ว");
+      alert.success(t("saved"));
       onCreated(a);
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : "บันทึกที่อยู่ไม่สำเร็จ"),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("saveFailed")),
   });
 
   const fields: { key: keyof ShopAddressInput; label: string; max: number; wide?: boolean }[] = [
-    { key: "house_no", label: "บ้านเลขที่ / หมู่ / ถนน", max: 200, wide: true },
-    { key: "sub_district", label: "ตำบล / แขวง", max: 120 },
-    { key: "district", label: "อำเภอ / เขต", max: 120 },
-    { key: "province", label: "จังหวัด", max: 120 },
-    { key: "zip_code", label: "รหัสไปรษณีย์", max: 5 },
+    { key: "house_no", label: t("houseNo"), max: 200, wide: true },
+    { key: "sub_district", label: t("subDistrict"), max: 120 },
+    { key: "district", label: t("district"), max: 120 },
+    { key: "province", label: t("province"), max: 120 },
+    { key: "zip_code", label: t("zipCode"), max: 5 },
   ];
   const filled = fields.every((f) => String(form[f.key] ?? "").trim()) && ZIP_RE.test(form.zip_code.trim());
 
@@ -67,14 +70,14 @@ export default function CheckoutAddressForm({ onCreated, onCancel }: { onCreated
       </div>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
-        ตั้งเป็นที่อยู่เริ่มต้น
+        {t("setDefault")}
       </label>
       <div className="flex justify-end gap-2">
         <button type="button" className={shopButton} onClick={onCancel} disabled={createMutation.isPending}>
-          ยกเลิก
+          {tc("cancel")}
         </button>
         <button type="button" className={shopButtonPrimary} disabled={!filled || createMutation.isPending} onClick={() => createMutation.mutate()}>
-          {createMutation.isPending ? "กำลังบันทึก..." : "บันทึกที่อยู่"}
+          {createMutation.isPending ? tc("saving") : t("save")}
         </button>
       </div>
     </div>

@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { shopFavoritesService, type FavoriteItem } from "@/services/shopFavorites";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { alert } from "@/lib/alert";
@@ -16,6 +17,7 @@ import { LOGIN_PATH } from "@/constants/auth";
 import { shopFavoritesKey } from "../lib/shopQueries";
 
 export function useFavorites() {
+  const t = useTranslations("shop.cartActions");
   const qc = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
@@ -31,7 +33,7 @@ export function useFavorites() {
   /** stub = ข้อมูลที่ใส่ใน cache ระหว่างรอ (เพิ่มจากบัตรสินค้า — รายละเอียดเต็มมากับการโหลดใหม่) */
   const toggle = async (productId: string, stub?: Partial<FavoriteItem>) => {
     if (!isLoggedIn) {
-      alert.warning("กรุณาเข้าสู่ระบบก่อนบันทึกรายการโปรด");
+      alert.warning(t("loginToFavorite"));
       router.push(`${LOGIN_PATH}?next=${encodeURIComponent(pathname)}`);
       return;
     }
@@ -47,10 +49,10 @@ export function useFavorites() {
     setPending(productId);
     try {
       await (next ? shopFavoritesService.add(productId) : shopFavoritesService.remove(productId));
-      alert.success(next ? "เพิ่มในรายการโปรดแล้ว" : "นำออกจากรายการโปรดแล้ว");
+      alert.success(next ? t("favoriteAdded") : t("favoriteRemoved"));
     } catch (e) {
       qc.setQueryData(shopFavoritesKey, before);
-      alert.error(isApiError(e) ? e.message : "บันทึกรายการโปรดไม่สำเร็จ");
+      alert.error(isApiError(e) ? e.message : t("favoriteFailed"));
     } finally {
       setPending(null);
       void qc.invalidateQueries({ queryKey: shopFavoritesKey });

@@ -23,12 +23,12 @@ export function preorderPickupDates(loc: Pick<PickupLocation, "days">, roundPick
   return keys;
 }
 
-/** "16 ต.ค. 2569" (+ เวลาถ้า withTime) ตามเวลาไทย */
-export function thaiDate(iso: string | null | undefined, withTime = false): string {
+/** "16 ต.ค. 2569" / "Oct 16, 2026" (+ เวลาถ้า withTime) ตามเวลาไทย · locale = ภาษาของหน้า (useLocale) */
+export function thaiDate(iso: string | null | undefined, withTime = false, locale: string = "th"): string {
   if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleString("th-TH", {
+  return d.toLocaleString(locale === "en" ? "en-US" : "th-TH", {
     timeZone: TZ,
     day: "numeric",
     month: "short",

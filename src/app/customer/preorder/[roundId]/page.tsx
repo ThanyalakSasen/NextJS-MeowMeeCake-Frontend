@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { shopPreordersService } from "@/services/shopPreorders";
@@ -19,6 +20,8 @@ import { BasketBar, CountdownText, PreorderSteps, RoundProductCard } from "../_c
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
 export default function PreorderRoundPage() {
+  const t = useTranslations("shop.preorderShop");
+  const locale = useLocale();
   const { roundId } = useParams<{ roundId: string }>();
   const valid = isObjectId(roundId ?? "");
   const q = useQuery({
@@ -34,15 +37,15 @@ export default function PreorderRoundPage() {
   if (!valid || (q.isError && isApiError(q.error) && q.error.status === 404)) {
     return (
       <div className={`${shopPage} text-center`}>
-        <p className="text-lg font-bold">ไม่พบรอบพรีออเดอร์นี้</p>
-        <Link href="/customer/preorder" className={`${shopButton} mt-4`}>ดูรอบทั้งหมด</Link>
+        <p className="text-lg font-bold">{t("roundNotFound")}</p>
+        <Link href="/customer/preorder" className={`${shopButton} mt-4`}>{t("allRounds")}</Link>
       </div>
     );
   }
   if (q.isLoading || !round) {
     return (
       <div className={`${shopPage} text-center`}>
-        {q.isError ? <p className="text-sm text-red-700">โหลดรอบไม่สำเร็จ กรุณารีเฟรช</p> : <p className="animate-pulse text-sm text-[#8C5A3C]">กำลังโหลดรอบพรีออเดอร์...</p>}
+        {q.isError ? <p className="text-sm text-red-700">{t("roundFailed")}</p> : <p className="animate-pulse text-sm text-[#8C5A3C]">{t("loadingRounds")}</p>}
       </div>
     );
   }
@@ -56,17 +59,18 @@ export default function PreorderRoundPage() {
   return (
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
-        <CustomerBreadcrumb items={[{ label: "พรีออเดอร์", href: "/customer/preorder" }, { label: round.round_name }]} className="!mb-0" />
+        <CustomerBreadcrumb items={[{ label: t("crumb"), href: "/customer/preorder" }, { label: round.round_name }]} className="!mb-0" />
 
         <header className="flex flex-col gap-3 rounded-2xl border border-[#8C5A3C]/15 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="m-0 text-xl font-bold text-stone-800 sm:text-2xl">{round.round_name}</h1>
             <p className="m-0 mt-1 text-sm text-stone-600">
-              {isOpen ? `ปิดรับ ${thaiDate(round.close_date, true)}` : `เปิดรับ ${thaiDate(round.open_date, true)}`} · รับสินค้าตั้งแต่ {thaiDate(round.pickup_date)}
+              {isOpen ? t("closesAt", { date: thaiDate(round.close_date, true, locale) }) : t("opensAt", { date: thaiDate(round.open_date, true, locale) })} ·{" "}
+              {t("pickupFrom", { date: thaiDate(round.pickup_date, false, locale) })}
             </p>
           </div>
           <p className={`m-0 rounded-xl px-3 py-1.5 text-sm font-semibold ${isOpen ? "bg-emerald-50 text-emerald-700" : "bg-sky-50 text-sky-700"}`}>
-            {isOpen ? <CountdownText target={round.close_date} prefix="ปิดรับในอีก" /> : round.round_status === "scheduled" ? "ยังไม่เปิดรับ — ดูสินค้าได้ก่อน" : "ปิดรับแล้ว"}
+            {isOpen ? <CountdownText target={round.close_date} prefix={t("closesIn")} /> : round.round_status === "scheduled" ? t("notOpenYet") : t("closed")}
           </p>
         </header>
 
@@ -74,14 +78,14 @@ export default function PreorderRoundPage() {
 
         <section className="space-y-4" aria-labelledby="round-items">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 id="round-items" className="m-0 text-xl font-bold text-stone-800">สินค้าของรอบนี้ ({round.items.length})</h2>
+            <h2 id="round-items" className="m-0 text-xl font-bold text-stone-800">{t("roundItems", { n: round.items.length })}</h2>
             {round.items.length > 4 && (
-              <input className={`${shopInput} sm:max-w-xs`} type="search" placeholder="ค้นหาสินค้าในรอบ" aria-label="ค้นหาสินค้าในรอบ" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <input className={`${shopInput} sm:max-w-xs`} type="search" placeholder={t("searchRound")} aria-label={t("searchRound")} value={search} onChange={(e) => setSearch(e.target.value)} />
             )}
           </div>
           {items.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-stone-200 bg-white p-10 text-center text-sm text-stone-500">
-              {round.items.length ? "ไม่พบสินค้าที่ค้นหา" : "รอบนี้ยังไม่มีสินค้า"}
+              {round.items.length ? t("noMatch") : t("noItems")}
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">

@@ -6,13 +6,16 @@
 // ─────────────────────────────────────────────────────────────
 import { CUSTOMIZATION_LIMITS, type ProductCustomization } from "@/types/productCustomization";
 import { toggleVariant, type Picked } from "@/lib/customizationSelection";
+import { useTranslations } from "next-intl";
 
-const priceTag = (n: number) => (n > 0 ? `+฿${n.toLocaleString("th-TH")}` : "ไม่มีค่าใช้จ่ายเพิ่ม");
+type CustomT = ReturnType<typeof useTranslations<"shop.custom">>;
 
-function ruleText(min: number, max: number): string {
-  if (min >= 1 && max === 1) return "เลือก 1 อย่าง";
-  if (min >= 1) return `เลือก ${min}–${max} อย่าง`;
-  return max === 1 ? "ไม่บังคับ" : `เลือกได้สูงสุด ${max} อย่าง`;
+const priceTag = (n: number, t: CustomT) => (n > 0 ? `+฿${n.toLocaleString()}` : t("noExtra"));
+
+function ruleText(min: number, max: number, t: CustomT): string {
+  if (min >= 1 && max === 1) return t("pickOne");
+  if (min >= 1) return t("pickRange", { min, max });
+  return max === 1 ? t("optional") : t("pickUpTo", { n: max });
 }
 
 const chip = (active: boolean) =>
@@ -31,6 +34,7 @@ export default function CustomizationPicker({
   onChange: (next: Picked) => void;
   disabled?: boolean;
 }) {
+  const t = useTranslations("shop.custom");
   const { groups, options } = customization;
   const setOption = (id: string, value: string | undefined) => {
     const next = { ...picked.options };
@@ -53,8 +57,8 @@ export default function CustomizationPicker({
                 {g.min_select >= 1 && <span className="text-red-500"> *</span>}
               </span>
               <span className="text-[11px] font-normal text-gray-500">
-                {ruleText(g.min_select, g.max_select)}
-                {!single && ` · เลือกแล้ว ${count}`}
+                {ruleText(g.min_select, g.max_select, t)}
+                {!single && t("picked", { n: count })}
               </span>
             </legend>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role={single ? "radiogroup" : "group"} aria-label={g.group_name}>
@@ -71,7 +75,7 @@ export default function CustomizationPicker({
                     className={chip(active)}
                   >
                     <span className="block">{v.variant_name}</span>
-                    <span className="block text-[11px] font-normal text-[#8C5A3C]">{priceTag(v.variant_price)}</span>
+                    <span className="block text-[11px] font-normal text-[#8C5A3C]">{priceTag(v.variant_price, t)}</span>
                   </button>
                 );
               })}
@@ -82,7 +86,7 @@ export default function CustomizationPicker({
 
       {options.length > 0 && (
         <div className={`space-y-3 ${groups.length ? "border-t border-[#8C5A3C]/10 pt-4" : ""}`}>
-          <p className="m-0 text-xs font-bold text-[#4A342E] sm:text-sm">ตัวเลือกเพิ่มเติม</p>
+          <p className="m-0 text-xs font-bold text-[#4A342E] sm:text-sm">{t("extras")}</p>
           {options.map((o) =>
             o.is_text_input ? (
               <label key={o._id} className="block space-y-1">
@@ -91,14 +95,14 @@ export default function CustomizationPicker({
                     {o.option_name}
                     {o.is_required && <span className="text-red-500"> *</span>}
                   </span>
-                  <span className="text-[11px] font-normal text-[#8C5A3C]">{priceTag(o.extra_price)}</span>
+                  <span className="text-[11px] font-normal text-[#8C5A3C]">{priceTag(o.extra_price, t)}</span>
                 </span>
                 <input
                   type="text"
                   disabled={disabled}
                   value={picked.options[o._id] ?? ""}
                   maxLength={o.max_text_length ?? CUSTOMIZATION_LIMITS.defaultTextLength}
-                  placeholder={o.is_required ? "จำเป็นต้องกรอก" : "ไม่ใส่ก็ได้"}
+                  placeholder={o.is_required ? t("required") : t("notRequired")}
                   onChange={(e) => setOption(o._id, e.target.value || undefined)}
                   className="w-full rounded-xl border border-[#8C5A3C]/20 bg-white px-4 py-2.5 text-xs text-[#4A342E] transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8C5A3C]/40 sm:text-sm"
                 />
@@ -116,7 +120,7 @@ export default function CustomizationPicker({
                   {o.option_name}
                   {o.is_required && <span className="text-red-500">*</span>}
                 </span>
-                <span className="text-[11px] text-[#8C5A3C]">{priceTag(o.extra_price)}</span>
+                <span className="text-[11px] text-[#8C5A3C]">{priceTag(o.extra_price, t)}</span>
               </label>
             ),
           )}

@@ -7,6 +7,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { roundItemLimits, type StorefrontRoundDetail, type StorefrontRoundItem } from "@/services/shopPreorders";
 import type { ProductCustomization } from "@/types/productCustomization";
 import type { CartSelection, Picked, PickProblem } from "@/lib/customizationSelection";
@@ -51,6 +52,11 @@ export default function PreorderOrderBox({
   problems: PickProblem[];
   selection: CartSelection | null;
 }) {
+  const t = useTranslations("shop.preorderBox");
+  const ts = useTranslations("shop.preorderShop");
+  const tpick = useTranslations("shop.pick");
+  const tcart = useTranslations("shop.cart");
+  const locale = useLocale();
   const router = useRouter();
   const { status } = useCustomerSession();
   const [qty, setQty] = useState<number | null>(null);
@@ -62,13 +68,13 @@ export default function PreorderOrderBox({
     return (
       <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
         <p className="m-0 font-medium">
-          {hasRoundParam ? "สินค้านี้ไม่ได้เปิดขายในรอบที่เลือก" : "สินค้านี้เป็นสินค้าพรีออเดอร์ สั่งได้ผ่านรอบพรีออเดอร์เท่านั้น"}
+          {hasRoundParam ? t("notInRound") : t("preorderOnly")}
         </p>
-        <Link href="/customer/preorder" className="font-bold underline">ดูรอบพรีออเดอร์ที่เปิดรับ →</Link>
+        <Link href="/customer/preorder" className="font-bold underline">{t("seeOpenRounds")}</Link>
       </div>
     );
   }
-  if (loading || !round || !roundItem) return <p className="animate-pulse text-xs text-gray-500">กำลังโหลดข้อมูลรอบพรีออเดอร์...</p>;
+  if (loading || !round || !roundItem) return <p className="animate-pulse text-xs text-gray-500">{t("loadingRound")}</p>;
 
   const isOpen = isRoundOpen(round, now);
   const { min, max } = roundItemLimits(roundItem);
@@ -79,13 +85,13 @@ export default function PreorderOrderBox({
 
   const add = (goCheckout: boolean) => {
     if (status !== "authenticated") {
-      alert.warning("กรุณาเข้าสู่ระบบก่อนสั่งพรีออเดอร์");
+      alert.warning(t("loginFirst"));
       router.push(`${LOGIN_PATH}?next=${encodeURIComponent(`/customer/product/${productId}?round=${round._id}`)}`);
       return;
     }
     if (problems.length > 0) {
       setShowProblems(true);
-      alert.warning(pickProblemText(problems[0]));
+      alert.warning(pickProblemText(problems[0], tpick));
       return;
     }
     const item = {
@@ -109,14 +115,14 @@ export default function PreorderOrderBox({
     const done = () => {
       setShowProblems(false);
       if (goCheckout) router.push("/customer/preorder/checkout");
-      else alert.success("เพิ่มลงรายการพรีออเดอร์แล้ว");
+      else alert.success(t("added"));
     };
     const res = addToPreorderBasket(meta, item);
     if (res.ok) return done();
-    void confirmAlert(`รายการพรีออเดอร์มีสินค้าของ "${res.conflictRoundName}" อยู่ — 1 คำสั่งซื้อสั่งได้รอบเดียว ล้างรายการเดิมแล้วเริ่มรอบนี้ไหม?`, {
-      title: "เปลี่ยนรอบพรีออเดอร์",
-      confirmText: "ล้างแล้วเพิ่ม",
-      cancelText: "ไม่เปลี่ยน",
+    void confirmAlert(t("conflict", { round: res.conflictRoundName }), {
+      title: t("conflictTitle"),
+      confirmText: t("clearAndAdd"),
+      cancelText: t("keep"),
     }).then((ok) => {
       if (ok && addToPreorderBasket(meta, item, { replace: true }).ok) done();
     });
@@ -126,15 +132,17 @@ export default function PreorderOrderBox({
     <div className="space-y-4">
       <div className="rounded-xl border border-[#8C5A3C]/15 bg-white p-4 text-sm">
         <p className="m-0 font-bold text-[#4A342E]">
-          รอบ: <Link href={`/customer/preorder/${round._id}`} className="underline">{round.round_name}</Link>
+          {t("round")} <Link href={`/customer/preorder/${round._id}`} className="underline">{round.round_name}</Link>
         </p>
         <p className="m-0 text-gray-600">
-          {isOpen ? `ปิดรับ ${thaiDate(round.close_date, true)}` : "ปิดรับแล้ว / ยังไม่เปิดรับ"} · รับสินค้าตั้งแต่ {thaiDate(round.pickup_date)}
+          {isOpen ? ts("closesAt", { date: thaiDate(round.close_date, true, locale) }) : t("notOpen")} ·{" "}
+          {ts("pickupFrom", { date: thaiDate(round.pickup_date, false, locale) })}
         </p>
         <p className="m-0 text-gray-600">
-          ราคาในรอบ <span className="font-bold text-[#8C5A3C]">{baht(roundItem.current_price)}</span> · เหลือ {roundItem.remaining_qty.toLocaleString("th-TH")} ชิ้น
-          {min > 1 && ` · ขั้นต่ำ ${min} ชิ้น`}
-          {roundItem.product.preorder_config?.max_order_qty != null && ` · สูงสุด ${roundItem.product.preorder_config.max_order_qty} ชิ้นต่อคน`}
+          {t("roundPrice")} <span className="font-bold text-[#8C5A3C]">{baht(roundItem.current_price)}</span>
+          {t("left", { n: roundItem.remaining_qty.toLocaleString() })}
+          {min > 1 && t("min", { n: min })}
+          {roundItem.product.preorder_config?.max_order_qty != null && t("maxPerPerson", { n: roundItem.product.preorder_config.max_order_qty })}
         </p>
       </div>
 
@@ -142,19 +150,19 @@ export default function PreorderOrderBox({
       {showProblems && problems.length > 0 && (
         <ul className="m-0 list-none space-y-0.5 p-0 text-xs text-red-600" role="alert">
           {problems.map((p) => (
-            <li key={`${p.key}-${JSON.stringify(p.params)}`}>{pickProblemText(p)}</li>
+            <li key={`${p.key}-${JSON.stringify(p.params)}`}>{pickProblemText(p, tpick)}</li>
           ))}
         </ul>
       )}
 
       <label className="block space-y-1.5">
-        <span className="text-xs font-bold text-[#4A342E]">หมายเหตุถึงร้าน (ไม่บังคับ)</span>
+        <span className="text-xs font-bold text-[#4A342E]">{t("note")}</span>
         <input
           type="text"
           maxLength={500}
           value={note}
           disabled={disabled}
-          placeholder="เช่น หวานน้อย"
+          placeholder={t("notePlaceholder")}
           onChange={(e) => setNote(e.target.value)}
           className="w-full rounded-xl border border-[#8C5A3C]/20 bg-white px-4 py-2.5 text-xs text-[#4A342E] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8C5A3C]/40 sm:text-sm"
         />
@@ -162,19 +170,19 @@ export default function PreorderOrderBox({
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-[#8C5A3C]/30 bg-white">
-          <button type="button" onClick={() => setQty(quantity - 1)} disabled={disabled || quantity <= min} aria-label="ลดจำนวน"
+          <button type="button" onClick={() => setQty(quantity - 1)} disabled={disabled || quantity <= min} aria-label={tcart("decrease")}
             className="flex h-11 w-10 items-center justify-center text-lg font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">-</button>
           <span className="w-12 text-center text-sm font-bold text-[#4A342E] sm:text-base">{quantity}</span>
-          <button type="button" onClick={() => setQty(quantity + 1)} disabled={disabled || quantity >= max} aria-label="เพิ่มจำนวน"
+          <button type="button" onClick={() => setQty(quantity + 1)} disabled={disabled || quantity >= max} aria-label={tcart("increase")}
             className="flex h-11 w-10 items-center justify-center text-lg font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">+</button>
         </div>
         <button type="button" disabled={disabled} onClick={() => add(false)}
           className={`${btn} flex-1 border border-[#8C5A3C]/30 bg-white text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white`}>
-          เพิ่มลงรายการพรีออเดอร์
+          {t("addToList")}
         </button>
         <button type="button" disabled={disabled} onClick={() => add(true)}
           className={`${btn} w-full bg-[#4A342E] text-white shadow-md hover:bg-[#8C5A3C] sm:w-auto sm:flex-1`}>
-          {soldOut ? "สินค้าเต็มแล้ว" : !isOpen ? "รอบนี้ไม่เปิดรับ" : `พรีออเดอร์เลย · ${baht(unit * quantity)}`}
+          {soldOut ? t("full") : !isOpen ? t("roundNotOpen") : t("orderNow", { amount: baht(unit * quantity) })}
         </button>
       </div>
     </div>
