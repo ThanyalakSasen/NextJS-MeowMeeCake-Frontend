@@ -151,7 +151,6 @@
 | F1 แนบสลิปย้อนหลัง | backend | [Q-BE1](BACKLOG3-merge.md#ถาม-backend) |
 | F2 · F3 · F4 | backend / เจ้าของร้าน | หมวด 4 |
 | I15 · U9 | backend | Q-BE10 · Q-BE12 |
-| หน้าร้านภาษาอังกฤษ: หมวด · หน่วย · หัวข้อในรีวิว | backend | Q-BE19 |
 | G3 ปิด FrontOffice พอร์ต 4000 | ทีม | [Q-OWN4](BACKLOG3-merge.md#ถาม-เจ้าของร้าน--ทีม) · [Q-FO1](BACKLOG3-merge.md#ถาม-ผู้พัฒนา-frontoffice) — ปิดได้เมื่อหมวด 2–3 ครบ |
 | คำถามค้างใน BACKLOG3 | ทุกฝ่าย | Q-BE1–Q-BE13 · Q-FO1–Q-FO4 · Q-OWN3–Q-OWN4 ยังไม่มีคำตอบในแบบฟอร์ม |
 
@@ -199,7 +198,7 @@
 | Q-BE4 | รีวิว analytics · dashboard · รายสินค้า | `admin/reviews` มี `bulk` · `filter-options` · `[id]` | F3 |
 | Q-BE5 | สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ | `admin/preorder-rounds` มี CRUD · `items` · `status` · `restore` | F4 |
 | Q-BE12 | `refund_promptpay_id/name` ของลูกค้า | ไม่มี field | U9 · I2 |
-| Q-BE19 | ชื่อภาษาอังกฤษของหมวดหมู่สินค้า · หน่วยสินค้า · หัวข้อรีวิวในแต่ละรีวิว (`aspect_feedback`) | หมวด/หน่วยมีแต่ชื่อไทย · `aspect_feedback` ส่งแค่ `aspect_name_th` (ส่วน `product_name_eng` · `aspect_name_eng` ของหัวข้อมีแล้ว — หน้าร้านใช้แล้วใน #46) | หน้าร้านภาษาอังกฤษ (#44–#46) |
+| Q-BE19 | ชื่อภาษาอังกฤษของหมวดหมู่สินค้า · หน่วยสินค้า · หัวข้อรีวิวในแต่ละรีวิว (`aspect_feedback`) | หมวด/หน่วยมีแต่ชื่อไทย · `aspect_feedback` ส่งแค่ `aspect_name_th` (ส่วน `product_name_eng` · `aspect_name_eng` ของหัวข้อมีแล้ว — หน้าร้านใช้แล้วใน #46) | ❌ ไม่ทำ — เจ้าของร้านตอบ 2026-10-09 "ระบบนี้รองรับแค่ภาษาไทย" → หน้าร้านภาษาไทยอย่างเดียว: เอาปุ่ม TH/EN ออก + `customer/layout.tsx` บังคับ locale th (branch `feat/storefront-thai-only`) · ข้อความ `shop.*` ภาษาอังกฤษยังเก็บไว้ |
 
 ### 9.5 ต้องตัดสินใจ
 | รหัส | เรื่อง | ไฟล์ backend |

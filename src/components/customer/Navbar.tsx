@@ -19,7 +19,6 @@ import { useSidebarMenuStore } from "@/app/customer/store/sidebarMenuStore";
 import { LOGIN_PATH } from "@/constants/auth";
 import DoorLogoutIcon from "./DoorLogoutIcon";
 import { NotificationBell } from "./CustomerNotifications";
-import ShopLocaleSwitch from "./ShopLocaleSwitch";
 
 const noopSubscribe = () => () => {};
 
@@ -185,9 +184,6 @@ export default function Navbar() {
           {/* ฝั่งขวา 2 แถว: บน = ผู้ใช้ (เล็ก) · ล่าง = ตะกร้า (ระดับเดียวกับช่องค้นหา) */}
           <div className="flex-1 min-w-0 flex flex-col gap-2 md:self-stretch md:justify-between md:justify-self-end">
             <ul className="flex items-center justify-end gap-4 text-sm font-medium">
-              <li>
-                <ShopLocaleSwitch />
-              </li>
               <li className="relative">
                 {!hydrated || status === "loading" ? (
                   <span className="!text-white">...</span>

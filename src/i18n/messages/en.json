@@ -2101,8 +2101,7 @@
       "logout": "Log out",
       "login": "Log in",
       "cart": "Cart",
-      "cartWithCount": "Cart ({count} items)",
-      "language": "Language"
+      "cartWithCount": "Cart ({count} items)"
     },
     "common": {
       "loading": "Loading",
