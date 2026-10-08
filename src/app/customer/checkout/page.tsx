@@ -29,6 +29,7 @@ import {
   baht, shopButton, shopButtonPrimary, shopCard, shopInput, shopPage,
 } from "@/components/customer/shopStyles";
 import { useCartCountStore } from "../store/cartCountStore";
+import FlowSteps from "@/components/customer/FlowSteps";
 import { pickupLocationsKey, shopAddressesKey, shopCartKey, shopCouponsKey, shopPointsKey } from "../lib/shopQueries";
 import PickupLocationPicker from "@/components/customer/PickupLocationPicker";
 import CheckoutAddressForm from "@/components/customer/CheckoutAddressForm";
@@ -203,6 +204,7 @@ function CheckoutContent() {
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
         <CustomerBreadcrumb items={[{ label: tcart("title"), href: "/customer/cart" }, { label: t("confirmOrder") }]} className="!mb-0" />
+        <FlowSteps kind="order" current={2} />
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-8">
