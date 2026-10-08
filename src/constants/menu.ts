@@ -72,6 +72,8 @@ export const MENU_SECTIONS: MenuSection[] = [
         children: [
           { labelKey: "ordersManage", href: "/owner/orders/manageOrders", icon: "ClipboardDocumentListIcon", menuKey: "orders" },
           { labelKey: "ordersPreorderRound", href: "/owner/orders/preOrderRound", icon: "ClockIcon", menuKey: "preorder" },
+          // โซนค่าจัดส่งหลังร้าน (I8) — /admin/delivery-zones ใช้สิทธิ์ orders.*
+          { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
         ]
       },
       { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "orders" },

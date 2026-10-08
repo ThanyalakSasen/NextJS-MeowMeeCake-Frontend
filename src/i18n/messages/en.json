@@ -80,7 +80,8 @@
     "storeDesign": "Banners",
     "storeInfo": "Store info",
     "notificationsHistory": "Notification History",
-    "logout": "Log out"
+    "logout": "Log out",
+    "deliveryZones": "Delivery Zones"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -2024,5 +2025,63 @@
     "doneSpamHint": "Can’t find it? Check your spam folder.",
     "resending": "Sending...",
     "goLogin": "Go to sign in"
+  },
+  "deliveryZones": {
+    "title": "Delivery Zones",
+    "description": "Delivery fees by province for delivery orders created in the back office — changes apply to new orders immediately",
+    "usage": "Used for the delivery fee of back-office orders and pre-orders shipped to an address (when no fee is entered manually). The online storefront has its own shipping rates.",
+    "freeShipping": "Orders of {amount} or more ship free in every zone (set on the server)",
+    "add": "Add zone",
+    "addTitle": "Add delivery zone",
+    "editTitle": "Edit delivery zone",
+    "listTitle": "All zones ({n})",
+    "empty": "No zones yet — the default fees are used",
+    "catchAllTag": "All other provinces",
+    "moreProvinces": "+{n} provinces",
+    "deleteConfirm": "Delete zone \"{name}\"? (can be restored later)",
+    "deletedTitle": "Deleted zones ({n})",
+    "restore": "Restore",
+    "added": "Added zone \"{name}\"",
+    "saved": "Saved zone \"{name}\"",
+    "deleted": "Deleted zone \"{name}\"",
+    "restored": "Restored zone \"{name}\"",
+    "saveFailed": "Could not save the zone",
+    "deleteFailed": "Could not delete the zone",
+    "fields": {
+      "name": "Zone name",
+      "namePlaceholder": "e.g. Bangkok & vicinity",
+      "fee": "Fee",
+      "sortOrder": "Check order",
+      "sortOrderShort": "Order",
+      "sortOrderHint": "Lower numbers are checked first — a province in several zones uses the lowest one",
+      "catchAll": "Use for all other provinces",
+      "catchAllHint": "Provinces not in any zone use this zone's fee (one zone at a time)",
+      "catchAllReplaces": "\"{name}\" is currently set — saving makes this zone the catch-all instead",
+      "provinces": "Provinces",
+      "provincesPlaceholder": "Pick or type a province",
+      "provincesHint": "Must match the province typed in the address — add common short forms (e.g. กทม) and press Enter",
+      "active": "Active",
+      "activeAria": "Activate zone {name}"
+    },
+    "errors": {
+      "nameRequired": "Enter a zone name",
+      "nameTooLong": "Zone name is over 200 characters",
+      "feeInvalid": "Fee must be 0 or more with at most 2 decimals",
+      "provincesRequired": "Pick at least one province or turn on \"Use for all other provinces\"",
+      "sortInvalid": "Order must be a whole number"
+    },
+    "warnings": {
+      "fallback": "No active zones yet — the system uses the default fees: {zones}",
+      "noCatchAll": "There is no \"all other provinces\" zone — provinces outside every zone use the system defaults (Bangkok & vicinity / upcountry)",
+      "duplicates": "Some provinces are in more than one active zone — the lower order wins:",
+      "duplicateItem": "{province}: uses \"{winner}\" (not {others})"
+    },
+    "checker": {
+      "title": "Check fee by province",
+      "placeholder": "Pick a province",
+      "result": "Zone \"{zone}\" — fee {fee}",
+      "fallback": "No zone matches — the system default fee applies",
+      "freeNote": "Orders of {amount} or more ship free"
+    }
   }
 }
