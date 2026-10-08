@@ -850,6 +850,25 @@ body {
   white-space: nowrap;
 }
 
+/* จอแคบ: breadcrumb แถวที่สองใต้ navbar (Navbar.tsx) · ชื่อผู้ใช้ยาวตัดด้วย … ไม่ดันจนล้น (BACKLOG4 V5) */
+.navbar-crumbs-row {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.25rem 1rem;
+  overflow-x: auto;
+  background-color: var(--navbar-bg);
+  border-bottom: 1px solid var(--navbar-border);
+}
+
+@media (max-width: 639px) {
+  .owner-name {
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 /* ------------------------------------------------------------
    7. Responsive overrides
    ------------------------------------------------------------ */
