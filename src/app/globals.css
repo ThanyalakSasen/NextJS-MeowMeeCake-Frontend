@@ -962,7 +962,7 @@ body {
 }
 
 .section-card-link {
-  @apply text-sm text-blue-600 hover:text-blue-700 transition-colors cursor-pointer;
+  @apply text-sm font-medium text-brown-600 hover:text-brown-800 transition-colors cursor-pointer;
 }
 
 /* ── Dashboard widget — section-card ที่สูงเท่ากันทุกใบ (ว่างหรือมีข้อมูล) ──
