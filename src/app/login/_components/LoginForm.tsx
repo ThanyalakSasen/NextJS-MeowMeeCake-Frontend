@@ -11,6 +11,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, LockOpen } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import { EMAIL_NOT_VERIFIED, lineLoginUrl, login, loginWithGoogle, resendVerification } from "@/lib/authClient";
@@ -33,6 +34,7 @@ function Form() {
   const t = useTranslations();
   const router = useRouter();
   const params = useSearchParams();
+  const qc = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +45,8 @@ function Form() {
 
   const emailValid = EMAIL_RE.test(email.trim());
   const goNext = (user: CurrentUser) => {
+    // ล้าง cache ตอนเป็น guest (session ว่าง · ตะกร้า ฯลฯ) — ไม่งั้นกลับไปหน้า ?next= (เช่นลิงก์คำสั่งซื้อจาก LINE) แล้วยังเห็นการ์ดชวนล็อกอิน
+    qc.clear();
     router.replace(nextPathFor(user.roleType, params.get("next")));
     router.refresh();
   };
