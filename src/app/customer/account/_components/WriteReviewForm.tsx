@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CakeSlice, Send, Star, Upload, Video, X } from "lucide-react";
 import { catalogService } from "@/services/catalog";
@@ -36,6 +37,7 @@ export interface ReviewableItem {
   _id: string;
   product_id: string;
   product_name: string;
+  product_name_eng?: string | null;
   variant_name: string | null;
   quantity: number;
   unit_price: number;
@@ -60,6 +62,7 @@ export default function WriteReviewForm({
   backHref: string;
 }) {
   const tw = useTranslations("shop.review");
+  const { name: localName } = useLocalName();
   const tc = useTranslations("shop.common");
   const to = useTranslations("shop.orders");
   const router = useRouter();
@@ -264,7 +267,7 @@ export default function WriteReviewForm({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="m-0 truncate text-sm font-semibold text-stone-800">{it.product_name || tw("product")}</p>
+                  <p className="m-0 truncate text-sm font-semibold text-stone-800">{localName(it.product_name, it.product_name_eng) || tw("product")}</p>
                   <p className="m-0 truncate text-xs text-stone-500">
                     {it.variant_name ? tw("option", { name: it.variant_name }) : ""}×{it.quantity} · {baht(it.unit_price)}
                   </p>
@@ -334,7 +337,7 @@ export default function WriteReviewForm({
                   }`}
                 >
                   <AspectIcon icon={a.icon} size={14} />
-                  {a.aspect_name_th}
+                  {localName(a.aspect_name_th, a.aspect_name_eng)}
                 </button>
               );
             })}

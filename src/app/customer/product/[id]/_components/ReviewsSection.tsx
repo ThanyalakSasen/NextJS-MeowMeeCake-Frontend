@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { formatDate } from "@/i18n/format";
 import { FaImage, FaStar, FaThumbtack } from "react-icons/fa";
 import { catalogService, type CatalogReview } from "@/services/catalog";
@@ -38,6 +39,7 @@ function Stars({ value }: { value: number }) {
 
 export default function ReviewsSection({ productId }: { productId: string }) {
   const t = useTranslations("shop.reviews");
+  const { name: localName } = useLocalName();
   const reviewsQ = useQuery({ queryKey: ["catalog", "product", productId, "reviews"], queryFn: () => catalogService.reviews(productId) });
   const summaryQ = useQuery({ queryKey: ["catalog", "product", productId, "reviews", "summary"], queryFn: () => catalogService.reviewSummary(productId) });
   const sentimentQ = useQuery({ queryKey: ["catalog", "product", productId, "sentiment"], queryFn: () => catalogService.sentiment(productId) });
@@ -101,7 +103,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
                 onClick={() => setFilter(isActive({ kind: "aspect", id: a.aspect_id }) ? { kind: "all" } : { kind: "aspect", id: a.aspect_id })}
                 className={filterCls(isActive({ kind: "aspect", id: a.aspect_id }))}
               >
-                {a.aspect?.aspect_name_th}
+                {localName(a.aspect?.aspect_name_th, a.aspect?.aspect_name_eng)}
                 <span className="ml-1.5 text-[11px] font-normal opacity-80">
                   👍 {a.positive}
                   {a.negative > 0 && ` · 👎 ${a.negative}`}

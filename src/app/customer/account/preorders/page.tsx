@@ -7,6 +7,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { useQueries, useQuery, keepPreviousData } from "@tanstack/react-query";
 import { CalendarClock, CakeSlice } from "lucide-react";
 import { shopPreordersService, type ShopPreorder } from "@/services/shopPreorders";
@@ -111,6 +112,7 @@ function PreordersContent() {
 
 function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail: ShopPreorder | null }) {
   const t = useTranslations("shop.preorders");
+  const { name: localName } = useLocalName();
   const to = useTranslations("shop.orders");
   const labels = useOrderLabels();
   const locale = useLocale();
@@ -144,7 +146,7 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
               </div>
               <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="m-0 truncate text-sm font-semibold text-stone-800">{it.product_name || to("product")}</p>
+                  <p className="m-0 truncate text-sm font-semibold text-stone-800">{localName(it.product_name, it.product_name_eng) || to("product")}</p>
                   {it.variant_name && <p className="m-0 text-xs text-stone-400">{to("option", { name: it.variant_name })}</p>}
                 </div>
                 <div className="flex shrink-0 items-center gap-2 text-right">

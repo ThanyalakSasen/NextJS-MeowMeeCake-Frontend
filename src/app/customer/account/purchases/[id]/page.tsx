@@ -14,6 +14,7 @@ import { Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaCheckCircle } from "react-icons/fa";
 import { canCustomerCancel, shopOrdersService } from "@/services/shopOrders";
@@ -48,6 +49,7 @@ export default function OrderPage() {
 
 function OrderContent() {
   const t = useTranslations("shop.orders");
+  const { name: localName } = useLocalName();
   const tc = useTranslations("shop.common");
   const labels = useOrderLabels();
   const locale = useLocale();
@@ -146,7 +148,7 @@ function OrderContent() {
                 <div key={it._id} className="flex items-center gap-3 text-sm">
                   <OrderItemThumb productId={it.product_id} alt={it.product_name} className="h-12 w-12" />
                   <span className="min-w-0 flex-1">
-                    {it.product_name}
+                    {localName(it.product_name, it.product_name_eng)}
                     {it.variant_name ? ` (${it.variant_name})` : ""} <span className="text-gray-500">×{it.quantity}</span>
                     {it.selected_options.map((o) => (
                       <span key={o.option_name} className="block text-xs text-gray-500">

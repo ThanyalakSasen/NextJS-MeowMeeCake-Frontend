@@ -10,6 +10,7 @@ import { Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaCheckCircle } from "react-icons/fa";
 import { canCustomerCancelPreorder, shopPreordersService } from "@/services/shopPreorders";
@@ -40,6 +41,7 @@ export default function PreorderDetailPage() {
 
 function PreorderDetailContent() {
   const t = useTranslations("shop.preorders");
+  const { name: localName } = useLocalName();
   const to = useTranslations("shop.orders");
   const tc = useTranslations("shop.common");
   const labels = useOrderLabels();
@@ -155,7 +157,7 @@ function PreorderDetailContent() {
               {p.items.map((it) => (
                 <div key={it._id} className="flex items-start justify-between gap-3 text-sm">
                   <span className="min-w-0">
-                    {it.product_name}
+                    {localName(it.product_name, it.product_name_eng)}
                     {it.variant_name ? ` (${it.variant_name})` : ""} <span className="text-gray-500">×{it.quantity}</span>
                     {it.selected_options.map((o) => (
                       <span key={o.option_name} className="block text-xs text-gray-500">

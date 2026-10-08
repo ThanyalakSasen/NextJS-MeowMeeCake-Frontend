@@ -12,6 +12,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { useQueries, useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ShoppingBag } from "lucide-react";
 import { shopOrdersService, type ShopOrder } from "@/services/shopOrders";
@@ -124,6 +125,7 @@ function PurchasesContent() {
 
 function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | null }) {
   const t = useTranslations("shop.orders");
+  const { names: localNames } = useLocalName();
   const labels = useOrderLabels();
   const locale = useLocale();
   const [expanded, setExpanded] = useState(false);
@@ -154,8 +156,8 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
               <OrderItemThumb productId={it.product_id} alt={it.product_name} />
               <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="m-0 truncate text-sm font-semibold text-stone-800">{it.product_name || t("product")}</p>
-                  {it.product_name_eng && <p className="m-0 truncate text-xs text-stone-400">{it.product_name_eng}</p>}
+                  <p className="m-0 truncate text-sm font-semibold text-stone-800">{localNames(it.product_name, it.product_name_eng).primary || t("product")}</p>
+                  {localNames(it.product_name, it.product_name_eng).secondary && <p className="m-0 truncate text-xs text-stone-400">{localNames(it.product_name, it.product_name_eng).secondary}</p>}
                   {it.variant_name && <p className="m-0 text-xs text-stone-400">{t("option", { name: it.variant_name })}</p>}
                 </div>
                 <div className="flex shrink-0 items-center gap-2 text-right">
