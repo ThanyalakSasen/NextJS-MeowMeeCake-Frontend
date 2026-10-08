@@ -12,6 +12,7 @@
     "check": "node scripts/check-i18n.mjs && node scripts/check-theme.mjs --strict && tsc --noEmit && eslint"
   },
   "dependencies": {
+    "@ant-design/cssinjs": "^2.1.2",
     "@heroicons/react": "^2.2.0",
     "@tanstack/react-query": "^5.62.0",
     "antd": "^6.4.3",

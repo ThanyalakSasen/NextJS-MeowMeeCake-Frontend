@@ -3,6 +3,11 @@
    ครอบคลุม: Layout, Sidebar, Navbar และ utility ที่ใช้ร่วมกัน
    ============================================================ */
 
+/* ลำดับ CSS layer: antd อยู่หลัง base (ชนะ preflight) แต่ก่อน utilities — class Tailwind ชนะ style ของ antd เสมอ
+   (antd ห่อ CSS ด้วย @layer antd ผ่าน <StyleProvider layer> ใน providers.tsx · เดิม antd ไม่อยู่ใน layer จึงชนะ utility ทุกตัว
+   เช่น a { color; background: transparent } ทำให้ <Link> ที่ใช้ bg/text ของ Tailwind สีหาย — BACKLOG4 V9) · ต้องอยู่ก่อน @import */
+@layer theme, base, antd, components, utilities;
+
 @import "tailwindcss";
 
 /* ════════════════════════════════════════════════════════════════════
@@ -859,6 +864,12 @@ body {
   overflow-x: auto;
   background-color: var(--navbar-bg);
   border-bottom: 1px solid var(--navbar-border);
+}
+/* ซ่อนเองตั้งแต่ sm — กฎนี้ไม่อยู่ใน layer จึงชนะ utility sm:hidden */
+@media (min-width: 640px) {
+  .navbar-crumbs-row {
+    display: none;
+  }
 }
 
 @media (max-width: 639px) {

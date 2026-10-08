@@ -43,7 +43,7 @@ export function Navbar({
           <UserMenuDropdown user={user} onLogout={onLogout} />
         </div>
       </nav>
-      <div className="navbar-crumbs-row sm:hidden">
+      <div className="navbar-crumbs-row">
         <BreadcrumbTrail items={crumbs} />
       </div>
     </div>
