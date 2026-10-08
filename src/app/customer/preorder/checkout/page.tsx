@@ -140,7 +140,9 @@ function PreorderCheckoutContent() {
   let pointsToRedeem = 0;
   let maxPoints = 0;
   if (points) {
-    maxPoints = maxRedeemablePoints(points.balance, subtotal - Math.min(couponAmount, subtotal), points.rules);
+    // ส่วนลดส่งฟรีไม่ลดฐานคิดแต้ม (Q-BE14)
+    const goodsDiscount = selectedCoupon?.discount_type === "FreeShipping" ? 0 : couponAmount;
+    maxPoints = maxRedeemablePoints(points.balance, subtotal - Math.min(goodsDiscount, subtotal), points.rules);
     const capped = Math.min(pointsInput, maxPoints);
     pointsToRedeem = capped - (capped % points.rules.REDEEM_STEP);
   }

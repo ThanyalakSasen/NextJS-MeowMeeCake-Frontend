@@ -73,7 +73,7 @@ function CheckoutContent() {
   const [recipientPhone, setRecipientPhone] = useState("");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [promoInput, setPromoInput] = useState("");
-  const [promo, setPromo] = useState<{ code: string; discount: number; forKey: string } | null>(null);
+  const [promo, setPromo] = useState<{ code: string; discount: number; freeShipping: boolean; forKey: string } | null>(null);
   const [couponId, setCouponId] = useState<string | null>(null);
   const [pointsInput, setPointsInput] = useState(0);
   const [pickupLocationId, setPickupLocationId] = useState<string | null>(null);
@@ -100,7 +100,7 @@ function CheckoutContent() {
   const promoMutation = useMutation({
     mutationFn: (code: string) => shopOrdersService.validatePromotion(code, deliveryFee),
     onSuccess: (r) => {
-      setPromo({ code: r.promotion_code, discount: r.discount_amount, forKey: promoKey });
+      setPromo({ code: r.promotion_code, discount: r.discount_amount, freeShipping: r.free_shipping, forKey: promoKey });
       setCouponId(null); // โค้ดกับคูปองของฉันใช้พร้อมกันไม่ได้
       alert.success(t("promoApplied"));
     },
@@ -156,14 +156,16 @@ function CheckoutContent() {
   const selectedCoupon = coupons.find((c) => c._id === couponId) ?? null;
   const couponAmount = selectedCoupon ? (couponDiscount(selectedCoupon, subtotal, deliveryFee).amount ?? 0) : 0;
   const codeOrCouponDiscount = activePromo ? activePromo.discount : couponAmount;
+  const freeShippingDiscount = activePromo ? activePromo.freeShipping : selectedCoupon?.discount_type === "FreeShipping";
 
-  // แต้ม: ฐาน = ยอดสินค้า − ส่วนลดคูปอง/โค้ด (ไม่เกินยอดสินค้า) — ตรงกับ backend orderService.createOrder
-  // ค่าที่กรอกเกินเพดานใหม่ (เช่นเลือกคูปองทีหลัง) ถูกตัดลงอัตโนมัติ
+  // แต้ม: ฐาน = ยอดสินค้า − ส่วนลดสินค้าจากคูปอง/โค้ด (ไม่เกินยอดสินค้า) — ตรงกับ backend orderService.createOrder
+  // ส่วนลดส่งฟรีไม่ลดฐาน (Q-BE14) · ค่าที่กรอกเกินเพดานใหม่ (เช่นเลือกคูปองทีหลัง) ถูกตัดลงอัตโนมัติ
+  const goodsDiscount = freeShippingDiscount ? 0 : codeOrCouponDiscount;
   const points = pointsQ.data ?? null;
   let pointsToRedeem = 0;
   let maxPoints = 0;
   if (points) {
-    maxPoints = maxRedeemablePoints(points.balance, subtotal - Math.min(codeOrCouponDiscount, subtotal), points.rules);
+    maxPoints = maxRedeemablePoints(points.balance, subtotal - Math.min(goodsDiscount, subtotal), points.rules);
     const capped = Math.min(pointsInput, maxPoints);
     pointsToRedeem = capped - (capped % points.rules.REDEEM_STEP);
   }

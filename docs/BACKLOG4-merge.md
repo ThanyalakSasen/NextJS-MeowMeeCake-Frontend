@@ -28,7 +28,7 @@
 
 > งานฝั่ง frontend ที่ทำได้โดยไม่ต้องรอใคร **เข้า `main` ครบแล้ว** — ที่เหลือติดคำตอบ/การตัดสินใจ (หมวด 7 · หมวด 9 · คำถามใหม่) และค่าตั้ง env ก่อน deploy (§9.6)
 
-**ลำดับที่ทำไปแล้ว:** ~~1.1 (ปิด C3)~~ ✅ → ~~K1–K4 (เอกสาร)~~ ✅ → ~~D4~~ ✅ → ~~D5 + U3 (หัวใจ)~~ ✅ → ~~C1~~ ✅ → ~~D3~~ ✅ → ~~D6 + U4~~ ✅ → ~~D7~~ ✅ → ~~D8~~ ✅ → ~~D9 + U5~~ ✅ → ~~C2~~ ✅ → หลังร้าน ~~E2~~ ✅ → ~~E3~~ ✅ → ~~E4~~ ✅ → ~~E5~~ ✅ → ~~I3 · I10 · K5–K7~~ ✅ → ~~V1–V10 (ตรวจหน้าจอจริง)~~ ✅ → ~~U2 · U6 · U7~~ ✅ → ~~I11~~ ✅ → ~~I8~~ ✅ → ~~ย้ายข้อความหน้าร้านเข้า i18n (`shop.*` · th/en · #44)~~ ✅ → ~~ปุ่มสลับภาษา TH/EN บน Navbar หน้าร้าน + เมนูมือถือบรรทัดเดียว (#45)~~ ✅ → ~~ชื่อสินค้า/หัวข้อรีวิวภาษาอังกฤษเมื่อเลือก EN (#46)~~ ✅ → **ที่เหลือ: รอคำตอบ** (U8 · U9 · D10 · F1–F4 · I15 · Q-BE14 · Q-BE19)
+**ลำดับที่ทำไปแล้ว:** ~~1.1 (ปิด C3)~~ ✅ → ~~K1–K4 (เอกสาร)~~ ✅ → ~~D4~~ ✅ → ~~D5 + U3 (หัวใจ)~~ ✅ → ~~C1~~ ✅ → ~~D3~~ ✅ → ~~D6 + U4~~ ✅ → ~~D7~~ ✅ → ~~D8~~ ✅ → ~~D9 + U5~~ ✅ → ~~C2~~ ✅ → หลังร้าน ~~E2~~ ✅ → ~~E3~~ ✅ → ~~E4~~ ✅ → ~~E5~~ ✅ → ~~I3 · I10 · K5–K7~~ ✅ → ~~V1–V10 (ตรวจหน้าจอจริง)~~ ✅ → ~~U2 · U6 · U7~~ ✅ → ~~I11~~ ✅ → ~~I8~~ ✅ → ~~ย้ายข้อความหน้าร้านเข้า i18n (`shop.*` · th/en · #44)~~ ✅ → ~~ปุ่มสลับภาษา TH/EN บน Navbar หน้าร้าน + เมนูมือถือบรรทัดเดียว (#45)~~ ✅ → ~~ชื่อสินค้า/หัวข้อรีวิวภาษาอังกฤษเมื่อเลือก EN (#46)~~ ✅ → ~~owner/staff ลิงก์หลังร้าน (#48)~~ ✅ → ~~U8 (#49)~~ ✅ → ~~หน้าร้านไทยอย่างเดียว · Q-BE19 (#50)~~ ✅ → ~~D10 ลิงก์ใน LINE (#51 · BE #70)~~ ✅ → ~~Q-BE14 เพดานแต้ม~~ ✅ → **ที่เหลือ (ตอบแล้ว: ทำ — ต้องมี backend ก่อน):** I15 (Q-BE10) · U9 (Q-BE12) · F2 (Q-BE2) · F4 (Q-BE5) · **รอคำตอบ:** F3 (Q-BE4) · Q-BE3 · Q-BE9 · Q-BE16
 
 ---
 
@@ -45,8 +45,8 @@
   - รวม: คูปอง + แต้ม · ส่งฟรี + แต้ม · โค้ด + แต้ม · takeaway + จุดรับ + คูปอง + แต้ม → `total_amount` ของ backend = ยอดหน้าเว็บทุกกรณี · โค้ด + คูปองพร้อมกัน 400
   - หน้า `/customer/checkout` · `/customer/cart` · `/customer/account/purchases` คอมไพล์และเปิดได้ (200)
 - **ยังไม่ได้ทดสอบ:** คลิกดูหน้าจอจริงในเบราว์เซอร์ (มือถือ + จอใหญ่)
-- **⚠️ ก่อน deploy:** backend `main` (`7ef6362`) ยังมี regex `pickup_date` ผิด (`/^d{4}-d{2}-d{2}$/` ไม่มี `\`) → **ทุกออเดอร์ที่เลือกวันรับได้ 400** · ต้อง merge branch `fix/pickup-date-regex` (`2746063` · ยังไม่ push) ก่อน — [Q-BE15](#คำถามใหม่)
-- **ติดคำถาม:** [Q-BE14](#คำถามใหม่) ฐานคิดแต้มเมื่อใช้คูปอง/โค้ดส่งฟรี — ทดสอบแล้ว: สูตร FrontOffice (1,800 แต้ม) ได้ 400 "ใช้แต้มได้สูงสุด 1680" → หน้าเว็บตอนนี้ตรงกับ backend
+- ~~**⚠️ ก่อน deploy:** regex `pickup_date` ผิดบน backend `main`~~ ✅ แก้แล้ว — backend PR #67 ([Q-BE15](#คำถามใหม่))
+- ✅ [Q-BE14](#คำถามใหม่) ฐานคิดแต้มเมื่อใช้คูปอง/โค้ดส่งฟรี — ตอบ "ไม่หักค่าส่ง" → backend แก้ `orderService` + `preorderService` แล้ว · หน้า checkout (ออเดอร์ + พรีออเดอร์) คิดเพดานตามสูตรใหม่
 
 ---
 
@@ -148,11 +148,10 @@
 | เรื่อง | รอใคร | รายละเอียด |
 |---|---|---|
 | B3 ล็อกอิน Google / LINE | ทีม/ผู้ดูแลบัญชี | ตั้ง `NEXT_PUBLIC_GOOGLE_CLIENT_ID` + origin ใน Google Console · `LINE_AUTH_*` + Callback URL ใน LINE Console · merge backend `feat/line-login-endpoint` ([Q-BE7](BACKLOG3-merge.md#ถาม-backend)) แล้วทดสอบด้วยบัญชีจริง |
-| F1 แนบสลิปย้อนหลัง | backend | [Q-BE1](BACKLOG3-merge.md#ถาม-backend) |
 | F2 · F3 · F4 | backend / เจ้าของร้าน | หมวด 4 |
-| I15 · U9 | backend | Q-BE10 · Q-BE12 |
-| G3 ปิด FrontOffice พอร์ต 4000 | ทีม | [Q-OWN4](BACKLOG3-merge.md#ถาม-เจ้าของร้าน--ทีม) · [Q-FO1](BACKLOG3-merge.md#ถาม-ผู้พัฒนา-frontoffice) — ปิดได้เมื่อหมวด 2–3 ครบ |
-| คำถามค้างใน BACKLOG3 | ทุกฝ่าย | Q-BE1–Q-BE13 · Q-FO1–Q-FO4 · Q-OWN3–Q-OWN4 ยังไม่มีคำตอบในแบบฟอร์ม |
+| I15 · U9 | backend | Q-BE10 · Q-BE12 (ตอบแล้ว: ทำ) |
+| G3 ปิด FrontOffice พอร์ต 4000 | ทีม | [Q-OWN4](BACKLOG3-merge.md#ถาม-เจ้าของร้าน--ทีม) ตอบแล้ว: เห็นด้วย · เหลือกำหนดวัน + [Q-FO1](BACKLOG3-merge.md#ถาม-ผู้พัฒนา-frontoffice) |
+| คำถามค้างใน BACKLOG3 | ทุกฝ่าย | ตอบแล้ว 2026-10-09: Q-BE1 · Q-BE2 · Q-BE5 · Q-BE10 · Q-BE12 · Q-BE13 · Q-BE14 · Q-FO2 · Q-OWN3 · Q-OWN4 · Q-OWN5 · **ยังค้าง:** Q-BE3 (ค่า `STOREFRONT_URL`) · Q-BE4 (คำตอบไม่ชัด) · Q-BE9 · Q-BE16 · Q-FO1 · Q-FO3 · Q-FO4 |
 
 ---
 
@@ -174,7 +173,7 @@
 |---|---|---|---|
 | Q-BE15 | regex `pickup_date` ผิดบน `main` (`/^d{4}-d{2}-d{2}$/` ไม่มี `\`) → ออเดอร์/พรีออเดอร์ที่เลือกวันรับได้ 400 ทุกครั้ง · ค้นทั้ง `src/` แล้วไม่มี regex ผิดแบบเดียวกันที่อื่น | `src/schemas/order.ts:38` · `src/schemas/preorder.ts:36` | ✅ backend PR [#67](https://github.com/ThanyalakSasen/NextJS-MeowMeeCake/pull/67) merge แล้ว 2026-10-08 (`38b57c6`) · ทดสอบ C3 กับ `main` ซ้ำ 39/39 |
 | Q-BE16 | 🟢 รายการโปรด: เอาออกแล้วเพิ่มกลับ = กู้แถวเดิม (`created_at` เดิม) → กลับไปอยู่ตำแหน่งเดิม ไม่ขึ้นบนสุดตามที่ GET บอกว่า "ล่าสุดก่อน" · เสนอ: ตั้ง `created_at` ใหม่ตอนกู้ (หรือเรียงด้วย `updated_at`) | `src/services/favoriteService.ts` `addFavorite` | ▢ เล็กน้อย |
-| Q-BE18 | 🟢 แจ้งเตือนพรีออเดอร์ตั้ง `link` เป็น `/customer/account/preorders` (หน้ารายการ) — FrontOffice ไม่มีหน้ารายละเอียด แต่ repo นี้มีแล้ว (D3) · frontend เลี่ยงด้วย `ref_id` แล้ว · เสนอ: `docPath("preorder", id)` → `/customer/account/preorders/<id>` (ลิงก์ใน LINE จะได้ตรงด้วย) | `src/services/customerNotifyService.ts:140` | ▢ เล็กน้อย |
+| Q-BE18 | 🟢 แจ้งเตือนพรีออเดอร์ตั้ง `link` เป็น `/customer/account/preorders` (หน้ารายการ) — FrontOffice ไม่มีหน้ารายละเอียด แต่ repo นี้มีแล้ว (D3) · frontend เลี่ยงด้วย `ref_id` แล้ว · เสนอ: `docPath("preorder", id)` → `/customer/account/preorders/<id>` (ลิงก์ใน LINE จะได้ตรงด้วย) | `src/services/customerNotifyService.ts:140` | ✅ backend PR #70 (D10) — ลิงก์กระดิ่ง/LINE ของพรีออเดอร์ชี้หน้าใบนั้นแล้ว |
 | Q-BE17 | 🔴 `POST /shop/cart/items` ไม่ส่ง `variant_ids` ต่อให้ `cartService` (schema รับ แต่ route ส่งแค่ `variant_id`) → **สินค้าที่มีกลุ่มบังคับเลือกใส่ตะกร้าจากหน้าเว็บไม่ได้เลย** (400 "กรุณาเลือก …") · เจอตอนทดสอบ C1 · ตรวจ route อื่นแล้ว (orders · preorders) ไม่เป็น | `src/app/api/shop/cart/items/route.ts` | ✅ backend PR [#69](https://github.com/ThanyalakSasen/NextJS-MeowMeeCake/pull/69) merge แล้ว 2026-10-09 (`4190f57`) · เทส route (fail เมื่อไม่มีตัวแก้) · CI ผ่าน |
 
 ### 9.2 🟠 ช่องโหว่ (แก้เล็ก)
@@ -186,24 +185,24 @@
 ### 9.3 🟠 ทางตันใน flow ลูกค้า
 | รหัส | เรื่อง | ไฟล์ backend | สถานะ |
 |---|---|---|---|
-| Q-BE1 (F1) | ออเดอร์หมดเวลาแล้วต้องแนบ `slip_image_url` แต่ URL ได้จาก `POST /shop/payments/:id/slip` เท่านั้น (ต้องมี payment ก่อน) → ลูกค้าที่ไม่เคยส่งสลิปเปิดออเดอร์กลับเองไม่ได้ · เสนอ: `POST /shop/payments` รับ multipart หรือยอมสร้าง payment ไม่มีสลิป | `src/services/paymentService.ts:49` · `:118` | ▢ |
+| Q-BE1 (F1) | ออเดอร์หมดเวลาแล้วต้องแนบ `slip_image_url` แต่ URL ได้จาก `POST /shop/payments/:id/slip` เท่านั้น (ต้องมี payment ก่อน) → ลูกค้าที่ไม่เคยส่งสลิปเปิดออเดอร์กลับเองไม่ได้ · เสนอ: `POST /shop/payments` รับ multipart หรือยอมสร้าง payment ไม่มีสลิป | `src/services/paymentService.ts:49` · `:118` | ❌ ไม่ทำ — ตอบ (ค): หมดเวลาแล้วยกเลิกไปเลย ไม่เปิดกลับ (2026-10-09) |
 
 ### 9.4 🟡 API ที่ควรเพิ่ม
 | รหัส | เรื่อง | ตอนนี้ | ใช้กับ |
 |---|---|---|---|
-| Q-BE10 | รายการสินค้าสำหรับ POS ใต้สิทธิ์ `orders` (เช่น `GET /admin/pos/products?search=`) | `admin/pos` มีแค่ `scan` | I15 |
-| Q-BE13 | `GET /shop/orders` ส่ง items แบบย่อ (ชื่อ · จำนวน · ราคา · รูป) | `orderService.listOrders` (`:616`) ไม่ส่ง items · `productSnapshotSchema` (`orderItemModel.ts:4`) ไม่มีรูป | U7 · D1 |
+| Q-BE10 | **ตอบแล้ว: ทำ** · รายการสินค้าสำหรับ POS ใต้สิทธิ์ `orders` (เช่น `GET /admin/pos/products?search=`) | `admin/pos` มีแค่ `scan` | I15 |
+| Q-BE13 | ~~`GET /shop/orders` ส่ง items แบบย่อ~~ **ตอบแล้ว: ไม่ทำ** (ดึงทีละใบแบบเดิม) | `orderService.listOrders` (`:616`) ไม่ส่ง items · `productSnapshotSchema` (`orderItemModel.ts:4`) ไม่มีรูป | U7 · D1 |
 | Q-BE9 | flag `has_customization` ใน `GET /admin/products` | ไม่มี | I4 (POS) |
-| Q-BE2 | admin API แก้ `ShippingZones` (ค่าส่งเว็บ) | มีแค่ `admin/delivery-zones` (POS) | F2 |
-| Q-BE4 | รีวิว analytics · dashboard · รายสินค้า | `admin/reviews` มี `bulk` · `filter-options` · `[id]` | F3 |
-| Q-BE5 | สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ | `admin/preorder-rounds` มี CRUD · `items` · `status` · `restore` | F4 |
-| Q-BE12 | `refund_promptpay_id/name` ของลูกค้า | ไม่มี field | U9 · I2 |
+| Q-BE2 | **ตอบแล้ว: ทำ** · admin API แก้ `ShippingZones` (ค่าส่งเว็บ) | มีแค่ `admin/delivery-zones` (POS) | F2 |
+| Q-BE4 | รีวิว analytics · dashboard · รายสินค้า · ⏸ คำตอบยังไม่ชัด | `admin/reviews` มี `bulk` · `filter-options` · `[id]` | F3 |
+| Q-BE5 | **ตอบแล้ว: ทำ** (เจ้าของร้านต้องการ — Q-OWN3) · สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ | `admin/preorder-rounds` มี CRUD · `items` · `status` · `restore` | F4 |
+| Q-BE12 | **ตอบแล้ว: ทำ** · `refund_promptpay_id/name` ของลูกค้า | ไม่มี field | U9 · I2 |
 | Q-BE19 | ชื่อภาษาอังกฤษของหมวดหมู่สินค้า · หน่วยสินค้า · หัวข้อรีวิวในแต่ละรีวิว (`aspect_feedback`) | หมวด/หน่วยมีแต่ชื่อไทย · `aspect_feedback` ส่งแค่ `aspect_name_th` (ส่วน `product_name_eng` · `aspect_name_eng` ของหัวข้อมีแล้ว — หน้าร้านใช้แล้วใน #46) | ❌ ไม่ทำ — เจ้าของร้านตอบ 2026-10-09 "ระบบนี้รองรับแค่ภาษาไทย" → หน้าร้านภาษาไทยอย่างเดียว: เอาปุ่ม TH/EN ออก + `customer/layout.tsx` บังคับ locale th (branch `feat/storefront-thai-only`) · ข้อความ `shop.*` ภาษาอังกฤษยังเก็บไว้ |
 
 ### 9.5 ต้องตัดสินใจ
 | รหัส | เรื่อง | ไฟล์ backend |
 |---|---|---|
-| Q-BE14 | ฐานคิดเพดานแต้ม — comment "ส่วนลดส่งฟรีไม่ลดฐานคิดแต้ม" แต่โค้ด `min(discount_amount, subtotal)` หักส่วนลดค่าส่งด้วย · แก้โค้ด (frontend ต้องแก้ตาม) หรือแก้ comment | `src/services/orderService.ts:403` |
+| Q-BE14 | ✅ ตอบ "ไม่หักค่าส่ง" — แก้โค้ดให้ตรง comment: ส่วนลดจากโปร/คูปองส่งฟรีไม่ลดฐานคิดเพดานแต้ม (ออเดอร์ + พรีออเดอร์) · frontend แก้ตาม | `src/services/orderService.ts` · `preorderService.ts` |
 
 ### 9.6 ค่าตั้ง (env)
 | ตัวแปร | ปัญหา | ต้องตั้ง |
@@ -216,7 +215,7 @@
 - Q-BE7 — endpoint LINE login merge แล้ว (backend PR #66)
 - Q-BE6 — ไม่ต้องทำ (G1 เลือก `/customer/account/purchases/<id>` ที่ลิงก์ของ backend ใช้อยู่แล้ว)
 
-**ลำดับที่แนะนำ (backend):** Q-BE15 (merge #67) → ~~Q-BE11 · Q-BE8~~ (#68) → ตั้ง `STOREFRONT_URL` → Q-BE1 → Q-BE10 · Q-BE13 → Q-BE14 (ตัดสินใจ) → ที่เหลือ
+**ลำดับที่แนะนำ (backend):** ~~Q-BE15 (#67)~~ → ~~Q-BE11 · Q-BE8~~ (#68) → ~~Q-BE18 (#70)~~ → ~~Q-BE14~~ → ~~Q-BE1 · Q-BE13 (ไม่ทำ)~~ → ตั้ง `STOREFRONT_URL` (Q-BE3) → Q-BE10 → Q-BE12 → Q-BE2 → Q-BE5 → ที่เหลือ
 
 ---
 
@@ -252,6 +251,6 @@
 
 | รหัส | ถามใคร | คำถาม | บริบท | ใช้กับ | คำตอบ | ผู้ตอบ · วันที่ |
 |---|---|---|---|---|---|---|
-| Q-BE14 | backend | ฐานคิดเพดานแต้มตอนใช้คูปอง/โค้ด **ส่งฟรี** ควรหักส่วนลดค่าส่งหรือไม่ | `orderService.createOrder`: `goodsDiscount = min(discount_amount, subtotal)` รวมส่วนลดค่าส่งด้วย แต่ comment เขียนว่า "ส่วนลดส่งฟรีไม่ลดฐานคิดแต้ม" · FrontOffice หักเฉพาะส่วนลดสินค้า · หน้า checkout ตอนนี้ทำตามโค้ด backend (ถ้า backend แก้ ต้องแก้ `checkout/page.tsx` ตาม) | C3 | | |
+| Q-BE14 | backend | ฐานคิดเพดานแต้มตอนใช้คูปอง/โค้ด **ส่งฟรี** ควรหักส่วนลดค่าส่งหรือไม่ | `orderService.createOrder`: `goodsDiscount = min(discount_amount, subtotal)` รวมส่วนลดค่าส่งด้วย แต่ comment เขียนว่า "ส่วนลดส่งฟรีไม่ลดฐานคิดแต้ม" · FrontOffice หักเฉพาะส่วนลดสินค้า · หน้า checkout ตอนนี้ทำตามโค้ด backend (ถ้า backend แก้ ต้องแก้ `checkout/page.tsx` ตาม) | C3 | **ไม่หักค่าส่ง** — backend `fix/points-cap-shipping` (เทสใหม่ fail กับโค้ดเดิม: "สูงสุด 2700") · frontend checkout + preorder checkout แก้ตาม | หน้าคำถามค้าง · 2026-10-09 |
 | Q-BE15 | backend | merge `fix/pickup-date-regex` (`2746063` — แก้ regex `pickup_date` ใน `schemas/order.ts` + `schemas/preorder.ts` + เทส) เข้า `main` ได้เมื่อไหร่ | `main` ปฏิเสธ `pickup_date` ทุกค่า → checkout เลือกวันรับไม่ได้ (C3) และพรีออเดอร์ (D3) · branch อยู่ในเครื่องเท่านั้น ยังไม่ push | C3 · D3 | merge แล้ว — backend PR #67 (`38b57c6`) · ทดสอบ C3 กับ `main` ซ้ำ 39/39 | backend · 2026-10-08 (K7) |
-| Q-OWN5 | เจ้าของร้าน | ต้องการหน้า "สั่งซื้อสำเร็จ" + แถบขั้นตอน (ตะกร้า → ยืนยัน → ชำระ → เสร็จ) แบบ FrontOffice ไหม | ตอนนี้สั่งซื้อแล้วไปหน้ารายละเอียดออเดอร์ (ชำระเงินได้ทันที) | U8 · D3 | | |
+| Q-OWN5 | เจ้าของร้าน | ต้องการหน้า "สั่งซื้อสำเร็จ" + แถบขั้นตอน (ตะกร้า → ยืนยัน → ชำระ → เสร็จ) แบบ FrontOffice ไหม | ตอนนี้สั่งซื้อแล้วไปหน้ารายละเอียดออเดอร์ (ชำระเงินได้ทันที) | U8 · D3 | **ต้องการ** → U8 ✅ (#49) | หน้าคำถามค้าง · 2026-10-09 |
