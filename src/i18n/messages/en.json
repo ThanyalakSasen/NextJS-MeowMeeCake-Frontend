@@ -2103,7 +2103,6 @@
       "login": "Log in",
       "cart": "Cart",
       "cartWithCount": "Cart ({count} items)",
-      "language": "Language",
       "backOffice": "Back office"
     },
     "common": {
