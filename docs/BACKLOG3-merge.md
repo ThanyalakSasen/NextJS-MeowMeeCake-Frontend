@@ -182,10 +182,10 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 |---|---|---|---|---|---|
 | D1 | ประวัติคำสั่งซื้อ | `account/purchases` (+`[id]`) | `/shop/orders` (กรองสถานะ + แบ่งหน้าที่ server) · `/shop/orders/:id` | — | ✅ 2026-10-07 (branch `feat/purchases`) — รายการ + รายละเอียด (ย้ายหน้าออเดอร์เดิมมา · `/customer/order/[id]` redirect) · ทดสอบ 11/11 · ไม่มีรูปสินค้า/ปุ่มรีวิว (Q-BE13 · D7) |
 | D2 | สมุดที่อยู่ | `account/address` (541) | `/shop/addresses` (+`:id`, `:id/default`) | B2 | ✅ 2026-10-07 (branch `feat/address-book`) — รายการ · เพิ่ม/แก้ (modal) · ตั้งค่าเริ่มต้น · ลบ (ยืนยันก่อน) · เมนู "ที่อยู่" ใน AccountSideMenu · cache ร่วมกับ checkout · ทดสอบ 8/8 · **ไม่มีชื่อ/เบอร์ผู้รับ** (backend หลักไม่เก็บในที่อยู่ — กรอกตอน checkout) |
-| D3 | พรีออเดอร์ทั้ง flow | `preorder/*` · `account/preorders/*` (~2,700 บรรทัด) | `/catalog/preorder-rounds` (+`:id`) · `/shop/preorders` (+`cancel`, `payment`) · `delivery-quote` ส่ง `product_ids` | G1 · C1 | ⏸ |
-| D4 | แต้มสะสม · คูปอง · แชร์แต้ม | `account/member` (567) | `/shop/points` (+`share`) · `/shop/coupons` (+`check`, `redeem`) | B2 | ▢ |
-| D5 | รายการโปรด | `account/favorites` | `/shop/favorites` (`data.items`) | B2 | ▢ |
-| D6 | กระดิ่งแจ้งเตือน | `account/notifications` · `CustomerNotifications` | `/shop/notifications` (+`:id`) → `{ items, unread_count }` | G1 (ลิงก์ในแจ้งเตือน) | ⏸ |
+| D3 | พรีออเดอร์ทั้ง flow | `preorder/*` · `account/preorders/*` (~2,700 บรรทัด) | `/catalog/preorder-rounds` (+`:id`) · `/shop/preorders` (+`cancel`, `payment`) · `delivery-quote` ส่ง `product_ids` | G1 · C1 | ✅ 2026-10-09 — ดู [BACKLOG4 D3](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
+| D4 | แต้มสะสม · คูปอง · แชร์แต้ม | `account/member` (567) | `/shop/points` (+`share`) · `/shop/coupons` (+`check`, `redeem`) | B2 | ✅ 2026-10-08 — ดู [BACKLOG4 D4](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
+| D5 | รายการโปรด | `account/favorites` | `/shop/favorites` (`data.items`) | B2 | ✅ 2026-10-08 — ดู [BACKLOG4 D5](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
+| D6 | กระดิ่งแจ้งเตือน | `account/notifications` · `CustomerNotifications` | `/shop/notifications` (+`:id`) → `{ items, unread_count }` | G1 (ลิงก์ในแจ้งเตือน) | ✅ 2026-10-09 — ดู [BACKLOG4 D6](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
 | D7 | เขียนรีวิว + รูป/วิดีโอ | `account/pendingreview/[id]` (705) | `/shop/reviews` · `/shop/reviews/upload` · `/catalog/review-aspects` | D1 | ✅ 2026-10-09 — ดู [BACKLOG4 D7](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
 | D8 | ติดต่อร้าน | `contact-us` | `/shop/contact` · `/catalog/contact-topics` | — | ✅ 2026-10-09 — ดู [BACKLOG4 D8](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
 | D9 | ตารางค่าส่ง · ข้อมูลร้าน | `shipping` · `StoreLogo` | `/catalog/shipping-zones` · `/catalog/store-info` · `/catalog/store-logo` | — | ✅ 2026-10-09 — ดู [BACKLOG4 D9](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
@@ -370,11 +370,11 @@ deploy พร้อมกันได้ (backend ก่อน) · แต่ PR 
 | Q-BE6 | ถ้าเลือก G1 (ก) ช่วยเปลี่ยน `link` ของแจ้งเตือนลูกค้าเป็น `/customer/order/<id>` ได้ไหม | ตอนนี้ `/customer/account/purchases/<id>` | G1 · D6 | | |
 | Q-BE9 | เพิ่ม flag `has_customization` (หรือจำนวนกลุ่ม/ออปชัน) ใน `GET /admin/products` ได้ไหม — POS จะได้ไม่ต้องถาม customization ทีละสินค้าก่อนลงบิล | ตอนนี้มีแค่ใน `/admin/pos/scan` · `/customization` รายตัว | I4 | | |
 | Q-BE10 | ขอ endpoint รายการสินค้าสำหรับ POS ใต้สิทธิ์ orders (เช่น `GET /admin/pos/products?search=`) — ตอนนี้ POS ใช้ `/admin/products` ที่ต้อง products.view | พนักงานหน้าร้านที่มีแค่ orders ได้ 403 ในช่องค้นหา | I15 | | |
-| Q-BE11 | `DELETE /shop/me/line` ไม่กันบัญชีที่สมัครด้วย LINE (ไม่มีรหัสผ่าน) — ยกเลิกแล้วเข้าสู่ระบบไม่ได้อีก · หน้าเว็บซ่อนปุ่มไว้แล้ว แต่ควรกันที่ backend ด้วย · ข้อความ "บัญชีนี้เข้าสู่ระบบด้วย Google…" ของเปลี่ยนรหัสใช้กับบัญชี LINE ด้วย | userService.unlinkLineAccount · changePassword | B2 | | |
+| Q-BE11 | `DELETE /shop/me/line` ไม่กันบัญชีที่สมัครด้วย LINE (ไม่มีรหัสผ่าน) — ยกเลิกแล้วเข้าสู่ระบบไม่ได้อีก · หน้าเว็บซ่อนปุ่มไว้แล้ว แต่ควรกันที่ backend ด้วย · ข้อความ "บัญชีนี้เข้าสู่ระบบด้วย Google…" ของเปลี่ยนรหัสใช้กับบัญชี LINE ด้วย | userService.unlinkLineAccount · changePassword | B2 | แก้แล้ว — ยกเลิก LINE ของบัญชีที่ไม่มีรหัสผ่านได้ 409 · backend PR #68 (`33e51a4`) | backend · 2026-10-09 (K7) |
 | Q-BE12 | จะย้าย `refund_promptpay_id/name` (บัญชีรับเงินคืนของลูกค้า) จากฝั่งลูกค้ามาไหม — ใช้คู่กับคืนเงินออเดอร์ที่ลูกค้ายกเลิก (I2) | BE §7.1 ข้อ 21 · ไม่อยู่ใน `updateProfileBody` | B2 · I2 | | |
 | Q-BE13 | `GET /shop/orders` (รายการ) ไม่ส่งรายการสินค้า + snapshot สินค้าในออเดอร์ไม่มีรูป — หน้า "ประวัติการสั่งซื้อ" ต้องดึงรายละเอียดทีละใบ (10 คำขอต่อหน้า) และแสดงไอคอนแทนรูป · ขอ `items` แบบย่อ (ชื่อ · จำนวน · ราคา · รูป) ใน list ได้ไหม | orderService.listOrders · productSnapshot | D1 | | |
-| Q-BE8 | frontend เลิกส่ง `product_stock_quantity` ใน PATCH แล้ว (PR #19) — เปิดการปฏิเสธฝั่ง backend ได้เลยไหม | BACKLOG5 §4 ยังรอ FrontEnd | I12 | | |
-| Q-BE7 | รีวิว + merge endpoint ล็อกอินด้วย LINE (`/api/auth/line` + `/callback` — branch `feat/line-login-endpoint`) · ตั้ง `LINE_AUTH_*` + Callback URL ใน Console ตอน deploy | ทำให้แล้ว 2026-10-06 รอรีวิว | B3 | | |
+| Q-BE8 | frontend เลิกส่ง `product_stock_quantity` ใน PATCH แล้ว (PR #19) — เปิดการปฏิเสธฝั่ง backend ได้เลยไหม | BACKLOG5 §4 ยังรอ FrontEnd | I12 | แก้แล้ว — PATCH ที่ส่ง `product_stock_quantity` ได้ 400 ให้ใช้ `/stock` · backend PR #68 (`33e51a4`) | backend · 2026-10-09 (K7) |
+| Q-BE7 | รีวิว + merge endpoint ล็อกอินด้วย LINE (`/api/auth/line` + `/callback` — branch `feat/line-login-endpoint`) · ตั้ง `LINE_AUTH_*` + Callback URL ใน Console ตอน deploy | ทำให้แล้ว 2026-10-06 รอรีวิว | B3 | merge แล้ว — backend PR #66 (endpoint LINE login) · ค่าตั้ง `LINE_AUTH_*` ยังต้องตั้งตอน deploy (BACKLOG4 §9.6) | backend · 2026-10-08 (K7) |
 
 ### ถาม ผู้พัฒนา FrontOffice
 

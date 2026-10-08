@@ -11,7 +11,7 @@ export interface ShopCartItem {
   /** backend populate เป็น object (ชื่อ/รูป/การแสดงผล) */
   product_id:
     | string
-    | { _id: string; product_name_th: string; product_name_eng?: string; product_img?: string[]; is_visible?: boolean };
+    | { _id: string; product_name_th: string; product_name_eng?: string; product_img?: string[]; is_visible?: boolean; is_preorder?: boolean };
   /** แบบเดิม — ตัวเลือกเดียว (รายการเก่าก่อนมีกลุ่มตัวเลือก) */
   variant_id?: string | { _id: string; variant_name: string; variant_price: number } | null;
   /** ตัวเลือกที่เลือกทุกกลุ่ม (เช่น ขนาด: 2 ปอนด์) */

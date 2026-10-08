@@ -17,7 +17,6 @@ const STRICT = process.argv.includes("--strict");
 // ไดเรกทอรี/ไฟล์ที่ยกเว้น (มีอักษรไทยได้โดยตั้งใจ)
 const ALLOW_DIRS = [
   "src/i18n",           // ตัว catalog เอง
-  "src/mocks",          // MSW fixture (D17)
   "src/types",          // interface/union ที่มีค่าไทยเป็น literal type (แนวทาง A)
   "src/constants",      // *_CONFIG ที่ key ด้วยค่า DB enum ภาษาไทย (แนวทาง A)
   // หน้าร้าน (ย้ายมาจาก FrontOffice) — ข้อความไทยเขียนตรงในโค้ด ~1,400 จุด · ตัดสินใจ (2026-10-04, แบบ ข)

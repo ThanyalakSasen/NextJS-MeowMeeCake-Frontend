@@ -13,7 +13,7 @@
 - **ใครใช้:** เจ้าของร้าน (เห็นทุกอย่าง) + พนักงาน (เห็นเฉพาะที่ได้รับสิทธิ์จริงจาก backend ผ่าน `/api/auth/me`)
 - **ขอบเขต:** **frontend เท่านั้น** — ไม่มี DB / ไม่เข้ารหัสรหัสผ่าน / ไม่ออก token · backend เป็นคนละโปรเจกต์ คุยผ่าน REST API
 - **2 ภาษา:** ไทย (ค่าเริ่มต้น) / อังกฤษ — สลับได้ทุกหน้า
-- **เชื่อม backend จริงแล้ว (2026-09):** `.env.local` ตั้ง `NEXT_PUBLIC_API_MOCK=0` ยิงเข้า backend จริงที่ `NEXT_PUBLIC_API_BASE_URL` เสมอ — **MSW** (backend ปลอมในเบราว์เซอร์ตอบตาม `API_CONTRACT.md`) ยังอยู่ในโค้ด ใช้เป็น fallback ตอน dev โดยไม่มี backend รันอยู่เท่านั้น (`NEXT_PUBLIC_API_MOCK=1`) ไม่ใช่โหมดหลักอีกต่อไป
+- **เชื่อม backend จริงแล้ว (2026-09):** `.env.local` ตั้ง `NEXT_PUBLIC_API_MOCK=0` ยิงเข้า backend จริงที่ `NEXT_PUBLIC_API_BASE_URL` เสมอ — **MSW** (backend ปลอม) ถูกถอดออกแล้ว 2026-10-09 (BACKLOG4 I11) · แผนภาพ/ตารางด้านล่างที่ยังพูดถึง MSW เป็นของยุคก่อน
 
 ---
 
@@ -28,7 +28,7 @@
 | i18n | **next-intl 4** | locale ใน cookie `mmc_locale` — ไม่มี `/th` `/en` ใน URL |
 | Server-state | **@tanstack/react-query 5** | ViewModel wrap `useQuery` / `useMutation` |
 | HTTP | **axios** | instance + interceptor เดียวที่ `src/lib/http.ts` |
-| Mock API | **MSW 2** | toggle `NEXT_PUBLIC_API_MOCK=1` · persist ลง `localStorage` |
+| Mock API | ~~MSW 2~~ ถอดแล้ว (I11) | ทดสอบกับ backend ในเครื่อง + DB ทดสอบ |
 | อื่น ๆ | sweetalert2 (`lib/alert.ts`) · dayjs · recharts · qrcode · heroicons / lucide | |
 | Theme | `src/theme/*.ts` (antd tokens) + `globals.css @theme` (Tailwind) | ค่าสีอยู่ 2 ที่ — `npm run lint:theme` เทียบให้ตรง |
 
@@ -136,7 +136,6 @@ src/
   components/
     base/     19 atoms — ครอบ antd + ธีม (Button, Input, Select, DatePicker, ...)
     shared/   layout | data | feedback | stats | form  — ใช้ ≥ 2 หน้า
-  mocks/      MSW — db · handlers/ · fixtures/  (ลบทั้งโฟลเดอร์ได้เมื่อ backend พร้อม)
 
 docs/         เอกสารทั้งหมด (ดู §9)
 scripts/      check-i18n.mjs · check-theme.mjs
@@ -195,7 +194,7 @@ backend เป็นเจ้าของทุกอย่างสำคัญ
 | **`npm run check`** | **`lint:i18n` + `lint:theme` + `tsc --noEmit` + `eslint` รวดเดียว — ต้องเขียวก่อน commit** |
 
 **env** (`.env.local` คัดจาก `.env.example`): `NEXT_PUBLIC_API_BASE_URL` (URL backend รวม `/api` ต่อท้าย — backend เสิร์ฟใต้ `/api/*`) · `NEXT_PUBLIC_API_MOCK` (`1` = MSW · **`0` = backend จริง ← ค่าจริงตอนนี้**) · `NEXT_PUBLIC_AUTH_COOKIE=session` (ชื่อ cookie จริงจาก backend ไม่ใช่ `mmc_session` ตามแผนเดิม)
-**credential mock (MSW เท่านั้น, ไม่เชื่อมระบบจริง):** `owner@meowmeecake.local` / `owner1234` — **credential จริง** (backend จริง): ดู `Debug.md` (ไม่ใส่ค่าจริงในไฟล์นี้)
+**credential:** (backend จริง): ดู `Debug.md` (ไม่ใส่ค่าจริงในไฟล์นี้)
 
 ---
 
@@ -207,7 +206,7 @@ backend เป็นเจ้าของทุกอย่างสำคัญ
 | `REBUILD_PLAN.md` | แผนแม่บท — เป้าหมาย, สถาปัตยกรรม, 8 เฟส, การตัดสินใจ D1–D19 พร้อมเหตุผล | อยากรู้ทำถึงไหน / ทำไมเลือกแนวนี้ |
 | `CODE_STRUCTURE.md` | กติกา MVVM — View/ViewModel วางยังไง ตั้งชื่ออะไร แตกไฟล์เมื่อไหร่ | ก่อนสร้างหน้า/component ที่มี logic |
 | `API_CONTRACT.md` | สัญญา REST กับ backend — envelope, params, status, auth, 40 resource | ก่อนเขียน service / mock / DTO ใหม่ |
-| `MOCKS.md` | MSW ทำงานยังไง + handler ที่มี + credential dev + checklist ปิด mock | dev โดยไม่มี backend / จะต่อ backend จริง |
+| `MOCKS.md` | ถอด mock แล้ว — วิธีทดสอบกับ backend ในเครื่อง + DB ทดสอบ | ก่อนทดสอบงานที่เรียก API |
 | `I18N_PLAN.md` | ระบบ 2 ภาษา — โครง namespace, การจัดการ enum ค่าไทย | เพิ่มภาษา / ข้อความแปลไม่ครบ / งง key |
 | `AUTH_PLAN.md` | auth ฝั่ง frontend — interceptor 401→refresh, idle, cross-tab | แตะโค้ด login / session / permission |
 | `THEME.md` | design token 2 ชั้น (antd + Tailwind) แก้สีที่ไหน | เปลี่ยนสีแบรนด์ / เพิ่ม token |

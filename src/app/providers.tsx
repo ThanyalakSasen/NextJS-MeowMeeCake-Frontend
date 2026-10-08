@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { App, ConfigProvider } from "antd";
+import { StyleProvider } from "@ant-design/cssinjs";
 import thTH from "antd/locale/th_TH";
 import enUS from "antd/locale/en_US";
 import { useLocale } from "next-intl";
@@ -12,7 +13,6 @@ import "dayjs/locale/en";
 import { makeQueryClient } from "@/lib/queryClient";
 import { antdTheme } from "@/theme";
 import { AuthBootstrap } from "@/components/providers/AuthBootstrap";
-import { MSWReady } from "@/components/providers/MSWReady";
 import { AlertHost } from "@/components/shared/feedback";
 
 // ตั้ง dayjs locale เริ่มต้นตรงนี้ (ก่อนคอมโพเนนต์ใน tree เรนเดอร์) กัน DatePicker/Calendar
@@ -35,15 +35,17 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthBootstrap />
       {/* locale ของ antd (ชื่อเดือน/วัน, ปุ่ม "วันนี้"/"ตกลง", ข้อความแบ่งหน้า ฯลฯ) ตามภาษาที่เลือก */}
-      <ConfigProvider theme={antdTheme} locale={locale === "en" ? enUS : thTH}>
-        {/* <App> ส่ง theme ต่อไปถึง feedback component ของ antd */}
-        <App>
-          {/* mock mode: รอ MSW พร้อมก่อน render (กัน request แรกหลุด) */}
-          <MSWReady>{children}</MSWReady>
-          {/* modal ของ alert.* / confirmAlert / ConfirmDeletePopup ทั้งแอป — ดู src/lib/alert.ts */}
-          <AlertHost />
-        </App>
-      </ConfigProvider>
+      {/* layer: style ของ antd อยู่ใน @layer antd — class Tailwind ชนะได้ (ลำดับ layer ประกาศใน globals.css · BACKLOG4 V9) */}
+      <StyleProvider layer>
+        <ConfigProvider theme={antdTheme} locale={locale === "en" ? enUS : thTH}>
+          {/* <App> ส่ง theme ต่อไปถึง feedback component ของ antd */}
+          <App>
+            {children}
+            {/* modal ของ alert.* / confirmAlert / ConfirmDeletePopup ทั้งแอป — ดู src/lib/alert.ts */}
+            <AlertHost />
+          </App>
+        </ConfigProvider>
+      </StyleProvider>
     </QueryClientProvider>
   );
 }

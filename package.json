@@ -2,11 +2,6 @@
   "name": "meowmeecake-frontend",
   "version": "0.1.0",
   "private": true,
-  "msw": {
-    "workerDirectory": [
-      "public"
-    ]
-  },
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
@@ -17,6 +12,7 @@
     "check": "node scripts/check-i18n.mjs && node scripts/check-theme.mjs --strict && tsc --noEmit && eslint"
   },
   "dependencies": {
+    "@ant-design/cssinjs": "^2.1.2",
     "@heroicons/react": "^2.2.0",
     "@tanstack/react-query": "^5.62.0",
     "antd": "^6.4.3",
@@ -42,7 +38,6 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
-    "msw": "^2.15.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

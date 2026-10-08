@@ -3,20 +3,24 @@
 // ตะกร้าสินค้า — แทน FrontOffice customer/cart/page.tsx (เขียนใหม่บน /shop/cart ของ backend หลัก)
 // แก้จำนวน = PATCH /shop/cart/items/{id} (backend ตรวจสต็อกแล้วตอบข้อความเอง) · ลบ = DELETE
 // ตัดออก (backend ยังไม่รองรับ): แพ็กเกจ/เซ็ตขนม · ตัวเลือกสินค้าหลายตัว · หมายเหตุต่อชิ้น
-// สต็อก/สินค้าที่สั่งไม่ได้ backend ตรวจตอนกดสั่งซื้อ (ตะกร้าไม่ส่งสต็อกมา)
+// รายการที่ซื้อไม่ได้ (ปิดขาย · หมด · สต็อกไม่พอ — สต็อกจาก /catalog/products/:id) แสดงต่อบรรทัด + ปิดปุ่มสั่งซื้อ (U6 · lib/cartIssues)
+// backend ตรวจซ้ำตอนกดสั่งซื้อเสมอ · ช่องค้นหาอยู่ใน Navbar หน้าร้านแล้ว (FrontOffice ซ่อน Navbar ในตะกร้าเลยมีช่องแยก)
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaImage, FaTrashAlt } from "react-icons/fa";
 import { cartItemOptionText, shopCartService, type ShopCart, type ShopCartItem } from "@/services/shopCart";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
+import { catalogService } from "@/services/catalog";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
 import { useCartCountStore } from "../store/cartCountStore";
 import { shopCartKey } from "../lib/shopQueries";
+import { catalogProductKey } from "../lib/catalogQueries";
+import { cartIssueText, cartIssues, cartProductId, type StockInfo } from "../lib/cartIssues";
 
 export default function CartPage() {
   return (
@@ -41,7 +45,28 @@ function CartContent() {
     },
   });
 
-  const refresh = () => qc.invalidateQueries({ queryKey: shopCartKey });
+  // สต็อกปัจจุบันของสินค้าในตะกร้า — cache เดียวกับหน้ารายละเอียดสินค้า · 404 = ถูกซ่อน/ลบ
+  const productIds = [...new Set((cartQ.data?.items ?? []).map(cartProductId).filter((x): x is string => !!x))];
+  const stockQs = useQueries({
+    queries: productIds.map((id) => ({
+      queryKey: catalogProductKey(id),
+      queryFn: () => catalogService.product(id),
+      retry: (n: number, e: unknown) => !(isApiError(e) && e.status === 404) && n < 1,
+      staleTime: 30_000,
+    })),
+  });
+  const stockOf = (id: string): StockInfo => {
+    const q = stockQs[productIds.indexOf(id)];
+    if (!q) return null;
+    if (q.isError) return isApiError(q.error) && q.error.status === 404 ? "missing" : null;
+    return q.data ? { stock: q.data.product_stock_quantity } : null;
+  };
+
+  const refresh = () => {
+    void qc.invalidateQueries({ queryKey: shopCartKey });
+    // จำนวนเปลี่ยน → สต็อกล่าสุดด้วย (ข้อความ "สต็อกไม่พอ" คิดจากทั้งตะกร้า)
+    for (const id of productIds) void qc.invalidateQueries({ queryKey: catalogProductKey(id) });
+  };
 
   const qtyMutation = useMutation({
     mutationFn: ({ id, qty }: { id: string; qty: number }) => shopCartService.updateQuantity(id, qty),
@@ -86,6 +111,7 @@ function CartContent() {
   }
 
   const cart: ShopCart = cartQ.data;
+  const issues = cartIssues(cart.items, stockOf);
 
   return (
     <div className={shopPage}>
@@ -116,8 +142,9 @@ function CartContent() {
                 const img = resolveUploadUrl(product?.product_img?.[0]);
                 const variant = cartItemOptionText(item);
                 const busy = busyId === item._id;
+                const issue = issues.get(item._id);
                 return (
-                  <div key={item._id} className={`${shopCard} flex gap-4 ${busy ? "opacity-60" : ""}`}>
+                  <div key={item._id} className={`${shopCard} flex gap-4 ${busy ? "opacity-60" : ""} ${issue ? "!border-red-300" : ""}`}>
                     <Link
                       href={product ? `/customer/product/${product._id}` : "#"}
                       className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#FAF6F0] sm:h-24 sm:w-24"
@@ -136,6 +163,7 @@ function CartContent() {
                           <p className="truncate font-bold">{product?.product_name_th ?? "สินค้า"}</p>
                           {variant && <p className="text-xs text-gray-500">{variant}</p>}
                           <p className="text-sm text-gray-600">{baht(item.price_snapshot)} / ชิ้น</p>
+                          {issue && <p className="mt-1 text-xs font-semibold text-red-600">{cartIssueText(issue)}</p>}
                         </div>
                         <button
                           type="button"
@@ -191,9 +219,20 @@ function CartContent() {
                     <span className="italic text-[#8C5A3C]">คำนวณในขั้นถัดไป</span>
                   </div>
                 </div>
-                <Link href="/customer/checkout" className={`${shopButtonPrimary} w-full`}>
-                  ดำเนินการสั่งซื้อ
-                </Link>
+                {issues.size > 0 ? (
+                  <>
+                    <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+                      มี {issues.size} รายการที่ยังสั่งซื้อไม่ได้ — กรุณาลบหรือลดจำนวนก่อน
+                    </p>
+                    <button type="button" disabled className={`${shopButtonPrimary} w-full`}>
+                      ดำเนินการสั่งซื้อ
+                    </button>
+                  </>
+                ) : (
+                  <Link href="/customer/checkout" className={`${shopButtonPrimary} w-full`}>
+                    ดำเนินการสั่งซื้อ
+                  </Link>
+                )}
                 <p className="text-center text-xs text-gray-500">ชำระเงินผ่านพร้อมเพย์ แล้วแนบสลิปเพื่อยืนยัน</p>
               </div>
             </div>

@@ -1419,7 +1419,7 @@
     "empty": "No sales found for this period"
   },
   "reviews": {
-    "title": "Customer reviews",
+    "title": "Customer Reviews",
     "description": "Reply, hide/show, pin and follow up on every review — filters update the summary instantly",
     "settingsLink": "Review topic settings",
     "searchPlaceholder": "Search review text...",

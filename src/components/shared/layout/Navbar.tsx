@@ -19,24 +19,33 @@ export function Navbar({
   const pathname = usePathname();
   const crumbs = buildBreadcrumbs(pathname);
 
+  // จอแคบ (< sm): breadcrumb ลงแถวที่สองใต้แถบ — แถวบนเหลือปุ่มเมนู · กระดิ่ง · ผู้ใช้ (เดิมทับกัน — BACKLOG4 V5)
   return (
-    <nav className="navbar">
-      <button
-        type="button"
-        className="navbar-toggle-btn lg:hidden"
-        onClick={onToggleSidebar}
-        aria-label="menu"
-      >
-        <Bars3Icon />
-      </button>
+    <div className="shrink-0">
+      <nav className="navbar">
+        <button
+          type="button"
+          className="navbar-toggle-btn lg:hidden"
+          onClick={onToggleSidebar}
+          aria-label="menu"
+        >
+          <Bars3Icon />
+        </button>
 
-      <BreadcrumbTrail items={crumbs} />
+        <div className="hidden min-w-0 flex-1 sm:flex">
+          <BreadcrumbTrail items={crumbs} />
+        </div>
+        <div className="flex-1 sm:hidden" />
 
-      <div className="navbar-right">
-        <NotificationDropdown />
-        <div className="navbar-divider" />
-        <UserMenuDropdown user={user} onLogout={onLogout} />
+        <div className="navbar-right">
+          <NotificationDropdown />
+          <div className="navbar-divider" />
+          <UserMenuDropdown user={user} onLogout={onLogout} />
+        </div>
+      </nav>
+      <div className="navbar-crumbs-row">
+        <BreadcrumbTrail items={crumbs} />
       </div>
-    </nav>
+    </div>
   );
 }
