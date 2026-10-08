@@ -4,14 +4,15 @@
 // ยกจาก FrontOffice src/app/customer/account/purchases/page.tsx — ต่างจากต้นแบบ:
 //   - ต้นแบบดึงออเดอร์/รายการสินค้า "ของทุกคน" มากรองฝั่ง client · ที่นี่ใช้ GET /shop/orders (ของตัวเองเท่านั้น)
 //     กรองสถานะ + แบ่งหน้าที่ server แล้วดึงรายการสินค้าเฉพาะออเดอร์ที่แสดงอยู่ (list ของ backend ไม่ส่ง items มา)
-//   - snapshot สินค้าในออเดอร์ไม่มีรูป → แสดงไอคอนแทน
+//   - snapshot สินค้าในออเดอร์ไม่มีรูป → รูปแรกของสินค้าจาก catalog (OrderItemThumb · ไม่มี/ถูกซ่อน = ไอคอน) (U7)
+//   - ปุ่ม "ซื้ออีกครั้ง" สำหรับออเดอร์ที่จบแล้ว (สำเร็จ/ยกเลิก) (U7)
 //   - ปุ่มรีวิวสินค้า (D7) → purchases/[id]/review (ติ๊กรายการที่จะรีวิวในหน้าเดียว แทน ?next= / ?mode=combined ของต้นแบบ)
 // ชำระเงิน / แนบสลิป / ยกเลิก อยู่ในหน้ารายละเอียด (/customer/account/purchases/[id])
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
 import { useQueries, useQuery, keepPreviousData } from "@tanstack/react-query";
-import { ShoppingBag, CakeSlice } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { shopOrdersService, type ShopOrder } from "@/services/shopOrders";
 import type { OrderStatus } from "@/constants/enumConfig";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
@@ -21,6 +22,8 @@ import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { shopOrderKey, shopOrdersKey } from "../../lib/shopQueries";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE, pickupDateText } from "./orderLabels";
 import ReviewLink from "../_components/ReviewLink";
+import OrderItemThumb from "../_components/OrderItemThumb";
+import BuyAgainButton from "../_components/BuyAgainButton";
 
 const PAGE_SIZE = 10;
 const FILTERS: { value: OrderStatus | "all"; label: string }[] = [
@@ -143,9 +146,7 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
         ) : (
           shown.map((it) => (
             <div key={it._id} className="flex items-center gap-3">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[#FAF6F0] text-[#8C5A3C]">
-                <CakeSlice className="h-6 w-6" aria-hidden="true" />
-              </div>
+              <OrderItemThumb productId={it.product_id} alt={it.product_name} />
               <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="m-0 truncate text-sm font-semibold text-stone-800">{it.product_name || "สินค้า"}</p>
@@ -197,6 +198,9 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
         <div className="flex flex-wrap items-center gap-2">
           {unpaid && <Link href={href} className={actionLink}>{order.has_payment ? "ชำระเงิน / อัปโหลดสลิปใหม่" : "ชำระเงิน / อัปโหลดสลิป"}</Link>}
           <ReviewLink kind="order" doc={order} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={actionLink} />
+          {detail && (order.order_status === "completed" || order.order_status === "cancelled") && (
+            <BuyAgainButton items={detail.items} className={actionLink} />
+          )}
           <Link href={href} className={actionLink}>ดูรายละเอียด</Link>
         </div>
       </div>

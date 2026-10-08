@@ -16,8 +16,10 @@ export interface ShopOrderItem {
   product_name: string;
   variant_name: string | null;
   product_name_eng: string | null;
-  /** ออปชันเสริมที่เลือก (ข้อความบนเค้ก ฯลฯ) */
-  selected_options: { option_name: string; text_value: string | null }[];
+  /** ตัวเลือกที่เลือกทุกกลุ่ม (selected_variants · ออเดอร์เก่า = variant_id เดียว) — ใช้ "ซื้ออีกครั้ง" */
+  variant_ids: string[];
+  /** ออปชันเสริมที่เลือก (ข้อความบนเค้ก ฯลฯ) · option_id null = ออปชันถูกลบไปแล้ว */
+  selected_options: { option_id: string | null; option_name: string; text_value: string | null }[];
   quantity: number;
   unit_price: number;
   total_price: number;
@@ -118,8 +120,15 @@ function toShopOrder(raw: any): ShopOrder {
           product_name: it.product_snapshot?.product_name_th ?? "",
           variant_name: it.product_snapshot?.variant_name ?? null,
           product_name_eng: it.product_snapshot?.product_name_eng ?? null,
+          variant_ids: Array.isArray(it.selected_variants) && it.selected_variants.length
+            ? it.selected_variants.map((v: any) => v.variant_id).filter(Boolean).map(String)
+            : it.variant_id ? [String(it.variant_id?._id ?? it.variant_id)] : [],
           selected_options: Array.isArray(it.selected_options)
-            ? it.selected_options.map((o: any) => ({ option_name: o.option_name ?? "", text_value: o.text_value ?? null }))
+            ? it.selected_options.map((o: any) => ({
+                option_id: o.option_id ? String(o.option_id?._id ?? o.option_id) : null,
+                option_name: o.option_name ?? "",
+                text_value: o.text_value ?? null,
+              }))
             : [],
           quantity: it.quantity,
           unit_price: it.unit_price,
