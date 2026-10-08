@@ -1,8 +1,8 @@
 # API Contract — Frontend ↔ Backend
 
 > **เอกสารนี้คืออะไร:** "สัญญา" ว่า backend จะส่งข้อมูลหน้าตาแบบไหนกลับมา และ frontend จะเรียกยังไง
-> **เปิดอ่านเมื่อ:** ก่อนเขียน `src/services/*` ใหม่ · ก่อนเขียน mock handler · ก่อนสร้าง DTO ใน `src/types/`
-> **ทำไมสำคัญ:** frontend, backend, และ MSW (backend ปลอม) ทั้ง 3 ฝ่ายเขียนตามไฟล์นี้ไฟล์เดียว — ถ้าเอกสารตรง งานก็ต่อกันได้โดยไม่ต้องคุย
+> **เปิดอ่านเมื่อ:** ก่อนเขียน `src/services/*` ใหม่ · ก่อนสร้าง DTO ใน `src/types/`
+> **ทำไมสำคัญ:** frontend กับ backend เขียนตามไฟล์นี้ไฟล์เดียว (MSW ถอดแล้ว — I11) — ถ้าเอกสารตรง งานก็ต่อกันได้โดยไม่ต้องคุย
 > **สถานะ: DRAFT** — อิงพฤติกรรมของระบบเดิม (`-MeowMeeCake-NextJS5`) · ปรับได้เมื่อ backend team ยืนยัน
 > ทุก path ข้างล่างต่อท้าย `NEXT_PUBLIC_API_BASE_URL` (เช่น `https://api.meowmeecake.local` + `/products`)
 

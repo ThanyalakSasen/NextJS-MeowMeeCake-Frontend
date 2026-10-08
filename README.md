@@ -39,7 +39,7 @@ Backend เป็นคนละโปรเจกต์ คุยกันผ�
 - **โครงใหญ่:** เบราว์เซอร์ → **Next.js (โปรเจกต์นี้)** → เรียก API → **Backend (คนละโปรเจกต์ · `/api/catalog/*` สาธารณะ · `/api/shop/*` ลูกค้า · `/api/admin/*` หลังร้าน)** → ฐานข้อมูล
 - **โปรเจกต์นี้ไม่มี:** ฐานข้อมูล, การเข้ารหัสรหัสผ่าน, การออก token — พวกนี้อยู่ที่ backend ทั้งหมด
 - **2 ภาษา:** หลังร้าน ไทย (ค่าเริ่มต้น) / อังกฤษ สลับได้ทุกหน้า · หน้าร้านยังเป็นข้อความไทยในโค้ด (ยกเว้นจาก `lint:i18n` ไว้ก่อน — ทยอยย้ายเข้า i18n)
-- **Backend:** ใช้ backend จริง (`NEXT_PUBLIC_API_MOCK=0`) — mock (MSW) ใน `src/mocks/` เป็นของยุคก่อน ใช้กับ path `/admin` ปัจจุบันไม่ได้แล้ว (BACKLOG4 I11)
+- **Backend:** ต้องรัน backend จริงเสมอ — mock (MSW) ถูกถอดออกแล้ว 2026-10-09 (BACKLOG4 I11) · ทดสอบด้วย backend จริงในเครื่อง + MongoDB local `meowmeecake-test` (ดู `docs/MOCKS.md`)
 
 ---
 
@@ -56,7 +56,6 @@ npm run dev                     # http://localhost:3001 (backend รันที
 | ตัวแปร | ใส่อะไร | ถ้าไม่ใส่ |
 |---|---|---|
 | `NEXT_PUBLIC_API_BASE_URL` | URL ของ backend **ต่อท้าย `/api`** เช่น `http://localhost:3000/api` | request ยิงไม่ถึง backend |
-| `NEXT_PUBLIC_API_MOCK` | `0` = ยิง backend จริง (ใช้ค่านี้) · `1` = MSW (ใช้ไม่ได้แล้ว — I11) | — |
 | `NEXT_PUBLIC_AUTH_COOKIE` | ชื่อ cookie session ของ backend (ตอนนี้ `session`) | proxy.ts มองไม่เห็นว่า login แล้ว |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | client ID ของปุ่ม Google login | ปุ่ม Google กดไม่ได้ |
 
@@ -78,7 +77,6 @@ npm run dev                     # http://localhost:3001 (backend รันที
 | **Envelope** | รูปแบบตายตัวที่ backend ห่อข้อมูลมา: `{ data: ..., meta: ... }` |
 | **namespace** (i18n) | กลุ่มของข้อความแปล เช่น `common`, `products` — เวลาเรียกใช้ `t("products.title")` |
 | **Permission gate** | การซ่อน/โชว์ปุ่มตามสิทธิ์ผู้ใช้ ผ่าน `usePermission("orders")` |
-| **MSW** (Mock Service Worker) | ไลบรารีที่ทำ "backend ปลอม" ดักrequest ในเบราว์เซอร์ ตอบข้อมูลตัวอย่างกลับ |
 | **proxy.ts** | ไฟล์ที่รันก่อนทุกหน้า (เหมือน middleware) — ที่นี่ใช้เช็คว่า login หรือยัง |
 
 ---
@@ -124,9 +122,8 @@ src/
     base/                  ปุ่ม / input / badge พื้นฐาน (ครอบ antd ให้หน้าตาเหมือนกันทั้งแอป)
     shared/                component ที่ใช้ ≥ 2 หน้า — แบ่ง layout / data / feedback / stats / charts / form
     customer/              component ของหน้าร้าน (Navbar · Footer · ProductCard · StoreLogo · กระดิ่งแจ้งเตือน ...) + shopStyles.ts
-    providers/             AuthBootstrap (401 → login) · MSWReady
+    providers/             AuthBootstrap (401 → login)
 
-  mocks/                   MSW — backend ปลอมยุคก่อน (path เก่า ใช้ไม่ได้แล้ว — รอตัดสินใจ เขียนใหม่/ลบ: BACKLOG4 I11)
 
 docs/                      เอกสารรายละเอียด (ดูข้อ 9)
 scripts/check-i18n.mjs     สคริปต์เช็คว่าไม่มีข้อความ hard-code
@@ -148,8 +145,7 @@ scripts/check-i18n.mjs     สคริปต์เช็คว่าไม่�
 5. src/services/products.ts         http.get('/products', { params: filters })
 6. src/lib/http.ts (interceptor)    - แนบ header Accept-Language ตามภาษาปัจจุบัน
                                     - ส่ง request ออกไปที่ NEXT_PUBLIC_API_BASE_URL
-7a. ถ้า NEXT_PUBLIC_API_MOCK=1  →  MSW (src/mocks/handlers/products.ts) ดักไว้ ตอบข้อมูลตัวอย่าง
-7b. ถ้า =0                      →  ยิง backend จริง
+7.  backend จริงตอบ (ไม่มี mock แล้ว — I11)
 8. response กลับมา              interceptor แกะ envelope { data, meta } ออก
                                 ถ้า error 401 → เรียก refresh 1 ครั้ง → สำเร็จ retry / ล้มเหลว → เด้ง login
 9. useQuery ได้ data → ViewModel ส่งต่อเป็น props → <ProductsView/> วาดตาราง (ข้อความทุกคำผ่าน t())
@@ -170,7 +166,6 @@ scripts/check-i18n.mjs     สคริปต์เช็คว่าไม่�
 | component เฉพาะหน้าเดียว | `src/app/owner/<หน้า>/_components/` | สร้างไฟล์ในโฟลเดอร์นั้นได้เลย |
 | ซ่อนปุ่มถ้าไม่มีสิทธิ์ | ใน ViewModel | `const perm = usePermission("orders")` → `{perm.create && <ปุ่มเพิ่ม/>}` |
 | เปลี่ยนสีของ badge สถานะ | `src/constants/enumConfig.ts` | แก้ hex ในตารางสถานะ (label อยู่คนละที่ — i18n) |
-| เพิ่ม endpoint ให้ mock ตอบ | `src/mocks/handlers/` + `src/mocks/fixtures/` | เขียน handler ตาม `docs/API_CONTRACT.md` |
 | เปลี่ยนธีมสี/ฟอนต์ | `src/app/globals.css` + `src/app/providers.tsx` | ตัวแปรสีน้ำตาล (coffee) + antd token |
 | แก้เมนู Sidebar | `src/components/shared/layout/Sidebar*` + `src/constants/menuKeys.ts` | เพิ่ม/ลบรายการ + คีย์สิทธิ์ |
 
@@ -225,7 +220,7 @@ const t = await getTranslations();
 **3 อย่างที่กันพลาด:**
 - พิมพ์ key ผิด → editor autocomplete + **build error** (ผ่าน `src/i18n/messages.d.ts`)
 - ลืมเติมอีกไฟล์ → `npm run lint:i18n` เช็ค key ของ th/en ให้ตรงกัน
-- เผลอเขียนข้อความไทยตรง ๆ ใน `.tsx` → `npm run lint:i18n` จับ (ยกเว้น `i18n/` `types/` `constants/` `mocks/`)
+- เผลอเขียนข้อความไทยตรง ๆ ใน `.tsx` → `npm run lint:i18n` จับ (ยกเว้น `i18n/` `types/` `constants/` และหน้าร้าน `app/customer/` `components/customer/`)
 
 **key จากตัวแปร/config:** ต้อง type ให้แคบ (เช่น `menu.ts` `labelKey: NavKey`) หรือ cast `t(key as Parameters<typeof t>[0])`
 
@@ -338,9 +333,9 @@ export const productsService = {
 };
 ```
 
-**ตอน backend ยังไม่พร้อม:** `NEXT_PUBLIC_API_MOCK=1` → MSW (`src/mocks/`) ตอบตาม contract เดียวกัน → **โค้ดหน้าไม่ต้องแก้เลย** พอ backend พร้อมก็แค่สลับ env
+**ทดสอบ:** ไม่มี mock แล้ว — ทดสอบด้วย backend จริงในเครื่อง + MongoDB local `meowmeecake-test` (ดู `docs/MOCKS.md`)
 
-**ทำไมสำคัญ:** contract คือ "สัญญา" ระหว่าง 2 ทีม — frontend เขียนตามนี้, backend ทำให้ตรงนี้, MSW เลียนแบบนี้ ทั้งหมดอ้างเอกสารเดียว
+**ทำไมสำคัญ:** contract คือ "สัญญา" ระหว่าง 2 ทีม — frontend เขียนตามนี้, backend ทำให้ตรงนี้ ทั้งหมดอ้างเอกสารเดียว
 
 > รายการ endpoint ทั้งหมด (40 resource) + สิ่งที่ frontend ไม่ทำ: `docs/API_CONTRACT.md`
 
@@ -374,7 +369,6 @@ export const productsService = {
 | **next-intl 4** | ระบบ 2 ภาษา | ทำงานได้ทั้ง server + client component · เก็บภาษาใน cookie ไม่ต้องมี `/th` `/en` |
 | **axios** | เรียก HTTP | มี interceptor รวมศูนย์ (จัดการ 401/error ที่เดียว) |
 | **@tanstack/react-query** | จัดการข้อมูลจาก API (loading/error/cache/refetch) | ไม่ต้องเขียน `useState`+`useEffect` ซ้ำทุกหน้า · refetch อัตโนมัติเมื่อกลับมาโฟกัสแท็บ |
-| **MSW** | backend ปลอมตอน dev | ดักที่ network layer → โค้ดจริงไม่รู้ตัว → พอ backend มาก็ลบทิ้งได้สะอาด |
 | **sweetalert2** | popup แจ้งเตือน/ยืนยัน | หน้าตาสวย, เรียกผ่าน `lib/alert.ts` ที่เดียว |
 | **dayjs** | จัดการวันที่ | เบา, antd ใช้ตัวนี้อยู่แล้ว, สลับ locale ได้ |
 | **recharts** | กราฟ (ยอดขาย, การผลิต) | API เป็น React component ตรงไปตรงมา |
@@ -392,7 +386,7 @@ export const productsService = {
 |---|---|---|---|
 | **0 · ปฐมนิเทศ** | README นี้ทั้งไฟล์ → `REBUILD_PLAN.md` §1–3 (เป้าหมาย + สถานะ + สถาปัตยกรรม) | ~30 นาที | รู้ว่าแอปทำอะไร ใครใช้ โครงใหญ่ ตอนนี้ทำถึงเฟสไหน |
 | **1 · วิธีเขียนหน้า** | `CODE_STRUCTURE.md` ทั้งไฟล์ → ทวน README §5 (เส้นทาง request) + §7.3 (MVVM) | ~45 นาที | สร้างหน้าใหม่ที่ดึงข้อมูลมาแสดง + มีปุ่ม/ฟอร์มได้ |
-| **2 · ต่อกับ backend** | `API_CONTRACT.md` §0–3 → `MOCKS.md` | ~30 นาที | เขียน `service` ใหม่ + เขียน mock handler ให้ endpoint นั้นได้ |
+| **2 · ต่อกับ backend** | `API_CONTRACT.md` §0–3 → `MOCKS.md` (วิธีทดสอบกับ backend ในเครื่อง) | ~30 นาที | เขียน `service` ใหม่ + ทดสอบกับ backend จริงได้ |
 | **3 · เฉพาะเรื่อง** *(อ่านตอนถึงงานนั้น)* | ดูตารางด้านล่าง | — | — |
 
 **ด่าน 3 — อ่านเมื่อถึงงาน:**
@@ -412,7 +406,7 @@ export const productsService = {
 | **`REBUILD_PLAN.md`** | แผนแม่บท — เป้าหมาย, สถาปัตยกรรม frontend, 8 เฟส, การตัดสินใจ D1–D19 พร้อมเหตุผล | วันแรก / อยากรู้ทำถึงไหน / จะเริ่มเฟสใหม่ | เห็นภาพรวมทั้งโปรเจกต์ในไฟล์เดียว — ทุก decision มี "ทำไม" กำกับ |
 | **`CODE_STRUCTURE.md`** | กติกา MVVM — View/ViewModel วางยังไง ตั้งชื่ออะไร แตกไฟล์เมื่อไหร่ + ตัวอย่างเต็ม | ก่อนสร้างหน้า/component ที่มี logic | ทุกหน้าโครงโค้ดเหมือนกัน → เปิดหน้าไหนก็อ่านออกทันที |
 | **`API_CONTRACT.md`** | สัญญา REST กับ backend — envelope, params, status, auth, 40 resource, ตัวอย่าง request/response | ก่อนเขียน `service` / `mock` / DTO ใหม่ | frontend + backend + MSW อ้างเอกสารเดียว → ไม่หลุดกัน |
-| **`MOCKS.md`** | MSW ทำงานยังไง + handler ที่มี + credential dev + checklist ปิด mock ตอน backend พร้อม | dev โดยไม่มี backend / จะต่อ backend จริง | เตือนว่าข้อมูลที่เห็นตอนนี้เป็นของปลอม + บอกวิธีสลับ |
+| **`MOCKS.md`** | ถอด mock แล้ว — วิธีทดสอบกับ backend ในเครื่อง + DB ทดสอบ | ก่อนทดสอบงานที่เรียก API | กันทดสอบกับ DB จริง (Atlas) โดยไม่ตั้งใจ |
 | **`I18N_PLAN.md`** | ระบบ 2 ภาษา — โครง namespace, การจัดการ enum ที่ DB เก็บเป็นภาษาไทย | เพิ่มภาษา / ข้อความแปลไม่ครบ / งง key | เข้าใจว่าทำไมข้อความอยู่ใน json ไม่อยู่ในโค้ด |
 | **`AUTH_PLAN.md`** | auth ฝั่ง frontend — interceptor 401→refresh, idle timeout, cross-tab logout + ตารางว่าอะไรเป็นหน้าที่ frontend/backend | แตะโค้ด login / session / permission | auth ผิด = ช่องโหว่ · ไฟล์นี้กันเข้าใจผิดว่า "ซ่อนปุ่ม = ปลอดภัย" |
 | **`INVENTORY.md`** | แจกแจงทุก entity / field / enum / util จากระบบเดิม (fullstack) | ก่อนสร้าง DTO / หน้าใหม่ / หา enum | กันสร้างของซ้ำ + ตั้งชื่อฟิลด์ให้ตรงกับ backend |
