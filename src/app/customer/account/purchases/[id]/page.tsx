@@ -8,6 +8,7 @@
 //   มีรายการชำระเงินที่ pending/failed อยู่แล้ว = แนบกับใบเดิม · ยังไม่มี = POST /shop/payments ก่อน
 //   แล้ว POST /shop/payments/{id}/slip (multipart — backend PR #54)
 // หมดเวลาแล้ว (late_upload) = แนบสลิปกับใบเดิมเพื่อเปิดออเดอร์กลับ (backend docs/customer-backend-merge.md §8.8)
+// U7: ไทม์ไลน์สถานะ · รูปสินค้า (จาก catalog) · ซื้ออีกครั้ง (ออเดอร์ที่จบแล้ว — สำเร็จ/ยกเลิก)
 // ─────────────────────────────────────────────────────────────
 import { Suspense, useCallback } from "react";
 import Link from "next/link";
@@ -23,6 +24,9 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
 import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
 import ReviewLink from "../../_components/ReviewLink";
+import OrderTimeline from "../../_components/OrderTimeline";
+import OrderItemThumb from "../../_components/OrderItemThumb";
+import BuyAgainButton from "../../_components/BuyAgainButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { DELIVERY_STATUS_LABEL, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, pickupDateText } from "../orderLabels";
 
@@ -119,6 +123,10 @@ function OrderContent() {
               </div>
             </div>
 
+            <div className="border-t border-[#8C5A3C]/10 pt-4">
+              <OrderTimeline order={order} />
+            </div>
+
             {order.order_status === "cancelled" && order.cancelled_reason && (
               <p className="rounded-xl bg-stone-100 p-3 text-sm text-stone-600">เหตุผลที่ยกเลิก: {order.cancelled_reason}</p>
             )}
@@ -128,8 +136,9 @@ function OrderContent() {
 
             <div className="space-y-2 border-t border-[#8C5A3C]/10 pt-4">
               {order.items.map((it) => (
-                <div key={it._id} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="min-w-0">
+                <div key={it._id} className="flex items-center gap-3 text-sm">
+                  <OrderItemThumb productId={it.product_id} alt={it.product_name} className="h-12 w-12" />
+                  <span className="min-w-0 flex-1">
                     {it.product_name}
                     {it.variant_name ? ` (${it.variant_name})` : ""} <span className="text-gray-500">×{it.quantity}</span>
                     {it.selected_options.map((o) => (
@@ -206,6 +215,7 @@ function OrderContent() {
             เลือกซื้อสินค้าต่อ
           </Link>
           <ReviewLink kind="order" doc={order} itemIds={order.items.map((it) => it._id)} href={`/customer/account/purchases/${order._id}/review`} className={shopButtonPrimary} />
+          {(order.order_status === "completed" || order.order_status === "cancelled") && <BuyAgainButton items={order.items} className={shopButton} />}
           {canCustomerCancel(order) && <CancelOrderButton orderId={order._id} orderNo={order.order_no} paid={order.payment_status === "paid"} />}
         </div>
       </div>
