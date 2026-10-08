@@ -17,3 +17,12 @@ export const shopCouponOverviewKey = ["shop", "coupons", "overview"] as const;
 export const pickupLocationsKey = ["catalog", "pickup-locations"] as const;
 /** รายการโปรด (D5) — หน้า favorites + ปุ่มหัวใจในบัตรสินค้าทุกใบใช้ cache เดียวกัน (โหลดครั้งเดียวทั้งหน้า) */
 export const shopFavoritesKey = ["shop", "favorites"] as const;
+/** พรีออเดอร์ (D3) — รายการ/ใบเดียว/หน้าชำระเงิน · ขึ้นต้นเหมือนกันให้ invalidate ชุดเดียวได้ */
+export const shopPreordersKey = ["shop", "preorders", "list"] as const;
+export const shopPreorderKey = (id: string) => ["shop", "preorders", id] as const;
+export const shopPreorderPaymentPageKey = (id: string) => ["shop", "preorders", id, "payment-page"] as const;
+/** รอบพรีออเดอร์ (สาธารณะ) */
+export const preorderRoundsKey = ["catalog", "preorder-rounds"] as const;
+export const preorderRoundKey = (id: string) => ["catalog", "preorder-rounds", id] as const;
+/** กระดิ่งแจ้งเตือน (D6) — ต่อท้ายด้วย limit (กระดิ่ง 8 · หน้าเต็ม 100) · อ่านแล้วแก้ทุกชุดพร้อมกัน */
+export const shopNotificationsKey = ["shop", "notifications"] as const;

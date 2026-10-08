@@ -34,6 +34,12 @@ export const DELIVERY_STATUS_LABEL: Record<string, string> = {
   failed: "จัดส่งไม่สำเร็จ",
 };
 
-/** วันนัดรับ YYYY-MM-DD → "จ. 6 ต.ค. 2569" */
-export const pickupDateText = (ymd: string) =>
-  new Date(`${ymd}T00:00:00`).toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+/**
+ * วันนัดรับ → "จ. 6 ต.ค. 2569" — รับทั้ง "YYYY-MM-DD" และ ISO เต็มที่ backend ส่ง (เที่ยงคืนเวลาไทย = 17:00Z ของวันก่อน)
+ * แสดงตามเวลาไทยเสมอ (เดิมต่อ "T00:00:00" ท้าย ISO → Invalid Date ทุกออเดอร์ที่มีวันรับ)
+ */
+export const pickupDateText = (value: string) => {
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00+07:00`) : new Date(value);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toLocaleDateString("th-TH", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Bangkok" });
+};

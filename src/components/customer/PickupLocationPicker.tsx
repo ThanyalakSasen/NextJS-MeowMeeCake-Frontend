@@ -1,7 +1,8 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // เลือกจุดรับสินค้า + วันรับ (takeaway) — แทน FrontOffice PickupLocationPicker
-// วันที่ให้เลือกมาจาก order_pickup_dates ของ backend (ภายใน 14 วัน · ตัดวันนี้ถ้าเลยเวลาปิด) — server ตรวจซ้ำตอนสร้างออเดอร์
+// วันที่ให้เลือก = order_pickup_dates ของแต่ละจุด — ออเดอร์ปกติ: จาก backend (ภายใน 14 วัน) · พรีออเดอร์: หน้า checkout
+// พรีออเดอร์แทนค่าด้วยวันในช่วงรอบ (preorderPickupDates) — server ตรวจซ้ำตอนสร้างเสมอ
 // ─────────────────────────────────────────────────────────────
 import type { PickupLocation } from "@/services/pickupLocations";
 

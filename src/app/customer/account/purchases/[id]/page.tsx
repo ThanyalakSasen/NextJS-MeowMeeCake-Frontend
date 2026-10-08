@@ -4,28 +4,27 @@
 // path ตาม FrontOffice (ลิงก์ในกระดิ่ง/LINE ของ backend ชี้มาที่นี่ — G1) · รวม customer/payment + order/success + purchases/[id]
 // ยกเลิกออเดอร์ (C4): POST /shop/orders/{id}/cancel — pending/confirmed เท่านั้น · ชำระแล้ว = รอร้านโอนคืน
 // ?new=1 = เพิ่งสั่งจากหน้า checkout → แสดงแถบ "สั่งซื้อสำเร็จ"
-// ชำระเงิน: GET /shop/orders/{id}/payment (QR พร้อมเพย์จาก backend + กำหนดชำระ 30 นาที) → แนบสลิป:
+// ชำระเงิน: ../../_components/SlipPaymentPanel (ใช้ร่วมกับพรีออเดอร์ D3) — QR พร้อมเพย์จาก backend + กำหนดชำระ 30 นาที + แนบสลิป
 //   มีรายการชำระเงินที่ pending/failed อยู่แล้ว = แนบกับใบเดิม · ยังไม่มี = POST /shop/payments ก่อน
 //   แล้ว POST /shop/payments/{id}/slip (multipart — backend PR #54)
 // หมดเวลาแล้ว (late_upload) = แนบสลิปกับใบเดิมเพื่อเปิดออเดอร์กลับ (backend docs/customer-backend-merge.md §8.8)
 // ─────────────────────────────────────────────────────────────
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaCheckCircle } from "react-icons/fa";
 import { canCustomerCancel, shopOrdersService } from "@/services/shopOrders";
-import { shopPaymentsService, type ShopPaymentPage } from "@/services/shopPayments";
+import { shopPaymentsService } from "@/services/shopPayments";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
+import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { DELIVERY_STATUS_LABEL, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, pickupDateText } from "../orderLabels";
 
-const SLIP_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-const SLIP_MAX_BYTES = 5 * 1024 * 1024;
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
 export default function OrderPage() {
@@ -55,6 +54,11 @@ function OrderContent() {
     queryFn: () => shopPaymentsService.orderPaymentPage(id),
     enabled: validId && orderQ.isSuccess,
   });
+  const qc = useQueryClient();
+  const refresh = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: shopOrderPaymentPageKey(id) });
+    void qc.invalidateQueries({ queryKey: shopOrderKey(id) });
+  }, [qc, id]);
 
   if (validId && (orderQ.isLoading || paymentQ.isLoading)) {
     return (
@@ -186,7 +190,7 @@ function OrderContent() {
           <section className={`${shopCard} space-y-4 lg:col-span-2`}>
             <h2 className="text-lg font-bold">การชำระเงิน</h2>
             {paymentQ.data ? (
-              <PaymentPanel orderId={order._id} page={paymentQ.data} fetchedAt={paymentQ.dataUpdatedAt} />
+              <SlipPaymentPanel kind="order" docId={order._id} page={paymentQ.data} fetchedAt={paymentQ.dataUpdatedAt} onChanged={refresh} />
             ) : (
               <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">โหลดข้อมูลการชำระเงินไม่สำเร็จ กรุณารีเฟรชหน้านี้</p>
             )}
@@ -242,178 +246,6 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between text-gray-600">
       <span>{label}</span>
       <span className="font-semibold text-[#4A342E]">{value}</span>
-    </div>
-  );
-}
-
-/** วินาทีที่เหลือก่อนหมดเขตชำระ — ชดเชยนาฬิกาเครื่องลูกค้าด้วย server_time (null = ไม่มีกำหนด) */
-function useSecondsLeft(page: ShopPaymentPage, fetchedAt: number): number | null {
-  const [now, setNow] = useState(() => Date.now());
-  const due = page.payment_due_at ? new Date(page.payment_due_at).getTime() : null;
-  const offset = new Date(page.server_time).getTime() - fetchedAt;
-
-  useEffect(() => {
-    if (due === null) return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [due]);
-
-  return due === null ? null : Math.max(0, Math.floor((due - (now + offset)) / 1000));
-}
-
-const mmss = (sec: number) => `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
-
-function PaymentPanel({ orderId, page, fetchedAt }: { orderId: string; page: ShopPaymentPage; fetchedAt: number }) {
-  const qc = useQueryClient();
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-
-  const paid = page.payment_status === "paid" || page.payment_record_status === "paid";
-  const awaitingReview = page.payment_record_status === "pending" && !!page.slip_url;
-  const rejected = page.payment_record_status === "failed";
-  // แนบกับรายการเดิมได้ (pending/failed) — หมดเวลาแล้วต้องแนบกับใบเดิมเท่านั้น (สร้างใบใหม่แบบไม่มีสลิป = 400)
-  const reusablePaymentId =
-    page.payment_id && (page.payment_record_status === "pending" || page.payment_record_status === "failed") ? page.payment_id : null;
-  const canUpload = page.can_pay || (page.late_upload && !!reusablePaymentId);
-
-  const secondsLeft = useSecondsLeft(page, fetchedAt);
-  const showCountdown = page.can_pay && !awaitingReview && secondsLeft !== null;
-  const expiredNow = showCountdown && secondsLeft === 0;
-
-  // ครบกำหนดตอนเปิดหน้าอยู่ → ถาม backend ใหม่ (backend ยกเลิกออเดอร์ที่เลยกำหนดให้ตอนเปิดหน้าชำระเงิน)
-  useEffect(() => {
-    if (!expiredNow) return;
-    qc.invalidateQueries({ queryKey: shopOrderPaymentPageKey(orderId) });
-    qc.invalidateQueries({ queryKey: shopOrderKey(orderId) });
-  }, [expiredNow, orderId, qc]);
-
-  const refresh = () => {
-    qc.invalidateQueries({ queryKey: shopOrderPaymentPageKey(orderId) });
-    qc.invalidateQueries({ queryKey: shopOrderKey(orderId) });
-  };
-
-  const pickFile = (f: File | null) => {
-    if (preview) URL.revokeObjectURL(preview);
-    if (f && !SLIP_TYPES.includes(f.type)) {
-      alert.error("รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP หรือ AVIF");
-      f = null;
-    } else if (f && f.size > SLIP_MAX_BYTES) {
-      alert.error("ไฟล์สลิปต้องมีขนาดไม่เกิน 5 MB");
-      f = null;
-    }
-    setFile(f);
-    setPreview(f ? URL.createObjectURL(f) : null);
-  };
-
-  const uploadMutation = useMutation({
-    mutationFn: async (slip: File) => {
-      const paymentId = reusablePaymentId ?? (await shopPaymentsService.createForOrder(orderId, page.amount))._id;
-      return shopPaymentsService.uploadSlip(paymentId, slip);
-    },
-    onSuccess: () => {
-      alert.success(page.late_upload ? "ส่งสลิปแล้ว — เปิดคำสั่งซื้อกลับและรอร้านตรวจสอบ" : "ส่งสลิปแล้ว รอร้านตรวจสอบ");
-      pickFile(null);
-      refresh();
-    },
-    onError: (e) => {
-      alert.error(isApiError(e) ? e.message : "ส่งสลิปไม่สำเร็จ กรุณาลองใหม่");
-      // อาจมีรายการชำระเงินถูกสร้างไปแล้วก่อนอัปโหลดพัง — โหลดใหม่ให้รอบหน้าแนบกับใบเดิม
-      refresh();
-    },
-  });
-
-  if (paid) {
-    return (
-      <div className="flex items-center gap-3 rounded-xl bg-green-50 p-4 text-green-800">
-        <FaCheckCircle className="shrink-0 text-2xl" />
-        <p className="text-sm font-semibold">ร้านได้รับการชำระเงินแล้ว ขอบคุณที่สั่งซื้อ</p>
-      </div>
-    );
-  }
-
-  if (page.late_upload && !reusablePaymentId) {
-    // backend ยังไม่มีทางอัปโหลดสลิปโดยไม่มีรายการชำระเงิน (POST /shop/payments ไม่มีสลิป = 400) — docs/BACKLOG3-merge.md F1
-    return (
-      <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-        หมดเวลาชำระเงิน ระบบยกเลิกคำสั่งซื้อนี้แล้ว — หากโอนเงินไปแล้ว กรุณาติดต่อร้านพร้อมสลิปการโอน
-      </p>
-    );
-  }
-
-  if (!canUpload) {
-    return (
-      <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-        {page.blocked_reason ?? "คำสั่งซื้อนี้ชำระเงินไม่ได้แล้ว"} — กรุณาอย่าโอนเงินเข้าคำสั่งซื้อนี้
-      </p>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {page.late_upload && (
-        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
-          หมดเวลาชำระเงินแล้ว — ถ้าโอนไปแล้ว แนบสลิปเพื่อขอเปิดคำสั่งซื้อกลับ (ต้องมีสินค้าเหลือพอ)
-        </p>
-      )}
-      {awaitingReview && (
-        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">ส่งสลิปแล้ว รอร้านตรวจสอบ — แนบใหม่ได้ถ้าส่งรูปผิด</p>
-      )}
-      {rejected && (
-        <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">สลิปล่าสุดตรวจสอบไม่ผ่าน กรุณาแนบสลิปใหม่</p>
-      )}
-      {showCountdown && (
-        <p className={`rounded-xl p-3 text-center text-sm ${secondsLeft < 300 ? "bg-red-50 text-red-700" : "bg-[#FAF6F0] text-gray-700"}`}>
-          กรุณาชำระและแนบสลิปภายใน <span className="font-mono text-base font-bold">{mmss(secondsLeft)}</span> นาที
-        </p>
-      )}
-
-      {page.can_pay &&
-        !awaitingReview &&
-        (page.qr_image ? (
-          <div className="flex flex-col items-center gap-2 text-center">
-            <div className="flex h-[240px] w-[240px] items-center justify-center rounded-2xl border border-[#8C5A3C]/15 bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={page.qr_image} alt="QR พร้อมเพย์" width={230} height={230} />
-            </div>
-            <p className="text-sm text-gray-600">สแกนจ่ายด้วยแอปธนาคาร (พร้อมเพย์)</p>
-            {page.account_name && (
-              <p className="text-sm">
-                ชื่อบัญชี: <span className="font-semibold">{page.account_name}</span>
-              </p>
-            )}
-            <p className="text-2xl font-extrabold text-[#8C5A3C]">{baht(page.amount)}</p>
-          </div>
-        ) : (
-          <p className="rounded-xl bg-[#FAF6F0] p-3 text-sm text-gray-700">
-            โอนยอด <span className="font-bold">{baht(page.amount)}</span> ตามช่องทางที่ร้านแจ้ง แล้วแนบสลิปด้านล่าง
-          </p>
-        ))}
-
-      <div className="space-y-3 border-t border-[#8C5A3C]/10 pt-4">
-        <label className="block text-sm font-semibold">
-          {awaitingReview ? "แนบสลิปใหม่" : "แนบสลิปการโอน"}
-          <input
-            type="file"
-            accept={SLIP_TYPES.join(",")}
-            className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-[#8C5A3C]/10 file:px-3 file:py-2 file:font-semibold file:text-[#8C5A3C]"
-            onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
-            disabled={uploadMutation.isPending}
-          />
-        </label>
-        {preview && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="ตัวอย่างสลิป" className="mx-auto max-h-64 rounded-xl border border-gray-200 object-contain" />
-        )}
-        <button
-          type="button"
-          className={`${shopButtonPrimary} w-full`}
-          disabled={!file || uploadMutation.isPending || expiredNow}
-          onClick={() => file && uploadMutation.mutate(file)}
-        >
-          {uploadMutation.isPending ? "กำลังส่งสลิป..." : "ส่งสลิป"}
-        </button>
-        <p className="text-center text-xs text-gray-500">รองรับ JPG, PNG, WEBP, AVIF ขนาดไม่เกิน 5 MB</p>
-      </div>
     </div>
   );
 }

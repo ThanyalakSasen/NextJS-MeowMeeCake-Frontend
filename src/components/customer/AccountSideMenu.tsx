@@ -1,12 +1,12 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // เมนูบัญชีของลูกค้า (ด้านซ้ายบนจอใหญ่ · แถบบนสุดบนมือถือ) — ย่อจาก FrontOffice src/app/components/customer/SideBarMenu.tsx
-// ใส่เฉพาะหน้าที่มีแล้วใน repo นี้ · หน้าอื่นของต้นแบบ (ประวัติพรีออเดอร์ · แจ้งเตือน)
+// ครบทุกเมนูของต้นแบบแล้ว (8/8)
 // เพิ่มตามลำดับ BACKLOG4-merge หมวด 2 (U2)
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, GiftIcon, HeartIcon } from "@heroicons/react/24/solid";
+import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, GiftIcon, HeartIcon, CalendarDaysIcon, BellIcon } from "@heroicons/react/24/solid";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import DoorLogoutIcon from "./DoorLogoutIcon";
 
@@ -16,7 +16,9 @@ const ITEMS = [
   { href: "/customer/changepassword", label: "เปลี่ยนรหัสผ่าน", icon: KeyIcon },
   { href: "/customer/account/member", label: "สมาชิกของฉัน", icon: GiftIcon },
   { href: "/customer/account/purchases", label: "ประวัติการสั่งซื้อ", icon: ShoppingBagIcon },
+  { href: "/customer/account/preorders", label: "ประวัติพรีออเดอร์", icon: CalendarDaysIcon },
   { href: "/customer/account/favorites", label: "รายการโปรด", icon: HeartIcon },
+  { href: "/customer/account/notifications", label: "การแจ้งเตือน", icon: BellIcon },
 ] as const;
 
 export default function AccountSideMenu() {
@@ -24,7 +26,8 @@ export default function AccountSideMenu() {
   const router = useRouter();
   const { signOut } = useCustomerSession();
   // ประวัติการสั่งซื้อ = รวมหน้ารายละเอียด /customer/account/purchases/[id]
-  const isActive = (href: string) => pathname === href || (href.endsWith("/purchases") && !!pathname?.startsWith(`${href}/`));
+  const isActive = (href: string) =>
+    pathname === href || ((href.endsWith("/purchases") || href.endsWith("/preorders")) && !!pathname?.startsWith(`${href}/`));
 
   const onLogout = async () => {
     await signOut();

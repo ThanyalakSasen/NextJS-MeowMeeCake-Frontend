@@ -20,9 +20,13 @@ export interface ShopPayment {
   created_at: string;
 }
 
-/** GET /shop/orders/{id}/payment — paymentService.getPaymentPage() ฝั่ง backend */
+/** ออเดอร์ปกติ หรือ พรีออเดอร์ — หน้าชำระเงิน/สลิปใช้ร่วมกัน (backend paymentService.getPaymentPage(kind)) */
+export type PaymentKind = "order" | "preorder";
+
+/** GET /shop/{orders|preorders}/{id}/payment — paymentService.getPaymentPage() ฝั่ง backend */
 export interface ShopPaymentPage {
   id: string;
+  /** order_no หรือ preorder_no */
   order_no: string;
   /** ยอดที่ต้องโอน (บาท) */
   amount: number;
@@ -54,11 +58,29 @@ export const shopPaymentsService = {
     return res.data;
   },
 
+  /** GET /shop/preorders/{id}/payment — แบบเดียวกับออเดอร์ แต่กำหนดชำระ = 24 ชม. (ไม่เกินปิดรอบ) · ไม่มี late_upload */
+  preorderPaymentPage: async (preorderId: string): Promise<ShopPaymentPage> => {
+    const res = await http.get<ItemResponse<ShopPaymentPage>>(`/shop/preorders/${preorderId}/payment`);
+    return res.data;
+  },
+
+  paymentPage: (kind: PaymentKind, id: string) =>
+    kind === "order" ? shopPaymentsService.orderPaymentPage(id) : shopPaymentsService.preorderPaymentPage(id),
+
   /** POST /shop/payments { order_id, amount } — ออเดอร์ที่หมดเวลาแล้วสร้างแบบไม่มีสลิปไม่ได้ (400) */
   createForOrder: async (orderId: string, amount: number): Promise<ShopPayment> => {
     const res = await http.post<ItemResponse<ShopPayment>>("/shop/payments", { order_id: orderId, amount });
     return res.data;
   },
+
+  /** POST /shop/payments { preorder_id, amount } — ยอดต้องเท่ายอดพรีออเดอร์ */
+  createForPreorder: async (preorderId: string, amount: number): Promise<ShopPayment> => {
+    const res = await http.post<ItemResponse<ShopPayment>>("/shop/payments", { preorder_id: preorderId, amount });
+    return res.data;
+  },
+
+  create: (kind: PaymentKind, id: string, amount: number) =>
+    kind === "order" ? shopPaymentsService.createForOrder(id, amount) : shopPaymentsService.createForPreorder(id, amount),
 
   /** POST /shop/payments/{id}/slip (multipart field "file") — JPEG/PNG/WEBP/AVIF ≤ 5 MB */
   uploadSlip: async (paymentId: string, file: File): Promise<ShopPayment> => {

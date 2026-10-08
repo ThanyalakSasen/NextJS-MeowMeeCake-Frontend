@@ -1,14 +1,16 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // สินค้าทั้งหมด — ย้ายมาจาก FrontOffice (customer/product/page.tsx)
-// เปลี่ยนจากเดิม: ข้อมูลจาก /catalog/products + /catalog/categories (cache ร่วมกับหน้าแรก)
-// · ค้นหาในหน้าเองจาก ?q= (ชื่อไทย/อังกฤษ/รหัสสินค้า) · หมวดจาก ?category=<ชื่อหมวด>
-// ตัดออก: คำค้นพ้อง (search-synonyms — backend ยังไม่มี) · เรียง "ขายดี" (catalog ไม่ส่งยอดขายมา)
+// เปลี่ยนจากเดิม: ข้อมูลจาก /catalog/products + /catalog/categories (cache ร่วมกับหน้าแรก) · หมวดจาก ?category=<ชื่อหมวด>
+// · ค้นหา ?q= ที่ server (/catalog/products?search= — backend ขยายคำพ้องให้ · BACKLOG4 U4 / H6) แทนการกรองในหน้า
+//   ซึ่งหาคำพ้องไม่เจอ · จำนวนในหมวดนับจากผลค้นหา (เห็นว่าผลอยู่หมวดไหน)
+// · เรียงตามเก็บใน ?sort= (กลับจากหน้าสินค้าแล้วยังเรียงแบบเดิม)
+// ต่างจากต้นแบบ: "ขายดี" → "คะแนนรีวิวสูงสุด" (catalog ไม่ส่งยอดขายมา · avg_rating มี)
 // ─────────────────────────────────────────────────────────────
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { FaFilter, FaSortAmountDown } from "react-icons/fa";
 import { catalogService } from "@/services/catalog";
 import { effectivePrice } from "@/lib/pricing";
@@ -17,12 +19,14 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from "../lib/catalogQueries";
 
 const ALL = "ทั้งหมด";
-type SortKey = "latest" | "price-asc" | "price-desc";
+type SortKey = "latest" | "rating" | "price-asc" | "price-desc";
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "latest", label: "มาใหม่ล่าสุด" },
+  { key: "rating", label: "คะแนนรีวิวสูงสุด" },
   { key: "price-asc", label: "ราคา: ต่ำ → สูง" },
   { key: "price-desc", label: "ราคา: สูง → ต่ำ" },
 ];
+const isSortKey = (v: string | null): v is SortKey => SORTS.some((s) => s.key === v);
 
 // ใช้ useSearchParams จึงต้องครอบด้วย Suspense (ไม่งั้น next build จะ error)
 export default function ProductListPage() {
@@ -35,13 +39,25 @@ export default function ProductListPage() {
 
 function ProductListContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const currentCategory = searchParams.get("category") || ALL;
   const searchQuery = searchParams.get("q")?.trim() || "";
-  const [sortBy, setSortBy] = useState<SortKey>("latest");
+  const sortParam = searchParams.get("sort");
+  const sortBy: SortKey = isSortKey(sortParam) ? sortParam : "latest";
+  const setSortBy = (key: SortKey) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (key === "latest") params.delete("sort");
+    else params.set("sort", key);
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  };
 
+  // ไม่ค้นหา = รายการเต็ม (cache ร่วมกับหน้าแรก) · ค้นหา = ถาม server (ขยายคำพ้อง)
   const productsQ = useQuery({
-    queryKey: catalogProductsKey,
-    queryFn: () => catalogService.products(CATALOG_PRODUCT_PARAMS),
+    queryKey: searchQuery ? [...catalogProductsKey, "search", searchQuery] : catalogProductsKey,
+    queryFn: () => catalogService.products(searchQuery ? { ...CATALOG_PRODUCT_PARAMS, search: searchQuery } : CATALOG_PRODUCT_PARAMS),
+    placeholderData: keepPreviousData,
   });
   const categoriesQ = useQuery({ queryKey: catalogCategoriesKey, queryFn: catalogService.categories });
   const loading = productsQ.isLoading;
@@ -60,25 +76,21 @@ function ProductListContent() {
   }, [categoriesQ.data, products]);
 
   const visible = useMemo(() => {
+    // คำค้นกรองที่ server แล้ว (productsQ) — ที่นี่เหลือแค่หมวด + เรียง
     let result = [...products];
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.product_name_th.toLowerCase().includes(q) ||
-          (p.product_name_eng ?? "").toLowerCase().includes(q) ||
-          (p.product_id ?? "").toLowerCase().includes(q),
-      );
-    }
     if (currentCategory !== ALL) result = result.filter((p) => categoryNameOf(p) === currentCategory);
     result.sort((a, b) => {
       // เรียงตามราคาขายจริง (ราคาลดถ้ามี) ให้ตรงกับราคาที่แสดงบนบัตร
       if (sortBy === "price-asc") return effectivePrice(a) - effectivePrice(b);
       if (sortBy === "price-desc") return effectivePrice(b) - effectivePrice(a);
+      if (sortBy === "rating") {
+        const r = Number(b.avg_rating ?? 0) - Number(a.avg_rating ?? 0);
+        return r !== 0 ? r : (b.review_count ?? 0) - (a.review_count ?? 0);
+      }
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
     return result;
-  }, [products, currentCategory, sortBy, searchQuery]);
+  }, [products, currentCategory, sortBy]);
 
   return (
     <div className="w-full min-h-screen text-[#4A342E] pt-54 sm:pt-52 md:pt-50 pb-36">
@@ -104,10 +116,11 @@ function ProductListContent() {
               <div className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
                 {categoryCards.map((c) => {
                   const isActive = currentCategory === c.name;
-                  // คงคำค้นไว้ตอนเปลี่ยนหมวด
+                  // คงคำค้น + การเรียงไว้ตอนเปลี่ยนหมวด
                   const params = new URLSearchParams();
                   if (c.name !== ALL) params.set("category", c.name);
                   if (searchQuery) params.set("q", searchQuery);
+                  if (sortBy !== "latest") params.set("sort", sortBy);
                   const qs = params.toString();
                   return (
                     <Link
