@@ -158,7 +158,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 - **API:** `/catalog/products/:id/customization` · `/reviews` (+`summary`) · `/similar` · `/sentiment` · `/catalog/ingredients` · ตะกร้ารับ `variant_ids[]` + `selected_options` (BE §8.3)
 - **ขั้นตอน:** (1) ตัวเลือกในหน้า + ส่งตะกร้า (2) แสดงตัวเลือกในตะกร้า/checkout/ออเดอร์ (3) รีวิว (4) สินค้าคล้าย + สารก่อภูมิแพ้
 
-### C2 ▢ หน้าแรก: สินค้าแนะนำ
+### C2 ✅ หน้าแรก: สินค้าแนะนำ (2026-10-09 — ดู [BACKLOG4 C2](BACKLOG4-merge.md#3-หน้าร้าน--เติม-ui-ในหน้าที่มีแล้ว))
 - **ต้นแบบ:** `HomeRecommendations.tsx` · **API:** `/catalog/products/recommended` · `/shop/recommendations` (BE §8.15)
 
 ### C3 ✅ checkout: จุดรับสินค้า · คูปองส่วนตัว · ใช้แต้ม (2026-10-08 · branch `feat/checkout-full` · ทดสอบกับ backend 39/39 — รายละเอียด + ข้อควรระวังก่อน deploy ดู [BACKLOG4 §1.1](BACKLOG4-merge.md#11--c3-checkout-จุดรับสินค้า--คูปองของฉัน--ใช้แต้ม-branch-featcheckout-full--ทดสอบ--commit-2026-10-08))
@@ -186,9 +186,9 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | D4 | แต้มสะสม · คูปอง · แชร์แต้ม | `account/member` (567) | `/shop/points` (+`share`) · `/shop/coupons` (+`check`, `redeem`) | B2 | ▢ |
 | D5 | รายการโปรด | `account/favorites` | `/shop/favorites` (`data.items`) | B2 | ▢ |
 | D6 | กระดิ่งแจ้งเตือน | `account/notifications` · `CustomerNotifications` | `/shop/notifications` (+`:id`) → `{ items, unread_count }` | G1 (ลิงก์ในแจ้งเตือน) | ⏸ |
-| D7 | เขียนรีวิว + รูป/วิดีโอ | `account/pendingreview/[id]` (705) | `/shop/reviews` · `/shop/reviews/upload` · `/catalog/review-aspects` | D1 | ▢ |
-| D8 | ติดต่อร้าน | `contact-us` | `/shop/contact` · `/catalog/contact-topics` | — | ▢ |
-| D9 | ตารางค่าส่ง · ข้อมูลร้าน | `shipping` · `StoreLogo` | `/catalog/shipping-zones` · `/catalog/store-info` · `/catalog/store-logo` | — | ▢ |
+| D7 | เขียนรีวิว + รูป/วิดีโอ | `account/pendingreview/[id]` (705) | `/shop/reviews` · `/shop/reviews/upload` · `/catalog/review-aspects` | D1 | ✅ 2026-10-09 — ดู [BACKLOG4 D7](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
+| D8 | ติดต่อร้าน | `contact-us` | `/shop/contact` · `/catalog/contact-topics` | — | ✅ 2026-10-09 — ดู [BACKLOG4 D8](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
+| D9 | ตารางค่าส่ง · ข้อมูลร้าน | `shipping` · `StoreLogo` | `/catalog/shipping-zones` · `/catalog/store-info` · `/catalog/store-logo` | — | ✅ 2026-10-09 — ดู [BACKLOG4 D9](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
 | D10 | ลิงก์ชำระเงินใช้ครั้งเดียว | `customer/payment` | `/shop/payment-link` (+`redeem`) | G1 · Q-FO2 | ⏸ |
 
 **หมายเหตุ D3:** พรีออเดอร์ใช้กติกาของ backend หลัก (กำหนดชำระ + ยกเลิกอัตโนมัติ · ไม่ใช่ 30 นาที) · หน้าชำระเงินใช้ `GET /shop/preorders/:id/payment` แบบเดียวกับ A1
@@ -202,10 +202,10 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | รหัส | หน้า | ต้นแบบ | API | หมายเหตุ | สถานะ |
 |---|---|---|---|---|---|
 | E1 | กลุ่มตัวเลือกสินค้า + POS | `ProductCustomizationEditor.tsx` | `GET/PUT /admin/products/:id/customization` · `pos/scan` คืน `customization` | แทน BACKLOG2 §6 · POS ต้องส่ง `variant_ids` (BE §8.3) | ✅ 2026-10-06 (PR #27 · `a53114b`) — ตัวแก้กลุ่มตัวเลือกในหน้าแก้สินค้า · ทดสอบกับ backend แล้ว (ดู "ผลทดสอบ PR #25–#27") |
-| E2 | ข้อมูลร้าน (ที่อยู่ · พิกัด · ตลาดนัด · แผนที่ · โลโก้ · พร้อมเพย์) | `owner/store-info/*` | `/admin/store-profile` · `/admin/store-settings` · `/admin/weekly-markets` · `/admin/map-link` | เมนูใหม่ `store_info` · เลขพร้อมเพย์ของ A1 ตั้งที่นี่ (BE §8.19) | ▢ |
-| E3 | คำค้นเทียบเคียง | `products/search-synonyms` | `/admin/search-synonyms` (+`:id`) | สิทธิ์ `products` (BE §8.16) | ▢ |
-| E4 | จัดการรีวิวขั้นสูง | `reports/reviews/*` | `/admin/reviews/bulk` · `filter-options` · `:id/visibility` · `:id/sentiment` · `/admin/aspects/reorder` · `/admin/semantic-terms` | ไม่รวม analytics → F3 | ▢ |
-| E5 | ออเดอร์พร้อมส่ง | `orders/readyReders` | `/admin/orders?order_status=ready` | อาจทำเป็นตัวกรองในหน้า `manageOrders` แทน | ▢ |
+| E2 | ข้อมูลร้าน (ที่อยู่ · พิกัด · ตลาดนัด · แผนที่ · โลโก้ · พร้อมเพย์) | `owner/store-info/*` | `/admin/store-profile` · `/admin/store-settings` · `/admin/weekly-markets` · `/admin/map-link` | เมนูใหม่ `store_info` · เลขพร้อมเพย์ของ A1 ตั้งที่นี่ (BE §8.19) | ✅ 2026-10-09 — ดู [BACKLOG4 E2](BACKLOG4-merge.md#4-หลังร้าน--หน้าที่ยังไม่มี) |
+| E3 | คำค้นเทียบเคียง | `products/search-synonyms` | `/admin/search-synonyms` (+`:id`) | สิทธิ์ `products` (BE §8.16) | ✅ 2026-10-09 — ดู [BACKLOG4 E3](BACKLOG4-merge.md#4-หลังร้าน--หน้าที่ยังไม่มี) |
+| E4 | จัดการรีวิวขั้นสูง | `reports/reviews/*` | `/admin/reviews/bulk` · `filter-options` · `:id/visibility` · `:id/sentiment` · `/admin/aspects/reorder` · `/admin/semantic-terms` | ไม่รวม analytics → F3 | ✅ 2026-10-09 — ดู [BACKLOG4 E4](BACKLOG4-merge.md#4-หลังร้าน--หน้าที่ยังไม่มี) |
+| E5 | ออเดอร์พร้อมส่ง | `orders/readyReders` | `/admin/orders?order_status=ready` | อาจทำเป็นตัวกรองในหน้า `manageOrders` แทน | ✅ 2026-10-09 — ดู [BACKLOG4 E5](BACKLOG4-merge.md#4-หลังร้าน--หน้าที่ยังไม่มี) |
 | E6 | ตัวกรองหมวด "ลูกค้า" ในแจ้งเตือน | — | `/admin/notifications?module=customer` | BE §8.17 · งานเล็ก | ✅ (PR #25 · `0f2f936`) — หมวด "ข้อความลูกค้า" ในตัวกรองหน้าประวัติแจ้งเตือน |
 
 ---
@@ -317,14 +317,14 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 |---|---|---|---|---|---|
 | I1 | 🔴 | **เมนูสิทธิ์ `store_info` ไม่มีใน frontend** — backend เพิ่มใน `MENU_KEYS` แล้ว (`/auth/me` ส่งมา) แต่ frontend ทิ้ง → หน้าสิทธิ์ตั้งค่าเมนูนี้ให้พนักงานไม่ได้ · ต้องมีก่อนทำหน้า E2 | `constants/menuKeys.ts` (`MenuKey` · `ALL_MENU_KEYS`) · `employees/permissions/permissionGroups.ts` · i18n `nav.*` | `permissionService.MENU_KEYS` · BE §8.19 | ✅ PR #25 (`0f2f936`) · ทดสอบแล้ว |
 | I2 | 🔴 | **คืนเงินไม่มีปุ่ม** — ลูกค้ายกเลิกออเดอร์ที่ชำระแล้วได้เอง → สถานะ "ยกเลิก + ชำระแล้ว" = รอร้านโอนคืน (backend **ไม่**คืนอัตโนมัติ) แต่หลังร้านไม่มีทางกดยืนยันคืนเงิน → ค้างตลอด | `orders/manageOrders` + `preOrderRound` drawer · `services/payments.ts` (+ `refund`) | `POST /admin/payments/:id/refund` (`payments.approve`) · BE §8.8 · BACKLOG2 §15.3 ข้อ 7 | ✅ PR #25 (`1e1e68c` · `RefundSection`) · ทดสอบแล้ว |
-| I3 | 🟡 | ประเภทแจ้งเตือน: frontend ยังมี `employee` (backend เลิกแล้ว) และ**ไม่มี `customer`** (ลูกค้าติดต่อร้าน · ยกเลิกออเดอร์) → ตัวกรองไม่มีหมวดนี้ · ป้ายเป็น key ดิบ | `types/notification.ts` · `notificationsHistory` · i18n `enums` | enum `Notifications.module` · BE §8.17 | 🟡 เพิ่ม `customer` แล้ว (PR #25 · `0f2f936` · = E6) · ยังเหลือลบ `employee` → BACKLOG4 §5 |
+| I3 | 🟡 | ประเภทแจ้งเตือน: frontend ยังมี `employee` (backend เลิกแล้ว) และ**ไม่มี `customer`** (ลูกค้าติดต่อร้าน · ยกเลิกออเดอร์) → ตัวกรองไม่มีหมวดนี้ · ป้ายเป็น key ดิบ | `types/notification.ts` · `notificationsHistory` · i18n `enums` | enum `Notifications.module` · BE §8.17 | ✅ 2026-10-09 — `NotificationModule` = 6 หมวดที่ backend สร้างได้ (+ `NOTIFICATION_MODULES` ใช้เป็นตัวกรอง) · `employee` แยกเป็น `LegacyNotificationModule` ใช้แสดงแถวเก่าเท่านั้น (คงป้าย i18n ไว้ — backend ก็ยังมีป้ายของเอกสารเก่า · ลบแล้วแถวเก่าจะขึ้น key ผิด) |
 | I4 | 🟡 | **POS ไม่รองรับกลุ่มตัวเลือก** — `scan` คืน `customization` แล้ว แต่ POS ไม่ให้เลือก (`usePOSViewModel.ts:140`) · ถ้า FrontOffice (หลังร้านพอร์ต 4000) ตั้งกลุ่มบังคับเลือกให้สินค้าไว้ → ขายใน POS ได้ 400 | `OrderInStore/*` · `services/pos.ts` | `POST /admin/pos/scan` · ออเดอร์รับ `variant_ids` + `selected_options` · BE §8.3 | ✅ 2026-10-06 (PR #27 · `398f7cb`) — หน้าต่างเลือกตัวเลือกก่อนลงบิล · ดึงผ่าน `/admin/pos/scan` (สิทธิ์ orders.view) + cache · บรรทัดแยกตามชุดตัวเลือก · สต็อกรวมต่อสินค้า · ทดสอบแล้ว |
 | I5 | 🟡 | สวิตช์ "ส่งทั่วประเทศ" ของหมวดสินค้า — ค่าส่งเว็บตัดสินจาก `ships_nationwide` · ไม่ตั้ง = เดาจากชื่อหมวด ("ซาวโดว์") | `components/shared/categories/CategoryManagerDialog.tsx` · `services/productCategories.ts` · `types/productCategory.ts` | `PATCH /admin/product-categories/:id { ships_nationwide }` · BE §8.7 | ✅ PR #26 (`a842444`) · ทดสอบแล้ว |
 | I6 | 🟡 | drawer ออเดอร์ไม่แสดง field ของออเดอร์เว็บ: `payment_due_at` · `cancelled_reason` (เช่น "หมดเวลาชำระเงิน (ระบบยกเลิกอัตโนมัติ)") · จุดรับ `pickup_point` + `pickup_date` · แต้มที่ใช้ `points_redeemed`/`points_discount` · คูปองส่วนตัว | `types/order.ts` · `services/orders.ts` (`toOrder`) · `manageOrders/_components/OrderDetailContent.tsx` | BE §8.7 · §8.8 · §8.11 | ✅ PR #26 (`bfe3073`) · ทดสอบแล้ว |
 | I7 | 🟡 | คูปองแลกแต้ม — โปรโมชันมี `points_cost` (ลูกค้าใช้แต้มแลกเป็นคูปองส่วนตัว) แต่ฟอร์มคูปองหลังร้านตั้งไม่ได้ | `promotions/coupons/couponForm.ts` · `CouponFormModal.tsx` · `types/promotion.ts` | `schemas/promotion.ts` `points_cost` · BE §8.11 | ✅ PR #26 (`72d8a6c`) · ทดสอบแล้ว |
 | I8 | 🟢 | หน้าจัดการโซนค่าส่งของหลังร้าน/POS (`DeliveryZones`) ยังไม่มี (ค้างจาก BACKLOG2 §16.3) · คนละตารางกับค่าส่งเว็บ (F2) | ใหม่ `owner/...` | `/admin/delivery-zones` (+`:id`, `restore`) · `/admin/delivery-fee` | ▢ |
-| I9 | 🟢 | รายการรีวิวหลังร้าน: response มี `data.summary` เพิ่ม (frontend ทิ้ง) · สถานะ/ปักหมุด/ตอบกลับ → รวมใน E4 | `services/reviews.ts` | BE §8.20 | ▢ (ทำคู่ E4) |
-| I10 | 🟢 | บัญชีลูกค้าจาก LINE ที่ไม่มีอีเมลได้อีเมลชั่วคราว `*@line-user.invalid` · `auth_provider: "line"` → ที่ไหนแสดงอีเมลผู้ใช้ (ออเดอร์ · รีวิว) ควรซ่อน/แสดง "บัญชี LINE" | `OrderDetailContent` · `reviews` · `types/user.ts` | `oauthService.isPlaceholderEmail` · BE §8.9 | ▢ |
+| I9 | 🟢 | รายการรีวิวหลังร้าน: response มี `data.summary` เพิ่ม (frontend ทิ้ง) · สถานะ/ปักหมุด/ตอบกลับ → รวมใน E4 | `services/reviews.ts` | BE §8.20 | ✅ 2026-10-09 (E4) |
+| I10 | 🟢 | บัญชีลูกค้าจาก LINE ที่ไม่มีอีเมลได้อีเมลชั่วคราว `*@line-user.invalid` · `auth_provider: "line"` → ที่ไหนแสดงอีเมลผู้ใช้ (ออเดอร์ · รีวิว) ควรซ่อน/แสดง "บัญชี LINE" | `OrderDetailContent` · `reviews` · `types/user.ts` | `oauthService.isPlaceholderEmail` · BE §8.9 | ✅ 2026-10-09 — `lib/lineAccount.ts` (`isLinePlaceholderEmail` ย้ายจาก services/shopProfile — re-export ไว้) · `/profile` แสดง "บัญชี LINE — ยังไม่ได้ระบุอีเมล" · ฟอร์มแก้พนักงานเตือนให้ใส่อีเมลจริง · ตรวจแล้ว: drawer ออเดอร์/รีวิวหลังร้านไม่ได้แสดงอีเมลลูกค้า (backend ก็ตัดอีเมลชั่วคราวออกจากข้อความติดต่อร้านแล้ว) |
 | I11 | 🟢 | mock (MSW) ใช้ไม่ได้แล้ว (path เก่า ไม่มี `/admin`) — ค้างจาก BACKLOG2 §16.5 · ตัดสินใจเขียนใหม่หรือลบ | `src/mocks/*` · `MSWReady` | — | ⏸ ตัดสินใจ |
 | I13 | ✅ | **รายการถูกตัดเงียบ ๆ** — backend ตัด `?limit=` ไว้ ≤ 100 (`parsePagination` maxLimit · ไม่ส่ง = 20) แต่ frontend ขอ 200/500 อยู่ 24 จุด + ขอ 100 เพื่อ "โหลดทั้งหมด" อีก 15 จุด (ออเดอร์ · วัตถุดิบ · พนักงาน · หมวด · role) + หน่วยนับไม่ส่ง limit (ได้ 20) → แก้ที่ `http.getList` ไล่ขอทีละหน้าเมื่อ limit > `PAGE_MAX` · ใช้ `LIST_ALL` (1,000) แทนเลขลอย | `lib/http.ts` · ViewModel/service 26 ไฟล์ | `src/lib/queryParams.ts` | ✅ 2026-10-06 |
 | I14 | ✅ | สิทธิ์หน้ารีวิว: backend ย้าย `/admin/reviews*` จาก `products.*` เป็น **`reports.*`** แต่เมนู + ViewModel ยังเช็ค `products` → ปุ่ม/เมนูไม่ตรงสิทธิ์จริง | `constants/menu.ts` · `useReviewsViewModel.ts` | BE §8.20 | ✅ 2026-10-06 |

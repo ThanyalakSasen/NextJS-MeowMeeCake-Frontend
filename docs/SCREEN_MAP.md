@@ -1,10 +1,10 @@
-# Screen Map — สถานะการ wire ของ 27 หน้า
+# Screen Map — สถานะการ wire ของทุกหน้า (หลังร้าน + หน้าร้าน)
 
 > **เอกสารนี้คืออะไร:** ความจริงเรื่อง **reachability/wiring** ของแต่ละหน้า — มี route ไหม เข้าถึงได้ทางไหน (sidebar/ปุ่ม/redirect) มี menuKey/permission/breadcrumb/i18n ครบไหม
 > **เปิดอ่านเมื่อ:** ก่อนเริ่ม/หลังจบ screen ใดในเฟส 4 · สงสัยว่าทำไมกดเมนูแล้วไปหน้าอื่น/404 · เช็คว่าลืมต่อสายอะไรไหม
 > **ความสัมพันธ์กับเอกสารอื่น:** `REBUILD_PLAN.md` §7 = route/template/component ต่อหน้า (ของ "จะสร้างอะไร") · `COMPONENT_MAP.md` = ทะเบียน component (ของ "component อยู่ไหน") · **เอกสารนี้ = เข้าถึงหน้านั้นได้จริงหรือยัง**
 >
-> อัปเดตล่าสุด: 2026-09-07 (27/27 ✅ — เฟส 4 ครบทุกหน้า)
+> อัปเดตล่าสุด: 2026-10-09 — §2 = 27 หน้าเดิมของเฟส 4 · §2b = หน้าหลังร้านที่เพิ่มภายหลัง · §2c = หน้าร้าน `/customer/*` (ย้ายมาจาก FrontOffice — BACKLOG3/4) · **ข้อแก้ §2:** #22 Attendance ไม่มีในโค้ดแล้ว (ไม่มี `app/owner/attendance`) · #8 POS = `OrderInStore`
 
 ---
 
@@ -61,6 +61,49 @@
 | 27 | Access Denied | `/owner/access-denied` | ✅ | redirect ตอนถูกปฏิเสธสิทธิ์ (proxy/permission gate) — ตั้งใจไม่มีใน sidebar (**G7**) | N/A (หน้าปฏิเสธสิทธิ์ ไม่ควร gate ตัวเอง) | ❌ ไม่มี key (**G5**) — โชว์แค่ crumb "หน้าหลัก" | (none) | `page.tsx`+`_components/AccessDeniedCard.tsx` | AccessDeniedCard | ไม่มี resource — i18n `accessDenied.*` |
 
 *(Production #13–15 ใช้ route เดียวกัน สลับด้วย `?tab=` — ไม่ใช่ 3 route แยก)*
+
+## 2b. หลังร้าน — หน้าที่เพิ่มหลังเฟส 4
+
+| # | Screen | Route | Reach | menuKey | Breadcrumb key | Files | หมายเหตุ |
+|---|---|---|---|---|---|---|---|
+| 28 | รอบพรีออเดอร์ | `/owner/orders/preOrderRound` | sidebar ใต้คำสั่งซื้อ | `preorder` | `ordersPreorderRound` | MVVM + `_components/` (RoundsTab · OrdersTab · RoundFormModal ...) | รอบ + พรีออเดอร์ของลูกค้า |
+| 29 | คูปอง | `/owner/promotions/coupons` | sidebar ใต้โปรโมชัน | `promotions` | `promotionsCoupons` | MVVM + CouponCard · CouponFormModal | แต้มแลกคูปอง (`points_cost`) |
+| 30 | ตั้งราคา/ราคาลด | `/owner/promotions/pricing` | sidebar ใต้โปรโมชัน | `products` (ยิง /admin/products) | `promotionsPricing` | MVVM | |
+| 31 | รายงานยอดขาย | `/owner/reports/sales` | sidebar ใต้รายงาน | `reports` | `reportsSales` | MVVM | |
+| 32 | รีวิวลูกค้า | `/owner/reports/reviews` | sidebar ใต้รายงาน | `reports` | `reportsReviews` | MVVM + ReviewCard · ReviewFiltersBar · ReplyBox · NoteBox · ReviewDetailContent | E4 — กรอง/แบ่งหน้าที่ server + summary |
+| 33 | ตั้งค่าหัวข้อรีวิว | `/owner/reports/reviews/settings` | ปุ่ม "ตั้งค่าหัวข้อรีวิว" บนหน้ารีวิว (ไม่มี sidebar leaf — ตั้งใจ) | `reports` | `reviewSettings` | MVVM + AspectsTab · TermsTab | E4 |
+| 34 | คำพ้องค้นหา | `/owner/products/search-synonyms` | sidebar ใต้สินค้า | `products` | `searchSynonyms` | MVVM + SynonymGroupForm · SearchTester | E3 |
+| 35 | ข้อมูลร้าน | `/owner/store-info` | sidebar กลุ่มพนักงาน | `store_info` (ส่วนอื่น owner เท่านั้น) | `storeInfo` | MVVM + SectionCard · StoreAddressFields · CoordinateInput · WeeklyMarketsEditor · TimeSelect | E2 — พนักงานเห็นเฉพาะหน้าร้านประจำสัปดาห์ |
+| — | โปรไฟล์ | `/profile` | เมนูผู้ใช้บน Navbar | — (login-only) | — | MVVM | เชื่อม LINE · ซ่อนอีเมลชั่วคราวของบัญชี LINE (I10) |
+| — | สมัครสมาชิก · LINE login | `/register` · `/login/line` | ลิงก์จากหน้า login | — (public) | — | | B1/B3 |
+
+## 2c. หน้าร้าน `/customer/*`
+
+> เขียนแบบหน้าเดียวไฟล์เดียว (ยกจาก FrontOffice) · ข้อความไทยในโค้ด (ยกเว้นจาก `lint:i18n`) · layout = `CustomerChrome` (Navbar + Footer) · guest เปิดได้ทุกหน้า หน้าที่ต้อง login ครอบด้วย `CustomerAuthGate` (🔒)
+> ทางเข้า: Navbar (หน้าแรก · สินค้าทั้งหมด · พรีออเดอร์ · ติดต่อเรา · ตะกร้า · กระดิ่ง · เมนูบัญชี) · Footer (สินค้า · การจัดส่ง · ติดต่อเรา) · เมนูบัญชี `AccountSideMenu` · ลิงก์ในแจ้งเตือน/LINE/อีเมล
+
+| Screen | Route | Reach | API หลัก | งาน |
+|---|---|---|---|---|
+| หน้าแรก | `/customer` (`/` เด้งมา) | Navbar/โลโก้ | /catalog/products · banners · products/recommended · (/shop/recommendations) | สินค้าแนะนำ C2 |
+| สินค้าทั้งหมด | `/customer/product` | Navbar · Footer | /catalog/products?search= (ขยายคำพ้องที่ server) | U4 |
+| รายละเอียดสินค้า | `/customer/product/[id]` (`?round=` = สั่งในรอบพรีออเดอร์) | บัตรสินค้า | /catalog/products/:id (+customization · reviews · similar · sentiment) | C1 |
+| ตะกร้า 🔒 | `/customer/cart` | Navbar | /shop/cart | |
+| ชำระเงิน 🔒 | `/customer/checkout` | ตะกร้า | /shop/orders · delivery-quote · coupons · points · pickup-locations | C3 |
+| รอบพรีออเดอร์ | `/customer/preorder` · `/customer/preorder/[roundId]` | Navbar | /catalog/preorder-rounds | D3 |
+| ชำระพรีออเดอร์ 🔒 | `/customer/preorder/checkout` | รายการพรีออเดอร์ | /shop/preorders | D3 |
+| ติดต่อเรา | `/customer/contact-us` | Navbar · Footer | /catalog/store-info · contact-topics · /shop/contact | D8 |
+| การจัดส่ง | `/customer/shipping` | Footer | /catalog/shipping-zones · store-info · categories · pickup-locations | D9 |
+| บัญชีของฉัน 🔒 | `/customer/account` | เมนูบัญชี | /shop/me (+ email · line) | B2 |
+| ที่อยู่ 🔒 | `/customer/account/address` | เมนูบัญชี | /shop/addresses | D2 |
+| ประวัติการสั่งซื้อ 🔒 | `/customer/account/purchases` · `/[id]` (ชำระเงิน/สลิป/ยกเลิก) | เมนูบัญชี · แจ้งเตือน | /shop/orders · /shop/payments | D1 · C4 |
+| เขียนรีวิว 🔒 | `/customer/account/purchases/[id]/review` · `/customer/account/preorders/[id]/review` | ปุ่ม "รีวิวสินค้า" (completed + ชำระแล้ว) | /shop/reviews (+upload) · /catalog/review-aspects | D7 |
+| ประวัติพรีออเดอร์ 🔒 | `/customer/account/preorders` · `/[id]` | เมนูบัญชี · แจ้งเตือน | /shop/preorders | D3 |
+| สมาชิก/แต้ม/คูปอง 🔒 | `/customer/account/member` | เมนูบัญชี | /shop/points · /shop/coupons | D4 |
+| รายการโปรด 🔒 | `/customer/account/favorites` | เมนูบัญชี · หัวใจบนบัตร | /shop/favorites | D5 |
+| การแจ้งเตือน 🔒 | `/customer/account/notifications` | กระดิ่ง | /shop/notifications | D6 |
+| เปลี่ยนรหัสผ่าน 🔒 | `/customer/changepassword` | บัญชีของฉัน | /shop/me/password | B2 |
+| ยืนยันอีเมล · ลืม/ตั้งรหัสใหม่ | `/customer/verify-email` · `/customer/forgot-password` · `/customer/reset-password` | ลิงก์ในอีเมล · หน้า login | /auth/* | B1 |
+| (ลิงก์เก่า) | `/customer/order/[id]` | — | redirect → `/customer/account/purchases/[id]` | D1 |
 
 ---
 

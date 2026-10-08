@@ -2,17 +2,22 @@
 import type { ListParams } from "@/types/api";
 import type { NotificationType } from "@/types";
 
-// "employee" — backend เลิกใช้แล้ว (LINE.md §9.10: ไม่มีจุดไหนสร้างใหม่) แต่เอกสารเก่ายังอ่านได้ → คงไว้ใน type
-// + i18n เพื่อแสดงป้ายเอกสารเก่า · ไม่อยู่ในตัวกรองหน้า Notification History แล้ว
-export type NotificationModule =
-  | "order" | "ingredient" | "production" | "employee" | "finance" | "customer" | "system";
+/** หมวดที่ backend สร้าง/กรองได้ (ตรงกับ enum ของ notificationModel) */
+export type NotificationModule = "order" | "ingredient" | "production" | "finance" | "customer" | "system";
+export const NOTIFICATION_MODULES: NotificationModule[] = ["order", "ingredient", "production", "finance", "customer", "system"];
+
+/**
+ * หมวดที่เลิกใช้แล้วแต่ยังมีในเอกสารเก่า — แสดงผลอย่างเดียว (BACKLOG3 I3)
+ * "employee" backend เลิกสร้าง 2026-10-01 · ป้าย i18n enums.notificationModule.employee คงไว้ให้แถวเก่าแสดงชื่อได้
+ */
+export type LegacyNotificationModule = "employee";
 
 export interface NotificationDTO {
   _id: string;
   title: string;
   message: string;
   type: NotificationType;
-  module: NotificationModule;
+  module: NotificationModule | LegacyNotificationModule;
   is_read: boolean;
   link?: string | null;
   created_at: string;

@@ -1,6 +1,6 @@
 # MeowMeeCake — Frontend
 
-ระบบจัดการร้านเบเกอรี่ (ฝั่งเจ้าของร้าน/พนักงาน) — โปรเจกต์นี้เป็น **frontend อย่างเดียว**
+ระบบร้านเบเกอรี่ทั้ง **หน้าร้านออนไลน์ (ลูกค้า)** และ **หลังร้าน (เจ้าของร้าน/พนักงาน)** — โปรเจกต์นี้เป็น **frontend อย่างเดียว**
 Backend เป็นคนละโปรเจกต์ คุยกันผ่าน REST API
 
 > เอกสารนี้เขียนให้คนที่เพิ่งเข้าโปรเจกต์อ่านจบแล้ว **แก้โค้ดได้เลย** — อ่านจากบนลงล่างครั้งเดียวพอ
@@ -31,12 +31,15 @@ Backend เป็นคนละโปรเจกต์ คุยกันผ�
 
 ## 1. ภาพรวม 1 นาที
 
-- **แอปนี้ทำอะไร:** หน้าเว็บหลังบ้านของร้านเค้ก — จัดการสินค้า, คำสั่งซื้อ, POS หน้าร้าน, วัตถุดิบ, สูตร, การผลิต, พนักงาน, การเงิน, แบนเนอร์, แจ้งเตือน (รวม **27 หน้า**)
-- **ใครใช้:** เจ้าของร้าน (เห็นทุกอย่าง) และพนักงาน (เห็นเฉพาะที่ได้รับสิทธิ์)
-- **โครงใหญ่:** เบราว์เซอร์ → **Next.js (โปรเจกต์นี้)** → เรียก API → **Backend (คนละโปรเจกต์)** → ฐานข้อมูล
+- **แอปนี้ทำอะไร — 2 ส่วนในแอปเดียว:**
+  - **หน้าร้าน `/customer/*`** (ย้ายมาจากโปรเจกต์ FrontOffice เดิม): ดู/ค้นสินค้า · ตะกร้า · ชำระเงิน (QR พร้อมเพย์ + แนบสลิป) · พรีออเดอร์ตามรอบ · บัญชีของฉัน (ที่อยู่ · ประวัติ · แต้ม/คูปอง · รายการโปรด · แจ้งเตือน · รีวิว) · ติดต่อร้าน · ค่าจัดส่ง — **26 หน้า**
+  - **หลังร้าน `/owner/*`**: สินค้า · คำสั่งซื้อ · POS · รอบพรีออเดอร์ · วัตถุดิบ · สูตร · การผลิต · พนักงาน/สิทธิ์ · การเงิน · โปรโมชัน · รายงาน/รีวิว · ข้อมูลร้าน · แบนเนอร์ · แจ้งเตือน — **31 หน้า**
+  - หน้ารวม: `/login` (+`/login/line`) · `/register` · `/profile` — รายการเต็มดู `docs/SCREEN_MAP.md`
+- **ใครใช้:** ลูกค้า (หน้าร้าน — guest ดูสินค้าได้ · สั่งซื้อต้อง login) · เจ้าของร้าน (หลังร้านทุกอย่าง) · พนักงาน (หลังร้านเฉพาะที่ได้รับสิทธิ์)
+- **โครงใหญ่:** เบราว์เซอร์ → **Next.js (โปรเจกต์นี้)** → เรียก API → **Backend (คนละโปรเจกต์ · `/api/catalog/*` สาธารณะ · `/api/shop/*` ลูกค้า · `/api/admin/*` หลังร้าน)** → ฐานข้อมูล
 - **โปรเจกต์นี้ไม่มี:** ฐานข้อมูล, การเข้ารหัสรหัสผ่าน, การออก token — พวกนี้อยู่ที่ backend ทั้งหมด
-- **2 ภาษา:** ไทย (ค่าเริ่มต้น) / อังกฤษ สลับได้ทุกหน้า
-- **ตอนนี้ยัง dev อยู่:** backend ยังไม่พร้อม → ใช้ **MSW** (backend ปลอม) ตอบแทนไปก่อน
+- **2 ภาษา:** หลังร้าน ไทย (ค่าเริ่มต้น) / อังกฤษ สลับได้ทุกหน้า · หน้าร้านยังเป็นข้อความไทยในโค้ด (ยกเว้นจาก `lint:i18n` ไว้ก่อน — ทยอยย้ายเข้า i18n)
+- **Backend:** ใช้ backend จริง (`NEXT_PUBLIC_API_MOCK=0`) — mock (MSW) ใน `src/mocks/` เป็นของยุคก่อน ใช้กับ path `/admin` ปัจจุบันไม่ได้แล้ว (BACKLOG4 I11)
 
 ---
 
@@ -44,18 +47,20 @@ Backend เป็นคนละโปรเจกต์ คุยกันผ�
 
 ```bash
 npm install
-cp .env.example .env.local     # แล้วแก้ค่า 2 ตัวด้านล่าง
-npm run dev                     # http://localhost:3000
+cp .env.example .env.local     # แล้วแก้ค่าด้านล่าง
+npm run dev                     # http://localhost:3001 (backend รันที่ :3000)
 ```
 
-`.env.local`:
+`.env.local` (ตัวเต็ม + คำอธิบายดู `.env.example`):
 
 | ตัวแปร | ใส่อะไร | ถ้าไม่ใส่ |
 |---|---|---|
-| `NEXT_PUBLIC_API_BASE_URL` | URL ของ backend เช่น `https://api.meowmeecake.local` | request ยิงไปที่ path ว่าง — ต้องเปิด mock |
-| `NEXT_PUBLIC_API_MOCK` | `1` = ใช้ backend ปลอม (MSW) · `0` = ยิง backend จริง | ถือว่า `1` ตอน dev |
+| `NEXT_PUBLIC_API_BASE_URL` | URL ของ backend **ต่อท้าย `/api`** เช่น `http://localhost:3000/api` | request ยิงไม่ถึง backend |
+| `NEXT_PUBLIC_API_MOCK` | `0` = ยิง backend จริง (ใช้ค่านี้) · `1` = MSW (ใช้ไม่ได้แล้ว — I11) | — |
+| `NEXT_PUBLIC_AUTH_COOKIE` | ชื่อ cookie session ของ backend (ตอนนี้ `session`) | proxy.ts มองไม่เห็นว่า login แล้ว |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | client ID ของปุ่ม Google login | ปุ่ม Google กดไม่ได้ |
 
-**ทำงานครั้งแรกทำอะไร:** ตั้ง `NEXT_PUBLIC_API_MOCK=1` → `npm run dev` → เปิดหน้าเว็บ → login ด้วย credential ปลอม (ดู `docs/MOCKS.md`) → เดินดูหน้าต่าง ๆ ได้เลย
+**ทำงานครั้งแรกทำอะไร:** รัน backend ที่ :3000 → ตั้ง `.env.local` ตามตาราง → `npm run dev` → หน้าร้านที่ `http://localhost:3001/` · หลังร้าน login ที่ `/login` ด้วยบัญชีเจ้าของร้าน/พนักงานของ backend
 
 ---
 
@@ -84,13 +89,18 @@ npm run dev                     # http://localhost:3000
 src/
   app/                     ทุกหน้าเว็บ (Next.js App Router)
     layout.tsx             โครงนอกสุด — ครอบ i18n + antd + React Query ให้ทั้งแอป
-    page.tsx               หน้าแรก "/" — เด้งไป dashboard หรือ login
-    login/                 หน้า login (ใช้ AuthLayout — ไม่มีเมนู)
+    page.tsx               หน้าแรก "/" — เด้งไปหน้าร้าน /customer (proxy.ts ทำเป็น 307 ให้ก่อน)
+    login/ register/       login (อีเมล · Google · LINE /login/line) · สมัครสมาชิก — หลัง login ไปหน้าร้านหรือหลังร้านตาม role
+    profile/               ข้อมูลผู้ใช้หลังร้าน + เชื่อม LINE
+    customer/              หน้าร้าน (CustomerChrome — Navbar + Footer) — เขียนแบบหน้าเดียวไฟล์เดียว (ยกจาก FrontOffice)
+      layout.tsx           guest เปิดดูได้ · หน้าที่ต้อง login ครอบด้วย CustomerAuthGate
+      lib/  hooks/         query key ร่วม (shopQueries/catalogQueries) · format · hook ของหน้าร้าน (ตะกร้า · รายการโปรด · แจ้งเตือน)
+      account/             บัญชีของฉัน (+ _components ที่ใช้ร่วมกัน เช่น SlipPaymentPanel · WriteReviewForm)
     owner/                 หน้าหลังบ้านทั้งหมด (ใช้ OwnerLayout — มี Sidebar + Navbar)
       layout.tsx           โหลดข้อมูลผู้ใช้, ประกอบ Sidebar/Navbar, จับ idle timeout
       products/            1 หน้า = page.tsx + useProductsViewModel.ts + ProductsView.tsx
         _components/        component ที่ "หน้านี้เท่านั้น" ใช้
-  proxy.ts                 ด่านหน้า: ยังไม่ login → เด้ง /login
+  proxy.ts                 ด่านหน้า: "/" → /customer · /owner/* ยังไม่ login → เด้ง /login
 
   lib/                     เครื่องมือระดับแอป
     http.ts                axios instance + interceptor (จุดเดียวที่คุยกับ network)
@@ -99,7 +109,9 @@ src/
     alert.ts               popup แจ้งเตือน (ครอบ sweetalert2)
     exportCsv.ts           ดาวน์โหลดตารางเป็น CSV
 
-  services/                1 ไฟล์ต่อ 1 resource — ฟังก์ชันเรียก API (productsService, ordersService...)
+  services/                1 ไฟล์ต่อ 1 resource — ฟังก์ชันเรียก API
+                           หลังร้าน /admin/* (productsService, ordersService ...) · หน้าร้าน catalog.ts (/catalog/* สาธารณะ)
+                           + shop*.ts (/shop/* ของลูกค้า: ตะกร้า · ออเดอร์ · พรีออเดอร์ · ชำระเงิน · แต้ม · รีวิว ...) · storeInfo.ts
   types/                   DTO — หน้าตา JSON จาก backend
   constants/               menuKeys (คีย์เมนู/สิทธิ์) · enumConfig (สีของสถานะ/badge)
   utils/                   ฟังก์ชันช่วยล้วน ๆ (คำนวณส่วนลด, diff ก่อน/หลัง, แปลงหน่วย)
@@ -111,8 +123,10 @@ src/
   components/
     base/                  ปุ่ม / input / badge พื้นฐาน (ครอบ antd ให้หน้าตาเหมือนกันทั้งแอป)
     shared/                component ที่ใช้ ≥ 2 หน้า — แบ่ง layout / data / feedback / stats / charts / form
+    customer/              component ของหน้าร้าน (Navbar · Footer · ProductCard · StoreLogo · กระดิ่งแจ้งเตือน ...) + shopStyles.ts
+    providers/             AuthBootstrap (401 → login) · MSWReady
 
-  mocks/                   MSW — backend ปลอมสำหรับ dev (ลบทั้งโฟลเดอร์ได้เมื่อ backend พร้อม)
+  mocks/                   MSW — backend ปลอมยุคก่อน (path เก่า ใช้ไม่ได้แล้ว — รอตัดสินใจ เขียนใหม่/ลบ: BACKLOG4 I11)
 
 docs/                      เอกสารรายละเอียด (ดูข้อ 9)
 scripts/check-i18n.mjs     สคริปต์เช็คว่าไม่มีข้อความ hard-code

@@ -9,11 +9,13 @@ const ROUTE_NAV_KEY: Record<string, NavKey> = {
   "/owner/dashboard": "dashboard",
   "/owner/reports/sales": "reportsSales",
   "/owner/reports/reviews": "reportsReviews",
+  "/owner/reports/reviews/settings": "reviewSettings",
   "/owner/finance/expenses": "financeExpenses",
   "/owner/finance/summary": "financeSummary",
   "/owner/products": "products",
   "/owner/products/addProducts": "productsAdd",
   "/owner/products/productStock": "productStock",
+  "/owner/products/search-synonyms": "searchSynonyms",
   "/owner/orders/manageOrders": "ordersManage",
   "/owner/orders/preOrderRound": "ordersPreorderRound",
   "/owner/orders/OrderInStore": "ordersInStore",
@@ -31,6 +33,7 @@ const ROUTE_NAV_KEY: Record<string, NavKey> = {
   "/owner/employees/permissions": "permissions",
   "/owner/employees/userLog": "userLog",
   "/owner/store-design": "storeDesign",
+  "/owner/store-info": "storeInfo",
   "/owner/notificationsHistory": "notificationsHistory",
 };
 

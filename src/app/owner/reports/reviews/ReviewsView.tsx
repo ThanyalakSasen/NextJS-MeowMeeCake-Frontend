@@ -1,125 +1,151 @@
 "use client";
-// View ของ Customer Reviews — list + filter + detail drawer (อ่าน + ควบคุมการแสดงผลเท่านั้น)
+// View ของ "รีวิวลูกค้า" (BACKLOG4 E4) — แถบกรอง · แถบสรุปของชุดที่กรอง · เลือกหลายรายการ · การ์ดรีวิว · แบ่งหน้า ·
+// modal แท็กภายใน · drawer รายละเอียด (ผลวิเคราะห์ความรู้สึก) · ลิงก์ไปหน้าตั้งค่าหัวข้อ/คำวิเคราะห์
+import Link from "next/link";
+import { Checkbox, Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { Select, Switch } from "@/components/base";
+import { ArrowDownTrayIcon, CheckIcon, Cog6ToothIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { Button, EmptyState, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
-import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
-import { ConfirmDeletePopup, DetailDrawer } from "@/components/shared/feedback";
-import { DeleteButton, RetryButton } from "@/components/shared/actions";
-import type { ReviewRow, useReviewsViewModel } from "./useReviewsViewModel";
-import { StarRating } from "./_components/StarRating";
+import { PaginationBar } from "@/components/shared/data";
+import { DetailDrawer, LoadingSpin } from "@/components/shared/feedback";
+import { RetryButton, modalButtonIcons } from "@/components/shared/actions";
+import type { useReviewsViewModel } from "./useReviewsViewModel";
+import { ReviewFiltersBar } from "./_components/ReviewFiltersBar";
+import { ReviewCard } from "./_components/ReviewCard";
 import { ReviewDetailContent } from "./_components/ReviewDetailContent";
 
 type VM = ReturnType<typeof useReviewsViewModel>;
 
 export function ReviewsView(vm: VM) {
   const t = useTranslations();
-
-  const columns: Column<ReviewRow>[] = [
-    {
-      key: "user",
-      title: t("reviews.colUser"),
-      render: (r) => (
-        <div>
-          <p className="font-medium text-brown-800">{r.userName}</p>
-          {!r.is_visible && <p className="text-xs text-gray-400">{t("reviews.statusHidden")}</p>}
-        </div>
-      ),
-    },
-    { key: "product", title: t("reviews.colProduct"), render: (r) => r.productName },
-    { key: "rating", title: t("reviews.colRating"), render: (r) => <StarRating rating={r.rating} /> },
-    {
-      key: "text",
-      title: t("reviews.colText"),
-      render: (r) => <span className="line-clamp-2 text-gray-600">{r.review_text || t("reviews.noComment")}</span>,
-    },
-  ];
+  const s = vm.summary;
+  const allSelected = vm.rows.length > 0 && vm.rows.every((r) => vm.selected.has(r._id));
 
   return (
     <ListPageLayout
       title={t("reviews.title")}
       description={t("reviews.description")}
-      toolbar={
-        <FilterToolbar
-          left={
-            <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("reviews.searchPlaceholder")} />
-              <div style={{ minWidth: 180 }}>
-                <Select
-                  value={vm.productId}
-                  onChange={(v) => vm.setProductId(v as string)}
-                  options={[{ value: "all", label: t("reviews.allProducts") }, ...vm.productOptions]}
-                />
-              </div>
-              <div style={{ minWidth: 130 }}>
-                <Select
-                  value={vm.ratingFilter}
-                  onChange={(v) => vm.setRatingFilter(v as VM["ratingFilter"])}
-                  options={[
-                    { value: "all", label: t("reviews.allRatings") },
-                    ...[5, 4, 3, 2, 1].map((n) => ({ value: n, label: t("reviews.ratingStars", { n }) })),
-                  ]}
-                />
-              </div>
-              <div style={{ minWidth: 150 }}>
-                <Select
-                  value={vm.visibilityFilter}
-                  onChange={(v) => vm.setVisibilityFilter(v as VM["visibilityFilter"])}
-                  options={[
-                    { value: "all", label: t("reviews.allVisibility") },
-                    { value: "visible", label: t("reviews.statusVisible") },
-                    { value: "hidden", label: t("reviews.statusHidden") },
-                  ]}
-                />
-              </div>
-            </>
-          }
-        />
+      actions={
+        <Link href="/owner/reports/reviews/settings">
+          <Button icon={<Cog6ToothIcon className="h-4 w-4" />}>{t("reviews.settingsLink")}</Button>
+        </Link>
       }
     >
-      {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-5">
-          <StatCardsGrid>
-            <StatCard label={t("reviews.statTotal")} value={vm.stats.total} sub={t("reviews.statTotalSub")} />
-            <StatCard label={t("reviews.statAvgRating")} value={vm.stats.avgRating.toFixed(1)} sub={t("reviews.statAvgRatingSub")} tone="up" />
-            <StatCard label={t("reviews.statLowRating")} value={vm.stats.lowRating} sub={t("reviews.statLowRatingSub")} tone="warn" />
-            <StatCard label={t("reviews.statHidden")} value={vm.stats.hidden} sub={t("reviews.statHiddenSub")} tone="muted" />
-          </StatCardsGrid>
+      <div className="flex flex-col gap-3">
+        <ReviewFiltersBar
+          filters={vm.filters}
+          setFilter={vm.setFilter}
+          search={vm.search}
+          setSearch={vm.setSearch}
+          onReset={vm.resetFilters}
+          categoryOptions={vm.categoryOptions}
+          productOptions={vm.productOptions}
+          aspectOptions={vm.aspectOptions}
+        />
 
-          <DataTable
-            columns={columns}
-            rows={vm.rows}
-            loading={vm.isLoading}
-            emptyText={t("reviews.empty")}
-            onRowClick={vm.onView}
-            actions={(r) => (
-              <div className="flex items-center justify-end gap-2">
-                <Switch
-                  size="small"
-                  checked={r.is_visible}
-                  disabled={!vm.perm.update}
-                  onChange={() => vm.onToggleVisibility(r)}
-                  aria-label={t("reviews.toggleVisibleAria")}
-                />
-                {vm.perm.delete && (
-                  <ConfirmDeletePopup title={t("reviews.deleteConfirm")} onConfirm={() => vm.onDelete(r._id)}>
-                    <DeleteButton size="small" />
-                  </ConfirmDeletePopup>
-                )}
-              </div>
-            )}
-          />
+        {/* สรุปของชุดที่กรอง (ทุกหน้า ไม่ใช่แค่หน้านี้) */}
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brown-100 bg-brown-50 px-4 py-2.5 text-sm text-brown-800">
+          <span>{t("reviews.summary.count", { n: (s?.count ?? 0).toLocaleString() })}</span>
+          <span>{t("reviews.summary.avg", { v: s?.avg_rating != null ? s.avg_rating.toFixed(2) : "—" })}</span>
+          <span className={(s?.negative_rate ?? 0) >= 0.25 ? "text-rose-600" : ""}>
+            {t("reviews.summary.negative", { v: s?.negative_rate != null ? `${Math.round(s.negative_rate * 100)}%` : "—" })}
+          </span>
+          {(s?.unreplied_negative ?? 0) > 0 && (
+            <button type="button" onClick={vm.showUnrepliedNegative} className="font-semibold text-rose-600 hover:underline">
+              {t("reviews.summary.unrepliedNegative", { n: s!.unreplied_negative })}
+            </button>
+          )}
         </div>
-      )}
 
-      <DetailDrawer open={vm.drawerOpen} title={t("reviews.detailTitle")} onClose={vm.closeDrawer}>
-        {vm.selectedReview && <ReviewDetailContent review={vm.selectedReview} />}
+        <div className="flex flex-wrap items-center gap-3 px-1">
+          <Checkbox
+            checked={allSelected}
+            indeterminate={vm.selected.size > 0 && !allSelected}
+            disabled={vm.rows.length === 0}
+            onChange={(e) => vm.selectAllOnPage(e.target.checked)}
+          >
+            <span className="text-xs text-gray-500">{t("reviews.selectPage")}</span>
+          </Checkbox>
+          {vm.selected.size > 0 && (
+            <>
+              <span className="text-xs font-semibold text-brown-800">{t("reviews.selectedCount", { n: vm.selected.size })}</span>
+              {vm.perm.update && (
+                <>
+                  <Button size="small" icon={<CheckIcon className="h-4 w-4" />} loading={vm.bulkBusy} onClick={() => vm.onBulkRead(true)}>
+                    {t("reviews.markRead")}
+                  </Button>
+                  <Button size="small" icon={<EyeSlashIcon className="h-4 w-4" />} disabled={vm.bulkBusy} onClick={() => vm.onBulkRead(false)}>
+                    {t("reviews.markUnread")}
+                  </Button>
+                </>
+              )}
+              <Button size="small" icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
+                {t("reviews.exportCsv")}
+              </Button>
+            </>
+          )}
+        </div>
+
+        {vm.isError ? (
+          <div className="flex flex-col items-center gap-3 py-10 text-center">
+            <p className="text-gray-600">{t("common.loadFailed")}</p>
+            <RetryButton onClick={() => vm.refetch()} />
+          </div>
+        ) : vm.isLoading ? (
+          <LoadingSpin />
+        ) : vm.rows.length === 0 ? (
+          <EmptyState description={t("reviews.empty")} />
+        ) : (
+          <ul className={`m-0 flex list-none flex-col gap-2 p-0 transition-opacity ${vm.isFetching ? "opacity-60" : ""}`}>
+            {vm.rows.map((r) => (
+              <ReviewCard
+                key={r._id}
+                review={r}
+                selected={vm.selected.has(r._id)}
+                canUpdate={vm.perm.update}
+                canDelete={vm.perm.delete}
+                suggestions={vm.replySuggestions}
+                onSelect={() => vm.toggleSelect(r._id)}
+                onStatus={(st) => vm.onStatus(r, st)}
+                onTogglePin={() => vm.onTogglePin(r)}
+                onToggleRead={() => vm.onToggleRead(r)}
+                onSaveReply={(text) => vm.onSaveReply(r, text)}
+                onSaveNote={(text) => vm.onSaveNote(r, text)}
+                onTags={() => vm.openTags(r)}
+                onDetail={() => vm.openDetail(r)}
+                onDelete={() => vm.onDelete(r._id)}
+              />
+            ))}
+          </ul>
+        )}
+
+        <PaginationBar page={vm.page} pageSize={vm.pageSize} total={vm.total} onChange={vm.onPage} />
+      </div>
+
+      <Modal
+        open={!!vm.tagTarget}
+        title={t("reviews.tagsTitle", { product: vm.tagTarget?.productName || t("reviews.unknownProduct") })}
+        onCancel={vm.closeTags}
+        onOk={() => void vm.saveTags()}
+        confirmLoading={vm.tagSaving}
+        okText={t("common.save")}
+        cancelText={t("common.cancel")}
+        {...modalButtonIcons("save")}
+        destroyOnHidden
+      >
+        <Select
+          mode="tags"
+          value={vm.tagDraft}
+          onChange={(v: string[]) => vm.setTagDraft(v)}
+          options={vm.tagSuggestions.map((tag) => ({ value: tag, label: tag }))}
+          placeholder={t("reviews.tagsPlaceholder")}
+        />
+        <p className="m-0 mt-2 text-xs text-gray-500">{t("reviews.tagsHint")}</p>
+      </Modal>
+
+      <DetailDrawer open={!!vm.detail} title={t("reviews.detailTitle")} onClose={vm.closeDetail}>
+        {vm.detail && <ReviewDetailContent review={vm.detail} />}
       </DetailDrawer>
     </ListPageLayout>
   );

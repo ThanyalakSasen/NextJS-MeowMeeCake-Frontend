@@ -5,7 +5,7 @@
 //   - ต้นแบบดึงออเดอร์/รายการสินค้า "ของทุกคน" มากรองฝั่ง client · ที่นี่ใช้ GET /shop/orders (ของตัวเองเท่านั้น)
 //     กรองสถานะ + แบ่งหน้าที่ server แล้วดึงรายการสินค้าเฉพาะออเดอร์ที่แสดงอยู่ (list ของ backend ไม่ส่ง items มา)
 //   - snapshot สินค้าในออเดอร์ไม่มีรูป → แสดงไอคอนแทน
-//   - ปุ่มรีวิวสินค้ารอทำพร้อมหน้าเขียนรีวิว (D7)
+//   - ปุ่มรีวิวสินค้า (D7) → purchases/[id]/review (ติ๊กรายการที่จะรีวิวในหน้าเดียว แทน ?next= / ?mode=combined ของต้นแบบ)
 // ชำระเงิน / แนบสลิป / ยกเลิก อยู่ในหน้ารายละเอียด (/customer/account/purchases/[id])
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
@@ -20,6 +20,7 @@ import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { shopOrderKey, shopOrdersKey } from "../../lib/shopQueries";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE, pickupDateText } from "./orderLabels";
+import ReviewLink from "../_components/ReviewLink";
 
 const PAGE_SIZE = 10;
 const FILTERS: { value: OrderStatus | "all"; label: string }[] = [
@@ -195,6 +196,7 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {unpaid && <Link href={href} className={actionLink}>{order.has_payment ? "ชำระเงิน / อัปโหลดสลิปใหม่" : "ชำระเงิน / อัปโหลดสลิป"}</Link>}
+          <ReviewLink kind="order" doc={order} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={actionLink} />
           <Link href={href} className={actionLink}>ดูรายละเอียด</Link>
         </div>
       </div>

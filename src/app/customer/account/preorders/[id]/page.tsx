@@ -19,6 +19,7 @@ import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
 import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
+import ReviewLink from "../../_components/ReviewLink";
 import { shopPointsKey, shopCouponsKey, shopPreorderKey, shopPreorderPaymentPageKey, shopPreordersKey } from "../../../lib/shopQueries";
 import { DELIVERY_STATUS_LABEL, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, pickupDateText } from "../../purchases/orderLabels";
 import { thaiDate } from "../../../preorder/lib/preorderDates";
@@ -215,6 +216,7 @@ function PreorderDetailContent() {
         <div className="flex flex-wrap justify-center gap-2">
           <Link href="/customer/account/preorders" className={shopButton}>ดูพรีออเดอร์ทั้งหมด</Link>
           <Link href="/customer/preorder" className={shopButton}>ดูรอบพรีออเดอร์</Link>
+          <ReviewLink kind="preorder" doc={p} itemIds={p.items.map((it) => it._id)} href={`/customer/account/preorders/${p._id}/review`} className={shopButtonPrimary} />
           {canCustomerCancelPreorder(p) && (
             <button type="button" onClick={() => void onCancel()} disabled={cancel.isPending}
               className="rounded-xl border border-red-600/30 bg-white px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">

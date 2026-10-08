@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────
 // Navbar ของหน้าร้าน — ย้ายมาจาก FrontOffice (components/customer/Navbar.tsx)
 // เปลี่ยนจากเดิม: session = useCustomerSession (backend cookie แทน next-auth) · จำนวนในตะกร้า = GET /shop/cart
-// · โลโก้ = base Logo · ออกจากระบบ = logout ของ backend (ไม่มีม่าน LogoutCurtain)
+// · โลโก้ = StoreLogo (โลโก้ที่ร้านอัปโหลด) · ออกจากระบบ = logout ของ backend (ไม่มีม่าน LogoutCurtain)
 // ตัดออก (backend ยังไม่รองรับ — BACKLOG2 §16): กระดิ่งแจ้งเตือนลูกค้า · เมนู "เซ็ตขนม"
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { FaShoppingCart, FaUser } from "react-icons/fa";
 import { AiOutlineSearch } from "react-icons/ai";
 import { useState, useEffect, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Logo } from "@/components/base";
+import StoreLogo from "./StoreLogo";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { shopCartService } from "@/services/shopCart";
 import { useCartCountStore } from "@/app/customer/store/cartCountStore";
@@ -26,6 +26,7 @@ const NAV_LINKS = [
   { href: "/customer", label: "หน้าแรก" },
   { href: "/customer/product", label: "สินค้าทั้งหมด" },
   { href: "/customer/preorder", label: "พรีออเดอร์" },
+  { href: "/customer/contact-us", label: "ติดต่อเรา" },
 ] as const;
 
 export default function Navbar() {
@@ -171,7 +172,7 @@ export default function Navbar() {
 
           <div className={`${hasSidebarMenu ? "hidden md:flex" : "flex"} flex-shrink-0 items-center md:justify-self-start`}>
             <Link href="/customer" aria-label="MeowMee Cake — หน้าแรก">
-              <Logo size={80} />
+              <StoreLogo size={80} />
             </Link>
           </div>
 

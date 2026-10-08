@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────
 // หน้าแรกของหน้าร้าน — ย้ายมาจาก FrontOffice (customer/page.tsx)
 // เปลี่ยนจากเดิม: ข้อมูลจาก /catalog/products (สินค้าปกติ ?is_preorder=false) + /catalog/categories ผ่าน react-query
-// ตัดออก: HomeRecommendations (สินค้าแนะนำ — backend ยังไม่มี recommendation engine)
+// สินค้าแนะนำ: _components/HomeRecommendations (C2 — login = เฉพาะตัว · guest = คะแนนรีวิว · ไม่มีผล = สินค้าพร้อมขาย)
 // แสดงเฉพาะสินค้าพร้อมขาย: สต็อก > 0 และไม่ใช่พรีออเดอร์ (เกณฑ์เดียวกับหน้าสินค้าทั้งหมด — isProductCardVisible)
 // ─────────────────────────────────────────────────────────────
 import { useMemo } from "react";
@@ -10,7 +10,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { catalogService } from "@/services/catalog";
 import HeroCarousel from "@/components/customer/HeroCarousel";
-import ProductCard, { categoryNameOf, isProductCardVisible } from "@/components/customer/ProductCard";
+import { categoryNameOf, isProductCardVisible } from "@/components/customer/ProductCard";
+import HomeRecommendations from "./_components/HomeRecommendations";
 import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from "./lib/catalogQueries";
 
 
@@ -75,41 +76,9 @@ export default function CustomerHomePage() {
         </div>
       </section>
 
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 py-12 md:pt-2 md:pb-12">
-        <div className="flex flex-col items-center justify-center text-center mb-8 md:mb-12">
-          <h2 className="!text-3xl md:text-4xl font-extrabold text-[#4A342E] tracking-tight relative inline-block after:content-[''] after:block after:w-16 after:h-1 after:bg-[#8C5A3C] after:mx-auto after:mt-3 after:rounded-full">
-            สินค้าแนะนำ
-          </h2>
-        </div>
+      <HomeRecommendations fallbackProducts={products} fallbackLoading={loading} />
 
-        {loading ? (
-          <div className="flex justify-center items-center py-16">
-            <p className="text-base sm:text-lg text-[#8C5A3C] font-medium animate-pulse">กำลังโหลดสินค้า...</p>
-          </div>
-        ) : productsQ.isError ? (
-          <div className="flex flex-col items-center gap-3 py-16">
-            <p className="text-base text-gray-600">โหลดสินค้าไม่สำเร็จ</p>
-            <button
-              type="button"
-              onClick={() => productsQ.refetch()}
-              className="px-5 py-2 rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
-            >
-              ลองใหม่
-            </button>
-          </div>
-        ) : products.length > 0 ? (
-          // มือถือ 2 · แท็บเล็ต 3 · จอคอม 5 คอลัมน์ — หน้าแรกโชว์ 5 ชิ้นแรก
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-2">
-            {products.slice(0, 5).map((p) => (
-              <ProductCard key={p._id} product={p} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex justify-center items-center py-16 bg-white/50 rounded-2xl border border-dashed border-[#8C5A3C]/20">
-            <p className="text-base sm:text-lg text-gray-500">ขออภัย ยังไม่มีสินค้าในขณะนี้</p>
-          </div>
-        )}
-
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 pb-12">
         <div className="flex justify-center mt-10 md:mt-12">
           <Link
             href="/customer/product"

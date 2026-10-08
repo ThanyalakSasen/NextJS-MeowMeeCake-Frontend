@@ -5,6 +5,7 @@ import { ArrowRightOnRectangleIcon, ChatBubbleLeftRightIcon } from "@heroicons/r
 import { Button, Logo, Tag } from "@/components/base";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { RetryButton } from "@/components/shared/actions";
+import { isLinePlaceholderEmail } from "@/lib/lineAccount";
 import type { useProfileViewModel } from "./useProfileViewModel";
 
 type VM = ReturnType<typeof useProfileViewModel>;
@@ -27,7 +28,9 @@ export function ProfileView(vm: VM) {
             <section className="section-card">
               <div className="flex flex-col gap-0.5 px-5 py-4">
                 <p className="font-medium text-brown-800">{vm.user?.fullname}</p>
-                <p className="text-sm text-gray-600">{vm.user?.email}</p>
+                <p className="text-sm text-gray-600">
+                  {isLinePlaceholderEmail(vm.user?.email) ? t("profile.lineNoEmail") : vm.user?.email}
+                </p>
               </div>
             </section>
 

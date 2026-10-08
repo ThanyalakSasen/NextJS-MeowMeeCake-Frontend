@@ -18,7 +18,7 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import { isAwaitingRefund, type DeliveryUpdateInput, type Order, type OrderType } from "@/types/order";
 import { isApiError } from "@/types/api";
-import { isFinalStatus } from "./orderStatus";
+import { STATUS_SELECT_OPTIONS, isFinalStatus } from "./orderStatus";
 import { LIST_ALL } from "@/lib/http";
 
 export function useManageOrdersViewModel() {
@@ -28,9 +28,16 @@ export function useManageOrdersViewModel() {
   const perm = usePermission("orders");
   const paymentPerm = usePermission("payments");
 
-  const [activeTab, setActiveTabState] = useState<OrderType>("delivery");
+  // ?tab= / ?status= ตั้งค่าเริ่มต้นของตัวกรอง (E5 — ลิงก์ตรงไปออเดอร์พร้อมส่งมอบ เช่น ?tab=takeaway&status=ready)
+  const initialParams = useSearchParams();
+  const [activeTab, setActiveTabState] = useState<OrderType>(() =>
+    initialParams.get("tab") === "takeaway" ? "takeaway" : "delivery",
+  );
   const [search, setSearchState] = useState("");
-  const [statusFilter, setStatusFilterState] = useState<OrderStatus | "all">("all");
+  const [statusFilter, setStatusFilterState] = useState<OrderStatus | "all">(() => {
+    const st = initialParams.get("status");
+    return st && (STATUS_SELECT_OPTIONS as string[]).includes(st) ? (st as OrderStatus) : "all";
+  });
   const [paymentFilter, setPaymentFilterState] = useState<PaymentStatus | "all">("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -78,6 +85,8 @@ export function useManageOrdersViewModel() {
 
   const unreviewedCount = typeOrders.filter((o) => o.payment_status === "pending").length;
   const awaitingRefundCount = typeOrders.filter(isAwaitingRefund).length;
+  // E5 ออเดอร์พร้อมส่งมอบ (แทนหน้า readyReders ของ FrontOffice) — delivery = รอจัดส่ง · takeaway = รอลูกค้ามารับ
+  const readyCount = typeOrders.filter((o) => o.order_status === "ready").length;
 
   // รายละเอียดเต็ม (มี items จริง) + รายการชำระเงินที่ผูกไว้ — ดึงเฉพาะตอนเปิด drawer (กัน N+1 ในตาราง)
   const detailQ = useQuery({
@@ -241,7 +250,7 @@ export function useManageOrdersViewModel() {
     orders: paged,
     ordersForStats: typeOrders,
     total: filtered.length,
-    deliveryCount, takeawayCount, unreviewedCount, awaitingRefundCount,
+    deliveryCount, takeawayCount, unreviewedCount, awaitingRefundCount, readyCount,
 
     isLoading: ordersQ.isLoading,
     isError: ordersQ.isError,
