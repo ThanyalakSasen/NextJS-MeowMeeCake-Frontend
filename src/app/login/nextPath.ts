@@ -6,12 +6,13 @@ const isPath = (next: string, base: string) => next === base || next.startsWith(
 /**
  * ปลายทางหลัง login ตาม role — รับ ?next= เฉพาะ path ภายในแอป (กัน open redirect)
  *  - ลูกค้า: หน้าร้าน (/customer/*) หรือ /profile · อย่างอื่น (รวม /owner) → หน้าแรกของหน้าร้าน
- *  - เจ้าของร้าน/พนักงาน: /owner/* · /profile · /customer/* (ดูหน้าร้านได้) · ไม่มี next → แดชบอร์ด
+ *  - เจ้าของร้าน/พนักงาน: /owner/* · /profile · อย่างอื่น (รวม /customer/* — ปุ่ม "เข้าสู่ระบบ" บนหน้าร้านแนบ next มา) → แดชบอร์ด
+ *    เดิมพาไปหน้าร้านตาม next แล้วหาทางกลับหลังร้านไม่เจอ · ไปหน้าร้านเองได้จากเมนูผู้ใช้หลังร้าน ("ดูหน้าร้าน")
  * ใช้ทั้งล็อกอินด้วยรหัสผ่าน/Google (LoginForm) และกลับจาก LINE (/login/line)
  */
 export function nextPathFor(roleType: RoleType | null, next: string | null): string {
   if (roleType === "customer") {
     return next && (isPath(next, CUSTOMER_HOME_PATH) || isPath(next, PROFILE_PATH)) ? next : CUSTOMER_HOME_PATH;
   }
-  return next && (isPath(next, "/owner") || isPath(next, PROFILE_PATH) || isPath(next, CUSTOMER_HOME_PATH)) ? next : HOME_PATH;
+  return next && (isPath(next, "/owner") || isPath(next, PROFILE_PATH)) ? next : HOME_PATH;
 }
