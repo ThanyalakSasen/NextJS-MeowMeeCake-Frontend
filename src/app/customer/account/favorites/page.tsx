@@ -8,6 +8,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { FaCheck, FaHeart, FaSpinner, FaStar } from "react-icons/fa";
 import { Heart, ShoppingCart } from "lucide-react";
 import type { FavoriteItem } from "@/services/shopFavorites";
@@ -83,6 +84,7 @@ function FavoritesContent() {
 
 function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removing: boolean; onRemove: () => void }) {
   const t = useTranslations("shop.favorites");
+  const { names: localNames } = useLocalName();
   const { quickAdd, status } = useAddToCart();
   const [imgFailed, setImgFailed] = useState(false);
   const href = `/customer/product/${item.id}`;
@@ -125,9 +127,9 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
         <div className="space-y-1">
           {item.category && <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#4A342E]">{item.category}</span>}
           <Link href={href} className="block">
-            <h2 className="m-0 line-clamp-1 text-base font-bold leading-snug text-stone-800 hover:text-[#8C5A3C]">{item.name}</h2>
+            <h2 className="m-0 line-clamp-1 text-base font-bold leading-snug text-stone-800 hover:text-[#8C5A3C]">{localNames(item.name, item.nameeg).primary}</h2>
           </Link>
-          {item.nameeg && <span className="line-clamp-1 block text-xs text-stone-400">{item.nameeg}</span>}
+          {localNames(item.name, item.nameeg).secondary && <span className="line-clamp-1 block text-xs text-stone-400">{localNames(item.name, item.nameeg).secondary}</span>}
           {item.rating !== "-" && (
             <span className="flex items-center gap-1 pt-1 text-xs font-bold text-amber-500">
               <FaStar /> {Number(item.rating).toFixed(1)}

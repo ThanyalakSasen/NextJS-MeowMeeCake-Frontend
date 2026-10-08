@@ -9,6 +9,7 @@
 import Link from "next/link";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { FaImage, FaTrashAlt } from "react-icons/fa";
 import { cartItemOptionText, shopCartService, type ShopCart, type ShopCartItem } from "@/services/shopCart";
 import { resolveUploadUrl } from "@/lib/uploads";
@@ -36,6 +37,7 @@ const productOf = (item: ShopCartItem) => (typeof item.product_id === "object" &
 
 function CartContent() {
   const t = useTranslations("shop.cart");
+  const { name: localName } = useLocalName();
   const tc = useTranslations("shop.common");
   const qc = useQueryClient();
   const setCount = useCartCountStore((s) => s.setCount);
@@ -164,7 +166,7 @@ function CartContent() {
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate font-bold">{product?.product_name_th ?? t("product")}</p>
+                          <p className="truncate font-bold">{product ? localName(product.product_name_th, product.product_name_eng) : t("product")}</p>
                           {variant && <p className="text-xs text-gray-500">{variant}</p>}
                           <p className="text-sm text-gray-600">{t("perUnit", { price: baht(item.price_snapshot) })}</p>
                           {issue && <p className="mt-1 text-xs font-semibold text-red-600">{cartIssueText(issue, t)}</p>}
@@ -173,7 +175,7 @@ function CartContent() {
                           type="button"
                           onClick={() => removeMutation.mutate(item._id)}
                           disabled={busy}
-                          aria-label={t("removeItem", { name: product?.product_name_th ?? t("product") })}
+                          aria-label={t("removeItem", { name: product ? localName(product.product_name_th, product.product_name_eng) : t("product") })}
                           className="rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                         >
                           <FaTrashAlt />

@@ -98,6 +98,7 @@ export default function PreorderOrderBox({
       round_item_id: roundItem._id,
       product_id: productId,
       product_name_th: productName,
+      product_name_eng: roundItem.product.product_name_eng ?? null,
       product_img: productImg,
       unit_price: unit,
       quantity,

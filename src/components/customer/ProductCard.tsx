@@ -11,6 +11,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { FaSpinner, FaCheck, FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import type { Product } from "@/types/product";
 import { resolveUploadUrl } from "@/lib/uploads";
@@ -63,6 +64,7 @@ export default function ProductCard({
   reasons?: string[];
 }) {
   const t = useTranslations("shop.productCard");
+  const { names: localNames } = useLocalName();
   const { quickAdd, status } = useAddToCart();
   const favorites = useFavorites();
   const isLoading = status === "loading";
@@ -140,8 +142,8 @@ export default function ProductCard({
       <div className="p-5 sm:p-3 flex flex-col justify-between !bg-[#fff]">
         <div>
           <p className="text-md font-medium text-black mb-0.5 truncate">{categoryName || t("noCategory")}</p>
-          <h3 className="text-lg font-semibold text-black line-clamp-1">{product.product_name_th}</h3>
-          <p className="text-md text-black line-clamp-1 mb-2">{product.product_name_eng || " "}</p>
+          <h3 className="text-lg font-semibold text-black line-clamp-1">{localNames(product.product_name_th, product.product_name_eng).primary}</h3>
+          <p className="text-md text-black line-clamp-1 mb-2">{localNames(product.product_name_th, product.product_name_eng).secondary || " "}</p>
           {reasons?.[0] && <p className="-mt-1 mb-2 line-clamp-1 text-xs text-[#8C5A3C]">{reasons[0]}</p>}
         </div>
 

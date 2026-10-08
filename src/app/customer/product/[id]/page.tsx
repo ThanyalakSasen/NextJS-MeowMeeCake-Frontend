@@ -12,6 +12,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { FaHeart, FaRegHeart, FaShareAlt, FaSpinner } from "react-icons/fa";
 import { catalogService } from "@/services/catalog";
 import { shopLoyaltyService } from "@/services/shopLoyalty";
@@ -53,6 +54,7 @@ function ProductDetailContent() {
   const tcard = useTranslations("shop.productCard");
   const tcart = useTranslations("shop.cart");
   const tp = useTranslations("shop.products");
+  const { name: localName, names: localNames } = useLocalName();
   const { id } = useParams<{ id: string }>();
   const roundParam = useSearchParams().get("round");
   const router = useRouter();
@@ -182,7 +184,7 @@ function ProductDetailContent() {
     const url = window.location.href;
     const canNativeShare = typeof navigator.share === "function";
     try {
-      if (canNativeShare) await navigator.share({ title: product.product_name_th, url });
+      if (canNativeShare) await navigator.share({ title: localName(product.product_name_th, product.product_name_eng), url });
       else await navigator.clipboard.writeText(url);
     } catch {
       return; // กดยกเลิกหน้าต่างแชร์ = ไม่ถือว่าแชร์
@@ -203,7 +205,7 @@ function ProductDetailContent() {
     <div className="w-full min-h-screen text-[#4A342E] pt-46 sm:pt-50 md:pt-44 pb-16">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8">
         <div>
-          <CustomerBreadcrumb items={[{ label: tp("allProducts"), href: "/customer/product" }, { label: product.product_name_th }]} />
+          <CustomerBreadcrumb items={[{ label: tp("allProducts"), href: "/customer/product" }, { label: localName(product.product_name_th, product.product_name_eng) }]} />
           {/* เปิดจากลิงก์ตรง (ไม่มีหน้าก่อนหน้า) → กลับไปหน้าสินค้าทั้งหมดแทน */}
           <button
             type="button"
@@ -259,8 +261,8 @@ function ProductDetailContent() {
           <div className="w-full flex-1 flex flex-col gap-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] leading-tight">{product.product_name_th}</h1>
-                <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">{product.product_name_eng}</p>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] leading-tight">{localNames(product.product_name_th, product.product_name_eng).primary}</h1>
+                <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">{localNames(product.product_name_th, product.product_name_eng).secondary}</p>
               </div>
               <div className="flex gap-2">
                 <button

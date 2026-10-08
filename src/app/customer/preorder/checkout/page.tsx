@@ -10,6 +10,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { shopAddressesService } from "@/services/shopAddresses";
@@ -53,6 +54,7 @@ function PreorderCheckoutContent() {
   const t = useTranslations("shop.preorderShop");
   const tk = useTranslations("shop.checkout");
   const tp = useTranslations("shop.preorders");
+  const { name: localName } = useLocalName();
   const tcart = useTranslations("shop.cart");
   const locale = useLocale();
   const router = useRouter();
@@ -196,7 +198,7 @@ function PreorderCheckoutContent() {
         )}
         {missing.length > 0 && (
           <p className="rounded-2xl bg-red-50 p-4 text-sm text-red-700">
-            {t("itemsGone", { names: missing.map((m) => m.product_name_th).join(", ") })}
+            {t("itemsGone", { names: missing.map((m) => localName(m.product_name_th, m.product_name_eng)).join(", ") })}
           </p>
         )}
 
@@ -218,8 +220,8 @@ function PreorderCheckoutContent() {
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="m-0 truncate text-sm font-bold">{it.product_name_th}</p>
-                        <button type="button" onClick={() => removePreorderBasketItem(key)} aria-label={t("removeItem", { name: it.product_name_th })} className="text-gray-400 hover:text-red-600">
+                        <p className="m-0 truncate text-sm font-bold">{localName(it.product_name_th, it.product_name_eng)}</p>
+                        <button type="button" onClick={() => removePreorderBasketItem(key)} aria-label={t("removeItem", { name: localName(it.product_name_th, it.product_name_eng) })} className="text-gray-400 hover:text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -228,7 +230,7 @@ function PreorderCheckoutContent() {
                         className="w-full rounded-lg border border-[#8C5A3C]/15 px-2 py-1 text-xs"
                         maxLength={500}
                         placeholder={t("notePlaceholder")}
-                        aria-label={t("noteAria", { name: it.product_name_th })}
+                        aria-label={t("noteAria", { name: localName(it.product_name_th, it.product_name_eng) })}
                         value={it.special_request ?? ""}
                         onChange={(e) => updatePreorderBasketItem(key, { special_request: e.target.value || null })}
                       />

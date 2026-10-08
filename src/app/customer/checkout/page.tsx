@@ -12,6 +12,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cartItemOptionText, shopCartService } from "@/services/shopCart";
 import { shopAddressesService, type ShopAddress } from "@/services/shopAddresses";
@@ -50,6 +51,7 @@ export default function CheckoutPage() {
 
 function CheckoutContent() {
   const t = useTranslations("shop.checkout");
+  const { name: localName } = useLocalName();
   const tc = useTranslations("shop.common");
   const tcart = useTranslations("shop.cart");
   const router = useRouter();
@@ -332,7 +334,7 @@ function CheckoutContent() {
             <section className={`${shopCard} space-y-3`}>
               <h2 className="text-lg font-bold">{t("items")}</h2>
               {cart.items.map((it) => {
-                const name = typeof it.product_id === "object" && it.product_id ? it.product_id.product_name_th : t("product");
+                const name = typeof it.product_id === "object" && it.product_id ? localName(it.product_id.product_name_th, it.product_id.product_name_eng) : t("product");
                 const options = cartItemOptionText(it);
                 return (
                   <div key={it._id} className="flex items-center justify-between gap-3 text-sm">

@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import Link from "next/link";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
 import type { StorefrontRoundItem } from "@/services/shopPreorders";
@@ -69,6 +70,7 @@ export function CountdownText({ target, prefix }: { target: string; prefix: stri
 /** บัตรสินค้าในรอบ → หน้าสินค้า (โหมดพรีออเดอร์ ?round=) */
 export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem; roundId: string }) {
   const t = useTranslations("shop.preorderShop");
+  const { names: localNames } = useLocalName();
   const p = item.product;
   const { min, max } = roundItemLimits(item);
   const soldOut = item.remaining_qty <= 0 || max < min;
@@ -94,8 +96,8 @@ export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem;
         </div>
         <div className="flex flex-grow flex-col justify-between p-4">
           <div>
-            <h3 className="m-0 line-clamp-1 text-sm font-bold text-stone-800 group-hover:text-[#4A342E]">{p.product_name_th}</h3>
-            <p className="m-0 mb-3 line-clamp-1 text-xs text-stone-400">{p.product_name_eng}</p>
+            <h3 className="m-0 line-clamp-1 text-sm font-bold text-stone-800 group-hover:text-[#4A342E]">{localNames(p.product_name_th, p.product_name_eng).primary}</h3>
+            <p className="m-0 mb-3 line-clamp-1 text-xs text-stone-400">{localNames(p.product_name_th, p.product_name_eng).secondary}</p>
           </div>
           <div>
             <p className="m-0 mb-1 flex items-baseline gap-1.5">
