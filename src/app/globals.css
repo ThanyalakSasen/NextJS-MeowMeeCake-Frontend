@@ -576,6 +576,13 @@ body {
   transition: background-color var(--transition-fast);
 }
 
+/* ซ่อนเองตั้งแต่ lg (จอที่มี sidebar ถาวร) — กฎนี้ไม่อยู่ใน layer จึงชนะ utility lg:hidden */
+@media (min-width: 1024px) {
+  .navbar-toggle-btn {
+    display: none;
+  }
+}
+
 .navbar-toggle-btn:hover {
   background-color: var(--color-brown-50);
 }

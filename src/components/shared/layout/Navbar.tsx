@@ -25,7 +25,7 @@ export function Navbar({
       <nav className="navbar">
         <button
           type="button"
-          className="navbar-toggle-btn lg:hidden"
+          className="navbar-toggle-btn"
           onClick={onToggleSidebar}
           aria-label="menu"
         >
