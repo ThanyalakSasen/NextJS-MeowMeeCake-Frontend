@@ -135,6 +135,7 @@
 | K4 | `BACKLOG3-merge.md` A4 | `src/lib/promptpay.ts` ถูกลบแล้ว → ติ๊ก checkbox | ✅ 2026-10-08 — A4 เป็น 🟡 (เหลือคลิกดูหน้าจอจริง) |
 | K5 | `README.md` §1 · §4 | ยังบอกว่าเป็นระบบหลังร้านอย่างเดียว (27 หน้า) · พอร์ต `3000` (จริง `3001`) · ไม่มีหน้าร้าน `/customer/*` · `services/shop*` · `components/customer` | ✅ 2026-10-09 — §1 (หน้าร้าน + หลังร้าน · จำนวนหน้า · API 3 กลุ่ม · สถานะ mock) · §2 (พอร์ต 3001 · env จริง) · §4 (โฟลเดอร์ customer · services shop* · components/customer · providers) |
 | K6 | `docs/SCREEN_MAP.md` · `COMPONENT_MAP.md` | ยังไม่มีหน้าจอ/คอมโพเนนต์ของหน้าร้าน | ✅ 2026-10-09 — SCREEN_MAP §2b หลังร้านที่เพิ่ม (8 หน้า + profile/register) · §2c หน้าร้านทุก route (ทางเข้า · API · รหัสงาน) · แก้ข้อมูลเก่า (Attendance ไม่มีแล้ว) · COMPONENT_MAP: components/customer + page-local หน้าร้าน/หลังร้านใหม่ + base Logo `src` |
+| K7 | `BACKLOG3-merge.md` ตาราง D + คำถาม · `BACKLOG4` คำถามใหม่ | D3/D6 ยังเป็น ⏸ · D4/D5 ยังเป็น ▢ ทั้งที่เสร็จแล้ว · คำตอบ Q-BE7/8/11/15 ยังว่างทั้งที่ backend แก้/merge แล้ว (พบตอนจัดลำดับงานที่เหลือ 2026-10-09) | ✅ 2026-10-09 — ใส่สถานะ + ลิงก์ไป BACKLOG4 · กรอกคำตอบ + PR ของ backend |
 
 ---
 
@@ -241,5 +242,5 @@
 | รหัส | ถามใคร | คำถาม | บริบท | ใช้กับ | คำตอบ | ผู้ตอบ · วันที่ |
 |---|---|---|---|---|---|---|
 | Q-BE14 | backend | ฐานคิดเพดานแต้มตอนใช้คูปอง/โค้ด **ส่งฟรี** ควรหักส่วนลดค่าส่งหรือไม่ | `orderService.createOrder`: `goodsDiscount = min(discount_amount, subtotal)` รวมส่วนลดค่าส่งด้วย แต่ comment เขียนว่า "ส่วนลดส่งฟรีไม่ลดฐานคิดแต้ม" · FrontOffice หักเฉพาะส่วนลดสินค้า · หน้า checkout ตอนนี้ทำตามโค้ด backend (ถ้า backend แก้ ต้องแก้ `checkout/page.tsx` ตาม) | C3 | | |
-| Q-BE15 | backend | merge `fix/pickup-date-regex` (`2746063` — แก้ regex `pickup_date` ใน `schemas/order.ts` + `schemas/preorder.ts` + เทส) เข้า `main` ได้เมื่อไหร่ | `main` ปฏิเสธ `pickup_date` ทุกค่า → checkout เลือกวันรับไม่ได้ (C3) และพรีออเดอร์ (D3) · branch อยู่ในเครื่องเท่านั้น ยังไม่ push | C3 · D3 | | |
+| Q-BE15 | backend | merge `fix/pickup-date-regex` (`2746063` — แก้ regex `pickup_date` ใน `schemas/order.ts` + `schemas/preorder.ts` + เทส) เข้า `main` ได้เมื่อไหร่ | `main` ปฏิเสธ `pickup_date` ทุกค่า → checkout เลือกวันรับไม่ได้ (C3) และพรีออเดอร์ (D3) · branch อยู่ในเครื่องเท่านั้น ยังไม่ push | C3 · D3 | merge แล้ว — backend PR #67 (`38b57c6`) · ทดสอบ C3 กับ `main` ซ้ำ 39/39 | backend · 2026-10-08 (K7) |
 | Q-OWN5 | เจ้าของร้าน | ต้องการหน้า "สั่งซื้อสำเร็จ" + แถบขั้นตอน (ตะกร้า → ยืนยัน → ชำระ → เสร็จ) แบบ FrontOffice ไหม | ตอนนี้สั่งซื้อแล้วไปหน้ารายละเอียดออเดอร์ (ชำระเงินได้ทันที) | U8 · D3 | | |
