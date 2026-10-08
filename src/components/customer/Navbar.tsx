@@ -16,7 +16,7 @@ import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { shopCartService } from "@/services/shopCart";
 import { useCartCountStore } from "@/app/customer/store/cartCountStore";
 import { useSidebarMenuStore } from "@/app/customer/store/sidebarMenuStore";
-import { LOGIN_PATH } from "@/constants/auth";
+import { HOME_PATH, LOGIN_PATH } from "@/constants/auth";
 import DoorLogoutIcon from "./DoorLogoutIcon";
 import { NotificationBell } from "./CustomerNotifications";
 
@@ -203,6 +203,19 @@ export default function Navbar() {
                     </button>
                     {showDropdown && (
                       <div className="absolute right-0 top-full mt-2.5 w-60 bg-white rounded-2xl shadow-xl py-2 z-50 border border-stone-200/80 overflow-hidden">
+                        {/* เจ้าของร้าน/พนักงานที่เปิดหน้าร้านอยู่ — ทางกลับหลังร้าน */}
+                        {user.roleType && user.roleType !== "customer" && (
+                          <>
+                            <Link
+                              href={HOME_PATH}
+                              onClick={() => setShowDropdown(false)}
+                              className="flex items-center px-4 py-2.5 text-base font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 transition-all duration-150"
+                            >
+                              {t("backOffice")}
+                            </Link>
+                            <div className="my-1 border-t border-stone-100" />
+                          </>
+                        )}
                         <Link
                           href="/customer/account"
                           onClick={() => setShowDropdown(false)}

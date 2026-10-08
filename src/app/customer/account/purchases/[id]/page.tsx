@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────
 import { Suspense, useCallback } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
 import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
+import FlowSteps from "@/components/customer/FlowSteps";
 import ReviewLink from "../../_components/ReviewLink";
 import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
@@ -55,6 +56,8 @@ function OrderContent() {
   const locale = useLocale();
   const { id } = useParams<{ id: string }>();
   const isNew = useSearchParams().get("new") === "1";
+  const router = useRouter();
+  const tf = useTranslations("shop.flow");
   const validId = isObjectId(id ?? "");
 
   const orderQ = useQuery({
@@ -108,13 +111,17 @@ function OrderContent() {
           className="!mb-0"
         />
 
+        {isNew && <FlowSteps kind="order" current={order.payment_status === "paid" || order.has_payment ? 4 : 3} />}
         {isNew && (
           <div className="flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-green-800">
             <FaCheckCircle className="shrink-0 text-2xl" />
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="font-bold">{t("placed")}</p>
               <p className="text-sm">{t("placedHint")}</p>
             </div>
+            <Link href={`/customer/account/purchases/${order._id}/success`} className="shrink-0 text-sm font-semibold text-green-800 underline">
+              {tf("payLater")}
+            </Link>
           </div>
         )}
 
@@ -209,7 +216,8 @@ function OrderContent() {
           <section className={`${shopCard} space-y-4 lg:col-span-2`}>
             <h2 className="text-lg font-bold">{t("payment")}</h2>
             {paymentQ.data ? (
-              <SlipPaymentPanel kind="order" docId={order._id} page={paymentQ.data} fetchedAt={paymentQ.dataUpdatedAt} onChanged={refresh} />
+              <SlipPaymentPanel kind="order" docId={order._id} page={paymentQ.data} fetchedAt={paymentQ.dataUpdatedAt} onChanged={refresh}
+                onUploaded={isNew ? () => router.push(`/customer/account/purchases/${order._id}/success`) : undefined} />
             ) : (
               <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{t("paymentLoadFailed")}</p>
             )}

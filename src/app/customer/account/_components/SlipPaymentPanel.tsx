@@ -49,6 +49,7 @@ export default function SlipPaymentPanel({
   page,
   fetchedAt,
   onChanged,
+  onUploaded,
 }: {
   kind: PaymentKind;
   docId: string;
@@ -56,6 +57,8 @@ export default function SlipPaymentPanel({
   fetchedAt: number;
   /** ให้หน้าที่ใช้โหลดข้อมูลเอกสาร + หน้าชำระเงินใหม่ */
   onChanged: () => void;
+  /** ส่งสลิปสำเร็จ (หลัง onChanged) — หน้ารายละเอียดใช้พาไปหน้าสั่งซื้อสำเร็จตอนเพิ่งสั่ง (U8) */
+  onUploaded?: () => void;
 }) {
   const t = useTranslations("shop.slip");
   const locale = useLocale();
@@ -101,6 +104,7 @@ export default function SlipPaymentPanel({
       alert.success(page.late_upload ? t("sentReopen") : t("sent"));
       pickFile(null);
       onChanged();
+      onUploaded?.();
     },
     onError: (e) => {
       alert.error(isApiError(e) ? e.message : t("sendFailed"));
