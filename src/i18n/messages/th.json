@@ -2101,7 +2101,8 @@
       "logout": "ออกจากระบบ",
       "login": "เข้าสู่ระบบ",
       "cart": "ตะกร้า",
-      "cartWithCount": "ตะกร้า ({count} รายการ)"
+      "cartWithCount": "ตะกร้า ({count} รายการ)",
+      "language": "ภาษา"
     },
     "common": {
       "loading": "กำลังโหลด",
