@@ -900,6 +900,10 @@ body {
   .breadcrumb-item:not(:last-child) {
     display: none;
   }
+  /* เหลือรายการเดียว — ไม่ต้องมีลูกศรนำหน้า */
+  .breadcrumb-item:last-child .breadcrumb-separator {
+    display: none;
+  }
 
   /* Content padding แคบลง */
   .layout-content {
