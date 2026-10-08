@@ -7,6 +7,7 @@
 // แสดงเฉพาะที่ซื้อได้ทันที (isProductCardVisible — สต็อก > 0 · ไม่ใช่พรีออเดอร์) สูงสุด 10 ชิ้น
 // ─────────────────────────────────────────────────────────────
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { catalogService, type SimilarProduct } from "@/services/catalog";
 import type { Product } from "@/types/product";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
@@ -29,6 +30,7 @@ export default function HomeRecommendations({ fallbackProducts, fallbackLoading 
   fallbackProducts: Product[];
   fallbackLoading: boolean;
 }) {
+  const t = useTranslations("shop.home");
   const { status } = useCustomerSession();
   const authed = status === "authenticated";
   const q = useQuery({
@@ -48,14 +50,14 @@ export default function HomeRecommendations({ fallbackProducts, fallbackLoading 
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 pt-12 md:pt-2">
       <div className="flex flex-col items-center justify-center text-center mb-8 md:mb-12">
         <h2 className="!text-3xl md:text-4xl font-extrabold text-[#4A342E] tracking-tight relative inline-block after:content-[''] after:block after:w-16 after:h-1 after:bg-[#8C5A3C] after:mx-auto after:mt-3 after:rounded-full">
-          สินค้าแนะนำ
+          {t("recommended")}
         </h2>
-        {authed && recs.length > 0 && <p className="m-0 mt-3 text-sm text-stone-500">เลือกมาสำหรับคุณโดยเฉพาะ</p>}
+        {authed && recs.length > 0 && <p className="m-0 mt-3 text-sm text-stone-500">{t("forYou")}</p>}
       </div>
 
       {loading ? (
         <div className="flex justify-center items-center py-16">
-          <p className="text-base sm:text-lg text-[#8C5A3C] font-medium animate-pulse">กำลังสรรหาสินค้าแนะนำ...</p>
+          <p className="text-base sm:text-lg text-[#8C5A3C] font-medium animate-pulse">{t("loadingRecs")}</p>
         </div>
       ) : items.length > 0 ? (
         // มือถือ 2 · แท็บเล็ต 3 · จอคอม 5 คอลัมน์
@@ -66,7 +68,7 @@ export default function HomeRecommendations({ fallbackProducts, fallbackLoading 
         </div>
       ) : (
         <div className="flex justify-center items-center py-16 bg-white/50 rounded-2xl border border-dashed border-[#8C5A3C]/20">
-          <p className="text-base sm:text-lg text-gray-500">ขออภัย ยังไม่มีสินค้าในขณะนี้</p>
+          <p className="text-base sm:text-lg text-gray-500">{t("noProducts")}</p>
         </div>
       )}
     </section>

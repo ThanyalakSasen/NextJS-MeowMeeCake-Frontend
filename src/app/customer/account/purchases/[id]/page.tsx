@@ -13,12 +13,14 @@
 import { Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaCheckCircle } from "react-icons/fa";
 import { canCustomerCancel, shopOrdersService } from "@/services/shopOrders";
 import { shopPaymentsService } from "@/services/shopPayments";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
+import { formatDate } from "@/i18n/format";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
@@ -28,13 +30,14 @@ import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
 import BuyAgainButton from "../../_components/BuyAgainButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
-import { DELIVERY_STATUS_LABEL, ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, pickupDateText } from "../orderLabels";
+import { useOrderLabels } from "../orderLabels";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
 export default function OrderPage() {
+  const t = useTranslations("shop.orders");
   return (
-    <CustomerAuthGate message="กรุณาเข้าสู่ระบบเพื่อดูคำสั่งซื้อ">
+    <CustomerAuthGate message={t("loginToViewOne")}>
       {/* useSearchParams ต้องอยู่ใต้ Suspense (ไม่งั้น next build error) */}
       <Suspense fallback={null}>
         <OrderContent />
@@ -44,6 +47,10 @@ export default function OrderPage() {
 }
 
 function OrderContent() {
+  const t = useTranslations("shop.orders");
+  const tc = useTranslations("shop.common");
+  const labels = useOrderLabels();
+  const locale = useLocale();
   const { id } = useParams<{ id: string }>();
   const isNew = useSearchParams().get("new") === "1";
   const validId = isObjectId(id ?? "");
@@ -68,7 +75,7 @@ function OrderContent() {
   if (validId && (orderQ.isLoading || paymentQ.isLoading)) {
     return (
       <div className={`${shopPage} flex items-center justify-center`}>
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label="กำลังโหลด" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label={tc("loading")} />
       </div>
     );
   }
@@ -78,9 +85,9 @@ function OrderContent() {
     return (
       <div className={`${shopPage} flex items-center justify-center px-4`}>
         <div className={`${shopCard} w-full max-w-md space-y-4 text-center`}>
-          <h2 className="text-lg font-bold">ไม่พบคำสั่งซื้อนี้</h2>
+          <h2 className="text-lg font-bold">{t("notFound")}</h2>
           <Link href="/customer" className={`${shopButtonPrimary} w-full`}>
-            กลับหน้าแรก
+            {t("backHome")}
           </Link>
         </div>
       </div>
@@ -92,8 +99,8 @@ function OrderContent() {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
         <CustomerBreadcrumb
           items={[
-            { label: "บัญชีของฉัน", href: "/customer/account" },
-            { label: "ประวัติการสั่งซื้อ", href: "/customer/account/purchases" },
+            { label: t("myAccount"), href: "/customer/account" },
+            { label: t("history"), href: "/customer/account/purchases" },
             { label: order.order_no },
           ]}
           className="!mb-0"
@@ -103,8 +110,8 @@ function OrderContent() {
           <div className="flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-green-800">
             <FaCheckCircle className="shrink-0 text-2xl" />
             <div>
-              <p className="font-bold">สั่งซื้อสำเร็จ</p>
-              <p className="text-sm">กรุณาชำระเงินและแนบสลิปด้านล่าง เพื่อให้ร้านเริ่มเตรียมสินค้า</p>
+              <p className="font-bold">{t("placed")}</p>
+              <p className="text-sm">{t("placedHint")}</p>
             </div>
           </div>
         )}
@@ -113,13 +120,13 @@ function OrderContent() {
           <section className={`${shopCard} space-y-4 lg:col-span-3`}>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <p className="text-xs text-gray-500">เลขที่คำสั่งซื้อ</p>
+                <p className="text-xs text-gray-500">{t("orderNoLabel")}</p>
                 <h1 className="text-xl font-extrabold">{order.order_no}</h1>
-                <p className="text-xs text-gray-500">{new Date(order.created_at).toLocaleString("th-TH")}</p>
+                <p className="text-xs text-gray-500">{formatDate(order.created_at, locale, { withTime: true })}</p>
               </div>
               <div className="flex flex-col items-end gap-1 text-xs font-semibold">
-                <span className="rounded-full bg-[#8C5A3C]/10 px-2.5 py-1 text-[#8C5A3C]">{ORDER_STATUS_LABEL[order.order_status]}</span>
-                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{PAYMENT_STATUS_LABEL[order.payment_status]}</span>
+                <span className="rounded-full bg-[#8C5A3C]/10 px-2.5 py-1 text-[#8C5A3C]">{labels.orderStatus(order.order_status)}</span>
+                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{labels.paymentStatus(order.payment_status)}</span>
               </div>
             </div>
 
@@ -128,10 +135,10 @@ function OrderContent() {
             </div>
 
             {order.order_status === "cancelled" && order.cancelled_reason && (
-              <p className="rounded-xl bg-stone-100 p-3 text-sm text-stone-600">เหตุผลที่ยกเลิก: {order.cancelled_reason}</p>
+              <p className="rounded-xl bg-stone-100 p-3 text-sm text-stone-600">{t("cancelReason", { reason: order.cancelled_reason })}</p>
             )}
             {order.order_status === "cancelled" && order.payment_status === "paid" && (
-              <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">ร้านกำลังดำเนินการโอนเงินคืน — หากมีคำถามกรุณาติดต่อร้าน</p>
+              <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{t("refundInProgress")}</p>
             )}
 
             <div className="space-y-2 border-t border-[#8C5A3C]/10 pt-4">
@@ -154,20 +161,20 @@ function OrderContent() {
             </div>
 
             <div className="space-y-1.5 border-t border-[#8C5A3C]/10 pt-4 text-sm">
-              <Row label="ยอดรวมสินค้า" value={baht(order.subtotal)} />
-              <Row label="ค่าจัดส่ง" value={order.order_type === "takeaway" ? "รับที่ร้าน" : baht(order.delivery_fee)} />
-              {order.discount_amount > 0 && <Row label="ส่วนลด" value={`-${baht(order.discount_amount)}`} />}
+              <Row label={t("subtotal")} value={baht(order.subtotal)} />
+              <Row label={t("deliveryFee")} value={order.order_type === "takeaway" ? t("pickupAtStore") : baht(order.delivery_fee)} />
+              {order.discount_amount > 0 && <Row label={t("discount")} value={`-${baht(order.discount_amount)}`} />}
               <div className="flex items-baseline justify-between pt-2">
-                <span className="font-bold">ยอดชำระ</span>
+                <span className="font-bold">{t("amountDue")}</span>
                 <span className="text-2xl font-extrabold text-[#8C5A3C]">{baht(order.total_amount)}</span>
               </div>
             </div>
 
             {order.order_type === "takeaway" && (order.pickup_point_name || order.pickup_date) && (
               <div className="border-t border-[#8C5A3C]/10 pt-4 text-sm">
-                <p className="mb-1 font-semibold">นัดรับสินค้า</p>
+                <p className="mb-1 font-semibold">{t("pickupAppointment")}</p>
                 <p className="text-gray-600">
-                  {order.pickup_date ? pickupDateText(order.pickup_date) : ""}
+                  {order.pickup_date ? labels.pickupDate(order.pickup_date) : ""}
                   {order.pickup_point_name ? ` · ${order.pickup_point_name}` : ""}
                 </p>
               </div>
@@ -175,17 +182,17 @@ function OrderContent() {
 
             {order.order_type === "delivery" && order.delivery_status && order.order_status !== "cancelled" && (
               <div className="border-t border-[#8C5A3C]/10 pt-4 text-sm">
-                <p className="mb-1 font-semibold">สถานะจัดส่ง</p>
+                <p className="mb-1 font-semibold">{t("deliveryStatus")}</p>
                 <p className="text-gray-600">
-                  {DELIVERY_STATUS_LABEL[order.delivery_status] ?? order.delivery_status}
-                  {order.tracking_no ? ` · เลขพัสดุ ${order.tracking_no}` : ""}
+                  {labels.deliveryStatus(order.delivery_status)}
+                  {order.tracking_no ? t("tracking", { no: order.tracking_no }) : ""}
                 </p>
               </div>
             )}
 
             {order.order_type === "delivery" && order.delivery_address && (
               <div className="border-t border-[#8C5A3C]/10 pt-4 text-sm">
-                <p className="mb-1 font-semibold">ที่อยู่จัดส่ง</p>
+                <p className="mb-1 font-semibold">{t("deliveryAddress")}</p>
                 <p>
                   {order.delivery_address.recipient_name} · {order.delivery_address.recipient_phone}
                 </p>
@@ -198,21 +205,21 @@ function OrderContent() {
           </section>
 
           <section className={`${shopCard} space-y-4 lg:col-span-2`}>
-            <h2 className="text-lg font-bold">การชำระเงิน</h2>
+            <h2 className="text-lg font-bold">{t("payment")}</h2>
             {paymentQ.data ? (
               <SlipPaymentPanel kind="order" docId={order._id} page={paymentQ.data} fetchedAt={paymentQ.dataUpdatedAt} onChanged={refresh} />
             ) : (
-              <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">โหลดข้อมูลการชำระเงินไม่สำเร็จ กรุณารีเฟรชหน้านี้</p>
+              <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{t("paymentLoadFailed")}</p>
             )}
           </section>
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">
           <Link href="/customer/account/purchases" className={shopButton}>
-            ดูคำสั่งซื้อทั้งหมด
+            {t("viewAll")}
           </Link>
           <Link href="/customer/product" className={shopButton}>
-            เลือกซื้อสินค้าต่อ
+            {t("continueShopping")}
           </Link>
           <ReviewLink kind="order" doc={order} itemIds={order.items.map((it) => it._id)} href={`/customer/account/purchases/${order._id}/review`} className={shopButtonPrimary} />
           {(order.order_status === "completed" || order.order_status === "cancelled") && <BuyAgainButton items={order.items} className={shopButton} />}
@@ -225,30 +232,31 @@ function OrderContent() {
 
 /** ยกเลิกออเดอร์ (C4) — ชำระแล้วยกเลิกได้ แต่ต้องรอร้านโอนคืน (แจ้งในหน้าต่างยืนยัน) */
 function CancelOrderButton({ orderId, orderNo, paid }: { orderId: string; orderNo: string; paid: boolean }) {
+  const t = useTranslations("shop.orders");
   const qc = useQueryClient();
   const cancel = useMutation({
     mutationFn: () => shopOrdersService.cancel(orderId),
     onSuccess: () => {
-      alert.success(`ยกเลิกคำสั่งซื้อ ${orderNo} แล้ว`);
+      alert.success(t("cancelled", { no: orderNo }));
       qc.invalidateQueries({ queryKey: shopOrderKey(orderId) });
       qc.invalidateQueries({ queryKey: shopOrderPaymentPageKey(orderId) });
       qc.invalidateQueries({ queryKey: shopOrdersKey });
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : "ยกเลิกคำสั่งซื้อไม่สำเร็จ"),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("cancelFailed")),
   });
   const onClick = async () => {
     const ok = await confirmAlert(
       paid
-        ? "คำสั่งซื้อนี้ชำระเงินแล้ว — ยกเลิกแล้วร้านจะโอนเงินคืนให้ภายหลัง ยืนยันยกเลิกไหม?"
-        : "ยืนยันยกเลิกคำสั่งซื้อนี้?",
-      { title: `ยกเลิกคำสั่งซื้อ ${orderNo}`, confirmText: "ยกเลิกคำสั่งซื้อ", cancelText: "ไม่ยกเลิก", danger: true },
+        ? t("cancelConfirmPaid")
+        : t("cancelConfirm"),
+      { title: t("cancelTitle", { no: orderNo }), confirmText: t("cancelOrder"), cancelText: t("keepOrder"), danger: true },
     );
     if (ok) cancel.mutate();
   };
   return (
     <button type="button" onClick={() => void onClick()} disabled={cancel.isPending}
       className="rounded-xl border border-red-600/30 bg-white px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
-      {cancel.isPending ? "กำลังยกเลิก..." : "ยกเลิกคำสั่งซื้อ"}
+      {cancel.isPending ? t("cancelling") : t("cancelOrder")}
     </button>
   );
 }

@@ -3,6 +3,7 @@
 // ใช้แต้มสะสมเป็นส่วนลด — แทน FrontOffice PointsRedeemBox
 // max คิดจากหน้า checkout (maxRedeemablePoints ตามฐานเดียวกับ backend) · ค่าที่กรอกถูกปัดลงทีละ REDEEM_STEP
 // ─────────────────────────────────────────────────────────────
+import { useTranslations } from "next-intl";
 import { pointsToBaht, type MyPoints } from "@/services/shopLoyalty";
 import { baht, shopButton, shopInput } from "@/components/customer/shopStyles";
 
@@ -18,6 +19,7 @@ export default function PointsRedeemBox({
   value: number;
   onChange: (points: number) => void;
 }) {
+  const t = useTranslations("shop.points");
   const { balance, rules } = points;
   if (balance <= 0) return null;
 
@@ -30,14 +32,14 @@ export default function PointsRedeemBox({
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between text-sm">
-        <p className="font-semibold">ใช้แต้มสะสม</p>
-        <p className="text-xs text-gray-500">มี {balance.toLocaleString("th-TH")} แต้ม</p>
+        <p className="font-semibold">{t("title")}</p>
+        <p className="text-xs text-gray-500">{t("balance", { n: balance.toLocaleString() })}</p>
       </div>
 
       {balance < rules.MIN_BALANCE_TO_REDEEM ? (
-        <p className="text-xs text-gray-500">ต้องมีอย่างน้อย {rules.MIN_BALANCE_TO_REDEEM.toLocaleString("th-TH")} แต้มจึงจะใช้แต้มได้</p>
+        <p className="text-xs text-gray-500">{t("minBalance", { n: rules.MIN_BALANCE_TO_REDEEM.toLocaleString() })}</p>
       ) : max === 0 ? (
-        <p className="text-xs text-gray-500">ยอดสินค้าออเดอร์นี้ยังใช้แต้มไม่ได้</p>
+        <p className="text-xs text-gray-500">{t("notUsable")}</p>
       ) : (
         <>
           <div className="flex gap-2">
@@ -50,18 +52,17 @@ export default function PointsRedeemBox({
               step={step}
               value={value || ""}
               placeholder="0"
-              aria-label="จำนวนแต้มที่ใช้"
+              aria-label={t("inputAria")}
               onChange={(e) => onChange(Math.min(Math.max(0, Math.floor(Number(e.target.value)) || 0), max))}
               // ปัดลงให้ลงตัวทีละ step ตอนออกจากช่อง (ระหว่างพิมพ์ยังพิมพ์ 1, 15 ได้)
               onBlur={() => onChange(clamp(value))}
             />
             <button type="button" className={`${shopButton} shrink-0`} onClick={() => onChange(value === max ? 0 : max)}>
-              {value === max ? "ไม่ใช้" : "ใช้สูงสุด"}
+              {value === max ? t("none") : t("max")}
             </button>
           </div>
           <p className="text-xs text-gray-500">
-            ใช้ได้สูงสุด {max.toLocaleString("th-TH")} แต้ม (= {baht(pointsToBaht(max, rules))}) · ทีละ {step} แต้ม · ไม่เกิน{" "}
-            {Math.round(rules.MAX_REDEEM_RATIO * 100)}% ของยอดสินค้า
+            {t("rule", { max: max.toLocaleString(), amount: baht(pointsToBaht(max, rules)), step, percent: Math.round(rules.MAX_REDEEM_RATIO * 100) })}
           </p>
         </>
       )}

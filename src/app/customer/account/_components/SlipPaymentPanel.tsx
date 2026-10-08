@@ -9,10 +9,12 @@
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { FaCheckCircle } from "react-icons/fa";
 import { shopPaymentsService, type PaymentKind, type ShopPaymentPage } from "@/services/shopPayments";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
+import { formatDate } from "@/i18n/format";
 import { baht, shopButtonPrimary } from "@/components/customer/shopStyles";
 
 const SLIP_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
@@ -34,11 +36,11 @@ function useSecondsLeft(page: ShopPaymentPage, fetchedAt: number): number | null
 }
 
 /** ออเดอร์ (30 นาที) = "29:59 นาที" · พรีออเดอร์ (ถึง 24 ชม.) = "23 ชม. 59 นาที" */
-function timeLeftText(sec: number): string {
-  if (sec < 3600) return `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")} นาที`;
+function timeLeftText(sec: number, t: ReturnType<typeof useTranslations<"shop.slip">>): string {
+  if (sec < 3600) return t("minSec", { mm: String(Math.floor(sec / 60)).padStart(2, "0"), ss: String(sec % 60).padStart(2, "0") });
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
-  return h >= 48 ? `${Math.floor(h / 24)} วัน ${h % 24} ชม.` : `${h} ชม. ${m} นาที`;
+  return h >= 48 ? t("daysHours", { d: Math.floor(h / 24), h: h % 24 }) : t("hoursMins", { h, m });
 }
 
 export default function SlipPaymentPanel({
@@ -55,6 +57,8 @@ export default function SlipPaymentPanel({
   /** ให้หน้าที่ใช้โหลดข้อมูลเอกสาร + หน้าชำระเงินใหม่ */
   onChanged: () => void;
 }) {
+  const t = useTranslations("shop.slip");
+  const locale = useLocale();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -78,10 +82,10 @@ export default function SlipPaymentPanel({
   const pickFile = (f: File | null) => {
     if (preview) URL.revokeObjectURL(preview);
     if (f && !SLIP_TYPES.includes(f.type)) {
-      alert.error("รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP หรือ AVIF");
+      alert.error(t("badType"));
       f = null;
     } else if (f && f.size > SLIP_MAX_BYTES) {
-      alert.error("ไฟล์สลิปต้องมีขนาดไม่เกิน 5 MB");
+      alert.error(t("tooBig"));
       f = null;
     }
     setFile(f);
@@ -94,12 +98,12 @@ export default function SlipPaymentPanel({
       return shopPaymentsService.uploadSlip(paymentId, slip);
     },
     onSuccess: () => {
-      alert.success(page.late_upload ? "ส่งสลิปแล้ว — เปิดคำสั่งซื้อกลับและรอร้านตรวจสอบ" : "ส่งสลิปแล้ว รอร้านตรวจสอบ");
+      alert.success(page.late_upload ? t("sentReopen") : t("sent"));
       pickFile(null);
       onChanged();
     },
     onError: (e) => {
-      alert.error(isApiError(e) ? e.message : "ส่งสลิปไม่สำเร็จ กรุณาลองใหม่");
+      alert.error(isApiError(e) ? e.message : t("sendFailed"));
       // อาจมีรายการชำระเงินถูกสร้างไปแล้วก่อนอัปโหลดพัง — โหลดใหม่ให้รอบหน้าแนบกับใบเดิม
       onChanged();
     },
@@ -109,7 +113,7 @@ export default function SlipPaymentPanel({
     return (
       <div className="flex items-center gap-3 rounded-xl bg-green-50 p-4 text-green-800">
         <FaCheckCircle className="shrink-0 text-2xl" />
-        <p className="text-sm font-semibold">ร้านได้รับการชำระเงินแล้ว ขอบคุณที่สั่งซื้อ</p>
+        <p className="text-sm font-semibold">{t("paid")}</p>
       </div>
     );
   }
@@ -118,7 +122,7 @@ export default function SlipPaymentPanel({
     // backend ยังไม่มีทางอัปโหลดสลิปโดยไม่มีรายการชำระเงิน (POST /shop/payments ไม่มีสลิป = 400) — BACKLOG4 Q-BE1
     return (
       <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-        หมดเวลาชำระเงิน ระบบยกเลิกคำสั่งซื้อนี้แล้ว — หากโอนเงินไปแล้ว กรุณาติดต่อร้านพร้อมสลิปการโอน
+        {t("expiredCancelled")}
       </p>
     );
   }
@@ -126,7 +130,7 @@ export default function SlipPaymentPanel({
   if (!canUpload) {
     return (
       <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-        {page.blocked_reason ?? "คำสั่งซื้อนี้ชำระเงินไม่ได้แล้ว"} — กรุณาอย่าโอนเงินเข้าคำสั่งซื้อนี้
+        {t("blocked", { reason: page.blocked_reason ?? t("blockedDefault") })}
       </p>
     );
   }
@@ -135,17 +139,17 @@ export default function SlipPaymentPanel({
     <div className="space-y-4">
       {page.late_upload && (
         <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
-          หมดเวลาชำระเงินแล้ว — ถ้าโอนไปแล้ว แนบสลิปเพื่อขอเปิดคำสั่งซื้อกลับ (ต้องมีสินค้าเหลือพอ)
+          {t("lateUpload")}
         </p>
       )}
-      {awaitingReview && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">ส่งสลิปแล้ว รอร้านตรวจสอบ — แนบใหม่ได้ถ้าส่งรูปผิด</p>}
-      {rejected && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">สลิปล่าสุดตรวจสอบไม่ผ่าน กรุณาแนบสลิปใหม่</p>}
+      {awaitingReview && <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{t("awaitingReview")}</p>}
+      {rejected && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{t("rejected")}</p>}
       {showCountdown && (
         <p className={`rounded-xl p-3 text-center text-sm ${secondsLeft < 300 ? "bg-red-50 text-red-700" : "bg-[#FAF6F0] text-gray-700"}`}>
-          กรุณาชำระและแนบสลิปภายใน <span className="font-mono text-base font-bold">{timeLeftText(secondsLeft)}</span>
+          {t("payWithin")} <span className="font-mono text-base font-bold">{timeLeftText(secondsLeft, t)}</span>
           {kind === "preorder" && page.payment_due_at && (
             <span className="mt-1 block text-xs text-gray-500">
-              (ภายใน {new Date(page.payment_due_at).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" })} — เลยแล้วยกเลิกอัตโนมัติ)
+              {t("dueAt", { date: formatDate(page.payment_due_at, locale, { withTime: true }) })}
             </span>
           )}
         </p>
@@ -157,25 +161,25 @@ export default function SlipPaymentPanel({
           <div className="flex flex-col items-center gap-2 text-center">
             <div className="flex h-[240px] w-[240px] items-center justify-center rounded-2xl border border-[#8C5A3C]/15 bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={page.qr_image} alt="QR พร้อมเพย์" width={230} height={230} />
+              <img src={page.qr_image} alt={t("qrAlt")} width={230} height={230} />
             </div>
-            <p className="text-sm text-gray-600">สแกนจ่ายด้วยแอปธนาคาร (พร้อมเพย์)</p>
+            <p className="text-sm text-gray-600">{t("scan")}</p>
             {page.account_name && (
               <p className="text-sm">
-                ชื่อบัญชี: <span className="font-semibold">{page.account_name}</span>
+                {t("accountName")} <span className="font-semibold">{page.account_name}</span>
               </p>
             )}
             <p className="text-2xl font-extrabold text-[#8C5A3C]">{baht(page.amount)}</p>
           </div>
         ) : (
           <p className="rounded-xl bg-[#FAF6F0] p-3 text-sm text-gray-700">
-            โอนยอด <span className="font-bold">{baht(page.amount)}</span> ตามช่องทางที่ร้านแจ้ง แล้วแนบสลิปด้านล่าง
+            {t("transfer", { amount: baht(page.amount) })}
           </p>
         ))}
 
       <div className="space-y-3 border-t border-[#8C5A3C]/10 pt-4">
         <label className="block text-sm font-semibold">
-          {awaitingReview ? "แนบสลิปใหม่" : "แนบสลิปการโอน"}
+          {awaitingReview ? t("attachNew") : t("attach")}
           <input
             type="file"
             accept={SLIP_TYPES.join(",")}
@@ -186,7 +190,7 @@ export default function SlipPaymentPanel({
         </label>
         {preview && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="ตัวอย่างสลิป" className="mx-auto max-h-64 rounded-xl border border-gray-200 object-contain" />
+          <img src={preview} alt={t("previewAlt")} className="mx-auto max-h-64 rounded-xl border border-gray-200 object-contain" />
         )}
         <button
           type="button"
@@ -194,9 +198,9 @@ export default function SlipPaymentPanel({
           disabled={!file || uploadMutation.isPending || expiredNow}
           onClick={() => file && uploadMutation.mutate(file)}
         >
-          {uploadMutation.isPending ? "กำลังส่งสลิป..." : "ส่งสลิป"}
+          {uploadMutation.isPending ? t("sending") : t("send")}
         </button>
-        <p className="text-center text-xs text-gray-500">รองรับ JPG, PNG, WEBP, AVIF ขนาดไม่เกิน 5 MB</p>
+        <p className="text-center text-xs text-gray-500">{t("accepted")}</p>
       </div>
     </div>
   );

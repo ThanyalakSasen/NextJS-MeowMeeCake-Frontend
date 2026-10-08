@@ -10,6 +10,7 @@ import { FaShoppingCart, FaUser } from "react-icons/fa";
 import { AiOutlineSearch } from "react-icons/ai";
 import { useState, useEffect, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import StoreLogo from "./StoreLogo";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { shopCartService } from "@/services/shopCart";
@@ -23,13 +24,14 @@ const noopSubscribe = () => () => {};
 
 /** เมนูหลักแถวล่าง — เพิ่มทีละหน้าตามที่ย้ายมาแล้ว (ช่วง 1 ของการรวม FrontOffice) */
 const NAV_LINKS = [
-  { href: "/customer", label: "หน้าแรก" },
-  { href: "/customer/product", label: "สินค้าทั้งหมด" },
-  { href: "/customer/preorder", label: "พรีออเดอร์" },
-  { href: "/customer/contact-us", label: "ติดต่อเรา" },
+  { href: "/customer", labelKey: "home" },
+  { href: "/customer/product", labelKey: "allProducts" },
+  { href: "/customer/preorder", labelKey: "preorder" },
+  { href: "/customer/contact-us", labelKey: "contact" },
 ] as const;
 
 export default function Navbar() {
+  const t = useTranslations("shop.nav");
   const { user, status, signOut } = useCustomerSession();
   // Navbar อยู่ใต้ <Suspense> (CustomerChrome) จึงอาจ hydrate หลัง session โหลดเสร็จแล้ว — รอบ hydrate ใช้สถานะเดียวกับ
   // server (ยังไม่รู้ session) ก่อนเสมอ แล้วค่อยวาดตาม session หลัง hydrate เสร็จ กัน hydration mismatch
@@ -125,13 +127,13 @@ export default function Navbar() {
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="ค้นหา..."
-        aria-label="ค้นหาสินค้า"
+        placeholder={t("searchPlaceholder")}
+        aria-label={t("searchAria")}
         className="w-full h-11 pl-4 pr-14 text-base text-[#4A342E] bg-white placeholder-gray-400 rounded-xl outline-none focus:ring-2 focus:ring-white shadow-inner transition"
       />
       <button
         type="submit"
-        aria-label="ค้นหา"
+        aria-label={t("search")}
         className="absolute right-1 top-1 bottom-1 px-5 bg-[#8C5A3C] !text-white rounded-xl hover:bg-[#8C5A3C]/90 flex items-center justify-center transition"
       >
         <AiOutlineSearch size={24} className="!text-white" />
@@ -162,7 +164,7 @@ export default function Navbar() {
               type="button"
               onClick={() => setSidebarOpen(true)}
               className="md:hidden flex-shrink-0 p-2 rounded-xl !text-white hover:bg-white/10 transition"
-              aria-label="เปิดเมนู"
+              aria-label={t("openMenu")}
             >
               <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -171,7 +173,7 @@ export default function Navbar() {
           )}
 
           <div className={`${hasSidebarMenu ? "hidden md:flex" : "flex"} flex-shrink-0 items-center md:justify-self-start`}>
-            <Link href="/customer" aria-label="MeowMee Cake — หน้าแรก">
+            <Link href="/customer" aria-label={t("logoHome")}>
               <StoreLogo size={80} />
             </Link>
           </div>
@@ -191,7 +193,7 @@ export default function Navbar() {
                       type="button"
                       className="flex items-center gap-1.5 cursor-pointer !text-white hover:!text-[#e2d7c7] transition py-0.5"
                       onClick={() => setShowDropdown((v) => !v)}
-                      aria-label="เมนูบัญชี"
+                      aria-label={t("accountMenu")}
                       aria-expanded={showDropdown}
                     >
                       <FaUser size={18} className="!text-white" />
@@ -209,14 +211,14 @@ export default function Navbar() {
                               (pathname.startsWith("/customer/account/") && !pathname.startsWith("/customer/account/purchases")),
                           )}
                         >
-                          บัญชีของฉัน
+                          {t("myAccount")}
                         </Link>
                         <Link
                           href="/customer/account/purchases"
                           onClick={() => setShowDropdown(false)}
                           className={linkClass(pathname.startsWith("/customer/account/purchases"))}
                         >
-                          คำสั่งซื้อของฉัน
+                          {t("myOrders")}
                         </Link>
                         <div className="my-1 border-t border-stone-100" />
                         <button
@@ -225,7 +227,7 @@ export default function Navbar() {
                           className="group w-full flex items-center gap-2.5 px-4 py-2.5 text-base font-semibold text-rose-600 hover:bg-rose-50/80 hover:text-rose-700 transition duration-150"
                         >
                           <DoorLogoutIcon className="w-4 h-4 shrink-0 text-rose-500 group-hover:text-rose-700 transition-colors" />
-                          <span>ออกจากระบบ</span>
+                          <span>{t("logout")}</span>
                         </button>
                       </div>
                     )}
@@ -234,10 +236,10 @@ export default function Navbar() {
                   <Link
                     href={`${LOGIN_PATH}?next=${encodeURIComponent(pathname)}`}
                     className="flex items-center gap-2 !text-white hover:!text-[#e2d7c7] transition text-sm font-semibold"
-                    aria-label="เข้าสู่ระบบ"
+                    aria-label={t("login")}
                   >
                     <FaUser size={18} className="!text-white" />
-                    <span className="hidden md:inline !text-white">เข้าสู่ระบบ</span>
+                    <span className="hidden md:inline !text-white">{t("login")}</span>
                   </Link>
                 )}
               </li>
@@ -249,7 +251,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setShowMobileSearch((v) => !v)}
-                  aria-label="ค้นหา"
+                  aria-label={t("search")}
                   aria-expanded={showMobileSearch}
                   className="flex items-center p-1 !text-white hover:!text-[#e2d7c7] transition"
                 >
@@ -265,13 +267,13 @@ export default function Navbar() {
               <li>
                 <Link
                   href="/customer/cart"
-                  aria-label={count > 0 ? `ตะกร้า (${count} รายการ)` : "ตะกร้า"}
+                  aria-label={count > 0 ? t("cartWithCount", { count }) : t("cart")}
                   className={`relative flex items-center justify-center gap-2 p-2 md:h-11 md:min-w-11 md:py-0 lg:px-2 whitespace-nowrap rounded-xl transition shadow-sm text-base !bg-[#fff] !text-[#4A342E] ${
                     pathname === "/customer/cart" ? "ring-2 ring-white" : "hover:bg-[#8C5A3C]/90"
                   }`}
                 >
                   <FaShoppingCart size={22} />
-                  <span className="hidden lg:inline font-bold">ตะกร้า {count > 0 && <span>({count})</span>}</span>
+                  <span className="hidden lg:inline font-bold">{t("cart")} {count > 0 && <span>({count})</span>}</span>
                   {count > 0 && (
                     <span className="lg:hidden absolute -top-1.5 -right-1.5 min-w-[1.25rem] h-5 px-1 rounded-full bg-red-500 !text-white text-[11px] font-bold leading-5 text-center">
                       {count > 99 ? "99+" : count}
@@ -300,7 +302,7 @@ export default function Navbar() {
                         : "!text-white hover:!text-[#e2d7c7]"
                     }`}
                   >
-                    {l.label}
+                    {t(l.labelKey)}
                   </Link>
                 </li>
               ))}

@@ -1,29 +1,28 @@
 // รูปแบบข้อความของข้อมูลร้าน (ติดต่อเรา D8 · ค่าส่ง/ข้อมูลร้าน D9) — ข้อมูลจาก services/storeInfo.ts
+// ที่อยู่ใช้รูปแบบที่อยู่ไทย (ต./อ./จ. · แขวง/เขต) ทั้ง 2 ภาษา — เป็นรูปแบบข้อมูล ไม่ใช่ข้อความ UI (ยกเว้นใน check-i18n)
+import type { useTranslations } from "next-intl";
 import type { StoreAddress, StoreInfo, WeekDay } from "@/services/storeInfo";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { guessShipsNationwide } from "@/constants/shipping";
 
 const DAY_ORDER: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-const DAY_LABELS: Record<WeekDay, string> = {
-  mon: "จันทร์", tue: "อังคาร", wed: "พุธ", thu: "พฤหัสบดี", fri: "ศุกร์", sat: "เสาร์", sun: "อาทิตย์",
-};
 
-/** รวมวันที่ติดกัน — [จ,อ,พ] → "จันทร์ - พุธ" · [ศ,ส] → "ศุกร์, เสาร์" · ครบ 7 วัน → "ทุกวัน" */
-export function formatMarketDays(days: WeekDay[]): string {
+/** รวมวันที่ติดกัน — [จ,อ,พ] → "ทุกจันทร์ - พุธ" · [ศ,ส] → "ทุกศุกร์, เสาร์" · ครบ 7 วัน → "ทุกวัน" · t = useTranslations("shop.store") */
+export function formatMarketDays(days: WeekDay[], t: ReturnType<typeof useTranslations<"shop.store">>): string {
   const on = DAY_ORDER.map((d) => days.includes(d));
-  if (on.every(Boolean)) return "ทุกวัน";
-  if (!on.some(Boolean)) return "ยังไม่กำหนดวัน";
+  if (on.every(Boolean)) return t("everyDay");
+  if (!on.some(Boolean)) return t("noDays");
   const parts: string[] = [];
   for (let i = 0; i < 7; i++) {
     if (!on[i]) continue;
     let j = i;
     while (j + 1 < 7 && on[j + 1]) j++;
-    const from = DAY_LABELS[DAY_ORDER[i]];
-    const to = DAY_LABELS[DAY_ORDER[j]];
+    const from = t(`days.${DAY_ORDER[i]}`);
+    const to = t(`days.${DAY_ORDER[j]}`);
     parts.push(j - i >= 2 ? `${from} - ${to}` : j === i ? from : `${from}, ${to}`);
     i = j;
   }
-  return `ทุก${parts.join(", ")}`;
+  return t("every", { days: parts.join(", ") });
 }
 
 /** เติมคำนำหน้าเฉพาะเมื่อยังไม่มี (กัน "อ.อำเภอเมือง") · ค่าว่าง/"-" = ข้าม */

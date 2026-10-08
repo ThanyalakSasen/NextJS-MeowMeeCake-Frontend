@@ -3,17 +3,16 @@
 // คูปองของฉัน (แลกด้วยแต้ม) — แทน FrontOffice CouponSelectBox
 // เลือกได้ใบเดียว · ใช้คู่กับโค้ดส่วนลดไม่ได้ (หน้า checkout ล้างอีกฝั่งให้) · ส่วนลดที่แสดงเป็นยอดประมาณจาก couponDiscount()
 // ─────────────────────────────────────────────────────────────
+import { useLocale, useTranslations } from "next-intl";
 import { couponDiscount, type CouponUnusableReason, type MyCoupon } from "@/services/shopLoyalty";
 import { baht } from "@/components/customer/shopStyles";
 import { couponLabel } from "@/app/customer/lib/couponLabel";
+import { formatDate } from "@/i18n/format";
 
-const expiryText = (iso: string) =>
-  new Date(iso).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
-
-function reasonText(reason: CouponUnusableReason, c: MyCoupon): string {
-  if (reason === "min_order") return `ยอดสินค้ายังไม่ถึงขั้นต่ำ ${baht(c.min_order_amount)}`;
-  if (reason === "needs_delivery_fee") return "ใช้ได้เมื่อเลือกจัดส่งที่มีค่าจัดส่ง";
-  return "ไม่ได้ส่วนลดกับออเดอร์นี้";
+function reasonText(reason: CouponUnusableReason, c: MyCoupon, t: ReturnType<typeof useTranslations<"shop.coupons">>): string {
+  if (reason === "min_order") return t("minNotReached", { amount: baht(c.min_order_amount) });
+  if (reason === "needs_delivery_fee") return t("needsDeliveryFee");
+  return t("noDiscount");
 }
 
 export default function CouponSelectBox({
@@ -29,12 +28,14 @@ export default function CouponSelectBox({
   deliveryFee: number;
   onSelect: (id: string | null) => void;
 }) {
+  const t = useTranslations("shop.coupons");
+  const locale = useLocale();
   if (coupons.length === 0) return null;
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-semibold">คูปองของฉัน</p>
-      <div className="max-h-64 space-y-2 overflow-y-auto" role="radiogroup" aria-label="คูปองของฉัน">
+      <p className="text-sm font-semibold">{t("title")}</p>
+      <div className="max-h-64 space-y-2 overflow-y-auto" role="radiogroup" aria-label={t("title")}>
         {coupons.map((c) => {
           const active = c._id === selectedId;
           const result = couponDiscount(c, subtotal, deliveryFee);
@@ -51,17 +52,18 @@ export default function CouponSelectBox({
               }`}
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="font-bold">{couponLabel(c)}</span>
+                <span className="font-bold">{couponLabel(c, t)}</span>
                 {result.amount !== null && <span className="shrink-0 font-semibold text-green-700">-{baht(result.amount)}</span>}
               </div>
               <p className="text-xs text-gray-600">{c.promotion_name}</p>
               <p className="text-xs text-gray-500">
-                {c.min_order_amount > 0 && `ขั้นต่ำ ${baht(c.min_order_amount)} · `}ใช้ได้ถึง {expiryText(c.expires_at)}
+                {c.min_order_amount > 0 && t("minOrder", { amount: baht(c.min_order_amount) })}
+                {t("validUntil", { date: formatDate(c.expires_at, locale) })}
               </p>
               {result.reason && (
                 <p className="text-xs text-amber-700">
-                  {reasonText(result.reason, c)}
-                  {active && " — จะไม่ถูกใช้กับออเดอร์นี้"}
+                  {reasonText(result.reason, c, t)}
+                  {active && t("notApplied")}
                 </p>
               )}
             </button>
