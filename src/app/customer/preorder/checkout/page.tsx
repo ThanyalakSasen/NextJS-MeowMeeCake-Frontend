@@ -38,6 +38,7 @@ import {
 } from "../lib/preorderBasket";
 import { preorderPickupDates, thaiDate } from "../lib/preorderDates";
 import { isRoundOpen, useNow } from "../lib/useNow";
+import FlowSteps from "@/components/customer/FlowSteps";
 
 const PHONE_RE = /^0\d{8,9}$/;
 
@@ -192,6 +193,7 @@ function PreorderCheckoutContent() {
           items={[{ label: t("crumb"), href: "/customer/preorder" }, { label: basket.round_name, href: `/customer/preorder/${basket.round_id}` }, { label: t("confirm") }]}
           className="!mb-0"
         />
+        <FlowSteps kind="preorder" current={2} />
 
         {round && !roundOpen && (
           <p className="rounded-2xl bg-red-50 p-4 text-sm text-red-700">{t("roundClosed", { round: basket.round_name })}</p>

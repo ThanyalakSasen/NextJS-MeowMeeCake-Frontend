@@ -3037,6 +3037,41 @@
       "forYou": "Picked just for you",
       "loadingRecs": "Finding recommendations...",
       "noProducts": "Sorry, there are no products yet"
+    },
+    "flow": {
+      "aria": "Order steps",
+      "cart": "Cart",
+      "pickItems": "Choose items",
+      "confirm": "Confirm order",
+      "confirmPreorder": "Confirm pre-order",
+      "pay": "Pay / attach slip",
+      "done": "Order placed",
+      "payLater": "Pay later →"
+    },
+    "success": {
+      "notFound": "Order not found",
+      "notFoundHint": "We couldn't find this order — please check your order history",
+      "history": "Go to order history",
+      "slipSent": "Slip sent — awaiting review",
+      "awaitingPayment": "Awaiting payment",
+      "cancelledTitle": "Order cancelled",
+      "title": "Order placed",
+      "savedOrder": "Your order #{no} has been placed",
+      "savedPreorder": "Your pre-order #{no} has been placed",
+      "paidHint": "Payment confirmed — the store is preparing your order",
+      "slipSentHint": "The store received your slip and is checking it — you'll be notified once it's confirmed",
+      "total": "Total",
+      "method": "Delivery method",
+      "delivery": "Home delivery",
+      "pickup": "Pick up",
+      "pickupDate": "Pickup date",
+      "pickupPoint": "Pickup point",
+      "orderedAt": "Ordered",
+      "status": "Status",
+      "payNow": "Pay now (scan QR / attach slip)",
+      "payDeadline": "Please pay and attach your slip within 30 minutes, or the order will be cancelled automatically",
+      "payDeadlinePreorder": "Please pay and attach your slip within 24 hours (and before the round closes), or it will be cancelled automatically",
+      "home": "Back to home"
     }
   }
 }

@@ -23,6 +23,7 @@ import { useCartCountStore } from "../store/cartCountStore";
 import { shopCartKey } from "../lib/shopQueries";
 import { catalogProductKey } from "../lib/catalogQueries";
 import { cartIssueText, cartIssues, cartProductId, type StockInfo } from "../lib/cartIssues";
+import FlowSteps from "@/components/customer/FlowSteps";
 
 export default function CartPage() {
   const t = useTranslations("shop.cart");
@@ -123,6 +124,7 @@ function CartContent() {
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
         <CustomerBreadcrumb items={[{ label: t("title") }]} className="!mb-0" />
+        {cart.items.length > 0 && <FlowSteps kind="order" current={1} />}
 
         {cart.items.length === 0 ? (
           <div className={`${shopCard} mx-auto w-full max-w-md space-y-4 text-center`}>
