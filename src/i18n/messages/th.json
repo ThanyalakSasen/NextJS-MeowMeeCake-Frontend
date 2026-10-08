@@ -81,7 +81,8 @@
     "storeInfo": "ข้อมูลร้าน",
     "notificationsHistory": "ประวัติการแจ้งเตือน",
     "logout": "ออกจากระบบ",
-    "deliveryZones": "โซนค่าจัดส่ง"
+    "deliveryZones": "โซนค่าจัดส่ง",
+    "storefront": "ดูหน้าร้าน"
   },
   "auth": {
     "loginTitle": "เข้าสู่ระบบ",
@@ -2102,7 +2103,8 @@
       "login": "เข้าสู่ระบบ",
       "cart": "ตะกร้า",
       "cartWithCount": "ตะกร้า ({count} รายการ)",
-      "language": "ภาษา"
+      "language": "ภาษา",
+      "backOffice": "ไปหน้าจัดการร้าน"
     },
     "common": {
       "loading": "กำลังโหลด",

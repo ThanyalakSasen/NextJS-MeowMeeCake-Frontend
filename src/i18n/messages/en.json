@@ -81,7 +81,8 @@
     "storeInfo": "Store info",
     "notificationsHistory": "Notification History",
     "logout": "Log out",
-    "deliveryZones": "Delivery Zones"
+    "deliveryZones": "Delivery Zones",
+    "storefront": "View storefront"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -2102,7 +2103,8 @@
       "login": "Log in",
       "cart": "Cart",
       "cartWithCount": "Cart ({count} items)",
-      "language": "Language"
+      "language": "Language",
+      "backOffice": "Back office"
     },
     "common": {
       "loading": "Loading",
