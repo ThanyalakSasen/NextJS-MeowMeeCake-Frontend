@@ -6,17 +6,19 @@ import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Tag, EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadingSpin, ConfirmDeletePopup } from "@/components/shared/feedback";
-import { DeleteButton, SaveButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, EditButton, SaveButton, actionIcon } from "@/components/shared/actions";
 import type { usePermissionsViewModel } from "./usePermissionsViewModel";
 import { RoleListPanel } from "./_components/RoleListPanel";
 import { PermissionMatrix } from "./_components/PermissionMatrix";
 import { RoleFormModal } from "./_components/RoleFormModal";
+import { RenameRoleModal } from "./_components/RenameRoleModal";
 
 type VM = ReturnType<typeof usePermissionsViewModel>;
 
 export function PermissionsView(vm: VM) {
   const t = useTranslations();
   const [modalOpen, setModalOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
   const canEdit = vm.perm.update;
 
   const addRoleBtn = vm.perm.create && (
@@ -64,6 +66,9 @@ export function PermissionsView(vm: VM) {
                     </p>
                   </div>
                   <div className="flex shrink-0 gap-2">
+                    {canEdit && (
+                      <EditButton size="small" label={t("permissions.renameRole")} onClick={() => setRenameOpen(true)} />
+                    )}
                     {vm.perm.delete && (
                       <ConfirmDeletePopup
                         title={t("permissions.deleteRoleConfirm", { role: vm.selectedRole.role_name })}
@@ -133,6 +138,18 @@ export function PermissionsView(vm: VM) {
         onSubmit={async (values) => {
           const ok = await vm.onAddRole(values);
           if (ok) setModalOpen(false);
+          return ok;
+        }}
+      />
+
+      <RenameRoleModal
+        role={renameOpen ? vm.selectedRole : null}
+        roles={vm.roles}
+        saving={vm.renaming}
+        onCancel={() => setRenameOpen(false)}
+        onSubmit={async (name) => {
+          const ok = await vm.onRenameRole(name);
+          if (ok) setRenameOpen(false);
           return ok;
         }}
       />
