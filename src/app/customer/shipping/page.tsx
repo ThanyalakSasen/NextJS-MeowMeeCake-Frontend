@@ -4,7 +4,6 @@
 // ข้อมูลจาก API เดียวกับที่ checkout คิดจริง:
 //   โซนค่าส่ง → /catalog/shipping-zones · จังหวัดร้าน → /catalog/store-info · หมวดส่งทั่วประเทศ → /catalog/categories (ships_nationwide)
 //   จุดรับ → /catalog/pickup-locations (schedule สรุปมาจาก backend) · ส่วนไหนโหลดไม่ได้ ส่วนที่เหลือยังแสดง
-// ต่างจากต้นแบบ: ตัดลิงก์ "บัญชีพร้อมเพย์สำหรับรับเงินคืน" (ยังไม่มีใน backend หลัก — U9 / Q-BE12)
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -128,7 +127,15 @@ export default function ShippingInfoPage() {
           <ul className="m-0 list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-stone-600">
             <li>{t("note1", { n: PAYMENT_MINUTES })}</li>
             <li>{t("note2")}</li>
-            <li>{t("note3")}</li>
+            <li>
+              {t.rich("note3", {
+                link: (c) => (
+                  <Link href="/customer/account" className="font-semibold text-[#8C5A3C] hover:underline">
+                    {c}
+                  </Link>
+                ),
+              })}
+            </li>
             <li>
               {t("moreQuestions")}{" "}
               <Link href="/customer/contact-us" className="font-semibold text-[#8C5A3C] hover:underline">

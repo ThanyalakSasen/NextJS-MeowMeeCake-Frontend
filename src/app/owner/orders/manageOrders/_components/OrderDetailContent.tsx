@@ -75,6 +75,7 @@ export function OrderDetailContent({
         <RefundSection
           amount={order.total_amount}
           reason={order.cancelled_reason}
+          account={order.refund_account}
           paidPaymentId={paidPaymentId}
           canRefund={canApprovePayment}
           refunding={refunding}

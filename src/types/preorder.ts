@@ -14,7 +14,7 @@
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
 import type { OrderStatus, PaymentStatus, RoundStatus } from "@/constants/enumConfig";
-import type { OrderType, DeliveryAddress, DeliveryInfo } from "@/types/order";
+import type { OrderType, DeliveryAddress, DeliveryInfo, RefundAccount } from "@/types/order";
 
 export interface PreorderItem {
   _id: string;
@@ -53,6 +53,8 @@ export interface Preorder extends DeliveryInfo {
   payment_due_at?: string | null;
   /** มีเฉพาะตอน preordersService.get(id) — list ไม่มี (อยู่คนละ collection) */
   items?: PreorderItem[];
+  /** มีค่าเฉพาะ preordersService.get(id) ของพรีออเดอร์ที่รอโอนคืน + ลูกค้าตั้งบัญชีไว้ (Q-BE12) */
+  refund_account: RefundAccount | null;
   created_at: string;
   updated_at: string;
 }

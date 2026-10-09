@@ -9,7 +9,7 @@
 import { http } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
 import type { Preorder, PreorderItem, PreorderListParams } from "@/types/preorder";
-import { toDeliveryInfo, type DeliveryUpdateInput } from "@/types/order";
+import { toDeliveryInfo, toRefundAccount, type DeliveryUpdateInput } from "@/types/order";
 import { refId } from "@/lib/refId";
 
 const BASE = "/admin/preorders";
@@ -56,6 +56,7 @@ function toPreorder(raw: any): Preorder {
     cancelled_reason: raw.cancelled_reason ?? null,
     payment_due_at: raw.payment_due_at ?? null,
     items: Array.isArray(raw.items) ? raw.items.map(toPreorderItem) : undefined,
+    refund_account: toRefundAccount(raw),
     created_at: raw.created_at,
     updated_at: raw.updated_at,
   };
