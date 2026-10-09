@@ -6,7 +6,7 @@
 //   อาหารที่แพ้: PATCH /shop/me { user_allergies } — ตัวเลือกจาก /catalog/ingredients
 //   LINE: /shop/me/line (ผูก → หน้ายินยอมของ LINE → backend กลับมาที่ /profile → /profile ส่งลูกค้าต่อมาที่นี่พร้อม ?line=)
 //   บัญชีที่สมัครด้วย LINE แล้วไม่มีอีเมล: POST /shop/me/email (ตั้งอีเมลจริง + ส่งลิงก์ยืนยัน)
-// ไม่ยกมา: บัญชีพร้อมเพย์รับเงินคืน — backend หลักยังไม่มี field refund_promptpay_* (BACKLOG3-merge B2)
+//   บัญชีพร้อมเพย์รับเงินคืน: PATCH /shop/me { refund_promptpay_id/name } — เว้นว่างเลข = ลบ (BACKLOG4 U9 · backend Q-BE12)
 // ─────────────────────────────────────────────────────────────
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -18,6 +18,7 @@ import { isLinePlaceholderEmail, shopProfileService, type ShopProfile } from "@/
 import { shopLineService } from "@/services/shopLine";
 import { catalogService } from "@/services/catalog";
 import { resendVerification } from "@/lib/authClient";
+import { formatPromptpayId, isPromptpayId, normalizePromptpayId } from "@/lib/promptpay";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
@@ -75,6 +76,7 @@ function AccountContent() {
               <>
                 {emailQ.data?.auth_provider === "line" && <LineAccountEmail status={emailQ.data} />}
                 <ProfileSection profile={profile} />
+                <RefundAccountSection profile={profile} />
                 <LineSection authProvider={profile.auth_provider} />
                 <AllergySection profile={profile} />
               </>
@@ -275,6 +277,88 @@ function ProfileSection({ profile }: { profile: ShopProfile }) {
           </label>
           {problem && <p className="m-0 text-xs text-red-600">{problem}</p>}
           <p className="m-0 text-xs text-stone-400">{t("bonusHint")}</p>
+        </div>
+      </Modal>
+    </section>
+  );
+}
+
+// ── บัญชีพร้อมเพย์รับเงินคืน + หน้าต่างแก้ไข (ต้นแบบ FrontOffice) — เว้นว่างเลขแล้วบันทึก = ลบบัญชี ──
+function RefundAccountSection({ profile }: { profile: ShopProfile }) {
+  const t = useTranslations("shop.account");
+  const tc = useTranslations("shop.common");
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ id: "", name: "" });
+  const openEdit = () => {
+    setForm({ id: profile.refund_promptpay_id ?? "", name: profile.refund_promptpay_name ?? "" });
+    setOpen(true);
+  };
+
+  const id = normalizePromptpayId(form.id);
+  const name = form.name.trim();
+  const save = useMutation({
+    mutationFn: () => shopProfileService.update({ refund_promptpay_id: id || null, refund_promptpay_name: id ? name : null }),
+    onSuccess: (p) => {
+      qc.setQueryData(shopProfileKey, p);
+      setOpen(false);
+      alert.success(id ? t("refundSaved") : t("refundRemoved"));
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("refundSaveFailed")),
+  });
+  const problem = id && !isPromptpayId(id) ? t("refundIdInvalid") : id && !name ? t("refundNameRequired") : null;
+  const current = profile.refund_promptpay_id;
+
+  return (
+    <section className={section}>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="m-0 text-base font-bold text-stone-900">{t("refundTitle")}</h2>
+          <p className="m-0 mt-1 text-xs text-stone-500">{t("refundHint")}</p>
+        </div>
+        <button type="button" onClick={openEdit} className={`${shopButton} shrink-0 !px-3 !py-1.5 text-sm`}>
+          <Pencil className="h-3.5 w-3.5" /> {current ? t("edit") : t("refundAdd")}
+        </button>
+      </div>
+      {current ? (
+        <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+          {[
+            { label: t("refundId"), value: formatPromptpayId(current) },
+            { label: t("refundName"), value: profile.refund_promptpay_name || "-" },
+          ].map(({ label, value }) => (
+            <div key={label} className={field}>
+              <span className="block text-xs font-medium text-stone-400">{label}</span>
+              <span className="block break-all font-semibold text-stone-800">{value}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-400">{t("refundEmpty")}</p>
+      )}
+
+      <Modal
+        open={open}
+        title={t("refundTitle")}
+        onCancel={() => setOpen(false)}
+        onOk={() => save.mutate()}
+        okText={save.isPending ? tc("saving") : t("save")}
+        cancelText={tc("cancel")}
+        okButtonProps={{ disabled: !!problem || save.isPending }}
+        destroyOnHidden
+      >
+        <div className="flex flex-col gap-3 text-sm">
+          <label className="space-y-1">
+            <span className="block font-semibold text-stone-700">{t("refundId")}</span>
+            <input className={shopInput} inputMode="numeric" maxLength={17} placeholder={t("refundIdPlaceholder")} value={form.id}
+              onChange={(e) => setForm({ ...form, id: e.target.value.replace(/[^\d\s-]/g, "") })} />
+          </label>
+          <label className="space-y-1">
+            <span className="block font-semibold text-stone-700">{t("refundName")}</span>
+            <input className={shopInput} maxLength={100} placeholder={t("refundNamePlaceholder")} value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </label>
+          {problem && <p className="m-0 text-xs text-red-600">{problem}</p>}
+          <p className="m-0 text-xs text-stone-400">{t("refundModalHint")}</p>
         </div>
       </Modal>
     </section>

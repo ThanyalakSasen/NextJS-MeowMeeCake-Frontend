@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
 // src/services/shopProfile.ts — บัญชีของลูกค้าที่ login (/shop/me*) · หน้า /customer/account (BACKLOG3-merge B2)
-//   GET/PATCH /shop/me            โปรไฟล์ (ชื่อ · เบอร์ · วันเกิด · อาหารที่แพ้) — อีเมลแก้ที่นี่ไม่ได้
+//   GET/PATCH /shop/me            โปรไฟล์ (ชื่อ · เบอร์ · วันเกิด · อาหารที่แพ้ · บัญชีพร้อมเพย์รับเงินคืน) — อีเมลแก้ที่นี่ไม่ได้
 //   PATCH /shop/me/password       เปลี่ยนรหัสผ่าน (ต้องรู้รหัสเดิม) — เครื่องอื่นหลุด · เครื่องนี้ได้ cookie ใหม่
 //   GET/POST /shop/me/email       บัญชีที่สมัครด้วย LINE: ตั้งอีเมลจริงแทนอีเมลชั่วคราว + ส่งลิงก์ยืนยัน
 // ผูก/ยกเลิก LINE ใช้ services/shopLine.ts (/shop/me/line)
@@ -21,6 +21,9 @@ export interface ShopProfile {
   user_allergies: string[];
   auth_provider: AuthProvider;
   is_email_verified: boolean;
+  /** พร้อมเพย์รับเงินคืน (ตัวเลขล้วน) — ร้านโอนคืนเมื่อออเดอร์ที่ชำระแล้วถูกยกเลิก (Q-BE12 · U9) */
+  refund_promptpay_id: string | null;
+  refund_promptpay_name: string | null;
 }
 
 export interface ShopProfileInput {
@@ -29,6 +32,9 @@ export interface ShopProfileInput {
   /** YYYY-MM-DD */
   user_birthdate?: string | null;
   user_allergies?: string[];
+  /** null = ล้างบัญชีรับเงินคืน · backend ตัดขีด/ช่องว่างให้ */
+  refund_promptpay_id?: string | null;
+  refund_promptpay_name?: string | null;
 }
 
 /** GET /shop/me/email — needs_email = บัญชี LINE ที่ยังใช้อีเมลชั่วคราว (ให้ลูกค้ากรอกอีเมลจริง) */
@@ -55,6 +61,8 @@ function toProfile(raw: any): ShopProfile {
     user_allergies: Array.isArray(raw.user_allergies) ? raw.user_allergies : [],
     auth_provider: raw.auth_provider ?? "local",
     is_email_verified: raw.is_email_verified === true,
+    refund_promptpay_id: raw.refund_promptpay_id ?? null,
+    refund_promptpay_name: raw.refund_promptpay_name ?? null,
   };
 }
 
