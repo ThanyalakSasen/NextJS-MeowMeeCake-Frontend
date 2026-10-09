@@ -1,21 +1,13 @@
 # งานที่ backend ต้องแก้ไข
 
 > backend: `ThanyalakSasen/NextJS-MeowMeeCake` (ในเครื่อง `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake`)
-> รวบรวมจาก [`BACKLOG4-merge.md`](BACKLOG4-merge.md) หมวด 9 และคำถามใน [`BACKLOG3-merge.md`](BACKLOG3-merge.md#ถาม-backend) · อัปเดต 2026-10-10 (หลัง backend #73 · frontend U9)
+> รวบรวมจาก [`BACKLOG4-merge.md`](BACKLOG4-merge.md) หมวด 9 และคำถามใน [`BACKLOG3-merge.md`](BACKLOG3-merge.md#ถาม-backend) · อัปเดต 2026-10-10 (หลัง backend #74 · frontend F2)
 
 สถานะ: ▢ พร้อมทำ (ตอบแล้วว่าทำ) · ⏸ รอคำตอบ · ✅ เสร็จ · ❌ ไม่ทำ
 
 ## 1. ตอบแล้วว่าทำ — frontend รอ API อยู่
 
-ลำดับที่แนะนำ: 1.3 → 1.4 (1.1 Q-BE10 · 1.2 Q-BE12 เสร็จแล้ว — ดูหมวด 4)
-
-### 1.3 Q-BE2 — admin API แก้โซนค่าส่งเว็บ (`ShippingZones`) ▢
-- **ปัญหา:** ค่าส่งออเดอร์เว็บคิดจาก `ShippingZones` (โซน A–D · `provinces` · `fee` — `shippingZoneModel.ts`) แต่มีแค่ `GET /catalog/shipping-zones` (อ่านอย่างเดียว) · แก้ได้ทาง DB เท่านั้น
-  (POS/หลังร้านใช้ `DeliveryZones` อีกตาราง — `/admin/delivery-zones` มีครบแล้ว ไม่เกี่ยว)
-- **ขอ:** `GET /admin/shipping-zones` · `PATCH /admin/shipping-zones/:zone_code` (`fee` · `provinces` · ชื่อ/คำอธิบาย) ใต้สิทธิ์ตั้งค่าร้าน
-  - กันจังหวัดซ้ำข้ามโซน · จังหวัดต้องอยู่ในรายชื่อ 77 จังหวัด · `fee` ≥ 0
-  - เขียน audit log แบบ endpoint ตั้งค่าอื่น
-- **frontend ที่รอ:** F2 — หน้า `owner/shipping` (ตามหน้าเดิมของ FrontOffice)
+ลำดับที่แนะนำ: 1.4 (1.1 Q-BE10 · 1.2 Q-BE12 · 1.3 Q-BE2 เสร็จแล้ว — ดูหมวด 4)
 
 ### 1.4 Q-BE5 — สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ ▢ (เจ้าของร้านต้องการ — Q-OWN3)
 - **ปัญหา:** `admin/preorder-rounds` มีแค่ CRUD · `items` · `status` · `restore` — ไม่มีสรุปยอด/รายชื่อ (FrontOffice ใช้ `/owner/preorder-rounds/dashboard` · `/:id/customers`)
@@ -45,6 +37,7 @@
 
 | รหัส | เรื่อง | ผล |
 |---|---|---|
+| Q-BE2 | `GET /admin/shipping-zones` (`store_info.view`) · `PATCH /admin/shipping-zones/:zone_code` (`store_info.update` · ชื่อ/ค่าส่ง/จังหวัด — 77 จังหวัด · ซ้ำข้ามโซน = 409 · โซน D ไม่มีจังหวัด · audit log) | ✅ BE #74 · frontend F2 (`/owner/shipping`) ใช้แล้ว |
 | Q-BE12 | บัญชีพร้อมเพย์รับเงินคืน: `refund_promptpay_id/name` ใน `userModel` · `GET/PATCH /shop/me` (มือถือ 10 หลัก / บัตร 13 หลัก · `null` ล้าง) · ไม่ออกทาง `/admin/users` · `refund_account` ใน `GET /admin/orders/:id` · `/admin/preorders/:id` เฉพาะตอนรอโอนคืน | ✅ BE #73 · frontend U9 + I2 ใช้แล้ว |
 | Q-BE10 · Q-BE9 | `GET /admin/pos/products` ใต้ `orders.view` (ไม่ลบ · ไม่ใช่พรีออเดอร์ · ไม่กรอง `is_visible` เหมือน `/pos/scan` · ไม่มี `purchase_cost`) + `has_customization` ต่อรายการ | ✅ BE #72 · frontend I15 ใช้แล้ว |
 | Q-BE15 | regex `pickup_date` ผิด → เลือกวันรับไม่ได้ | ✅ #67 |

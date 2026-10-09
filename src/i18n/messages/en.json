@@ -82,6 +82,7 @@
     "notificationsHistory": "Notification History",
     "logout": "Log out",
     "deliveryZones": "Delivery Zones",
+    "webShipping": "Online Shipping Fees",
     "storefront": "View storefront"
   },
   "auth": {
@@ -2086,6 +2087,38 @@
       "result": "Zone \"{zone}\" — fee {fee}",
       "fallback": "No zone matches — the system default fee applies",
       "freeNote": "Orders of {amount} or more ship free"
+    }
+  },
+  "shippingZones": {
+    "title": "Online Shipping Fees",
+    "description": "Shipping fees by province for orders customers place on the website (zones A–D) — changes apply to new orders immediately",
+    "usage": "The customer's delivery province is matched against zones A–C — anything else uses zone D · no free shipping by order total (free shipping only via coupons) · orders created in the back office use \"Delivery Zones\" instead",
+    "scopeNote": "Categories without \"ships nationwide\" can only be delivered within the store's province — set this in category management on the products page",
+    "fallbackTag": "All other provinces",
+    "fallbackHint": "Zone D automatically covers every province not in zones A–C — only its name and fee can be edited",
+    "noProvinces": "No provinces yet",
+    "moreProvinces": "+{n} provinces",
+    "editTitle": "Edit zone {code}",
+    "saved": "Zone {code} saved",
+    "saveFailed": "Could not save the zone",
+    "fields": {
+      "code": "Zone",
+      "label": "Zone name",
+      "fee": "Fee",
+      "provinces": "Provinces",
+      "provincesPlaceholder": "Pick provinces",
+      "provincesHint": "A province can belong to one zone only — remove it from its current zone before moving it",
+      "provinceTaken": "{province} (zone {code})"
+    },
+    "errors": {
+      "labelRequired": "Please enter a zone name",
+      "labelTooLong": "Zone name must be 120 characters or fewer",
+      "feeInvalid": "Fee must be 0 or more with at most 2 decimals"
+    },
+    "checker": {
+      "title": "Check fee by province",
+      "placeholder": "Pick a province",
+      "result": "Zone {code} — fee {fee}"
     }
   },
   "shop": {
