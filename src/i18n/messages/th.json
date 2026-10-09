@@ -1385,6 +1385,8 @@
     "fieldVendor": "ผู้รับเงิน / ร้านค้า",
     "fieldNote": "หมายเหตุ",
     "fieldReceipt": "ใบเสร็จ",
+    "receiptUploadFailed": "อัปโหลดรูปใบเสร็จไม่สำเร็จ",
+    "receiptTooLarge": "รูปใบเสร็จต้องไม่เกิน 5 MB",
     "fieldRecurring": "รายจ่ายที่เกิดขึ้นซ้ำ",
     "descriptionPlaceholder": "เช่น ซื้อแป้งสาลี 20kg, ค่าไฟฟ้าเดือนมิถุนายน",
     "vendorPlaceholder": "เช่น ตลาดสด, ร้านวัสดุ",

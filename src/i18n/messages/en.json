@@ -1385,6 +1385,8 @@
     "fieldVendor": "Payee / Vendor",
     "fieldNote": "Note",
     "fieldReceipt": "Receipt",
+    "receiptUploadFailed": "Could not upload the receipt image",
+    "receiptTooLarge": "Receipt image must be 5 MB or smaller",
     "fieldRecurring": "Recurring Expense",
     "descriptionPlaceholder": "e.g. Bought 20kg flour, June electricity bill",
     "vendorPlaceholder": "e.g. Wet market, supply shop",

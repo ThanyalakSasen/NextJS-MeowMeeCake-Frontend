@@ -93,7 +93,7 @@
 | component | สถานะ | consumers |
 |---|---|---|
 | FormField | ✅ เฟส 4 (จาก Add Product) | ทุกฟอร์ม |
-| UploadImageBox | ✅ เฟส 4 | Add/Edit Product, Store Design |
+| ~~UploadImageBox~~ | ❌ ลบแล้ว 2026-10-10 — เก็บรูปเป็น base64 ที่ backend ไม่รับ · แทนด้วยตัวอัปโหลดจริงเฉพาะหน้า | `ProductImageUpload` (สินค้า) · `BannerImageUpload` (แบนเนอร์) · `ReceiptUpload` (ใบเสร็จค่าใช้จ่าย) |
 | ToggleRow · MonthSelector · PasswordShuffleButton · AvatarUploader | ⏳ | Add/Edit Employee, Finance |
 
 ---
