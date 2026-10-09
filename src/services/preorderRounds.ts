@@ -10,6 +10,9 @@ import type {
   PreorderRound, PreorderRoundItem, CreateRoundInput, UpdateRoundInput,
   RoundItemInput, UpdateRoundItemInput, RoundListParams,
 } from "@/types/preorderRound";
+import type {
+  RoundCustomers, RoundCustomersParams, RoundDashboardParams, RoundDashboardRow,
+} from "@/types/preorderRoundDashboard";
 import { refId } from "@/lib/refId";
 
 const ROUNDS_BASE = "/admin/preorder-rounds";
@@ -97,4 +100,11 @@ export const preorderRoundsService = {
   },
 
   removeItem: (itemId: string) => http.delete<EmptyResponse>(`${ROUND_ITEMS_BASE}/${itemId}`),
+
+  /** GET /admin/preorder-rounds/dashboard — สรุปต่อรอบ (จอง/โควตา · ยอดแยกสถานะชำระเงิน) · รอบล่าสุดก่อน (F4 · Q-BE5) */
+  dashboard: (params: RoundDashboardParams = {}) => http.getList<RoundDashboardRow>(`${ROUNDS_BASE}/dashboard`, { params }),
+
+  /** GET /admin/preorder-rounds/:id/customers — รายชื่อลูกค้าในรอบ จัดกลุ่มตามคน (F4 · Q-BE5) */
+  customers: async (roundId: string, params: RoundCustomersParams = {}): Promise<RoundCustomers> =>
+    (await http.get<ItemResponse<RoundCustomers>>(`${ROUNDS_BASE}/${roundId}/customers`, { params })).data,
 };

@@ -1,20 +1,13 @@
 # งานที่ backend ต้องแก้ไข
 
 > backend: `ThanyalakSasen/NextJS-MeowMeeCake` (ในเครื่อง `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake`)
-> รวบรวมจาก [`BACKLOG4-merge.md`](BACKLOG4-merge.md) หมวด 9 และคำถามใน [`BACKLOG3-merge.md`](BACKLOG3-merge.md#ถาม-backend) · อัปเดต 2026-10-10 (หลัง backend #74 · frontend F2)
+> รวบรวมจาก [`BACKLOG4-merge.md`](BACKLOG4-merge.md) หมวด 9 และคำถามใน [`BACKLOG3-merge.md`](BACKLOG3-merge.md#ถาม-backend) · อัปเดต 2026-10-10 (หลัง backend #75 · frontend F4)
 
 สถานะ: ▢ พร้อมทำ (ตอบแล้วว่าทำ) · ⏸ รอคำตอบ · ✅ เสร็จ · ❌ ไม่ทำ
 
 ## 1. ตอบแล้วว่าทำ — frontend รอ API อยู่
 
-ลำดับที่แนะนำ: 1.4 (1.1 Q-BE10 · 1.2 Q-BE12 · 1.3 Q-BE2 เสร็จแล้ว — ดูหมวด 4)
-
-### 1.4 Q-BE5 — สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ ▢ (เจ้าของร้านต้องการ — Q-OWN3)
-- **ปัญหา:** `admin/preorder-rounds` มีแค่ CRUD · `items` · `status` · `restore` — ไม่มีสรุปยอด/รายชื่อ (FrontOffice ใช้ `/owner/preorder-rounds/dashboard` · `/:id/customers`)
-- **ขอ:**
-  - `GET /admin/preorder-rounds/dashboard` — ต่อรอบ: จำนวนพรีออเดอร์ · จำนวนชิ้นต่อสินค้า (จอง / โควตา) · ยอดเงิน · แยกสถานะชำระเงิน (ชำระแล้ว / รอชำระ / ยกเลิก)
-  - `GET /admin/preorder-rounds/:id/customers` — รายชื่อลูกค้าในรอบ: ชื่อ · เบอร์ · เลขพรีออเดอร์ · รายการ + จำนวน · วิธีรับ (รับเอง/จัดส่ง + ที่อยู่) · สถานะชำระเงิน · รองรับกรอง/ค้นหา และส่งออก (CSV) ถ้าทำได้
-- **frontend ที่รอ:** F4 — dashboard ใน `owner/preorders/rounds`
+ไม่มีงานค้างในหมวดนี้แล้ว — Q-BE10 · Q-BE12 · Q-BE2 · Q-BE5 เสร็จทั้งหมด (ดูหมวด 4)
 
 ## 2. รอคำตอบก่อนทำ
 
@@ -37,6 +30,7 @@
 
 | รหัส | เรื่อง | ผล |
 |---|---|---|
+| Q-BE5 | `GET /admin/preorder-rounds/dashboard` (จอง/โควตาต่อสินค้า · ยอดแยกชำระแล้ว/รอชำระ/ยกเลิก) · `GET /admin/preorder-rounds/:id/customers` (จัดกลุ่มตามลูกค้า · วิธีรับ · กรอง/ค้นหา) — สิทธิ์ `preorder.view` · CSV ทำฝั่ง frontend | ✅ BE #75 · frontend F4 (แท็บ "สรุปรอบ") ใช้แล้ว |
 | Q-BE2 | `GET /admin/shipping-zones` (`store_info.view`) · `PATCH /admin/shipping-zones/:zone_code` (`store_info.update` · ชื่อ/ค่าส่ง/จังหวัด — 77 จังหวัด · ซ้ำข้ามโซน = 409 · โซน D ไม่มีจังหวัด · audit log) | ✅ BE #74 · frontend F2 (`/owner/shipping`) ใช้แล้ว |
 | Q-BE12 | บัญชีพร้อมเพย์รับเงินคืน: `refund_promptpay_id/name` ใน `userModel` · `GET/PATCH /shop/me` (มือถือ 10 หลัก / บัตร 13 หลัก · `null` ล้าง) · ไม่ออกทาง `/admin/users` · `refund_account` ใน `GET /admin/orders/:id` · `/admin/preorders/:id` เฉพาะตอนรอโอนคืน | ✅ BE #73 · frontend U9 + I2 ใช้แล้ว |
 | Q-BE10 · Q-BE9 | `GET /admin/pos/products` ใต้ `orders.view` (ไม่ลบ · ไม่ใช่พรีออเดอร์ · ไม่กรอง `is_visible` เหมือน `/pos/scan` · ไม่มี `purchase_cost`) + `has_customization` ต่อรายการ | ✅ BE #72 · frontend I15 ใช้แล้ว |

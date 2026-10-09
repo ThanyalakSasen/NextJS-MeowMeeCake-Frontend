@@ -1,11 +1,13 @@
 "use client";
-// View ของ Pre-order Round — 2 แท็บ (รอบพรีออเดอร์ / คำสั่งซื้อเค้กวันเกิด) sync กับ ?tab= ผ่าน TabbedPageLayout
+// View ของ Pre-order Round — 3 แท็บ (รอบพรีออเดอร์ / สรุปรอบ / คำสั่งซื้อเค้กวันเกิด) sync กับ ?tab= ผ่าน TabbedPageLayout
 import { useTranslations } from "next-intl";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { DetailDrawer } from "@/components/shared/feedback";
 import type { usePreOrderRoundViewModel } from "./usePreOrderRoundViewModel";
 import { RoundsTab } from "./_components/RoundsTab";
 import { OrdersTab } from "./_components/OrdersTab";
+import { DashboardTab } from "./_components/DashboardTab";
+import { RoundDashboardDrawer } from "./_components/RoundDashboardDrawer";
 import { RoundFormModal } from "./_components/RoundFormModal";
 import { EditRoundModal } from "./_components/EditRoundModal";
 import { RoundItemFormModal } from "./_components/RoundItemFormModal";
@@ -26,9 +28,12 @@ export function PreOrderRoundView(vm: VM) {
         onChange={vm.setActiveTab}
         items={[
           { key: "rounds", label: t("preorderRound.tabRounds"), children: <RoundsTab {...vm} /> },
+          { key: "dashboard", label: t("preorderRound.tabDashboard"), children: <DashboardTab {...vm.dashboard} /> },
           { key: "orders", label: t("preorderRound.tabOrders"), children: <OrdersTab {...vm} /> },
         ]}
       />
+
+      <RoundDashboardDrawer {...vm.dashboard} />
 
       <RoundFormModal
         open={vm.createRoundOpen}
