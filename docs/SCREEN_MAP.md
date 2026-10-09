@@ -4,7 +4,7 @@
 > **เปิดอ่านเมื่อ:** ก่อนเริ่ม/หลังจบ screen ใดในเฟส 4 · สงสัยว่าทำไมกดเมนูแล้วไปหน้าอื่น/404 · เช็คว่าลืมต่อสายอะไรไหม
 > **ความสัมพันธ์กับเอกสารอื่น:** `REBUILD_PLAN.md` §7 = route/template/component ต่อหน้า (ของ "จะสร้างอะไร") · `COMPONENT_MAP.md` = ทะเบียน component (ของ "component อยู่ไหน") · **เอกสารนี้ = เข้าถึงหน้านั้นได้จริงหรือยัง**
 >
-> อัปเดตล่าสุด: 2026-10-09 — §2 = 27 หน้าเดิมของเฟส 4 · §2b = หน้าหลังร้านที่เพิ่มภายหลัง · §2c = หน้าร้าน `/customer/*` (ย้ายมาจาก FrontOffice — BACKLOG3/4) · **ข้อแก้ §2:** #22 Attendance ไม่มีในโค้ดแล้ว (ไม่มี `app/owner/attendance`) · #8 POS = `OrderInStore`
+> อัปเดตล่าสุด: 2026-10-10 (เพิ่ม #36 โซนค่าจัดส่ง · #37 ค่าจัดส่งหน้าร้านออนไลน์ · แท็บสรุปรอบใน #28) — §2 = 27 หน้าเดิมของเฟส 4 · §2b = หน้าหลังร้านที่เพิ่มภายหลัง · §2c = หน้าร้าน `/customer/*` (ย้ายมาจาก FrontOffice — BACKLOG3/4) · **ข้อแก้ §2:** #22 Attendance ไม่มีในโค้ดแล้ว (ไม่มี `app/owner/attendance`) · #8 POS = `OrderInStore`
 
 ---
 
@@ -66,7 +66,7 @@
 
 | # | Screen | Route | Reach | menuKey | Breadcrumb key | Files | หมายเหตุ |
 |---|---|---|---|---|---|---|---|
-| 28 | รอบพรีออเดอร์ | `/owner/orders/preOrderRound` | sidebar ใต้คำสั่งซื้อ | `preorder` | `ordersPreorderRound` | MVVM + `_components/` (RoundsTab · OrdersTab · RoundFormModal ...) | รอบ + พรีออเดอร์ของลูกค้า |
+| 28 | รอบพรีออเดอร์ | `/owner/orders/preOrderRound` | sidebar ใต้คำสั่งซื้อ | `preorder` | `ordersPreorderRound` | MVVM + `_components/` (RoundsTab · DashboardTab · OrdersTab · RoundFormModal · RoundDashboardDrawer ...) | 3 แท็บ `?tab=rounds\|dashboard\|orders` — รอบ · **สรุปรอบ** (F4 — `useRoundDashboardViewModel` แยก) · พรีออเดอร์ของลูกค้า |
 | 29 | คูปอง | `/owner/promotions/coupons` | sidebar ใต้โปรโมชัน | `promotions` | `promotionsCoupons` | MVVM + CouponCard · CouponFormModal | แต้มแลกคูปอง (`points_cost`) |
 | 30 | ตั้งราคา/ราคาลด | `/owner/promotions/pricing` | sidebar ใต้โปรโมชัน | `products` (ยิง /admin/products) | `promotionsPricing` | MVVM | |
 | 31 | รายงานยอดขาย | `/owner/reports/sales` | sidebar ใต้รายงาน | `reports` | `reportsSales` | MVVM | |
@@ -74,6 +74,8 @@
 | 33 | ตั้งค่าหัวข้อรีวิว | `/owner/reports/reviews/settings` | ปุ่ม "ตั้งค่าหัวข้อรีวิว" บนหน้ารีวิว (ไม่มี sidebar leaf — ตั้งใจ) | `reports` | `reviewSettings` | MVVM + AspectsTab · TermsTab | E4 |
 | 34 | คำพ้องค้นหา | `/owner/products/search-synonyms` | sidebar ใต้สินค้า | `products` | `searchSynonyms` | MVVM + SynonymGroupForm · SearchTester | E3 |
 | 35 | ข้อมูลร้าน | `/owner/store-info` | sidebar กลุ่มพนักงาน | `store_info` (ส่วนอื่น owner เท่านั้น) | `storeInfo` | MVVM + SectionCard · StoreAddressFields · CoordinateInput · WeeklyMarketsEditor · TimeSelect | E2 — พนักงานเห็นเฉพาะหน้าร้านประจำสัปดาห์ |
+| 36 | โซนค่าจัดส่ง (หลังร้าน/POS) | `/owner/orders/delivery-zones` | sidebar ใต้คำสั่งซื้อ | `orders` | `deliveryZones` | MVVM + DeliveryZoneForm · ZoneChecker · `deliveryZoneForm.ts` | I8 — `DeliveryZones` · เพิ่ม/แก้/ลบ/กู้คืน |
+| 37 | ค่าจัดส่งหน้าร้านออนไลน์ | `/owner/shipping` | sidebar กลุ่มพนักงาน (ต่อจากข้อมูลร้าน) | `store_info` (view / update) | `webShipping` | MVVM + ShippingZoneFormFields · `shippingZoneForm.ts` | F2 — `ShippingZones` A–D (backend #74) · โซนคงที่ แก้ได้อย่างเดียว |
 | — | โปรไฟล์ | `/profile` | เมนูผู้ใช้บน Navbar | — (login-only) | — | MVVM | เชื่อม LINE · ซ่อนอีเมลชั่วคราวของบัญชี LINE (I10) |
 | — | สมัครสมาชิก · LINE login | `/register` · `/login/line` | ลิงก์จากหน้า login | — (public) | — | | B1/B3 |
 
