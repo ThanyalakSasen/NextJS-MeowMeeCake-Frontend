@@ -21,7 +21,7 @@
 
 | ด้าน | ใช้ | หมายเหตุ |
 |---|---|---|
-| Framework | **Next.js 16.2.6** (App Router) | `reactCompiler: true` · `src/proxy.ts` = middleware เดิม (Node runtime) |
+| Framework | **Next.js 16.3.8** (App Router) | `reactCompiler: true` (+ `react-compiler-runtime` เพราะ React 18) · `src/proxy.ts` = middleware เดิม (Node runtime) |
 | UI | **React 18.3.1** + TypeScript | |
 | Component | **antd 6** | เรียกผ่าน `components/base/` เท่านั้น — ไม่เรียก antd ตรงจากหน้า |
 | Styling | **Tailwind 4** | จัด layout/spacing/สี · antd = component, Tailwind = จัดวาง |

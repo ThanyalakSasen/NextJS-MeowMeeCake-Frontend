@@ -376,7 +376,7 @@ export const productsService = {
 | **sweetalert2** | popup แจ้งเตือน/ยืนยัน | หน้าตาสวย, เรียกผ่าน `lib/alert.ts` ที่เดียว |
 | **dayjs** | จัดการวันที่ | เบา, antd ใช้ตัวนี้อยู่แล้ว, สลับ locale ได้ |
 | **recharts** | กราฟ (ยอดขาย, การผลิต) | API เป็น React component ตรงไปตรงมา |
-| **React Compiler** (`reactCompiler: true`) | ทำ memoization ให้อัตโนมัติ | ไม่ต้องใส่ `useMemo`/`useCallback` เองทุกที่ (build ช้าลงนิดหน่อย แลกมา) |
+| **React Compiler** (`reactCompiler: true`) | ทำ memoization ให้อัตโนมัติ | ไม่ต้องใส่ `useMemo`/`useCallback` เองทุกที่ (build ช้าลงนิดหน่อย แลกมา) · ใช้คู่ `react-compiler-runtime` เพราะยังเป็น React 18 (Next 16.3+ บังคับ) |
 
 ---
 
