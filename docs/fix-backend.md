@@ -1,7 +1,7 @@
 # งานที่ backend ต้องแก้ไข
 
 > backend: `ThanyalakSasen/NextJS-MeowMeeCake` (ในเครื่อง `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake`)
-> รวบรวมจาก [`BACKLOG4-merge.md`](BACKLOG4-merge.md) หมวด 9 และคำถามใน [`BACKLOG3-merge.md`](BACKLOG3-merge.md#ถาม-backend) · อัปเดต 2026-10-10 (หลัง backend #75 · frontend F4)
+> รวบรวมจาก [`BACKLOG4-merge.md`](BACKLOG4-merge.md) หมวด 9 และคำถามใน [`BACKLOG3-merge.md`](BACKLOG3-merge.md#ถาม-backend) · อัปเดต 2026-10-10 (หลัง backend #76)
 
 สถานะ: ▢ พร้อมทำ (ตอบแล้วว่าทำ) · ⏸ รอคำตอบ · ✅ เสร็จ · ❌ ไม่ทำ
 
@@ -14,7 +14,6 @@
 | รหัส | เรื่อง | ค้างที่ | frontend ที่รอ |
 |---|---|---|---|
 | Q-BE4 | รีวิว analytics · dashboard · รายสินค้า (`/owner/reviews/analytics` · `dashboard` · `products/[id]` ของ FrontOffice — BE §8.20 ยังไม่ย้าย) | คำตอบ "หลังจากเมื่อสินค้าถูกจัดส่งเรียบร้อยแล้ว" ยังไม่ชัดว่าหมายถึงจังหวะเปิดให้รีวิว หรือกำหนดเวลาทำหน้า analytics — ต้องถามซ้ำ | F3 |
-| Q-BE16 | 🟢 รายการโปรด: เอาออกแล้วเพิ่มกลับ = กู้แถวเดิม (`created_at` เดิม) → ไม่ขึ้นบนสุดตามที่ `GET` เรียง "ล่าสุดก่อน" · เสนอ: ตั้ง `created_at` ใหม่ตอนกู้ (หรือเรียงด้วย `updated_at`) — `favoriteService.addFavorite` | ยังไม่ได้ตอบ (แก้เล็ก) | — |
 
 ## 3. ค่าตั้งก่อน deploy (env ของ backend)
 
@@ -30,6 +29,7 @@
 
 | รหัส | เรื่อง | ผล |
 |---|---|---|
+| Q-BE16 | รายการโปรด: เอาออกแล้วเพิ่มกลับ → กู้แถวเดิม + ตั้ง `created_at` ใหม่ (ขึ้นบนสุด) · กดซ้ำตอนอยู่ในรายการ = ลำดับไม่เปลี่ยน — `favoriteService.addFavorite` | ✅ BE #76 · frontend ไม่ต้องแก้ (`useFavorites` ใส่ไว้บนสุดแบบ optimistic อยู่แล้ว — ไม่กระโดดกลับตอนโหลดใหม่อีก) |
 | Q-BE5 | `GET /admin/preorder-rounds/dashboard` (จอง/โควตาต่อสินค้า · ยอดแยกชำระแล้ว/รอชำระ/ยกเลิก) · `GET /admin/preorder-rounds/:id/customers` (จัดกลุ่มตามลูกค้า · วิธีรับ · กรอง/ค้นหา) — สิทธิ์ `preorder.view` · CSV ทำฝั่ง frontend | ✅ BE #75 · frontend F4 (แท็บ "สรุปรอบ") ใช้แล้ว |
 | Q-BE2 | `GET /admin/shipping-zones` (`store_info.view`) · `PATCH /admin/shipping-zones/:zone_code` (`store_info.update` · ชื่อ/ค่าส่ง/จังหวัด — 77 จังหวัด · ซ้ำข้ามโซน = 409 · โซน D ไม่มีจังหวัด · audit log) | ✅ BE #74 · frontend F2 (`/owner/shipping`) ใช้แล้ว |
 | Q-BE12 | บัญชีพร้อมเพย์รับเงินคืน: `refund_promptpay_id/name` ใน `userModel` · `GET/PATCH /shop/me` (มือถือ 10 หลัก / บัตร 13 หลัก · `null` ล้าง) · ไม่ออกทาง `/admin/users` · `refund_account` ใน `GET /admin/orders/:id` · `/admin/preorders/:id` เฉพาะตอนรอโอนคืน | ✅ BE #73 · frontend U9 + I2 ใช้แล้ว |
