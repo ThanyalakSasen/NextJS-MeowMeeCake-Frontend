@@ -10,7 +10,7 @@ import { rolesService } from "@/services/roles";
 import { usersService } from "@/services/users";
 import { permissionsService } from "@/services/permissions";
 import { usePermission } from "@/context/PermissionsContext";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { CURRENT_USER_KEY, useCurrentUser } from "@/hooks/useCurrentUser";
 import { alert, confirmAlert } from "@/lib/alert";
 import { LIST_ALL } from "@/lib/http";
 import type { MenuKey } from "@/constants/menuKeys";
@@ -188,6 +188,27 @@ export function usePermissionsViewModel() {
     }
   };
 
+  // แก้ชื่อตำแหน่ง — ชื่อแสดงในหน้าพนักงาน + เมนูผู้ใช้ด้วย จึงโหลด users / ผู้ใช้ปัจจุบันใหม่
+  const [renaming, setRenaming] = useState(false);
+  const onRenameRole = async (name: string) => {
+    if (!selectedRole) return false;
+    if (name === selectedRole.role_name) return true;
+    setRenaming(true);
+    try {
+      await rolesService.rename(selectedRole._id, name);
+      await qc.invalidateQueries({ queryKey: ["roles"] });
+      qc.invalidateQueries({ queryKey: ["users"] });
+      qc.invalidateQueries({ queryKey: CURRENT_USER_KEY });
+      alert.success(t("permissions.renameRoleSuccess", { from: selectedRole.role_name, to: name }));
+      return true;
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("permissions.renameRoleFailed"));
+      return false;
+    } finally {
+      setRenaming(false);
+    }
+  };
+
   // ยืนยันแล้วที่ <ConfirmDeletePopup> ของปุ่ม "ลบบทบาท" (PermissionsView) — ไม่ถาม confirmAlert ซ้ำอีกชั้น
   // (เดิมถาม 2 ครั้ง: Popconfirm แล้วตามด้วย popup กลางจอ)
   const onDeleteRole = async () => {
@@ -223,6 +244,8 @@ export function usePermissionsViewModel() {
     onSave,
     onReset,
     onAddRole,
+    onRenameRole,
+    renaming,
     onDeleteRole,
   };
 }
