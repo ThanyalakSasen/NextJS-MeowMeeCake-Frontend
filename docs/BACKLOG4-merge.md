@@ -24,11 +24,11 @@
 | ฝั่ง | ตอนตรวจ (2026-10-08) | ตอนนี้ (2026-10-09 · `main`) |
 |---|---|---|
 | หน้าร้าน (ลูกค้า) | ครบ 16 หน้า · **ขาด 15 หน้า** (พรีออเดอร์ 8 · แต้ม · รายการโปรด · แจ้งเตือน · เขียนรีวิว · ติดต่อร้าน · ค่าส่ง · ลิงก์ชำระเงิน) · **UI ไม่ครบ 9 จุด** (หมวด 3) | ครบ (D10 = ลิงก์หน้าคำสั่งซื้อใน LINE ✅) · UI ไม่ครบ **1 จุด** — U9 (⏸ Q-BE12) |
-| หลังร้าน (เจ้าของร้าน) | ทุกหน้าที่มีในระบบเดิม · **ขาด 5 หน้า** (ข้อมูลร้าน · คำค้นเทียบเคียง · รีวิวขั้นสูง · ออเดอร์พร้อมส่ง · โซนค่าส่ง) · รีวิว UI ไม่ครบ (FO ~4,160 บรรทัด vs 374) | **ครบทั้ง 5 หน้า** (E2 · E3 · E4 · E5 · I8) · ที่เหลือรอ backend: F2 ค่าส่งเว็บ · F3 รีวิว analytics · F4 dashboard รอบพรีออเดอร์ · I15 ค้นสินค้าใน POS |
+| หลังร้าน (เจ้าของร้าน) | ทุกหน้าที่มีในระบบเดิม · **ขาด 5 หน้า** (ข้อมูลร้าน · คำค้นเทียบเคียง · รีวิวขั้นสูง · ออเดอร์พร้อมส่ง · โซนค่าส่ง) · รีวิว UI ไม่ครบ (FO ~4,160 บรรทัด vs 374) | **ครบทั้ง 5 หน้า** (E2 · E3 · E4 · E5 · I8) · ที่เหลือรอ backend: F2 ค่าส่งเว็บ · F3 รีวิว analytics · F4 dashboard รอบพรีออเดอร์ |
 
 > งานฝั่ง frontend ที่ทำได้โดยไม่ต้องรอใคร **เข้า `main` ครบแล้ว** — ที่เหลือติดคำตอบ/การตัดสินใจ (หมวด 7 · หมวด 9 · คำถามใหม่) และค่าตั้ง env ก่อน deploy (§9.6)
 
-**ลำดับที่ทำไปแล้ว:** ~~1.1 (ปิด C3)~~ ✅ → ~~K1–K4 (เอกสาร)~~ ✅ → ~~D4~~ ✅ → ~~D5 + U3 (หัวใจ)~~ ✅ → ~~C1~~ ✅ → ~~D3~~ ✅ → ~~D6 + U4~~ ✅ → ~~D7~~ ✅ → ~~D8~~ ✅ → ~~D9 + U5~~ ✅ → ~~C2~~ ✅ → หลังร้าน ~~E2~~ ✅ → ~~E3~~ ✅ → ~~E4~~ ✅ → ~~E5~~ ✅ → ~~I3 · I10 · K5–K7~~ ✅ → ~~V1–V10 (ตรวจหน้าจอจริง)~~ ✅ → ~~U2 · U6 · U7~~ ✅ → ~~I11~~ ✅ → ~~I8~~ ✅ → ~~ย้ายข้อความหน้าร้านเข้า i18n (`shop.*` · th/en · #44)~~ ✅ → ~~ปุ่มสลับภาษา TH/EN บน Navbar หน้าร้าน + เมนูมือถือบรรทัดเดียว (#45)~~ ✅ → ~~ชื่อสินค้า/หัวข้อรีวิวภาษาอังกฤษเมื่อเลือก EN (#46)~~ ✅ → ~~owner/staff ลิงก์หลังร้าน (#48)~~ ✅ → ~~U8 (#49)~~ ✅ → ~~หน้าร้านไทยอย่างเดียว · Q-BE19 (#50)~~ ✅ → ~~D10 ลิงก์ใน LINE (#51 · BE #70)~~ ✅ → ~~Q-BE14 เพดานแต้ม~~ ✅ → **ที่เหลือ (ตอบแล้ว: ทำ — ต้องมี backend ก่อน):** I15 (Q-BE10) · U9 (Q-BE12) · F2 (Q-BE2) · F4 (Q-BE5) · **รอคำตอบ:** F3 (Q-BE4) · Q-BE3 · Q-BE9 · Q-BE16
+**ลำดับที่ทำไปแล้ว:** ~~1.1 (ปิด C3)~~ ✅ → ~~K1–K4 (เอกสาร)~~ ✅ → ~~D4~~ ✅ → ~~D5 + U3 (หัวใจ)~~ ✅ → ~~C1~~ ✅ → ~~D3~~ ✅ → ~~D6 + U4~~ ✅ → ~~D7~~ ✅ → ~~D8~~ ✅ → ~~D9 + U5~~ ✅ → ~~C2~~ ✅ → หลังร้าน ~~E2~~ ✅ → ~~E3~~ ✅ → ~~E4~~ ✅ → ~~E5~~ ✅ → ~~I3 · I10 · K5–K7~~ ✅ → ~~V1–V10 (ตรวจหน้าจอจริง)~~ ✅ → ~~U2 · U6 · U7~~ ✅ → ~~I11~~ ✅ → ~~I8~~ ✅ → ~~ย้ายข้อความหน้าร้านเข้า i18n (`shop.*` · th/en · #44)~~ ✅ → ~~ปุ่มสลับภาษา TH/EN บน Navbar หน้าร้าน + เมนูมือถือบรรทัดเดียว (#45)~~ ✅ → ~~ชื่อสินค้า/หัวข้อรีวิวภาษาอังกฤษเมื่อเลือก EN (#46)~~ ✅ → ~~owner/staff ลิงก์หลังร้าน (#48)~~ ✅ → ~~U8 (#49)~~ ✅ → ~~หน้าร้านไทยอย่างเดียว · Q-BE19 (#50)~~ ✅ → ~~D10 ลิงก์ใน LINE (#51 · BE #70)~~ ✅ → ~~Q-BE14 เพดานแต้ม~~ ✅ → ~~I15 ค้นสินค้าใน POS (Q-BE10 + Q-BE9 · BE #72)~~ ✅ → **ที่เหลือ (ตอบแล้ว: ทำ — ต้องมี backend ก่อน):** U9 (Q-BE12) · F2 (Q-BE2) · F4 (Q-BE5) · **รอคำตอบ:** F3 (Q-BE4) · Q-BE3 · Q-BE16
 
 ---
 
@@ -123,7 +123,7 @@
 | I9 | 🟢 | รายการรีวิวหลังร้าน: `data.summary` ยังถูกทิ้ง (`services/reviews.ts`) | ✅ 2026-10-09 (E4) — `reviewsService.list` อ่าน `data.summary` (ส่ง `summary=1`) แสดงในแถบสรุป |
 | I10 | 🟢 | อีเมลชั่วคราวของบัญชี LINE (`*@line-user.invalid`) ยังแสดงดิบในหลังร้าน (drawer ออเดอร์ · รีวิว · พนักงาน) | ✅ 2026-10-09 — `lib/lineAccount.ts` (`isLinePlaceholderEmail` ย้ายจาก services/shopProfile — re-export ไว้) · `/profile` แสดง "บัญชี LINE — ยังไม่ได้ระบุอีเมล" · ฟอร์มแก้พนักงานเตือนให้ใส่อีเมลจริง · ตรวจแล้ว: drawer ออเดอร์/รีวิวหลังร้านไม่ได้แสดงอีเมลลูกค้า (backend ก็ตัดอีเมลชั่วคราวออกจากข้อความติดต่อร้านแล้ว) |
 | I11 | 🟢 | mock (MSW) ใช้ไม่ได้ (path เก่า ไม่มี `/admin`) — ตอนนี้ `.env.local` ตั้ง `NEXT_PUBLIC_API_MOCK=0` อยู่แล้ว | ✅ 2026-10-09 (branch `fix/frontend-followups`) — เลือก "ลบทิ้งทั้งหมด": ถอด `src/mocks` · `MSWReady` · `public/mockServiceWorker.js` · แพ็กเกจ `msw` · `NEXT_PUBLIC_API_MOCK` (+ ESLint ignore · ข้อยกเว้น check-i18n) · `docs/MOCKS.md` เขียนใหม่เป็นวิธีทดสอบกับ backend ในเครื่อง + DB ทดสอบ · อัปเดต README · OVERVIEW · API_CONTRACT · services/README |
-| I15 | 🟡 | POS: ช่องค้นหาสินค้าได้ 403 ถ้าพนักงานไม่มี `products.view` | ⏸ [Q-BE10](BACKLOG3-merge.md#ถาม-backend) |
+| I15 | ✅ | POS: ช่องค้นหาสินค้าได้ 403 ถ้าพนักงานไม่มี `products.view` | ✅ 2026-10-10 — `catalogQ` ใช้ `GET /admin/pos/products` (`posService.listProducts` · สิทธิ์ `orders.view` · BE #72) · `has_customization = false` ลงบิลทันทีไม่ยิง `/pos/scan` (Q-BE9) · ยังไม่ได้คลิกทดสอบในเบราว์เซอร์ |
 
 ---
 
@@ -149,9 +149,9 @@
 |---|---|---|
 | B3 ล็อกอิน Google / LINE | ทีม/ผู้ดูแลบัญชี | ตั้ง `NEXT_PUBLIC_GOOGLE_CLIENT_ID` + origin ใน Google Console · `LINE_AUTH_*` + Callback URL ใน LINE Console · merge backend `feat/line-login-endpoint` ([Q-BE7](BACKLOG3-merge.md#ถาม-backend)) แล้วทดสอบด้วยบัญชีจริง |
 | F2 · F3 · F4 | backend / เจ้าของร้าน | หมวด 4 |
-| I15 · U9 | backend | Q-BE10 · Q-BE12 (ตอบแล้ว: ทำ) |
+| U9 | backend | Q-BE12 (ตอบแล้ว: ทำ) |
 | G3 ปิด FrontOffice พอร์ต 4000 | ทีม | [Q-OWN4](BACKLOG3-merge.md#ถาม-เจ้าของร้าน--ทีม) ตอบแล้ว: เห็นด้วย · เหลือกำหนดวัน + [Q-FO1](BACKLOG3-merge.md#ถาม-ผู้พัฒนา-frontoffice) |
-| คำถามค้างใน BACKLOG3 | ทุกฝ่าย | ตอบแล้ว 2026-10-09: Q-BE1 · Q-BE2 · Q-BE5 · Q-BE10 · Q-BE12 · Q-BE13 · Q-BE14 · Q-FO2 · Q-OWN3 · Q-OWN4 · Q-OWN5 · **ยังค้าง:** Q-BE3 (ค่า `STOREFRONT_URL`) · Q-BE4 (คำตอบไม่ชัด) · Q-BE9 · Q-BE16 · Q-FO1 · Q-FO3 · Q-FO4 |
+| คำถามค้างใน BACKLOG3 | ทุกฝ่าย | ตอบแล้ว 2026-10-09: Q-BE1 · Q-BE2 · Q-BE5 · Q-BE10 · Q-BE12 · Q-BE13 · Q-BE14 · Q-FO2 · Q-OWN3 · Q-OWN4 · Q-OWN5 · **ยังค้าง:** Q-BE3 (ค่า `STOREFRONT_URL`) · Q-BE4 (คำตอบไม่ชัด) · Q-BE16 (Q-BE9 ทำพร้อม Q-BE10 แล้ว) · Q-FO1 · Q-FO3 · Q-FO4 |
 
 ---
 
@@ -190,9 +190,9 @@
 ### 9.4 🟡 API ที่ควรเพิ่ม
 | รหัส | เรื่อง | ตอนนี้ | ใช้กับ |
 |---|---|---|---|
-| Q-BE10 | **ตอบแล้ว: ทำ** · รายการสินค้าสำหรับ POS ใต้สิทธิ์ `orders` (เช่น `GET /admin/pos/products?search=`) | `admin/pos` มีแค่ `scan` | I15 |
+| Q-BE10 | **ตอบแล้ว: ทำ** · รายการสินค้าสำหรับ POS ใต้สิทธิ์ `orders` (เช่น `GET /admin/pos/products?search=`) | ✅ BE #72 | I15 |
 | Q-BE13 | ~~`GET /shop/orders` ส่ง items แบบย่อ~~ **ตอบแล้ว: ไม่ทำ** (ดึงทีละใบแบบเดิม) | `orderService.listOrders` (`:616`) ไม่ส่ง items · `productSnapshotSchema` (`orderItemModel.ts:4`) ไม่มีรูป | U7 · D1 |
-| Q-BE9 | flag `has_customization` ใน `GET /admin/products` | ไม่มี | I4 (POS) |
+| Q-BE9 | flag `has_customization` ใน `GET /admin/products` | ✅ ใส่ใน `/admin/pos/products` แทน (BE #72) | I4 (POS) |
 | Q-BE2 | **ตอบแล้ว: ทำ** · admin API แก้ `ShippingZones` (ค่าส่งเว็บ) | มีแค่ `admin/delivery-zones` (POS) | F2 |
 | Q-BE4 | รีวิว analytics · dashboard · รายสินค้า · ⏸ คำตอบยังไม่ชัด | `admin/reviews` มี `bulk` · `filter-options` · `[id]` | F3 |
 | Q-BE5 | **ตอบแล้ว: ทำ** (เจ้าของร้านต้องการ — Q-OWN3) · สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ | `admin/preorder-rounds` มี CRUD · `items` · `status` · `restore` | F4 |
@@ -215,7 +215,7 @@
 - Q-BE7 — endpoint LINE login merge แล้ว (backend PR #66)
 - Q-BE6 — ไม่ต้องทำ (G1 เลือก `/customer/account/purchases/<id>` ที่ลิงก์ของ backend ใช้อยู่แล้ว)
 
-**ลำดับที่แนะนำ (backend):** ~~Q-BE15 (#67)~~ → ~~Q-BE11 · Q-BE8~~ (#68) → ~~Q-BE18 (#70)~~ → ~~Q-BE14~~ → ~~Q-BE1 · Q-BE13 (ไม่ทำ)~~ → ตั้ง `STOREFRONT_URL` (Q-BE3) → Q-BE10 → Q-BE12 → Q-BE2 → Q-BE5 → ที่เหลือ
+**ลำดับที่แนะนำ (backend):** ~~Q-BE15 (#67)~~ → ~~Q-BE11 · Q-BE8~~ (#68) → ~~Q-BE18 (#70)~~ → ~~Q-BE14~~ → ~~Q-BE1 · Q-BE13 (ไม่ทำ)~~ → ตั้ง `STOREFRONT_URL` (Q-BE3) → ~~Q-BE10 (#72)~~ → Q-BE12 → Q-BE2 → Q-BE5 → ที่เหลือ
 
 ---
 

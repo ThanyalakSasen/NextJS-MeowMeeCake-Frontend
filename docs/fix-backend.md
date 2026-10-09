@@ -1,19 +1,13 @@
 # งานที่ backend ต้องแก้ไข
 
 > backend: `ThanyalakSasen/NextJS-MeowMeeCake` (ในเครื่อง `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake`)
-> รวบรวมจาก [`BACKLOG4-merge.md`](BACKLOG4-merge.md) หมวด 9 และคำถามใน [`BACKLOG3-merge.md`](BACKLOG3-merge.md#ถาม-backend) · อัปเดต 2026-10-09 (หลัง backend #71 · frontend #52)
+> รวบรวมจาก [`BACKLOG4-merge.md`](BACKLOG4-merge.md) หมวด 9 และคำถามใน [`BACKLOG3-merge.md`](BACKLOG3-merge.md#ถาม-backend) · อัปเดต 2026-10-10 (หลัง backend #72 · frontend I15)
 
 สถานะ: ▢ พร้อมทำ (ตอบแล้วว่าทำ) · ⏸ รอคำตอบ · ✅ เสร็จ · ❌ ไม่ทำ
 
 ## 1. ตอบแล้วว่าทำ — frontend รอ API อยู่
 
-ลำดับที่แนะนำ: 1.1 → 1.2 → 1.3 → 1.4
-
-### 1.1 Q-BE10 — รายการสินค้าสำหรับ POS ใต้สิทธิ์ `orders` ▢
-- **ปัญหา:** POS ใช้ `GET /admin/products` (ต้องมีสิทธิ์ `products.view`) เป็นคำแนะนำในช่องค้นหา → พนักงานหน้าร้านที่มีแค่สิทธิ์ `orders` ได้ 403 (สแกนรหัส/บาร์โค้ดผ่าน `/admin/pos/scan` ยังใช้ได้)
-- **ขอ:** `GET /admin/pos/products?search=&page=&limit=` ใต้สิทธิ์ `orders` — คืนเฉพาะสินค้าที่ขายหน้าร้านได้ (ไม่ลบ · เปิดขาย) พร้อมฟิลด์ที่ POS ใช้: `_id` · ชื่อ th/en · ราคา · สต็อก · รหัส/บาร์โค้ด · รูป · `is_preorder`
-- **ทำได้พร้อมกัน:** Q-BE9 (ข้อ 2.3) ใส่ flag `has_customization` ใน response นี้เลย
-- **frontend ที่รอ:** I15 — `OrderInStore/usePOSViewModel.ts` (`catalogQ`)
+ลำดับที่แนะนำ: 1.2 → 1.3 → 1.4 (1.1 Q-BE10 เสร็จแล้ว — ดูหมวด 4)
 
 ### 1.2 Q-BE12 — บัญชีพร้อมเพย์รับเงินคืนของลูกค้า ▢
 - **ปัญหา:** ยังไม่มี field `refund_promptpay_id` / `refund_promptpay_name` ในผู้ใช้ (FrontOffice เดิมมี — BE §7.1 ข้อ 21) · ไม่อยู่ใน `updateProfileBody`
@@ -43,7 +37,6 @@
 | รหัส | เรื่อง | ค้างที่ | frontend ที่รอ |
 |---|---|---|---|
 | Q-BE4 | รีวิว analytics · dashboard · รายสินค้า (`/owner/reviews/analytics` · `dashboard` · `products/[id]` ของ FrontOffice — BE §8.20 ยังไม่ย้าย) | คำตอบ "หลังจากเมื่อสินค้าถูกจัดส่งเรียบร้อยแล้ว" ยังไม่ชัดว่าหมายถึงจังหวะเปิดให้รีวิว หรือกำหนดเวลาทำหน้า analytics — ต้องถามซ้ำ | F3 |
-| Q-BE9 | flag `has_customization` (หรือจำนวนกลุ่มตัวเลือก) ใน `GET /admin/products` — POS จะได้ไม่ต้องเรียก `/customization` ทีละสินค้า | ยังไม่ได้ตอบ · ถ้าทำ 1.1 ใส่ใน `/admin/pos/products` ได้เลย | I4 (POS) |
 | Q-BE16 | 🟢 รายการโปรด: เอาออกแล้วเพิ่มกลับ = กู้แถวเดิม (`created_at` เดิม) → ไม่ขึ้นบนสุดตามที่ `GET` เรียง "ล่าสุดก่อน" · เสนอ: ตั้ง `created_at` ใหม่ตอนกู้ (หรือเรียงด้วย `updated_at`) — `favoriteService.addFavorite` | ยังไม่ได้ตอบ (แก้เล็ก) | — |
 
 ## 3. ค่าตั้งก่อน deploy (env ของ backend)
@@ -60,6 +53,7 @@
 
 | รหัส | เรื่อง | ผล |
 |---|---|---|
+| Q-BE10 · Q-BE9 | `GET /admin/pos/products` ใต้ `orders.view` (ไม่ลบ · ไม่ใช่พรีออเดอร์ · ไม่กรอง `is_visible` เหมือน `/pos/scan` · ไม่มี `purchase_cost`) + `has_customization` ต่อรายการ | ✅ BE #72 · frontend I15 ใช้แล้ว |
 | Q-BE15 | regex `pickup_date` ผิด → เลือกวันรับไม่ได้ | ✅ #67 |
 | Q-BE11 · Q-BE8 | ยกเลิก LINE ของบัญชีที่ไม่มีรหัสผ่าน · PATCH สินค้าเขียนสต็อกตรง ๆ | ✅ #68 |
 | Q-BE17 | ตะกร้าไม่ส่ง `variant_ids` | ✅ #69 |
