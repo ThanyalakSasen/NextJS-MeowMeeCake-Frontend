@@ -75,9 +75,12 @@ export function StoreDesignView(vm: VM) {
             <StatCard label={t("enums.bannerStatus.expired")} value={vm.counts.expired} sub={t("storeDesign.statExpiredSub")} tone="down" />
           </StatCardsGrid>
 
-          <p className="text-sm text-gray-500">
-            {t(vm.canReorder ? "storeDesign.reorderHint" : "storeDesign.reorderDisabledHint")}
-          </p>
+          {/* ไม่มีสิทธิ์ products.update = ลากเรียงไม่ได้อยู่แล้ว — ซ่อนคำใบ้ทิ้งไปเลย ไม่ต้องบอกวิธีทำสิ่งที่ทำไม่ได้ */}
+          {vm.perm.update && (
+            <p className="text-sm text-gray-500">
+              {t(vm.canReorder ? "storeDesign.reorderHint" : "storeDesign.reorderDisabledHint")}
+            </p>
+          )}
 
           {/* ไม่ใส่ items-start → การ์ดยืดเต็มแถว (BannerCard h-full) สูงเท่ากัน รวมถึงปุ่ม "เพิ่มแบนเนอร์" */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

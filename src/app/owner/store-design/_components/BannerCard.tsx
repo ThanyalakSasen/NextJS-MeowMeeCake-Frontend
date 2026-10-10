@@ -46,7 +46,9 @@ export function BannerCard({
   onEdit: (b: BannerRow) => void;
   onDelete: (id: string) => void;
   onToggle: (b: BannerRow) => void;
+  /** products.update — ปุ่มแก้ + สวิตช์เปิด/ปิด */
   canUpdate: boolean;
+  /** products.delete */
   canDelete: boolean;
   onDragStart: (id: string) => void;
   onDragOver: () => void;

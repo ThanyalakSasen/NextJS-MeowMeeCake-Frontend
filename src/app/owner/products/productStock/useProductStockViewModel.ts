@@ -1,19 +1,19 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // ViewModel ของ Product Stock — สต็อกสินค้าปกติ (is_preorder: false)
-// ไม่มี resource ใหม่: ใช้ productsService (list + update stock) + map category/unit
+// รายการจาก GET /admin/products/stock-list (stock.view — Final-Backlog P12) · ชื่อหมวด/หน่วยมากับรายการ (populate)
+// ปรับยอดผ่าน PUT /admin/products/:id/stock (stock.update)
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { productsService } from "@/services/products";
-import { productCategoriesService } from "@/services/productCategories";
-import { unitsService } from "@/services/units";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import type { StockStatus } from "@/constants/enumConfig";
 import { getStockStatus } from "./stockStatus";
 import { refId } from "@/lib/refId";
+import { unitLabel } from "@/utils/unitContext";
 import { isApiError } from "@/types/api";
 import { LIST_ALL } from "@/lib/http";
 
@@ -31,8 +31,8 @@ export interface StockProductRow {
 
 export type StatusFilter = "all" | StockStatus;
 
-// เฉพาะสินค้าปกติ — พรีออเดอร์ไม่มีสต็อกให้ปรับที่นี่
-const ALL_PARAMS = { limit: LIST_ALL, is_preorder: false } as const;
+// backend ส่งเฉพาะสินค้าปกติ (ไม่ใช่พรีออเดอร์ · ไม่ถูกลบ) อยู่แล้ว
+const STOCK_PARAMS = { limit: LIST_ALL } as const;
 
 export function useProductStockViewModel() {
   const t = useTranslations();
@@ -45,40 +45,39 @@ export function useProductStockViewModel() {
   const [adjustTarget, setAdjustTarget] = useState<StockProductRow | null>(null);
 
   const productsQ = useQuery({
-    queryKey: ["products", ALL_PARAMS],
-    queryFn: () => productsService.list(ALL_PARAMS),
-  });
-  const categoriesQ = useQuery({
-    queryKey: ["product-categories"],
-    queryFn: () => productCategoriesService.list(),
-  });
-  const unitsQ = useQuery({
-    queryKey: ["units"],
-    queryFn: () => unitsService.list(),
+    queryKey: ["products", "stock-list", STOCK_PARAMS],
+    queryFn: () => productsService.stockList(STOCK_PARAMS),
   });
 
+  // ตัวกรองหมวด = หมวดที่มีสินค้าในหน้านี้ (จาก category_id ที่ populate มา) — ไม่เรียก /admin/product-categories (products.view)
+  const categories = useMemo(() => {
+    const byId = new Map<string, { _id: string; product_category_name: string }>();
+    for (const p of productsQ.data?.data ?? []) {
+      const c = p.category_id;
+      if (c && typeof c === "object") byId.set(c._id, { _id: c._id, product_category_name: c.product_category_name });
+    }
+    return [...byId.values()];
+  }, [productsQ.data]);
+
   const rows = useMemo<StockProductRow[]>(() => {
-    const catMap = new Map((categoriesQ.data?.data ?? []).map((c) => [c._id, c.product_category_name]));
-    const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, u.unit_abbr || u.unit_name]));
     return (productsQ.data?.data ?? [])
       .filter((p) => !p.is_preorder) // กันซ้ำเผื่อ backend รุ่นเก่าที่ยังไม่รู้จัก ?is_preorder=
       .map((p) => {
         const stock = p.product_stock_quantity ?? 0;
         const categoryId = refId(p.category_id);
-        const unitId = refId(p.unit_id);
         return {
           _id: p._id,
           name: p.product_name_th,
           categoryId,
-          category: (categoryId && catMap.get(categoryId)) || "",
-          unit: (unitId && unitMap.get(unitId)) || t("productStock.unitDefault"),
+          category: typeof p.category_id === "object" && p.category_id ? p.category_id.product_category_name : "",
+          unit: unitLabel(p.unit_id) || t("productStock.unitDefault"),
           price: p.product_price,
           stock,
           status: getStockStatus(stock),
           value: stock * p.product_price,
         };
       });
-  }, [productsQ.data, categoriesQ.data, unitsQ.data, t]);
+  }, [productsQ.data, t]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -116,8 +115,8 @@ export function useProductStockViewModel() {
     perm,
     rows: filtered,
     stats,
-    categories: categoriesQ.data?.data ?? [],
-    isLoading: productsQ.isLoading || categoriesQ.isLoading || unitsQ.isLoading,
+    categories,
+    isLoading: productsQ.isLoading,
     isError: productsQ.isError,
     refetch: () => productsQ.refetch(),
 

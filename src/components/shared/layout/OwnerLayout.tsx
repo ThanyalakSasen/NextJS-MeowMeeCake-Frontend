@@ -14,6 +14,7 @@ import { logout } from "@/lib/authClient";
 import { confirmAlert } from "@/lib/alert";
 import { ACCESS_DENIED_PATH, CUSTOMER_HOME_PATH, LOGIN_PATH } from "@/constants/auth";
 import { resolveMenuKey } from "@/constants/menuKeys";
+import { firstPermittedPath } from "@/lib/landingPath";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
@@ -38,14 +39,18 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   }, [isCustomer, router]);
 
   // กั้นหน้าตามสิทธิ์: path ที่ผูก menu_key (constants/menuKeys.ts ROUTE_MENU_MAP) แต่ไม่มีสิทธิ์ view → หน้า access-denied
-  // path ที่ไม่ผูก key (dashboard ฯลฯ) = login พอ · owner มี view ทุกเมนูเสมอ
+  // ยกเว้นแดชบอร์ด (หน้าแรกหลังล็อกอิน · ลิงก์ "หน้าหลัก") → พาไปหน้าแรกที่มีสิทธิ์แทน (lib/landingPath.ts — Final-Backlog P11)
+  // path ที่ไม่ผูก key (store-design ฯลฯ) = login พอ · owner มี view ทุกเมนูเสมอ
   // นี่คือ UX gate — ข้อมูลจริงถูก backend กั้นอยู่แล้วทุก route (403) · สิทธิ์ถูกเพิกถอนระหว่างใช้งาน
   // จะมีผลเมื่อ useCurrentUser refetch (โฟกัสแท็บ / ทุก 60 วินาที)
   const menuKey = resolveMenuKey(pathname);
   const denied = !!user && !!menuKey && !user.menuAccess[menuKey]?.view;
+  const deniedTarget = denied
+    ? (menuKey === "dashboard" && user ? firstPermittedPath(user.menuAccess) : null) ?? ACCESS_DENIED_PATH
+    : null;
   useEffect(() => {
-    if (denied) router.replace(ACCESS_DENIED_PATH);
-  }, [denied, router]);
+    if (deniedTarget) router.replace(deniedTarget);
+  }, [deniedTarget, router]);
 
   // ปิด drawer เมื่อเปลี่ยนหน้า (mobile) — side effect ต่อ navigation จริง ไม่ derive ได้
   useEffect(() => {

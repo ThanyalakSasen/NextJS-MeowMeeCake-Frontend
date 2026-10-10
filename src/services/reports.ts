@@ -106,22 +106,31 @@ export const reportsService = {
     }));
   },
 
-  dashboard: async (): Promise<{ data: DashboardSummary }> => {
+  /**
+   * scope = widget ที่ผู้ใช้มีสิทธิ์ดู — ไม่มีสิทธิ์ = ไม่ยิง (คืนรายการว่าง) แทนที่ 403 ตัวเดียวจะทำให้ Promise.all ล้มทั้งหน้า
+   * overview / top-products ใช้ dashboard.view (หน้านี้กั้นไว้แล้ว) · ออเดอร์ล่าสุด = orders · วัตถุดิบใกล้หมด = ingredients ·
+   * สถานะการผลิต = production (Final-Backlog P11)
+   */
+  dashboard: async (scope: { orders: boolean; ingredients: boolean; production: boolean }): Promise<{ data: DashboardSummary }> => {
     const today = bangkokTodayRangeUtc();
 
     const [overviewToday, overviewAllTime, lowStockRes, topProductsRes, recentOrdersRes, productionRes] =
       await Promise.all([
         http.get<{ data: RawOverview }>("/admin/dashboard/overview", { params: today }),
         http.get<{ data: RawOverview }>("/admin/dashboard/overview"),
-        http.get<{ data: { count: number; items: RawLowStockIngredient[] } }>(
-          "/admin/ingredients/low-stock",
-          { params: { limit: 10 } }
-        ),
+        scope.ingredients
+          ? http.get<{ data: { count: number; items: RawLowStockIngredient[] } }>(
+              "/admin/ingredients/low-stock",
+              { params: { limit: 10 } }
+            )
+          : { data: { count: 0, items: [] as RawLowStockIngredient[] } },
         http.get<{ data: RawTopProductsResult }>("/admin/dashboard/top-products", {
           params: { limit: 5 },
         }),
-        http.getList<RawOrder>("/admin/orders", { params: { limit: 5 } }),
-        http.getList<RawProductionOrder>("/admin/production-orders", { params: { limit: 20 } }),
+        scope.orders ? http.getList<RawOrder>("/admin/orders", { params: { limit: 5 } }) : { data: [] as RawOrder[] },
+        scope.production
+          ? http.getList<RawProductionOrder>("/admin/production-orders", { params: { limit: 20 } })
+          : { data: [] as RawProductionOrder[] },
       ]);
 
     const lowStock: DashboardLowStock[] = lowStockRes.data.items.map((i) => ({
