@@ -2,9 +2,9 @@
 // บันทึกภายในของรีวิว (ทีมงานเห็นเท่านั้น ลูกค้าไม่เห็น) — แก้แบบอินไลน์ · ข้อความว่าง = ลบโน้ต
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
 import { Button, TextArea } from "@/components/base";
 import { formatDate } from "@/i18n/format";
+import { actionIcon } from "@/components/shared/actions";
 
 const MAX_NOTE = 2000;
 
@@ -55,7 +55,7 @@ export function NoteBox({ note, canEdit, onSave }: {
           </p>
           {canEdit && (
             <button type="button" onClick={() => { setText(note.text); setEditing(true); }} className="inline-flex items-center gap-1 text-[11px] text-yellow-800 hover:underline">
-              <PencilSquareIcon className="h-3 w-3" />
+              {actionIcon("edit", undefined, "h-3 w-3")}
               {t("common.edit")}
             </button>
           )}
@@ -67,7 +67,7 @@ export function NoteBox({ note, canEdit, onSave }: {
 
   return canEdit ? (
     <button type="button" onClick={() => { setText(""); setEditing(true); }} className="mt-2 inline-flex items-center gap-1 text-[11px] text-gray-500 hover:text-yellow-800 hover:underline">
-      <PencilSquareIcon className="h-3 w-3" />
+      {actionIcon("edit", undefined, "h-3 w-3")}
       {t("reviews.note.add")}
     </button>
   ) : null;

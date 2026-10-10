@@ -6,6 +6,11 @@
 //   2. src/app/globals.css    → ฝั่ง Tailwind (@theme --color-*)
 // สคริปต์นี้ parse ทั้งสองไฟล์แล้วเทียบ hex ทีละคีย์
 //
+// และตรวจ "ขนาดตัวอักษร" ด้วย — globals.css เขียนเป็น rem แต่คนอ่านจากคอมเมนต์ /* Npx */
+// ถ้าคอมเมนต์คิดจากฐาน 16px (ค่า default ของเบราว์เซอร์) แต่โปรเจกต์ใช้ฐาน 18px เลขจะผิดทันที
+// เคยเกิดมาแล้วจริง: --menu-item-font-size เขียน "17px" แต่ค่าจริงคือ 19.125px
+// เมนูจึงใหญ่กว่าเนื้อหาหลักมาตลอดโดยไม่มีใครรู้ — กฎนี้กันไม่ให้เกิดซ้ำ
+//
 //   node scripts/check-theme.mjs           → รายงานอย่างเดียว (exit 0)
 //   node scripts/check-theme.mjs --strict  → exit 1 ถ้าไม่ตรง (ใช้ใน CI / npm run lint)
 // ─────────────────────────────────────────────────────────────
@@ -69,5 +74,64 @@ if (Object.keys(brandTs).length !== 11) {
 }
 compare("brand", brandTs, brandCss, (k) => `--color-brown-${k}`);
 compare("status", statusTs, statusCss, (k) => `--color-${k}`);
+
+// ── 3. ขนาดตัวอักษร: rem ใน globals.css ต้องตรงกับ px ที่คอมเมนต์อ้าง ──
+const tokensSrc = readFileSync(join(ROOT, "src/theme/tokens.ts"), "utf8");
+const baseM = tokensSrc.match(/baseSizePx:\s*(\d+)/);
+const basePx = baseM ? Number(baseM[1]) : null;
+
+// html { font-size: P% } ต้องให้ 16 × P/100 = baseSizePx
+const htmlM = cssSrc.match(/font-size:\s*([\d.]+)%/);
+if (basePx === null) {
+  failed = true;
+  console.log("✗ theme: อ่าน typography.baseSizePx จาก tokens.ts ไม่ได้");
+} else if (!htmlM) {
+  failed = true;
+  console.log("✗ theme: หา html { font-size: N% } ใน globals.css ไม่เจอ");
+} else {
+  const fromCss = 16 * (Number(htmlM[1]) / 100);
+  if (Math.abs(fromCss - basePx) > 0.01) {
+    failed = true;
+    console.log(`✗ theme: ฐานตัวอักษรไม่ตรง — tokens.baseSizePx=${basePx}px แต่ globals.css html{font-size:${htmlM[1]}%} = ${fromCss}px`);
+  } else {
+    console.log(`✓ theme: ฐานตัวอักษร ${basePx}px ตรงกันทั้ง tokens.ts และ globals.css`);
+  }
+}
+
+// ทุกบรรทัดที่เขียน `<X>rem;` แล้วมีคอมเมนต์อ้าง px — เอาเลข px ตัวแรกเป็นคำสัญญา
+if (basePx !== null) {
+  const bad = [];
+  let checked = 0;
+  cssSrc.split("\n").forEach((line, i) => {
+    const m = line.match(/([\d.]+)rem;\s*\/\*\s*~?\s*([\d.]+)px/);
+    if (!m) return;
+    checked++;
+    const actual = Number(m[1]) * basePx;
+    const claimed = Number(m[2]);
+    if (Math.abs(actual - claimed) > 0.5)
+      bad.push(`  บรรทัด ${i + 1}: ${m[1]}rem = ${Math.round(actual * 1000) / 1000}px แต่คอมเมนต์เขียน ${claimed}px`);
+  });
+  if (bad.length) {
+    failed = true;
+    console.log(`✗ theme: คอมเมนต์ px ใน globals.css ไม่ตรงกับ rem จริง (ฐาน ${basePx}px)`);
+    bad.forEach((b) => console.log(b));
+  } else {
+    console.log(`✓ theme: คอมเมนต์ px ใน globals.css (${checked} จุด) ตรงกับ rem จริง`);
+  }
+}
+
+// พื้นที่กดขั้นต่ำ — ค่าเดียวกันอยู่สองที่ (a11y.touchTargetPx / --touch-target)
+// เป็น px ทั้งคู่ การตรวจ rem↔คอมเมนต์ข้างบนจึงไม่ครอบ — ต้องเทียบตรง ๆ
+const ttTs = tokensSrc.match(/touchTargetPx:\s*(\d+)/);
+const ttCss = cssSrc.match(/--touch-target:\s*(\d+)px/);
+if (!ttTs || !ttCss) {
+  failed = true;
+  console.log(`✗ theme: อ่าน touch target ไม่ครบ (tokens.ts=${!!ttTs} globals.css=${!!ttCss}) — --touch-target ต้องเป็น px ไม่ใช่ rem`);
+} else if (ttTs[1] !== ttCss[1]) {
+  failed = true;
+  console.log(`✗ theme: touch target ไม่ตรง — tokens.ts=${ttTs[1]}px  globals.css=${ttCss[1]}px`);
+} else {
+  console.log(`✓ theme: touch target ${ttTs[1]}px ตรงกันทั้งสองไฟล์`);
+}
 
 process.exit(failed && STRICT ? 1 : 0);

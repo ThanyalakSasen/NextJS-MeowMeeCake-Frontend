@@ -5,7 +5,7 @@ import { DatePicker, EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { TypeTabBar, SortDropdown } from "@/components/shared/data";
-import { LoadingSpin } from "@/components/shared/feedback";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatCurrency, formatNumber } from "@/i18n/format";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import type { useSalesReportViewModel } from "./useSalesReportViewModel";
@@ -52,9 +52,7 @@ export function SalesReportView(vm: VM) {
       </div>
 
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : (

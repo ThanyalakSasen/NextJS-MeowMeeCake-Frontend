@@ -2,11 +2,10 @@
 // ตรวจจังหวัด → ใช้โซนไหน ค่าส่งเท่าไร (กติกาเดียวกับ backend — deliveryZoneForm.resolveZone)
 import { useLocale, useTranslations } from "next-intl";
 import { Card, Select } from "@/components/base";
-import { THAI_PROVINCES } from "@/constants/thaiProvinces";
+import { PROVINCE_OPTIONS } from "@/constants/thaiProvinces";
 import { formatCurrency } from "@/i18n/format";
 import type { DeliveryZone } from "@/types/deliveryZone";
 
-const OPTIONS = THAI_PROVINCES.map((p) => ({ value: p, label: p }));
 
 export function ZoneChecker({
   value, onChange, result,
@@ -26,7 +25,7 @@ export function ZoneChecker({
           allowClear
           className="w-full sm:w-64"
           value={value || undefined}
-          options={OPTIONS}
+          options={PROVINCE_OPTIONS}
           placeholder={t("deliveryZones.checker.placeholder")}
           aria-label={t("deliveryZones.checker.title")}
           onChange={(v?: string) => onChange(v ?? "")}

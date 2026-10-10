@@ -239,7 +239,7 @@ function ContactForm({ storeName }: { storeName: string }) {
           onChange={(e) => setMessage(e.target.value)}
           className={`${shopInput} h-auto resize-none py-2.5`}
         />
-        <span className="block text-right text-xs text-gray-400">{message.length}/{maxLength}</span>
+        <span className="block text-right text-xs text-gray-500">{message.length}/{maxLength}</span>
       </label>
 
       <button type="submit" disabled={send.isPending || !message.trim() || !topic} className={`${shopButton} w-full`}>

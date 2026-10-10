@@ -5,3 +5,4 @@ export { FilterToolbar } from "./FilterToolbar";
 export { TypeTabBar } from "./TypeTabBar";
 export { SortDropdown } from "./SortDropdown";
 export { ViewToggle } from "./ViewToggle";
+export { StatusFilterSelect, useStockStatusOptions, type FilterOption } from "./StatusFilterSelect";

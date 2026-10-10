@@ -23,7 +23,7 @@ export function BreakdownList({
       </div>
       <div className="px-4 py-3">
         {entries.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">{emptyText}</p>
+          <p className="text-sm text-gray-500 text-center py-4">{emptyText}</p>
         ) : (
           entries.map(([label, value]) => (
             <div key={label} className="mb-2.5 last:mb-0">

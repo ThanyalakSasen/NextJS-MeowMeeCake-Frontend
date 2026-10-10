@@ -4,10 +4,9 @@
 import { useTranslations } from "next-intl";
 import { Input, InputNumber, Select, Switch } from "@/components/base";
 import { FormField } from "@/components/shared/form";
-import { THAI_PROVINCES } from "@/constants/thaiProvinces";
+import { PROVINCE_OPTIONS } from "@/constants/thaiProvinces";
 import type { DeliveryZoneInput } from "@/types/deliveryZone";
 
-const PROVINCE_OPTIONS = THAI_PROVINCES.map((p) => ({ value: p, label: p }));
 
 export function DeliveryZoneForm({
   form, errors, otherCatchAll, onChange,

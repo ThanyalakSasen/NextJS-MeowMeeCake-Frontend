@@ -32,7 +32,7 @@ export function ProductBarRow({
 
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-brown-800">{row.name}</p>
-        <p className="truncate text-sm text-gray-400">{row.category_name || "—"}</p>
+        <p className="truncate text-sm text-gray-500">{row.category_name || "—"}</p>
       </div>
 
       <div className="relative h-[14px] overflow-visible rounded bg-gray-100">
@@ -41,7 +41,7 @@ export function ProductBarRow({
 
       <div className="text-right">
         <p className="text-sm font-semibold text-brown-800">{valueLabel}</p>
-        <p className="mt-0.5 text-xs text-gray-400">{subLabel}</p>
+        <p className="mt-0.5 text-xs text-gray-500">{subLabel}</p>
       </div>
     </div>
   );

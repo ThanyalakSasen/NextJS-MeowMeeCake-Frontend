@@ -63,7 +63,7 @@ export function StatusBoard({
             <div className="flex items-center gap-1.5 mb-3">
               <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
               <p className="text-sm font-semibold text-gray-700">{t(`enums.productionStatus.${status}`)}</p>
-              <span className="text-sm text-gray-400">({columnOrders.length})</span>
+              <span className="text-sm text-gray-500">({columnOrders.length})</span>
             </div>
             {columnOrders.length === 0 ? (
               <EmptyState description={t("production.columnEmpty")} className="py-6" />

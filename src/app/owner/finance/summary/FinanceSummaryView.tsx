@@ -5,8 +5,7 @@ import { DatePicker, EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DataTable, TypeTabBar, type Column } from "@/components/shared/data";
-import { LoadingSpin } from "@/components/shared/feedback";
-import { RetryButton } from "@/components/shared/actions";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatCurrency } from "@/i18n/format";
 import type { useFinanceSummaryViewModel } from "./useFinanceSummaryViewModel";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
@@ -53,10 +52,7 @@ export function FinanceSummaryView(vm: VM) {
       {vm.isLoading ? (
         <LoadingSpin />
       ) : vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetch} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : !vm.hasData ? (
         <EmptyState description={t("finance.noDataThisPeriod")} />
       ) : (
@@ -95,7 +91,7 @@ export function FinanceSummaryView(vm: VM) {
             <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white">
               <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                 <p className="text-sm font-semibold text-brown-900">{t("finance.statementTitle")}</p>
-                <span className="text-sm text-gray-400">{vm.periodLabel}</span>
+                <span className="text-sm text-gray-500">{vm.periodLabel}</span>
               </div>
               <PLStatementTable rows={vm.pnlRows} />
               {/* mt-auto: หมายเหตุชิดล่างเสมอ ถ้าการ์ดถูกยืดตามตารางเปรียบเทียบที่ยาวกว่า */}

@@ -1,18 +1,16 @@
 "use client";
 // เนื้อหาใน DetailDrawer ของคำสั่งซื้อเค้กวันเกิด (Preorder) — presentational ล้วน
 // payment มาจาก paymentsService.listByPreorder (คนละ resource กับ preorder — สลิป/สถานะตรวจอยู่ในนั้น)
-import { Divider, Tag } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { Avatar, Button } from "@/components/base";
+import { Avatar, Button, Divider, Tag } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Preorder } from "@/types/preorder";
 import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
-import { SlipImage } from "../../_components/SlipImage";
-import { DeliverySection } from "../../_components/DeliverySection";
-import { RefundSection } from "../../_components/RefundSection";
+import { DeliverySection, RefundSection, SlipImage } from "@/components/shared/orders";
 import { isAwaitingRefund } from "@/types/order";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -40,7 +38,7 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
 
       {isCancelled ? (
         <div>
-          <Tag color="error" className="w-fit">{t("orders.cancelledBanner")}</Tag>
+          <Tag color={NOTICE_TAG.cancelled} className="w-fit">{t("orders.cancelledBanner")}</Tag>
           {order.cancelled_reason && !isAwaitingRefund(order) && (
             <p className="mt-1.5 text-sm text-gray-600">{order.cancelled_reason}</p>
           )}

@@ -6,8 +6,8 @@
 import { useTranslations } from "next-intl";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Input, InputNumber, Select, Switch, EmptyState } from "@/components/base";
-import { LoadingSpin } from "@/components/shared/feedback";
-import { RetryButton, actionIcon } from "@/components/shared/actions";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { actionIcon } from "@/components/shared/actions";
 import type { useCustomizationEditor } from "../useCustomizationEditor";
 import { groupRuleOf, type GroupRow, type OptionRow } from "../customizationForm";
 
@@ -26,10 +26,7 @@ export function CustomizationEditor(vm: VM) {
       {vm.isLoading ? (
         <LoadingSpin className="py-6" />
       ) : vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-4">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetch} />
-        </div>
+        <LoadFailed className="flex flex-col items-center gap-3 py-4" onRetry={vm.refetch} />
       ) : (
         <>
           {/* ── กลุ่มตัวเลือก ── */}

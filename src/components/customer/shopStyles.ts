@@ -8,7 +8,7 @@ export const shopButtonPrimary =
   "inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#4A342E] px-5 text-sm font-bold text-white shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#8C5A3C] hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none";
 
 export const shopInput =
-  "h-11 w-full rounded-xl border border-[#8C5A3C]/25 bg-white px-3.5 text-sm text-[#4A342E] outline-none transition placeholder:text-gray-400 focus:border-[#8C5A3C] focus:ring-2 focus:ring-[#8C5A3C]/20";
+  "h-11 w-full rounded-xl border border-[#8C5A3C]/25 bg-white px-3.5 text-sm text-[#4A342E] outline-none transition placeholder:text-gray-500 focus:border-[#8C5A3C] focus:ring-2 focus:ring-[#8C5A3C]/20";
 
 /** ระยะบนของเนื้อหา — ใต้ Navbar แบบ fixed (เท่าหน้ารายละเอียดสินค้า) */
 export const shopPage = "w-full min-h-screen pt-46 pb-16 text-[#4A342E] sm:pt-50 md:pt-44";

@@ -71,7 +71,7 @@ export function AlertHost() {
         </span>
         <h3 className="text-lg font-semibold text-brown-900">{a.title ?? t(`alert.${style.titleKey}`)}</h3>
         <p className="whitespace-pre-line text-sm text-gray-600">{a.text}</p>
-        {a.note && <p className="text-sm text-gray-400">{a.note}</p>}
+        {a.note && <p className="text-sm text-gray-500">{a.note}</p>}
 
         <div className="mt-3 flex w-full justify-center gap-2">
           {isConfirm ? (

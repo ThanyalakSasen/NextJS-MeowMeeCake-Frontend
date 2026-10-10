@@ -6,7 +6,7 @@ import { Avatar, Divider, Tag } from "@/components/base";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import { reviewsService } from "@/services/reviews";
-import { SENTIMENT_LABEL_CONFIG } from "@/constants/enumConfig";
+import { REVIEW_STATUS_CONFIG, SENTIMENT_LABEL_CONFIG } from "@/constants/enumConfig";
 import type { ReviewRow } from "../reviewRow";
 import { StarRating } from "./StarRating";
 
@@ -42,7 +42,7 @@ export function ReviewDetailContent({ review }: { review: ReviewRow }) {
       </div>
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-500">{t("reviews.colStatus")}</span>
-        <Tag color={review.status === "approved" ? "success" : review.status === "pending" ? "warning" : "default"}>
+        <Tag color={REVIEW_STATUS_CONFIG[review.status].antColor}>
           {t(`reviews.status.${review.status}`)}
         </Tag>
       </div>
@@ -68,11 +68,11 @@ export function ReviewDetailContent({ review }: { review: ReviewRow }) {
       <div>
         <p className="mb-2 text-sm font-medium text-gray-600">{t("reviews.sentimentTitle")}</p>
         {!review.is_analyzed ? (
-          <p className="text-sm text-gray-400">{t("reviews.sentimentNotAnalyzed")}</p>
+          <p className="text-sm text-gray-500">{t("reviews.sentimentNotAnalyzed")}</p>
         ) : sentimentQ.isLoading ? (
           <LoadingSpin />
         ) : !sentimentQ.data || sentimentQ.data.length === 0 ? (
-          <p className="text-sm text-gray-400">{t("reviews.sentimentEmpty")}</p>
+          <p className="text-sm text-gray-500">{t("reviews.sentimentEmpty")}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {sentimentQ.data.map((s) => {

@@ -1,7 +1,6 @@
 "use client";
 // แท็บ 1: แผนการผลิต / ใบสั่งผลิต — presentational ล้วน รับ props จาก useProductionViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Select, Tag } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
@@ -9,8 +8,9 @@ import { formatDate } from "@/i18n/format";
 import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
 import type { ProductionStatus } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
-import { RetryButton, ViewButton } from "@/components/shared/actions";
+import { ViewButton, actionIcon } from "@/components/shared/actions";
 import type { useProductionViewModel } from "../useProductionViewModel";
+import { LoadFailed } from "@/components/shared/feedback";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
@@ -67,10 +67,10 @@ export function PlanTab(vm: VM) {
         <p className="text-base text-gray-600">{t("production.planDescription", { n: vm.planTotal })}</p>
         {vm.perm.create && (
           <div className="flex items-center gap-2">
-            <Button icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openCreateFromRound}>
+            <Button icon={actionIcon("add")} onClick={vm.openCreateFromRound}>
               {t("production.createFromRound")}
             </Button>
-            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openCreate}>
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openCreate}>
               {t("production.createOrder")}
             </Button>
           </div>
@@ -106,10 +106,7 @@ export function PlanTab(vm: VM) {
       />
 
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetch} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <DataTable
           columns={columns}

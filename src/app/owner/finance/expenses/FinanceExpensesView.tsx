@@ -1,19 +1,18 @@
 "use client";
 // View ของ Finance Expenses — JSX ล้วน รับ props จาก useFinanceExpensesViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
-import { ConfirmDeletePopup } from "@/components/shared/feedback";
+import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
-import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { useFinanceExpensesViewModel } from "./useFinanceExpensesViewModel";
 import { ExpenseFormModal } from "./_components/ExpenseFormModal";
 import { RecurringRemindersList } from "./_components/RecurringRemindersList";
@@ -39,7 +38,7 @@ export function FinanceExpensesView(vm: VM) {
       render: (e) => (
         <div>
           <p className="line-clamp-2 font-medium text-brown-900" title={e.description}>{e.description}</p>
-          {e.vendor && <p className="line-clamp-1 text-sm text-gray-400" title={e.vendor}>{e.vendor}</p>}
+          {e.vendor && <p className="line-clamp-1 text-sm text-gray-500" title={e.vendor}>{e.vendor}</p>}
         </div>
       ),
     },
@@ -89,7 +88,7 @@ export function FinanceExpensesView(vm: VM) {
             {t("common.export")}
           </Button>
           {vm.perm.create && (
-            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
               {t("finance.addExpense")}
             </Button>
           )}
@@ -142,10 +141,7 @@ export function FinanceExpensesView(vm: VM) {
             </div>
             <div className="expense-table-area">
               {vm.isError ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
-                  <p className="text-gray-600">{t("common.loadFailed")}</p>
-                  <RetryButton onClick={vm.refetch} />
-                </div>
+                <LoadFailed className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center" onRetry={vm.refetch} />
               ) : (
                 <DataTable
                   inCard
@@ -197,7 +193,7 @@ export function FinanceExpensesView(vm: VM) {
                   <span className="font-medium text-gray-700">{t("finance.netProfit")}</span>
                   <span className={`font-bold ${vm.netProfit >= 0 ? "text-green-600" : "text-red-500"}`}>{formatCurrency(vm.netProfit, locale)}</span>
                 </div>
-                <p className="text-right text-gray-400">
+                <p className="text-right text-gray-500">
                   {vm.monthIncome > 0 ? t("finance.profitMargin", { pct: ((vm.netProfit / vm.monthIncome) * 100).toFixed(1) }) : t("finance.noIncomeThisMonth")}
                 </p>
               </div>

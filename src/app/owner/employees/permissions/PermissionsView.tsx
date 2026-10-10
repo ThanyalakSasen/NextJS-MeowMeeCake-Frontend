@@ -2,7 +2,6 @@
 // View ของ Permissions Mgmt — 2 คอลัมน์: รายการ Role | matrix สิทธิ์
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Tag, EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadingSpin, ConfirmDeletePopup } from "@/components/shared/feedback";
@@ -12,6 +11,7 @@ import { RoleListPanel } from "./_components/RoleListPanel";
 import { PermissionMatrix } from "./_components/PermissionMatrix";
 import { RoleFormModal } from "./_components/RoleFormModal";
 import { RenameRoleModal } from "./_components/RenameRoleModal";
+import { ROLE_TYPE_CONFIG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof usePermissionsViewModel>;
 
@@ -22,7 +22,7 @@ export function PermissionsView(vm: VM) {
   const canEdit = vm.perm.update;
 
   const addRoleBtn = vm.perm.create && (
-    <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={() => setModalOpen(true)}>
+    <Button type="primary" icon={actionIcon("add")} onClick={() => setModalOpen(true)}>
       {t("permissions.addRole")}
     </Button>
   );
@@ -57,11 +57,11 @@ export function PermissionsView(vm: VM) {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-base font-semibold text-brown-800">{vm.selectedRole.role_name}</h2>
-                      <Tag color={vm.selectedRole.role_type === "owner" ? "gold" : "blue"}>
+                      <Tag color={ROLE_TYPE_CONFIG[vm.selectedRole.role_type]?.antColor}>
                         {vm.selectedRole.role_type}
                       </Tag>
                     </div>
-                    <p className="mt-0.5 text-xs text-gray-400">
+                    <p className="mt-0.5 text-xs text-gray-500">
                       {t("permissions.members", { n: vm.memberCounts[vm.selectedRole._id] ?? 0 })}
                     </p>
                   </div>
@@ -100,11 +100,11 @@ export function PermissionsView(vm: VM) {
                   {[
                     { v: vm.summary.total, l: t("permissions.summaryTotal"), c: "text-brown-900" },
                     { v: vm.summary.on, l: t("permissions.summaryOn"), c: "text-green-600" },
-                    { v: vm.summary.total - vm.summary.on, l: t("permissions.summaryOff"), c: "text-gray-400" },
+                    { v: vm.summary.total - vm.summary.on, l: t("permissions.summaryOff"), c: "text-gray-500" },
                   ].map((s) => (
                     <div key={s.l} className="border-r border-gray-100 py-3 last:border-0">
                       <p className={`text-lg font-semibold ${s.c}`}>{s.v}</p>
-                      <p className="text-xs text-gray-400">{s.l} · {t("permissions.summaryUnit")}</p>
+                      <p className="text-xs text-gray-500">{s.l} · {t("permissions.summaryUnit")}</p>
                     </div>
                   ))}
                 </div>

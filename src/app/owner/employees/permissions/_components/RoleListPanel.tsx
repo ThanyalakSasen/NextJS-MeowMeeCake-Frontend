@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Tag } from "@/components/base";
 import type { Role } from "@/types/role";
+import { ROLE_TYPE_CONFIG } from "@/constants/enumConfig";
 
 export function RoleListPanel({
   roles,
@@ -35,11 +36,11 @@ export function RoleListPanel({
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-brown-800">{role.role_name}</p>
-              <p className="mt-0.5 text-xs text-gray-400">
+              <p className="mt-0.5 text-xs text-gray-500">
                 {t("permissions.members", { n: memberCounts[role._id] ?? 0 })}
               </p>
             </div>
-            <Tag color={role.role_type === "owner" ? "gold" : "blue"}>
+            <Tag color={ROLE_TYPE_CONFIG[role.role_type]?.antColor}>
               {role.role_type}
             </Tag>
           </button>

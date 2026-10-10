@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { notificationsService } from "@/services/notifications";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { alert, confirmAlert } from "@/lib/alert";
 import type { NotificationDTO, NotificationModule } from "@/types/notification";
 import type { NotificationType } from "@/types";
@@ -20,6 +21,11 @@ type TypeFilter = "all" | NotificationType;
 export function useNotificationHistoryViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
+  // การแจ้งเตือนไม่มี menu_key ของตัวเอง (ROUTE_MENU_MAP ไม่ได้ผูก /owner/notificationsHistory)
+  // backend: GET/PATCH แค่ล็อกอินก็พอ · แต่ DELETE เป็น requireRole(session, "owner")
+  // → ปุ่มลบจึงเช็คด้วย role ไม่ใช่ usePermission (src/app/api/admin/notifications/[id]/route.ts)
+  const { user } = useCurrentUser();
+  const canDelete = user?.roleType === "owner";
 
   const [tab, setTab] = useState<TabFilter>("all");
   const [search, setSearch] = useState("");
@@ -114,6 +120,7 @@ export function useNotificationHistoryViewModel() {
   };
 
   return {
+    canDelete,
     rows: filtered,
     stats,
     isLoading: q.isLoading,

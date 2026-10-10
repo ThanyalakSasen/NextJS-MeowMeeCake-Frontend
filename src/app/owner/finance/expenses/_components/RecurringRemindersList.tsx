@@ -32,7 +32,7 @@ export function RecurringRemindersList({
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
         {reminders.length === 0 ? (
-          <p className="py-2 text-center text-sm text-gray-400">{t("finance.recurringEmpty")}</p>
+          <p className="py-2 text-center text-sm text-gray-500">{t("finance.recurringEmpty")}</p>
         ) : (
           reminders.map((r) => (
             <div
@@ -43,11 +43,11 @@ export function RecurringRemindersList({
                 {r.isUrgent ? (
                   <ExclamationTriangleIcon className="h-3.5 w-3.5 shrink-0 text-red-400" />
                 ) : (
-                  <ClockIcon className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+                  <ClockIcon className="h-3.5 w-3.5 shrink-0 text-gray-500" />
                 )}
                 <div>
                   <p className="text-sm font-medium text-brown-900">{r.description}</p>
-                  <p className="text-sm text-gray-400">{t("finance.dueOn", { date: formatDate(r.dueDate, locale) })}</p>
+                  <p className="text-sm text-gray-500">{t("finance.dueOn", { date: formatDate(r.dueDate, locale) })}</p>
                 </div>
               </div>
               <span className={`text-sm font-semibold ${r.isUrgent ? "text-red-500" : "text-amber-600"}`}>

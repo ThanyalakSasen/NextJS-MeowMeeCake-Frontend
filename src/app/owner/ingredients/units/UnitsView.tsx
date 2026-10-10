@@ -2,8 +2,7 @@
 // View ของ Manage Units — 2 คอลัมน์: หน่วยวัตถุดิบ | หน่วยสินค้า
 import { useTranslations } from "next-intl";
 import { DashboardPageLayout } from "@/components/shared/layout";
-import { LoadingSpin } from "@/components/shared/feedback";
-import { RetryButton } from "@/components/shared/actions";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { useUnitsViewModel } from "./useUnitsViewModel";
 import { UnitListCard } from "./_components/UnitListCard";
 import { UnitFormModal } from "./_components/UnitFormModal";
@@ -16,10 +15,7 @@ export function UnitsView(vm: VM) {
   return (
     <DashboardPageLayout title={t("units.title")} description={t("units.description")}>
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : (

@@ -26,7 +26,7 @@ export function RecipeDetail({ recipe }: { recipe: Recipe }) {
           { label: t("recipes.fieldDuration"), value: `${hours > 0 ? t("recipes.hoursShort", { n: hours }) + " " : ""}${mins > 0 ? t("recipes.minutesShort", { n: mins }) : "—"}` },
         ].map((m) => (
           <div key={m.label} className="rounded-lg bg-gray-50 p-2.5 text-center">
-            <p className="text-sm text-gray-400">{m.label}</p>
+            <p className="text-sm text-gray-500">{m.label}</p>
             <p className="mt-0.5 text-sm font-semibold text-brown-900">{m.value}</p>
           </div>
         ))}
@@ -51,12 +51,12 @@ export function RecipeDetail({ recipe }: { recipe: Recipe }) {
         </div>
       ))}
       {recipe.components.length === 0 && recipe.ingredients.length === 0 && (
-        <p className="text-sm text-gray-400">{t("recipes.noIngredients")}</p>
+        <p className="text-sm text-gray-500">{t("recipes.noIngredients")}</p>
       )}
 
       <Divider>{t("recipes.stepsTitle")}</Divider>
       {recipe.steps.length === 0 ? (
-        <p className="text-sm text-gray-400">{t("recipes.noSteps")}</p>
+        <p className="text-sm text-gray-500">{t("recipes.noSteps")}</p>
       ) : (
         <Steps
           direction="vertical"
@@ -65,7 +65,7 @@ export function RecipeDetail({ recipe }: { recipe: Recipe }) {
           items={recipe.steps.map((s) => ({
             title: <span className="text-sm font-medium">{s.title}</span>,
             description: (
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-gray-500">
                 {s.description}
                 {s.duration_minutes ? ` · ${t("recipes.stepMinutesValue", { n: s.duration_minutes })}` : ""}
               </span>

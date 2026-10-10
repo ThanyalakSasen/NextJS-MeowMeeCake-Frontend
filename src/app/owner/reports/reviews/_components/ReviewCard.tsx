@@ -5,6 +5,8 @@
 import { useState } from "react";
 import { Checkbox, Image, Tooltip } from "antd";
 import { useLocale, useTranslations } from "next-intl";
+// EyeIcon/EyeSlashIcon ที่นี่เป็น "สลับอ่านแล้ว/ยังไม่อ่าน" เป็นคู่ ไม่ใช่ปุ่ม "ดู" ของ actionIcon("view")
+// — EyeSlashIcon ไม่มีในตาราง §1.1 ถ้าดึงมาแค่ตัวเดียวจะกลายเป็นคนละแหล่งกัน จึง import เองทั้งคู่
 import { EyeIcon, EyeSlashIcon, PhotoIcon, TagIcon } from "@heroicons/react/24/outline";
 import { MapPinIcon as PinSolid } from "@heroicons/react/24/solid";
 import { MapPinIcon as PinOutline } from "@heroicons/react/24/outline";
@@ -81,8 +83,8 @@ export function ReviewCard({
             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
               <StarRating rating={r.rating} />
               <span>{r.userName || t("reviews.customer")}</span>
-              <span className="text-gray-400">· {formatDate(r.created_at, locale, { withTime: true })}</span>
-              {r.orderNo && <span className="font-mono text-gray-400">· {r.orderNo}</span>}
+              <span className="text-gray-500">· {formatDate(r.created_at, locale, { withTime: true })}</span>
+              {r.orderNo && <span className="font-mono text-gray-500">· {r.orderNo}</span>}
               {r.isPreorder && <span className="rounded bg-sky-50 px-1.5 text-[10px] text-sky-700">{t("reviews.preorder")}</span>}
             </div>
           </div>
@@ -111,11 +113,14 @@ export function ReviewCard({
             {canUpdate && (
               <>
                 <Tooltip title={r.is_pinned ? t("reviews.unpin") : t("reviews.pin")}>
+                  {/* Tooltip ช่วยเฉพาะคนที่ใช้เมาส์ — screen reader/คีย์บอร์ดต้องพึ่ง aria-label (ACTION_BUTTONS.md §4.1) */}
                   <Button size="small" type="text" onClick={onTogglePin}
+                    aria-label={r.is_pinned ? t("reviews.unpin") : t("reviews.pin")}
                     icon={r.is_pinned ? <PinSolid className="h-4 w-4 text-amber-500" /> : <PinOutline className="h-4 w-4" />} />
                 </Tooltip>
                 <Tooltip title={r.isRead ? t("reviews.markUnread") : t("reviews.markRead")}>
                   <Button size="small" type="text" onClick={onToggleRead}
+                    aria-label={r.isRead ? t("reviews.markUnread") : t("reviews.markRead")}
                     icon={r.isRead ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4 text-sky-600" />} />
                 </Tooltip>
               </>

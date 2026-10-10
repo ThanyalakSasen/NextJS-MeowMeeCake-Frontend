@@ -10,3 +10,4 @@ export { UserMenuDropdown } from "./UserMenuDropdown";
 export { ListPageLayout } from "./ListPageLayout";
 export { DashboardPageLayout } from "./DashboardPageLayout";
 export { TabbedPageLayout, type TabbedPageLayoutItem } from "./TabbedPageLayout";
+export { FormPageLayout, FormActions } from "./FormPageLayout";

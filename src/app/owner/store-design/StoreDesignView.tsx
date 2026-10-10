@@ -5,13 +5,12 @@
 // useStoreDesignViewModel.onReorder แล้ว
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
-import { LoadingSpin } from "@/components/shared/feedback";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { FilterToolbar, SearchInput, TypeTabBar } from "@/components/shared/data";
-import { RetryButton } from "@/components/shared/actions";
+import { actionIcon } from "@/components/shared/actions";
 import type { useStoreDesignViewModel } from "./useStoreDesignViewModel";
 import { BannerCard } from "./_components/BannerCard";
 import { BannerFormModal } from "./_components/BannerFormModal";
@@ -35,11 +34,11 @@ export function StoreDesignView(vm: VM) {
       title={t("storeDesign.title")}
       description={t("storeDesign.description")}
       actions={
-        vm.perm.create ? (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+        vm.perm.create && (
+          <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
             {t("storeDesign.addBanner")}
           </Button>
-        ) : undefined
+        )
       }
       toolbar={
         <FilterToolbar
@@ -63,10 +62,7 @@ export function StoreDesignView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : (
@@ -79,8 +75,9 @@ export function StoreDesignView(vm: VM) {
             <StatCard label={t("enums.bannerStatus.expired")} value={vm.counts.expired} sub={t("storeDesign.statExpiredSub")} tone="down" />
           </StatCardsGrid>
 
+          {/* ไม่มีสิทธิ์ products.update = ลากเรียงไม่ได้อยู่แล้ว — ซ่อนคำใบ้ทิ้งไปเลย ไม่ต้องบอกวิธีทำสิ่งที่ทำไม่ได้ */}
           {vm.perm.update && (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-500">
               {t(vm.canReorder ? "storeDesign.reorderHint" : "storeDesign.reorderDisabledHint")}
             </p>
           )}
@@ -92,13 +89,13 @@ export function StoreDesignView(vm: VM) {
                 key={b._id}
                 banner={b}
                 draggable={vm.canReorder && vm.perm.update}
-                canEdit={vm.perm.update}
-                canDelete={vm.perm.delete}
                 dragging={draggingId === b._id}
                 dragOver={dragOverId === b._id}
                 onEdit={vm.openEdit}
                 onDelete={vm.onDelete}
                 onToggle={vm.onToggle}
+                canUpdate={vm.perm.update}
+                canDelete={vm.perm.delete}
                 onDragStart={setDraggingId}
                 onDragOver={() => setDragOverId(b._id)}
                 onDragLeave={() => setDragOverId((prev) => (prev === b._id ? null : prev))}
@@ -107,15 +104,15 @@ export function StoreDesignView(vm: VM) {
               />
             ))}
             {vm.perm.create && (
-            <button
-              type="button"
-              onClick={vm.openAdd}
-              className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-600"
-            >
-              <PlusIcon className="h-7 w-7" />
-              <span className="text-sm font-medium">{t("storeDesign.addBanner")}</span>
-              <span className="px-4 text-center text-xs leading-relaxed">{t("storeDesign.addCardHint")}</span>
-            </button>
+              <button
+                type="button"
+                onClick={vm.openAdd}
+                className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-600"
+              >
+                {actionIcon("add", undefined, "h-7 w-7")}
+                <span className="text-sm font-medium">{t("storeDesign.addBanner")}</span>
+                <span className="px-4 text-center text-xs leading-relaxed">{t("storeDesign.addCardHint")}</span>
+              </button>
             )}
           </div>
         </div>

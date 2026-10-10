@@ -36,6 +36,30 @@ import จาก `@/components/shared/actions`
 
 ทุกไอคอนเป็น **outline** ยกเว้น `add` · ขนาดตาม `size` ของปุ่ม: `small` = `h-3.5 w-3.5` · ปกติ = `h-4 w-4`
 
+### 1.3 ปุ่มมีไอคอนแล้ว — ข้อความห้ามมีสัญลักษณ์ซ้ำ
+
+เคยหลุดมาแล้ว ผู้ใช้เห็นลูกศร 2 ตัวบนปุ่มเดียว — ไอคอนหนึ่ง และอีกหนึ่งติดมากับข้อความใน catalog:
+
+```jsonc
+// ❌  th.json
+"advanceTo": "→ {status}"      // พอใส่ในปุ่มที่มี icon={actionIcon("next")} ได้ "→ → ปิดรับแล้ว"
+// ✅
+"advanceTo": "{status}"
+```
+
+**กฎ:** ข้อความของปุ่มที่มี `icon=` ห้ามขึ้นต้นหรือลงท้ายด้วย `→ ← ↑ ↓ ✓ ✕ × + −`
+
+สัญลักษณ์กลางประโยคไม่นับ — เป็นเนื้อหา ไม่ใช่ไอคอน:
+
+| ข้อความ | นับไหม | เพราะ |
+|---|---|---|
+| `"ราคา น้อย→มาก"` | ไม่นับ | `→` แปลว่า "ถึง" |
+| `"+{n} รายการ"` | ไม่นับ | `+` แปลว่า "อีก" |
+| `"ไปที่จัดการผลิต →"` | ไม่นับ | เป็น `<Link>` ไม่มีไอคอนคู่ |
+
+**มีเครื่องตรวจ:** `npm run lint:ui` — กฎ `icon-glyph-duplicate`
+อ่านค่าจริงจาก `th.json` แล้วดูสัญลักษณ์หัว/ท้าย — ไม่ได้เดาจากชื่อคีย์
+
 ### 1.2 ปุ่มกลาง
 
 | component | ไอคอน | คำเริ่มต้น | หมายเหตุ |
@@ -167,7 +191,7 @@ import { EditButton, DeleteButton, SaveButton, CancelButton, RetryButton, ViewBu
 | `/owner/production` (drawer ใบสั่งผลิต) | `src/app/owner/production/_components/ProductionOrderDetail.tsx` | 82 · 84 | ยกเลิกใบสั่งผลิต · ไปสถานะถัดไป | `cancelAction` · `next` |
 | `/owner/ingredients/ingredientStock` | `src/app/owner/ingredients/ingredientStock/IngredientStockView.tsx` | 109 · 110 · 111 | รับเข้า · เบิกใช้ · ปรับยอด | `receive` · `use` · `adjust` |
 | `/owner/products/productStock` | `src/app/owner/products/productStock/ProductStockView.tsx` | 142 | ปรับสต็อก | `adjust` |
-| `/owner/orders/OrderInStore` (ตะกร้า POS) | `src/app/owner/orders/OrderInStore/_components/CartPanel.tsx` | 141 | ยืนยัน ฿xx | `confirm` |
+| `/owner/orders/OrderInStore` (แผงชำระเงิน) | `src/app/owner/orders/OrderInStore/_components/PaymentAside.tsx` | 146 · 149 | จ่ายเงินสด · จ่าย QR | ไอคอนเฉพาะ POS (`BanknotesIcon` · `QrCodeIcon` — ไม่มีในตาราง §1.1) |
 | `/owner/orders/OrderInStore` (Modal QR) | `src/app/owner/orders/OrderInStore/_components/QRPaymentModal.tsx` | 61 | ยืนยันรับเงินแล้ว (Modal นี้ `footer={null}` ใช้ปุ่มของตัวเอง) | `confirm` |
 | `/owner/employees/permissions` | `src/app/owner/employees/permissions/PermissionsView.tsx` | 76 | รีเซ็ต | `reset` |
 | 〃 (ตารางสิทธิ์) | `src/app/owner/employees/permissions/_components/PermissionMatrix.tsx` | 58 | เปิดทั้งหมด / ปิดทั้งหมด (สลับตามสถานะ) | `confirm` / `off` |
@@ -204,11 +228,18 @@ import { EditButton, DeleteButton, SaveButton, CancelButton, RetryButton, ViewBu
 
 ## 4. ที่ตั้งใจ **ไม่** ใส่ไอคอน / คงไว้แบบเดิม
 
-### 4.1 คงไว้แบบ "มีแต่ไอคอน" (6 ปุ่ม) — แถวแน่นมาก ใส่คำแล้วเบียดช่องกรอก · มี `aria-label` ครบ
+### 4.1 คงไว้แบบ "มีแต่ไอคอน" (16 ปุ่ม) — แถวแน่นมาก ใส่คำแล้วเบียดช่องกรอก · มี `aria-label` ครบ
+
+> **อัปเดต 2026-10-10:** POS ถูก refactor แล้ว — `CartPanel.tsx` · `ProductPickerGrid.tsx` ไม่มีในโค้ดอีกต่อไป
+> (ตอนนี้คือ `BillCard` · `PaymentAside` · `ScanSearchBox` ฯลฯ) · ปุ่มลบแถวใน 2 ฟอร์มย้ายไปใช้
+> `shared/form/RemoveRowButton` ซึ่งมี `aria-label` ในตัว
+>
+> **ปุ่มไอคอนล้วนที่เพิ่มมาทีหลังและขึ้นทะเบียนย้อนหลัง:** `CustomizationEditor` 3 ปุ่ม · `AspectsTab` 3 ปุ่ม ·
+> `ReviewCard` 2 ปุ่ม (ปักหมุด/อ่านแล้ว) · `CategoryManagerDialog` 2 ปุ่ม — มี `aria-label` ครบแล้วทุกตัว
+> และกฎ `icon-button-aria` ใน `npm run check` บังคับไว้ (baseline = 0 เพิ่มปุ่มที่ไม่มี `aria-label` อีกไม่ได้)
 
 | ที่ใช้ | component | บรรทัด | ปุ่ม |
 |---|---|---|---|
-| `/owner/orders/OrderInStore` (ตะกร้า POS) | `src/app/owner/orders/OrderInStore/_components/CartPanel.tsx` | 87 | 🗑 เอาสินค้าออก |
 | `/owner/recipes` (ฟอร์มสูตร) | `src/app/owner/recipes/_components/IngredientEditor.tsx` | 64 | ✕ ลบแถววัตถุดิบ |
 | 〃 | `src/app/owner/recipes/_components/StepEditor.tsx` | 55 | ✕ ลบขั้นตอน |
 | 〃 | `src/app/owner/recipes/_components/MainRecipeModal.tsx` | 136 | ✕ ลบแถวส่วนประกอบ |
@@ -221,9 +252,8 @@ import { EditButton, DeleteButton, SaveButton, CancelButton, RetryButton, ViewBu
 |---|---|---|
 | `src/app/login/_components/LoginForm.tsx` | 46 | ปุ่ม "เข้าสู่ระบบ" — ปุ่มหลักปุ่มเดียวของหน้า |
 | `src/app/owner/access-denied/_components/AccessDeniedCard.tsx` | 17 | ปุ่ม "กลับ" — ปุ่มเดียวของหน้า |
-| `src/app/owner/orders/OrderInStore/_components/CartPanel.tsx` | 59 | "ล้างตะกร้า" — ลิงก์ข้อความ (`section-card-link`) แบบเดียวกับ "ดูทั้งหมด →" |
 | `src/components/shared/layout/UserMenuDropdown.tsx` | 43 | "ออกจากระบบ" — ลิงก์ข้อความท้าย dropdown |
-| `ProductPickerGrid.tsx:27` · `RoleListPanel.tsx:28` · `CategoryChip.tsx:19` · `LocaleSwitcher.tsx:21` · `UserMenuDropdown.tsx:22` | — | ไม่ใช่ปุ่ม action (การ์ดสินค้า POS, รายการบทบาท, ชิปหมวดหมู่ที่มีจุดสีอยู่แล้ว, ตัวเลือกภาษา, avatar) |
+| `RoleListPanel.tsx` · `CategoryChip.tsx` · `LocaleSwitcher.tsx` · `UserMenuDropdown.tsx` | — | ไม่ใช่ปุ่ม action (รายการบทบาท, ชิปหมวดหมู่ที่มีจุดสีอยู่แล้ว, ตัวเลือกภาษา, avatar) |
 
 ---
 
@@ -231,13 +261,23 @@ import { EditButton, DeleteButton, SaveButton, CancelButton, RetryButton, ViewBu
 
 - ไอคอนแก้ไขเหมือนกันทั้งแอป (เดิม `BannerCard` ใช้ solid ที่เดียว) · `CouponCard` ได้ชื่อปุ่มแล้ว (เดิมไอคอนล้วนไม่มี `aria-label`)
 - ตัด import ที่ไม่ใช้แล้ว (`PencilSquareIcon`/`TrashIcon`/`Button`) ออกจากไฟล์ที่เกี่ยวข้อง
-- **⚠️ พบ (ยังไม่แก้):** ปุ่มลบในมุมมอง**ตาราง** `/owner/products` (`ProductsView.tsx:135`) **ลบทันทีไม่ถามยืนยัน** — มุมมองกริดมี `ConfirmDeletePopup`
+- ~~⚠️ ปุ่มลบในมุมมองตาราง `/owner/products` ลบทันทีไม่ถามยืนยัน~~ → ✅ **แก้แล้ว** (ครอบ `ConfirmDeletePopup` เหมือนมุมมองกริดแล้ว)
 
 ---
 
 ## 6. ตรวจสอบ
 
-- `npm run check` (i18n + theme + tsc + eslint) ✅ ผ่าน
+**กฎที่ตรวจอัตโนมัติแล้ว** (`scripts/check-ui.mjs` — เพิ่ม 2026-10-10 · รันผ่าน `npm run check` หรือ `npm run lint:ui`):
+
+| กฎในเอกสารนี้ | ชื่อกฎในสคริปต์ | หมายเหตุ |
+|---|---|---|
+| §1.1 ไอคอน `add` ต้องเป็น **solid** เสมอ | `plus-icon-solid` | ห้าม import `PlusIcon` จาก `24/outline` |
+| §4.1 ปุ่มที่มีแต่ไอคอน ต้องมี `aria-label` | `icon-button-aria` | นับ `{}` ใน prop ถูกต้อง อ่าน `icon={<XIcon />}` ไม่สับสน |
+
+ทำงานแบบ **ratchet** — ของเดิมที่ยังค้าง (ดู `CONSISTENCY_AUDIT.md` ข้อ 3.5 · 3.8) บันทึกจำนวนไว้ใน `scripts/ui-baseline.json`
+ยังผ่านได้ แต่**เพิ่มของใหม่ไม่ได้** · แก้ของเดิมไปแล้วให้รัน `npm run lint:ui:update` เพื่อขันเฟือง
+
+- `npm run check` (i18n + theme + ui + tsc + eslint) ✅ ผ่าน
 - สแกน `<Button>` + `<button>` ทั้ง `src/**/*.tsx` หลังแก้ (นับ `{}` ใน prop เพื่ออ่าน `icon={<XIcon />}` ถูก): ที่เหลือ "มีแต่คำ" = เฉพาะ §4.2 ·
   "มีแต่ไอคอน" = เฉพาะ §4.1
 - ทุกไฟล์ที่มี `okText=` (Modal/Popconfirm) มี `modalButtonIcons` หรือ `okButtonProps` แล้ว

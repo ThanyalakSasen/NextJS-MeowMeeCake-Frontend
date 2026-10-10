@@ -3,17 +3,17 @@
 // ปุ่มเพิ่ม/แก้/ลบ/กู้คืน + สวิตช์เปิดใช้ ตามสิทธิ์ orders.create/update/delete
 import { Modal } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Card, Switch, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable } from "@/components/shared/data";
-import { ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
-import { DeleteButton, EditButton, RetryButton, modalButtonIcons } from "@/components/shared/actions";
+import { ConfirmDeletePopup, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { DeleteButton, EditButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import { formatCurrency } from "@/i18n/format";
 import type { DeliveryZone } from "@/types/deliveryZone";
 import type { useDeliveryZonesViewModel } from "./useDeliveryZonesViewModel";
 import { DeliveryZoneForm } from "./_components/DeliveryZoneForm";
 import { ZoneChecker } from "./_components/ZoneChecker";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof useDeliveryZonesViewModel>;
 const PROVINCES_SHOWN = 8;
@@ -30,17 +30,14 @@ export function DeliveryZonesView(vm: VM) {
       description={t("deliveryZones.description")}
       actions={
         vm.perm.create && !vm.isLoading && !vm.isError ? (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+          <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
             {t("deliveryZones.add")}
           </Button>
         ) : undefined
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : (
@@ -84,14 +81,14 @@ export function DeliveryZonesView(vm: VM) {
                   key: "name",
                   title: t("deliveryZones.fields.name"),
                   width: 200,
-                  render: (z) => <span className={`font-semibold ${z.is_active ? "text-brown-800" : "text-gray-400"}`}>{z.zone_name}</span>,
+                  render: (z) => <span className={`font-semibold ${z.is_active ? "text-brown-800" : "text-gray-500"}`}>{z.zone_name}</span>,
                 },
                 {
                   key: "provinces",
                   title: t("deliveryZones.fields.provinces"),
                   render: (z) =>
                     z.is_catch_all ? (
-                      <Tag color="gold" className="!m-0">{t("deliveryZones.catchAllTag")}</Tag>
+                      <Tag color={NOTICE_TAG.catchAllZone} className="!m-0">{t("deliveryZones.catchAllTag")}</Tag>
                     ) : (
                       <span className="flex flex-wrap gap-1">
                         {z.provinces.slice(0, PROVINCES_SHOWN).map((p) => (

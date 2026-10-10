@@ -1,16 +1,16 @@
 "use client";
 // View ของ Ingredient Stock — ตาราง + ปุ่ม รับเข้า / เบิกใช้ / ปรับยอด ต่อแถว
-import { Progress } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { Button, Select } from "@/components/base";
+import { Button, ProgressBar } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, StatusFilterSelect, type Column, useStockStatusOptions } from "@/components/shared/data";
 import { formatCurrency, formatNumber } from "@/i18n/format";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
-import { RetryButton, actionIcon } from "@/components/shared/actions";
+import { actionIcon } from "@/components/shared/actions";
 import type { StockRow, useIngredientStockViewModel } from "./useIngredientStockViewModel";
 import { StockActionModal } from "./_components/StockActionModal";
+import { LoadFailed } from "@/components/shared/feedback";
 
 type VM = ReturnType<typeof useIngredientStockViewModel>;
 
@@ -38,7 +38,7 @@ export function IngredientStockView(vm: VM) {
             {formatNumber(r.currentStock, locale)}{" "}
             <span className="font-normal text-gray-600">{r.unitAbbr}</span>
           </p>
-          <Progress percent={r.pct} showInfo={false} size="small" strokeColor={STOCK_STATUS_CONFIG[r.status].dotColor} />
+          <ProgressBar percent={r.pct} color={STOCK_STATUS_CONFIG[r.status].dotColor} />
         </div>
       ),
     },
@@ -55,13 +55,6 @@ export function IngredientStockView(vm: VM) {
     },
   ];
 
-  const statusOptions = [
-    { value: "all", label: t("common.all") },
-    { value: "ok", label: t("enums.stockStatus.ok") },
-    { value: "low", label: t("enums.stockStatus.low") },
-    { value: "out", label: t("enums.stockStatus.out") },
-  ];
-
   return (
     <ListPageLayout
       title={t("ingredientStock.title")}
@@ -71,23 +64,14 @@ export function IngredientStockView(vm: VM) {
           left={
             <>
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("ingredientStock.searchPlaceholder")} />
-              <div style={{ minWidth: 150 }}>
-                <Select
-                  value={vm.status}
-                  onChange={(v) => vm.setStatus(v as VM["status"])}
-                  options={statusOptions}
-                />
-              </div>
+              <StatusFilterSelect value={vm.status} onChange={vm.setStatus} options={useStockStatusOptions()} />
             </>
           }
         />
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>

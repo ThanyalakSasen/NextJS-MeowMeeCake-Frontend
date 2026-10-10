@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint",
-    "lint:i18n": "node scripts/check-i18n.mjs",
+    "lint:i18n": "node scripts/check-i18n.mjs --strict",
     "lint:theme": "node scripts/check-theme.mjs --strict",
-    "check": "node scripts/check-i18n.mjs && node scripts/check-theme.mjs --strict && tsc --noEmit && eslint"
+    "lint:ui": "node scripts/check-ui.mjs --strict",
+    "lint:ui:update": "node scripts/check-ui.mjs --update",
+    "check": "node scripts/check-i18n.mjs --strict && node scripts/check-theme.mjs --strict && node scripts/check-ui.mjs --strict && tsc --noEmit && eslint"
   },
   "dependencies": {
     "@ant-design/cssinjs": "^2.1.2",

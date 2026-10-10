@@ -165,7 +165,7 @@ export default function PreorderOrderBox({
           disabled={disabled}
           placeholder={t("notePlaceholder")}
           onChange={(e) => setNote(e.target.value)}
-          className="w-full rounded-xl border border-[#8C5A3C]/20 bg-white px-4 py-2.5 text-xs text-[#4A342E] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8C5A3C]/40 sm:text-sm"
+          className="w-full rounded-xl border border-[#8C5A3C]/20 bg-white px-4 py-2.5 text-xs text-[#4A342E] placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C5A3C]/40 sm:text-sm"
         />
       </label>
 

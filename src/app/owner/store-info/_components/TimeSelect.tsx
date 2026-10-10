@@ -22,7 +22,7 @@ export function TimeSelect({ value, onChange, disabled, ariaLabel }: {
         options={HOURS.map((x) => ({ value: x, label: x }))}
         onChange={(v: string) => onChange(`${v}:${m}`)}
       />
-      <span className="text-gray-400">:</span>
+      <span className="text-gray-500">:</span>
       <Select
         style={{ width: 72 }}
         value={m}

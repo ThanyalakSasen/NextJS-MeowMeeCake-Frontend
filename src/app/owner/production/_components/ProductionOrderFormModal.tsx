@@ -3,16 +3,15 @@
 // IngredientFormModal/StockActionModal — ยังไม่ซับซ้อนพอต้องแยก ViewModel ของตัวเอง)
 // รายการสินค้าที่เลือกได้ = เฉพาะที่มีสูตรผูกแล้ว (backend บังคับ recipe_id ต่อแถว — กรองไว้แล้วที่
 // useProductionViewModel.productOptions) ไม่เช็ควัตถุดิบขาด/พอที่นี่ (backend เช็คตอนปิดงานผลิตแทน)
-import { useState } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import type { CreateProductionOrderItemInput } from "@/types/productionOrder";
-import { modalButtonIcons } from "@/components/shared/actions";
+import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import type { CreateProductionOrderValue } from "../useProductionViewModel";
+import { useEditableRows, RemoveRowButton } from "@/components/shared/form";
 
 interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string }
 interface StaffOption { _id: string; user_fullname: string }
@@ -51,7 +50,7 @@ export function ProductionOrderFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<FormValues>();
-  const [rows, setRows] = useState<ItemRow[]>([emptyRow()]);
+  const { rows, setRows, updateRow, removeRow } = useEditableRows<ItemRow>([emptyRow()]);
 
   /** เคลียร์ฟอร์ม+แถวหลังปิด modal สนิทแล้ว (ไม่ว่าจะปิดจากปุ่มยกเลิกหรือหลังบันทึกสำเร็จ)
    *  ใช้ callback ของ antd แทน useEffect(open) — เลี่ยง setState ใน effect (react-compiler) */
@@ -59,9 +58,6 @@ export function ProductionOrderFormModal({
     form.resetFields();
     setRows([emptyRow()]);
   };
-
-  const updateRow = (key: string, patch: Partial<ItemRow>) =>
-    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
 
   const handleOk = async () => {
     const v = await form.validateFields();
@@ -119,7 +115,7 @@ export function ProductionOrderFormModal({
 
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-gray-500">{t("production.itemsTitle", { n: rows.length })}</p>
-          <Button size="small" icon={<PlusIcon className="h-3.5 w-3.5" />} onClick={() => setRows((p) => [...p, emptyRow()])}>
+          <Button size="small" icon={actionIcon("add", "small")} onClick={() => setRows((p) => [...p, emptyRow()])}>
             {t("production.addItem")}
           </Button>
         </div>
@@ -145,7 +141,7 @@ export function ProductionOrderFormModal({
               min={1}
               value={row.planned_qty}
               onChange={(v) => updateRow(row.key, { planned_qty: Number(v) || 1 })}
-              suffix={<span className="text-xs text-gray-400">{products.find((p) => p._id === row.product_id)?.unit_abbr ?? ""}</span>}
+              suffix={<span className="text-xs text-gray-500">{products.find((p) => p._id === row.product_id)?.unit_abbr ?? ""}</span>}
             />
             <Input
               size="small"
@@ -153,13 +149,7 @@ export function ProductionOrderFormModal({
               onChange={(e) => updateRow(row.key, { notes: e.target.value })}
               placeholder={t("production.itemNotePlaceholder")}
             />
-            <Button
-              size="small" type="text" danger
-              icon={<XMarkIcon className="h-3.5 w-3.5" />}
-              disabled={rows.length === 1}
-              onClick={() => setRows((p) => p.filter((r) => r.key !== row.key))}
-              aria-label={t("common.delete")}
-            />
+            <RemoveRowButton onClick={() => removeRow(row.key)} disabled={rows.length === 1} />
           </div>
         ))}
       </Form>

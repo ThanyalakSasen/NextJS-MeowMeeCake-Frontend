@@ -14,7 +14,7 @@
 (Next โหลด `.env.local` แต่ไม่ทับตัวแปรที่มีอยู่แล้วใน process — ค่าว่างก็นับว่ามี)
 
 ```bash
-# backend (โปรเจกต์ D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake) — พอร์ต 3000
+# backend (โปรเจกต์ D:\Cream\MeowMeeCake-Backend\NextJS-MeowMeeCake) — พอร์ต 3000
 MONGODB_URI=mongodb://127.0.0.1:27017/meowmeecake-test \
 EMAIL_USER= EMAIL_PASS= EMAIL_SERVICE= \
 LINE_CHANNEL_ACCESS_TOKEN= LINE_TARGET_ID= \

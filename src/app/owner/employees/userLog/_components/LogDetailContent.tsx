@@ -54,7 +54,7 @@ export function LogDetailContent({ log }: { log: LogRow }) {
       log.entity ? (
         <span>
           {t.has(`entities.${log.entity}`) ? t(`entities.${log.entity}`) : t("entities.fallback")}
-          {log.entity_id && <span className="ml-1 font-mono text-xs text-gray-400">{log.entity_id}</span>}
+          {log.entity_id && <span className="ml-1 font-mono text-xs text-gray-500">{log.entity_id}</span>}
         </span>
       ) : (
         "—"
@@ -68,7 +68,7 @@ export function LogDetailContent({ log }: { log: LogRow }) {
     <div className="flex flex-col gap-4">
       <div>
         <p className="font-semibold text-brown-800">{log.userName}</p>
-        <p className="text-sm text-gray-400">{log.roleName}</p>
+        <p className="text-sm text-gray-500">{log.roleName}</p>
       </div>
 
       <Divider className="!my-0" />
@@ -76,7 +76,7 @@ export function LogDetailContent({ log }: { log: LogRow }) {
       <div className="flex flex-col gap-2.5">
         {meta.map(([label, value]) => (
           <div key={label} className="flex items-start justify-between gap-3">
-            <span className="w-28 shrink-0 text-sm text-gray-400">{label}</span>
+            <span className="w-28 shrink-0 text-sm text-gray-500">{label}</span>
             <div className="flex-1 text-right text-sm text-gray-700">{value}</div>
           </div>
         ))}
@@ -90,7 +90,7 @@ export function LogDetailContent({ log }: { log: LogRow }) {
             <div className="flex flex-col gap-2">
               {detailEntries.map(([label, value]) => (
                 <div key={label} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
-                  <p className="mb-1 text-xs text-gray-400">{label}</p>
+                  <p className="mb-1 text-xs text-gray-500">{label}</p>
                   <p className="text-sm text-gray-700">{value}</p>
                 </div>
               ))}

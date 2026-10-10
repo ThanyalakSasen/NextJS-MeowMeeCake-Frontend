@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from "next-intl";
 import { Divider, Tag } from "@/components/base";
 import { formatDate } from "@/i18n/format";
-import { NOTIFICATION_TYPE_COLOR } from "@/constants/enumConfig";
+import { NOTIFICATION_TYPE_COLOR, READ_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { NotificationDTO } from "@/types/notification";
 
 export function NotificationDetailContent({ notif }: { notif: NotificationDTO }) {
@@ -16,7 +16,7 @@ export function NotificationDetailContent({ notif }: { notif: NotificationDTO })
     [t("fields.module"), <Tag key="m">{t(`enums.notificationModule.${notif.module}`)}</Tag>],
     [
       t("fields.status"),
-      <Tag key="s" color={notif.is_read ? "default" : "processing"}>
+      <Tag key="s" color={READ_STATUS_CONFIG[notif.is_read ? "read" : "unread"].antColor}>
         {notif.is_read ? t("notifications.statusRead") : t("notifications.statusUnread")}
       </Tag>,
     ],
@@ -35,7 +35,7 @@ export function NotificationDetailContent({ notif }: { notif: NotificationDTO })
       <div className="flex flex-col gap-2.5">
         {meta.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-3">
-            <span className="w-24 shrink-0 text-sm text-gray-400">{label}</span>
+            <span className="w-24 shrink-0 text-sm text-gray-500">{label}</span>
             <div className="flex-1 text-right text-sm text-gray-700">{value}</div>
           </div>
         ))}

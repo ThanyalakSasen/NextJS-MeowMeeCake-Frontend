@@ -28,11 +28,11 @@ export function BannerCard({
   draggable,
   dragging,
   dragOver,
-  canEdit,
-  canDelete,
   onEdit,
   onDelete,
   onToggle,
+  canUpdate,
+  canDelete,
   onDragStart,
   onDragOver,
   onDragLeave,
@@ -43,13 +43,13 @@ export function BannerCard({
   draggable: boolean;
   dragging: boolean;
   dragOver: boolean;
-  /** products.update — ปุ่มแก้ + สวิตช์เปิด/ปิด */
-  canEdit: boolean;
-  /** products.delete */
-  canDelete: boolean;
   onEdit: (b: BannerRow) => void;
   onDelete: (id: string) => void;
   onToggle: (b: BannerRow) => void;
+  /** products.update — ปุ่มแก้ + สวิตช์เปิด/ปิด */
+  canUpdate: boolean;
+  /** products.delete */
+  canDelete: boolean;
   onDragStart: (id: string) => void;
   onDragOver: () => void;
   onDragLeave: () => void;
@@ -116,15 +116,15 @@ export function BannerCard({
           การ์ดจึงสูงเท่ากันทุกใบไม่ว่าข้อความจะยาวแค่ไหน · ข้อความเต็มดูได้จาก tooltip (title) */}
       <div className="px-3 py-2.5">
         <p className="truncate text-sm font-semibold text-brown-800" title={banner.banner_name}>{banner.banner_name}</p>
-        <p className="mt-0.5 truncate text-xs text-gray-400" title={banner.banner_link || undefined}>
+        <p className="mt-0.5 truncate text-xs text-gray-500" title={banner.banner_link || undefined}>
           {banner.banner_link || "—"}
         </p>
-        <p className="mt-0.5 truncate text-xs text-gray-400" title={dateText}>{dateText}</p>
+        <p className="mt-0.5 truncate text-xs text-gray-500" title={dateText}>{dateText}</p>
       </div>
 
       <div className="mt-auto flex items-center justify-between border-t border-gray-100 px-3 py-2">
         <div className="flex items-center gap-1.5">
-          {canEdit && <EditButton size="small" onClick={() => onEdit(banner)} />}
+          {canUpdate && <EditButton size="small" onClick={() => onEdit(banner)} />}
           {canDelete && (
             <ConfirmDeletePopup
               title={t("storeDesign.deleteConfirm", { name: banner.banner_name })}
@@ -138,7 +138,7 @@ export function BannerCard({
             "รอตามกำหนด" จึงโชว์เป็นปิด แล้วกดเปิดกลับได้ is_active: false (ตรงข้ามกับที่ตั้งใจ) */}
         <Switch
           checked={banner.is_active}
-          disabled={!canEdit}
+          disabled={!canUpdate}
           onChange={() => onToggle(banner)}
           aria-label={banner.banner_name}
         />

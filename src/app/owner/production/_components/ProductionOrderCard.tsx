@@ -53,10 +53,10 @@ export function ProductionOrderCard({
           </p>
         ))}
         {items.length > 2 && (
-          <p className="text-sm text-gray-400">{t("production.moreItems", { n: items.length - 2 })}</p>
+          <p className="text-sm text-gray-500">{t("production.moreItems", { n: items.length - 2 })}</p>
         )}
       </div>
-      <p className="text-sm text-gray-400">{order.assignee_name ?? t("production.unassigned")}</p>
+      <p className="text-sm text-gray-500">{order.assignee_name ?? t("production.unassigned")}</p>
     </div>
   );
 }

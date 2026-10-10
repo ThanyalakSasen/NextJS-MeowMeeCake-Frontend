@@ -6,10 +6,10 @@
 // ─────────────────────────────────────────────────────────────
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { Input } from "@/components/base";
 import { isShortMapLink, parseCoordinates, type CoordinateError } from "@/lib/parseCoordinates";
 import { isApiError } from "@/types/api";
+import { actionIcon } from "@/components/shared/actions";
 
 const format = (lat: number | null, lng: number | null) => (lat != null && lng != null ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : "");
 
@@ -95,7 +95,7 @@ export function CoordinateInput({ lat, lng, onChange, onResolveShortLink, disabl
           className="inline-flex items-center gap-1 self-start text-xs text-gray-500 hover:text-gray-700 hover:underline"
         >
           {t("storeInfo.coord.check", { coord: format(lat, lng) })}
-          <ArrowTopRightOnSquareIcon className="h-3 w-3" />
+          {actionIcon("external", undefined, "h-3 w-3")}
         </a>
       ) : (
         <span className="text-xs text-amber-600">{t("storeInfo.coord.notSet")}</span>

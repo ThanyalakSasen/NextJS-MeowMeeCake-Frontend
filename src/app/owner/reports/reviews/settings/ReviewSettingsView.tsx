@@ -5,8 +5,7 @@ import { useTranslations } from "next-intl";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/base";
 import { TabbedPageLayout } from "@/components/shared/layout";
-import { LoadingSpin } from "@/components/shared/feedback";
-import { RetryButton } from "@/components/shared/actions";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { SettingsTab, useReviewSettingsViewModel } from "./useReviewSettingsViewModel";
 import { AspectsTab } from "./_components/AspectsTab";
 import { TermsTab } from "./_components/TermsTab";
@@ -31,10 +30,7 @@ export function ReviewSettingsView(vm: VM) {
           key: "aspects",
           label: t("reviewSettings.tabAspects"),
           children: vm.aspectsError ? (
-            <div className="flex flex-col items-center gap-3 py-10 text-center">
-              <p className="text-gray-600">{t("common.loadFailed")}</p>
-              <RetryButton onClick={() => vm.refetchAspects()} />
-            </div>
+            <LoadFailed onRetry={vm.refetchAspects} />
           ) : vm.aspectsLoading ? (
             <LoadingSpin />
           ) : (

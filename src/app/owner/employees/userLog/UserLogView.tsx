@@ -5,11 +5,10 @@ import { ArrowDownTrayIcon } from "@heroicons/react/24/solid";
 import { Button, Select, RangePicker } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { DetailDrawer } from "@/components/shared/feedback";
+import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
 import { USER_LOG_ACTION_CONFIG, type UserLogAction } from "@/constants/enumConfig";
-import { RetryButton } from "@/components/shared/actions";
 import type { LogRow, useUserLogViewModel } from "./useUserLogViewModel";
 import { LogDetailContent } from "./_components/LogDetailContent";
 
@@ -33,7 +32,7 @@ export function UserLogView(vm: VM) {
       render: (r) => (
         <div>
           <p className="font-medium text-brown-800">{r.userName}</p>
-          <p className="text-xs text-gray-400">{r.roleName}</p>
+          <p className="text-xs text-gray-500">{r.roleName}</p>
         </div>
       ),
     },
@@ -59,7 +58,7 @@ export function UserLogView(vm: VM) {
         <div>
           <p className="text-gray-700">{r.action}</p>
           {r.entity && (
-            <p className="mt-0.5 text-xs text-gray-400">
+            <p className="mt-0.5 text-xs text-gray-500">
               {t.has(`entities.${r.entity}`) ? t(`entities.${r.entity}`) : t("entities.fallback")}
               {r.entity_id && <span className="ml-1 font-mono">{r.entity_id}</span>}
             </p>
@@ -70,7 +69,7 @@ export function UserLogView(vm: VM) {
     {
       key: "ip",
       title: t("userLog.colIp"),
-      render: (r) => <span className="font-mono text-sm text-gray-400">{r.ip_address ?? "—"}</span>,
+      render: (r) => <span className="font-mono text-sm text-gray-500">{r.ip_address ?? "—"}</span>,
     },
   ];
 
@@ -118,10 +117,7 @@ export function UserLogView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>

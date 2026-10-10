@@ -1,17 +1,16 @@
 "use client";
 // View ของ Notification History — ตารางประวัติแจ้งเตือน + drawer รายละเอียด
 import { useTranslations, useLocale } from "next-intl";
-import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { DetailDrawer, ConfirmDeletePopup } from "@/components/shared/feedback";
+import { ConfirmDeletePopup, DetailDrawer, LoadFailed } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
-import { NOTIFICATION_TYPE_COLOR } from "@/constants/enumConfig";
+import { NOTIFICATION_TYPE_COLOR, READ_STATUS_CONFIG } from "@/constants/enumConfig";
 import { NOTIFICATION_MODULES, type NotificationDTO } from "@/types/notification";
 import type { NotificationType } from "@/types";
-import { DeleteButton, RetryButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, actionIcon } from "@/components/shared/actions";
 import type { useNotificationHistoryViewModel } from "./useNotificationHistoryViewModel";
 import { NotificationDetailContent } from "./_components/NotificationDetailContent";
 
@@ -48,7 +47,7 @@ export function NotificationHistoryView(vm: VM) {
       render: (n) => (
         <div>
           <p className={n.is_read ? "text-gray-600" : "font-semibold text-brown-800"}>{n.title}</p>
-          <p className="mt-0.5 line-clamp-1 text-xs text-gray-400">{n.message}</p>
+          <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">{n.message}</p>
         </div>
       ),
     },
@@ -66,7 +65,7 @@ export function NotificationHistoryView(vm: VM) {
       key: "status",
       title: t("notifications.colStatus"),
       render: (n) => (
-        <Tag color={n.is_read ? "default" : "processing"}>
+        <Tag color={READ_STATUS_CONFIG[n.is_read ? "read" : "unread"].antColor}>
           {n.is_read ? t("notifications.statusRead") : t("notifications.statusUnread")}
         </Tag>
       ),
@@ -80,12 +79,12 @@ export function NotificationHistoryView(vm: VM) {
       actions={
         <>
           {vm.stats.unread > 0 && (
-            <Button icon={<CheckCircleIcon className="h-4 w-4" />} onClick={vm.onMarkAllRead}>
+            <Button icon={actionIcon("confirm")} onClick={vm.onMarkAllRead}>
               {t("notifications.markAllRead")}
             </Button>
           )}
-          {vm.stats.total > 0 && (
-            <Button danger icon={<TrashIcon className="h-4 w-4" />} onClick={vm.onClearAll}>
+          {vm.canDelete && vm.stats.total > 0 && (
+            <Button danger icon={actionIcon("delete")} onClick={vm.onClearAll}>
               {t("notifications.clearAll")}
             </Button>
           )}
@@ -131,10 +130,7 @@ export function NotificationHistoryView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>
@@ -150,11 +146,15 @@ export function NotificationHistoryView(vm: VM) {
             loading={vm.isLoading}
             emptyText={t("notifications.empty")}
             onRowClick={vm.openDetail}
-            actions={(n) => (
-              <ConfirmDeletePopup title={t("notifications.deleteConfirm")} onConfirm={() => vm.onDelete(n._id)}>
-                <DeleteButton size="small" />
-              </ConfirmDeletePopup>
-            )}
+            actions={
+              vm.canDelete
+                ? (n) => (
+                    <ConfirmDeletePopup title={t("notifications.deleteConfirm")} onConfirm={() => vm.onDelete(n._id)}>
+                      <DeleteButton size="small" />
+                    </ConfirmDeletePopup>
+                  )
+                : undefined
+            }
           />
         </div>
       )}

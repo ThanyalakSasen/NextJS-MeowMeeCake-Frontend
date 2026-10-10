@@ -3,19 +3,19 @@
 // payment_status แสดงเป็น badge อ่านอย่างเดียว (แก้ตรง ๆ ไม่ได้ — backend จัดการผ่าน resource
 // Payments/verify เท่านั้น) · คอลัมน์ items/สลิปเอาออกจากตาราง (ต้องเรียก getById ต่อแถว ไม่คุ้ม
 // N+1 — ดูรายละเอียดเต็มได้ที่ drawer ผ่านปุ่ม "ดู")
-import { Tag, Tooltip } from "antd";
+import { Tooltip } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import { Avatar, Button, Select } from "@/components/base";
+import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "@/components/shared/data";
-import { DetailDrawer } from "@/components/shared/feedback";
+import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
-import { PAYMENT_STATUS_CONFIG } from "@/constants/enumConfig";
+import { NOTICE_TAG, PAYMENT_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import { isAwaitingRefund, type Order } from "@/types/order";
-import { RetryButton, ViewButton, actionIcon } from "@/components/shared/actions";
+import { ViewButton, actionIcon } from "@/components/shared/actions";
 import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
 import { STATUS_SELECT_OPTIONS } from "./orderStatus";
 import { OrderStatusFilter } from "./_components/OrderStatusFilter";
@@ -83,7 +83,7 @@ export function ManageOrdersView(vm: VM) {
       // ยกเลิก + ชำระแล้ว = ร้านยังต้องโอนคืน (ป้าย "ชำระแล้ว" เฉย ๆ ทำให้ดูเหมือนเรียบร้อย)
       render: (o) =>
         isAwaitingRefund(o) ? (
-          <Tag color="warning">{t("orders.awaitingRefund")}</Tag>
+          <Tag color={NOTICE_TAG.awaitingRefund}>{t("orders.awaitingRefund")}</Tag>
         ) : (
           <StatusBadge group="paymentStatus" value={o.payment_status} />
         ),
@@ -171,10 +171,7 @@ export function ManageOrdersView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <DataTable
           columns={columns}

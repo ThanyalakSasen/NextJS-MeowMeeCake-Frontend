@@ -2,18 +2,16 @@
 // เนื้อหาข้างใน DetailDrawer ของ Manage Orders — presentational ล้วน
 // order มาจาก ordersService.get(id) เสมอ (มี items จริง) · payment มาจาก paymentsService.listByOrder
 // (คนละ resource กับ order — สลิป/verified_at อยู่ในนี้ ไม่ใช่ field บน order)
-import { Divider, Tag } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { Avatar, Button } from "@/components/base";
+import { Avatar, Button, Divider, Tag } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { isAwaitingRefund, type DeliveryUpdateInput, type Order } from "@/types/order";
 import type { Payment } from "@/types/payment";
 import { actionIcon } from "@/components/shared/actions";
 import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
-import { SlipImage } from "../../_components/SlipImage";
-import { DeliverySection } from "../../_components/DeliverySection";
-import { RefundSection } from "../../_components/RefundSection";
+import { DeliverySection, RefundSection, SlipImage } from "@/components/shared/orders";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 export function OrderDetailContent({
   order,
@@ -61,7 +59,7 @@ export function OrderDetailContent({
 
       {isCancelled ? (
         <div>
-          <Tag color="error" className="w-fit">{t("orders.cancelledBanner")}</Tag>
+          <Tag color={NOTICE_TAG.cancelled} className="w-fit">{t("orders.cancelledBanner")}</Tag>
           {/* เหตุผลแสดงใน RefundSection แทนเมื่อรอโอนคืน (ไม่ซ้ำสองที่) */}
           {order.cancelled_reason && !isAwaitingRefund(order) && (
             <p className="mt-1.5 text-sm text-gray-600">{order.cancelled_reason}</p>

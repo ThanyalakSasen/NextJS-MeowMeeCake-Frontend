@@ -1,11 +1,12 @@
 "use client";
 // แถบกรองของหน้ารีวิว — ค้นข้อความ · หมวด · สินค้า · ดาว · หัวข้อ (+ ชม/ติ) · ตอบกลับ · อ่าน · รูป/วิดีโอ · ประเภทออเดอร์ · สถานะ · เรียง
 import { useTranslations } from "next-intl";
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Select, Tag } from "@/components/base";
 import { SearchInput } from "@/components/shared/data";
 import type { ReviewSort, ReviewStatus } from "@/types/review";
 import type { ReviewFilters, Tri } from "../useReviewsViewModel";
+import { actionIcon } from "@/components/shared/actions";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 const SORTS: ReviewSort[] = ["newest", "needs_reply", "lowest", "highest", "oldest"];
 const STATUSES: ReviewStatus[] = ["approved", "hidden", "pending"];
@@ -28,7 +29,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
 
   const field = (label: string, node: React.ReactNode) => (
     <label className="flex min-w-0 flex-col gap-0.5">
-      <span className="text-[11px] text-gray-400">{label}</span>
+      <span className="text-[11px] text-gray-500">{label}</span>
       {node}
     </label>
   );
@@ -38,7 +39,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput value={search} onChange={setSearch} placeholder={t("reviews.searchPlaceholder")} />
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs text-gray-400">{t("reviews.sortLabel")}</span>
+          <span className="text-xs text-gray-500">{t("reviews.sortLabel")}</span>
           <Select
             size="small"
             style={{ width: 150 }}
@@ -100,7 +101,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
             onChange={(v: ReviewFilters["status"]) => setFilter("status", v)} />
         ))}
         <div className="flex items-end">
-          <Button size="small" icon={<ArrowPathIcon className="h-4 w-4" />} onClick={onReset}>
+          <Button size="small" icon={actionIcon("reset", "small")} onClick={onReset}>
             {t("reviews.filter.reset")}
           </Button>
         </div>
@@ -108,7 +109,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
 
       {filters.negativeOnly && (
         <div className="flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-3">
-          <Tag closable color="red" onClose={() => setFilter("negativeOnly", false)} className="!m-0">
+          <Tag closable color={NOTICE_TAG.negativeFilter} onClose={() => setFilter("negativeOnly", false)} className="!m-0">
             {t("reviews.filter.negativeOnly")}
           </Tag>
         </div>

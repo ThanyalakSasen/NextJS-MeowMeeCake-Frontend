@@ -4,7 +4,14 @@
 > **เปิดอ่านเมื่อ:** ก่อนสร้าง component ใหม่ (เช็คว่ามีอยู่แล้วไหม / ควรวางที่ไหน) · ตรวจความสอดคล้องกับ `MeowMeeCake_Components.html`
 > **ทำไมสำคัญ:** กันสร้างซ้ำ · ให้ทุกคนวาง component ที่เดียวกันตามกติกา "ใช้กี่หน้า?"
 
+**กติกามี 2 ชั้น:** วางที่ไหน (ข้างล่างนี้ + Promotion rule) · และ **ของทำงานเหมือนกันต้องเป็นตัวเดียวกัน** (→ §กติกา de-duplicate)
+
 **กติกาที่วาง:** UI ล้วน → `components/base/` · ใช้ ≥ 2 screen → `components/shared/<concern>/` · ใช้ 1 screen → `app/owner/<route>/_components/`
+**ชั้นที่ 4 — `app/owner/<feature>/_components/`** (บันทึก 2026-10-10 · เดิมมีใช้จริงแต่ไม่มีในกติกา · `CONSISTENCY_AUDIT.md` ข้อ 3.10):
+ใช้เมื่อหน้าย่อยของ **feature เดียวกัน** ใช้ร่วมกัน เช่น `products/_components/ProductFormFields` (add + edit สินค้า) ·
+`employees/_components/EmployeeFormFields` (add + edit พนักงาน) — อ้างด้วย relative path `../_components/` ได้
+**เส้นแบ่งกับ `shared/`:** ถ้าผู้ใช้เป็น **คนละ feature** ต้องขึ้น `shared/` เช่น `SlipImage` ที่ Manage Orders กับ
+PreOrder Round ใช้ร่วมกัน — ย้ายขึ้น `shared/orders/` แล้ว (Phase 4)
 **หน้าร้าน** (`/customer/*` — ยกจาก FrontOffice): component ที่ใช้หลายหน้าอยู่ `components/customer/` · ใช้หน้าเดียวอยู่ `app/customer/<route>/_components/` (ดู §หน้าร้าน ท้ายเอกสาร) · อัปเดต 2026-10-09
 **split:** มี state/effect/fetch จริง → แยก View + `use<X>` · presentation ล้วน → ไฟล์เดียว
 
@@ -31,7 +38,6 @@
 | Card | `base/Card.tsx` | กล่องขอบมน |
 | Logo | `base/Logo.tsx` | โลโก้ร้าน · `src` = โลโก้ที่ร้านอัปโหลด (หน้าร้านใช้ผ่าน `customer/StoreLogo`) |
 | EmptyState | `base/EmptyState.tsx` | antd Empty + i18n |
-| ErrorMessage | `base/ErrorMessage.tsx` | กล่อง error แดง |
 | LocaleSwitcher | `base/LocaleSwitcher.tsx` | TH/EN (เฟส 0.5) |
 
 **Icon** = ใช้ `@heroicons/react` / `lucide-react` ตรง ๆ (ไม่มี wrapper)
@@ -53,7 +59,8 @@
 | NotificationItem | `NotificationItem.tsx` | — | NotificationDropdown, Notification History |
 | UserMenuDropdown | `UserMenuDropdown.tsx` | ใช่ (open state) | Navbar |
 | ListPageLayout | `ListPageLayout.tsx` | — | Products, Orders, Employees, Ingredients, Finance, Reports, ... |
-| DashboardPageLayout | `DashboardPageLayout.tsx` | — | Dashboard, POS (2-pane shell), Manage Units/Permissions (2-col shell), Attendance |
+| DashboardPageLayout | `DashboardPageLayout.tsx` | — | Dashboard, POS (2-pane shell), Manage Units/Permissions (2-col shell) |
+| FormPageLayout · FormActions | `FormPageLayout.tsx` | — | Add/Edit Employee, Add/Edit Product — หัวข้อ + แถวปุ่มท้ายฟอร์ม (`FormActions` ต้องอยู่ **ใน** `<Form>` เพราะ `htmlType="submit"`) |
 | TabbedPageLayout | `TabbedPageLayout.tsx` | — (antd `Tabs`, `activeKey`/`onChange` — consumer sync กับ `?tab=` เอง ถ้าต้องการ) | Production (`?tab=` sync), Recipes (local state) |
 
 ### shared/feedback/ (✅ เฟส 3–4)
@@ -62,6 +69,7 @@
 | LoadingSpin | `feedback/LoadingSpin.tsx` | ทุกหน้า owner |
 | ConfirmDeletePopup | `feedback/ConfirmDeletePopup.tsx` | ทุกหน้าที่มี delete |
 | DetailDrawer | `feedback/DetailDrawer.tsx` | Manage Orders, Ingredient History, User Log, Notification History, Production |
+| LoadFailed | `feedback/LoadFailed.tsx` | **30 จุด** — ทุกหน้าที่มีสถานะ "โหลดไม่สำเร็จ" (เดิมเขียนบล็อกซ้ำเองทุกไฟล์ · Phase 3B) |
 
 ### shared/stats/ (✅ เฟส 3)
 | component | ไฟล์ | consumers |
@@ -82,6 +90,7 @@
 | SortDropdown | `data/SortDropdown.tsx` | ✅ เฟส 4 | Products |
 | ViewToggle | `data/ViewToggle.tsx` | ✅ เฟส 4 | Products |
 | AutoCompleteSearch | `data/AutoCompleteSearch.tsx` | ⏳ เฟส 4 (Ingredient Stock) | |
+| StatusFilterSelect · useStockStatusOptions | `data/StatusFilterSelect.tsx` | ✅ 2026-10-10 (Phase 3B) | Ingredients, Ingredient Stock · ตัวเลือกใช้ที่ Product Stock ด้วย (หน้านั้นมี label กำกับ จึงใช้ wrapper ของตัวเอง) |
 
 ### shared/charts/ — ตั้งใจไม่ทำ (D0 ตัดสินใจ)
 | RevenueBarChart · AnalyticsBarChart | **ไม่ทำ** | เดิมวางแผนไว้ Finance Summary/Production History/Ingredient History (recharts) — ทั้ง 3 หน้าใช้ `DataTable`/`BreakdownList` (แถบ %) แทนกราฟจริงหมดแล้ว |
@@ -89,10 +98,19 @@
 ### shared/stats/ — ⏳ (ยังไม่มี consumer)
 | KPIStatsRow | ⏳ | เดิมวางแผนไว้ Finance Summary — สุดท้ายใช้ StatCardsGrid + แถว KPI ธรรมดาแทน |
 
+### shared/orders/ (✅ 2026-10-10 · Phase 4)
+| component | ไฟล์ | consumers |
+|---|---|---|
+| SlipImage · DeliverySection · RefundSection | `orders/*.tsx` | Manage Orders (drawer) · PreOrder Round (drawer ออเดอร์) |
+
+ย้ายขึ้นมาจาก `app/owner/orders/_components/` ตาม Promotion rule — ผู้ใช้เป็น **คนละ feature** กัน
+
 ### shared/form/
 | component | สถานะ | consumers |
 |---|---|---|
 | FormField | ✅ เฟส 4 (จาก Add Product) | ทุกฟอร์ม |
+| ImageUpload · SingleImageUpload | ✅ 2026-10-10 (Phase 3B) | แกนกลางของ `ProductImageUpload` · `BannerImageUpload` · `ReceiptUpload` — 3 ตัวนั้นเหลือเป็นตัวห่อบาง ๆ ที่ผูกกับ service ของโดเมนตัวเอง |
+| useEditableRows · RemoveRowButton | ✅ 2026-10-10 (Phase 3B) | RoundFormModal, ProductionOrderFormModal — แถวสินค้าที่เพิ่ม/แก้/ลบได้ |
 | ~~UploadImageBox~~ | ❌ ลบแล้ว 2026-10-10 — เก็บรูปเป็น base64 ที่ backend ไม่รับ · แทนด้วยตัวอัปโหลดจริงเฉพาะหน้า | `ProductImageUpload` (สินค้า) · `BannerImageUpload` (แบนเนอร์) · `ReceiptUpload` (ใบเสร็จค่าใช้จ่าย) |
 | ToggleRow · MonthSelector · PasswordShuffleButton · AvatarUploader | ⏳ | Add/Edit Employee, Finance |
 
@@ -114,6 +132,58 @@
 `orders/OrderInStore/_components/` CartPanel, ProductPickerGrid, QRPaymentModal · ฯลฯ
 
 **Promotion rule:** page-local ตัวไหนมี screen ที่ 2 มาใช้ → ย้ายขึ้น `shared/<concern>/` + อัปเดตแถวในเอกสารนี้
+
+---
+
+## กติกา de-duplicate — "ของทำงานเหมือนกัน ต้องเป็นตัวเดียวกัน"
+
+> เพิ่ม 2026-10-10 (`CONSISTENCY_AUDIT.md` ข้อ 3.14) — Promotion rule ข้างบนคุมแค่ **"component ตัวเดียว ถูกใช้ 2 หน้า"**
+> ส่วนนี้คุมอีกกรณีที่ตรวจยากกว่า: **"component คนละตัว คนละชื่อ แต่ทำงานเหมือนกัน"**
+
+### 1. เมื่อไหร่ถึงต้องยุบ — *rule of three*
+
+| ซ้ำกี่ครั้ง | ทำยังไง |
+|---|---|
+| **2 ครั้ง** | **ปล่อยไว้ก่อน** — อาจบังเอิญคล้าย ยังไม่รู้ว่าอะไรคือส่วนที่ต่างจริง ยุบเร็วไปจะได้ abstraction ที่ผิด |
+| **3 ครั้งขึ้นไป** | **ยุบ** — พิสูจน์แล้วว่าเป็น pattern ไม่ใช่เรื่องบังเอิญ |
+| **เหมือนกันทุกตัวอักษร** | ยุบได้ตั้งแต่ครั้งที่ 2 (เช่น helper สั้น ๆ, ค่าคงที่) |
+
+> **ทำไมต้องรอถึง 3:** ตอนเห็นซ้ำครั้งที่ 2 เรายังเดาไม่ออกว่าอะไรคือ "แกนร่วม" อะไรคือ "ส่วนที่ต่าง"
+> ถ้ารีบยุบ มักได้ component ที่มี prop แปลก ๆ เต็มไปหมดเพื่อรองรับ 2 เคส — ซึ่งแก้ยากกว่าปล่อยให้ซ้ำ
+> ครั้งที่ 3 จะเห็นชัดว่าอะไรคงที่ อะไรเปลี่ยน
+
+### 2. "โครงเหมือน" ≠ "ต้องยุบ"
+
+component ที่ใช้ชิ้นส่วนเดียวกัน (`useAntForm` + `Modal` + `modalButtonIcons` + `FormField`) จะดูเหมือนกันเป็นธรรมดา —
+**นั่นคือสัญญาณว่า convention ทำงานถูก ไม่ใช่ข้อบกพร่อง** เกณฑ์ตัดสินคือ **"ตรรกะเดียวกันไหม"** ไม่ใช่ "หน้าตาเหมือนไหม"
+
+| ถาม | ถ้าใช่ | ถ้าไม่ |
+|---|---|---|
+| ลบตัวหนึ่งทิ้ง แล้วใช้อีกตัวแทนได้โดยเพิ่มแค่ prop? | **ยุบ** | อย่ายุบ |
+| กติกาธุรกิจต่างกันจริงไหม (ไม่ใช่แค่ข้อความ/ฟิลด์) | อย่ายุบ | พิจารณายุบ |
+| ถ้าวันหนึ่งต้องแก้ ต้องไปแก้ทุกที่ไหม | **ยุบ** | อย่ายุบ |
+
+**ตัวอย่างที่ถูกต้องแล้ว — อย่าไปรื้อ:**
+- `reports/reviews/_components/StarRating` ↔ `products/_components/RatingDisplay` — ดาว 5 ดวงของรีวิวใบเดียว vs ค่าเฉลี่ย+จำนวน
+- `orders/delivery-zones/_components/DeliveryZoneForm` ↔ `shipping/_components/ShippingZoneFormFields` — เพิ่ม/ลบได้ vs 4 โซนคงที่
+- `store-info/_components/SectionCard` → ประกอบจาก `base/Card` (composition ไม่ใช่ duplication)
+
+### 3. ตัดสินใจ "ไม่ยุบ" = ต้องเขียนเหตุผลกำกับ
+
+บรรทัดแรกของไฟล์ต้องบอกว่าต่างจากตัวที่คล้ายกันยังไง — ต้นแบบคือ `StarRating.tsx:2`
+
+```tsx
+// ดาว 1-5 ของรีวิว 1 รายการ — ต่างจาก products/_components/RatingDisplay.tsx ที่โชว์ "ค่าเฉลี่ย (จำนวนรีวิว)"
+// ของสินค้าทั้งหมด อันนี้โชว์คะแนนดิบของรีวิวใบเดียวเป็นดวงดาว
+```
+
+ไม่มีบรรทัดนี้ = คนถัดไปจะมาถามคำถามเดิม หรือยุบมันทิ้งแล้วพัง
+
+### 4. ก่อนสร้าง component ใหม่ ให้ถาม 3 ข้อ
+
+1. เปิด **ทะเบียนข้างบน** แล้ว มีตัวที่ทำงานนี้อยู่แล้วไหม
+2. ถ้ามีตัวที่ *คล้าย* — ต่างกันแค่ prop ไหม (ถ้าใช่ → เพิ่ม prop ไม่ใช่สร้างใหม่)
+3. ถ้าตัดสินใจสร้างใหม่ — เขียนเหตุผลตามข้อ 3 และ **เพิ่มแถวในทะเบียนนี้ใน PR เดียวกัน**
 
 ---
 
@@ -146,6 +216,12 @@
 | คำพ้องค้นหา `owner/products/search-synonyms` | SynonymGroupForm · SearchTester (+ `synonymForm.ts` · `lib/searchSynonyms.ts`) |
 | รีวิวลูกค้า `owner/reports/reviews` | ReviewFiltersBar · ReviewCard · ReplyBox · NoteBox · ReviewDetailContent · StarRating (+ `reviewRow.ts`) |
 | ตั้งค่าหัวข้อรีวิว `owner/reports/reviews/settings` | AspectsTab · TermsTab |
+| ค่าจัดส่งหน้าร้านออนไลน์ `owner/shipping` | ShippingZonesView (View) · ShippingZoneFormFields (+ `shippingZoneForm.ts`) |
+| รอบพรีออเดอร์ — แท็บสรุปรอบ `owner/orders/preOrderRound` | DashboardTab · RoundDashboardDrawer (+ `useRoundDashboardViewModel.ts`) |
+| จัดการสิทธิ์ `owner/employees/permissions` | RenameRoleModal |
+| ค่าใช้จ่าย `owner/finance/expenses` | ReceiptUpload (ห่อ `shared/form/ImageUpload`) |
+
+**หน้าร้านที่เพิ่มภายหลัง:** `components/customer/FlowSteps` (แถบขั้นตอน) · `app/customer/account/_components/OrderSuccess`
 
 ## ยังไม่ทำใน เฟส 3 (ตั้งใจเลื่อน)
 

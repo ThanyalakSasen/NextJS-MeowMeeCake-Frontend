@@ -225,7 +225,7 @@ function PreorderCheckoutContent() {
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className="m-0 truncate text-sm font-bold">{localName(it.product_name_th, it.product_name_eng)}</p>
-                        <button type="button" onClick={() => removePreorderBasketItem(key)} aria-label={t("removeItem", { name: localName(it.product_name_th, it.product_name_eng) })} className="text-gray-400 hover:text-red-600">
+                        <button type="button" onClick={() => removePreorderBasketItem(key)} aria-label={t("removeItem", { name: localName(it.product_name_th, it.product_name_eng) })} className="text-gray-500 hover:text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -246,7 +246,7 @@ function PreorderCheckoutContent() {
                         </div>
                         <span className="text-sm font-semibold">{baht(it.unit_price * it.quantity)}</span>
                       </div>
-                      {it.min_qty > 1 && <p className="m-0 text-[11px] text-gray-400">{t("minQty", { n: it.min_qty })}</p>}
+                      {it.min_qty > 1 && <p className="m-0 text-[11px] text-gray-500">{t("minQty", { n: it.min_qty })}</p>}
                     </div>
                   </div>
                 );

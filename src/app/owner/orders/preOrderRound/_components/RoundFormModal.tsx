@@ -1,17 +1,16 @@
 "use client";
 // สร้างรอบพรีออเดอร์ใหม่ — antd Modal + base/Form · รายการสินค้าเริ่มต้นเป็นแถวไดนามิก (ไม่บังคับ
 // เพิ่มก็ได้ ค่อยเพิ่มทีหลังจาก drawer จัดการรอบ) แพทเทิร์นเดียวกับ ProductionOrderFormModal
-import { useState } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import type { Dayjs } from "dayjs";
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Form, FormItem, useAntForm, Input, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import { formatCurrency } from "@/i18n/format";
 import type { Product } from "@/types/product";
 import type { CreateRoundInput, RoundItemInput } from "@/types/preorderRound";
-import { modalButtonIcons } from "@/components/shared/actions";
+import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
+import { useEditableRows, RemoveRowButton } from "@/components/shared/form";
 
 interface ItemRow {
   key: string;
@@ -47,15 +46,12 @@ export function RoundFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<FormValues>();
-  const [rows, setRows] = useState<ItemRow[]>([]);
+  const { rows, setRows, updateRow, removeRow } = useEditableRows<ItemRow>([]);
 
   const handleAfterClose = () => {
     form.resetFields();
     setRows([]);
   };
-
-  const updateRow = (key: string, patch: Partial<ItemRow>) =>
-    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
 
   const handleOk = async () => {
     const v = await form.validateFields();
@@ -120,7 +116,7 @@ export function RoundFormModal({
 
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-gray-500">{t("preorderRound.itemsTitle", { n: rows.length })}</p>
-          <Button size="small" icon={<PlusIcon className="h-3.5 w-3.5" />} onClick={() => setRows((p) => [...p, emptyRow()])}>
+          <Button size="small" icon={actionIcon("add", "small")} onClick={() => setRows((p) => [...p, emptyRow()])}>
             {t("preorderRound.addItem")}
           </Button>
         </div>
@@ -164,17 +160,12 @@ export function RoundFormModal({
                 value={row.max_qty_total}
                 onChange={(v) => updateRow(row.key, { max_qty_total: Number(v) || 1 })}
               />
-              <Button
-                size="small" type="text" danger
-                icon={<XMarkIcon className="h-3.5 w-3.5" />}
-                onClick={() => setRows((p) => p.filter((r) => r.key !== row.key))}
-                aria-label={t("common.delete")}
-              />
+              <RemoveRowButton onClick={() => removeRow(row.key)} />
             </div>
           );
         })}
         {rows.length > 0 && (
-          <div className="grid gap-2 text-xs text-gray-400" style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 0.8fr 24px" }}>
+          <div className="grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 0.8fr 24px" }}>
             <span>{t("preorderRound.colProduct")}</span>
             <span>{t("preorderRound.colPriceOverride")}</span>
             <span>{t("preorderRound.colMinQty")}</span>

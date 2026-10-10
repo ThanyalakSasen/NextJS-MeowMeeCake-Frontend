@@ -11,7 +11,7 @@ import type { ProductKind } from "@/types/product";
 /** ชื่อสีของ antd <Tag color> / <Badge status> */
 export type AntColor =
   | "default" | "success" | "processing" | "warning" | "error"
-  | "purple" | "orange" | "blue" | "gold";
+  | "purple" | "orange" | "blue" | "gold" | "green" | "red";
 
 interface StatusStyle {
   color: string;
@@ -88,9 +88,9 @@ export const SOURCE_TYPE_CONFIG: Record<SourceType, { color: string; bg: string 
 
 // ─── ประเภทสินค้า (ProductKind — derive จาก Product.is_preorder) ──────
 // ป้ายบนมุมรูปของการ์ดสินค้า — สินค้าปกติใช้โทนน้ำตาลของแบรนด์ (brown-600 บน brown-100)
-export const PRODUCT_TYPE_CONFIG: Record<ProductKind, { color: string; bg: string }> = {
-  normal:   { color: "#7C4F35", bg: "#F1E4DC" },
-  preorder: { color: "#7c3aed", bg: "#ede9fe" },
+export const PRODUCT_TYPE_CONFIG: Record<ProductKind, { color: string; bg: string; antColor: AntColor }> = {
+  normal:   { color: "#7C4F35", bg: "#F1E4DC", antColor: "success" },
+  preorder: { color: "#7c3aed", bg: "#ede9fe", antColor: "processing" },
 };
 
 // ─── สต็อกวัตถุดิบ ───────────────────────────────────────────
@@ -242,4 +242,83 @@ export const SENTIMENT_LABEL_CONFIG: Record<SentimentLabel, StatusStyle> = {
   Positive: { color: "#15803d", antColor: "success" },
   Negative: { color: "#dc2626", antColor: "error" },
   Neutral:  { color: "#64748b", antColor: "default" },
+};
+
+// ─── บทบาทพนักงาน (ป้ายข้างชื่อบทบาท) ────────────────────────
+// ใช้ 2 ที่: หัวแผงสิทธิ์ (PermissionsView) · รายการบทบาทด้านซ้าย (RoleListPanel)
+export type RoleTypeKind = "owner" | "staff" | "customer";
+
+export const ROLE_TYPE_CONFIG: Record<RoleTypeKind, StatusStyle> = {
+  owner:    { color: "#a16207", antColor: "gold" },
+  staff:    { color: "#1d4ed8", antColor: "blue" },
+  customer: { color: "#475569", antColor: "default" },
+};
+
+// ─── สถานะการทำงานของพนักงาน ─────────────────────────────────
+export type EmployeeWorking = "working" | "left";
+
+export const EMPLOYEE_WORKING_CONFIG: Record<EmployeeWorking, StatusStyle> = {
+  working: { color: "#15803d", antColor: "success" },
+  left:    { color: "#475569", antColor: "default" },
+};
+
+// ─── อ่านแล้ว / ยังไม่อ่าน (ประวัติการแจ้งเตือน) ─────────────
+export type ReadStatus = "read" | "unread";
+
+export const READ_STATUS_CONFIG: Record<ReadStatus, StatusStyle> = {
+  read:   { color: "#475569", antColor: "default" },
+  unread: { color: "#1d4ed8", antColor: "processing" },
+};
+
+// ─── สถานะรีวิวลูกค้า — ค่าตรงกับ ReviewStatus ใน types/review.ts ──
+// (status กับ is_visible เปลี่ยนคู่กัน: approved = แสดง · hidden = ซ่อน)
+export const REVIEW_STATUS_CONFIG: Record<"approved" | "pending" | "hidden", StatusStyle> = {
+  approved: { color: "#15803d", antColor: "success" },
+  pending:  { color: "#b45309", antColor: "warning" },
+  hidden:   { color: "#475569", antColor: "default" },
+};
+
+// ─── กลุ่มการชำระเงินของออเดอร์ในรอบพรีออเดอร์ (แท็บสรุปรอบ) ──
+export type PaymentGroup = "paid" | "pending" | "cancelled";
+
+export const PAYMENT_GROUP_CONFIG: Record<PaymentGroup, StatusStyle> = {
+  paid:      { color: "#15803d", antColor: "success" },
+  pending:   { color: "#b45309", antColor: "warning" },
+  cancelled: { color: "#475569", antColor: "default" },
+};
+
+// ─── โซนค่าจัดส่งหน้าร้านออนไลน์ — ไล่สีจากใกล้ไปไกล ─────────
+export type ShippingZoneCode = "A" | "B" | "C" | "D";
+
+export const SHIPPING_ZONE_CONFIG: Record<ShippingZoneCode, StatusStyle> = {
+  A: { color: "#15803d", antColor: "green" },
+  B: { color: "#1d4ed8", antColor: "blue" },
+  C: { color: "#a16207", antColor: "gold" },
+  D: { color: "#475569", antColor: "default" },
+};
+
+// ─── ป้ายที่ไม่ใช่ enum แต่ใช้ซ้ำหลายหน้า ────────────────────
+// อยู่ที่นี่เพราะความหมายเดียวกันต้องได้สีเดียวกันทุกหน้า — เดิมพิมพ์ชื่อสีซ้ำกันคนละไฟล์
+export const NOTICE_TAG: Record<
+  "awaitingRefund" | "cancelled" | "catchAllZone" | "inactive" | "roleName" | "negativeFilter",
+  AntColor
+> = {
+  /** "รอคืนเงิน" — ตารางจัดการออเดอร์ · แท็บออเดอร์ของรอบพรีออเดอร์ */
+  awaitingRefund: "warning",
+  /** แถบ "ออเดอร์ถูกยกเลิก" ใน drawer รายละเอียด (ออเดอร์ + พรีออเดอร์) */
+  cancelled: "error",
+  /** โซน "จังหวัดอื่นทั้งหมด" — โซนค่าจัดส่ง (POS) · ค่าส่งหน้าร้านออนไลน์ */
+  catchAllZone: "gold",
+  /** รายการที่ปิดใช้งานแล้ว เช่น สินค้าในรอบพรีออเดอร์ */
+  inactive: "default",
+  /** ชิปชื่อบทบาทในตารางพนักงาน (แถวมีแค่ชื่อ ไม่มี role_type ให้แยกสี) */
+  roleName: "blue",
+  /** ชิปตัวกรอง "เฉพาะรีวิวแง่ลบ" ที่กดปิดได้ — หน้ารีวิวลูกค้า */
+  negativeFilter: "red",
+};
+
+// ─── สถานะการเชื่อมบัญชี LINE (หน้าโปรไฟล์) ──────────────────
+export const LINK_STATUS_CONFIG: Record<"linked" | "unlinked", StatusStyle> = {
+  linked:   { color: "#15803d", antColor: "success" },
+  unlinked: { color: "#475569", antColor: "default" },
 };

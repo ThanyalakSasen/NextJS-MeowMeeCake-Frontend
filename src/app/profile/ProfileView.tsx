@@ -3,10 +3,10 @@
 import { useTranslations } from "next-intl";
 import { ArrowRightOnRectangleIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { Button, Logo, Tag } from "@/components/base";
-import { LoadingSpin } from "@/components/shared/feedback";
-import { RetryButton } from "@/components/shared/actions";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { isLinePlaceholderEmail } from "@/lib/lineAccount";
 import type { useProfileViewModel } from "./useProfileViewModel";
+import { LINK_STATUS_CONFIG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof useProfileViewModel>;
 
@@ -41,7 +41,7 @@ export function ProfileView(vm: VM) {
                   {t("profile.line.title")}
                 </span>
                 {!vm.isError && (
-                  <Tag color={vm.linked ? "success" : "default"}>
+                  <Tag color={LINK_STATUS_CONFIG[vm.linked ? "linked" : "unlinked"].antColor}>
                     {vm.linked ? t("profile.line.statusLinked") : t("profile.line.statusNotLinked")}
                   </Tag>
                 )}
@@ -49,10 +49,7 @@ export function ProfileView(vm: VM) {
 
               <div className="flex flex-col gap-3 px-5 py-4">
                 {vm.isError ? (
-                  <div className="flex flex-col items-center gap-3 text-center">
-                    <p className="text-sm text-gray-600">{t("common.loadFailed")}</p>
-                    <RetryButton onClick={vm.refetch} />
-                  </div>
+                  <LoadFailed className="flex flex-col items-center gap-3 text-center" onRetry={vm.refetch} />
                 ) : vm.linked ? (
                   <>
                     <p className="text-sm text-gray-600">{t("profile.line.linkedHint")}</p>

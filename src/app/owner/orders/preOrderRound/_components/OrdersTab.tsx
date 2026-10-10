@@ -1,16 +1,17 @@
 "use client";
 // แท็บ 2: คำสั่งซื้อเค้กวันเกิด (Preorders) — presentational ล้วน รับ props จาก usePreOrderRoundViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { Avatar, Select } from "@/components/base";
-import { Tag } from "antd";
+import { Avatar, Select, Tag } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { isAwaitingRefund } from "@/types/order";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { OrderStatus } from "@/constants/enumConfig";
 import type { Preorder } from "@/types/preorder";
-import { RetryButton, ViewButton } from "@/components/shared/actions";
+import { ViewButton } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
+import { NOTICE_TAG } from "@/constants/enumConfig";
+import { LoadFailed } from "@/components/shared/feedback";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -72,7 +73,7 @@ export function OrdersTab(vm: VM) {
         return (
           <div>
             {isAwaitingRefund(o) ? (
-              <Tag color="warning">{t("orders.awaitingRefund")}</Tag>
+              <Tag color={NOTICE_TAG.awaitingRefund}>{t("orders.awaitingRefund")}</Tag>
             ) : (
               <StatusBadge group="paymentStatus" value={o.payment_status} />
             )}
@@ -129,10 +130,7 @@ export function OrdersTab(vm: VM) {
       />
 
       {vm.isOrdersError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetchOrders} />
-        </div>
+        <LoadFailed onRetry={vm.refetchOrders} />
       ) : (
         <DataTable
           columns={columns}

@@ -2,7 +2,6 @@
 // View ของ Recipes — JSX ล้วน รับ props จาก useRecipesViewModel
 // 2 แท็บ: สูตรหลัก (การ์ด) · สูตรส่วนประกอบ (ตาราง) — ใช้ TabbedPageLayout ร่วมกับ Production
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, EmptyState, Select, Tag } from "@/components/base";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
@@ -10,7 +9,7 @@ import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components
 import { DetailDrawer, ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RecipeComponent } from "@/types/recipeComponent";
-import { EditButton, DeleteButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import { CategoryManagerButton } from "@/components/shared/categories";
 import type { useRecipesViewModel } from "./useRecipesViewModel";
 import { RecipeCard } from "./_components/RecipeCard";
@@ -29,7 +28,7 @@ function MainTab(vm: VM) {
       <div className="flex items-start justify-between gap-4">
         <p className="text-base text-gray-600">{t("recipes.planDescription", { n: vm.filteredRecipes.length })}</p>
         {vm.perm.create && (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAddRecipe}>
+          <Button type="primary" icon={actionIcon("add")} onClick={vm.openAddRecipe}>
             {t("recipes.addRecipe")}
           </Button>
         )}
@@ -125,7 +124,7 @@ function ComponentsTab(vm: VM) {
       title: t("recipes.usedInTitle"),
       render: (c) => (
         c.usedIn.length === 0
-          ? <span className="text-gray-400">{t("recipes.notUsedYet")}</span>
+          ? <span className="text-gray-500">{t("recipes.notUsedYet")}</span>
           : <div className="flex flex-wrap gap-1">
               {c.usedIn.map((name) => (
                 <span key={name} className="rounded bg-pink-50 px-1.5 py-0.5 text-sm font-medium text-pink-700">{name}</span>
@@ -136,7 +135,7 @@ function ComponentsTab(vm: VM) {
     {
       key: "updated",
       title: t("common.status"),
-      render: (c) => <span className="text-gray-400">{formatDate(c.updated_at, locale)}</span>,
+      render: (c) => <span className="text-gray-500">{formatDate(c.updated_at, locale)}</span>,
     },
   ];
 
@@ -147,7 +146,7 @@ function ComponentsTab(vm: VM) {
         <div className="flex flex-wrap justify-end gap-2">
           <CategoryManagerButton kind="component" />
           {vm.perm.create && (
-            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAddComponent}>
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openAddComponent}>
               {t("recipes.addComponent")}
             </Button>
           )}

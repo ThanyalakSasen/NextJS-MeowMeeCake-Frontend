@@ -1,17 +1,17 @@
 "use client";
 // View ของ Employees List — JSX ล้วน (+ ResetPasswordModal สำหรับตั้งรหัสผ่านใหม่)
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { KeyIcon, LockOpenIcon } from "@heroicons/react/24/outline";
 import { formatDate } from "@/i18n/format";
 import { ResetPasswordModal } from "./_components/ResetPasswordModal";
 import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { ConfirmDeletePopup } from "@/components/shared/feedback";
+import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
-import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel";
+import { EMPLOYEE_WORKING_CONFIG, NOTICE_TAG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof useEmployeesViewModel>;
 
@@ -30,7 +30,7 @@ export function EmployeesView(vm: VM) {
         </div>
       ),
     },
-    { key: "role", title: t("employees.colRole"), render: (r) => <Tag color="blue">{r.roleName}</Tag> },
+    { key: "role", title: t("employees.colRole"), render: (r) => <Tag color={NOTICE_TAG.roleName}>{r.roleName}</Tag> },
     {
       key: "type",
       title: t("employees.colType"),
@@ -49,12 +49,12 @@ export function EmployeesView(vm: VM) {
       title: t("employees.colStatus"),
       render: (r) => (
         <div className="flex flex-wrap items-center gap-1">
-          <Tag color={r.working ? "success" : "default"} className="!m-0">
+          <Tag color={EMPLOYEE_WORKING_CONFIG[r.working ? "working" : "left"].antColor} className="!m-0">
             {r.working ? t("employees.statusWorking") : t("employees.statusLeft")}
           </Tag>
           {r.locked && r.lockedUntil && (
             <Tag
-              color="error"
+              color={NOTICE_TAG.cancelled}
               className="!m-0"
               title={t("employees.lockedUntil", { time: formatDate(r.lockedUntil, locale, { withTime: true }) })}
             >
@@ -72,7 +72,7 @@ export function EmployeesView(vm: VM) {
       description={t("employees.description")}
       actions={
         vm.perm.create && (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} href="/owner/employees/addEmployee">
+          <Button type="primary" icon={actionIcon("add")} href="/owner/employees/addEmployee">
             {t("employees.addEmployee")}
           </Button>
         )
@@ -109,10 +109,7 @@ export function EmployeesView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>

@@ -150,11 +150,11 @@ export default function ReviewsSection({ productId }: { productId: string }) {
         ) : (
           <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/50 py-12 text-center">
             <p className="m-0 text-sm font-bold text-[#4A342E]">{reviews.length ? t("noMatch") : t("none")}</p>
-            {reviews.length > 0 && <span className="mt-1 block text-xs text-gray-400">{t("tryOther")}</span>}
+            {reviews.length > 0 && <span className="mt-1 block text-xs text-gray-500">{t("tryOther")}</span>}
           </div>
         )}
         {total > reviews.length && reviews.length > 0 && (
-          <p className="m-0 text-center text-xs text-gray-400">{t("latest", { n: reviews.length })}</p>
+          <p className="m-0 text-center text-xs text-gray-500">{t("latest", { n: reviews.length })}</p>
         )}
       </div>
     </section>
@@ -182,7 +182,7 @@ function ReviewItem({ review: r }: { review: CatalogReview }) {
             </div>
           </div>
         </div>
-        <span className="flex items-center gap-2 text-[11px] text-gray-400">
+        <span className="flex items-center gap-2 text-[11px] text-gray-500">
           {r.is_pinned && (
             <span className="flex items-center gap-1 font-semibold text-amber-700">
               <FaThumbtack /> {t("pinned")}
