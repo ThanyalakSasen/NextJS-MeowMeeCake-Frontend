@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse, ListResponse } from "@/types/api";
-import type { PosProduct, PosProductListParams, PosScanResult } from "@/types/pos";
+import type { PosGuestCustomer, PosProduct, PosProductListParams, PosScanResult } from "@/types/pos";
 import { toProduct } from "@/services/products";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -21,6 +21,16 @@ export const posService = {
     // ไม่มี flag (backend รุ่นก่อน) = ถือว่ามี → ไปดึงจาก /pos/scan ก่อนลงบิลเหมือนเดิม (ไม่ลงบิลข้ามกลุ่มบังคับ)
   },
 
+
+  /**
+   * GET /admin/pos/guest-customer — บัญชี "ลูกค้าทั่วไป" ที่ผูกกับออเดอร์หน้าร้านที่ไม่ระบุลูกค้า · สิทธิ์ orders.view
+   * ใช้แทนการค้นผ่าน /admin/users (ต้อง employees.view — พนักงานเคาน์เตอร์ไม่ควรต้องเห็นรายชื่อพนักงาน
+   * เพื่อจะขายของได้ · backend `src/lib/posGuest.ts`) · ยังไม่ได้ seed = 404
+   */
+  guestCustomer: async (): Promise<PosGuestCustomer> => {
+    const res = await http.get<ItemResponse<PosGuestCustomer>>("/admin/pos/guest-customer");
+    return res.data;
+  },
 
   /**
    * GET /admin/pos/scan?code=<รหัสสินค้า | _id> — ใช้ตอนยิงบาร์โค้ดหน้าร้าน (POS)

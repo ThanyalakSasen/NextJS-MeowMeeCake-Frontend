@@ -7,7 +7,7 @@
 //   3) POST /admin/payments/[id]/verify {approved:true} (ยืนยันจ่ายทันที)
 //   4) PATCH /admin/orders/[id]/status {order_status:"completed"}
 // backend บังคับทุกออเดอร์ต้องมี user_id จริง — ไม่มีแนวคิด "ลูกค้าไม่ระบุตัวตน" จึงผูกกับบัญชี
-// "ลูกค้าทั่วไป" ตายตัว (สร้างไว้แล้วผ่าน scripts/seed.ts, ดูค่าคงที่ GUEST_CUSTOMER_EMAIL ที่นั่น)
+// "ลูกค้าทั่วไป" ตายตัว (สร้างโดย scripts/seed.ts ฝั่ง backend) — หา id ผ่าน GET /admin/pos/guest-customer
 //
 // หน้าจอตามดีไซน์ใหม่ (BACKLOG2 §14): ช่อง "สแกน / ค้นหา" ช่องเดียว (บาร์โค้ด + รหัส/ชื่อ) · บิล (ปุ่ม −/+) ·
 // การ์ดโปรโมชัน · ปุ่มชำระเงินสด/QR · หน้าต่างรับเงินสด (คีย์แพด + ทอน) / QR / ชำระสำเร็จ
@@ -19,7 +19,6 @@ import { useTranslations } from "next-intl";
 import { promotionsService } from "@/services/promotions";
 import { ordersService } from "@/services/orders";
 import { paymentsService } from "@/services/payments";
-import { usersService } from "@/services/users";
 import { posService } from "@/services/pos";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert, confirmAlert } from "@/lib/alert";
@@ -45,9 +44,6 @@ const PROMO_PARAMS = { activeNow: true, limit: LIST_ALL } as const;
 const MAX_SUGGESTIONS = 6;
 /** หลักสูงสุดของ "รับเงินมา" (999,999 บาท) */
 const MAX_RECEIVED_DIGITS = 6;
-
-/** ต้องตรงกับ GUEST_CUSTOMER_EMAIL ใน backend scripts/seed.ts */
-const GUEST_CUSTOMER_EMAIL = "guest@meowmeecake.local";
 
 /** cache กลุ่มตัวเลือกต่อสินค้า — ดึงผ่าน /admin/pos/scan (สิทธิ์ orders.view เหมือน POS) ไม่ใช่ /admin/products/:id/customization
  *  (ต้อง products.view ซึ่งพนักงานหน้าร้านอาจไม่มี) */
@@ -101,12 +97,15 @@ export function usePOSViewModel() {
     retry: false,
   });
   // บัญชี "ลูกค้าทั่วไป" ตายตัว — หา id ครั้งเดียวตอนเปิดหน้า (cache ยาว ไม่มีวันเปลี่ยน)
+  // ใช้ /admin/pos/guest-customer (orders.view) ไม่ใช่ /admin/users (ต้อง employees.view) — พนักงาน
+  // เคาน์เตอร์ที่มีแค่สิทธิ์ orders จะหา guest ไม่เจอแล้วปิดการขายไม่ได้เลย (CONSISTENCY_AUDIT ข้อ 3.15)
   const guestQ = useQuery({
-    queryKey: ["users", "guest-customer"],
-    queryFn: () => usersService.list({ search: GUEST_CUSTOMER_EMAIL, limit: 1 }),
+    queryKey: ["pos", "guest-customer"],
+    queryFn: () => posService.guestCustomer(),
     staleTime: Infinity,
+    retry: false,
   });
-  const guestUserId = guestQ.data?.data[0]?._id ?? null;
+  const guestUserId = guestQ.data?._id ?? null;
 
   const catalog = useMemo<PosProduct[]>(() => catalogQ.data?.data ?? [], [catalogQ.data]);
   const promotions = useMemo(() => posPromotions(promotionsQ.data?.data ?? []), [promotionsQ.data]);

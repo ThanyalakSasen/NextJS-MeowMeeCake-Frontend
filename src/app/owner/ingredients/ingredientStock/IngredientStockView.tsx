@@ -103,7 +103,7 @@ export function IngredientStockView(vm: VM) {
             loading={vm.isLoading}
             emptyText={t("ingredientStock.empty")}
             actions={
-              vm.perm.update
+              vm.canWriteStock
                 ? (r) => (
                     <div className="flex justify-end gap-2">
                       <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("ingredientStock.ok_receive")}</Button>

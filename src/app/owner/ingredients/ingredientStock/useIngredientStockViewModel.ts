@@ -39,7 +39,11 @@ const skuOf = (id: string) => `ING-${id.slice(-6).toUpperCase()}`;
 export function useIngredientStockViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
+  // หน้านี้ "อ่าน" สต็อกวัตถุดิบ (stock.view) แต่ "เขียน" ผ่าน POST /admin/ingredient-transactions
+  // ซึ่ง backend ต้องการ ingredients.update — คนละเมนูกัน จึงต้องถือสิทธิ์ 2 ตัว
+  // (CONSISTENCY_AUDIT ข้อ 3.15 · src/app/api/admin/ingredient-transactions/route.ts)
   const perm = usePermission("stock");
+  const ingredientPerm = usePermission("ingredients");
   const { user } = useCurrentUser();
 
   const [search, setSearch] = useState("");
@@ -116,6 +120,8 @@ export function useIngredientStockViewModel() {
 
   return {
     perm,
+    /** ปุ่มรับเข้า/เบิกใช้/ปรับยอด — ต้องเห็นหน้าได้ และมีสิทธิ์เขียน transaction ของวัตถุดิบ */
+    canWriteStock: perm.view && ingredientPerm.update,
     rows: filtered,
     stats,
     isLoading: ingredientsQ.isLoading || unitsQ.isLoading,

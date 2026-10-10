@@ -14,8 +14,8 @@
 |---|---|
 | **สรุปสั้นที่สุด** | โครงสร้างใหญ่แข็งแรงมาก · ที่หลุดคือ "รายละเอียดที่ไม่มีเครื่องตรวจอัตโนมัติ" |
 | **`npm run check`** | ✅ **เขียวทั้ง 5 ด่าน** (i18n · theme · **ui** · tsc · eslint) — ด่าน ui เพิ่มใน Phase 1 |
-| **เจอทั้งหมด** | 14 ประเด็น — ✅ แก้แล้ว 2 (ข้อ 3.1, 3.2) · เหลือ 12: ร้ายแรง 1 · สายตา 6 · โครงสร้าง/ของซ้ำ/เอกสาร 5 |
-| **ใช้เวลาแก้ที่เหลือ** | ประมาณ 3–4 วันทำงาน (Phase 0 · 1 เสร็จแล้ว) |
+| **เจอทั้งหมด** | 15 ประเด็น — ✅ แก้แล้ว 5 (ข้อ 3.1 · 3.2 · 3.3 · 3.8 · 3.15) · เหลือ 10: สายตา 5 · โครงสร้าง/ของซ้ำ/เอกสาร 5 |
+| **ใช้เวลาแก้ที่เหลือ** | ประมาณ 3–3.5 วันทำงาน (Phase 0 · 1 · 2 · 2B เสร็จแล้ว) |
 | **ข่าวดีจากรอบทวน** | โค้ดใหม่ 51 commit (รวมหน้า `/owner/shipping`) **ทำตาม convention ครบ** — ดู §2 ท้ายตาราง |
 
 ---
@@ -152,23 +152,34 @@ error ใน `.next/` ไม่เคยเป็นความผิดขอ�
 
 ---
 
-#### 3.3 พนักงานเห็นปุ่มที่ตัวเองกดไม่ได้ (6 หน้า)
+#### 3.3 ~~พนักงานเห็นปุ่มที่ตัวเองกดไม่ได้ (6 หน้า)~~ · ✅ **แก้แล้ว** (Phase 2 · 2026-10-10)
 
 **อาการ**
 ระบบมี `usePermission()` ไว้ซ่อนปุ่มตามสิทธิ์ของ role — แต่ 6 หน้าที่มีการแก้ข้อมูลลืมเรียก
 
 **หลักฐาน** — ViewModel ที่มี `useMutation` แต่ไม่มี `usePermission`:
 
-| ไฟล์ | จำนวน mutation |
-|---|---|
-| `store-design/useStoreDesignViewModel.ts` | 5 |
-| `notificationsHistory/useNotificationHistoryViewModel.ts` | 3 |
-| `employees/addEmployee/useAddEmployeeViewModel.ts` | 2 |
-| `employees/editEmployee/useEditEmployeeViewModel.ts` | 2 |
-| `products/addProducts/useAddProductViewModel.ts` | 2 |
-| `products/[id]/edit/useEditProductViewModel.ts` | 2 |
+| ไฟล์ | mutation | backend เช็คอะไรจริง | แก้ด้วย |
+|---|---|---|---|
+| `store-design/useStoreDesignViewModel.ts` | 5 | `products.*` | `usePermission("products")` |
+| `notificationsHistory/useNotificationHistoryViewModel.ts` | 3 | DELETE = **owner เท่านั้น** | เช็ค `roleType` |
+| `employees/addEmployee/…` | 2 | `employees.create` | `usePermission("employees")` |
+| `employees/editEmployee/…` | 2 | `employees.update` | 〃 |
+| `products/addProducts/…` | 2 | `products.create` | `usePermission("products")` |
+| `products/[id]/edit/…` | 2 | `products.update` | 〃 |
 
 (อีก 20 ไฟล์ที่เหลือเรียกครบ)
+
+> ⚠️ **ตอนลงมือแก้พบว่ารายงานตอนตรวจยังไม่ละเอียดพอ 2 ข้อ** — ถ้าเติม `usePermission` ไปตรง ๆ ตามที่เขียนไว้เดิมจะผิดทั้งคู่:
+>
+> **1. `store-design` ไม่มี menu key ของตัวเอง** — ตอนแรกดูเหมือนควรเป็น `"store_design"` แต่ `MENU_KEYS` ไม่มีค่านี้
+> ไปอ่าน backend แล้วพบว่าแบนเนอร์อยู่ใต้สิทธิ์ **`products`** (`/api/admin/banners/route.ts` → `auth: { menu: "products" }`)
+>
+> **2. `notificationsHistory` ไม่ได้ใช้ menu permission เลย** — `/admin/notifications` GET/PATCH แค่ล็อกอินก็พอ
+> แต่ **DELETE เป็น `requireRole(session, "owner")`** (`notifications/[id]/route.ts:25-26`) → ต้องเช็ค **role** ไม่ใช่ permission
+>
+> **บทเรียน:** "เติม `usePermission` ให้ครบ" เป็นคำสั่งที่ฟังดูง่าย แต่ถ้าไม่ไปอ่าน backend ก่อน จะได้ gate ที่ผิดโดยไม่มีใครรู้
+> — เพราะ **gate ที่ผิดก็ยังดูเหมือนทำงาน** (ปุ่มซ่อน/โชว์ได้เหมือนกัน แค่ผิดเงื่อนไข)
 
 **ทำไมสำคัญ — และสิ่งที่ *ไม่* ต้องกังวล**
 ขอให้อ่านคอมเมนต์ใน `src/context/PermissionsContext.tsx:8` ให้ดี:
@@ -182,8 +193,18 @@ error ใน `.next/` ไม่เคยเป็นความผิดขอ�
 > การเช็คสิทธิ์ที่ backend = เพื่อ **ความปลอดภัย**
 > ต้องมีทั้งคู่ และห้ามสลับหน้าที่กัน — frontend เชื่อถือไม่ได้ เพราะผู้ใช้แก้โค้ดในเบราว์เซอร์ได้
 
-**แก้ยังไง**
-ใน ViewModel เพิ่ม `const perm = usePermission("<menuKey>")` แล้ว return ออกไป จากนั้นใน View ครอบปุ่มด้วย `{vm.perm.update && ( ... )}` — ลอกแบบจาก `useProductsViewModel.ts` ได้เลย
+**แก้ไปยังไง**
+
+| หน้า | วิธี |
+|---|---|
+| **4 หน้าฟอร์ม** (add/edit พนักงาน · add/edit สินค้า) | `OwnerLayout` กั้นด้วย `.view` เท่านั้น → ViewModel เช็ค `.create`/`.update` เองแล้ว `router.replace(ACCESS_DENIED_PATH)` · View คืน `null` ระหว่างรอ redirect (กันภาพแวบ แบบเดียวกับ `OwnerLayout.tsx:81`) |
+| **store-design** | ViewModel คืน `perm` · View ซ่อนปุ่มเพิ่ม 2 จุด + ปิด drag · `BannerCard` รับ `canUpdate`/`canDelete` (แบบเดียวกับ `products/_components/ProductCard`) |
+| **notificationsHistory** | `useCurrentUser()` → `canDelete = roleType === "owner"` · ซ่อนปุ่ม "ลบทั้งหมด" และคอลัมน์ปุ่มลบในตาราง |
+
+**ทำไมหน้าฟอร์มถึง redirect แทนที่จะซ่อนปุ่ม:** ซ่อนปุ่มบันทึกแล้วปล่อยให้กรอกฟอร์มจนเสร็จถือว่าแย่กว่าไม่ให้เข้าตั้งแต่แรก
+และมีหน้า `/owner/access-denied` พร้อมใช้อยู่แล้ว — ใช้ทางเดียวกับที่ `OwnerLayout` ใช้จะได้ไม่มี 2 มาตรฐาน
+
+**ทดสอบแล้ว:** login เป็น owner จริงแล้วยิงทั้ง 6 หน้า — **HTTP 200 ทุกหน้า** ไม่มี error ใน dev log
 
 ---
 
@@ -317,7 +338,7 @@ error ใน `.next/` ไม่เคยเป็นความผิดขอ�
 
 ---
 
-#### 3.8 ปุ่มไอคอนล้วน 16 ปุ่ม แต่เอกสารรับรองไว้ 6
+#### 3.8 ปุ่มไอคอนล้วน 16 ปุ่ม แต่เอกสารรับรองไว้ 6 · ⚠️ ส่วน `aria-label` ✅ แก้แล้ว
 
 **อาการ**
 `ACTION_BUTTONS.md` มีกฎใหญ่ว่า *"ทุกปุ่มต้องมีไอคอน + คำ"* และมีข้อยกเว้น 6 ปุ่มที่ **ตั้งใจ** ให้มีแต่ไอคอน (เพราะแถวแคบมาก ใส่คำแล้วล้น) — พร้อมเหตุผลกำกับทุกปุ่ม
@@ -328,7 +349,7 @@ error ใน `.next/` ไม่เคยเป็นความผิดขอ�
 |---|---|---|
 | `products/[id]/edit/_components/CustomizationEditor.tsx` | 117, 119, 121 | ✓ |
 | `reports/reviews/settings/_components/AspectsTab.tsx` | 65, 67, 105 | ✓ |
-| `reports/reviews/_components/ReviewCard.tsx` | **114, 118** | ❌ **ไม่มี** |
+| `reports/reviews/_components/ReviewCard.tsx` | **114, 118** | ✅ **เติมแล้ว** (Phase 2) |
 | `shared/categories/CategoryManagerDialog.tsx` | 101, 110 | ✓ |
 
 **ทำไมสำคัญ**
@@ -337,8 +358,9 @@ error ใน `.next/` ไม่เคยเป็นความผิดขอ�
 `ReviewCard.tsx:114,118` (ปุ่มปักหมุด / ทำเครื่องหมายอ่านแล้ว) ใช้ antd `<Tooltip>` ครอบแทน — tooltip ขึ้นตอนเอาเมาส์ชี้ ซึ่งช่วยคนที่มองเห็นและใช้เมาส์ แต่**ไม่ช่วยคนที่ใช้ screen reader หรือคีย์บอร์ดอย่างเดียว**
 
 **แก้ยังไง**
-1. เติม `aria-label` ให้ 2 ปุ่มใน `ReviewCard.tsx` (เร่งด่วนกว่าข้ออื่นในกลุ่มนี้)
-2. ขึ้นทะเบียน 10 ปุ่มลง `ACTION_BUTTONS.md §4.1` พร้อมเหตุผล — ถ้าหาเหตุผลไม่ได้ แปลว่าควรใส่คำกำกับ
+1. ~~เติม `aria-label` ให้ 2 ปุ่มใน `ReviewCard.tsx`~~ ✅ **เสร็จ Phase 2** — ตอนนี้ปุ่มไอคอนล้วนมี `aria-label` ครบ 16/16
+   และกฎ `icon-button-aria` มี baseline = 0 แล้ว คือ**ปิดสนิท** เพิ่มปุ่มที่ไม่มี `aria-label` อีกไม่ได้
+2. ⬜ ขึ้นทะเบียน 10 ปุ่มลง `ACTION_BUTTONS.md §4.1` พร้อมเหตุผล — ถ้าหาเหตุผลไม่ได้ แปลว่าควรใส่คำกำกับ (ทำใน Phase 5)
 
 ---
 
@@ -580,7 +602,50 @@ const PROVINCE_OPTIONS = THAI_PROVINCES.map((p) => ({ value: p, label: p }));
 
 ---
 
-## 4. แผนการแก้ — 7 Phase (0 · 1 · 2 · 3 · 3B · 4 · 5) — Phase 0 เสร็จแล้ว
+#### 3.15 `usePermission` ใช้ menu key ผิด 4 จุด · 🆕 *ตรวจข้าม repo* · ✅ **แก้แล้ว** (Phase 2B)
+
+**อาการ**
+ข้อ 3.3 ตรวจว่า **"มี `usePermission` ไหม"** ซึ่งตอบได้ด้วย grep — แต่ตอบไม่ได้ว่า **"ใช้ key ถูกไหม"**
+ต้องไล่ 3 ชั้น: **ViewModel → service → endpoint → menu key ของ backend** แล้วเทียบทีละตัว (backend 135 route · frontend 33 ViewModel)
+
+**ผล: ตรง 26 จาก 30 ViewModel ที่มี gate** — ที่ไม่ตรง 4 จุด:
+
+| # | ไฟล์ | frontend gate | backend ต้องการ | ผลกับพนักงาน |
+|---|---|---|---|---|
+| 1 | `orders/OrderInStore/usePOSViewModel.ts:106` | `orders` | `/admin/users` = **`employees.view`** | 🔴 **ปิดการขายไม่ได้เลย** |
+| 2 | `ingredients/ingredientStock/…ViewModel.ts:42` | `stock.update` | POST `/admin/ingredient-transactions` = **`ingredients.update`** | 3 ปุ่มกดแล้ว 403 |
+| 3 | `ingredients/units/useUnitsViewModel.ts:28` | `ingredients` | เขียน `/admin/units` = **`products.*`** | ปุ่มเพิ่มหน่วยกดแล้ว 403 |
+| 4 | `production/useProductionViewModel.ts:100` | `production` | อ่าน `/admin/units` — `readMenus` ไม่มี `production` | ช่องหน่วยในฟอร์มว่าง |
+
+**ข้อ 1 ร้ายแรงกว่าข้ออื่น — เป็นบั๊กจริง ไม่ใช่แค่ UX**
+POS หา "ลูกค้าทั่วไป" ด้วย `usersService.list()` ซึ่งยิง `/admin/users` (ต้อง `employees.view`)
+พนักงานเคาน์เตอร์ที่มีแค่ `orders.*` → `guestUserId` เป็น `null` → บรรทัด 236 `throw new Error(...)` → **ขายของไม่ได้**
+(และระหว่างที่มันเคยทำงานได้ ก็แปลว่าพนักงานเคาน์เตอร์ต้องมีสิทธิ์เห็นรายชื่อพนักงานทั้งร้าน ซึ่งไม่ควร)
+
+**แก้ไปยังไง**
+
+| # | แก้ที่ | วิธี |
+|---|---|---|
+| 1 | frontend | `posService.guestCustomer()` → `GET /admin/pos/guest-customer` (`orders.view`) ที่ backend ทำรอไว้ใน `6362137` |
+| 2 | frontend | `canWriteStock = perm.view && ingredientPerm.update` — ถือสิทธิ์ 2 เมนู |
+| 3 | frontend | แยก `readPerm`/`writePerm` แล้วประกอบเป็น `perm` ตัวเดียวให้ View ใช้เหมือนเดิม |
+| 4 | **backend** | บันทึกเป็น **Q-BE17** ใน `fix-backend.md` — ขอเพิ่ม `"production"` เข้า `readMenus` |
+
+**ทดสอบ:** `GET /api/admin/pos/guest-customer` คืน `{ _id, user_fullname: "ลูกค้าทั่วไป", email }` · 4 หน้าที่แก้ render ได้ HTTP 200 · BE log ยืนยันว่า POS เรียก endpoint ใหม่จริง
+
+> 💡 **แนวคิดที่ควรจำ: กฎที่ข้าม 2 ระบบ ตรวจอัตโนมัติไม่ได้ง่าย ๆ**
+> กฎ "มี `usePermission` ไหม" เขียนเป็น grep ได้ (และอยู่ใน `check-ui.mjs` แล้ว)
+> แต่กฎ "key ตรงกับ backend ไหม" ต้องอ่านอีก repo — ซึ่ง CI ของ frontend มองไม่เห็น
+>
+> และที่อันตรายคือ **key ผิดก็ยังดูเหมือนทำงาน** — ปุ่มซ่อน/โชว์ได้ตามปกติ ผิดแค่เงื่อนไข
+> จะรู้ตัวก็ต่อเมื่อมีพนักงานสิทธิ์จำกัดมาใช้จริง ซึ่งอาจเป็นวันเปิดร้าน
+>
+> ทางลดความเสี่ยงที่ทำได้จริง: **เขียน endpoint + menu key ที่คาดไว้เป็นคอมเมนต์ในทุก ViewModel ที่เรียก `usePermission`**
+> (ทำไปแล้วในทั้ง 3 ไฟล์ที่แก้) แล้วรันตรวจข้าม repo ซ้ำทุกครั้งที่ pull backend — ดูคำสั่งใน §5
+
+---
+
+## 4. แผนการแก้ — 8 Phase (0 · 1 · 2 · 2B · 3 · 3B · 4 · 5) — Phase 0 · 1 · 2 · 2B เสร็จแล้ว
 
 > **หลักคิดในการจัดลำดับ**
 > 1. **ซ่อมเครื่องมือก่อนซ่อมบ้าน** — ถ้า `npm run check` ยังแดง เราจะไม่รู้ว่างานที่ทำไปทำให้อะไรพังหรือเปล่า
@@ -647,17 +712,47 @@ npm run lint:ui:update   # ขันเฟือง: เขียน baseline �
 
 ---
 
-### Phase 2 — แก้สิ่งที่กระทบผู้ใช้จริง · ⏱ ครึ่งวัน
+### Phase 2 — แก้สิ่งที่กระทบผู้ใช้จริง · ✅ **เสร็จแล้ว** 2026-10-10
 
-| ลำดับ | งาน | ข้อ |
-|---|---|---|
-| ~~2.1~~ | ~~ทำ `UploadImageBox` ให้อัปโหลดจริง~~ | ✅ `d380b4c` |
-| 2.2 | เติม `usePermission` ให้ 6 ViewModel + ซ่อนปุ่มใน View | 3.3 |
-| 2.3 | เติม `aria-label` ให้ `ReviewCard.tsx:114,118` | 3.8 |
+| ลำดับ | งาน | ข้อ | ผล |
+|---|---|---|---|
+| ~~2.1~~ | ~~ทำ `UploadImageBox` ให้อัปโหลดจริง~~ | 3.1 | ✅ `d380b4c` |
+| 2.2 | gate 6 ViewModel ตามสิทธิ์จริงของ backend | 3.3 | ✅ 11 ไฟล์ |
+| 2.3 | เติม `aria-label` ให้ `ReviewCard.tsx:114,118` | 3.8 | ✅ กฎ `icon-button-aria` เหลือ 0 |
 
-**ทดสอบยังไง:** ตาม `MOCKS.md` — ชี้ backend ไป DB ทดสอบในเครื่อง (`mongodb://127.0.0.1:27017/meowmeecake-test`) แล้ว login ด้วยบัญชี `e2.staff@meowmeecake.test` (สิทธิ์จำกัด) เทียบกับ `e2.owner@meowmeecake.test` (สิทธิ์เต็ม) ว่าเห็นปุ่มต่างกันจริง
+**สิ่งที่พบระหว่างทำ:** 2 ใน 6 หน้าต้องใช้วิธีต่างจากที่เขียนไว้ในแผน (รายละเอียดในข้อ 3.3) —
+ต้องเปิดโค้ด backend อ่านทีละ route ก่อน ไม่งั้นได้ gate ที่ผิดเงื่อนไขแต่ดูเหมือนทำงาน
 
-**Definition of Done:** พนักงานสิทธิ์จำกัดเปิดทั้ง 6 หน้าแล้วไม่เห็นปุ่มที่กดไม่ได้ · ปุ่มใน `ReviewCard` อ่านออกด้วย screen reader
+**ผลทดสอบ**
+
+| ทดสอบ | ผล |
+|---|---|
+| `npm run check` | ✅ เขียวทั้ง 5 ด่าน |
+| login owner จริง → ยิงทั้ง 6 หน้า | ✅ HTTP 200 ทุกหน้า · dev log ไม่มี error |
+| ratchet ของ Phase 1 | ✅ จับได้เองว่า `icon-button-aria` เหลือ 0 → ขัน baseline ปิดกฎถาวรแล้ว |
+
+> ⏳ **ยังไม่ได้ทดสอบด้วยบัญชีพนักงานสิทธิ์จำกัด** — ต้อง seed DB ทดสอบตาม `MOCKS.md`
+> (`e2.staff@meowmeecake.test` เทียบกับ `e2.owner@meowmeecake.test`) แล้วดูว่าปุ่มหายจริงและหน้าฟอร์มเด้งไป access-denied จริง
+> ตอนนี้ยืนยันได้แค่ "ฝั่ง owner ไม่พัง" ซึ่งยังไม่ครอบคลุมสิ่งที่แก้
+
+---
+
+### Phase 2B — gate ที่ใช้ menu key ผิด · ✅ **เสร็จแล้ว** 2026-10-10 · *(ข้อ 3.15)*
+
+โผล่ขึ้นมาหลัง pull `main` ของ backend — ไม่ได้อยู่ในแผนเดิม เพราะตอนตรวจรอบแรกยังไม่ได้เทียบข้าม repo
+
+| ลำดับ | งาน | แก้ที่ | ผล |
+|---|---|---|---|
+| 1 | POS → `posService.guestCustomer()` | frontend | ✅ BE log ยืนยันเรียก `/admin/pos/guest-customer` |
+| 2 | ingredientStock → `canWriteStock` ถือ 2 เมนู | frontend | ✅ |
+| 3 | units → แยก read `ingredients` / write `products` | frontend | ✅ |
+| 4 | `readMenus` ของ `/admin/units` ขาด `production` | **backend** | ▢ บันทึกเป็น **Q-BE17** ใน `fix-backend.md` |
+
+**ทำไมต้องแทรกก่อน Phase 3:** งานนี้คือ finding 3.3 ที่ยังไม่จบ (อาการเดียวกัน สาเหตุต่างกัน)
+และแตะไฟล์เดียวกับที่ Phase 3 จะแก้สี/ไอคอน — ถ้าทำสลับกัน diff จะปนกันจนแยกไม่ออกว่าอันไหนเปลี่ยนตรรกะ อันไหนเปลี่ยนแค่สี
+
+**ข้อควรระวังต่อจากนี้:** ทุกครั้งที่ pull `main` ของ backend ให้รันคำสั่งเทียบ menu key ใน §5 ซ้ำ —
+backend เปลี่ยนสิทธิ์ของ route ได้โดยที่ `npm run check` ฝั่ง frontend ไม่มีทางรู้
 
 ---
 
@@ -823,12 +918,13 @@ export function QueryState({
 |---|---|---|---|---|
 | 0 | ซ่อมด่านตรวจ | 10 นาที | — | ✅ **เสร็จ** 2026-10-10 |
 | 1 | สร้างรั้วกันถอยหลัง | ครึ่งวัน | ต้องผ่าน 0 | ✅ **เสร็จ** 2026-10-10 |
-| 2 | แก้สิ่งที่กระทบผู้ใช้ | ครึ่งวัน | ทำคู่ขนานกับ 1 ได้ | ⬜ ถัดไป |
-| 3 | กวาดหน้าตา | 1–1.5 วัน | ต้องผ่าน 1 (ใช้ allowlist) | ⬜ |
+| 2 | แก้สิ่งที่กระทบผู้ใช้ | ครึ่งวัน | ทำคู่ขนานกับ 1 ได้ | ✅ **เสร็จ** 2026-10-10 |
+| **2B** | **gate ที่ใช้ key ผิด** (ข้อ 3.15) | 2 ชม. | — | ✅ **เสร็จ** 2026-10-10 |
+| 3 | กวาดหน้าตา | 1–1.5 วัน | ต้องผ่าน 1 (ใช้ baseline) | ⬜ ถัดไป |
 | **3B** | **ยุบของซ้ำ** (ข้อ 3.14) | **1–1.5 วัน** | ควรรอ 3 จบ | ⬜ |
 | 4 | จัดโครงสร้าง | ครึ่งวัน | ควรรอ 3B จบ | ⬜ |
 | 5 | ปรับเอกสาร | 1 ชั่วโมง | ต้องผ่าน 4 | ⬜ |
-| | **เหลือทั้งหมด** | **~3–4 วัน** | | |
+| | **เหลือทั้งหมด** | **~3–3.5 วัน** | | |
 
 **ทำไม Phase 3B ต้องอยู่หลัง Phase 3:** Phase 3 แก้ `text-gray-400` / ไอคอน / สี Tag ซึ่งแตะไฟล์เดียวกับที่ Phase 3B จะยุบ
 ถ้าทำสลับกัน จะต้องแก้ของเดิมแล้วมายุบทิ้งอีกรอบ — เสียเวลาสองเท่าและ diff อ่านยาก
@@ -884,7 +980,16 @@ grep -rhn 'common.loadFailed' src/app/owner --include=*.tsx \
 # ข้อ 3.14 — helper / ค่าคงที่ที่เขียนซ้ำ
 grep -rn "const updateRow" src/app/owner
 grep -rn "THAI_PROVINCES.map" src/
+
+# ข้อ 3.15 — ViewModel ไหน gate ด้วย key อะไร (ฝั่ง frontend)
+grep -rn "usePermission(" src/app/owner --include="use*ViewModel.ts"
+
+# ข้อ 3.15 — route ไหนต้องการ key อะไร (ฝั่ง backend · รันใน repo ของ backend)
+grep -rn "auth: { menu:\|withPermission(\|requireRole(" src/app/api/admin --include=route.ts
 ```
+
+**ทุกครั้งที่ pull `main` ของ backend ให้เทียบ 2 คำสั่งสุดท้ายซ้ำ** — backend เปลี่ยนสิทธิ์ของ route ได้
+โดยที่ `npm run check` ฝั่ง frontend ไม่มีทางรู้ (คนละ repo) ตัวอย่างจริงอยู่ในข้อ 3.15
 
 **สแกนชั้นที่ 2 (หาโค้ดทำงานเหมือนกัน)** — สคริปต์เต็มอยู่ใน git history ของ PR ที่เพิ่มข้อ 3.14 · หลักการ:
 

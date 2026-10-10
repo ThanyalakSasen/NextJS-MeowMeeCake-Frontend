@@ -7,7 +7,25 @@
 
 ## 1. ตอบแล้วว่าทำ — frontend รอ API อยู่
 
-ไม่มีงานค้างในหมวดนี้แล้ว — Q-BE10 · Q-BE12 · Q-BE2 · Q-BE5 เสร็จทั้งหมด (ดูหมวด 4)
+| รหัส | เรื่อง | รายละเอียด |
+|---|---|---|
+| **Q-BE17** | `/admin/units` — `readMenus` ยังไม่ครอบคลุมหน้าใบสั่งผลิต | ▢ พร้อมทำ |
+
+**Q-BE17 — เพิ่ม `"production"` เข้า `readMenus` ของ `/admin/units`**
+
+backend `6362137` ขยายสิทธิ์อ่านหน่วยนับเป็น `auth: { menu: "products", readMenus: ["ingredients", "recipes", "stock"] }`
+เพื่อให้หน้าวัตถุดิบ · สูตร · สต็อก อ่านได้โดยไม่ต้องมี `products.view` — **แต่ตกหน้าใบสั่งผลิตไป**
+
+`src/app/owner/production/useProductionViewModel.ts:100` เรียก `unitsService.list()` เพื่อแสดงหน่วยนับของสินค้าในใบสั่งผลิต
+พนักงานฝ่ายผลิตที่มีแค่ `production.*` จึงยังอ่านหน่วยนับไม่ได้ (403) → ช่องหน่วยในฟอร์มว่าง
+
+ขอให้แก้เป็น:
+```ts
+auth: { menu: "products", readMenus: ["ingredients", "recipes", "stock", "production"] },
+```
+
+> พบตอนไล่เทียบ menu key ของทุก ViewModel กับ route ของ backend — ดู `CONSISTENCY_AUDIT.md` ข้อ 3.15
+> อีก 3 จุดที่พบพร้อมกันเป็นงานฝั่ง frontend และแก้ไปแล้วใน Phase 2B
 
 ## 2. รอคำตอบก่อนทำ
 

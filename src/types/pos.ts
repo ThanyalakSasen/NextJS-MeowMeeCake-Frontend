@@ -11,6 +11,13 @@ export interface PosProduct extends Product {
   has_customization: boolean;
 }
 
+/** GET /admin/pos/guest-customer — บัญชี "ลูกค้าทั่วไป" ที่ออเดอร์หน้าร้านผูกด้วย (backend select แค่ 3 ฟิลด์นี้) */
+export interface PosGuestCustomer {
+  _id: string;
+  user_fullname: string;
+  email: string;
+}
+
 /** search ค้นจากรหัสสินค้าหรือชื่อ th/en (backend เรียงตามชื่อไทย) */
 export interface PosProductListParams {
   page?: number;
