@@ -792,7 +792,7 @@
     "cancelled": "ยกเลิกรอบ \"{name}\" แล้ว",
     "cancelFailed": "ยกเลิกรอบไม่สำเร็จ",
     "cancelRound": "ยกเลิกรอบ",
-    "advanceTo": "→ {status}",
+    "advanceTo": "{status}",
     "goToProductionHint": "รอบนี้ปิดรับแล้ว พร้อมสร้างใบสั่งผลิตได้",
     "goToProduction": "ไปที่จัดการผลิต →",
     "overridden": "ราคาพิเศษ",
@@ -1061,7 +1061,7 @@
     "columnEmpty": "ไม่มีรายการ",
     "drawerTitle": "ใบสั่งผลิต {no}",
     "cancelOrder": "ยกเลิกใบสั่งผลิต",
-    "advanceTo": "→ {status}",
+    "advanceTo": "{status}",
     "colStarted": "เริ่มผลิตเมื่อ",
     "viewMode": {
       "day": "รายวัน",

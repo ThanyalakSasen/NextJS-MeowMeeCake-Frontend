@@ -9,6 +9,7 @@
 //   plus-icon-solid    PlusIcon ต้องมาจาก 24/solid เสมอ                   docs/ACTION_BUTTONS.md §1.1
 //   icon-button-aria   ปุ่มที่มีแต่ไอคอน ต้องมี aria-label                docs/ACTION_BUTTONS.md §4.1
 //   tag-color-enum     <Tag color=...> ห้ามใส่ชื่อสีของ antd ตรง ๆ        docs/THEME.md §2
+//   icon-glyph-duplicate  ปุ่มที่มีไอคอน ข้อความห้ามมี → / + ซ้ำ       docs/ACTION_BUTTONS.md §1.3
 //
 // ── ทำงานแบบ ratchet (เฟืองกันถอย) ───────────────────────────
 // ของเดิมยังมีค้างอยู่เยอะ (ดู CONSISTENCY_AUDIT ข้อ 3.4-3.8) จะรอแก้ครบก่อนเปิดกฎไม่ไหว
@@ -30,6 +31,10 @@ const SRC = join(ROOT, "src");
 const BASELINE_PATH = join(ROOT, "scripts/ui-baseline.json");
 const STRICT = process.argv.includes("--strict");
 const UPDATE = process.argv.includes("--update");
+
+// catalog ภาษาไทย — กฎ icon-glyph-duplicate ต้องอ่านค่าจริงของคีย์ ไม่ใช่แค่ชื่อคีย์
+const MESSAGES = JSON.parse(readFileSync(join(SRC, "i18n/messages/th.json"), "utf8"));
+const msg = (key) => key.split(".").reduce((o, k) => (o == null ? undefined : o[k]), MESSAGES);
 
 // ── รวมไฟล์ที่ต้องตรวจ ──
 function walk(dir, out = []) {
@@ -153,6 +158,29 @@ const RULES = {
             ? ANT_COLORS.has(attr.value) ? [attr.value] : []
             : [...attr.value.matchAll(/["']([a-z]+)["']/g)].map((q) => q[1]).filter((n) => ANT_COLORS.has(n));
         if (names.length) hits.push({ line: lineOf(src, m.index), text: `<Tag color> hardcode: ${[...new Set(names)].join(", ")}` });
+      }
+      return hits;
+    },
+  },
+
+  "icon-glyph-duplicate": {
+    doc: "docs/ACTION_BUTTONS.md §1.3 — ปุ่มมีไอคอนอยู่แล้ว ข้อความห้ามมีสัญลักษณ์ซ้ำอีก (เคยได้ → → ปิดรับแล้ว)",
+    scan(src) {
+      const hits = [];
+      for (const m of src.matchAll(/<Button\b/g)) {
+        const end = endOfTag(src, m.index);
+        if (end < 0) continue;
+        if (src[end - 1] === "/") continue;              // ปุ่มไอคอนล้วน ไม่มีข้อความ
+        if (!/\bicon=/.test(src.slice(m.index, end + 1))) continue;
+        const close = src.indexOf("</Button>", end);
+        if (close < 0) continue;
+        for (const k of src.slice(end, close).matchAll(/\bt\(\s*"([A-Za-z0-9_.]+)"/g)) {
+          const v = msg(k[1]);
+          // เฉพาะสัญลักษณ์ที่ "โดดเดี่ยว" หัว/ท้ายประโยค — กลางประโยคคือเนื้อหา
+          // ("ราคา น้อย→มาก" / "+{n} รายการ" ไม่นับ — → แปลว่า "ถึง" + แปลว่า "อีก")
+          if (typeof v === "string" && /^[\u2190-\u2193\u2713\u2714\u2715\u2716\u00d7\u279c+\u2212]\s|\s[\u2190-\u2193\u2713\u2714\u2715\u2716\u00d7\u279c+\u2212]$/.test(v))
+            hits.push({ line: lineOf(src, m.index), text: `${k[1]} = ${JSON.stringify(v)}` });
+        }
       }
       return hits;
     },
