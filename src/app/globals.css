@@ -207,11 +207,36 @@ body {
   font-size: 1rem; /* = 18px (ไม่ทบ เพราะ rem อิง html) */
 }
 
-/* โฟกัสชัดเจน — ผู้สูงอายุที่ใช้คีย์บอร์ด/มองเห็นไม่ชัดจะรู้ว่าตอนนี้อยู่ที่ปุ่มไหน */
+/* โฟกัสชัดเจน — ผู้สูงอายุที่ใช้คีย์บอร์ด/มองเห็นไม่ชัดจะรู้ว่าตอนนี้อยู่ที่ปุ่มไหน
+   ไม่ตั้ง border-radius ที่นี่ — มันไปเปลี่ยนมุมของ "ตัว element" ไม่ใช่ของเส้น outline
+   ช่องกรอกมุมโค้ง 8px จึงกลายเป็นเหลี่ยมทุกครั้งที่โฟกัส · เบราว์เซอร์วาด outline
+   ตามมุมของ element ให้เองอยู่แล้ว */
 :focus-visible {
   outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: 2px;
-  border-radius: 2px;
+}
+
+/* ---- วงแหวนโฟกัสของ control ที่ antd ประกอบจากหลายชั้น ----
+   Select · InputNumber · DatePicker · Input ที่มี prefix/allowClear (= .ant-input-affix-wrapper)
+   ไม่ได้มี <input> เดียว — กรอบที่ผู้ใช้เห็นคือ div ข้างนอก ส่วน <input> จริง
+   ซ่อนอยู่ข้างในและเล็กกว่า (Select ที่ยังว่าง กว้างเกือบ 0 · ช่องค้นหา หักที่ไอคอนแว่นขยายไป)
+   ปล่อยไว้จะได้กรอบเล็ก ๆ ลอยผิดที่ ซ้อนกับกรอบจริงเป็น 2 ชั้น
+
+   เขียนแบบไม่ระบุชื่อ <input> ข้างใน — อ้าง wrapper ชั้นนอกอย่างเดียว
+   control ตัวอื่นของ antd ที่มีโครงเดียวกันจึงได้ด้วยโดยไม่ต้องมาเพิ่มทีละบรรทัด */
+.ant-input-affix-wrapper :focus-visible,
+.ant-input-number :focus-visible,
+.ant-picker :focus-visible,
+.ant-select :focus-visible {
+  outline: none;
+}
+
+.ant-input-affix-wrapper:has(:focus-visible),
+.ant-input-number:has(:focus-visible),
+.ant-picker:has(:focus-visible),
+.ant-select:has(:focus-visible) .ant-select-selector {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 /* ------------------------------------------------------------
