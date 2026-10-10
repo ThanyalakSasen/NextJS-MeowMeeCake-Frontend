@@ -80,6 +80,18 @@ style={{ minHeight: a11y.touchTargetPx }}   // 44
 ## 5. ตรวจสอบ
 
 ```bash
-npm run lint:theme    # เทียบสีใน palette.ts ↔ globals.css
-npm run check         # i18n + theme + tsc + eslint รวดเดียว
+npm run lint:theme       # เทียบสีใน palette.ts ↔ globals.css
+npm run lint:ui          # กฎ UI (ห้าม text-gray-400 · สี Tag ต้องมาจาก enumConfig · ไอคอน · aria-label)
+npm run check            # i18n + theme + ui + tsc + eslint รวดเดียว
+npm run lint:ui:update   # หลังแก้ของเดิมไปแล้ว — ขัน baseline ไม่ให้ถอยกลับ
 ```
+
+**กฎที่ตรวจอัตโนมัติแล้ว** (`scripts/check-ui.mjs` — เพิ่ม 2026-10-10):
+
+| กฎในเอกสารนี้ | ชื่อกฎในสคริปต์ |
+|---|---|
+| §4 ห้าม `text-gray-400` | `no-gray-400` |
+| §2 สี badge สถานะต้องมาจาก `enumConfig.ts` | `tag-color-enum` |
+
+สคริปต์ทำงานแบบ **ratchet**: ของเดิมที่ยังค้างถูกบันทึกจำนวนไว้ใน `scripts/ui-baseline.json` และยังผ่านได้
+แต่**เพิ่มของใหม่ไม่ได้** · รายละเอียดและแผนไล่เก็บอยู่ใน `CONSISTENCY_AUDIT.md` §4 Phase 1

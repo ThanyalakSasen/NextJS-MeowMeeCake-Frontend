@@ -237,7 +237,17 @@ import { EditButton, DeleteButton, SaveButton, CancelButton, RetryButton, ViewBu
 
 ## 6. ตรวจสอบ
 
-- `npm run check` (i18n + theme + tsc + eslint) ✅ ผ่าน
+**กฎที่ตรวจอัตโนมัติแล้ว** (`scripts/check-ui.mjs` — เพิ่ม 2026-10-10 · รันผ่าน `npm run check` หรือ `npm run lint:ui`):
+
+| กฎในเอกสารนี้ | ชื่อกฎในสคริปต์ | หมายเหตุ |
+|---|---|---|
+| §1.1 ไอคอน `add` ต้องเป็น **solid** เสมอ | `plus-icon-solid` | ห้าม import `PlusIcon` จาก `24/outline` |
+| §4.1 ปุ่มที่มีแต่ไอคอน ต้องมี `aria-label` | `icon-button-aria` | นับ `{}` ใน prop ถูกต้อง อ่าน `icon={<XIcon />}` ไม่สับสน |
+
+ทำงานแบบ **ratchet** — ของเดิมที่ยังค้าง (ดู `CONSISTENCY_AUDIT.md` ข้อ 3.5 · 3.8) บันทึกจำนวนไว้ใน `scripts/ui-baseline.json`
+ยังผ่านได้ แต่**เพิ่มของใหม่ไม่ได้** · แก้ของเดิมไปแล้วให้รัน `npm run lint:ui:update` เพื่อขันเฟือง
+
+- `npm run check` (i18n + theme + ui + tsc + eslint) ✅ ผ่าน
 - สแกน `<Button>` + `<button>` ทั้ง `src/**/*.tsx` หลังแก้ (นับ `{}` ใน prop เพื่ออ่าน `icon={<XIcon />}` ถูก): ที่เหลือ "มีแต่คำ" = เฉพาะ §4.2 ·
   "มีแต่ไอคอน" = เฉพาะ §4.1
 - ทุกไฟล์ที่มี `okText=` (Modal/Popconfirm) มี `modalButtonIcons` หรือ `okButtonProps` แล้ว
