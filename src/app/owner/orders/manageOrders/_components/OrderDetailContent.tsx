@@ -10,9 +10,7 @@ import { isAwaitingRefund, type DeliveryUpdateInput, type Order } from "@/types/
 import type { Payment } from "@/types/payment";
 import { actionIcon } from "@/components/shared/actions";
 import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
-import { SlipImage } from "../../_components/SlipImage";
-import { DeliverySection } from "../../_components/DeliverySection";
-import { RefundSection } from "../../_components/RefundSection";
+import { DeliverySection, RefundSection, SlipImage } from "@/components/shared/orders";
 import { NOTICE_TAG } from "@/constants/enumConfig";
 
 export function OrderDetailContent({

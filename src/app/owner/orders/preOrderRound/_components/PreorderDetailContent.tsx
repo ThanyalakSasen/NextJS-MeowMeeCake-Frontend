@@ -8,9 +8,7 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Preorder } from "@/types/preorder";
 import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
-import { SlipImage } from "../../_components/SlipImage";
-import { DeliverySection } from "../../_components/DeliverySection";
-import { RefundSection } from "../../_components/RefundSection";
+import { DeliverySection, RefundSection, SlipImage } from "@/components/shared/orders";
 import { isAwaitingRefund } from "@/types/order";
 import { NOTICE_TAG } from "@/constants/enumConfig";
 
