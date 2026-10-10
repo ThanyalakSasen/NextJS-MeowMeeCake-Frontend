@@ -1,13 +1,14 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // เมนูบัญชีของลูกค้า (ด้านซ้ายบนจอใหญ่ · แถบบนสุดบนมือถือ) — ย่อจาก FrontOffice src/app/components/customer/SideBarMenu.tsx
-// ครบทุกเมนูของต้นแบบแล้ว (8/8)
+// เหลือ 5 เมนู: ข้อมูลของฉัน · ที่อยู่ · เปลี่ยนรหัสผ่าน · ประวัติการสั่งซื้อ · ประวัติพรีออเดอร์
+// (สมาชิกของฉัน · รายการโปรด ย้ายไปเมนูผู้ใช้บน Navbar · การแจ้งเตือนเข้าจากกระดิ่ง)
 // แบ่ง 2 หัวข้อแบบต้นแบบ: "บัญชีของฉัน" / "คำสั่งซื้อของฉัน" (BACKLOG4 U2) — มือถือเป็นแถบเลื่อนแถวเดียว หัวข้อซ่อน
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, GiftIcon, HeartIcon, CalendarDaysIcon, BellIcon } from "@heroicons/react/24/solid";
+import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, CalendarDaysIcon } from "@heroicons/react/24/solid";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import DoorLogoutIcon from "./DoorLogoutIcon";
 
@@ -18,7 +19,6 @@ const GROUPS = [
       { href: "/customer/account", labelKey: "profile", icon: UserIcon },
       { href: "/customer/account/address", labelKey: "address", icon: MapPinIcon },
       { href: "/customer/changepassword", labelKey: "changePassword", icon: KeyIcon },
-      { href: "/customer/account/member", labelKey: "member", icon: GiftIcon },
     ],
   },
   {
@@ -26,8 +26,6 @@ const GROUPS = [
     items: [
       { href: "/customer/account/purchases", labelKey: "purchases", icon: ShoppingBagIcon },
       { href: "/customer/account/preorders", labelKey: "preorders", icon: CalendarDaysIcon },
-      { href: "/customer/account/favorites", labelKey: "favorites", icon: HeartIcon },
-      { href: "/customer/account/notifications", labelKey: "notifications", icon: BellIcon },
     ],
   },
 ] as const;
