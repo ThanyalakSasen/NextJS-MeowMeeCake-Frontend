@@ -33,8 +33,11 @@ export const NO_MENU_ACCESS: MenuPermissionSet = {
 };
 
 // map path → menu_key เรียงจาก prefix เจาะจงกว่าไว้ก่อน (longest-prefix match)
-// path ที่ไม่อยู่ในนี้ (dashboard, store-design, notificationsHistory) = login พอ ไม่เช็ค can_view เพิ่ม
+// path ที่ไม่อยู่ในนี้ (store-design, notificationsHistory) = login พอ ไม่เช็ค can_view เพิ่ม
 const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
+  // แดชบอร์ด = หน้าแรกหลังล็อกอิน — ไม่มี dashboard.view แล้ว OwnerLayout พาไปหน้าแรกที่มีสิทธิ์
+  // (lib/landingPath.ts) แทนหน้า access-denied · เดิม login พอ → widget ยิง /admin/dashboard/* ได้ 403 ทุกตัว (Final-Backlog P11)
+  { prefix: "/owner/dashboard", menuKey: "dashboard" },
   // สต็อก/ประวัติวัตถุดิบ + หน่วยนับ ใช้ "ingredients" ทั้งกลุ่ม — /admin/ingredients · ingredient-transactions ตรวจ
   // ingredients.* และ backend เปิดให้อ่าน /admin/units ด้วย ingredients.view (Final-Backlog P2)
   // ไม่ใช่ "stock" — "stock" คือสต็อกสินค้า (/admin/products/:id/stock) เท่านั้น
