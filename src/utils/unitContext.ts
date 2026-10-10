@@ -21,6 +21,11 @@ export const UNIT_TYPES = [
 
 export type UnitType = (typeof UNIT_TYPES)[number];
 
+/** ป้ายหน่วยจาก unit_id ที่ backend populate มาแล้ว ({ unit_name, unit_abbr }) — เป็น string id ดิบ = "" */
+export function unitLabel(ref: string | { unit_name?: string; unit_abbr?: string } | null | undefined): string {
+  return ref && typeof ref === "object" ? ref.unit_abbr || ref.unit_name || "" : "";
+}
+
 export function isIngredientUnit(usageContext: readonly string[] | undefined | null): boolean {
   return (usageContext ?? []).some((c) => /ingredient|both/i.test(c));
 }

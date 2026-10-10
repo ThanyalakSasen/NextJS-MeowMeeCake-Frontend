@@ -7,10 +7,10 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ingredientTransactionsService } from "@/services/ingredientTransactions";
 import { ingredientsService } from "@/services/ingredients";
-import { unitsService } from "@/services/units";
 import { usePermission } from "@/context/PermissionsContext";
 import type { IngredientTxnType } from "@/constants/enumConfig";
 import { refId } from "@/lib/refId";
+import { unitLabel } from "@/utils/unitContext";
 import { LIST_ALL } from "@/lib/http";
 
 export interface HistoryRow {
@@ -27,7 +27,8 @@ export interface HistoryRow {
 type TypeFilter = "all" | IngredientTxnType;
 
 export function useIngredientHistoryViewModel() {
-  const perm = usePermission("stock");
+  // ingredients ไม่ใช่ stock — API ของหน้านี้ตรวจ ingredients.* (Final-Backlog P2)
+  const perm = usePermission("ingredients");
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
@@ -41,19 +42,14 @@ export function useIngredientHistoryViewModel() {
     queryKey: ["ingredients"],
     queryFn: () => ingredientsService.list({ limit: LIST_ALL }),
   });
-  const unitsQ = useQuery({
-    queryKey: ["units"],
-    queryFn: () => unitsService.list(),
-  });
 
   const ingredients = ingredientsQ.data?.data ?? [];
 
   const rows = useMemo<HistoryRow[]>(() => {
-    const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, u.unit_abbr || u.unit_name]));
     const ingMap = new Map(
       (ingredientsQ.data?.data ?? []).map((i) => [
         i._id,
-        { name: i.ingredient_name, unit: (refId(i.unit_id) && unitMap.get(refId(i.unit_id))) || "" },
+        { name: i.ingredient_name, unit: unitLabel(i.unit_id) },
       ]),
     );
     return (txnsQ.data?.data ?? [])
@@ -73,7 +69,7 @@ export function useIngredientHistoryViewModel() {
         };
       })
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }, [txnsQ.data, ingredientsQ.data, unitsQ.data]);
+  }, [txnsQ.data, ingredientsQ.data]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -107,7 +103,7 @@ export function useIngredientHistoryViewModel() {
     rows: filtered,
     stats,
     ingredients,
-    isLoading: txnsQ.isLoading || ingredientsQ.isLoading || unitsQ.isLoading,
+    isLoading: txnsQ.isLoading || ingredientsQ.isLoading,
     isError: txnsQ.isError,
     refetch: () => txnsQ.refetch(),
 
