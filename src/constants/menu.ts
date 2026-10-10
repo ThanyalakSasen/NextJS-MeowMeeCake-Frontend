@@ -68,13 +68,18 @@ export const MENU_SECTIONS: MenuSection[] = [
           { labelKey: "searchSynonyms", href: "/owner/products/search-synonyms", icon: "TagIcon", menuKey: "products" },
         ],
       },
-      { labelKey: "ordersManage", icon: "ClipboardDocumentListIcon", href: "/owner/orders/manageOrders", menuKey: "orders", 
+      {
+        // กลุ่มไม่มี href/menuKey ของตัวเอง — Sidebar กรองสิทธิ์จาก children เท่านั้น
+        labelKey: "ordersManage",
+        icon: "ClipboardDocumentListIcon",
         children: [
           { labelKey: "ordersManage", href: "/owner/orders/manageOrders", icon: "ClipboardDocumentListIcon", menuKey: "orders" },
           { labelKey: "ordersPreorderRound", href: "/owner/orders/preOrderRound", icon: "ClockIcon", menuKey: "preorder" },
           // โซนค่าจัดส่งหลังร้าน (I8) — /admin/delivery-zones ใช้สิทธิ์ orders.*
+          // ซ่อนจาก sidebar ชั่วคราว (2026-10-11) · หน้า /owner/orders/delivery-zones, breadcrumb, service ยังอยู่ครบ
+          // เข้าได้ทาง URL ตรง ๆ — เปิดเมนูคืนได้ด้วยการเอาคอมเมนต์บรรทัดล่างออก
           // { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
-        ]
+        ],
       },
       { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "orders" },
       {
@@ -126,7 +131,7 @@ export const MENU_SECTIONS: MenuSection[] = [
       { labelKey: "storeInfo", icon: "BuildingStorefrontIcon", href: "/owner/store-info", menuKey: "store_info" },
       // ค่าจัดส่งหน้าร้านออนไลน์ (F2) — /admin/shipping-zones ใช้ store_info.* · คนละชุดกับ "โซนค่าจัดส่ง" ของหลังร้าน
       { labelKey: "webShipping", icon: "TruckIcon", href: "/owner/shipping", menuKey: "store_info" },
-    ]
+    ],
   },
 ];
 
