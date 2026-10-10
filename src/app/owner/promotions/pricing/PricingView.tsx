@@ -4,7 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { CurrencyDollarIcon } from "@heroicons/react/24/solid";
 import { Button, Select, Switch, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
-import { StatCard, StatCardsGrid } from "@/components/shared/stats";
+import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
 import { RetryButton } from "@/components/shared/actions";
@@ -38,7 +38,7 @@ export function PricingView(vm: VM) {
     {
       key: "productType",
       title: t("pricing.colType"),
-      render: (r) => <Tag color={r.productType === "preorder" ? "processing" : "success"}>{t(`enums.productType.${r.productType}`)}</Tag>,
+      render: (r) => <StatusBadge group="productType" value={r.productType} />,
     },
     {
       key: "basePrice",

@@ -12,7 +12,7 @@ import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "
 import { DetailDrawer } from "@/components/shared/feedback";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
-import { PAYMENT_STATUS_CONFIG } from "@/constants/enumConfig";
+import { NOTICE_TAG, PAYMENT_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import { isAwaitingRefund, type Order } from "@/types/order";
 import { RetryButton, ViewButton, actionIcon } from "@/components/shared/actions";
@@ -83,7 +83,7 @@ export function ManageOrdersView(vm: VM) {
       // ยกเลิก + ชำระแล้ว = ร้านยังต้องโอนคืน (ป้าย "ชำระแล้ว" เฉย ๆ ทำให้ดูเหมือนเรียบร้อย)
       render: (o) =>
         isAwaitingRefund(o) ? (
-          <Tag color="warning">{t("orders.awaitingRefund")}</Tag>
+          <Tag color={NOTICE_TAG.awaitingRefund}>{t("orders.awaitingRefund")}</Tag>
         ) : (
           <StatusBadge group="paymentStatus" value={o.payment_status} />
         ),

@@ -11,6 +11,7 @@ import { RoleListPanel } from "./_components/RoleListPanel";
 import { PermissionMatrix } from "./_components/PermissionMatrix";
 import { RoleFormModal } from "./_components/RoleFormModal";
 import { RenameRoleModal } from "./_components/RenameRoleModal";
+import { ROLE_TYPE_CONFIG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof usePermissionsViewModel>;
 
@@ -56,7 +57,7 @@ export function PermissionsView(vm: VM) {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-base font-semibold text-brown-800">{vm.selectedRole.role_name}</h2>
-                      <Tag color={vm.selectedRole.role_type === "owner" ? "gold" : "blue"}>
+                      <Tag color={ROLE_TYPE_CONFIG[vm.selectedRole.role_type]?.antColor}>
                         {vm.selectedRole.role_type}
                       </Tag>
                     </div>

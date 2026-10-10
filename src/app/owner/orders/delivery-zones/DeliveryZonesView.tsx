@@ -13,6 +13,7 @@ import type { DeliveryZone } from "@/types/deliveryZone";
 import type { useDeliveryZonesViewModel } from "./useDeliveryZonesViewModel";
 import { DeliveryZoneForm } from "./_components/DeliveryZoneForm";
 import { ZoneChecker } from "./_components/ZoneChecker";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof useDeliveryZonesViewModel>;
 const PROVINCES_SHOWN = 8;
@@ -90,7 +91,7 @@ export function DeliveryZonesView(vm: VM) {
                   title: t("deliveryZones.fields.provinces"),
                   render: (z) =>
                     z.is_catch_all ? (
-                      <Tag color="gold" className="!m-0">{t("deliveryZones.catchAllTag")}</Tag>
+                      <Tag color={NOTICE_TAG.catchAllZone} className="!m-0">{t("deliveryZones.catchAllTag")}</Tag>
                     ) : (
                       <span className="flex flex-wrap gap-1">
                         {z.provinces.slice(0, PROVINCES_SHOWN).map((p) => (

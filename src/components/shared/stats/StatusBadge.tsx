@@ -10,11 +10,12 @@ import en from "@/i18n/messages/en.json";
 import {
   ORDER_STATUS_CONFIG, PAYMENT_STATUS_CONFIG, PRODUCTION_STATUS_CONFIG,
   PRODUCTION_ITEM_STATUS_CONFIG, STOCK_STATUS_CONFIG, ROUND_STATUS_CONFIG, DELIVERY_STATUS_CONFIG,
+  PRODUCT_TYPE_CONFIG,
 } from "@/constants/enumConfig";
 
 type Group =
   | "orderStatus" | "paymentStatus" | "productionStatus" | "productionItemStatus" | "stockStatus" | "roundStatus"
-  | "deliveryStatus";
+  | "deliveryStatus" | "productType";
 
 type ValueOf<G extends Group> = keyof (typeof en)["enums"][G] & string;
 
@@ -26,6 +27,7 @@ const CONFIG: Record<Group, Record<string, { antColor: string }>> = {
   stockStatus: STOCK_STATUS_CONFIG,
   roundStatus: ROUND_STATUS_CONFIG,
   deliveryStatus: DELIVERY_STATUS_CONFIG,
+  productType: PRODUCT_TYPE_CONFIG,
 };
 
 export function StatusBadge<G extends Group>({ group, value }: { group: G; value: ValueOf<G> }) {

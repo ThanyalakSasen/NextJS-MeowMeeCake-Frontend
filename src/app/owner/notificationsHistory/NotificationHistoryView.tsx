@@ -7,7 +7,7 @@ import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DetailDrawer, ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
-import { NOTIFICATION_TYPE_COLOR } from "@/constants/enumConfig";
+import { NOTIFICATION_TYPE_COLOR, READ_STATUS_CONFIG } from "@/constants/enumConfig";
 import { NOTIFICATION_MODULES, type NotificationDTO } from "@/types/notification";
 import type { NotificationType } from "@/types";
 import { DeleteButton, RetryButton, actionIcon } from "@/components/shared/actions";
@@ -65,7 +65,7 @@ export function NotificationHistoryView(vm: VM) {
       key: "status",
       title: t("notifications.colStatus"),
       render: (n) => (
-        <Tag color={n.is_read ? "default" : "processing"}>
+        <Tag color={READ_STATUS_CONFIG[n.is_read ? "read" : "unread"].antColor}>
           {n.is_read ? t("notifications.statusRead") : t("notifications.statusUnread")}
         </Tag>
       ),

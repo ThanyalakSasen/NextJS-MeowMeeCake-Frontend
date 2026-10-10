@@ -63,22 +63,5 @@
   },
   "plus-icon-solid": {},
   "icon-button-aria": {},
-  "tag-color-enum": {
-    "src/app/owner/employees/EmployeesView.tsx": 3,
-    "src/app/owner/employees/permissions/_components/RoleListPanel.tsx": 1,
-    "src/app/owner/employees/permissions/PermissionsView.tsx": 1,
-    "src/app/owner/notificationsHistory/_components/NotificationDetailContent.tsx": 1,
-    "src/app/owner/notificationsHistory/NotificationHistoryView.tsx": 1,
-    "src/app/owner/orders/delivery-zones/DeliveryZonesView.tsx": 1,
-    "src/app/owner/orders/manageOrders/_components/OrderDetailContent.tsx": 1,
-    "src/app/owner/orders/manageOrders/ManageOrdersView.tsx": 1,
-    "src/app/owner/orders/preOrderRound/_components/OrdersTab.tsx": 1,
-    "src/app/owner/orders/preOrderRound/_components/PreorderDetailContent.tsx": 1,
-    "src/app/owner/orders/preOrderRound/_components/RoundDetailContent.tsx": 1,
-    "src/app/owner/promotions/pricing/PricingView.tsx": 1,
-    "src/app/owner/reports/reviews/_components/ReviewDetailContent.tsx": 1,
-    "src/app/owner/reports/reviews/_components/ReviewFiltersBar.tsx": 1,
-    "src/app/owner/shipping/ShippingZonesView.tsx": 1,
-    "src/app/profile/ProfileView.tsx": 1
-  }
+  "tag-color-enum": {}
 }

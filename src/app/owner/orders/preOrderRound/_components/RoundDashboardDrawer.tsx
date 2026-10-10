@@ -12,6 +12,7 @@ import { formatCurrency } from "@/i18n/format";
 import type { OrderType } from "@/types/order";
 import { PAYMENT_GROUPS, type PaymentGroup } from "@/types/preorderRoundDashboard";
 import { lineExtras, type useRoundDashboardViewModel } from "../useRoundDashboardViewModel";
+import { PAYMENT_GROUP_CONFIG } from "@/constants/enumConfig";
 
 type DVM = ReturnType<typeof useRoundDashboardViewModel>;
 
@@ -20,7 +21,6 @@ const GROUP_TONE: Record<PaymentGroup, string> = {
   pending: "border-amber-200 bg-amber-50 text-amber-800",
   cancelled: "border-gray-200 bg-gray-50 text-gray-600",
 };
-const GROUP_TAG: Record<PaymentGroup, string> = { paid: "success", pending: "warning", cancelled: "default" };
 
 export function RoundDashboardDrawer(vm: DVM) {
   const t = useTranslations();
@@ -125,7 +125,7 @@ export function RoundDashboardDrawer(vm: DVM) {
                       <div key={o._id} className="flex flex-col gap-1 px-3 py-2 text-sm">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-medium text-gray-800">{o.preorder_no}</span>
-                          <Tag color={GROUP_TAG[o.payment_group]} className="!m-0">{t(`preorderRound.dashboard.payment.${o.payment_group}`)}</Tag>
+                          <Tag color={PAYMENT_GROUP_CONFIG[o.payment_group].antColor} className="!m-0">{t(`preorderRound.dashboard.payment.${o.payment_group}`)}</Tag>
                           <StatusBadge group="orderStatus" value={o.order_status} />
                           <span className="ml-auto font-medium text-gray-800">{money(o.total_amount)}</span>
                         </div>

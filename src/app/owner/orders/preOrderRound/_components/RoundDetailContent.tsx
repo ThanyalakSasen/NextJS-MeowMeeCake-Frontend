@@ -9,6 +9,7 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import type { PreorderRound } from "@/types/preorderRound";
 import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -86,7 +87,7 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
                     {it.price_override != null && <span className="ml-1 text-xs text-amber-600">({t("preorderRound.overridden")})</span>}
                   </p>
                 </div>
-                {!it.is_active && <Tag color="default">{t("preorderRound.itemInactive")}</Tag>}
+                {!it.is_active && <Tag color={NOTICE_TAG.inactive}>{t("preorderRound.itemInactive")}</Tag>}
               </div>
               <div className="mt-1.5 flex items-center justify-between text-sm text-gray-600">
                 <span>

@@ -7,6 +7,7 @@ import { LoadingSpin } from "@/components/shared/feedback";
 import { RetryButton } from "@/components/shared/actions";
 import { isLinePlaceholderEmail } from "@/lib/lineAccount";
 import type { useProfileViewModel } from "./useProfileViewModel";
+import { LINK_STATUS_CONFIG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof useProfileViewModel>;
 
@@ -41,7 +42,7 @@ export function ProfileView(vm: VM) {
                   {t("profile.line.title")}
                 </span>
                 {!vm.isError && (
-                  <Tag color={vm.linked ? "success" : "default"}>
+                  <Tag color={LINK_STATUS_CONFIG[vm.linked ? "linked" : "unlinked"].antColor}>
                     {vm.linked ? t("profile.line.statusLinked") : t("profile.line.statusNotLinked")}
                   </Tag>
                 )}

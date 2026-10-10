@@ -14,12 +14,11 @@ import type { ShippingZone } from "@/types/shippingZone";
 import type { useShippingZonesViewModel } from "./useShippingZonesViewModel";
 import { FALLBACK_ZONE } from "./shippingZoneForm";
 import { ShippingZoneFormFields } from "./_components/ShippingZoneFormFields";
+import { NOTICE_TAG, SHIPPING_ZONE_CONFIG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof useShippingZonesViewModel>;
 const PROVINCES_SHOWN = 8;
 const PROVINCE_OPTIONS = THAI_PROVINCES.map((p) => ({ value: p, label: p }));
-/** สีประจำโซน — ไล่จากใกล้ไปไกล (ต้นแบบ FrontOffice) */
-const ZONE_COLOR: Record<ShippingZone["zone_code"], string> = { A: "green", B: "blue", C: "gold", D: "default" };
 
 export function ShippingZonesView(vm: VM) {
   const t = useTranslations();
@@ -75,7 +74,7 @@ export function ShippingZonesView(vm: VM) {
                   title: t("shippingZones.fields.code"),
                   width: 80,
                   align: "center",
-                  render: (z) => <Tag color={ZONE_COLOR[z.zone_code]} className="!m-0 font-bold">{z.zone_code}</Tag>,
+                  render: (z) => <Tag color={SHIPPING_ZONE_CONFIG[z.zone_code].antColor} className="!m-0 font-bold">{z.zone_code}</Tag>,
                 },
                 {
                   key: "label",
@@ -88,7 +87,7 @@ export function ShippingZonesView(vm: VM) {
                   title: t("shippingZones.fields.provinces"),
                   render: (z) =>
                     z.zone_code === FALLBACK_ZONE ? (
-                      <Tag color="gold" className="!m-0">{t("shippingZones.fallbackTag")}</Tag>
+                      <Tag color={NOTICE_TAG.catchAllZone} className="!m-0">{t("shippingZones.fallbackTag")}</Tag>
                     ) : z.provinces.length === 0 ? (
                       <span className="text-gray-400">{t("shippingZones.noProvinces")}</span>
                     ) : (

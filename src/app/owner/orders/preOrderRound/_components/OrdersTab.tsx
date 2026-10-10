@@ -10,6 +10,7 @@ import type { OrderStatus } from "@/constants/enumConfig";
 import type { Preorder } from "@/types/preorder";
 import { RetryButton, ViewButton } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -71,7 +72,7 @@ export function OrdersTab(vm: VM) {
         return (
           <div>
             {isAwaitingRefund(o) ? (
-              <Tag color="warning">{t("orders.awaitingRefund")}</Tag>
+              <Tag color={NOTICE_TAG.awaitingRefund}>{t("orders.awaitingRefund")}</Tag>
             ) : (
               <StatusBadge group="paymentStatus" value={o.payment_status} />
             )}

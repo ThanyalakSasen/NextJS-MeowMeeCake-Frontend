@@ -6,7 +6,7 @@ import { Avatar, Divider, Tag } from "@/components/base";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import { reviewsService } from "@/services/reviews";
-import { SENTIMENT_LABEL_CONFIG } from "@/constants/enumConfig";
+import { REVIEW_STATUS_CONFIG, SENTIMENT_LABEL_CONFIG } from "@/constants/enumConfig";
 import type { ReviewRow } from "../reviewRow";
 import { StarRating } from "./StarRating";
 
@@ -42,7 +42,7 @@ export function ReviewDetailContent({ review }: { review: ReviewRow }) {
       </div>
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-500">{t("reviews.colStatus")}</span>
-        <Tag color={review.status === "approved" ? "success" : review.status === "pending" ? "warning" : "default"}>
+        <Tag color={REVIEW_STATUS_CONFIG[review.status].antColor}>
           {t(`reviews.status.${review.status}`)}
         </Tag>
       </div>

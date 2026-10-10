@@ -6,6 +6,7 @@ import { SearchInput } from "@/components/shared/data";
 import type { ReviewSort, ReviewStatus } from "@/types/review";
 import type { ReviewFilters, Tri } from "../useReviewsViewModel";
 import { actionIcon } from "@/components/shared/actions";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 const SORTS: ReviewSort[] = ["newest", "needs_reply", "lowest", "highest", "oldest"];
 const STATUSES: ReviewStatus[] = ["approved", "hidden", "pending"];
@@ -108,7 +109,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
 
       {filters.negativeOnly && (
         <div className="flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-3">
-          <Tag closable color="red" onClose={() => setFilter("negativeOnly", false)} className="!m-0">
+          <Tag closable color={NOTICE_TAG.negativeFilter} onClose={() => setFilter("negativeOnly", false)} className="!m-0">
             {t("reviews.filter.negativeOnly")}
           </Tag>
         </div>

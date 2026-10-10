@@ -13,6 +13,7 @@ import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
 import { SlipImage } from "../../_components/SlipImage";
 import { DeliverySection } from "../../_components/DeliverySection";
 import { RefundSection } from "../../_components/RefundSection";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 export function OrderDetailContent({
   order,
@@ -60,7 +61,7 @@ export function OrderDetailContent({
 
       {isCancelled ? (
         <div>
-          <Tag color="error" className="w-fit">{t("orders.cancelledBanner")}</Tag>
+          <Tag color={NOTICE_TAG.cancelled} className="w-fit">{t("orders.cancelledBanner")}</Tag>
           {/* เหตุผลแสดงใน RefundSection แทนเมื่อรอโอนคืน (ไม่ซ้ำสองที่) */}
           {order.cancelled_reason && !isAwaitingRefund(order) && (
             <p className="mt-1.5 text-sm text-gray-600">{order.cancelled_reason}</p>

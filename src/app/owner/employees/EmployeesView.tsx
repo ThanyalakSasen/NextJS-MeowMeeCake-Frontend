@@ -11,6 +11,7 @@ import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { DeleteButton, EditButton, RetryButton, actionIcon } from "@/components/shared/actions";
 import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel";
+import { EMPLOYEE_WORKING_CONFIG, NOTICE_TAG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof useEmployeesViewModel>;
 
@@ -29,7 +30,7 @@ export function EmployeesView(vm: VM) {
         </div>
       ),
     },
-    { key: "role", title: t("employees.colRole"), render: (r) => <Tag color="blue">{r.roleName}</Tag> },
+    { key: "role", title: t("employees.colRole"), render: (r) => <Tag color={NOTICE_TAG.roleName}>{r.roleName}</Tag> },
     {
       key: "type",
       title: t("employees.colType"),
@@ -48,12 +49,12 @@ export function EmployeesView(vm: VM) {
       title: t("employees.colStatus"),
       render: (r) => (
         <div className="flex flex-wrap items-center gap-1">
-          <Tag color={r.working ? "success" : "default"} className="!m-0">
+          <Tag color={EMPLOYEE_WORKING_CONFIG[r.working ? "working" : "left"].antColor} className="!m-0">
             {r.working ? t("employees.statusWorking") : t("employees.statusLeft")}
           </Tag>
           {r.locked && r.lockedUntil && (
             <Tag
-              color="error"
+              color={NOTICE_TAG.cancelled}
               className="!m-0"
               title={t("employees.lockedUntil", { time: formatDate(r.lockedUntil, locale, { withTime: true }) })}
             >
