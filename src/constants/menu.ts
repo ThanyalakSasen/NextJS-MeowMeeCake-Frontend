@@ -73,7 +73,7 @@ export const MENU_SECTIONS: MenuSection[] = [
           { labelKey: "ordersManage", href: "/owner/orders/manageOrders", icon: "ClipboardDocumentListIcon", menuKey: "orders" },
           { labelKey: "ordersPreorderRound", href: "/owner/orders/preOrderRound", icon: "ClockIcon", menuKey: "preorder" },
           // โซนค่าจัดส่งหลังร้าน (I8) — /admin/delivery-zones ใช้สิทธิ์ orders.*
-          { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
+          // { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
         ]
       },
       { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "orders" },
@@ -110,21 +110,23 @@ export const MENU_SECTIONS: MenuSection[] = [
   {
     labelKey: "sectionEmployees",
     items: [
-      {
-        labelKey: "employees",
-        icon: "UserGroupIcon",
-        children: [
+      
           { labelKey: "employees", href: "/owner/employees", icon: "UsersIcon", menuKey: "employees" },
           { labelKey: "permissions", href: "/owner/employees/permissions", icon: "ShieldCheckIcon", menuKey: "employees" },
           { labelKey: "userLog", href: "/owner/employees/userLog", icon: "ClipboardDocumentListIcon", menuKey: "employees" },
-        ],
-      },
+        
+    ],
+  },
+  {
+    labelKey: "storefront",
+    items: [
+      // menuKey: "store_info" — backend MENU_KEYS เพิ่ม 2026-10-05 (customer-backend-merge.md §8.19)
       { labelKey: "storeDesign", icon: "PaintBrushIcon", href: "/owner/store-design" },
       // พนักงานเห็นเมื่อมี store_info.view (แก้ได้เฉพาะหน้าร้านประจำสัปดาห์) · owner เห็นทุกหัวข้อ
       { labelKey: "storeInfo", icon: "BuildingStorefrontIcon", href: "/owner/store-info", menuKey: "store_info" },
       // ค่าจัดส่งหน้าร้านออนไลน์ (F2) — /admin/shipping-zones ใช้ store_info.* · คนละชุดกับ "โซนค่าจัดส่ง" ของหลังร้าน
       { labelKey: "webShipping", icon: "TruckIcon", href: "/owner/shipping", menuKey: "store_info" },
-    ],
+    ]
   },
 ];
 

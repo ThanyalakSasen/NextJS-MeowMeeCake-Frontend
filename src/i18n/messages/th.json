@@ -83,7 +83,7 @@
     "logout": "ออกจากระบบ",
     "deliveryZones": "โซนค่าจัดส่ง",
     "webShipping": "ค่าจัดส่งหน้าร้านออนไลน์",
-    "storefront": "ดูหน้าร้าน"
+    "storefront": "จัดการข้อมูลร้าน"
   },
   "auth": {
     "loginTitle": "เข้าสู่ระบบ",
