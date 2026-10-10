@@ -89,7 +89,7 @@ export function ShippingZonesView(vm: VM) {
                     z.zone_code === FALLBACK_ZONE ? (
                       <Tag color={NOTICE_TAG.catchAllZone} className="!m-0">{t("shippingZones.fallbackTag")}</Tag>
                     ) : z.provinces.length === 0 ? (
-                      <span className="text-gray-400">{t("shippingZones.noProvinces")}</span>
+                      <span className="text-gray-500">{t("shippingZones.noProvinces")}</span>
                     ) : (
                       <span className="flex flex-wrap gap-1">
                         {z.provinces.slice(0, PROVINCES_SHOWN).map((p) => (

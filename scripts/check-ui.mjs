@@ -98,10 +98,13 @@ const ANT_COLORS = new Set([
 
 const RULES = {
   "no-gray-400": {
-    doc: "docs/THEME.md §4 — คอนทราสต์ไม่ผ่าน WCAG AA · ใช้ text-gray-600/700 หรือ --text-muted",
+    doc: "docs/THEME.md §4 — gray-400 ได้คอนทราสต์ 2.54:1 ตก WCAG AA · ข้อความรองใช้ gray-500 ขึ้นไป",
     scan(src) {
       const hits = [];
-      for (const m of src.matchAll(/text-gray-400/g)) hits.push({ line: lineOf(src, m.index), text: "text-gray-400" });
+      // จับทั้ง text-gray-400 และ placeholder-gray-400 (syntax Tailwind v3 ที่ v4 ไม่รองรับแล้ว
+      // — เคยหลุดรอดมาได้เพราะกฎเดิมดักแค่ "text-")
+      for (const m of src.matchAll(/(?:text|placeholder)-gray-400|placeholder:text-gray-400/g))
+        hits.push({ line: lineOf(src, m.index), text: m[0] });
       return hits;
     },
   },

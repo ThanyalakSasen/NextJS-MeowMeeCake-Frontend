@@ -109,7 +109,7 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
             </div>
           ))}
           {(round.items ?? []).length === 0 && (
-            <p className="py-4 text-center text-sm text-gray-400">{t("preorderRound.noItems")}</p>
+            <p className="py-4 text-center text-sm text-gray-500">{t("preorderRound.noItems")}</p>
           )}
         </div>
       </div>

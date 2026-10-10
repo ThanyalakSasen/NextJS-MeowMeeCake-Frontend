@@ -21,7 +21,7 @@ export function SearchInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder ?? t("search")}
-      prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />}
+      prefix={<MagnifyingGlassIcon className="w-4 h-4 text-gray-500" />}
       className={className}
       style={{ maxWidth: 280 }}
     />

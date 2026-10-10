@@ -83,8 +83,8 @@ export function ReviewCard({
             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
               <StarRating rating={r.rating} />
               <span>{r.userName || t("reviews.customer")}</span>
-              <span className="text-gray-400">· {formatDate(r.created_at, locale, { withTime: true })}</span>
-              {r.orderNo && <span className="font-mono text-gray-400">· {r.orderNo}</span>}
+              <span className="text-gray-500">· {formatDate(r.created_at, locale, { withTime: true })}</span>
+              {r.orderNo && <span className="font-mono text-gray-500">· {r.orderNo}</span>}
               {r.isPreorder && <span className="rounded bg-sky-50 px-1.5 text-[10px] text-sky-700">{t("reviews.preorder")}</span>}
             </div>
           </div>

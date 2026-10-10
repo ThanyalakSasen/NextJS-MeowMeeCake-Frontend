@@ -116,7 +116,7 @@ export function WeeklyMarketsEditor({
                 <span className="flex flex-wrap items-center gap-2">
                   <TimeSelect value={m.open_time} disabled={!editable} ariaLabel={t("storeInfo.markets.openTime")}
                     onChange={(v) => onField(i, "open_time", v)} />
-                  <span className="text-xs text-gray-400">{t("storeInfo.markets.to")}</span>
+                  <span className="text-xs text-gray-500">{t("storeInfo.markets.to")}</span>
                   <TimeSelect value={m.close_time} disabled={!editable} ariaLabel={t("storeInfo.markets.closeTime")}
                     onChange={(v) => onField(i, "close_time", v)} />
                 </span>

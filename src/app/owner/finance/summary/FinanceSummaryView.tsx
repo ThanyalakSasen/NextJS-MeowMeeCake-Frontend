@@ -95,7 +95,7 @@ export function FinanceSummaryView(vm: VM) {
             <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white">
               <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                 <p className="text-sm font-semibold text-brown-900">{t("finance.statementTitle")}</p>
-                <span className="text-sm text-gray-400">{vm.periodLabel}</span>
+                <span className="text-sm text-gray-500">{vm.periodLabel}</span>
               </div>
               <PLStatementTable rows={vm.pnlRows} />
               {/* mt-auto: หมายเหตุชิดล่างเสมอ ถ้าการ์ดถูกยืดตามตารางเปรียบเทียบที่ยาวกว่า */}

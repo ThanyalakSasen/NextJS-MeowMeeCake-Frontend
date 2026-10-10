@@ -38,7 +38,7 @@ export function ProductCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={resolveUploadUrl(product.product_img[0])} alt={product.product_name_th} className="h-full w-full object-cover" />
         ) : (
-          <CakeIcon className="h-10 w-10 text-gray-400" aria-hidden="true" />
+          <CakeIcon className="h-10 w-10 text-gray-500" aria-hidden="true" />
         )}
         {/* ประเภทสินค้าเป็นป้ายสีทับมุมซ้ายบนของรูป — เห็นได้ทันที และไม่กินบรรทัดในส่วนเนื้อหา */}
         <span

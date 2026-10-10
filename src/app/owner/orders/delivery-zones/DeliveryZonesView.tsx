@@ -84,7 +84,7 @@ export function DeliveryZonesView(vm: VM) {
                   key: "name",
                   title: t("deliveryZones.fields.name"),
                   width: 200,
-                  render: (z) => <span className={`font-semibold ${z.is_active ? "text-brown-800" : "text-gray-400"}`}>{z.zone_name}</span>,
+                  render: (z) => <span className={`font-semibold ${z.is_active ? "text-brown-800" : "text-gray-500"}`}>{z.zone_name}</span>,
                 },
                 {
                   key: "provinces",

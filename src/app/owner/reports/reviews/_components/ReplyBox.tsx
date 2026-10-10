@@ -51,14 +51,14 @@ export function ReplyBox({ rating, reply, suggestions, canEdit, onSave }: {
         label: (
           <div className="flex items-start justify-between gap-3 py-0.5">
             <span className="line-clamp-2 whitespace-normal text-xs">{s.text}</span>
-            <span className="shrink-0 text-[10px] text-gray-400">{t("reviews.reply.usedTimes", { n: s.used_count, rating: s.rating_avg.toFixed(1) })}</span>
+            <span className="shrink-0 text-[10px] text-gray-500">{t("reviews.reply.usedTimes", { n: s.used_count, rating: s.rating_avg.toFixed(1) })}</span>
           </div>
         ),
       }));
     return (
       <div className="mt-2 flex flex-col gap-1.5">
         <div className="flex flex-wrap items-center gap-1">
-          <span className="mr-0.5 text-[11px] text-gray-400">{t("reviews.reply.templates")}</span>
+          <span className="mr-0.5 text-[11px] text-gray-500">{t("reviews.reply.templates")}</span>
           {templates.map((tpl) => (
             <button
               key={tpl.key}
@@ -86,7 +86,7 @@ export function ReplyBox({ rating, reply, suggestions, canEdit, onSave }: {
           />
         </AutoComplete>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] text-gray-400">{text.length}/{MAX_REPLY}</span>
+          <span className="text-[11px] text-gray-500">{text.length}/{MAX_REPLY}</span>
           <div className="flex gap-2">
             {current && (
               <Button size="small" danger type="text" disabled={saving} onClick={() => void save("")}>
@@ -111,7 +111,7 @@ export function ReplyBox({ rating, reply, suggestions, canEdit, onSave }: {
         <div className="flex items-center justify-between gap-2">
           <p className="m-0 text-[11px] font-semibold text-brown-700">
             {t("reviews.reply.shopReplied")}
-            {reply?.replied_at && <span className="font-normal text-gray-400"> · {formatDate(reply.replied_at, locale, { withTime: true })}</span>}
+            {reply?.replied_at && <span className="font-normal text-gray-500"> · {formatDate(reply.replied_at, locale, { withTime: true })}</span>}
           </p>
           {canEdit && (
             <button type="button" onClick={() => { setText(current); setEditing(true); }} className="inline-flex items-center gap-1 text-[11px] text-brown-600 hover:underline">

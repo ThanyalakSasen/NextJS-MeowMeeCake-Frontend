@@ -128,7 +128,7 @@ export function CategoryManagerDialog({
                             onChange={(v) => manager.onToggleShipping?.(c.id, v)}
                           />
                           {t("categories.shipsNationwide")}
-                          {c.shipsNationwideAuto && <span className="text-gray-400">*</span>}
+                          {c.shipsNationwideAuto && <span className="text-gray-500">*</span>}
                         </label>
                       </Tooltip>
                     )}

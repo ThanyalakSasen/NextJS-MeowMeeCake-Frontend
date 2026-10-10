@@ -174,7 +174,7 @@ export function RoundFormModal({
           );
         })}
         {rows.length > 0 && (
-          <div className="grid gap-2 text-xs text-gray-400" style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 0.8fr 24px" }}>
+          <div className="grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 0.8fr 24px" }}>
             <span>{t("preorderRound.colProduct")}</span>
             <span>{t("preorderRound.colPriceOverride")}</span>
             <span>{t("preorderRound.colMinQty")}</span>

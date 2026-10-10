@@ -178,7 +178,7 @@ function CartContent() {
                           onClick={() => removeMutation.mutate(item._id)}
                           disabled={busy}
                           aria-label={t("removeItem", { name: product ? localName(product.product_name_th, product.product_name_eng) : t("product") })}
-                          className="rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                          className="rounded-lg p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                         >
                           <FaTrashAlt />
                         </button>

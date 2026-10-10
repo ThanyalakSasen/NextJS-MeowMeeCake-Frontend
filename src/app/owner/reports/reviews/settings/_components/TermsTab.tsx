@@ -29,7 +29,7 @@ export function TermsTab({ vm }: { vm: VM }) {
             options={[{ value: "all", label: t("reviewSettings.terms.allAspects") }, ...vm.aspectOptions]}
             onChange={(v: string) => vm.setTermAspect(v)}
           />
-          <span className="text-xs text-gray-400">{t("reviewSettings.terms.count", { shown: vm.terms.length, total: vm.termTotal })}</span>
+          <span className="text-xs text-gray-500">{t("reviewSettings.terms.count", { shown: vm.terms.length, total: vm.termTotal })}</span>
           {vm.perm.create && (
             <Button className="ml-auto" type="primary" icon={actionIcon("add")} onClick={vm.openNewTerm} disabled={vm.aspectOptions.length === 0}>
               {t("reviewSettings.terms.add")}

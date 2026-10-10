@@ -61,7 +61,7 @@ export function PermissionsView(vm: VM) {
                         {vm.selectedRole.role_type}
                       </Tag>
                     </div>
-                    <p className="mt-0.5 text-xs text-gray-400">
+                    <p className="mt-0.5 text-xs text-gray-500">
                       {t("permissions.members", { n: vm.memberCounts[vm.selectedRole._id] ?? 0 })}
                     </p>
                   </div>
@@ -100,11 +100,11 @@ export function PermissionsView(vm: VM) {
                   {[
                     { v: vm.summary.total, l: t("permissions.summaryTotal"), c: "text-brown-900" },
                     { v: vm.summary.on, l: t("permissions.summaryOn"), c: "text-green-600" },
-                    { v: vm.summary.total - vm.summary.on, l: t("permissions.summaryOff"), c: "text-gray-400" },
+                    { v: vm.summary.total - vm.summary.on, l: t("permissions.summaryOff"), c: "text-gray-500" },
                   ].map((s) => (
                     <div key={s.l} className="border-r border-gray-100 py-3 last:border-0">
                       <p className={`text-lg font-semibold ${s.c}`}>{s.v}</p>
-                      <p className="text-xs text-gray-400">{s.l} · {t("permissions.summaryUnit")}</p>
+                      <p className="text-xs text-gray-500">{s.l} · {t("permissions.summaryUnit")}</p>
                     </div>
                   ))}
                 </div>

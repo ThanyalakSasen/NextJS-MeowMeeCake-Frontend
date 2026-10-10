@@ -55,7 +55,7 @@ export function ProductImageUpload({
       onRemove={(file) => onChange?.(value.filter((url) => url !== file.uid))}
     >
       {value.length >= MAX_IMAGES ? null : (
-        <span className="flex flex-col items-center gap-1 text-xs text-gray-400">
+        <span className="flex flex-col items-center gap-1 text-xs text-gray-500">
           {actionIcon("add", undefined, "h-5 w-5")}
           {uploading ? t("common.loading") : t("common.add")}
         </span>

@@ -124,7 +124,7 @@ function ComponentsTab(vm: VM) {
       title: t("recipes.usedInTitle"),
       render: (c) => (
         c.usedIn.length === 0
-          ? <span className="text-gray-400">{t("recipes.notUsedYet")}</span>
+          ? <span className="text-gray-500">{t("recipes.notUsedYet")}</span>
           : <div className="flex flex-wrap gap-1">
               {c.usedIn.map((name) => (
                 <span key={name} className="rounded bg-pink-50 px-1.5 py-0.5 text-sm font-medium text-pink-700">{name}</span>
@@ -135,7 +135,7 @@ function ComponentsTab(vm: VM) {
     {
       key: "updated",
       title: t("common.status"),
-      render: (c) => <span className="text-gray-400">{formatDate(c.updated_at, locale)}</span>,
+      render: (c) => <span className="text-gray-500">{formatDate(c.updated_at, locale)}</span>,
     },
   ];
 

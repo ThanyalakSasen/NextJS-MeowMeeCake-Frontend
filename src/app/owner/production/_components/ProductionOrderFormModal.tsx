@@ -145,7 +145,7 @@ export function ProductionOrderFormModal({
               min={1}
               value={row.planned_qty}
               onChange={(v) => updateRow(row.key, { planned_qty: Number(v) || 1 })}
-              suffix={<span className="text-xs text-gray-400">{products.find((p) => p._id === row.product_id)?.unit_abbr ?? ""}</span>}
+              suffix={<span className="text-xs text-gray-500">{products.find((p) => p._id === row.product_id)?.unit_abbr ?? ""}</span>}
             />
             <Input
               size="small"

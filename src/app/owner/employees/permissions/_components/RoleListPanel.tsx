@@ -36,7 +36,7 @@ export function RoleListPanel({
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-brown-800">{role.role_name}</p>
-              <p className="mt-0.5 text-xs text-gray-400">
+              <p className="mt-0.5 text-xs text-gray-500">
                 {t("permissions.members", { n: memberCounts[role._id] ?? 0 })}
               </p>
             </div>

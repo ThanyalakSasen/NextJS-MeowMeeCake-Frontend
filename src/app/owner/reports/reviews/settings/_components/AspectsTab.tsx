@@ -23,9 +23,9 @@ export function AspectsTab({ vm }: { vm: VM }) {
           <p className="m-0 text-sm font-semibold text-brown-800">
             {t("reviewSettings.aspects.activeCount", { active: vm.activeCount, total: vm.aspects.length, max: MAX_ASPECTS })}
           </p>
-          <p className="m-0 text-xs text-gray-400">{t("reviewSettings.aspects.howItWorks")}</p>
+          <p className="m-0 text-xs text-gray-500">{t("reviewSettings.aspects.howItWorks")}</p>
         </div>
-        <p className="m-0 text-xs text-gray-400">{t("reviewSettings.aspects.preview")}</p>
+        <p className="m-0 text-xs text-gray-500">{t("reviewSettings.aspects.preview")}</p>
         {active.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {active.map((a) => (
@@ -100,7 +100,7 @@ export function AspectsTab({ vm }: { vm: VM }) {
                 ) : (
                   <span className="flex min-w-0 flex-1 items-center gap-1.5">
                     <span className="truncate text-sm font-semibold text-brown-800">{a.aspect_name_th}</span>
-                    {a.aspect_name_eng && a.aspect_name_eng !== a.aspect_name_th && <span className="truncate text-xs text-gray-400">· {a.aspect_name_eng}</span>}
+                    {a.aspect_name_eng && a.aspect_name_eng !== a.aspect_name_th && <span className="truncate text-xs text-gray-500">· {a.aspect_name_eng}</span>}
                     {canEdit && (
                       <Button size="small" type="text" aria-label={t("reviewSettings.aspects.rename")} icon={actionIcon("edit", "small")}
                         onClick={() => vm.startRename(a)} />

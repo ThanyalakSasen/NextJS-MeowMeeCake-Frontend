@@ -114,10 +114,10 @@ export function BannerCard({
           การ์ดจึงสูงเท่ากันทุกใบไม่ว่าข้อความจะยาวแค่ไหน · ข้อความเต็มดูได้จาก tooltip (title) */}
       <div className="px-3 py-2.5">
         <p className="truncate text-sm font-semibold text-brown-800" title={banner.banner_name}>{banner.banner_name}</p>
-        <p className="mt-0.5 truncate text-xs text-gray-400" title={banner.banner_link || undefined}>
+        <p className="mt-0.5 truncate text-xs text-gray-500" title={banner.banner_link || undefined}>
           {banner.banner_link || "—"}
         </p>
-        <p className="mt-0.5 truncate text-xs text-gray-400" title={dateText}>{dateText}</p>
+        <p className="mt-0.5 truncate text-xs text-gray-500" title={dateText}>{dateText}</p>
       </div>
 
       <div className="mt-auto flex items-center justify-between border-t border-gray-100 px-3 py-2">

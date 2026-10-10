@@ -29,7 +29,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
 
   const field = (label: string, node: React.ReactNode) => (
     <label className="flex min-w-0 flex-col gap-0.5">
-      <span className="text-[11px] text-gray-400">{label}</span>
+      <span className="text-[11px] text-gray-500">{label}</span>
       {node}
     </label>
   );
@@ -39,7 +39,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput value={search} onChange={setSearch} placeholder={t("reviews.searchPlaceholder")} />
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs text-gray-400">{t("reviews.sortLabel")}</span>
+          <span className="text-xs text-gray-500">{t("reviews.sortLabel")}</span>
           <Select
             size="small"
             style={{ width: 150 }}

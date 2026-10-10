@@ -63,7 +63,7 @@ export function CouponCard({
               <p className="font-mono text-sm font-bold tracking-wider text-brown-800">{coupon.promotion_code}</p>
               {/* ชื่อตัดที่ 2 บรรทัด + เผื่อที่ 2 บรรทัดเสมอ (แม้ชื่อสั้นหรือไม่มีชื่อ) ให้มูลค่าส่วนลดด้านล่างอยู่ระดับเดียวกันทุกใบ
                   leading-5 แทนค่าเริ่มต้นของ text-xs — สระบน/ล่างของภาษาไทยไม่โดน line-clamp ตัด */}
-              <p className="mt-0.5 line-clamp-2 min-h-10 text-xs leading-5 text-gray-400" title={coupon.promotion_name || undefined}>
+              <p className="mt-0.5 line-clamp-2 min-h-10 text-xs leading-5 text-gray-500" title={coupon.promotion_name || undefined}>
                 {coupon.promotion_name}
               </p>
             </div>
@@ -81,19 +81,19 @@ export function CouponCard({
 
           <div className="mb-1">
             <p className="text-2xl font-bold" style={{ color: typeCfg.color }}>{discountLabel}</p>
-            <p className="text-xs text-gray-400">{t(`enums.discountType.${coupon.discount_type}`)}</p>
+            <p className="text-xs text-gray-500">{t(`enums.discountType.${coupon.discount_type}`)}</p>
           </div>
 
           {coupon.usage_limit ? (
             <div className="mb-2">
-              <div className="mb-1 flex items-center justify-between text-xs text-gray-400">
+              <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
                 <span>{t("coupons.usageOf", { used: coupon.used_count, limit: coupon.usage_limit })}</span>
                 <span>{pct}%</span>
               </div>
               <ProgressBar percent={pct} color={typeCfg.color} />
             </div>
           ) : (
-            <p className="mb-2 text-xs text-gray-400">{t("coupons.usageUnlimited", { used: coupon.used_count })}</p>
+            <p className="mb-2 text-xs text-gray-500">{t("coupons.usageUnlimited", { used: coupon.used_count })}</p>
           )}
 
           {/* mt-auto: ช่วงวันที่/ขั้นต่ำชิดล่าง — ที่ว่างจากการยืดการ์ดไปอยู่เหนือบรรทัดนี้แทน */}

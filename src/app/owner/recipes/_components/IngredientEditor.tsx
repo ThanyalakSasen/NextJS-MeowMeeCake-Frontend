@@ -60,7 +60,7 @@ export function IngredientEditor({
             step={0.01}
             value={row.quantity}
             onChange={(v) => updateQty(i, Number(v) || 0)}
-            suffix={<span className="text-xs text-gray-400">{row.unit_abbr}</span>}
+            suffix={<span className="text-xs text-gray-500">{row.unit_abbr}</span>}
           />
           <Button
             size="small" type="text" danger

@@ -47,7 +47,7 @@ export function NotificationHistoryView(vm: VM) {
       render: (n) => (
         <div>
           <p className={n.is_read ? "text-gray-600" : "font-semibold text-brown-800"}>{n.title}</p>
-          <p className="mt-0.5 line-clamp-1 text-xs text-gray-400">{n.message}</p>
+          <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">{n.message}</p>
         </div>
       ),
     },

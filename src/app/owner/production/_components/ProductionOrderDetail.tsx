@@ -69,7 +69,7 @@ export function ProductionOrderDetail({
             <div key={i} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
               <div>
                 <p className="text-sm text-gray-800">{it.product_name}</p>
-                {it.notes && <p className="text-sm text-gray-400">{it.notes}</p>}
+                {it.notes && <p className="text-sm text-gray-500">{it.notes}</p>}
               </div>
               <p className="text-sm font-medium text-brown-900">{it.planned_qty} {it.unit_abbr}</p>
             </div>

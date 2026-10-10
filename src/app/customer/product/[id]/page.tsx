@@ -273,7 +273,7 @@ function ProductDetailContent() {
                   title={t("shareHint")}
                   className={iconButton}
                 >
-                  {sharing ? <FaSpinner className="animate-spin text-sm text-gray-400" /> : <FaShareAlt className="text-sm text-[#8C5A3C]" />}
+                  {sharing ? <FaSpinner className="animate-spin text-sm text-gray-500" /> : <FaShareAlt className="text-sm text-[#8C5A3C]" />}
                 </button>
                 <button
                   type="button"
@@ -293,7 +293,7 @@ function ProductDetailContent() {
                   className={iconButton}
                 >
                   {favorites.pendingId === product._id ? (
-                    <FaSpinner className="animate-spin text-sm text-gray-400" />
+                    <FaSpinner className="animate-spin text-sm text-gray-500" />
                   ) : favorite ? (
                     <FaHeart className="text-base text-red-500" />
                   ) : (
@@ -306,7 +306,7 @@ function ProductDetailContent() {
             <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#4A342E]">
               <span>{t("rating")}</span>
               <span className="text-[#8C5A3C] font-bold">{rating.toFixed(1)}</span>
-              <span className="text-gray-400">|</span>
+              <span className="text-gray-500">|</span>
               <a href="#reviews-title" className="text-gray-500 font-normal hover:underline">{t("reviews", { n: product.review_count || 0 })}</a>
             </div>
 
@@ -316,7 +316,7 @@ function ProductDetailContent() {
               <span className="text-xl font-semibold text-gray-600">{unitName ? t("perUnit", { unit: unitName }) : t("baht")}</span>
               {discounted && (
                 <>
-                  <span className="text-base text-gray-400 line-through">{t("regularPrice", { price: (regularPrice + extra).toLocaleString() })}</span>
+                  <span className="text-base text-gray-500 line-through">{t("regularPrice", { price: (regularPrice + extra).toLocaleString() })}</span>
                   <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2.5 py-1 rounded-xl">{t("sale", { percent: Math.round((1 - (price - extra) / regularPrice) * 100) })}</span>
                 </>
               )}

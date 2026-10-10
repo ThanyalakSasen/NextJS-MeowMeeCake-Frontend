@@ -38,7 +38,7 @@ export function FinanceExpensesView(vm: VM) {
       render: (e) => (
         <div>
           <p className="line-clamp-2 font-medium text-brown-900" title={e.description}>{e.description}</p>
-          {e.vendor && <p className="line-clamp-1 text-sm text-gray-400" title={e.vendor}>{e.vendor}</p>}
+          {e.vendor && <p className="line-clamp-1 text-sm text-gray-500" title={e.vendor}>{e.vendor}</p>}
         </div>
       ),
     },
@@ -196,7 +196,7 @@ export function FinanceExpensesView(vm: VM) {
                   <span className="font-medium text-gray-700">{t("finance.netProfit")}</span>
                   <span className={`font-bold ${vm.netProfit >= 0 ? "text-green-600" : "text-red-500"}`}>{formatCurrency(vm.netProfit, locale)}</span>
                 </div>
-                <p className="text-right text-gray-400">
+                <p className="text-right text-gray-500">
                   {vm.monthIncome > 0 ? t("finance.profitMargin", { pct: ((vm.netProfit / vm.monthIncome) * 100).toFixed(1) }) : t("finance.noIncomeThisMonth")}
                 </p>
               </div>

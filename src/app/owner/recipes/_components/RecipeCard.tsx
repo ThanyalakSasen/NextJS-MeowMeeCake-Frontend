@@ -52,7 +52,7 @@ export function RecipeCard({
             <p className="line-clamp-2 text-sm font-semibold leading-5 text-brown-900" title={recipe.recipe_name}>
               {recipe.recipe_name}
             </p>
-            <p className="mt-0.5 flex items-center gap-1 text-sm leading-5 text-gray-400" title={recipe.product_name}>
+            <p className="mt-0.5 flex items-center gap-1 text-sm leading-5 text-gray-500" title={recipe.product_name}>
               <LinkIcon className="h-3 w-3 shrink-0" />
               <span className="truncate">{recipe.product_name}</span>
             </p>
@@ -61,10 +61,10 @@ export function RecipeCard({
       </div>
 
       <div className="flex-1 px-3.5 py-2.5">
-        <p className="mb-1.5 text-sm font-semibold uppercase tracking-wider text-gray-400">{t("recipes.componentsUsedTitle")}</p>
+        <p className="mb-1.5 text-sm font-semibold uppercase tracking-wider text-gray-500">{t("recipes.componentsUsedTitle")}</p>
         {/* ช่องรายการสูงคงที่ = MAX_ITEM_ROWS × h-7 (แม้มีน้อยกว่า / ไม่มีเลย) */}
         <div className="flex h-21 flex-col">
-          {isEmpty && <p className="flex h-7 items-center text-sm text-gray-400">{t("recipes.noIngredients")}</p>}
+          {isEmpty && <p className="flex h-7 items-center text-sm text-gray-500">{t("recipes.noIngredients")}</p>}
           {shownComponents.map((ref) => (
             <div key={ref.component_id} className="flex h-7 shrink-0 items-center py-0.5">
               <div className="flex h-full w-full items-center gap-1.5 rounded bg-violet-50 px-2 text-sm text-violet-700" title={ref.component_name}>
@@ -77,12 +77,12 @@ export function RecipeCard({
             <div key={ing.ingredient_id} className="flex h-7 shrink-0 items-center gap-1.5 text-sm text-gray-500">
               <span className="h-1 w-1 shrink-0 rounded-full bg-gray-300" />
               <span className="flex-1 truncate" title={ing.ingredient_name}>{ing.ingredient_name}</span>
-              <span className="shrink-0 text-gray-400">{ing.quantity} {ing.unit_abbr}</span>
+              <span className="shrink-0 text-gray-500">{ing.quantity} {ing.unit_abbr}</span>
             </div>
           ))}
         </div>
         {/* เผื่อที่บรรทัดนี้เสมอ (h-5) — มีหรือไม่มีรายการที่ซ่อนอยู่ การ์ดก็สูงเท่ากัน */}
-        <p className="h-5 text-sm leading-5 text-gray-400">
+        <p className="h-5 text-sm leading-5 text-gray-500">
           {hiddenCount > 0 && t("recipes.moreItems", { n: hiddenCount })}
         </p>
       </div>
@@ -94,7 +94,7 @@ export function RecipeCard({
       </div>
 
       <div className="flex items-center justify-between px-3.5 py-2">
-        <span className="text-sm text-gray-400">{t("recipes.updatedAt", { date: formatDate(recipe.updated_at, locale) })}</span>
+        <span className="text-sm text-gray-500">{t("recipes.updatedAt", { date: formatDate(recipe.updated_at, locale) })}</span>
         <div className="flex items-center gap-1.5">
           <Button size="small" type="text" icon={actionIcon("view", "small")} onClick={onView} aria-label={t("common.view")} />
           {canUpdate && (

@@ -165,7 +165,7 @@ export function StoreInfoView(vm: VM) {
                   />
                 </FormField>
                 <FormField label={t("storeInfo.contact.systemEmail")}>
-                  <Input value={vm.systemEmail || "—"} disabled suffix={<span className="text-xs text-gray-400">{t("storeInfo.contact.fromSystem")}</span>} />
+                  <Input value={vm.systemEmail || "—"} disabled suffix={<span className="text-xs text-gray-500">{t("storeInfo.contact.fromSystem")}</span>} />
                 </FormField>
               </div>
               <div className="grid grid-cols-1 gap-3 border-t border-gray-100 pt-3 md:grid-cols-2">

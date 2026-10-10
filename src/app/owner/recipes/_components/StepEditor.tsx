@@ -50,7 +50,7 @@ export function StepEditor({
                 onChange={(v) => update(i, { duration_minutes: v === null || v === undefined ? null : Number(v) })}
                 placeholder="0"
               />
-              <span className="text-xs text-gray-400">{t("recipes.stepMinutes")}</span>
+              <span className="text-xs text-gray-500">{t("recipes.stepMinutes")}</span>
             </div>
           </div>
           <Button

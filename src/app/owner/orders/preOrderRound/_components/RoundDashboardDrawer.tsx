@@ -52,7 +52,7 @@ export function RoundDashboardDrawer(vm: DVM) {
             ) : (
               r.products.map((p) => (
                 <div key={p.round_item_id} className="flex items-center gap-3">
-                  <span className={`w-40 shrink-0 truncate text-sm ${p.is_active ? "text-gray-800" : "text-gray-400"}`} title={p.product_name_th}>
+                  <span className={`w-40 shrink-0 truncate text-sm ${p.is_active ? "text-gray-800" : "text-gray-500"}`} title={p.product_name_th}>
                     {p.product_name_th}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -138,7 +138,7 @@ export function RoundDashboardDrawer(vm: DVM) {
                             <span>
                               {l.product_name_th} ×{l.quantity}
                               {lineExtras(l).map((x) => (
-                                <span key={x} className="block text-gray-400">{x}</span>
+                                <span key={x} className="block text-gray-500">{x}</span>
                               ))}
                             </span>
                             <span className="shrink-0">{money(l.total_price)}</span>

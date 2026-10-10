@@ -94,7 +94,7 @@ export function CouponsView(vm: VM) {
                 <button
                   type="button"
                   onClick={vm.openAdd}
-                  className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                  className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-600"
                 >
                   {actionIcon("add", undefined, "h-7 w-7")}
                   <span className="text-sm font-medium">{t("coupons.addCoupon")}</span>

@@ -31,7 +31,7 @@ export function PermissionMatrix({
       {PERMISSION_GROUPS.map((group, gi) => (
         <div key={group.sectionKey}>
           {gi > 0 && <Divider className="!my-0" />}
-          <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
             {sectionLabel(group.sectionKey)}
           </p>
           <Collapse
@@ -50,7 +50,7 @@ export function PermissionMatrix({
                       className="flex shrink-0 items-center gap-2"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <span className="text-xs text-gray-400">{on}/5</span>
+                      <span className="text-xs text-gray-500">{on}/5</span>
                       {canEdit && (
                         <Button
                           size="small"

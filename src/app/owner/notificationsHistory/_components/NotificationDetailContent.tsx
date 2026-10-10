@@ -35,7 +35,7 @@ export function NotificationDetailContent({ notif }: { notif: NotificationDTO })
       <div className="flex flex-col gap-2.5">
         {meta.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-3">
-            <span className="w-24 shrink-0 text-sm text-gray-400">{label}</span>
+            <span className="w-24 shrink-0 text-sm text-gray-500">{label}</span>
             <div className="flex-1 text-right text-sm text-gray-700">{value}</div>
           </div>
         ))}

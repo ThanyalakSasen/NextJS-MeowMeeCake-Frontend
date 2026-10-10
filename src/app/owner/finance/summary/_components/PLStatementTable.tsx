@@ -5,7 +5,7 @@ import { formatCurrency } from "@/i18n/format";
 import type { PnLRow } from "../useFinanceSummaryViewModel";
 
 const ROW_STYLE: Record<PnLRow["kind"], string> = {
-  header: "text-sm font-semibold uppercase tracking-wider text-gray-400",
+  header: "text-sm font-semibold uppercase tracking-wider text-gray-500",
   line: "pl-3 text-sm text-gray-600",
   subtotal: "text-sm font-semibold text-gray-700",
   gross: "text-sm font-semibold text-green-700",

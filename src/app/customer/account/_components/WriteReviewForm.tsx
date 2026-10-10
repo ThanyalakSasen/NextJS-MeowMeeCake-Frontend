@@ -348,7 +348,7 @@ export default function WriteReviewForm({
       <div className="space-y-3 border-t border-stone-100 pt-5">
         <h3 className="text-sm font-bold text-stone-800">{tw("writeMore")}</h3>
         <textarea
-          className="w-full rounded-xl border border-[#8C5A3C]/25 bg-white px-3.5 py-2.5 text-sm text-[#4A342E] outline-none transition placeholder:text-gray-400 focus:border-[#8C5A3C] focus:ring-2 focus:ring-[#8C5A3C]/20"
+          className="w-full rounded-xl border border-[#8C5A3C]/25 bg-white px-3.5 py-2.5 text-sm text-[#4A342E] outline-none transition placeholder:text-gray-500 focus:border-[#8C5A3C] focus:ring-2 focus:ring-[#8C5A3C]/20"
           rows={4}
           maxLength={MAX_TEXT}
           placeholder={tw("placeholder")}

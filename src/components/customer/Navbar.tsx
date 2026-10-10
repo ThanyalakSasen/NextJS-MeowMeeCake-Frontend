@@ -136,7 +136,7 @@ export default function Navbar() {
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder={t("searchPlaceholder")}
         aria-label={t("searchAria")}
-        className="w-full h-11 pl-4 pr-14 text-base text-[#4A342E] bg-white placeholder-gray-400 rounded-xl outline-none focus:ring-2 focus:ring-white shadow-inner transition"
+        className="w-full h-11 pl-4 pr-14 text-base text-[#4A342E] bg-white placeholder:text-gray-500 rounded-xl outline-none focus:ring-2 focus:ring-white shadow-inner transition"
       />
       <button
         type="submit"

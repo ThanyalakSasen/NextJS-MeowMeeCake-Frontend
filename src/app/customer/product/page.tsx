@@ -192,7 +192,7 @@ function ProductListContent() {
                 <p className="text-base text-gray-500 font-medium mb-1">
                   {searchQuery ? t("noMatch", { q: searchQuery }) : t("noInCategory")}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-500">
                   {searchQuery
                     ? t("tryOtherSearch")
                     : t("tryOtherCategory")}

@@ -133,7 +133,7 @@ export function MainRecipeModal({
                 min={1}
                 value={ref.quantity}
                 onChange={(v) => updateComponentRef(i, { quantity: Number(v) || 1 })}
-                suffix={<span className="text-xs text-gray-400">{t("recipes.batch")}</span>}
+                suffix={<span className="text-xs text-gray-500">{t("recipes.batch")}</span>}
               />
               <Button
                 size="small" type="text" danger

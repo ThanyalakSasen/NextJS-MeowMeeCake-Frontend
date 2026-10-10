@@ -104,7 +104,7 @@ export default function CustomizationPicker({
                   maxLength={o.max_text_length ?? CUSTOMIZATION_LIMITS.defaultTextLength}
                   placeholder={o.is_required ? t("required") : t("notRequired")}
                   onChange={(e) => setOption(o._id, e.target.value || undefined)}
-                  className="w-full rounded-xl border border-[#8C5A3C]/20 bg-white px-4 py-2.5 text-xs text-[#4A342E] transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8C5A3C]/40 sm:text-sm"
+                  className="w-full rounded-xl border border-[#8C5A3C]/20 bg-white px-4 py-2.5 text-xs text-[#4A342E] transition-all placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C5A3C]/40 sm:text-sm"
                 />
               </label>
             ) : (

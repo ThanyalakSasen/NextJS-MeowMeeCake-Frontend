@@ -33,7 +33,7 @@ export function UserLogView(vm: VM) {
       render: (r) => (
         <div>
           <p className="font-medium text-brown-800">{r.userName}</p>
-          <p className="text-xs text-gray-400">{r.roleName}</p>
+          <p className="text-xs text-gray-500">{r.roleName}</p>
         </div>
       ),
     },
@@ -59,7 +59,7 @@ export function UserLogView(vm: VM) {
         <div>
           <p className="text-gray-700">{r.action}</p>
           {r.entity && (
-            <p className="mt-0.5 text-xs text-gray-400">
+            <p className="mt-0.5 text-xs text-gray-500">
               {t.has(`entities.${r.entity}`) ? t(`entities.${r.entity}`) : t("entities.fallback")}
               {r.entity_id && <span className="ml-1 font-mono">{r.entity_id}</span>}
             </p>
@@ -70,7 +70,7 @@ export function UserLogView(vm: VM) {
     {
       key: "ip",
       title: t("userLog.colIp"),
-      render: (r) => <span className="font-mono text-sm text-gray-400">{r.ip_address ?? "—"}</span>,
+      render: (r) => <span className="font-mono text-sm text-gray-500">{r.ip_address ?? "—"}</span>,
     },
   ];
 
