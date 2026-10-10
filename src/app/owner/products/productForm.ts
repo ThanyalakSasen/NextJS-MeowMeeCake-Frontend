@@ -26,15 +26,22 @@ export interface ProductFormValue {
   is_visible: boolean;
 }
 
-/** ค่าเริ่มต้นตอนเพิ่มสินค้าใหม่ (antd Form initialValues) */
-export const emptyProductForm: ProductFormValue = {
+/** ค่าเริ่มต้นตอนเพิ่มสินค้าใหม่ (antd Form initialValues)
+ *
+ *  เป็น Partial โดยตั้งใจ — นี่คือ "ฟอร์มที่ยังกรอกไม่เสร็จ" ไม่ใช่สินค้าที่สมบูรณ์
+ *  ช่องบังคับที่ยังไม่มีค่าที่ถูกต้องต้องปล่อยว่าง ให้ required rule เป็นคนทักท้วง
+ *
+ *  ⚠️ ห้ามเติมค่าหลอกลงช่องที่ rule ไม่ยอมรับ
+ *  เคยตั้ง product_price: 0 ทั้งที่ rule คือ min 0.01 — ช่องราคาจึงขึ้น
+ *  "ต้องมากกว่า 0" ตั้งแต่เปิดหน้าโดยที่ผู้ใช้ยังไม่ได้กรอกอะไรเลย */
+export const emptyProductForm: Partial<ProductFormValue> = {
   product_name_th: "",
   product_name_eng: "",
   category_id: "",
   unit_id: "",
   is_preorder: false,
-  product_price: 0,
-  product_stock_quantity: 0,
+  // product_price ไม่ตั้งค่า — rule คือ min 0.01 เติม 0 ลงไปคือการปั้นค่าที่ผิดให้ตัวเอง
+  product_stock_quantity: 0, // 0 ถูกตาม rule (min 0) และมีความหมายจริง = ยังไม่มีของ
   product_img: [],
   is_visible: true,
 };
