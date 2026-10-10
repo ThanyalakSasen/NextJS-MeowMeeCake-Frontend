@@ -63,20 +63,27 @@ export function DashboardView(vm: VM) {
           {/* grid 2 แถวจริง ซ้าย (กว้างกว่า) : ขวา = 2:1 บน lg — การ์ดที่อยู่แถวเดียวกันจึงสูงเท่ากัน
               (เดิมเป็น flex 2 คอลัมน์แยกกัน การ์ดคู่กันสูงไม่เท่ากัน) ความสูงเท่ากันทุกใบมาจาก .dashboard-widget
               แถว 1: ออเดอร์ล่าสุด | วัตถุดิบใกล้หมด · แถว 2: สินค้าขายดี | สถานะการผลิต
-              วางตำแหน่งด้วย col/row-start ตรง ๆ เพื่อให้ลำดับ DOM (= ลำดับบนจอเล็กที่ซ้อนแถวเดียว) เหมือนเดิม */}
+              วางตำแหน่งด้วย col/row-start ตรง ๆ เพื่อให้ลำดับ DOM (= ลำดับบนจอเล็กที่ซ้อนแถวเดียว) เหมือนเดิม
+              widget ของเมนูที่ไม่มีสิทธิ์ (vm.show) ไม่แสดง — ช่องนั้นว่าง แถวอื่นยังอยู่ตำแหน่งเดิม */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-            <div className="lg:col-span-2 lg:row-start-1">
-              <RecentOrdersWidget orders={vm.recentOrders} />
-            </div>
+            {vm.show.orders && (
+              <div className="lg:col-span-2 lg:row-start-1">
+                <RecentOrdersWidget orders={vm.recentOrders} />
+              </div>
+            )}
             <div className="lg:col-span-2 lg:row-start-2">
               <TopProductsWidget products={vm.topProducts} />
             </div>
-            <div className="lg:col-start-3 lg:row-start-1">
-              <LowStockWidget items={vm.lowStock} />
-            </div>
-            <div className="lg:col-start-3 lg:row-start-2">
-              <ProductionStatusWidget items={vm.productionStatus} />
-            </div>
+            {vm.show.ingredients && (
+              <div className="lg:col-start-3 lg:row-start-1">
+                <LowStockWidget items={vm.lowStock} />
+              </div>
+            )}
+            {vm.show.production && (
+              <div className="lg:col-start-3 lg:row-start-2">
+                <ProductionStatusWidget items={vm.productionStatus} />
+              </div>
+            )}
           </div>
         </>
       )}

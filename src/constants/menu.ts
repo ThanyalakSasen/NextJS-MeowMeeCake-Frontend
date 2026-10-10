@@ -32,8 +32,8 @@ export const MENU_SECTIONS: MenuSection[] = [
   {
     labelKey: "sectionOverview",
     items: [
-      // login-only ตั้งใจ ไม่ใส่ menuKey (แสดงเสมอ) — ปิด G1 (เดิมเข้าได้แค่ redirect หลัง login)
-      { labelKey: "dashboard", icon: "HomeIcon", href: "/owner/dashboard" },
+      // ผูก dashboard — ไม่มีสิทธิ์ = ซ่อน (widget ยิง /admin/dashboard/* ที่ต้อง dashboard.view · Final-Backlog P11)
+      { labelKey: "dashboard", icon: "HomeIcon", href: "/owner/dashboard", menuKey: "dashboard" },
       {
         labelKey: "reports",
         icon: "PresentationChartBarIcon",
