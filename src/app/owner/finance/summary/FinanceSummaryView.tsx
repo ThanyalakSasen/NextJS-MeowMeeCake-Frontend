@@ -5,8 +5,7 @@ import { DatePicker, EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DataTable, TypeTabBar, type Column } from "@/components/shared/data";
-import { LoadingSpin } from "@/components/shared/feedback";
-import { RetryButton } from "@/components/shared/actions";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatCurrency } from "@/i18n/format";
 import type { useFinanceSummaryViewModel } from "./useFinanceSummaryViewModel";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
@@ -53,10 +52,7 @@ export function FinanceSummaryView(vm: VM) {
       {vm.isLoading ? (
         <LoadingSpin />
       ) : vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetch} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : !vm.hasData ? (
         <EmptyState description={t("finance.noDataThisPeriod")} />
       ) : (

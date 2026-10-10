@@ -5,14 +5,14 @@ import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
-import { ConfirmDeletePopup } from "@/components/shared/feedback";
+import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
-import { DeleteButton, EditButton, RetryButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { useFinanceExpensesViewModel } from "./useFinanceExpensesViewModel";
 import { ExpenseFormModal } from "./_components/ExpenseFormModal";
 import { RecurringRemindersList } from "./_components/RecurringRemindersList";
@@ -141,10 +141,7 @@ export function FinanceExpensesView(vm: VM) {
             </div>
             <div className="expense-table-area">
               {vm.isError ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
-                  <p className="text-gray-600">{t("common.loadFailed")}</p>
-                  <RetryButton onClick={vm.refetch} />
-                </div>
+                <LoadFailed className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center" onRetry={vm.refetch} />
               ) : (
                 <DataTable
                   inCard

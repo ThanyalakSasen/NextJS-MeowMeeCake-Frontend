@@ -7,8 +7,8 @@ import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatDate, formatNumber } from "@/i18n/format";
 import { INGREDIENT_TXN_CONFIG } from "@/constants/enumConfig";
-import { RetryButton } from "@/components/shared/actions";
 import type { HistoryRow, useIngredientHistoryViewModel } from "./useIngredientHistoryViewModel";
+import { LoadFailed } from "@/components/shared/feedback";
 
 type VM = ReturnType<typeof useIngredientHistoryViewModel>;
 
@@ -96,10 +96,7 @@ export function IngredientHistoryView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>

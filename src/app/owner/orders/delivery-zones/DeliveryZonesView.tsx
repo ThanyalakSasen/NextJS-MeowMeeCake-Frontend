@@ -6,8 +6,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button, Card, Switch, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable } from "@/components/shared/data";
-import { ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
-import { DeleteButton, EditButton, RetryButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
+import { ConfirmDeletePopup, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { DeleteButton, EditButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import { formatCurrency } from "@/i18n/format";
 import type { DeliveryZone } from "@/types/deliveryZone";
 import type { useDeliveryZonesViewModel } from "./useDeliveryZonesViewModel";
@@ -37,10 +37,7 @@ export function DeliveryZonesView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : (

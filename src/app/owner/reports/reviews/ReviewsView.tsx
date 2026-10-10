@@ -8,8 +8,8 @@ import { ArrowDownTrayIcon, CheckIcon, Cog6ToothIcon, EyeSlashIcon } from "@hero
 import { Button, EmptyState, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { PaginationBar } from "@/components/shared/data";
-import { DetailDrawer, LoadingSpin } from "@/components/shared/feedback";
-import { RetryButton, modalButtonIcons } from "@/components/shared/actions";
+import { DetailDrawer, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { modalButtonIcons } from "@/components/shared/actions";
 import type { useReviewsViewModel } from "./useReviewsViewModel";
 import { ReviewFiltersBar } from "./_components/ReviewFiltersBar";
 import { ReviewCard } from "./_components/ReviewCard";
@@ -88,10 +88,7 @@ export function ReviewsView(vm: VM) {
         </div>
 
         {vm.isError ? (
-          <div className="flex flex-col items-center gap-3 py-10 text-center">
-            <p className="text-gray-600">{t("common.loadFailed")}</p>
-            <RetryButton onClick={() => vm.refetch()} />
-          </div>
+          <LoadFailed onRetry={vm.refetch} />
         ) : vm.isLoading ? (
           <LoadingSpin />
         ) : vm.rows.length === 0 ? (

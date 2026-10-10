@@ -4,11 +4,11 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button, ProgressBar, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
-import { ConfirmDeletePopup } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
+import { DataTable, FilterToolbar, SearchInput, StatusFilterSelect, type Column, useStockStatusOptions } from "@/components/shared/data";
 import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
-import { DeleteButton, EditButton, RetryButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import { CategoryManagerButton } from "@/components/shared/categories";
 import type { IngredientRow, useIngredientsViewModel } from "./useIngredientsViewModel";
 import { IngredientFormModal } from "./_components/IngredientFormModal";
@@ -69,13 +69,6 @@ export function IngredientsView(vm: VM) {
     },
   ];
 
-  const statusOptions = [
-    { value: "all", label: t("common.all") },
-    { value: "ok", label: t("enums.stockStatus.ok") },
-    { value: "low", label: t("enums.stockStatus.low") },
-    { value: "out", label: t("enums.stockStatus.out") },
-  ];
-
   return (
     <ListPageLayout
       title={t("ingredients.title")}
@@ -109,23 +102,14 @@ export function IngredientsView(vm: VM) {
                   ]}
                 />
               </div>
-              <div style={{ minWidth: 150 }}>
-                <Select
-                  value={vm.status}
-                  onChange={(v) => vm.setStatus(v as VM["status"])}
-                  options={statusOptions}
-                />
-              </div>
+              <StatusFilterSelect value={vm.status} onChange={vm.setStatus} options={useStockStatusOptions()} />
             </>
           }
         />
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>

@@ -2,5 +2,8 @@
   "no-gray-400": {},
   "plus-icon-solid": {},
   "icon-button-aria": {},
-  "tag-color-enum": {}
+  "tag-color-enum": {},
+  "load-failed-component": {
+    "src/app/owner/products/search-synonyms/_components/SearchTester.tsx": 1
+  }
 }

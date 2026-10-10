@@ -8,8 +8,9 @@ import { formatDate } from "@/i18n/format";
 import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
 import type { ProductionStatus } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
-import { RetryButton, ViewButton, actionIcon } from "@/components/shared/actions";
+import { ViewButton, actionIcon } from "@/components/shared/actions";
 import type { useProductionViewModel } from "../useProductionViewModel";
+import { LoadFailed } from "@/components/shared/feedback";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
@@ -105,10 +106,7 @@ export function PlanTab(vm: VM) {
       />
 
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetch} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <DataTable
           columns={columns}

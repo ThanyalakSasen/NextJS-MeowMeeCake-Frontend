@@ -7,10 +7,10 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
-import { LoadingSpin } from "@/components/shared/feedback";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { FilterToolbar, SearchInput, TypeTabBar } from "@/components/shared/data";
-import { RetryButton, actionIcon } from "@/components/shared/actions";
+import { actionIcon } from "@/components/shared/actions";
 import type { useStoreDesignViewModel } from "./useStoreDesignViewModel";
 import { BannerCard } from "./_components/BannerCard";
 import { BannerFormModal } from "./_components/BannerFormModal";
@@ -62,10 +62,7 @@ export function StoreDesignView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : (

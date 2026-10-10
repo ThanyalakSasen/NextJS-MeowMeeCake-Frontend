@@ -6,8 +6,8 @@ import { useTranslations } from "next-intl";
 import { Button, Card, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable, SearchInput } from "@/components/shared/data";
-import { ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
-import { DeleteButton, EditButton, RetryButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
+import { ConfirmDeletePopup, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { DeleteButton, EditButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import type { SearchSynonym } from "@/types/searchSynonym";
 import type { useSearchSynonymsViewModel } from "./useSearchSynonymsViewModel";
 import { SynonymGroupForm } from "./_components/SynonymGroupForm";
@@ -21,10 +21,7 @@ export function SearchSynonymsView(vm: VM) {
   return (
     <ListPageLayout title={t("searchSynonyms.title")} description={t("searchSynonyms.description")}>
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : (

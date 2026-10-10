@@ -4,8 +4,8 @@ import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import { Button, Card, Input, Select, Tag } from "@/components/base";
 import { DataTable, SearchInput } from "@/components/shared/data";
-import { ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
-import { DeleteButton, EditButton, RetryButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
+import { ConfirmDeletePopup, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { DeleteButton, EditButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import { FormField } from "@/components/shared/form";
 import type { SemanticTerm } from "@/types/review";
 import type { useReviewSettingsViewModel } from "../useReviewSettingsViewModel";
@@ -37,10 +37,7 @@ export function TermsTab({ vm }: { vm: VM }) {
           )}
         </div>
         {vm.termsError ? (
-          <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-gray-600">{t("common.loadFailed")}</p>
-            <RetryButton onClick={() => vm.refetchTerms()} />
-          </div>
+          <LoadFailed className="flex flex-col items-center gap-3 py-8 text-center" onRetry={vm.refetchTerms} />
         ) : vm.termsLoading ? (
           <LoadingSpin />
         ) : (

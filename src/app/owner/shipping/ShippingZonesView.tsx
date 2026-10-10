@@ -6,9 +6,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { Card, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable } from "@/components/shared/data";
-import { LoadingSpin } from "@/components/shared/feedback";
-import { EditButton, RetryButton, modalButtonIcons } from "@/components/shared/actions";
-import { THAI_PROVINCES } from "@/constants/thaiProvinces";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { EditButton, modalButtonIcons } from "@/components/shared/actions";
+import { PROVINCE_OPTIONS } from "@/constants/thaiProvinces";
 import { formatCurrency } from "@/i18n/format";
 import type { ShippingZone } from "@/types/shippingZone";
 import type { useShippingZonesViewModel } from "./useShippingZonesViewModel";
@@ -18,7 +18,6 @@ import { NOTICE_TAG, SHIPPING_ZONE_CONFIG } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof useShippingZonesViewModel>;
 const PROVINCES_SHOWN = 8;
-const PROVINCE_OPTIONS = THAI_PROVINCES.map((p) => ({ value: p, label: p }));
 
 export function ShippingZonesView(vm: VM) {
   const t = useTranslations();
@@ -28,10 +27,7 @@ export function ShippingZonesView(vm: VM) {
   return (
     <ListPageLayout title={t("shippingZones.title")} description={t("shippingZones.description")}>
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : (

@@ -4,11 +4,11 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button, Select } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
-import { ConfirmDeletePopup } from "@/components/shared/feedback";
+import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound } from "@/types/preorderRound";
-import { DeleteButton, RetryButton, ViewButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, ViewButton, actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { isFinalRoundStatus } from "../preorderStatus";
 
@@ -90,10 +90,7 @@ export function RoundsTab(vm: VM) {
       />
 
       {vm.isRoundsError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetchRounds} />
-        </div>
+        <LoadFailed onRetry={vm.refetchRounds} />
       ) : (
         <DataTable
           columns={columns}

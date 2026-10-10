@@ -8,8 +8,8 @@ import { Modal, Tooltip } from "antd";
 import { useTranslations } from "next-intl";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, Input, EmptyState, Switch } from "@/components/base";
-import { LoadingSpin, ConfirmDeletePopup } from "@/components/shared/feedback";
-import { EditButton, DeleteButton, RetryButton, actionIcon } from "@/components/shared/actions";
+import { ConfirmDeletePopup, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { EditButton, DeleteButton, actionIcon } from "@/components/shared/actions";
 import type { useCategoryManager } from "@/hooks/useCategoryManager";
 
 type Manager = ReturnType<typeof useCategoryManager>;
@@ -74,10 +74,7 @@ export function CategoryManagerDialog({
         {manager.isLoading ? (
           <LoadingSpin className="py-8" />
         ) : manager.isError ? (
-          <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <p className="text-gray-600">{t("common.loadFailed")}</p>
-            <RetryButton onClick={manager.refetch} />
-          </div>
+          <LoadFailed className="flex flex-col items-center gap-3 py-6 text-center" onRetry={manager.refetch} />
         ) : manager.items.length === 0 ? (
           <EmptyState description={t("categories.empty")} />
         ) : (

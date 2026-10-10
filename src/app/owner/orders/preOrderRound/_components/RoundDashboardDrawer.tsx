@@ -5,9 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, ProgressBar, Select, Tag } from "@/components/base";
 import { SearchInput } from "@/components/shared/data";
-import { DetailDrawer } from "@/components/shared/feedback";
+import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
 import { StatusBadge } from "@/components/shared/stats";
-import { RetryButton } from "@/components/shared/actions";
 import { formatCurrency } from "@/i18n/format";
 import type { OrderType } from "@/types/order";
 import { PAYMENT_GROUPS, type PaymentGroup } from "@/types/preorderRoundDashboard";
@@ -99,10 +98,7 @@ export function RoundDashboardDrawer(vm: DVM) {
             </div>
 
             {vm.isCustomersError ? (
-              <div className="flex flex-col items-center gap-2 py-6 text-center">
-                <p className="m-0 text-gray-600">{t("common.loadFailed")}</p>
-                <RetryButton size="small" onClick={vm.refetchCustomers} />
-              </div>
+              <LoadFailed className="flex flex-col items-center gap-2 py-6 text-center" onRetry={vm.refetchCustomers} size="small" />
             ) : vm.isCustomersLoading || !data ? (
               <p className="m-0 py-6 text-center text-gray-500">{t("common.loading")}</p>
             ) : data.customers.length === 0 ? (

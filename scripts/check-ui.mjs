@@ -158,11 +158,19 @@ const RULES = {
     },
   },
 
-  // ⏳ เปิดใช้หลัง Phase 3B (ยุบบล็อก error/retry เป็น QueryState) — ดู CONSISTENCY_AUDIT ข้อ 3.14 A1
-  // "query-state-only": {
-  //   doc: "docs/CONSISTENCY_AUDIT.md ข้อ 3.14 A1 — ใช้ <QueryState> แทนการเขียนบล็อก error/retry เอง",
-  //   scan(src) { ... common.loadFailed นอก QueryState.tsx ... },
-  // },
+  "load-failed-component": {
+    doc: 'docs/CONSISTENCY_AUDIT.md ข้อ 3.14 A1 — ใช้ <LoadFailed onRetry={...} /> แทนการเขียนบล็อก error เอง',
+    scan(src, rel) {
+      if (rel.endsWith("LoadFailed.tsx")) return [];
+      const hits = [];
+      src.split("\n").forEach((line, i) => {
+        if (!line.includes("common.loadFailed")) return;
+        if (/^\s*(\/\/|\*|\/\*)/.test(line)) return; // คอมเมนต์ที่พูดถึงคีย์นี้ ไม่ใช่การใช้งาน
+        hits.push({ line: i + 1, text: "เขียนบล็อก loadFailed เอง" });
+      });
+      return hits;
+    },
+  },
 };
 
 // ── สแกน ──
@@ -172,7 +180,7 @@ for (const key of Object.keys(RULES)) found[key] = {};
 for (const f of files) {
   const src = readFileSync(f.abs, "utf8");
   for (const [key, rule] of Object.entries(RULES)) {
-    const hits = rule.scan(src);
+    const hits = rule.scan(src, f.rel);
     if (hits.length) found[key][f.rel] = hits;
   }
 }

@@ -3,16 +3,15 @@
 // IngredientFormModal/StockActionModal — ยังไม่ซับซ้อนพอต้องแยก ViewModel ของตัวเอง)
 // รายการสินค้าที่เลือกได้ = เฉพาะที่มีสูตรผูกแล้ว (backend บังคับ recipe_id ต่อแถว — กรองไว้แล้วที่
 // useProductionViewModel.productOptions) ไม่เช็ควัตถุดิบขาด/พอที่นี่ (backend เช็คตอนปิดงานผลิตแทน)
-import { useState } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
-import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import type { CreateProductionOrderItemInput } from "@/types/productionOrder";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import type { CreateProductionOrderValue } from "../useProductionViewModel";
+import { useEditableRows, RemoveRowButton } from "@/components/shared/form";
 
 interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string }
 interface StaffOption { _id: string; user_fullname: string }
@@ -51,7 +50,7 @@ export function ProductionOrderFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<FormValues>();
-  const [rows, setRows] = useState<ItemRow[]>([emptyRow()]);
+  const { rows, setRows, updateRow, removeRow } = useEditableRows<ItemRow>([emptyRow()]);
 
   /** เคลียร์ฟอร์ม+แถวหลังปิด modal สนิทแล้ว (ไม่ว่าจะปิดจากปุ่มยกเลิกหรือหลังบันทึกสำเร็จ)
    *  ใช้ callback ของ antd แทน useEffect(open) — เลี่ยง setState ใน effect (react-compiler) */
@@ -59,9 +58,6 @@ export function ProductionOrderFormModal({
     form.resetFields();
     setRows([emptyRow()]);
   };
-
-  const updateRow = (key: string, patch: Partial<ItemRow>) =>
-    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
 
   const handleOk = async () => {
     const v = await form.validateFields();
@@ -153,13 +149,7 @@ export function ProductionOrderFormModal({
               onChange={(e) => updateRow(row.key, { notes: e.target.value })}
               placeholder={t("production.itemNotePlaceholder")}
             />
-            <Button
-              size="small" type="text" danger
-              icon={<XMarkIcon className="h-3.5 w-3.5" />}
-              disabled={rows.length === 1}
-              onClick={() => setRows((p) => p.filter((r) => r.key !== row.key))}
-              aria-label={t("common.delete")}
-            />
+            <RemoveRowButton onClick={() => removeRow(row.key)} disabled={rows.length === 1} />
           </div>
         ))}
       </Form>

@@ -36,6 +36,8 @@ export function SearchTester({ query, onQuery, result }: {
             ))}
             {result.usedGroups.length === 0 && <span className="text-gray-500">{t("searchSynonyms.tester.noGroup")}</span>}
           </p>
+          {/* ไม่ใช้ <LoadFailed> — กล่องนี้เป็นตัวทดสอบค้นหาเล็ก ๆ ในหน้า ไม่ใช่สถานะของทั้งหน้า
+              ไม่มีปุ่มลองใหม่ (พิมพ์คำใหม่ = ลองใหม่อยู่แล้ว) และใช้สีแดงเพื่อให้เห็นชัดในพื้นที่แคบ */}
           {result.isError ? (
             <p className="m-0 text-red-500">{t("common.loadFailed")}</p>
           ) : result.loading && result.products.length === 0 ? (

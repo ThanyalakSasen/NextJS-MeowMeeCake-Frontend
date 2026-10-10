@@ -4,13 +4,13 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { DetailDrawer, ConfirmDeletePopup } from "@/components/shared/feedback";
+import { ConfirmDeletePopup, DetailDrawer, LoadFailed } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
 import { NOTIFICATION_TYPE_COLOR, READ_STATUS_CONFIG } from "@/constants/enumConfig";
 import { NOTIFICATION_MODULES, type NotificationDTO } from "@/types/notification";
 import type { NotificationType } from "@/types";
-import { DeleteButton, RetryButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, actionIcon } from "@/components/shared/actions";
 import type { useNotificationHistoryViewModel } from "./useNotificationHistoryViewModel";
 import { NotificationDetailContent } from "./_components/NotificationDetailContent";
 
@@ -130,10 +130,7 @@ export function NotificationHistoryView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>

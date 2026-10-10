@@ -1,17 +1,16 @@
 "use client";
 // สร้างรอบพรีออเดอร์ใหม่ — antd Modal + base/Form · รายการสินค้าเริ่มต้นเป็นแถวไดนามิก (ไม่บังคับ
 // เพิ่มก็ได้ ค่อยเพิ่มทีหลังจาก drawer จัดการรอบ) แพทเทิร์นเดียวกับ ProductionOrderFormModal
-import { useState } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import type { Dayjs } from "dayjs";
-import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Form, FormItem, useAntForm, Input, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import { formatCurrency } from "@/i18n/format";
 import type { Product } from "@/types/product";
 import type { CreateRoundInput, RoundItemInput } from "@/types/preorderRound";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
+import { useEditableRows, RemoveRowButton } from "@/components/shared/form";
 
 interface ItemRow {
   key: string;
@@ -47,15 +46,12 @@ export function RoundFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<FormValues>();
-  const [rows, setRows] = useState<ItemRow[]>([]);
+  const { rows, setRows, updateRow, removeRow } = useEditableRows<ItemRow>([]);
 
   const handleAfterClose = () => {
     form.resetFields();
     setRows([]);
   };
-
-  const updateRow = (key: string, patch: Partial<ItemRow>) =>
-    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
 
   const handleOk = async () => {
     const v = await form.validateFields();
@@ -164,12 +160,7 @@ export function RoundFormModal({
                 value={row.max_qty_total}
                 onChange={(v) => updateRow(row.key, { max_qty_total: Number(v) || 1 })}
               />
-              <Button
-                size="small" type="text" danger
-                icon={<XMarkIcon className="h-3.5 w-3.5" />}
-                onClick={() => setRows((p) => p.filter((r) => r.key !== row.key))}
-                aria-label={t("common.delete")}
-              />
+              <RemoveRowButton onClick={() => removeRow(row.key)} />
             </div>
           );
         })}

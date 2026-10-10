@@ -7,9 +7,9 @@ import { ResetPasswordModal } from "./_components/ResetPasswordModal";
 import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { ConfirmDeletePopup } from "@/components/shared/feedback";
+import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
-import { DeleteButton, EditButton, RetryButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel";
 import { EMPLOYEE_WORKING_CONFIG, NOTICE_TAG } from "@/constants/enumConfig";
 
@@ -109,10 +109,7 @@ export function EmployeesView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>

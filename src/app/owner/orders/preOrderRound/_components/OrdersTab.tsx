@@ -8,9 +8,10 @@ import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { OrderStatus } from "@/constants/enumConfig";
 import type { Preorder } from "@/types/preorder";
-import { RetryButton, ViewButton } from "@/components/shared/actions";
+import { ViewButton } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { NOTICE_TAG } from "@/constants/enumConfig";
+import { LoadFailed } from "@/components/shared/feedback";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -129,10 +130,7 @@ export function OrdersTab(vm: VM) {
       />
 
       {vm.isOrdersError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetchOrders} />
-        </div>
+        <LoadFailed onRetry={vm.refetchOrders} />
       ) : (
         <DataTable
           columns={columns}

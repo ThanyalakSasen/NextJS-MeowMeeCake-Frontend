@@ -5,11 +5,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { ProgressBar, Select } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
-import { RetryButton, ViewButton } from "@/components/shared/actions";
+import { ViewButton } from "@/components/shared/actions";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { RoundDashboardRow } from "@/types/preorderRoundDashboard";
 import type { useRoundDashboardViewModel } from "../useRoundDashboardViewModel";
+import { LoadFailed } from "@/components/shared/feedback";
 
 type DVM = ReturnType<typeof useRoundDashboardViewModel>;
 
@@ -100,10 +101,7 @@ export function DashboardTab(vm: DVM) {
       />
 
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetch} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <DataTable
           columns={columns}

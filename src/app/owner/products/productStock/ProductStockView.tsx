@@ -4,13 +4,14 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, useStockStatusOptions } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
-import { RetryButton, actionIcon } from "@/components/shared/actions";
+import { actionIcon } from "@/components/shared/actions";
 import { LOW_STOCK_THRESHOLD } from "./stockStatus";
 import type { StockProductRow, useProductStockViewModel } from "./useProductStockViewModel";
 import { StockProgressRow } from "./_components/StockProgressRow";
 import { AdjustStockModal } from "./_components/AdjustStockModal";
+import { LoadFailed } from "@/components/shared/feedback";
 
 type VM = ReturnType<typeof useProductStockViewModel>;
 
@@ -53,12 +54,8 @@ export function ProductStockView(vm: VM) {
     },
   ];
 
-  const statusOptions = [
-    { value: "all", label: t("common.all") },
-    { value: "ok", label: t("enums.stockStatus.ok") },
-    { value: "low", label: t("enums.stockStatus.low") },
-    { value: "out", label: t("enums.stockStatus.out") },
-  ];
+  // wrapper ของหน้านี้มี label กำกับ (ต่างจากหน้าวัตถุดิบ/สต็อกวัตถุดิบ) จึงไม่ใช้ StatusFilterSelect
+  const statusOptions = useStockStatusOptions();
 
   return (
     <ListPageLayout
@@ -100,10 +97,7 @@ export function ProductStockView(vm: VM) {
       }
     >
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={() => vm.refetch()} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>

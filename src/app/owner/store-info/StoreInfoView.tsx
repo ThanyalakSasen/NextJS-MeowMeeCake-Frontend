@@ -5,8 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button, Input, Select } from "@/components/base";
 import { FormField } from "@/components/shared/form";
 import { ListPageLayout } from "@/components/shared/layout";
-import { LoadingSpin } from "@/components/shared/feedback";
-import { RetryButton } from "@/components/shared/actions";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { useStoreInfoViewModel } from "./useStoreInfoViewModel";
 import { LOGO_TYPES, SOCIAL_KEYS, type SectionKey } from "./storeInfoForm";
 import { SectionCard } from "./_components/SectionCard";
@@ -88,10 +87,7 @@ export function StoreInfoView(vm: VM) {
       {/* โหมดดู: ค่าที่บันทึกแล้วเป็นตัวเข้ม (antd disabled จางเกินจนแยกจาก placeholder ไม่ออก) */}
       <div className="[&_.ant-input-disabled]:!text-gray-800 [&_.ant-select-disabled_.ant-select-content]:!text-gray-800 [&_.ant-select-disabled_.ant-select-selection-item]:!text-gray-800">
       {vm.isError ? (
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-gray-600">{t("common.loadFailed")}</p>
-          <RetryButton onClick={vm.refetch} />
-        </div>
+        <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : !vm.isOwner ? (
