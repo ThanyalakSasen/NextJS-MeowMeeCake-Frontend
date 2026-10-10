@@ -118,7 +118,7 @@ export const MENU_SECTIONS: MenuSection[] = [
     ],
   },
   {
-    labelKey: "storefront",
+    labelKey: "sectionStorefront",
     items: [
       // menuKey: "store_info" — backend MENU_KEYS เพิ่ม 2026-10-05 (customer-backend-merge.md §8.19)
       { labelKey: "storeDesign", icon: "PaintBrushIcon", href: "/owner/store-design" },
