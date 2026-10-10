@@ -14,8 +14,8 @@
 |---|---|
 | **สรุปสั้นที่สุด** | โครงสร้างใหญ่แข็งแรงมาก · ที่หลุดคือ "รายละเอียดที่ไม่มีเครื่องตรวจอัตโนมัติ" |
 | **`npm run check`** | ✅ **เขียวทั้งชุด** (i18n · theme · tsc · eslint) ตั้งแต่ 2026-10-10 |
-| **เจอทั้งหมด** | 13 ประเด็น — ✅ แก้แล้ว 2 (ข้อ 3.1, 3.2) · เหลือ 11: ร้ายแรง 1 · สายตา 6 · โครงสร้าง/เอกสาร 4 |
-| **ใช้เวลาแก้ที่เหลือ** | ประมาณ 2–3 วันทำงาน ถ้าทำตาม Phase ใน §4 |
+| **เจอทั้งหมด** | 14 ประเด็น — ✅ แก้แล้ว 2 (ข้อ 3.1, 3.2) · เหลือ 12: ร้ายแรง 1 · สายตา 6 · โครงสร้าง/ของซ้ำ/เอกสาร 5 |
+| **ใช้เวลาแก้ที่เหลือ** | ประมาณ 3.5–4.5 วันทำงาน ถ้าทำตาม Phase ใน §4 |
 | **ข่าวดีจากรอบทวน** | โค้ดใหม่ 51 commit (รวมหน้า `/owner/shipping`) **ทำตาม convention ครบ** — ดู §2 ท้ายตาราง |
 
 ---
@@ -465,10 +465,122 @@ error ใน `.next/` ไม่เคยเป็นความผิดขอ�
 
 **แก้ยังไง**
 เพิ่ม 7 แถว และใส่บรรทัดใน Definition of Done ของทีมว่า *"สร้าง component ใหม่ = เพิ่มแถวใน `COMPONENT_MAP.md` ใน PR เดียวกัน"*
+(ข้อนี้เขียนเป็นกติกาแล้วที่ `COMPONENT_MAP.md` §กติกา de-duplicate ข้อ 4)
 
 ---
 
-## 4. แผนการแก้ — 6 Phase (Phase 0 เสร็จแล้ว)
+#### 3.14 โค้ดทำงานเหมือนกันกระจายอยู่หลายไฟล์ · 🆕 *สแกนชั้นที่ 2*
+
+**อาการ**
+ข้อ 3.10 / 3.11 คุมเรื่อง **"ตำแหน่ง"** (component ตัวเดียวถูกใช้ 2 หน้า → ควรย้ายขึ้น `shared/`)
+ข้อนี้คือเรื่อง **"พฤติกรรม"** — component **คนละตัว คนละชื่อ แต่ทำงานเหมือนกัน** ซึ่ง grep หาไม่เจอ ต้องอ่านว่าโค้ด*ทำอะไร*
+
+**วิธีสแกน** (ทำซ้ำได้ — สคริปต์อยู่ใน §5)
+1. **จับบล็อกซ้ำ** — normalize ทุกบรรทัด ตัดคอมเมนต์/ช่องว่าง แล้วหา run ที่ตรงกันข้ามไฟล์ ≥ 5 บรรทัด → เจอ **128 คู่**
+2. **จับโครงเหมือน** — ทำ signature ของแต่ละไฟล์จาก (JSX tag + hook + import) แล้ววัด Jaccard → เจอ **24 คู่ที่ ≥ 60%**
+
+> ⚠️ **ตัวเลขดิบใช้ตัดสินไม่ได้** — "โครงเหมือน" ส่วนใหญ่แปลว่า convention ทำงานถูก ไม่ใช่ข้อบกพร่อง
+> ต้องไล่อ่านแล้วแยกกลุ่มก่อน เกณฑ์ที่ใช้อยู่ที่ `COMPONENT_MAP.md` §กติกา de-duplicate
+
+---
+
+##### 🔴 กลุ่ม A — ซ้ำจริง ควรยุบ
+
+**A1 · บล็อก "โหลดไม่สำเร็จ + ลองใหม่" — ซ้ำ 31 ไฟล์**
+
+```tsx
+{vm.isError ? (
+  <div className="flex flex-col items-center gap-3 py-10 text-center">
+    <p className="text-gray-600">{t("common.loadFailed")}</p>
+    <RetryButton onClick={() => vm.refetch()} />
+  </div>
+) : vm.isLoading ? ( <LoadingSpin /> ) : ( ... )}
+```
+
+**และมันเพี้ยนไปแล้วจริง** — นี่คือหลักฐานที่ดีที่สุดในเอกสารนี้ว่าทำไม copy-paste ถึงไม่รอด:
+
+| สีข้อความ | จำนวน | ไฟล์ที่หลุด |
+|---|---|---|
+| `text-gray-600` | 28 | (มาตรฐาน) |
+| `text-gray-500` | 1 | `products/ProductsView.tsx:109` |
+| `m-0 text-red-500` | 1 | `products/search-synonyms/_components/SearchTester.tsx:40` |
+| `m-0 text-gray-600` | 1 | `orders/preOrderRound/_components/RoundDashboardDrawer.tsx:103` |
+
+ปุ่มก็เขียน 2 แบบ: `onClick={() => vm.refetch()}` 18 ที่ · `onClick={vm.refetch}` 6 ที่
+
+ไม่มีใครตั้งใจให้ต่าง — มันค่อย ๆ เพี้ยนตอนลอกไปวาง และ**ไม่มีทางรู้ว่าเพี้ยนจนกว่าจะเอามาเรียงเทียบกัน**
+
+**A2 · ตัวอัปโหลดรูป 3 ตัว — 196 บรรทัด**
+
+| ไฟล์ | บรรทัด |
+|---|---|
+| `products/_components/ProductImageUpload.tsx` | 65 |
+| `store-design/_components/BannerImageUpload.tsx` | 61 |
+| `finance/expenses/_components/ReceiptUpload.tsx` | 70 |
+
+โครงเดียวกันหมด: `customRequest` → upload → `alert.error` · `listType="picture-card"` · `accept`
+ต่างกันจริงแค่ **3 อย่างที่ทำเป็น prop ได้**: จำนวนรูปสูงสุด · ขนาดไฟล์สูงสุด · ชนิดไฟล์ที่รับ
+
+`ReceiptUpload` ถูกสร้างตอนแก้ข้อ 3.1 (commit `d380b4c`) โดยลอกโครงจาก 2 ตัวแรก — **ตอนแก้บั๊กหนึ่ง ได้สร้างของซ้ำชิ้นที่ 3 ขึ้นมาพร้อมกัน** ซึ่งเป็นเรื่องปกติมากเวลาไม่มีของกลาง
+
+**A3 · บล็อก Select กรองสถานะ — ซ้ำ 3 ไฟล์ ตัวอักษรต่อตัวอักษร**
+
+```tsx
+<div style={{ minWidth: 150 }}>
+  <Select value={vm.status} onChange={(v) => vm.setStatus(v as VM["status"])} options={statusOptions} />
+</div>
+```
+`ingredients/IngredientsView.tsx:114` · `ingredients/ingredientStock/IngredientStockView.tsx:74` · `products/productStock/ProductStockView.tsx:91` (ซ้ำกัน 19–20 บรรทัดติด)
+
+**A4 · `updateRow` + `interface ItemRow` + ปุ่มลบแถว — ซ้ำ 2 ที่ เหมือนกันเป๊ะ**
+
+```tsx
+const updateRow = (key: string, patch: Partial<ItemRow>) =>
+  setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+```
+`orders/preOrderRound/_components/RoundFormModal.tsx:57` · `production/_components/ProductionOrderFormModal.tsx:63`
+(ซ้ำแค่ 2 ครั้ง แต่ *เหมือนกันทุกตัวอักษร* จึงเข้าข้อยกเว้นของ rule of three)
+
+**A5 · `PROVINCE_OPTIONS` — บรรทัดเดียวกัน 3 ที่**
+
+```tsx
+const PROVINCE_OPTIONS = THAI_PROVINCES.map((p) => ({ value: p, label: p }));
+```
+`orders/delivery-zones/_components/DeliveryZoneForm.tsx:10` · `ZoneChecker.tsx:9` (ชื่อ `OPTIONS`) · `shipping/ShippingZonesView.tsx:20`
+
+---
+
+##### 🟡 กลุ่ม B — โครงเหมือนเพราะทำตาม convention (ยุบ *scaffolding* ได้ แต่อย่ายุบตัว component)
+
+| คู่ | เหมือน | ทำไมถึงไม่ควรยุบทั้งตัว |
+|---|---|---|
+| `RoundFormModal` ↔ `ProductionOrderFormModal` | 85% | คนละโดเมน — ยุบแค่ A4 พอ |
+| `StockActionModal` ↔ `AdjustStockModal` | 83% | วัตถุดิบมี 3 โหมด + note · สินค้าตั้งค่าใหม่อย่างเดียว |
+| `IngredientFormModal` ↔ `RoundItemFormModal` | 83% | ฟิลด์คนละชุด |
+| `OrderDetailContent` ↔ `PreorderDetailContent` | 82% | ยุบส่วนที่ซ้ำไปแล้ว (`SlipImage` · `DeliverySection` · `RefundSection`) |
+
+**แต่มีของที่ควรดึงออกมา:** ทั้ง 8+ ไฟล์เขียน scaffolding เดียวกัน — `useAntForm()` + `useEffect` เซ็ตค่าเริ่มต้น + `<Modal {...modalButtonIcons(...)}>` + prop ชื่อ `target` / `saving` / `onClose`
+→ ทำ `<FormModal>` ครอบได้ **โดยไม่ต้องยุบตัว modal แต่ละตัว**
+
+---
+
+##### 🟢 กลุ่ม C — ดูซ้ำแต่ไม่ซ้ำ (ถูกแล้ว ห้ามไปรื้อ)
+
+| คู่ | ทำไมถึงถูก |
+|---|---|
+| `StarRating` ↔ `RatingDisplay` | คนละอย่าง และ **`StarRating.tsx:2` เขียนคอมเมนต์อธิบายไว้** ← ต้นแบบที่ควรลอก |
+| `SectionCard` ↔ `base/Card` | composition ไม่ใช่ duplication |
+| `DeliveryZoneForm` ↔ `ShippingZoneFormFields` (73%) | กติกาธุรกิจต่างกันจริง ทั้งคู่มีคอมเมนต์กำกับ |
+| Tab components 8 ตัว | เหมือนเพราะใช้ `TabbedPageLayout` ตัวเดียวกัน = ระบบทำงานถูก |
+
+> 💡 **แนวคิดที่ควรจำ: การยุบผิดแย่กว่าไม่ยุบ**
+> ถ้ายุบกลุ่ม C เข้าด้วยกัน จะได้ component ที่มี prop แปลก ๆ เต็มไปหมดเพื่อรองรับทุกเคส (เรียกว่า *over-abstraction*)
+> แก้ทีหลังยากกว่าปล่อยให้ซ้ำ เพราะตอนนั้นมี 5 หน้าพึ่งมันอยู่แล้ว
+> **กฎง่าย ๆ: ซ้ำเล็กน้อย ถูกกว่า abstraction ที่ผิด**
+
+---
+
+## 4. แผนการแก้ — 7 Phase (0 · 1 · 2 · 3 · 3B · 4 · 5) — Phase 0 เสร็จแล้ว
 
 > **หลักคิดในการจัดลำดับ**
 > 1. **ซ่อมเครื่องมือก่อนซ่อมบ้าน** — ถ้า `npm run check` ยังแดง เราจะไม่รู้ว่างานที่ทำไปทำให้อะไรพังหรือเปล่า
@@ -499,6 +611,7 @@ error ใน `.next/` ไม่เคยเป็นความผิดขอ�
 | **`PlusIcon` ต้องมาจาก `solid`** | ห้าม `PlusIcon` จาก `24/outline` | `ACTION_BUTTONS.md §1.1` |
 | **ปุ่มไอคอนล้วนต้องมี `aria-label`** | หา `<Button ... icon={...} />` ที่ self-closing | `ACTION_BUTTONS.md §4.1` |
 | **`<Tag color=` ต้องมาจาก `enumConfig`** | ห้ามพิมพ์ชื่อสี antd ลงไปตรง ๆ | `THEME.md §2` · ข้อ 3.6 |
+| **ห้ามเขียนบล็อก error/retry เอง** | ห้าม `common.loadFailed` นอก `QueryState.tsx` | ข้อ 3.14 A1 — *เปิดใช้หลัง Phase 3B* |
 
 **เทคนิคสำคัญ:** ให้สคริปต์มี **allowlist** — ไฟล์/บรรทัดที่ยกเว้นได้ พร้อมเหตุผล จะได้เปิดใช้กฎทันทีโดยไม่ต้องรอแก้ครบ 90 จุด แล้วค่อย ๆ ลบรายการออกจาก allowlist ใน Phase ถัด ๆ ไป
 
@@ -543,6 +656,117 @@ error ใน `.next/` ไม่เคยเป็นความผิดขอ�
 
 ---
 
+### Phase 3B — ยุบของซ้ำ · ⏱ 1–1.5 วัน · *(ข้อ 3.14)*
+
+**กติกาที่ใช้ตัดสิน:** `COMPONENT_MAP.md` §กติกา de-duplicate — ทำเฉพาะกลุ่ม A **ห้ามแตะกลุ่ม C**
+
+#### ลำดับการทำ — เรียงตาม "ผลตอบแทน ÷ ความเสี่ยง"
+
+| # | งาน | แตะกี่ไฟล์ | ความเสี่ยง | เวลา |
+|---|---|---|---|---|
+| 1 | **A5** ย้าย `PROVINCE_OPTIONS` ไป `constants/thaiProvinces.ts` | 3 | ต่ำมาก | 15 นาที |
+| 2 | **A4** ดึง `ItemRow` + `updateRow` + ปุ่มลบแถว → `shared/form/EditableRows.tsx` | 2 | ต่ำ | 1 ชม. |
+| 3 | **A3** ดึงบล็อก Select สถานะ → `shared/data/StatusFilterSelect.tsx` | 3 | ต่ำ | 45 นาที |
+| 4 | **A2** ยุบตัวอัปโหลดรูป 3 → 1 | 3 | **กลาง** | 2–3 ชม. |
+| 5 | **A1** ดึงบล็อก error/retry → `shared/feedback/QueryState.tsx` | **31** | กลาง | 3–4 ชม. |
+
+**ทำไมเรียงแบบนี้:** เริ่มจากของเล็กที่ผิดพลาดยาก เพื่อให้ได้จังหวะและความมั่นใจก่อน
+ส่วน A1 ไว้ท้ายสุดเพราะแตะ 31 ไฟล์ — ควรทำตอนที่ของอื่นนิ่งแล้ว ไม่งั้น review ปนกันจนดูไม่ออก
+
+---
+
+#### ขั้นที่ 1 · A5 — `PROVINCE_OPTIONS`
+
+```ts
+// src/constants/thaiProvinces.ts — เพิ่มท้ายไฟล์
+export const PROVINCE_OPTIONS = THAI_PROVINCES.map((p) => ({ value: p, label: p }));
+```
+แล้ว import แทนที่ 3 จุด · `ShippingZoneFormFields.tsx:23` ทำ `.map()` เองพร้อมตรรกะ `taken` → **ปล่อยไว้** (ไม่ใช่ของซ้ำ)
+
+#### ขั้นที่ 2 · A4 — แถวที่แก้/ลบได้
+
+```tsx
+// src/components/shared/form/EditableRows.tsx
+export interface Row { key: string }
+export function useEditableRows<T extends Row>(initial: T[] = []) {
+  const [rows, setRows] = useState<T[]>(initial);
+  const updateRow = (key: string, patch: Partial<T>) =>
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const removeRow = (key: string) => setRows((prev) => prev.filter((r) => r.key !== key));
+  return { rows, setRows, updateRow, removeRow };
+}
+export function RemoveRowButton({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) { ... }
+```
+`RemoveRowButton` ต้องมี `aria-label={t("common.delete")}` ในตัว — ได้แก้ข้อ 3.8 ไปด้วย
+
+#### ขั้นที่ 3 · A3 — ตัวกรองสถานะ
+
+```tsx
+// src/components/shared/data/StatusFilterSelect.tsx
+export function StatusFilterSelect<T extends string>({ value, onChange, options, minWidth = 150 }) { ... }
+```
+
+#### ขั้นที่ 4 · A2 — ตัวอัปโหลดรูป ⚠️ ระวังที่สุดในกลุ่มนี้
+
+```tsx
+// src/components/shared/form/ImageUpload.tsx
+export function ImageUpload({
+  value, onChange,
+  max = 1,                    // ProductImageUpload = 8
+  maxBytes,                   // ReceiptUpload = 5MB · อีก 2 ตัวไม่จำกัด
+  accept = "image/*",         // ReceiptUpload รับ pdf ด้วย
+  uploadFn,                   // endpoint ต่างกันต่อโดเมน
+}: ImageUploadProps) { ... }
+```
+
+**ต้องทดสอบด้วยมือทั้ง 3 หน้า** เพราะนี่คือจุดที่เคยพังมาแล้ว (ข้อ 3.1 — ใบเสร็จอัปโหลดไม่ได้มาตลอดโดยไม่มีใครรู้) อย่าเชื่อแค่ว่า `tsc` ผ่าน:
+- เพิ่มสินค้า → อัปโหลด 8 รูป → ครบไหม · อัปโหลดรูปที่ 9 → ถูกกันไหม
+- แบนเนอร์ → อัปโหลด 1 รูป → แทนที่รูปเดิมได้ไหม
+- ใบเสร็จ → อัปโหลดไฟล์ > 5MB → ขึ้น `alert.error` ไหม · ไฟล์ปกติ → บันทึกแล้วเปิดดูได้ไหม
+
+#### ขั้นที่ 5 · A1 — `QueryState` (งานใหญ่สุด)
+
+```tsx
+// src/components/shared/feedback/QueryState.tsx
+export function QueryState({
+  isError, isLoading, onRetry, children,
+}: { isError: boolean; isLoading: boolean; onRetry: () => void; children: React.ReactNode }) {
+  const t = useTranslations();
+  if (isError) return (
+    <div className="flex flex-col items-center gap-3 py-10 text-center">
+      <p className="text-gray-600">{t("common.loadFailed")}</p>
+      <RetryButton onClick={onRetry} />
+    </div>
+  );
+  if (isLoading) return <LoadingSpin />;
+  return <>{children}</>;
+}
+```
+
+**วิธีทำให้ปลอดภัย — แบ่งเป็น 3 PR ย่อย อย่าทำรวดเดียว 31 ไฟล์:**
+
+| PR | ขอบเขต | จุดประสงค์ |
+|---|---|---|
+| 1 | สร้าง `QueryState` + แปลง **3 ไฟล์แรก** | ให้ทีม review API ของ component ก่อนที่จะสายเกินแก้ |
+| 2 | แปลงที่เหลือที่เป็น**มาตรฐาน** (`text-gray-600` + `() => vm.refetch()`) ~25 ไฟล์ | งานกล • diff ใหญ่แต่ซ้ำ ๆ |
+| 3 | 3 ไฟล์ที่**เพี้ยน** — ตัดสินใจทีละตัว | ดูข้างล่าง |
+
+**3 จุดที่เพี้ยน ต้องคิดก่อนแปลง — ไม่ใช่ลบทิ้งอัตโนมัติ:**
+
+| ไฟล์ | เพี้ยนยังไง | ถามก่อนว่า |
+|---|---|---|
+| `ProductsView.tsx:109` | `text-gray-500` | ตั้งใจหรือพิมพ์พลาด? (น่าจะพลาด → ใช้มาตรฐาน) |
+| `SearchTester.tsx:40` | `m-0 text-red-500` | อยู่ในกล่องทดสอบค้นหา สีแดงอาจตั้งใจ → อาจต้องมี prop `tone="inline"` |
+| `RoundDashboardDrawer.tsx:103` | `m-0` | อยู่ใน drawer ที่ต้องการระยะต่างออกไป → ใช้ prop `className` |
+
+**Definition of Done ของ Phase 3B:**
+- `grep -rc 'common.loadFailed' src/app/owner --include=*.tsx` เหลือเฉพาะใน `QueryState.tsx` (+ ไฟล์ที่ตัดสินใจไว้ว่าต่างจริง พร้อมคอมเมนต์เหตุผล)
+- `npm run check` เขียว
+- ทดสอบด้วยมือครบ 3 หน้าอัปโหลด
+- เพิ่มแถวของ component ใหม่ 5 ตัวลง `COMPONENT_MAP.md` (กติกา de-duplicate ข้อ 4)
+
+---
+
 ### Phase 4 — จัดโครงสร้าง · ⏱ ครึ่งวัน
 
 | งาน | ข้อ |
@@ -578,9 +802,15 @@ error ใน `.next/` ไม่เคยเป็นความผิดขอ�
 | 1 | สร้างรั้วกันถอยหลัง | ครึ่งวัน | ต้องผ่าน 0 | ⬜ ถัดไป |
 | 2 | แก้สิ่งที่กระทบผู้ใช้ | ครึ่งวัน | ทำคู่ขนานกับ 1 ได้ | ⬜ |
 | 3 | กวาดหน้าตา | 1–1.5 วัน | ต้องผ่าน 1 (ใช้ allowlist) | ⬜ |
-| 4 | จัดโครงสร้าง | ครึ่งวัน | ควรรอ 3 จบ | ⬜ |
+| **3B** | **ยุบของซ้ำ** (ข้อ 3.14) | **1–1.5 วัน** | ควรรอ 3 จบ | ⬜ |
+| 4 | จัดโครงสร้าง | ครึ่งวัน | ควรรอ 3B จบ | ⬜ |
 | 5 | ปรับเอกสาร | 1 ชั่วโมง | ต้องผ่าน 4 | ⬜ |
-| | **เหลือทั้งหมด** | **~2–3 วัน** | | |
+| | **เหลือทั้งหมด** | **~3.5–4.5 วัน** | | |
+
+**ทำไม Phase 3B ต้องอยู่หลัง Phase 3:** Phase 3 แก้ `text-gray-400` / ไอคอน / สี Tag ซึ่งแตะไฟล์เดียวกับที่ Phase 3B จะยุบ
+ถ้าทำสลับกัน จะต้องแก้ของเดิมแล้วมายุบทิ้งอีกรอบ — เสียเวลาสองเท่าและ diff อ่านยาก
+
+**ทำไมไม่ควรข้าม Phase 1 ไปทำ 3B เลย:** ถ้ายังไม่มีสคริปต์ตรวจ พอยุบเสร็จแล้วอีก 2 เดือนก็จะมีคนลอกบล็อกเดิมกลับมาใหม่
 
 ---
 
@@ -622,7 +852,29 @@ for c in $(find src/app/owner src/components -name "*.tsx" -newer package.json \
             -exec basename {} .tsx \;); do
   grep -q "$c" docs/COMPONENT_MAP.md || echo "ยังไม่ขึ้นทะเบียน: $c"
 done
+
+# ข้อ 3.14 A1 — บล็อก error/retry ซ้ำกี่ไฟล์ · เพี้ยนตรงไหน
+grep -rln 'common.loadFailed' src/app/owner --include=*.tsx | wc -l
+grep -rhn 'common.loadFailed' src/app/owner --include=*.tsx \
+  | grep -oE 'className="[^"]*"' | sort | uniq -c | sort -rn
+
+# ข้อ 3.14 — helper / ค่าคงที่ที่เขียนซ้ำ
+grep -rn "const updateRow" src/app/owner
+grep -rn "THAI_PROVINCES.map" src/
 ```
+
+**สแกนชั้นที่ 2 (หาโค้ดทำงานเหมือนกัน)** — สคริปต์เต็มอยู่ใน git history ของ PR ที่เพิ่มข้อ 3.14 · หลักการ:
+
+```
+blocks.mjs  normalize ทุกบรรทัด (ตัดคอมเมนต์/ช่องว่าง) → index บรรทัด → บรรทัดไหนโผล่หลายไฟล์
+            ให้ขยายขึ้น-ลงจนไม่ตรง → run ยาว >= 5 บรรทัด = บล็อกซ้ำ
+
+shape.mjs   signature ของไฟล์ = เซตของ (JSX tag + hook + ชื่อที่ import)
+            เทียบคู่ด้วย Jaccard = |ร่วม| / |รวม| → >= 0.6 ถือว่าโครงเหมือน
+```
+
+> ⚠️ **สคริปต์ 2 ตัวนี้ชี้ "จุดที่ควรไปดู" ไม่ใช่ "จุดที่ต้องแก้"** ผลลัพธ์ต้องให้คนอ่านแล้วแยกกลุ่ม A/B/C เสมอ
+> ห้ามเอาไปใส่ `npm run check` ให้มันฟ้อง error เพราะมันจะฟ้องกลุ่ม C (ที่ถูกต้องแล้ว) ด้วย
 
 > **หมายเหตุเรื่องการนับปุ่มไอคอนล้วน (ข้อ 3.8):** `grep` ธรรมดานับผิด เพราะ regex `<Button[\s\S]*?/>` จะไปหยุดที่ `/>` ของไอคอนข้างใน (`icon={<PlusIcon />}`) ไม่ใช่ `/>` ของตัวปุ่มเอง — ต้องเขียนตัวไล่อ่านที่ข้ามวงเล็บปีกกาและเครื่องหมายคำพูดก่อน ถึงจะได้ตัวเลขที่ถูก (16 ปุ่ม ไม่ใช่ 72)
 > นี่เป็นบทเรียนทั่วไป: **อย่าใช้ regex แยกโครงสร้างที่ซ้อนกันได้** — เจอบ่อยทั้งกับ HTML, JSON และ JSX
