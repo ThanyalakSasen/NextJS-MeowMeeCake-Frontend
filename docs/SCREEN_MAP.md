@@ -4,7 +4,7 @@
 > **เปิดอ่านเมื่อ:** ก่อนเริ่ม/หลังจบ screen ใดในเฟส 4 · สงสัยว่าทำไมกดเมนูแล้วไปหน้าอื่น/404 · เช็คว่าลืมต่อสายอะไรไหม
 > **ความสัมพันธ์กับเอกสารอื่น:** `REBUILD_PLAN.md` §7 = route/template/component ต่อหน้า (ของ "จะสร้างอะไร") · `COMPONENT_MAP.md` = ทะเบียน component (ของ "component อยู่ไหน") · **เอกสารนี้ = เข้าถึงหน้านั้นได้จริงหรือยัง**
 >
-> อัปเดตล่าสุด: 2026-10-10 (เพิ่ม #36 โซนค่าจัดส่ง · #37 ค่าจัดส่งหน้าร้านออนไลน์ · แท็บสรุปรอบใน #28) — §2 = 27 หน้าเดิมของเฟส 4 · §2b = หน้าหลังร้านที่เพิ่มภายหลัง · §2c = หน้าร้าน `/customer/*` (ย้ายมาจาก FrontOffice — BACKLOG3/4) · **ข้อแก้ §2:** #22 Attendance ไม่มีในโค้ดแล้ว (ไม่มี `app/owner/attendance`) · #8 POS = `OrderInStore`
+> อัปเดตล่าสุด: 2026-10-10 (เพิ่ม #36 โซนค่าจัดส่ง · #37 ค่าจัดส่งหน้าร้านออนไลน์ · แท็บสรุปรอบใน #28 · §2c ทางเข้าตามเมนูบัญชี 5 รายการ + เมนูผู้ใช้บน Navbar — PR #63) — §2 = 27 หน้าเดิมของเฟส 4 · §2b = หน้าหลังร้านที่เพิ่มภายหลัง · §2c = หน้าร้าน `/customer/*` (ย้ายมาจาก FrontOffice — BACKLOG3/4) · **ข้อแก้ §2:** #22 Attendance ไม่มีในโค้ดแล้ว (ไม่มี `app/owner/attendance`) · #8 POS = `OrderInStore`
 
 ---
 
@@ -82,7 +82,7 @@
 ## 2c. หน้าร้าน `/customer/*`
 
 > เขียนแบบหน้าเดียวไฟล์เดียว (ยกจาก FrontOffice) · ข้อความไทยในโค้ด (ยกเว้นจาก `lint:i18n`) · layout = `CustomerChrome` (Navbar + Footer) · guest เปิดได้ทุกหน้า หน้าที่ต้อง login ครอบด้วย `CustomerAuthGate` (🔒)
-> ทางเข้า: Navbar (หน้าแรก · สินค้าทั้งหมด · พรีออเดอร์ · ติดต่อเรา · ตะกร้า · กระดิ่ง · เมนูบัญชี) · Footer (สินค้า · การจัดส่ง · ติดต่อเรา) · เมนูบัญชี `AccountSideMenu` · ลิงก์ในแจ้งเตือน/LINE/อีเมล
+> ทางเข้า: Navbar (หน้าแรก · สินค้าทั้งหมด · พรีออเดอร์ · ติดต่อเรา · ตะกร้า · กระดิ่ง · **เมนูผู้ใช้**: บัญชีของฉัน · คำสั่งซื้อของฉัน · สมาชิกของฉัน · รายการโปรด) · Footer (สินค้า · การจัดส่ง · ติดต่อเรา) · **เมนูบัญชี** `AccountSideMenu` (5 รายการ: ข้อมูลของฉัน · ที่อยู่ · เปลี่ยนรหัสผ่าน · ประวัติการสั่งซื้อ · ประวัติพรีออเดอร์) · ลิงก์ในแจ้งเตือน/LINE/อีเมล
 
 | Screen | Route | Reach | API หลัก | งาน |
 |---|---|---|---|---|
@@ -95,15 +95,15 @@
 | ชำระพรีออเดอร์ 🔒 | `/customer/preorder/checkout` | รายการพรีออเดอร์ | /shop/preorders | D3 |
 | ติดต่อเรา | `/customer/contact-us` | Navbar · Footer | /catalog/store-info · contact-topics · /shop/contact | D8 |
 | การจัดส่ง | `/customer/shipping` | Footer | /catalog/shipping-zones · store-info · categories · pickup-locations | D9 |
-| บัญชีของฉัน 🔒 | `/customer/account` | เมนูบัญชี | /shop/me (+ email · line) | B2 |
+| บัญชีของฉัน 🔒 | `/customer/account` | เมนูบัญชี ("ข้อมูลของฉัน") · เมนูผู้ใช้ | /shop/me (+ email · line) | B2 |
 | ที่อยู่ 🔒 | `/customer/account/address` | เมนูบัญชี | /shop/addresses | D2 |
-| ประวัติการสั่งซื้อ 🔒 | `/customer/account/purchases` · `/[id]` (ชำระเงิน/สลิป/ยกเลิก) | เมนูบัญชี · แจ้งเตือน | /shop/orders · /shop/payments | D1 · C4 |
+| ประวัติการสั่งซื้อ 🔒 | `/customer/account/purchases` · `/[id]` (ชำระเงิน/สลิป/ยกเลิก) | เมนูบัญชี · เมนูผู้ใช้ · แจ้งเตือน | /shop/orders · /shop/payments | D1 · C4 |
 | เขียนรีวิว 🔒 | `/customer/account/purchases/[id]/review` · `/customer/account/preorders/[id]/review` | ปุ่ม "รีวิวสินค้า" (completed + ชำระแล้ว) | /shop/reviews (+upload) · /catalog/review-aspects | D7 |
 | ประวัติพรีออเดอร์ 🔒 | `/customer/account/preorders` · `/[id]` | เมนูบัญชี · แจ้งเตือน | /shop/preorders | D3 |
-| สมาชิก/แต้ม/คูปอง 🔒 | `/customer/account/member` | เมนูบัญชี | /shop/points · /shop/coupons | D4 |
-| รายการโปรด 🔒 | `/customer/account/favorites` | เมนูบัญชี · หัวใจบนบัตร | /shop/favorites | D5 |
+| สมาชิก/แต้ม/คูปอง 🔒 | `/customer/account/member` | เมนูผู้ใช้ | /shop/points · /shop/coupons | D4 |
+| รายการโปรด 🔒 | `/customer/account/favorites` | เมนูผู้ใช้ · หัวใจบนบัตร | /shop/favorites | D5 |
 | การแจ้งเตือน 🔒 | `/customer/account/notifications` | กระดิ่ง | /shop/notifications | D6 |
-| เปลี่ยนรหัสผ่าน 🔒 | `/customer/changepassword` | บัญชีของฉัน | /shop/me/password | B2 |
+| เปลี่ยนรหัสผ่าน 🔒 | `/customer/changepassword` | เมนูบัญชี | /shop/me/password | B2 |
 | ยืนยันอีเมล · ลืม/ตั้งรหัสใหม่ | `/customer/verify-email` · `/customer/forgot-password` · `/customer/reset-password` | ลิงก์ในอีเมล · หน้า login | /auth/* | B1 |
 | (ลิงก์เก่า) | `/customer/order/[id]` | — | redirect → `/customer/account/purchases/[id]` | D1 |
 
