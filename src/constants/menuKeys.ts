@@ -35,8 +35,9 @@ export const NO_MENU_ACCESS: MenuPermissionSet = {
 // map path → menu_key เรียงจาก prefix เจาะจงกว่าไว้ก่อน (longest-prefix match)
 // path ที่ไม่อยู่ในนี้ (dashboard, store-design, notificationsHistory) = login พอ ไม่เช็ค can_view เพิ่ม
 const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
-  { prefix: "/owner/ingredients/ingredientStock", menuKey: "stock" },
-  { prefix: "/owner/ingredients/ingredientHistory", menuKey: "stock" },
+  // สต็อก/ประวัติวัตถุดิบ + หน่วยนับ ใช้ "ingredients" ทั้งกลุ่ม — /admin/ingredients · ingredient-transactions ตรวจ
+  // ingredients.* และ backend เปิดให้อ่าน /admin/units ด้วย ingredients.view (Final-Backlog P2)
+  // ไม่ใช่ "stock" — "stock" คือสต็อกสินค้า (/admin/products/:id/stock) เท่านั้น
   { prefix: "/owner/ingredients", menuKey: "ingredients" },
   { prefix: "/owner/products/productStock", menuKey: "stock" },
   { prefix: "/owner/products", menuKey: "products" },
@@ -50,9 +51,8 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/production", menuKey: "production" },
   { prefix: "/owner/recipes", menuKey: "recipes" },
   { prefix: "/owner/employees", menuKey: "employees" },
-  // รีวิวลูกค้ายิง /admin/reviews ใต้ products.* (ดู useReviewsViewModel.ts) — เหตุผลเดียวกับ pricing
-  // ข้างบน ต้องมาก่อน /owner/reports ทั่วไป (docs/BACKLOG.md §1)
-  { prefix: "/owner/reports/reviews", menuKey: "products" },
+  // รีวิวลูกค้า (/owner/reports/reviews) ใช้ "reports" ตาม prefix ด้านล่าง — backend ย้าย /admin/reviews จาก
+  // products.* ไป reports.* แล้ว (customer-backend-merge.md §8.20 · Final-Backlog P1) ตรงกับ sidebar และ useReviewsViewModel
   { prefix: "/owner/reports", menuKey: "reports" },
   { prefix: "/owner/finance", menuKey: "reports" },
   // ข้อมูลร้าน (E2) — /admin/weekly-markets ใช้ store_info · ส่วนอื่น backend ให้ owner เท่านั้น

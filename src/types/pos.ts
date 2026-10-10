@@ -27,6 +27,13 @@ export interface PosScanVariant {
   variant_price: number;
 }
 
+/** GET /admin/pos/guest-customer */
+export interface PosGuestCustomer {
+  _id: string;
+  user_fullname: string;
+  email: string;
+}
+
 export interface PosScanResult {
   product: Product;
   current_price: number;
