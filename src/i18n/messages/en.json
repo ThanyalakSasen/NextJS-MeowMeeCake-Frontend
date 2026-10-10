@@ -2624,7 +2624,7 @@
       "lineSessionExpired": "Your session expired while connecting LINE — please log in and try again",
       "loginToManage": "Please log in to manage your account",
       "myAccount": "My account",
-      "profileTitle": "Profile",
+      "profileTitle": "My info",
       "loadFailed": "Could not load your account. Please refresh the page.",
       "emailSaved": "Email saved — please click the verification link in your email",
       "emailSaveFailed": "Could not save the email",
