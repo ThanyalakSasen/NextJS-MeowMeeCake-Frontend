@@ -15,7 +15,6 @@ import type { FavoriteItem } from "@/services/shopFavorites";
 import { resolveUploadUrl } from "@/lib/uploads";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
-import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useAddToCart } from "../../hooks/useAddToCart";
@@ -41,7 +40,6 @@ function FavoritesContent() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: ta("favorites") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
-          <AccountSideMenu />
           <div className="flex min-w-0 flex-1 flex-col gap-5">
             <header className="space-y-1 border-b border-stone-200 pb-5">
               <h1 className="m-0 flex items-center gap-2 text-xl font-bold text-stone-800 sm:text-2xl">

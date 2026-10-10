@@ -128,7 +128,7 @@
 | CustomerNotifications | กระดิ่ง + รายการล่าสุด (`useCustomerNotifications`) | Navbar |
 | CustomerAuthGate | หน้าที่ต้อง login — guest เห็นการ์ดชวนเข้าสู่ระบบ | ตะกร้า · checkout · บัญชีทุกหน้า · รีวิว |
 | CustomerBreadcrumb | เส้นทาง (หน้าแรกนำหน้าเสมอ) | เกือบทุกหน้า |
-| AccountSideMenu | เมนูบัญชีของฉัน | หน้า account/* |
+| AccountSideMenu | เมนูบัญชีของฉัน (5 รายการ) | หน้า account/* ยกเว้น member · favorites · notifications (+ `changepassword`) |
 | ProductCard | บัตรสินค้า + หัวใจ + ใส่ตะกร้า + ป้ายแพ้อาหาร/เหตุผลแนะนำ · `isProductCardVisible` | หน้าแรก · สินค้าทั้งหมด · สินค้าคล้าย · รายการโปรด · (หลังร้าน: SearchTester ใช้ `isProductCardVisible`) |
 | HeroCarousel | แบนเนอร์หน้าแรก | หน้าแรก |
 | CheckoutAddressForm · CouponSelectBox · PointsRedeemBox · PickupLocationPicker | ส่วนของ checkout | checkout · preorder/checkout |

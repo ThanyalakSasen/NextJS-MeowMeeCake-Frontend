@@ -19,7 +19,6 @@ import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
-import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopPage } from "@/components/customer/shopStyles";
 import { shopCouponOverviewKey, shopCouponsKey, shopPointsKey } from "../../lib/shopQueries";
 import { couponLabel } from "../../lib/couponLabel";
@@ -100,7 +99,6 @@ function MemberContent() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: ta("member") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
-          <AccountSideMenu />
           <div className="flex min-w-0 flex-1 flex-col gap-6">
             {pointsQ.isLoading ? (
               <p className="rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center text-sm text-stone-500">{t("loading")}</p>
