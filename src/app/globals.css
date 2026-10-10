@@ -30,9 +30,14 @@
 @theme {
   /* ── สเกลตัวอักษร ──
      ฐานทั้งหน้า = 18px ที่ html{font-size:112.5%} (ดู base reset ด้านล่าง)
-     text-* ของ Tailwind เป็น rem จึงขยายตามสัดส่วนอยู่แล้ว — ที่นี่แค่ดันพื้น text-xs กันจิ๋ว
-     (namespace ที่ถูกของ Tailwind v4 คือ --text-* ไม่ใช่ --font-size-*) */
-  --text-xs: 0.8125rem; /* ~14.6px ที่ฐาน 18 */
+     text-* ของ Tailwind เป็น rem จึงขยายตามสัดส่วนอยู่แล้ว — ที่นี่คือการดันพื้นขั้นต่ำ
+     (namespace ที่ถูกของ Tailwind v4 คือ --text-* ไม่ใช่ --font-size-*)
+
+     ⚠ text-xs กับ text-sm ตอนนี้ "ขนาดเท่ากัน" โดยตั้งใจ (16px ทั้งคู่)
+     คือพื้นขั้นต่ำของทั้งแอป — เล็กกว่านี้อ่านยากสำหรับอักษรไทยที่มีวรรณยุกต์ซ้อนสองชั้น
+     โค้ดเก่ายังเขียน text-xs อยู่ 829 จุด จึงยังคงค่าไว้ให้เท่ากัน แทนการไล่แก้ทั้งหมด */
+  --text-xs: 0.8889rem; /* 16px ที่ฐาน 18 — เดิม 14.6px */
+  --text-sm: 0.8889rem; /* 16px — เดิมไม่เคยตั้ง ได้ default 0.875rem = 15.75px */
 
   /* ── สีแบรนด์ "Coffee" (น้ำตาล) — จุดยึด = 800 ──  ⚠️ sync กับ src/theme/palette.ts (brand) */
   --color-brown-50:  #FAF5F2;
@@ -128,7 +133,7 @@
   --menu-item-active-bg:    var(--color-brown-200);
   --menu-item-active-color: var(--color-brown-900);
   --menu-item-active-bar:   var(--color-brown-500); /* แถบ accent ซ้ายของเมนูหน้าปัจจุบัน */
-  --menu-item-font-size:    1.0625rem; /* 17px */
+  --menu-item-font-size:    1rem;      /* 18px — เดิม 1.0625rem ซึ่งที่ฐาน 18 คือ 19.125px ไม่ใช่ 17px ตามคอมเมนต์เก่า */
 
   /* ── Sidebar: submenu ── */
   --submenu-item-color:        #1F2937;
@@ -316,7 +321,7 @@ body {
 
 /* --- Section label --- */
 .sidebar-section-label {
-  font-size: 0.9375rem; /* 15px — เดิมอ้าง var ที่ไม่มีนิยาม */
+  font-size: 0.8889rem; /* 16px — เดิม 0.9375rem ซึ่งที่ฐาน 18 คือ 16.875px ไม่ใช่ 15px ตามคอมเมนต์เก่า */
   font-weight: 700;
   letter-spacing: 0.02em; /* อักษรไทยไม่ควร track กว้าง */
   color: var(--sidebar-section-color);
@@ -613,7 +618,7 @@ body {
 }
 
 .breadcrumb-link {
-  font-size: 1.0625rem;
+  font-size: 1rem;
   color: var(--bc-link-color);
   text-decoration: none;
   white-space: nowrap;
@@ -632,7 +637,7 @@ body {
 }
 
 .breadcrumb-current {
-  font-size: 1.0625rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--bc-current-color);
   white-space: nowrap;
@@ -781,7 +786,7 @@ body {
 }
 
 .notif-item-time {
-  font-size: 0.9375rem;
+  font-size: 0.8889rem; /* 16px */
   color: var(--text-muted);
   margin-top: 0.125rem;
 }
@@ -826,7 +831,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.0625rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--avatar-color);
   cursor: pointer;
@@ -856,7 +861,7 @@ body {
 }
 
 .owner-name {
-  font-size: 1.0625rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #1e293b;
   white-space: nowrap;

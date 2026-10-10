@@ -5,7 +5,7 @@
 // antd render Table/Input/Select/Button/Tag ฯลฯ ด้วย design token ของตัวเอง (ไม่ผ่าน class Tailwind)
 // ที่นี่คือ "จุดเดียว" ที่ map token โปรเจกต์เข้ากับ token ของ antd
 //
-// แนวปรับ: เป็นมิตรกับผู้สูงอายุ — ตัวอักษร 15–28px, บรรทัด 1.7, control สูง 32/40/48
+// แนวปรับ: เป็นมิตรกับผู้สูงอายุ — ตัวอักษร 16–28px, บรรทัด 1.7, control สูง 36 เท่ากันหมด
 // ─────────────────────────────────────────────────────────────
 import type { ThemeConfig } from "antd";
 import { color, typography, control } from "@/theme/tokens";
