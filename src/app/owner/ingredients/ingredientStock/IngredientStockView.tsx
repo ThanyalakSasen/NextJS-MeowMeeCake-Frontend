@@ -1,7 +1,7 @@
 "use client";
 // View ของ Ingredient Stock — ตาราง + ปุ่ม รับเข้า / เบิกใช้ / ปรับยอด ต่อแถว
-import { Progress } from "antd";
 import { useTranslations, useLocale } from "next-intl";
+import { Progress } from "antd";
 import { Button, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
@@ -103,7 +103,7 @@ export function IngredientStockView(vm: VM) {
             loading={vm.isLoading}
             emptyText={t("ingredientStock.empty")}
             actions={
-              vm.canWriteStock
+              vm.perm.update
                 ? (r) => (
                     <div className="flex justify-end gap-2">
                       <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("ingredientStock.ok_receive")}</Button>
