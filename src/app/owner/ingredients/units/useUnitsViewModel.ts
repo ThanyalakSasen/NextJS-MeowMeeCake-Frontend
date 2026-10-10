@@ -25,7 +25,8 @@ export interface UnitFormValues {
 export function useUnitsViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("ingredients");
+  // เข้าหน้าได้ด้วย ingredients (backend อ่าน /admin/units ได้) แต่สร้าง/แก้/ลบ ต้องใช้ products.* — ปุ่มตามสิทธิ์ products
+  const perm = usePermission("products");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Unit | null>(null);
