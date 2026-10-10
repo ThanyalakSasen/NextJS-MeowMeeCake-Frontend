@@ -2,8 +2,8 @@
 
 > **เอกสารนี้คืออะไร:** ผลตรวจว่าโค้ดฝั่งหลังร้าน "ทำตามกติกาที่ตัวเองเขียนไว้" แค่ไหน — อะไรตรง อะไรหลุด และควรไล่เก็บตามลำดับไหน
 > **เปิดอ่านเมื่อ:** รับงานต่อจากคนอื่น · จะเพิ่มหน้าใหม่แล้วอยากรู้ว่า "แบบที่ถูก" หน้าตาเป็นยังไง · วางแผน sprint เก็บหนี้ทางเทคนิค
-> **ตรวจเมื่อ:** 2026-10-09 · **ทวนซ้ำ:** 2026-10-10 หลัง merge `main` (เพิ่มมา 51 commit) · **ไม่ได้แก้โค้ดใด ๆ** ระหว่างตรวจ
-> **ขอบเขต:** `src/app/owner/**` (33 route) + `src/components/**`
+> **ตรวจเมื่อ:** 2026-10-09 · **ทวนซ้ำเต็มรูปแบบ:** 2026-10-10 หลัง merge `main` (+51 commit) — ตรวจโค้ดใหม่ด้วยทั้งหมด
+> **ขอบเขต:** `src/app/owner/**` (33 route) + `src/components/**` · **ไม่ได้แก้โค้ดใด ๆ** ระหว่างตรวจ
 > **เกณฑ์ที่ใช้ตัดสิน:** `COMPONENT_MAP.md` · `ACTION_BUTTONS.md` · `ALERTS.md` · `THEME.md` (กติกาของโปรเจกต์เอง ไม่ใช่ความเห็นส่วนตัว)
 
 ---
@@ -13,10 +13,10 @@
 | | |
 |---|---|
 | **สรุปสั้นที่สุด** | โครงสร้างใหญ่แข็งแรงมาก · ที่หลุดคือ "รายละเอียดที่ไม่มีเครื่องตรวจอัตโนมัติ" |
-| **ผ่านอัตโนมัติ** | i18n ✓ · theme token ✓ · eslint ✓ |
-| **พังอยู่ตอนนี้** | `npm run check` ไม่ผ่าน — แต่สาเหตุคือไฟล์ cache ค้าง ไม่ใช่โค้ด (ข้อ 3.2) |
-| **เจอทั้งหมด** | 12 ประเด็น — ✅ แก้แล้ว 1 (ข้อ 3.1) · เหลือ 11: ร้ายแรง 2 · สายตา 6 · โครงสร้าง/เอกสาร 3 |
-| **ใช้เวลาแก้ที่เหลือ** | ประมาณ 2–4 วันทำงาน ถ้าทำตาม Phase ใน §4 |
+| **`npm run check`** | ✅ **เขียวทั้งชุด** (i18n · theme · tsc · eslint) ตั้งแต่ 2026-10-10 |
+| **เจอทั้งหมด** | 13 ประเด็น — ✅ แก้แล้ว 2 (ข้อ 3.1, 3.2) · เหลือ 11: ร้ายแรง 1 · สายตา 6 · โครงสร้าง/เอกสาร 4 |
+| **ใช้เวลาแก้ที่เหลือ** | ประมาณ 2–3 วันทำงาน ถ้าทำตาม Phase ใน §4 |
+| **ข่าวดีจากรอบทวน** | โค้ดใหม่ 51 commit (รวมหน้า `/owner/shipping`) **ทำตาม convention ครบ** — ดู §2 ท้ายตาราง |
 
 ---
 
@@ -50,6 +50,19 @@
 | **Alert ทางเดียว** | ไม่พบ antd `message` / `notification` / `Modal.confirm` / `Popconfirm` / `window.alert` เลยสักจุด | การแจ้งเตือนทั้งแอปไหลผ่าน `src/lib/alert.ts` จุดเดียวจริง ๆ |
 | **ไม่มีการลักไก่ข้ามหน้า** | ไม่มีไฟล์ไหน import `_components` ของหน้าอื่นข้าม route | ลบหน้าไหนทิ้ง ไม่พังหน้าอื่น |
 | **i18n / theme** | `npm run lint:i18n` และ `npm run lint:theme` ผ่านทั้งคู่ | ไม่มีข้อความไทยฝังในโค้ด · สีใน `palette.ts` ตรงกับ `globals.css` |
+| **โค้ดใหม่ 51 commit** | หน้า `/owner/shipping` · `DashboardTab` · `RoundDashboardDrawer` · `RenameRoleModal` · `ReceiptUpload` — ทำตาม convention **ครบทุกข้อ** | เป็นสัญญาณว่ากติกาที่เขียนไว้ "ใช้ได้จริง" ไม่ใช่กฎบนกระดาษ |
+
+**เจาะลึกโค้ดใหม่** — ตรวจทีละไฟล์แล้วพบว่า:
+
+| ไฟล์ใหม่ | base wrapper | `usePermission` | Loading/Retry | ปุ่มกลาง / `actionIcon` |
+|---|---|---|---|---|
+| `shipping/ShippingZonesView.tsx` + ViewModel | ✓ | ✓ (ใน ViewModel) | ✓ ทั้งคู่ | ✓ |
+| `preOrderRound/_components/DashboardTab.tsx` | ✓ | — (อ่านอย่างเดียว) | ✓ | ✓ |
+| `preOrderRound/_components/RoundDashboardDrawer.tsx` | ✓ | — | ✓ | — |
+| `permissions/_components/RenameRoleModal.tsx` | ✓ | — (เช็คที่ ViewModel) | — | ✓ `modalButtonIcons` |
+| `finance/expenses/_components/ReceiptUpload.tsx` | — (ใช้ antd `Upload` ตรง ซึ่งถูก เพราะไม่มี wrapper) | — | — | — |
+
+`/owner/shipping` ใช้ `ShippingZonesView.tsx` + `useShippingZonesViewModel.ts` + `ListPageLayout` ตรงตามแบบทุกอย่าง — **คนเขียนไม่ต้องถาม ก็ทำถูก** เพราะมี 32 หน้าก่อนหน้าเป็นตัวอย่าง
 
 > **บทเรียนที่ 1:** เรื่องที่มี **สคริปต์ตรวจอัตโนมัติ** → ผ่านหมด
 > เรื่องที่อาศัย **ความจำของคนเขียน** → หลุดเกือบทุกเรื่อง
@@ -107,9 +120,12 @@ return false; // ไม่อัปโหลดจริง — เก็บ bas
 
 ---
 
-#### 3.2 `npm run check` พังอยู่ตอนนี้ (แต่ไม่ใช่ความผิดของโค้ด)
+#### 3.2 ~~`npm run check` พังอยู่~~ · ✅ **แก้แล้ว** (2026-10-10)
 
-**อาการ**
+> **สถานะ:** ยืนยันแล้วว่า `rm -rf .next` แก้ได้จริง — รัน `npm run check` ซ้ำหลังลบ ผ่านครบทั้ง 4 ด่าน (exit 0)
+> เก็บหัวข้อไว้เพราะอาการนี้ **จะกลับมาอีก** ทุกครั้งที่ลบหน้าทิ้ง — อ่าน "วิธีสังเกต" ท้ายหัวข้อ
+
+**อาการ (ตอนตรวจเจอ)**
 ```
 .next/types/validator.ts(60,39): error TS2307:
 Cannot find module '../../src/app/owner/attendance/page.js'
@@ -128,7 +144,11 @@ Cannot find module '../../src/app/owner/attendance/page.js'
 ```bash
 rm -rf .next && npm run check
 ```
-`.next/` อยู่ใน `.gitignore` อยู่แล้ว ลบได้ปลอดภัย ไม่กระทบ repo
+`.next/` อยู่ใน `.gitignore` อยู่แล้ว ลบได้ปลอดภัย ไม่กระทบ repo (เสียแค่เวลา build รอบแรกช้าลงนิดหน่อย)
+
+**วิธีสังเกตว่าเจออาการนี้อีก**
+ถ้า `tsc` ฟ้อง error ที่ไฟล์ซึ่ง path ขึ้นต้นด้วย `.next/` — **อย่าเพิ่งไปไล่แก้โค้ด** ให้ลบ `.next` แล้วรันใหม่ก่อน
+error ใน `.next/` ไม่เคยเป็นความผิดของโค้ดที่เราเขียน เพราะมันคือไฟล์ที่ Next สร้างเอง
 
 ---
 
@@ -171,7 +191,7 @@ rm -rf .next && npm run check
 
 ---
 
-#### 3.4 `text-gray-400` — 90 จุด ใน 49 ไฟล์ (เฉพาะฝั่งหลังร้าน)
+#### 3.4 `text-gray-400` — 90 จุด ใน 50 ไฟล์ (เฉพาะฝั่งหลังร้าน)
 
 **อาการ**
 `THEME.md §4` เขียนกฎไว้ชัด:
@@ -220,25 +240,52 @@ rm -rf .next && npm run check
 
 ---
 
-#### 3.6 ป้ายสถานะ 4 จุดไม่ได้ใช้ `StatusBadge`
+#### 3.6 สีของป้าย `Tag` มาจาก 3 แหล่ง — มีแค่แหล่งเดียวที่ถูก
+
+> **หมายเหตุ:** รอบตรวจแรกรายงานข้อนี้ไว้แค่ 4 จุด เพราะค้นเฉพาะคำว่า `warning`/`error` รอบทวนซ้ำค้นทุก `<Tag color=` เลยเห็นภาพเต็ม — **ใหญ่กว่าที่รายงานไว้มาก**
 
 **อาการ**
-ระบบมี `StatusBadge` + `enumConfig.ts` เป็นตัวกลางกำหนดสีของสถานะทุกชนิด แต่มี 4 จุดที่เขียน antd `<Tag>` ดิบ:
+`THEME.md §2` กำหนดว่า *"สีของ badge สถานะ order/payment/production → `src/constants/enumConfig.ts` — เป็น palette เฉพาะโดเมน แยกจาก theme กลางตั้งใจ"*
 
-| ไฟล์ | บรรทัด | ข้อความ |
+แต่จากทั้งหมด **20 จุด**ที่ใช้ `<Tag color=...>` ฝั่งหลังร้าน:
+
+| แหล่งที่มาของสี | จำนวน | ตรงกติกา? |
+|---|---|---|
+| **(ก)** `enumConfig` (`cfg.antColor`) | 3 จุด | ✅ ถูก |
+| **(ข)** ตารางสีประจำไฟล์ (`ZONE_COLOR`, `GROUP_TAG`, `tagColorFor()`) | 3 จุด | ⚠️ รูปแบบใหม่ที่ไม่มีในกติกา |
+| **(ค)** พิมพ์ชื่อสีของ antd ลงไปตรง ๆ | **14 จุด** | ❌ ผิด |
+
+**หลักฐาน — กลุ่ม (ค) ที่ชัดที่สุด**
+
+| ไฟล์ | บรรทัด | เขียนว่า |
 |---|---|---|
 | `orders/manageOrders/ManageOrdersView.tsx` | 86 | `<Tag color="warning">` รอคืนเงิน |
 | `orders/preOrderRound/_components/OrdersTab.tsx` | 75 | `<Tag color="warning">` รอคืนเงิน |
 | `orders/manageOrders/_components/OrderDetailContent.tsx` | 64 | `<Tag color="error">` ยกเลิกแล้ว |
 | `orders/preOrderRound/_components/PreorderDetailContent.tsx` | 43 | `<Tag color="error">` ยกเลิกแล้ว |
+| `employees/EmployeesView.tsx` | 33, 52 | `"blue"` · `"success"/"default"` |
+| `employees/permissions/PermissionsView.tsx` · `RoleListPanel.tsx` | 60 · 42 | `"gold"/"blue"` (ตรรกะซ้ำกัน 2 ที่) |
+| `notificationsHistory/NotificationHistoryView.tsx` | 69 | `"default"/"processing"` |
+| `promotions/pricing/PricingView.tsx` | 41 | `"processing"/"success"` |
+| `reports/reviews/_components/ReviewDetailContent.tsx` | 45 | ternary 3 ชั้น `success/warning/default` |
+| `orders/delivery-zones/DeliveryZonesView.tsx` · `shipping/ShippingZonesView.tsx` | 94 · 91 | `"gold"` ทั้งคู่ (ความหมายเดียวกัน แต่ไม่ได้แชร์กัน) |
 
-ที่น่าสนใจคือ **ไฟล์เดียวกันนี้ใช้ `StatusBadge` กับสถานะอื่นอยู่แล้ว** (เช่น `ManageOrdersView.tsx:64`) — คือรู้วิธีที่ถูก แต่ 2 สถานะนี้ตกหล่น
+สังเกตว่า **ไฟล์เดียวกันหลายไฟล์ใช้ `StatusBadge` กับสถานะอื่นอยู่แล้ว** (เช่น `ManageOrdersView.tsx:64`) — คือรู้วิธีที่ถูก แต่สถานะเหล่านี้ตกหล่น
 
 **ทำไมสำคัญ**
-`color="warning"` / `color="error"` คือสีสำเร็จรูปของ antd ซึ่ง**ไม่ใช่สีของแบรนด์** ผลคือในตารางเดียวกัน ป้ายสถานะบางอันมาจาก palette ของร้าน บางอันมาจาก palette ของ library — เฉดเหลือง/แดงจะเพี้ยนกันนิด ๆ และถ้าวันหนึ่งเปลี่ยนธีม 4 จุดนี้จะไม่เปลี่ยนตาม
+`"warning"` / `"gold"` / `"processing"` คือชื่อสีสำเร็จรูปของ antd — **ไม่ใช่สีของแบรนด์** ผลที่ตามมา:
+- ในตารางเดียวกัน ป้ายบางอันมาจาก palette ของร้าน บางอันมาจาก palette ของ library เฉดเพี้ยนกันเล็กน้อย
+- เปลี่ยนธีมทีหลัง 14 จุดนี้จะไม่เปลี่ยนตาม
+- ความหมายเดียวกันใช้คนละสีได้ง่าย เช่น `role_type === "owner"` ให้สี gold เขียนไว้ 2 ไฟล์ ถ้าแก้ที่เดียวจะเพี้ยนทันที
+
+**เรื่องที่น่ากังวลกว่า — รูปแบบนี้กำลังแพร่**
+กลุ่ม (ข) ทั้ง 3 จุดอยู่ใน **โค้ดที่เพิ่งเพิ่มใหม่** (`ShippingZonesView.tsx:78` ใช้ `ZONE_COLOR` · `RoundDashboardDrawer.tsx:128` ใช้ `GROUP_TAG`) — คนเขียนรู้ว่า "ไม่ควร hardcode" เลยทำตารางสีไว้ในไฟล์ ซึ่งดีกว่าเดิม แต่**ยังไม่ใช่ที่ที่กติกากำหนด** ผลคือตอนนี้มีตารางสีกระจายอยู่ 3 ที่แทนที่จะเป็น 1
 
 **แก้ยังไง**
-เพิ่มสถานะ `awaitingRefund` / `cancelled` ลง `src/constants/enumConfig.ts` แล้วใช้ `<StatusBadge group="..." value="..." />`
+ย้ายทั้งหมดไปที่ `src/constants/enumConfig.ts` ซึ่งมีโครง `{ color, antColor }` รออยู่แล้ว:
+1. เพิ่ม group ใหม่: `refundStatus` · `roleType` · `readStatus` · `zoneKind` · `paymentGroup`
+2. เปลี่ยนจุดที่ใช้เป็น `<StatusBadge group="..." value="..." />`
+3. ลบ `ZONE_COLOR` / `GROUP_TAG` / `tagColorFor()` ออกจากไฟล์หน้า
 
 ---
 
@@ -364,7 +411,7 @@ rm -rf .next && npm run check
 
 ---
 
-#### 3.12 เอกสารพูดถึงของที่ไม่มีแล้ว 6 จุด
+#### 3.12 เอกสารพูดถึงของที่ไม่มีแล้ว — เหลือ 5 จุด
 
 **อาการ**
 
@@ -372,10 +419,12 @@ rm -rf .next && npm run check
 |---|---|---|
 | `COMPONENT_MAP.md` | `base/ErrorMessage.tsx` — กล่อง error แดง | **ไม่มีไฟล์นี้** และไม่มีใครใช้ |
 | `COMPONENT_MAP.md:56` | Attendance เป็น consumer ของ `DashboardPageLayout` | หน้านี้ถูกลบไปแล้ว |
-| `COMPONENT_MAP.md` | `UploadImageBox` ใช้ที่ Add/Edit Product, Store Design | จริง ๆ ใช้ที่ Finance Expenses ที่เดียว |
-| `ACTION_BUTTONS.md §4.1` | อ้าง `CartPanel.tsx` · `ProductPickerGrid.tsx` | POS ถูก refactor แล้ว เหลือ `BillCard` · `PaymentAside` · `ScanSearchBox` ฯลฯ |
-| `ACTION_BUTTONS.md §5` | "⚠️ พบ (ยังไม่แก้): ปุ่มลบในตาราง `/owner/products` ลบทันทีไม่ถามยืนยัน" | **แก้แล้ว** (`ProductsView.tsx:140`) |
-| `MOCKS.md §1` | backend อยู่ที่ `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake` | จริง ๆ คือ `D:\Cream\MeowMeeCake-Backend\NextJS-MeowMeeCake` |
+| ~~`COMPONENT_MAP.md`~~ | ~~`UploadImageBox` ใช้ที่ Add/Edit Product, Store Design~~ | ✅ **แก้แล้ว 2026-10-10** — แถวถูกขีดฆ่าพร้อมเหตุผล |
+| `ACTION_BUTTONS.md §4.1` (บรรทัด 170, 211, 224, 226) | อ้าง `CartPanel.tsx` · `ProductPickerGrid.tsx` | POS ถูก refactor แล้ว เหลือ `BillCard` · `PaymentAside` · `ScanSearchBox` ฯลฯ |
+| `ACTION_BUTTONS.md:234` | "⚠️ พบ (ยังไม่แก้): ปุ่มลบในตาราง `/owner/products` ลบทันทีไม่ถามยืนยัน" | **แก้แล้ว** (`ProductsView.tsx:140`) |
+| `MOCKS.md:17` | backend อยู่ที่ `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake` | จริง ๆ คือ `D:\Cream\MeowMeeCake-Backend\NextJS-MeowMeeCake` |
+
+**ข้อสังเกตจากรอบทวน:** `SCREEN_MAP.md` **อัปเดตทันแล้ว** (ลงวันที่ 2026-10-10 มีหน้า `/owner/shipping` และระบุชัดว่า Attendance ไม่มีในโค้ดแล้ว) — ปัญหากระจุกอยู่ที่ `COMPONENT_MAP.md` กับ `ACTION_BUTTONS.md` เท่านั้น
 
 **ทำไมสำคัญ**
 > 💡 **แนวคิดที่ควรจำ: เอกสารที่ผิด แย่กว่าไม่มีเอกสาร**
@@ -383,11 +432,43 @@ rm -rf .next && npm run check
 > ถ้ามีเอกสารที่ผิด คนจะเชื่อแล้วทำพลาด — เช่น นักศึกษาใหม่อ่านเจอ `base/ErrorMessage` แล้วพยายาม import จะงงอยู่ครึ่งชั่วโมงว่าทำไมหาไม่เจอ
 
 **แก้ยังไง**
-แก้ 6 บรรทัด — ใช้เวลา 15 นาที และควรทำ **ทุกครั้ง** ที่แก้โค้ดในรอบถัดไป (ดู Phase 5)
+แก้ 5 บรรทัดที่เหลือ — ใช้เวลา 15 นาที และควรทำ **ทุกครั้ง** ที่แก้โค้ดในรอบถัดไป (ดู Phase 5)
 
 ---
 
-## 4. แผนการแก้ — 6 Phase
+#### 3.13 component ใหม่ 7 ตัวยังไม่ขึ้นทะเบียนใน `COMPONENT_MAP` · 🆕 *เจอในรอบทวน*
+
+**อาการ**
+`COMPONENT_MAP.md` ประกาศตัวเองว่าเป็น *"ทะเบียน component ทุกตัว"* และมีเหตุผลกำกับว่า *"กันสร้างซ้ำ · ให้ทุกคนวาง component ที่เดียวกัน"* — แต่ของใหม่จาก 51 commit ล่าสุดยังไม่ได้ลงทะเบียน:
+
+| component | ที่อยู่ | อยู่ใน COMPONENT_MAP |
+|---|---|---|
+| `ShippingZonesView` | `app/owner/shipping/` | ✗ |
+| `ShippingZoneFormFields` | `app/owner/shipping/_components/` | ✗ |
+| `DashboardTab` | `app/owner/orders/preOrderRound/_components/` | ✗ |
+| `RoundDashboardDrawer` | 〃 | ✗ |
+| `RenameRoleModal` | `app/owner/employees/permissions/_components/` | ✗ |
+| `FlowSteps` | `components/customer/` | ✗ |
+| `OrderSuccess` | `app/customer/account/_components/` | ✗ |
+| `ReceiptUpload` | `app/owner/finance/expenses/_components/` | ✓ |
+
+**ทำไมสำคัญ**
+ทะเบียนที่ไม่ครบ = ทะเบียนที่เชื่อไม่ได้ และเมื่อเชื่อไม่ได้ คนก็เลิกเปิด — แล้วกฎ *"ก่อนสร้าง component ใหม่ ให้เช็คก่อนว่ามีอยู่แล้วไหม"* ก็ใช้ไม่ได้จริง
+
+เห็นผลแล้วในข้อ 3.6: `ShippingZonesView` สร้างตารางสี `ZONE_COLOR` ขึ้นมาเอง ทั้งที่ `DeliveryZonesView` มีตรรกะ `"gold"` แบบเดียวกันอยู่ก่อนแล้ว — ถ้าทะเบียนครบและเปิดดูก่อน อาจเห็นและแชร์กันได้
+
+> 💡 **สังเกตความต่างระหว่างข้อ 3.13 กับ 3.12**
+> 3.12 = เอกสารเขียน **ผิด** (พูดถึงของที่ไม่มี)
+> 3.13 = เอกสารเขียน **ไม่ครบ** (ของที่มีแต่ไม่ได้พูดถึง)
+> ทั้งคู่ทำให้เอกสารเชื่อไม่ได้เท่ากัน แต่ 3.13 เกิดง่ายกว่ามาก เพราะ "ลืมเพิ่ม" ง่ายกว่า "เขียนผิด"
+> ทางแก้ระยะยาวคือทำให้มันเป็นส่วนหนึ่งของ checklist ตอน review ไม่ใช่พึ่งความจำ
+
+**แก้ยังไง**
+เพิ่ม 7 แถว และใส่บรรทัดใน Definition of Done ของทีมว่า *"สร้าง component ใหม่ = เพิ่มแถวใน `COMPONENT_MAP.md` ใน PR เดียวกัน"*
+
+---
+
+## 4. แผนการแก้ — 6 Phase (Phase 0 เสร็จแล้ว)
 
 > **หลักคิดในการจัดลำดับ**
 > 1. **ซ่อมเครื่องมือก่อนซ่อมบ้าน** — ถ้า `npm run check` ยังแดง เราจะไม่รู้ว่างานที่ทำไปทำให้อะไรพังหรือเปล่า
@@ -397,14 +478,13 @@ rm -rf .next && npm run check
 
 ---
 
-### Phase 0 — ทำให้ด่านตรวจกลับมาเขียว · ⏱ 10 นาที
+### ~~Phase 0 — ทำให้ด่านตรวจกลับมาเขียว~~ · ✅ **เสร็จแล้ว** 2026-10-10
 
-| งาน | ไฟล์ |
+| งาน | ผล |
 |---|---|
-| ลบ cache ค้าง | `rm -rf .next` |
-| รันตรวจ | `npm run check` |
+| `rm -rf .next` | ✅ |
+| `npm run check` | ✅ ผ่านทั้ง 4 ด่าน (exit 0) |
 
-**Definition of Done:** `npm run check` ผ่านทั้ง 4 ด่าน (i18n · theme · tsc · eslint) โดยไม่มี error
 **ทำไมต้องก่อน:** ทุก Phase ถัดไปจะจบด้วยการรัน `npm run check` — ถ้ามันแดงอยู่แล้วตั้งแต่แรก เราจะแยกไม่ออกว่า error ใหม่หรือเก่า
 
 ---
@@ -418,6 +498,7 @@ rm -rf .next && npm run check
 | **ห้าม `text-gray-400`** | grep ทั้ง `src/` | `THEME.md §4` |
 | **`PlusIcon` ต้องมาจาก `solid`** | ห้าม `PlusIcon` จาก `24/outline` | `ACTION_BUTTONS.md §1.1` |
 | **ปุ่มไอคอนล้วนต้องมี `aria-label`** | หา `<Button ... icon={...} />` ที่ self-closing | `ACTION_BUTTONS.md §4.1` |
+| **`<Tag color=` ต้องมาจาก `enumConfig`** | ห้ามพิมพ์ชื่อสี antd ลงไปตรง ๆ | `THEME.md §2` · ข้อ 3.6 |
 
 **เทคนิคสำคัญ:** ให้สคริปต์มี **allowlist** — ไฟล์/บรรทัดที่ยกเว้นได้ พร้อมเหตุผล จะได้เปิดใช้กฎทันทีโดยไม่ต้องรอแก้ครบ 90 จุด แล้วค่อย ๆ ลบรายการออกจาก allowlist ใน Phase ถัด ๆ ไป
 
@@ -430,7 +511,7 @@ rm -rf .next && npm run check
 
 ---
 
-### Phase 2 — แก้สิ่งที่กระทบผู้ใช้จริง · ⏱ 1–2 วัน
+### Phase 2 — แก้สิ่งที่กระทบผู้ใช้จริง · ⏱ ครึ่งวัน
 
 | ลำดับ | งาน | ข้อ |
 |---|---|---|
@@ -444,7 +525,7 @@ rm -rf .next && npm run check
 
 ---
 
-### Phase 3 — กวาดเรื่องหน้าตา · ⏱ 1 วัน
+### Phase 3 — กวาดเรื่องหน้าตา · ⏱ 1–1.5 วัน
 
 เรียงจากง่ายไปยาก ทำทีละข้อแล้ว commit แยก จะ review ง่าย
 
@@ -453,7 +534,7 @@ rm -rf .next && npm run check
 | 3.1 | เปลี่ยน import antd → `@/components/base` | 12 ไฟล์ | 3.7 |
 | 3.2 | เปลี่ยน heroicons ที่ import เอง → `actionIcon` / ปุ่มกลาง | ~8 ไฟล์ | 3.9 |
 | 3.3 | `PlusIcon` outline → `actionIcon("add")` · แก้ solid ที่ควรเป็น outline | 12 + 2 ไฟล์ | 3.5 |
-| 3.4 | เพิ่ม `awaitingRefund` / `cancelled` ลง `enumConfig` → ใช้ `StatusBadge` | 4 จุด | 3.6 |
+| 3.4 | ย้ายสี `<Tag>` ไป `enumConfig` → ใช้ `StatusBadge` (รวมลบ `ZONE_COLOR` · `GROUP_TAG` · `tagColorFor`) | **17 จุด** | 3.6 |
 | 3.5 | ไล่ `text-gray-400` → `gray-600` / `--text-muted` **ทีละไฟล์** พร้อมลบออกจาก allowlist | 90 จุด | 3.4 |
 
 **คำเตือนสำคัญสำหรับข้อ 3.5:** อย่าใช้ find-and-replace รวดเดียว บางจุดเป็นไอคอน decoration ที่เปลี่ยนแล้วหน้าตาเพี้ยน ต้องเปิดดูหน้าจอจริงประกอบ
@@ -479,9 +560,9 @@ rm -rf .next && npm run check
 
 | เอกสาร | แก้อะไร |
 |---|---|
-| `COMPONENT_MAP.md` | ลบแถว `ErrorMessage` · ลบ Attendance · แก้ consumer ของ `UploadImageBox` · เพิ่ม component ใหม่ที่ย้ายใน Phase 4 |
-| `ACTION_BUTTONS.md` | แก้ §4.1 (ชื่อไฟล์ POS ใหม่ + ขึ้นทะเบียน 10 ปุ่มไอคอนล้วน) · ลบคำเตือนใน §5 ที่แก้แล้ว |
-| `MOCKS.md` | แก้ path backend |
+| `COMPONENT_MAP.md` | ลบแถว `ErrorMessage` · ลบ Attendance (บรรทัด 56) · **เพิ่ม 7 component ใหม่** (ข้อ 3.13) · เพิ่ม component ที่ย้ายใน Phase 4 |
+| `ACTION_BUTTONS.md` | แก้ §4.1 (ชื่อไฟล์ POS ใหม่ บรรทัด 170/211/224/226 + ขึ้นทะเบียน 10 ปุ่มไอคอนล้วน) · ลบคำเตือนบรรทัด 234 ที่แก้แล้ว |
+| `MOCKS.md:17` | แก้ path backend → `D:\Cream\MeowMeeCake-Backend\NextJS-MeowMeeCake` |
 | `THEME.md` · `ACTION_BUTTONS.md` | เพิ่มบรรทัด "กฎข้อนี้ตรวจอัตโนมัติโดย `npm run check`" ในกฎที่เพิ่มใน Phase 1 |
 | **ไฟล์นี้** | อัปเดตสถานะแต่ละข้อเป็น ✅ |
 
@@ -491,15 +572,15 @@ rm -rf .next && npm run check
 
 ### สรุปตารางงาน
 
-| Phase | ชื่อ | เวลา | ขึ้นกับ Phase ก่อน? |
-|---|---|---|---|
-| 0 | ซ่อมด่านตรวจ | 10 นาที | — |
-| 1 | สร้างรั้วกันถอยหลัง | ครึ่งวัน | ต้องผ่าน 0 |
-| 2 | แก้สิ่งที่กระทบผู้ใช้ | 1–2 วัน | ทำคู่ขนานกับ 1 ได้ |
-| 3 | กวาดหน้าตา | 1 วัน | ต้องผ่าน 1 (ใช้ allowlist) |
-| 4 | จัดโครงสร้าง | ครึ่งวัน | ควรรอ 3 จบ |
-| 5 | ปรับเอกสาร | 1 ชั่วโมง | ต้องผ่าน 4 |
-| | **รวม** | **~3–5 วัน** | |
+| Phase | ชื่อ | เวลา | ขึ้นกับ Phase ก่อน? | สถานะ |
+|---|---|---|---|---|
+| 0 | ซ่อมด่านตรวจ | 10 นาที | — | ✅ **เสร็จ** 2026-10-10 |
+| 1 | สร้างรั้วกันถอยหลัง | ครึ่งวัน | ต้องผ่าน 0 | ⬜ ถัดไป |
+| 2 | แก้สิ่งที่กระทบผู้ใช้ | ครึ่งวัน | ทำคู่ขนานกับ 1 ได้ | ⬜ |
+| 3 | กวาดหน้าตา | 1–1.5 วัน | ต้องผ่าน 1 (ใช้ allowlist) | ⬜ |
+| 4 | จัดโครงสร้าง | ครึ่งวัน | ควรรอ 3 จบ | ⬜ |
+| 5 | ปรับเอกสาร | 1 ชั่วโมง | ต้องผ่าน 4 | ⬜ |
+| | **เหลือทั้งหมด** | **~2–3 วัน** | | |
 
 ---
 
@@ -528,9 +609,18 @@ for C in Tag Divider Progress Empty Spin Input; do
   echo "-- $C --"; grep -rln "import .*\b$C\b.*from \"antd\"" src/app/owner src/components/shared
 done
 
-# ข้อ 3.1 — ปุ่มลบทุกปุ่มมี ConfirmDeletePopup ไหม
+# ปุ่มลบทุกปุ่มมี ConfirmDeletePopup ไหม
 for f in $(grep -rl DeleteButton src/app/owner); do
   grep -q ConfirmDeletePopup "$f" || echo "ไม่มี popup: $f"
+done
+
+# ข้อ 3.6 — สี Tag ที่ไม่ได้มาจาก enumConfig
+grep -rn '<Tag color=' src/app/owner | grep -v antColor
+
+# ข้อ 3.13 — component ใหม่ขึ้นทะเบียนใน COMPONENT_MAP แล้วหรือยัง
+for c in $(find src/app/owner src/components -name "*.tsx" -newer package.json \
+            -exec basename {} .tsx \;); do
+  grep -q "$c" docs/COMPONENT_MAP.md || echo "ยังไม่ขึ้นทะเบียน: $c"
 done
 ```
 
@@ -550,5 +640,15 @@ done
 ---
 
 *ตรวจโดยอ่านโค้ดและรันสคริปต์ของโปรเจกต์จริง ไม่มีการแก้ไขไฟล์ใด ๆ ระหว่างตรวจ*
-*ตรวจรอบแรก ณ commit `4f0202e` (2026-10-09) · ทวนซ้ำและปรับตัวเลขทั้งหมด ณ commit `6d9352f` (2026-10-10) หลัง merge `main`*
-*ทุกเลขบรรทัดอ้างอิงสถานะ ณ `6d9352f` — ถ้า `main` ขยับอีก ให้รันคำสั่งใน §5 ทวนก่อนลงมือ*
+**ประวัติการตรวจ**
+
+| รอบ | วันที่ | commit | ผล |
+|---|---|---|---|
+| 1 | 2026-10-09 | `4f0202e` | เจอ 12 ประเด็น |
+| 2 | 2026-10-10 | `6d9352f` | หลัง merge `main` (+51 commit) — ข้อ 3.1 แก้แล้ว · ปรับตัวเลขทั้งหมด |
+| 3 | 2026-10-10 | `089ccda` | ตรวจเต็มรูปแบบรวมโค้ดใหม่ — ข้อ 3.2 แก้แล้ว · ข้อ 3.6 พบว่าใหญ่กว่าเดิม (4 → 17 จุด) · เจอข้อ 3.13 ใหม่ |
+
+*ทุกเลขบรรทัดอ้างอิงสถานะ ณ `089ccda` — ถ้า `main` ขยับอีก ให้รันคำสั่งใน §5 ทวนก่อนลงมือ*
+
+> **ข้อสังเกตจากการตรวจ 3 รอบ:** ตัวเลขในรายงานแบบนี้ **หมดอายุเร็วมาก** — แค่ 1 วันกับ 51 commit ก็เปลี่ยนไป 5 จุดแล้ว
+> นี่คือเหตุผลที่ §4 Phase 1 (เปลี่ยนกฎให้เป็นสคริปต์) สำคัญกว่าการไล่แก้: **สคริปต์ไม่หมดอายุ รายงานหมด**
