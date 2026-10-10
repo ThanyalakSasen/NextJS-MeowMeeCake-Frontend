@@ -35,9 +35,11 @@ export function StoreDesignView(vm: VM) {
       title={t("storeDesign.title")}
       description={t("storeDesign.description")}
       actions={
-        <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
-          {t("storeDesign.addBanner")}
-        </Button>
+        vm.perm.create ? (
+          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+            {t("storeDesign.addBanner")}
+          </Button>
+        ) : undefined
       }
       toolbar={
         <FilterToolbar
@@ -77,9 +79,11 @@ export function StoreDesignView(vm: VM) {
             <StatCard label={t("enums.bannerStatus.expired")} value={vm.counts.expired} sub={t("storeDesign.statExpiredSub")} tone="down" />
           </StatCardsGrid>
 
-          <p className="text-sm text-gray-400">
-            {t(vm.canReorder ? "storeDesign.reorderHint" : "storeDesign.reorderDisabledHint")}
-          </p>
+          {vm.perm.update && (
+            <p className="text-sm text-gray-400">
+              {t(vm.canReorder ? "storeDesign.reorderHint" : "storeDesign.reorderDisabledHint")}
+            </p>
+          )}
 
           {/* ไม่ใส่ items-start → การ์ดยืดเต็มแถว (BannerCard h-full) สูงเท่ากัน รวมถึงปุ่ม "เพิ่มแบนเนอร์" */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -87,7 +91,9 @@ export function StoreDesignView(vm: VM) {
               <BannerCard
                 key={b._id}
                 banner={b}
-                draggable={vm.canReorder}
+                draggable={vm.canReorder && vm.perm.update}
+                canEdit={vm.perm.update}
+                canDelete={vm.perm.delete}
                 dragging={draggingId === b._id}
                 dragOver={dragOverId === b._id}
                 onEdit={vm.openEdit}
@@ -100,6 +106,7 @@ export function StoreDesignView(vm: VM) {
                 onDragEnd={() => { setDraggingId(null); setDragOverId(null); }}
               />
             ))}
+            {vm.perm.create && (
             <button
               type="button"
               onClick={vm.openAdd}
@@ -109,6 +116,7 @@ export function StoreDesignView(vm: VM) {
               <span className="text-sm font-medium">{t("storeDesign.addBanner")}</span>
               <span className="px-4 text-center text-xs leading-relaxed">{t("storeDesign.addCardHint")}</span>
             </button>
+            )}
           </div>
         </div>
       )}

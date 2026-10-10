@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { bannersService } from "@/services/banners";
+import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { Banner } from "@/types/banner";
@@ -21,6 +22,8 @@ export interface BannerRow extends Banner {
 type TabFilter = "all" | BannerStatus;
 
 export function useStoreDesignViewModel() {
+  // /admin/banners ตรวจ products.* — ปุ่มเพิ่ม/แก้/ลบ/เปิดปิด/ลากเรียง ตามสิทธิ์ products (Final-Backlog P13)
+  const perm = usePermission("products");
   const t = useTranslations();
   const qc = useQueryClient();
 
@@ -123,6 +126,7 @@ export function useStoreDesignViewModel() {
   });
 
   return {
+    perm,
     rows: filtered,
     counts,
     isLoading: q.isLoading,
