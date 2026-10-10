@@ -1,8 +1,7 @@
 "use client";
 // View ของ Ingredient Stock — ตาราง + ปุ่ม รับเข้า / เบิกใช้ / ปรับยอด ต่อแถว
 import { useTranslations, useLocale } from "next-intl";
-import { Progress } from "antd";
-import { Button, Select } from "@/components/base";
+import { Button, ProgressBar, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
@@ -38,7 +37,7 @@ export function IngredientStockView(vm: VM) {
             {formatNumber(r.currentStock, locale)}{" "}
             <span className="font-normal text-gray-600">{r.unitAbbr}</span>
           </p>
-          <Progress percent={r.pct} showInfo={false} size="small" strokeColor={STOCK_STATUS_CONFIG[r.status].dotColor} />
+          <ProgressBar percent={r.pct} color={STOCK_STATUS_CONFIG[r.status].dotColor} />
         </div>
       ),
     },

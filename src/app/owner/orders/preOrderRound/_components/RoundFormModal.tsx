@@ -5,13 +5,13 @@ import { useState } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import type { Dayjs } from "dayjs";
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Form, FormItem, useAntForm, Input, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import { formatCurrency } from "@/i18n/format";
 import type { Product } from "@/types/product";
 import type { CreateRoundInput, RoundItemInput } from "@/types/preorderRound";
-import { modalButtonIcons } from "@/components/shared/actions";
+import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 
 interface ItemRow {
   key: string;
@@ -120,7 +120,7 @@ export function RoundFormModal({
 
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-gray-500">{t("preorderRound.itemsTitle", { n: rows.length })}</p>
-          <Button size="small" icon={<PlusIcon className="h-3.5 w-3.5" />} onClick={() => setRows((p) => [...p, emptyRow()])}>
+          <Button size="small" icon={actionIcon("add", "small")} onClick={() => setRows((p) => [...p, emptyRow()])}>
             {t("preorderRound.addItem")}
           </Button>
         </div>

@@ -1,7 +1,6 @@
 "use client";
 // View ของ Finance Expenses — JSX ล้วน รับ props จาก useFinanceExpensesViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
@@ -13,7 +12,7 @@ import { resolveUploadUrl } from "@/lib/uploads";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
-import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, RetryButton, actionIcon } from "@/components/shared/actions";
 import type { useFinanceExpensesViewModel } from "./useFinanceExpensesViewModel";
 import { ExpenseFormModal } from "./_components/ExpenseFormModal";
 import { RecurringRemindersList } from "./_components/RecurringRemindersList";
@@ -89,7 +88,7 @@ export function FinanceExpensesView(vm: VM) {
             {t("common.export")}
           </Button>
           {vm.perm.create && (
-            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
               {t("finance.addExpense")}
             </Button>
           )}

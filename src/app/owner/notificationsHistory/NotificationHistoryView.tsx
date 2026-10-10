@@ -1,7 +1,6 @@
 "use client";
 // View ของ Notification History — ตารางประวัติแจ้งเตือน + drawer รายละเอียด
 import { useTranslations, useLocale } from "next-intl";
-import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
@@ -80,12 +79,12 @@ export function NotificationHistoryView(vm: VM) {
       actions={
         <>
           {vm.stats.unread > 0 && (
-            <Button icon={<CheckCircleIcon className="h-4 w-4" />} onClick={vm.onMarkAllRead}>
+            <Button icon={actionIcon("confirm")} onClick={vm.onMarkAllRead}>
               {t("notifications.markAllRead")}
             </Button>
           )}
           {vm.canDelete && vm.stats.total > 0 && (
-            <Button danger icon={<TrashIcon className="h-4 w-4" />} onClick={vm.onClearAll}>
+            <Button danger icon={actionIcon("delete")} onClick={vm.onClearAll}>
               {t("notifications.clearAll")}
             </Button>
           )}

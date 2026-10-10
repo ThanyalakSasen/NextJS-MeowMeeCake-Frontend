@@ -1,9 +1,10 @@
 "use client";
 // แถวไดนามิก "ขั้นตอนการทำ" — ใช้ร่วมทั้ง MainRecipeModal และ ComponentFormModal
 import { useTranslations } from "next-intl";
-import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, Input, TextArea, InputNumber } from "@/components/base";
 import type { RecipeStep } from "@/types/recipeShared";
+import { actionIcon } from "@/components/shared/actions";
 
 export function StepEditor({
   steps,
@@ -60,7 +61,7 @@ export function StepEditor({
           />
         </div>
       ))}
-      <Button size="small" icon={<PlusIcon className="h-3.5 w-3.5" />} onClick={add} className="self-start">
+      <Button size="small" icon={actionIcon("add", "small")} onClick={add} className="self-start">
         {t("recipes.addStep")}
       </Button>
     </div>

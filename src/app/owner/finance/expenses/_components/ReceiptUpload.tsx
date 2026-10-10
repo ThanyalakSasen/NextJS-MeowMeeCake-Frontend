@@ -5,12 +5,12 @@
 import { useState } from "react";
 import { Upload } from "antd";
 import type { UploadFile, UploadProps } from "antd";
-import { PlusIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 import { expensesService } from "@/services/expenses";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
+import { actionIcon } from "@/components/shared/actions";
 
 /** ตรงกับเพดานของ backend (src/lib/upload.ts) — กันไว้ก่อนส่งจะได้ไม่ต้องรอ 400 */
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -61,7 +61,7 @@ export function ReceiptUpload({
     >
       {value ? null : (
         <span className="flex flex-col items-center gap-1 text-xs text-gray-400">
-          <PlusIcon className="h-5 w-5" />
+          {actionIcon("add", undefined, "h-5 w-5")}
           {uploading ? t("common.loading") : t("common.add")}
         </span>
       )}

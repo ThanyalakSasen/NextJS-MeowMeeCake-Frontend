@@ -1,8 +1,7 @@
 "use client";
 // แท็บ 2: คำสั่งซื้อเค้กวันเกิด (Preorders) — presentational ล้วน รับ props จาก usePreOrderRoundViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { Avatar, Select } from "@/components/base";
-import { Tag } from "antd";
+import { Avatar, Select, Tag } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { isAwaitingRefund } from "@/types/order";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";

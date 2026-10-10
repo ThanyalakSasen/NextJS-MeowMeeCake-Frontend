@@ -1,12 +1,12 @@
 "use client";
 // การ์ดสูตรหลัก 1 สูตร — ผูกกับสินค้า แสดงส่วนประกอบ (สูตรส่วนประกอบ + วัตถุดิบตรง) แบบย่อ
 import { useTranslations, useLocale } from "next-intl";
-import { BookOpenIcon, LinkIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { BookOpenIcon, LinkIcon } from "@heroicons/react/24/outline";
 import { Button, Card } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Recipe } from "@/types/recipe";
-import { EditButton, DeleteButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 
 export function RecipeCard({
   recipe,
@@ -96,7 +96,7 @@ export function RecipeCard({
       <div className="flex items-center justify-between px-3.5 py-2">
         <span className="text-sm text-gray-400">{t("recipes.updatedAt", { date: formatDate(recipe.updated_at, locale) })}</span>
         <div className="flex items-center gap-1.5">
-          <Button size="small" type="text" icon={<EyeIcon className="h-3.5 w-3.5" />} onClick={onView} aria-label={t("common.view")} />
+          <Button size="small" type="text" icon={actionIcon("view", "small")} onClick={onView} aria-label={t("common.view")} />
           {canUpdate && (
             <EditButton size="small" type="text" onClick={onEdit} />
           )}

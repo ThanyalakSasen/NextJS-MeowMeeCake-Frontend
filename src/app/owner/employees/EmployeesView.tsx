@@ -1,7 +1,6 @@
 "use client";
 // View ของ Employees List — JSX ล้วน (+ ResetPasswordModal สำหรับตั้งรหัสผ่านใหม่)
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { KeyIcon, LockOpenIcon } from "@heroicons/react/24/outline";
 import { formatDate } from "@/i18n/format";
 import { ResetPasswordModal } from "./_components/ResetPasswordModal";
@@ -10,7 +9,7 @@ import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
-import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, RetryButton, actionIcon } from "@/components/shared/actions";
 import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel";
 
 type VM = ReturnType<typeof useEmployeesViewModel>;
@@ -72,7 +71,7 @@ export function EmployeesView(vm: VM) {
       description={t("employees.description")}
       actions={
         vm.perm.create && (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} href="/owner/employees/addEmployee">
+          <Button type="primary" icon={actionIcon("add")} href="/owner/employees/addEmployee">
             {t("employees.addEmployee")}
           </Button>
         )

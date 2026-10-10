@@ -5,13 +5,12 @@
 // useStoreDesignViewModel.onReorder แล้ว
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { FilterToolbar, SearchInput, TypeTabBar } from "@/components/shared/data";
-import { RetryButton } from "@/components/shared/actions";
+import { RetryButton, actionIcon } from "@/components/shared/actions";
 import type { useStoreDesignViewModel } from "./useStoreDesignViewModel";
 import { BannerCard } from "./_components/BannerCard";
 import { BannerFormModal } from "./_components/BannerFormModal";
@@ -36,7 +35,7 @@ export function StoreDesignView(vm: VM) {
       description={t("storeDesign.description")}
       actions={
         vm.perm.create && (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+          <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
             {t("storeDesign.addBanner")}
           </Button>
         )
@@ -110,7 +109,7 @@ export function StoreDesignView(vm: VM) {
                 onClick={vm.openAdd}
                 className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-600"
               >
-                <PlusIcon className="h-7 w-7" />
+                {actionIcon("add", undefined, "h-7 w-7")}
                 <span className="text-sm font-medium">{t("storeDesign.addBanner")}</span>
                 <span className="px-4 text-center text-xs leading-relaxed">{t("storeDesign.addCardHint")}</span>
               </button>

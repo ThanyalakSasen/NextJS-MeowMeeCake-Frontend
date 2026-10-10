@@ -1,11 +1,11 @@
 "use client";
 // แถบกรองของหน้ารีวิว — ค้นข้อความ · หมวด · สินค้า · ดาว · หัวข้อ (+ ชม/ติ) · ตอบกลับ · อ่าน · รูป/วิดีโอ · ประเภทออเดอร์ · สถานะ · เรียง
 import { useTranslations } from "next-intl";
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Select, Tag } from "@/components/base";
 import { SearchInput } from "@/components/shared/data";
 import type { ReviewSort, ReviewStatus } from "@/types/review";
 import type { ReviewFilters, Tri } from "../useReviewsViewModel";
+import { actionIcon } from "@/components/shared/actions";
 
 const SORTS: ReviewSort[] = ["newest", "needs_reply", "lowest", "highest", "oldest"];
 const STATUSES: ReviewStatus[] = ["approved", "hidden", "pending"];
@@ -100,7 +100,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
             onChange={(v: ReviewFilters["status"]) => setFilter("status", v)} />
         ))}
         <div className="flex items-end">
-          <Button size="small" icon={<ArrowPathIcon className="h-4 w-4" />} onClick={onReset}>
+          <Button size="small" icon={actionIcon("reset", "small")} onClick={onReset}>
             {t("reviews.filter.reset")}
           </Button>
         </div>

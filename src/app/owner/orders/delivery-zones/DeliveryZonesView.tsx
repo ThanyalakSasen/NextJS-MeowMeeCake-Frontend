@@ -3,12 +3,11 @@
 // ปุ่มเพิ่ม/แก้/ลบ/กู้คืน + สวิตช์เปิดใช้ ตามสิทธิ์ orders.create/update/delete
 import { Modal } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Card, Switch, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
-import { DeleteButton, EditButton, RetryButton, modalButtonIcons } from "@/components/shared/actions";
+import { DeleteButton, EditButton, RetryButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import { formatCurrency } from "@/i18n/format";
 import type { DeliveryZone } from "@/types/deliveryZone";
 import type { useDeliveryZonesViewModel } from "./useDeliveryZonesViewModel";
@@ -30,7 +29,7 @@ export function DeliveryZonesView(vm: VM) {
       description={t("deliveryZones.description")}
       actions={
         vm.perm.create && !vm.isLoading && !vm.isError ? (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+          <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
             {t("deliveryZones.add")}
           </Button>
         ) : undefined

@@ -7,11 +7,11 @@ import { useState } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import type { CreateProductionOrderItemInput } from "@/types/productionOrder";
-import { modalButtonIcons } from "@/components/shared/actions";
+import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import type { CreateProductionOrderValue } from "../useProductionViewModel";
 
 interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string }
@@ -119,7 +119,7 @@ export function ProductionOrderFormModal({
 
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-gray-500">{t("production.itemsTitle", { n: rows.length })}</p>
-          <Button size="small" icon={<PlusIcon className="h-3.5 w-3.5" />} onClick={() => setRows((p) => [...p, emptyRow()])}>
+          <Button size="small" icon={actionIcon("add", "small")} onClick={() => setRows((p) => [...p, emptyRow()])}>
             {t("production.addItem")}
           </Button>
         </div>

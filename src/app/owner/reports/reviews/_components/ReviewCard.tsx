@@ -5,6 +5,8 @@
 import { useState } from "react";
 import { Checkbox, Image, Tooltip } from "antd";
 import { useLocale, useTranslations } from "next-intl";
+// EyeIcon/EyeSlashIcon ที่นี่เป็น "สลับอ่านแล้ว/ยังไม่อ่าน" เป็นคู่ ไม่ใช่ปุ่ม "ดู" ของ actionIcon("view")
+// — EyeSlashIcon ไม่มีในตาราง §1.1 ถ้าดึงมาแค่ตัวเดียวจะกลายเป็นคนละแหล่งกัน จึง import เองทั้งคู่
 import { EyeIcon, EyeSlashIcon, PhotoIcon, TagIcon } from "@heroicons/react/24/outline";
 import { MapPinIcon as PinSolid } from "@heroicons/react/24/solid";
 import { MapPinIcon as PinOutline } from "@heroicons/react/24/outline";

@@ -2,14 +2,12 @@
 // เนื้อหาใน DetailDrawer ของรอบพรีออเดอร์ — ข้อมูลรอบ + ปุ่มเปลี่ยนสถานะ + จัดการสินค้าในรอบ
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/outline";
-import { Divider } from "antd";
-import { Button, Tag } from "@/components/base";
+import { Button, Divider, Tag } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { PreorderRound } from "@/types/preorderRound";
-import { EditButton, DeleteButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
@@ -71,7 +69,7 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
         <div className="mb-2 flex items-center justify-between">
           <p className="text-sm font-semibold text-gray-500">{t("preorderRound.itemsTitle", { n: round.items?.length ?? 0 })}</p>
           {vm.perm.update && !final && (
-            <Button size="small" icon={<PlusIcon className="h-3.5 w-3.5" />} onClick={vm.openAddItem}>
+            <Button size="small" icon={actionIcon("add", "small")} onClick={vm.openAddItem}>
               {t("preorderRound.addItem")}
             </Button>
           )}

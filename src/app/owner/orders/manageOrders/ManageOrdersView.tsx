@@ -3,10 +3,10 @@
 // payment_status แสดงเป็น badge อ่านอย่างเดียว (แก้ตรง ๆ ไม่ได้ — backend จัดการผ่าน resource
 // Payments/verify เท่านั้น) · คอลัมน์ items/สลิปเอาออกจากตาราง (ต้องเรียก getById ต่อแถว ไม่คุ้ม
 // N+1 — ดูรายละเอียดเต็มได้ที่ drawer ผ่านปุ่ม "ดู")
-import { Tag, Tooltip } from "antd";
+import { Tooltip } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import { Avatar, Button, Select } from "@/components/base";
+import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "@/components/shared/data";
 import { DetailDrawer } from "@/components/shared/feedback";

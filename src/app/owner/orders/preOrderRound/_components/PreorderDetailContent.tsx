@@ -1,9 +1,8 @@
 "use client";
 // เนื้อหาใน DetailDrawer ของคำสั่งซื้อเค้กวันเกิด (Preorder) — presentational ล้วน
 // payment มาจาก paymentsService.listByPreorder (คนละ resource กับ preorder — สลิป/สถานะตรวจอยู่ในนั้น)
-import { Divider, Tag } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { Avatar, Button } from "@/components/base";
+import { Avatar, Button, Divider, Tag } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Preorder } from "@/types/preorder";

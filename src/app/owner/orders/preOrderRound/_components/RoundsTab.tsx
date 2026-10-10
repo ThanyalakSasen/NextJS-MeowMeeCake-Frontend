@@ -1,7 +1,6 @@
 "use client";
 // แท็บ 1: รอบพรีออเดอร์ — presentational ล้วน รับ props จาก usePreOrderRoundViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Select } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
@@ -9,7 +8,7 @@ import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound } from "@/types/preorderRound";
-import { DeleteButton, RetryButton, ViewButton } from "@/components/shared/actions";
+import { DeleteButton, RetryButton, ViewButton, actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { isFinalRoundStatus } from "../preorderStatus";
 
@@ -56,7 +55,7 @@ export function RoundsTab(vm: VM) {
       <div className="flex items-start justify-between gap-4">
         <p className="text-base text-gray-600">{t("preorderRound.roundsDescription", { n: vm.roundTotal })}</p>
         {vm.perm.create && (
-          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openCreateRound}>
+          <Button type="primary" icon={actionIcon("add")} onClick={vm.openCreateRound}>
             {t("preorderRound.createRound")}
           </Button>
         )}

@@ -2,11 +2,10 @@
 // แท็บ "คำสำหรับวิเคราะห์" — คำ/วลีในข้อความรีวิว → หัวข้อ (ระบบวิเคราะห์ข้อความใช้จัดหมวดรีวิวที่ลูกค้าไม่ได้เลือกหัวข้อ)
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Card, Input, Select, Tag } from "@/components/base";
 import { DataTable, SearchInput } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
-import { DeleteButton, EditButton, RetryButton, modalButtonIcons } from "@/components/shared/actions";
+import { DeleteButton, EditButton, RetryButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import { FormField } from "@/components/shared/form";
 import type { SemanticTerm } from "@/types/review";
 import type { useReviewSettingsViewModel } from "../useReviewSettingsViewModel";
@@ -32,7 +31,7 @@ export function TermsTab({ vm }: { vm: VM }) {
           />
           <span className="text-xs text-gray-400">{t("reviewSettings.terms.count", { shown: vm.terms.length, total: vm.termTotal })}</span>
           {vm.perm.create && (
-            <Button className="ml-auto" type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openNewTerm} disabled={vm.aspectOptions.length === 0}>
+            <Button className="ml-auto" type="primary" icon={actionIcon("add")} onClick={vm.openNewTerm} disabled={vm.aspectOptions.length === 0}>
               {t("reviewSettings.terms.add")}
             </Button>
           )}

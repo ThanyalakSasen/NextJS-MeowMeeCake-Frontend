@@ -5,10 +5,10 @@
 import { useState } from "react";
 import { AutoComplete } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
 import { Button, TextArea } from "@/components/base";
 import { formatDate } from "@/i18n/format";
 import type { ReplySuggestion } from "@/types/review";
+import { actionIcon } from "@/components/shared/actions";
 
 const MAX_REPLY = 2000;
 const TEMPLATES = [
@@ -115,7 +115,7 @@ export function ReplyBox({ rating, reply, suggestions, canEdit, onSave }: {
           </p>
           {canEdit && (
             <button type="button" onClick={() => { setText(current); setEditing(true); }} className="inline-flex items-center gap-1 text-[11px] text-brown-600 hover:underline">
-              <PencilSquareIcon className="h-3 w-3" />
+              {actionIcon("edit", undefined, "h-3 w-3")}
               {t("common.edit")}
             </button>
           )}
@@ -127,7 +127,7 @@ export function ReplyBox({ rating, reply, suggestions, canEdit, onSave }: {
 
   return canEdit ? (
     <button type="button" onClick={() => { setText(""); setEditing(true); }} className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brown-700 hover:underline">
-      <PencilSquareIcon className="h-3.5 w-3.5" />
+      {actionIcon("edit", "small")}
       {t("reviews.reply.write")}
     </button>
   ) : null;

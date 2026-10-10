@@ -2,9 +2,8 @@
 // เนื้อหาข้างใน DetailDrawer ของ Manage Orders — presentational ล้วน
 // order มาจาก ordersService.get(id) เสมอ (มี items จริง) · payment มาจาก paymentsService.listByOrder
 // (คนละ resource กับ order — สลิป/verified_at อยู่ในนี้ ไม่ใช่ field บน order)
-import { Divider, Tag } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { Avatar, Button } from "@/components/base";
+import { Avatar, Button, Divider, Tag } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { isAwaitingRefund, type DeliveryUpdateInput, type Order } from "@/types/order";

@@ -57,10 +57,12 @@ export type ActionIconKind = keyof typeof ICONS;
 /** ขนาดไอคอนตาม size ของปุ่ม — small ตรงกับ PlusIcon ของปุ่มเพิ่มขนาดเล็กที่มีอยู่ (h-3.5 w-3.5) */
 const iconClass = (size: ButtonProps["size"]) => (size === "small" ? "h-3.5 w-3.5" : "h-4 w-4");
 
-/** ไอคอนของความหมายนั้น สำหรับใส่ icon={...} ของ <Button> ตรง ๆ (ปุ่มเฉพาะหน้าที่ไม่มีปุ่มกลาง) */
-export function actionIcon(kind: ActionIconKind, size?: ButtonProps["size"]) {
+/** ไอคอนของความหมายนั้น สำหรับใส่ icon={...} ของ <Button> ตรง ๆ (ปุ่มเฉพาะหน้าที่ไม่มีปุ่มกลาง)
+ *  className: ใช้เมื่อไอคอนไม่ได้อยู่ในปุ่ม เช่นลิงก์ข้อความตัวเล็ก (§4.2) ที่อยากได้ h-3 w-3 —
+ *  มีไว้เพื่อให้ทุกที่ยังอ้างไอคอนจากตารางเดียวกันได้ ไม่ต้อง import heroicons เอง (§1.2) */
+export function actionIcon(kind: ActionIconKind, size?: ButtonProps["size"], className?: string) {
   const Icon = ICONS[kind];
-  return <Icon className={iconClass(size)} />;
+  return <Icon className={className ?? iconClass(size)} />;
 }
 
 /** ไอคอนปุ่มท้าย antd <Modal> (ฟอร์มเพิ่ม/แก้ไข) — spread ลงบน Modal:

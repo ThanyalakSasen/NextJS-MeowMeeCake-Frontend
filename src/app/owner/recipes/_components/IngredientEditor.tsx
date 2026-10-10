@@ -2,9 +2,10 @@
 // แถวไดนามิก "วัตถุดิบที่ใช้ในสูตร" — ใช้ร่วมทั้ง MainRecipeModal และ ComponentFormModal
 // หน่วยล็อกตามหน่วยของวัตถุดิบที่เลือก (ไม่มี unit picker แยก — วัตถุดิบแต่ละตัวมีหน่วยคงที่ของตัวเองอยู่แล้ว)
 import { useTranslations } from "next-intl";
-import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, InputNumber, Select } from "@/components/base";
 import type { RecipeIngredientLine } from "@/types/recipeShared";
+import { actionIcon } from "@/components/shared/actions";
 
 export interface IngredientOption {
   _id: string;
@@ -69,7 +70,7 @@ export function IngredientEditor({
           />
         </div>
       ))}
-      <Button size="small" icon={<PlusIcon className="h-3.5 w-3.5" />} onClick={add} className="self-start">
+      <Button size="small" icon={actionIcon("add", "small")} onClick={add} className="self-start">
         {t("recipes.addIngredient")}
       </Button>
     </div>

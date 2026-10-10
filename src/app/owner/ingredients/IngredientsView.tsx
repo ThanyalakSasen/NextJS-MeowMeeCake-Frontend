@@ -1,16 +1,14 @@
 "use client";
 // View ของ Ingredients List — JSX ล้วน รับ props จาก useIngredientsViewModel
-import { Progress } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
-import { Button, Select } from "@/components/base";
+import { Button, ProgressBar, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
-import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, RetryButton, actionIcon } from "@/components/shared/actions";
 import { CategoryManagerButton } from "@/components/shared/categories";
 import type { IngredientRow, useIngredientsViewModel } from "./useIngredientsViewModel";
 import { IngredientFormModal } from "./_components/IngredientFormModal";
@@ -42,7 +40,7 @@ export function IngredientsView(vm: VM) {
             {formatNumber(r.currentStock, locale)}{" "}
             <span className="font-normal text-gray-600">{r.unitAbbr}</span>
           </p>
-          <Progress percent={r.pct} showInfo={false} size="small" strokeColor={STOCK_STATUS_CONFIG[r.status].dotColor} />
+          <ProgressBar percent={r.pct} color={STOCK_STATUS_CONFIG[r.status].dotColor} />
         </div>
       ),
     },
@@ -86,7 +84,7 @@ export function IngredientsView(vm: VM) {
         <div className="flex flex-wrap gap-2">
           <CategoryManagerButton kind="ingredient" />
           {vm.perm.create && (
-            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
               {t("ingredients.addIngredient")}
             </Button>
           )}

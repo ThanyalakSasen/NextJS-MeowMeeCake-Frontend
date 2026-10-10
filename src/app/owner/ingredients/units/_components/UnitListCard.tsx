@@ -1,12 +1,10 @@
 "use client";
 // การ์ดรายการหน่วยนับ 1 กลุ่ม (วัตถุดิบ หรือ สินค้า) — ใช้ซ้ำทั้ง 2 คอลัมน์
-import { Empty } from "antd";
 import { useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/outline";
-import { Button } from "@/components/base";
+import { Button, EmptyState } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import type { Unit } from "@/types/unit";
-import { EditButton, DeleteButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 
 export function UnitListCard({
   title,
@@ -40,16 +38,14 @@ export function UnitListCard({
           <p className="mt-0.5 text-sm text-gray-600">{description}</p>
         </div>
         {canCreate && (
-          <Button size="small" icon={<PlusIcon className="h-4 w-4" />} onClick={onAdd}>
+          <Button size="small" icon={actionIcon("add", "small")} onClick={onAdd}>
             {t("units.addUnit")}
           </Button>
         )}
       </div>
 
       {units.length === 0 ? (
-        <div className="px-5 py-10">
-          <Empty description={<span className="text-sm text-gray-600">{t("units.emptyGroup")}</span>} />
-        </div>
+        <EmptyState className="px-5 py-10" description={t("units.emptyGroup")} />
       ) : (
         <ul>
           {units.map((u) => (

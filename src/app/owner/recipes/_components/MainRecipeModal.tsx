@@ -5,13 +5,13 @@
 import { useState } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, Divider, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import type { Recipe, RecipeComponentRef } from "@/types/recipe";
 import type { RecipeIngredientLine, RecipeStep } from "@/types/recipeShared";
 import type { ProductKind } from "@/types/product";
-import { modalButtonIcons } from "@/components/shared/actions";
+import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import type { RecipeFormValue } from "../recipeForm";
 import { emptyRecipeForm, fromRecipe } from "../recipeForm";
 import { IngredientEditor, type IngredientOption } from "./IngredientEditor";
@@ -143,7 +143,7 @@ export function MainRecipeModal({
               />
             </div>
           ))}
-          <Button size="small" icon={<PlusIcon className="h-3.5 w-3.5" />} onClick={addComponentRef} className="self-start">
+          <Button size="small" icon={actionIcon("add", "small")} onClick={addComponentRef} className="self-start">
             {t("recipes.addComponentRef")}
           </Button>
         </div>

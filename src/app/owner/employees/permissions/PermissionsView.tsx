@@ -2,7 +2,6 @@
 // View ของ Permissions Mgmt — 2 คอลัมน์: รายการ Role | matrix สิทธิ์
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Tag, EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadingSpin, ConfirmDeletePopup } from "@/components/shared/feedback";
@@ -22,7 +21,7 @@ export function PermissionsView(vm: VM) {
   const canEdit = vm.perm.update;
 
   const addRoleBtn = vm.perm.create && (
-    <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={() => setModalOpen(true)}>
+    <Button type="primary" icon={actionIcon("add")} onClick={() => setModalOpen(true)}>
       {t("permissions.addRole")}
     </Button>
   );

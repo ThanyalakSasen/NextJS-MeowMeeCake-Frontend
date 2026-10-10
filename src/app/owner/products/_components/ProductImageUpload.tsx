@@ -5,11 +5,11 @@
 import { useState } from "react";
 import { Upload } from "antd";
 import type { UploadFile, UploadProps } from "antd";
-import { PlusIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 import { productsService } from "@/services/products";
 import { alert } from "@/lib/alert";
 import { resolveUploadUrl } from "@/lib/uploads";
+import { actionIcon } from "@/components/shared/actions";
 
 const MAX_IMAGES = 8;
 
@@ -56,7 +56,7 @@ export function ProductImageUpload({
     >
       {value.length >= MAX_IMAGES ? null : (
         <span className="flex flex-col items-center gap-1 text-xs text-gray-400">
-          <PlusIcon className="h-5 w-5" />
+          {actionIcon("add", undefined, "h-5 w-5")}
           {uploading ? t("common.loading") : t("common.add")}
         </span>
       )}

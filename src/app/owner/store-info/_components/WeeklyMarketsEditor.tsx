@@ -3,13 +3,13 @@
 // ลูกค้าเห็นที่ "ติดต่อเรา" และเลือกเป็นจุดรับสินค้าตอนสั่งแบบรับเอง (เฉพาะที่เปิดแสดง) · ต้องเปิดอย่างน้อย 1 แห่ง
 // แก้/ลบได้ตามสิทธิ์ (canEdit/canRemove จาก ViewModel) · รายการใหม่แก้ได้เสมอ
 import { useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Switch } from "@/components/base";
 import { FormField } from "@/components/shared/form";
 import type { WeekDay } from "@/services/storeInfo";
 import type { AdminWeeklyMarket } from "@/types/storeAdmin";
 import { DAY_ORDER, MAX_WEEKLY_MARKETS } from "../storeInfoForm";
 import { TimeSelect } from "./TimeSelect";
+import { actionIcon } from "@/components/shared/actions";
 
 export function WeeklyMarketsEditor({
   markets, editing, error, canCreate, canEdit, canRemove, onField, onToggleDay, onToggleActive, onAdd, onRemove,
@@ -138,7 +138,7 @@ export function WeeklyMarketsEditor({
       {error && <span className="text-xs text-red-500">{error}</span>}
 
       {canCreate && markets.length < MAX_WEEKLY_MARKETS && (
-        <Button className="self-start" type="dashed" icon={<PlusIcon className="h-4 w-4" />} onClick={onAdd}>
+        <Button className="self-start" type="dashed" icon={actionIcon("add")} onClick={onAdd}>
           {t("storeInfo.markets.add")}
         </Button>
       )}

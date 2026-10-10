@@ -2,10 +2,10 @@
 // แท็บ "หัวข้อรีวิว" — ตัวอย่างปุ่มในฟอร์มลูกค้า · เพิ่ม · รายการ (ลำดับ/ไอคอน/ชื่อ/คำแนะนำ/เปิด-ปิด/ลบ) · หัวข้อที่ลบแล้ว (กู้คืน)
 import { Popover, Tooltip } from "antd";
 import { useTranslations } from "next-intl";
-import { ArrowDownIcon, ArrowUpIcon, PencilSquareIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Input, Switch } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
-import { DeleteButton } from "@/components/shared/actions";
+import { DeleteButton, actionIcon } from "@/components/shared/actions";
 import AspectIcon, { ASPECT_ICON_KEYS, resolveAspectIcon } from "@/components/customer/AspectIcon";
 import { MAX_ASPECTS, type useReviewSettingsViewModel } from "../useReviewSettingsViewModel";
 
@@ -45,7 +45,7 @@ export function AspectsTab({ vm }: { vm: VM }) {
           <div className="grid grid-cols-1 gap-2 border-t border-gray-100 pt-3 sm:grid-cols-[1fr_1fr_auto]">
             <Input value={vm.newTh} maxLength={50} placeholder={t("reviewSettings.aspects.nameTh")} onChange={(e) => vm.setNewTh(e.target.value)} onPressEnter={vm.onAddAspect} />
             <Input value={vm.newEng} maxLength={50} placeholder={t("reviewSettings.aspects.nameEng")} onChange={(e) => vm.setNewEng(e.target.value)} onPressEnter={vm.onAddAspect} />
-            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} loading={vm.adding} disabled={!vm.newTh.trim() || !vm.canAddAspect} onClick={vm.onAddAspect}>
+            <Button type="primary" icon={actionIcon("add")} loading={vm.adding} disabled={!vm.newTh.trim() || !vm.canAddAspect} onClick={vm.onAddAspect}>
               {t("reviewSettings.aspects.add")}
             </Button>
             {!vm.canAddAspect && <p className="m-0 text-xs text-amber-600 sm:col-span-3">{t("reviewSettings.aspects.limit", { max: MAX_ASPECTS })}</p>}
@@ -102,7 +102,7 @@ export function AspectsTab({ vm }: { vm: VM }) {
                     <span className="truncate text-sm font-semibold text-brown-800">{a.aspect_name_th}</span>
                     {a.aspect_name_eng && a.aspect_name_eng !== a.aspect_name_th && <span className="truncate text-xs text-gray-400">· {a.aspect_name_eng}</span>}
                     {canEdit && (
-                      <Button size="small" type="text" aria-label={t("reviewSettings.aspects.rename")} icon={<PencilSquareIcon className="h-3.5 w-3.5" />}
+                      <Button size="small" type="text" aria-label={t("reviewSettings.aspects.rename")} icon={actionIcon("edit", "small")}
                         onClick={() => vm.startRename(a)} />
                     )}
                   </span>

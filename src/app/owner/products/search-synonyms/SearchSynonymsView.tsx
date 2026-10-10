@@ -3,12 +3,11 @@
 // ปุ่มเพิ่ม/แก้/ลบ ตามสิทธิ์ products.create/update/delete
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, Card, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable, SearchInput } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
-import { DeleteButton, EditButton, RetryButton, modalButtonIcons } from "@/components/shared/actions";
+import { DeleteButton, EditButton, RetryButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import type { SearchSynonym } from "@/types/searchSynonym";
 import type { useSearchSynonymsViewModel } from "./useSearchSynonymsViewModel";
 import { SynonymGroupForm } from "./_components/SynonymGroupForm";
@@ -41,7 +40,7 @@ export function SearchSynonymsView(vm: VM) {
               <div className="flex justify-end">
                 <Button
                   type="primary"
-                  icon={<PlusIcon className="h-4 w-4" />}
+                  icon={actionIcon("add")}
                   loading={vm.adding}
                   disabled={!vm.newForm.term.trim()}
                   onClick={vm.onAdd}

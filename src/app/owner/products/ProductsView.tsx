@@ -2,7 +2,6 @@
 // View ของ Products List — JSX ล้วน รับ props จาก useProductsViewModel
 // i18n: ใช้ t ตัวเดียว, key = path เต็มใน messages json (t("products.title"), t("common.all"))
 import { useTranslations, useLocale } from "next-intl";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import { Button, EmptyState, Switch } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
@@ -12,7 +11,7 @@ import {
 } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
 import { productKindOf, type Product } from "@/types/product";
-import { EditButton, DeleteButton, RetryButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, RetryButton, actionIcon } from "@/components/shared/actions";
 import { CategoryManagerButton } from "@/components/shared/categories";
 import type { useProductsViewModel } from "./useProductsViewModel";
 import { ProductGrid } from "./_components/ProductGrid";
@@ -58,7 +57,7 @@ export function ProductsView(vm: VM) {
         <div className="flex flex-wrap gap-2">
           <CategoryManagerButton kind="product" />
           {vm.perm.create && (
-            <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} href="/owner/products/addProducts">
+            <Button type="primary" icon={actionIcon("add")} href="/owner/products/addProducts">
               {t("products.addProduct")}
             </Button>
           )}
