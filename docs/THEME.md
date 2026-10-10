@@ -106,8 +106,11 @@ npm run lint:ui:update   # หลังแก้ของเดิมไปแ�
 
 | กฎในเอกสารนี้ | ชื่อกฎในสคริปต์ |
 |---|---|
-| §4 ห้าม `text-gray-400` | `no-gray-400` |
+| §4.1 ห้าม `text-gray-400` (รวม `placeholder-gray-400` ของ Tailwind v3) | `no-gray-400` |
 | §2 สี badge สถานะต้องมาจาก `enumConfig.ts` | `tag-color-enum` |
+
+**กฎทั้งหมดที่ `npm run check` บังคับตอนนี้ (5 ข้อ · baseline เหลือ 1 จุดที่ยกเว้นไว้พร้อมเหตุผล):**
+`no-gray-400` · `plus-icon-solid` · `icon-button-aria` · `tag-color-enum` · `load-failed-component`
 
 สคริปต์ทำงานแบบ **ratchet**: ของเดิมที่ยังค้างถูกบันทึกจำนวนไว้ใน `scripts/ui-baseline.json` และยังผ่านได้
 แต่**เพิ่มของใหม่ไม่ได้** · รายละเอียดและแผนไล่เก็บอยู่ใน `CONSISTENCY_AUDIT.md` §4 Phase 1

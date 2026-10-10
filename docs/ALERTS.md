@@ -37,6 +37,18 @@
   (ตอนนี้ใช้ที่ popup "session ใกล้หมดอายุ" ซึ่งปุ่มยกเลิก = ออกจากระบบ)
 - **ห้าม** เรียก antd `message` / `notification` / `Modal.confirm` / `Popconfirm` หรือ `window.alert/confirm` ตรง ๆ — ใช้ API ข้างบนเสมอ
 
+### 2.1 สถานะ "โหลดข้อมูลไม่สำเร็จ" ของทั้งหน้า — ไม่ใช่ alert
+
+modal ข้างบนใช้กับ **ผลของการกระทำ** (บันทึก/ลบ/ยืนยัน) ส่วนกรณี **โหลดข้อมูลหน้านั้นไม่สำเร็จ**
+ให้ render `<LoadFailed onRetry={vm.refetch} />` แทน (`components/shared/feedback/LoadFailed.tsx`)
+
+```tsx
+{vm.isError ? <LoadFailed onRetry={vm.refetch} /> : vm.isLoading ? <LoadingSpin /> : <เนื้อหา />}
+```
+
+เดิมเขียนบล็อกนี้ซ้ำเองทุกไฟล์ 31 จุดจนเพี้ยนไป 3 จุด (คนละสี · คนละระยะ · 1 หน้าลืมใส่ปุ่มลองใหม่)
+— กฎ `load-failed-component` ใน `npm run check` กันไม่ให้กลับมาเขียนเองอีก
+
 ---
 
 ## 3. จุดที่ใช้ (144 จุด · 48 ไฟล์)
