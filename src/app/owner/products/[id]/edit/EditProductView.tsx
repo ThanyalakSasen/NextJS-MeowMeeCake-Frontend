@@ -13,6 +13,7 @@ export function EditProductView(
 ) {
   const t = useTranslations();
 
+  if (!vm.allowed) return null; // กำลังเด้งไป access-denied
   if (vm.isLoading) return <LoadingSpin />;
   if (vm.isError || !vm.initialValues) return <EmptyState description={t("errors.notFound")} />;
 

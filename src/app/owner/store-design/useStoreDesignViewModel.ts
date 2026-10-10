@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { bannersService } from "@/services/banners";
+import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { Banner } from "@/types/banner";
@@ -23,6 +24,9 @@ type TabFilter = "all" | BannerStatus;
 export function useStoreDesignViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
+  // แบนเนอร์อยู่ใต้สิทธิ์ "products" ของ backend (/admin/banners → auth: { menu: "products" })
+  // ไม่ใช่เมนูของตัวเอง — ROUTE_MENU_MAP ไม่ได้ผูก /owner/store-design ไว้ OwnerLayout จึงไม่กั้นหน้านี้
+  const perm = usePermission("products");
 
   const [tab, setTab] = useState<TabFilter>("all");
   const [search, setSearch] = useState("");
@@ -123,6 +127,7 @@ export function useStoreDesignViewModel() {
   });
 
   return {
+    perm,
     rows: filtered,
     counts,
     isLoading: q.isLoading,

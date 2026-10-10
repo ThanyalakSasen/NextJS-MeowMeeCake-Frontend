@@ -7,6 +7,7 @@ import type { useAddProductViewModel } from "./useAddProductViewModel";
 
 export function AddProductView(vm: ReturnType<typeof useAddProductViewModel>) {
   const t = useTranslations();
+  if (!vm.allowed) return null; // กำลังเด้งไป access-denied
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-xl font-medium text-brown-900">{t("nav.productsAdd")}</h1>

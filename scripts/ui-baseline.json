@@ -75,9 +75,7 @@
     "src/app/owner/store-design/_components/BannerImageUpload.tsx": 1,
     "src/app/owner/store-info/_components/WeeklyMarketsEditor.tsx": 1
   },
-  "icon-button-aria": {
-    "src/app/owner/reports/reviews/_components/ReviewCard.tsx": 2
-  },
+  "icon-button-aria": {},
   "tag-color-enum": {
     "src/app/owner/employees/EmployeesView.tsx": 3,
     "src/app/owner/employees/permissions/_components/RoleListPanel.tsx": 1,

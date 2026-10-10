@@ -84,7 +84,7 @@ export function NotificationHistoryView(vm: VM) {
               {t("notifications.markAllRead")}
             </Button>
           )}
-          {vm.stats.total > 0 && (
+          {vm.canDelete && vm.stats.total > 0 && (
             <Button danger icon={<TrashIcon className="h-4 w-4" />} onClick={vm.onClearAll}>
               {t("notifications.clearAll")}
             </Button>
@@ -150,11 +150,15 @@ export function NotificationHistoryView(vm: VM) {
             loading={vm.isLoading}
             emptyText={t("notifications.empty")}
             onRowClick={vm.openDetail}
-            actions={(n) => (
-              <ConfirmDeletePopup title={t("notifications.deleteConfirm")} onConfirm={() => vm.onDelete(n._id)}>
-                <DeleteButton size="small" />
-              </ConfirmDeletePopup>
-            )}
+            actions={
+              vm.canDelete
+                ? (n) => (
+                    <ConfirmDeletePopup title={t("notifications.deleteConfirm")} onConfirm={() => vm.onDelete(n._id)}>
+                      <DeleteButton size="small" />
+                    </ConfirmDeletePopup>
+                  )
+                : undefined
+            }
           />
         </div>
       )}

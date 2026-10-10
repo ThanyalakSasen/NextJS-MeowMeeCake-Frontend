@@ -35,9 +35,11 @@ export function StoreDesignView(vm: VM) {
       title={t("storeDesign.title")}
       description={t("storeDesign.description")}
       actions={
-        <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
-          {t("storeDesign.addBanner")}
-        </Button>
+        vm.perm.create && (
+          <Button type="primary" icon={<PlusIcon className="h-4 w-4" />} onClick={vm.openAdd}>
+            {t("storeDesign.addBanner")}
+          </Button>
+        )
       }
       toolbar={
         <FilterToolbar
@@ -87,12 +89,14 @@ export function StoreDesignView(vm: VM) {
               <BannerCard
                 key={b._id}
                 banner={b}
-                draggable={vm.canReorder}
+                draggable={vm.canReorder && vm.perm.update}
                 dragging={draggingId === b._id}
                 dragOver={dragOverId === b._id}
                 onEdit={vm.openEdit}
                 onDelete={vm.onDelete}
                 onToggle={vm.onToggle}
+                canUpdate={vm.perm.update}
+                canDelete={vm.perm.delete}
                 onDragStart={setDraggingId}
                 onDragOver={() => setDragOverId(b._id)}
                 onDragLeave={() => setDragOverId((prev) => (prev === b._id ? null : prev))}
@@ -100,15 +104,17 @@ export function StoreDesignView(vm: VM) {
                 onDragEnd={() => { setDraggingId(null); setDragOverId(null); }}
               />
             ))}
-            <button
-              type="button"
-              onClick={vm.openAdd}
-              className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-600"
-            >
-              <PlusIcon className="h-7 w-7" />
-              <span className="text-sm font-medium">{t("storeDesign.addBanner")}</span>
-              <span className="px-4 text-center text-xs leading-relaxed">{t("storeDesign.addCardHint")}</span>
-            </button>
+            {vm.perm.create && (
+              <button
+                type="button"
+                onClick={vm.openAdd}
+                className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 transition-colors hover:border-gray-400 hover:bg-gray-50 hover:text-gray-600"
+              >
+                <PlusIcon className="h-7 w-7" />
+                <span className="text-sm font-medium">{t("storeDesign.addBanner")}</span>
+                <span className="px-4 text-center text-xs leading-relaxed">{t("storeDesign.addCardHint")}</span>
+              </button>
+            )}
           </div>
         </div>
       )}

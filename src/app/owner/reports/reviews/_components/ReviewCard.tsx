@@ -111,11 +111,14 @@ export function ReviewCard({
             {canUpdate && (
               <>
                 <Tooltip title={r.is_pinned ? t("reviews.unpin") : t("reviews.pin")}>
+                  {/* Tooltip ช่วยเฉพาะคนที่ใช้เมาส์ — screen reader/คีย์บอร์ดต้องพึ่ง aria-label (ACTION_BUTTONS.md §4.1) */}
                   <Button size="small" type="text" onClick={onTogglePin}
+                    aria-label={r.is_pinned ? t("reviews.unpin") : t("reviews.pin")}
                     icon={r.is_pinned ? <PinSolid className="h-4 w-4 text-amber-500" /> : <PinOutline className="h-4 w-4" />} />
                 </Tooltip>
                 <Tooltip title={r.isRead ? t("reviews.markUnread") : t("reviews.markRead")}>
                   <Button size="small" type="text" onClick={onToggleRead}
+                    aria-label={r.isRead ? t("reviews.markUnread") : t("reviews.markRead")}
                     icon={r.isRead ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4 text-sky-600" />} />
                 </Tooltip>
               </>

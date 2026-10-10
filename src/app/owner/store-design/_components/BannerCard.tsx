@@ -31,6 +31,8 @@ export function BannerCard({
   onEdit,
   onDelete,
   onToggle,
+  canUpdate,
+  canDelete,
   onDragStart,
   onDragOver,
   onDragLeave,
@@ -44,6 +46,8 @@ export function BannerCard({
   onEdit: (b: BannerRow) => void;
   onDelete: (id: string) => void;
   onToggle: (b: BannerRow) => void;
+  canUpdate: boolean;
+  canDelete: boolean;
   onDragStart: (id: string) => void;
   onDragOver: () => void;
   onDragLeave: () => void;
@@ -118,18 +122,21 @@ export function BannerCard({
 
       <div className="mt-auto flex items-center justify-between border-t border-gray-100 px-3 py-2">
         <div className="flex items-center gap-1.5">
-          <EditButton size="small" onClick={() => onEdit(banner)} />
-          <ConfirmDeletePopup
-            title={t("storeDesign.deleteConfirm", { name: banner.banner_name })}
-            onConfirm={() => onDelete(banner._id)}
-          >
-            <DeleteButton size="small" />
-          </ConfirmDeletePopup>
+          {canUpdate && <EditButton size="small" onClick={() => onEdit(banner)} />}
+          {canDelete && (
+            <ConfirmDeletePopup
+              title={t("storeDesign.deleteConfirm", { name: banner.banner_name })}
+              onConfirm={() => onDelete(banner._id)}
+            >
+              <DeleteButton size="small" />
+            </ConfirmDeletePopup>
+          )}
         </div>
         {/* ผูกกับ is_active ตรง ๆ (สวิตช์ = "เปิดใช้งาน") — เดิมใช้ status === "active" แบนเนอร์ที่เปิดไว้แต่ยัง
             "รอตามกำหนด" จึงโชว์เป็นปิด แล้วกดเปิดกลับได้ is_active: false (ตรงข้ามกับที่ตั้งใจ) */}
         <Switch
           checked={banner.is_active}
+          disabled={!canUpdate}
           onChange={() => onToggle(banner)}
           aria-label={banner.banner_name}
         />
