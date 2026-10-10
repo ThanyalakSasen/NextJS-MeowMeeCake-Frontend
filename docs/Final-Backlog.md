@@ -1,0 +1,194 @@
+# Final Backlog — งานที่เหลือทั้งระบบก่อนและหลัง deploy
+
+> **เอกสารนี้คืออะไร:** รายการงานที่ยังต้องแก้ ต้องตั้งค่า ต้องตัดสินใจ และต้องทดสอบ ของทั้ง frontend (repo นี้) และ backend
+> (`ThanyalakSasen/NextJS-MeowMeeCake` · ในเครื่อง `D:\1.2569\MeowMeeCake\NextJS-MeowMeeCake`) รวมไว้ที่เดียว — เน้น **การจัดการสิทธิ์** (§1)
+> **เปิดอ่านเมื่อ:** วางแผนงานรอบถัดไป · เตรียม deploy · ตั้งตำแหน่งพนักงานครั้งแรก
+> **ทำไมสำคัญ:** งานค้างกระจายอยู่ใน BACKLOG 4 ไฟล์ของ frontend + backlog / DEPLOY ของ backend — ไฟล์นี้คัดเฉพาะที่ **ยังเปิดอยู่จริง**
+> (ตรวจกับโค้ด 2026-10-10) พร้อมบอกว่าแก้ที่ฝั่งไหน
+>
+> ตรวจ: 2026-10-10 · frontend `main` `6d9352f` · backend `main` `6cc6370` (หลัง merge #80 + #82)
+> อัปเดต: 2026-10-10 หลัง merge backend #83 (`f403a28`) + frontend #68 (`4bb4924`) — ปิด P1–P3 · เพิ่ม P11
+> ที่มาเดิม: [`BACKLOG4-merge.md`](BACKLOG4-merge.md) §7–§10 · [`BACKLOG2.md`](BACKLOG2.md) §11, §16 · [`fix-backend.md`](fix-backend.md) ·
+> backend `docs/DEPLOY.md` · `docs/BACKLOG5.md` · `docs/LINE.md` §8 · `docs/preorder.md` §9 · `docs/reprice.md`
+> เช็กลิสต์ให้ทีมติ๊ก: https://claude.ai/artifact/PmrzmXNWwpwi1wUuTMUmFT (หัวข้อ §2–§4 ของไฟล์นี้)
+
+สถานะ: 🔴 ต้องแก้ก่อน deploy · 🟠 ควรแก้ · 🟢 ทำหลัง deploy ได้ · ⏸ รอคนอื่น / รอตัดสินใจ · ✅ เสร็จ
+ฝั่ง: **FE** = repo นี้ · **BE** = backend · **ทีม** = เจ้าของร้าน / ผู้ดูแลบัญชี / host
+
+---
+
+## สรุปภาพรวม
+
+| หมวด | เปิดอยู่ | ที่ต้องทำก่อน deploy |
+|---|---|---|
+| [§1 การจัดการสิทธิ์](#1-การจัดการสิทธิ์) | 8 (✅ P1–P3) | P6 (ตั้งตำแหน่งเริ่มต้น) · P9 (ให้สิทธิ์รีวิวตอน deploy) · P11 (หน้าแรกหลังล็อกอิน) |
+| [§2 ค่าตั้งและบัญชีภายนอก](#2-ค่าตั้งและบัญชีภายนอก-ก่อน-deploy) | 9 | ทั้งหมด |
+| [§3 ต้องตัดสินใจ](#3-ต้องตัดสินใจ) | 6 | Q1 (COGS) · Q2 (โดเมน — อยู่ใน E1) |
+| [§4 ทดสอบที่ค้าง](#4-ทดสอบที่ค้าง) | 8 | T1–T4 |
+| [§5 งานโค้ดที่ไม่บล็อก deploy](#5-งานโค้ดที่ไม่บล็อก-deploy) | 11 | — |
+
+**ปิดแล้ววันนี้:** ✅ backend #80 (คนที่ไม่ใช่ owner ยกระดับเป็น owner ไม่ได้) · ✅ backend #82 / issue #81 (ให้หรือจัดการได้ไม่เกินสิทธิ์ที่ตัวเองมี) ·
+✅ frontend #63–#66 (เมนูบัญชีลูกค้า 5 รายการ) · ✅ `npm run build` 59 หน้า · `npm run check` · `npm audit` 0 ช่องโหว่ ·
+✅ P1–P3 สิทธิ์หน้า ↔ API ตรงกัน (backend #83 · frontend #68)
+
+---
+
+## 1. การจัดการสิทธิ์
+
+### 1.1 ทำงานยังไง (ย่อ)
+
+```
+บทบาท (role) ──มี──▶ แถวสิทธิ์ (role_id + menu_key) ──5 flag──▶ view · create · update · delete · approve
+                                                                   │
+backend: ทุก /api/admin/* ตรวจ menu_key + action ── owner ผ่านหมด ──┘   ← ตัวบังคับจริง
+frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · usePermission() ซ่อนปุ่ม  ← UX เท่านั้น
+```
+
+**กติกา backend หลัง #80 + #82** (คนที่ไม่ใช่ owner): สร้าง/ย้ายเข้า/จัดการบทบาทและบัญชี owner ไม่ได้ · ให้สิทธิ์ได้เฉพาะ flag ที่ตัวเองมี ·
+ย้ายบทบาท / ตั้งรหัสผ่าน / แก้ / ลบ ได้เฉพาะคนที่สิทธิ์ไม่เกินตัวเอง · ถอนสิทธิ์ไม่จำกัด
+
+**menu_key แต่ละตัวคุมอะไรจริง** (ตรวจจาก route ของ backend):
+
+| menu_key | หน้าหลังร้าน | API หลัก | approve ใช้ทำอะไร |
+|---|---|---|---|
+| `dashboard` | แดชบอร์ด | `/admin/dashboard/overview` · `sales-by-day` · `top-products` | — |
+| `reports` | รายงานยอดขาย · **รีวิว** · ค่าใช้จ่าย · สรุปการเงิน | `/admin/expenses` · `revenue-by-channel` · `/admin/reviews` · `aspects` · `semantic-terms` | — |
+| `products` | สินค้า · ตั้งราคา · คำค้นเทียบเคียง · แบนเนอร์ · (สร้าง/แก้/ลบ หน่วยนับ) | `/admin/products` · categories · units · options/variants · banners · search-synonyms | — |
+| `stock` | สต็อกสินค้า | `/admin/products/:id/stock` · `products/low-stock` | — |
+| `orders` | ออเดอร์ · **POS** · โซนค่าจัดส่ง | `/admin/orders` · `/admin/pos/*` (รวม `guest-customer` — #83) · delivery-zones · delivery-fee | — |
+| `preorder` | รอบพรีออเดอร์ | `/admin/preorder-rounds` · `/admin/preorders` | — |
+| `payments` | (ใน drawer ออเดอร์ · POS) | `/admin/payments` · `slips` | **ยืนยันสลิป และ คืนเงิน** (ตัวเดียวกัน — P7) |
+| `promotions` | คูปอง · โปรโมชัน | `/admin/promotions` · `promotion-usages` | — |
+| `production` | การผลิต | `/admin/production-orders` · `production-items` | **ปิดงานผลิต · ตัดสต็อกวัตถุดิบ** |
+| `ingredients` | วัตถุดิบ · **สต็อกวัตถุดิบ · ประวัติ** · หน่วยนับ (ดู) | `/admin/ingredients` (+`/stock`) · categories · `ingredient-transactions` · อ่าน `/admin/units` (#83 — `recipes`/`stock` อ่านได้ด้วย) | — |
+| `recipes` | สูตร | `/admin/recipes` · `components` · component-categories | — |
+| `employees` | พนักงาน · สิทธิ์ · log | `/admin/users` · `roles` · `permissions` · `user-logs` | — |
+| `store_info` | ข้อมูลร้าน · ค่าส่งเว็บ | `/admin/weekly-markets` · `shipping-zones` (ส่วนอื่นของข้อมูลร้าน = owner เท่านั้น) | — |
+
+### 1.2 รายการ
+
+| รหัส | ระดับ | ฝั่ง | เรื่อง | แก้ยังไง |
+|---|---|---|---|---|
+| P1 | ✅ | FE | ~~หน้ารีวิวลูกค้ากั้นด้วย `products` แต่ backend ใช้ `reports`~~ | ✅ frontend #68 — ลบแถว override ใน `menuKeys.ts` → ใช้ `reports` ตาม `/owner/reports` · ทดสอบหน้าจริง: พนักงานที่มีแค่ `reports` เข้าหน้ารีวิวได้ (เดิมไป access-denied) |
+| P2 | ✅ | FE + BE | ~~หน้าสต็อก/ประวัติวัตถุดิบกั้นด้วย `stock` แต่ API ใช้ `ingredients` · อ่านหน่วยนับต้องมี `products.view`~~ | ✅ frontend #68 — route gate + sidebar + 2 ViewModel ใช้ `ingredients` · ป้ายหน่วยจาก `unit_id` ที่ populate มา (`unitLabel()`) ไม่เรียก `/admin/units` · ปุ่มในหน้าหน่วยนับตาม `products` · ✅ backend #83 — `crudRoutes` `readMenus`: อ่าน `/admin/units` ได้ด้วย view ของ `ingredients` · `recipes` · `stock` (เขียนยังต้อง `products`) · ทดสอบหน้าจริง: ฝ่ายผลิตที่ไม่มี `products` เปิดสต็อก/ประวัติ/หน่วยนับได้ครบ 200 |
+| P3 | ✅ | BE + FE | ~~POS ต้องมี `employees.view` เพื่อหาบัญชีลูกค้าทั่วไป~~ | ✅ backend #83 — `GET /admin/pos/guest-customer` (`orders.view` · ไม่ seed = 404) · ✅ frontend #68 — `posService.guestCustomer()` แทน `usersService.list` · ทดสอบหน้าจริง: พนักงานเคาน์เตอร์ที่ไม่มี `employees` เปิด POS ได้ ไม่เรียก `/admin/users` · ยังไม่ได้ทดสอบขายจริงจนจบ (T1) |
+| P4 | 🟠 | FE | **หน้าพนักงาน/สิทธิ์แสดงตัวเลือกที่ backend จะปฏิเสธ** (หลัง #80/#82) — คนที่ไม่ใช่ owner ยังเห็นบทบาท/บัญชี owner และพนักงานที่สิทธิ์สูงกว่า กดแล้วได้ 403 (ข้อความจาก backend แสดงผ่าน alert แล้ว — ทำงานถูก แต่สับสน) | ซ่อน/ปิดปุ่มเมื่อ `roleType !== "owner"` และเป้าหมายเป็น owner · ในตารางสิทธิ์ ปิดช่อง flag ที่ผู้ใช้เองไม่มี (`menuAccess` จาก `/auth/me` มีครบแล้ว) |
+| P5 | 🟠 | BE | **`expires_at` ยังไม่อยู่ในกติกา #82** — ผู้ที่มีสิทธิ์ชั่วคราวให้สิทธิ์เดียวกันแบบไม่หมดอายุกับบทบาทอื่น (หรือย้ายตัวเองเข้าบทบาทนั้น) ได้ | `permissionCeiling.assertMayGrant`: ถ้าสิทธิ์ของผู้ทำมี `expires_at` ให้ `expires_at` ที่ให้ต้องไม่เกินนั้น · ติดตามใน issue #81 (ปิดแล้ว — เปิด issue ใหม่) |
+| P6 | 🔴 | FE + ทีม | **ยังไม่มีตำแหน่งเริ่มต้น** — ตอนนี้สร้างตำแหน่งได้แค่แบบว่าง หรือคัดลอกจากตำแหน่งเดิม | ทำ "เริ่มจากแม่แบบ" ใน `RoleFormModal` ตาม §1.3 (P1–P3 เสร็จแล้ว — แม่แบบไม่ต้องใส่สิทธิ์เกินจำเป็น) · ทีมตรวจตารางสิทธิ์ §1.3 ก่อน |
+| P7 | 🟠 | BE + FE | **ยืนยันสลิปกับคืนเงินใช้ `payments.approve` ตัวเดียวกัน** — ให้พนักงานเคาน์เตอร์ยืนยันการชำระใน POS ได้ = กดคืนเงินได้ด้วย | BE: แยก `POST /admin/payments/:id/refund` ไปใช้ flag/เมนูอื่น (เช่น `payments.delete` หรือ owner-only) · FE: `RefundSection` เช็คสิทธิ์ใหม่ |
+| P8 | 🟢 | BE | ถอนสิทธิ์ / ปิดบทบาท / ลบบทบาท ของบทบาทที่สิทธิ์สูงกว่าได้ (ไม่ใช่การยกระดับ แต่กระทบคนอื่น) | ถ้าต้องการ: ใช้ `permissionCeiling` กับ `PATCH`/`DELETE /admin/roles/:id` และการถอนสิทธิ์ด้วย |
+| P9 | 🔴 | ทีม | **ตอน deploy: สิทธิ์รีวิวย้ายจาก `products` → `reports`** (backend DEPLOY ⑦) — พนักงานที่เคยดูแลรีวิวต้องได้ `reports` ใหม่ | เจ้าของร้านให้ `reports` ในหน้าจัดการสิทธิ์ (P1 แก้แล้ว — มี `reports` ก็เข้าหน้ารีวิวได้) |
+| P10 | 🟢 | BE | cache สิทธิ์ 30 วินาที + rate limit เก็บในหน่วยความจำ → **ต้องรัน backend instance เดียว** (DEPLOY Y8) · ถอนสิทธิ์แล้ว instance อื่นยังเห็นของเก่าได้ | ตอนนี้ไม่ต้องทำ (ร้านขนาดนี้ instance เดียวพอ) · ถ้าขยาย ย้ายไป Redis |
+| P11 | 🔴 | FE | **หลังล็อกอิน พนักงานทุกคนถูกพาไป `/owner/dashboard`** (`HOME_PATH`) ซึ่งไม่อยู่ใน `ROUTE_MENU_MAP` (login พอ) → พนักงานที่ไม่มี `dashboard.view` (หน้าเคาน์เตอร์ · ฝ่ายผลิตตาม §1.3) เห็นหน้าแดชบอร์ดที่ widget ทุกตัวได้ 403 (`/admin/dashboard/*` · `/admin/orders` · `/admin/ingredients/low-stock`) — เจอตอนทดสอบ #68 | ไม่มี `dashboard.view` → พาไปหน้าแรกที่มีสิทธิ์ (เรียงตาม sidebar `constants/menu.ts`) ทั้งตอนล็อกอิน (`login/nextPath.ts`) และตอนเปิด `/owner/dashboard` ตรง ๆ · หรือผูก `/owner/dashboard` กับ `dashboard` ใน `ROUTE_MENU_MAP` + widget แต่ละตัวเช็คสิทธิ์ของตัวเองก่อนยิง |
+
+### 1.3 ตำแหน่งเริ่มต้นที่เสนอ (P6)
+
+ตัวย่อ: ด = view · ส = create · ก = update · ล = delete · อ = approve · — = ไม่มีสิทธิ์
+**ต้องให้เจ้าของร้านยืนยันก่อนทำ** — ปรับได้ในตารางสิทธิ์หลังสร้างตำแหน่งเสมอ
+
+| menu_key | ผู้จัดการร้าน | พนักงานหน้าเคาน์เตอร์ | ฝ่ายผลิต |
+|---|---|---|---|
+| `dashboard` | ด | — | — |
+| `reports` | ด ส ก | — | — |
+| `products` | ด ส ก ล | ด | — |
+| `stock` | ด ก | ด | ด ก |
+| `orders` | ด ส ก ล | ด ส ก | — |
+| `preorder` | ด ส ก ล | ด ก | ด |
+| `payments` | ด ส อ | ด ส อ ⚠️ P7 | — |
+| `promotions` | ด ส ก ล | ด | — |
+| `production` | ด ส ก ล อ | — | ด ส ก อ |
+| `ingredients` | ด ส ก ล | — | ด ก |
+| `recipes` | ด ส ก ล | — | ด |
+| `employees` | ด ส ก | — (P3 แก้แล้ว — POS ไม่ต้องใช้) | — |
+| `store_info` | ด | — | — |
+
+เหตุผล:
+- **ผู้จัดการร้าน** — งานประจำวันครบ · เก็บไว้ให้เจ้าของร้าน: ลบพนักงาน · ลบรายการการเงิน/ชำระเงิน · แก้ข้อมูลร้านและค่าส่ง ·
+  ตามกติกา #82 จัดการได้เฉพาะพนักงานที่สิทธิ์ไม่เกินตัวเอง (หน้าเคาน์เตอร์ + ฝ่ายผลิตอยู่ในขอบเขตครบ)
+- **หน้าเคาน์เตอร์** — เท่าที่ POS ใช้: ขาย (`orders` ส) · ยืนยันการชำระ (`payments` ส อ) · เปลี่ยนสถานะ · ส่งมอบพรีออเดอร์ (`preorder` ก) ·
+  คิดส่วนลด (`promotions` ด) · ไม่เห็นตัวเลขการเงิน
+- **ฝ่ายผลิต** — เปิด/เริ่ม/ปิดงานผลิต (`production` อ = ตัดสต็อกวัตถุดิบ) · รับเข้า/เบิกวัตถุดิบ (`ingredients` ก) · ปรับสต็อกสินค้าหลังอบ (`stock` ก) ·
+  ดูสูตร (แก้ไม่ได้) · ดูยอดพรีออเดอร์ไว้วางแผน · ไม่ต้องมี `products` แล้ว (P2 — อ่านหน่วยนับด้วย `ingredients`/`recipes`/`stock` ได้ · #83)
+- หน้าเคาน์เตอร์และฝ่ายผลิตไม่มี `dashboard` → ต้องแก้ **P11** ก่อนใช้แม่แบบ ไม่งั้นหลังล็อกอินจะเจอหน้าแดชบอร์ดที่โหลดไม่ขึ้น
+
+วิธีทำ (FE): เพิ่ม `ROLE_TEMPLATES` ใน `employees/permissions/permissionGroups.ts` (ข้อมูลตามตารางนี้) · ตัวเลือก "เริ่มจากแม่แบบ" ใน
+`RoleFormModal` คู่กับ "คัดลอกสิทธิ์จาก" (เลือกได้อย่างเดียว) · `usePermissionsViewModel` สร้างแถวสิทธิ์ตามแม่แบบผ่าน `permissionsService.create`
+แบบเดียวกับการคัดลอก · ข้อความทั้งหมดผ่าน i18n (`permissions.template*` th/en) · ไม่ต้องแก้ backend และไม่ seed ข้อมูลล่วงหน้า
+(คนที่ไม่ใช่ owner ใช้แม่แบบได้เฉพาะส่วนที่ไม่เกินสิทธิ์ตัวเอง — backend ปฏิเสธแถวที่เกินด้วย 403 → ต้องแจ้งว่าแถวไหนไม่ถูกสร้าง)
+
+---
+
+## 2. ค่าตั้งและบัญชีภายนอก (ก่อน deploy)
+
+> ขั้นตอนเต็มของ backend: backend `docs/DEPLOY.md` ②–⑧ (DNS · สำรอง DB · secret · pm2 instance เดียว · nginx · งานข้อมูล · cron 6 ตัว)
+
+| รหัส | ระดับ | ฝั่ง | เรื่อง | รายละเอียด |
+|---|---|---|---|---|
+| E1 | 🔴 | ทีม | **เลือกโครงสร้างโดเมน** | subdomain เดียวกัน (`app.` + `api.`) → backend `COOKIE_DOMAIN` + `ALLOWED_ORIGINS` · คนละ site → frontend `NEXT_PUBLIC_AUTH_GATE=client` (ไม่งั้นล็อกอินแล้ววนกลับ `/login`) — backend `docs/security-hardening.md` §3 |
+| E2 | 🔴 | BE | `CRON_SECRET` + crontab 6 ตัว (DEPLOY ⑧) | ไม่ตั้ง = ออเดอร์ไม่หมดเวลาเอง · รอบพรีออเดอร์ไม่เปิด/ปิดเอง · ไม่มีเตือนก่อนวันรับ · ไม่มีสรุปรายเดือน |
+| E3 | 🔴 | BE | `STOREFRONT_URL` = โดเมนหน้าร้านจริง (Q-BE3) | ลิงก์ในอีเมลยืนยัน/ตั้งรหัสใหม่ + ลิงก์ท้ายข้อความ LINE |
+| E4 | 🔴 | BE | `EMAIL_USER` · `EMAIL_PASS` (+ `EMAIL_SERVICE` หรือ `EMAIL_HOST`/`PORT`) | ไม่ตั้ง = สมัครสมาชิกไม่ได้ (502) |
+| E5 | 🔴 | BE + ทีม | LINE: `LINE_CHANNEL_ACCESS_TOKEN` · `LINE_AUTH_CALLBACK_URL` · `LINE_AUTH_RETURN_URL` + Callback URL ใน LINE Console | แจ้งเตือน LINE · ปุ่มเข้าสู่ระบบด้วย LINE · ผูก LINE |
+| E6 | 🔴 | BE | secret ใหม่ทุกตัว (`JWT_SECRET` · `SESSION_SECRET` · `NEXTAUTH_SECRET` · `CRON_SECRET`) | คนละค่ากับ dev (DEPLOY ②) |
+| E7 | 🔴 | FE | env production: `NEXT_PUBLIC_API_BASE_URL` (ต่อท้าย `/api`) · `NEXT_PUBLIC_AUTH_COOKIE=session` · `NEXT_PUBLIC_GOOGLE_CLIENT_ID` · (`NEXT_PUBLIC_AUTH_GATE` ตาม E1) | ค่าทั้งหมดอยู่ใน `.env.example` · ยังไม่มีเอกสาร deploy ฝั่ง frontend (host ไหน · build/run) — ดู N10 |
+| E8 | 🔴 | ทีม | **Google Cloud Console** — Authorized JavaScript origins: โดเมนหน้าเว็บจริง (+ `http://localhost` และ `http://localhost:3001` สำหรับ dev) | 2026-10-10 เพิ่ม `http://localhost` + `:3001` แล้ว แต่เช็คซ้ำทุก 3 นาทีนาน 1 ชั่วโมงยังได้ 403 `The given origin is not allowed for the given client ID` → น่าจะตั้งไม่ตรงมากกว่ารอ propagate: ตรวจว่าแก้ใน client `556882585770…` (ค่าเดียวกับ `GOOGLE_CLIENT_ID` ของ backend) และกด Save แล้ว · frontend `.env.local` ตั้ง `NEXT_PUBLIC_GOOGLE_CLIENT_ID` แล้ว |
+| E9 | 🔴 | ทีม | งานข้อมูลหลัง deploy (DEPLOY ⑦) | `migrate:upload-files` · แก้รหัสสินค้า `pos-` 2 ตัว · `migrate:reviews` · `check:aspect-names` · `check:data-integrity` · `cleanup:legacy-product-fields` · ให้สิทธิ์ `reports` (P9) |
+
+---
+
+## 3. ต้องตัดสินใจ
+
+| รหัส | ระดับ | รอใคร | เรื่อง | ตัวเลือก / ผลกระทบ |
+|---|---|---|---|---|
+| Q1 | 🔴 | เจ้าของร้าน + BE | **นิยามต้นทุนขาย (COGS)** — กำไรใน dashboard / สรุปรายเดือนหักต้นทุนวัตถุดิบซ้ำ | ก. COGS ตามสูตร + ค่าใช้จ่ายไม่นับหมวดวัตถุดิบ/บรรจุภัณฑ์ (BE แนะนำ) · ข. COGS = ค่าใช้จ่ายหมวดวัตถุดิบ/บรรจุภัณฑ์ · ถ้าเลือก ก. หน้าสรุปการเงิน (FE) ต้องย้ายไปใช้ `/dashboard/overview` — BACKLOG2 §11 ข้อ 10 |
+| Q2 | 🔴 | ทีม | โครงสร้างโดเมน | ดู E1 |
+| Q3 | 🟠 | เจ้าของร้าน | ออเดอร์ทางโทรศัพท์/แชต | `channel: "online"` (นับเป็นเว็บ) ไปก่อน หรือเพิ่มช่องทาง (POS ต้องมีตัวเลือก) — BACKLOG2 §11 ข้อ 9 |
+| Q4 | 🟠 | เจ้าของร้าน | โปรจำกัดครั้งต่อลูกค้า (`max_user_per_user`) กับบัญชีลูกค้าทั่วไปของ POS | ยกเว้นบัญชีนี้ หรือห้ามตั้งกับโปรหน้าร้าน — BACKLOG2 §13 |
+| Q5 | 🟢 | ทีม | วันปิด FrontOffice (พอร์ต 4000) · คำถาม Q-FO1 · Q-FO3 · Q-FO4 | ตกลงแล้วว่าจะปิด (Q-OWN4) แต่ยังไม่มีวัน — BACKLOG3 G3 |
+| Q6 | 🟢 | BE / เจ้าของร้าน | หน้ารีวิว analytics · dashboard · รายสินค้า (F3) | Q-BE4 คำตอบยังไม่ชัด — ต้องถามซ้ำ |
+
+---
+
+## 4. ทดสอบที่ค้าง
+
+ทดสอบกับ backend ตัวที่จะ deploy (ตอนนี้ = `main` `f403a28`) · ในเครื่องใช้ DB `meowmeecake-test` ตาม [`MOCKS.md`](MOCKS.md) · ทั้งจอคอมและมือถือ
+
+| รหัส | ระดับ | เรื่อง | หมายเหตุ |
+|---|---|---|---|
+| T1 | 🔴 | test plan PR #16–#19 กับ backend จริง (หน้าคำสั่งซื้อหน้าร้าน · POS ดีไซน์ใหม่ · ปรับสต็อก) | ค้าง 21 ข้อ (#16: 7 · #17: 3 · #18: 6 · #19: 5) — BACKLOG2 §16.2 |
+| T2 | 🔴 | ล็อกอินด้วย Google ด้วยบัญชีจริง | หลัง E8 |
+| T3 | 🔴 | ล็อกอินด้วย LINE + ผูก LINE จากหน้าบัญชี ด้วยบัญชีจริง | หลัง E5 · backend `LINE.md` §7 |
+| T4 | 🔴 | สิทธิ์ตามตำแหน่ง: ล็อกอินเป็นแต่ละตำแหน่งใน §1.3 แล้วเปิดทุกหน้าที่ควรเข้าได้ — ต้องไม่มี 403 · หน้าที่ไม่มีสิทธิ์ต้องไป access-denied | หลัง P6 + P11 · P1–P3 ทดสอบแล้วด้วยพนักงานชั่วคราว 3 ตำแหน่ง (เฉพาะหน้าที่แก้ — #68) |
+| T5 | 🟠 | คลิกดูหน้าจอจริง: checkout (จุดรับ · คูปอง · แต้ม) · สมาชิก/แต้ม · สินค้าแนะนำหน้าแรก · บัญชีพร้อมเพย์รับเงินคืน + ปุ่มโอนคืนหลังร้าน · อาหารที่แพ้ | ผ่านระดับ API แล้ว (39/39 · 20/20 · 11/11) แต่ยังไม่คลิกจริง |
+| T6 | 🟠 | หลัง deploy: ตามเช็กลิสต์ backend DEPLOY "ตรวจหลัง deploy" (อัปโหลดรูป · cookie ข้าม subdomain ฯลฯ) | backend `docs/DEPLOY.md` |
+| T7 | 🟢 | ล็อกอินเป็นพนักงานที่มี `employees` แล้วลองจัดการ owner / คนที่สิทธิ์สูงกว่า → ต้องได้ข้อความ 403 ที่อ่านเข้าใจ | ยืนยัน #80 + #82 จากหน้าจอ (เทส integration ผ่านแล้ว) |
+| T8 | 🟢 | seed ข้อมูลสาธิตจริง (รูปรีวิว · หัวข้อรีวิวมีไอคอน) ก่อนใช้ DB ทำภาพประกอบ | BACKLOG4 V8 |
+
+---
+
+## 5. งานโค้ดที่ไม่บล็อก deploy
+
+| รหัส | ระดับ | ฝั่ง | เรื่อง | ที่มา / หมายเหตุ |
+|---|---|---|---|---|
+| N1 | 🟠 | FE | **CI ของ frontend** — ยังไม่มี `.github/workflows` · merge ทุกครั้งตรวจด้วยมือ | ใช้ backend `ci.yml` เป็นต้นแบบ: `npm ci` → `npm run check` → `npm run build` |
+| N2 | 🟢 | FE | dashboard แยกยอดตามช่องทาง + รวมพรีออเดอร์ | API `revenue-by-channel` มีแล้ว (หน้าสรุปการเงินใช้อยู่) — BACKLOG2 §12 ข้อ 11 |
+| N3 | 🟢 | BE | ตะกร้า / checkout ยังแสดง `price_snapshot` (ราคาตอนหยิบใส่) ไม่ใช่ราคาปัจจุบัน — ยอดจริงคิดใหม่ตอนสั่ง | backend `reprice.md` แถว 1, 3 (ยังไม่ได้ตรวจกับโค้ดรอบนี้) |
+| N4 | 🟢 | BE | ผูกโปรโมชัน / `discountEngine` กับพรีออเดอร์ (ตอนนี้มีแค่ส่วนลดกรอกมือ) | backend `preorder.md` §9 |
+| N5 | 🟢 | BE | LINE: รับ webhook `unfollow` (ลูกค้าบล็อก OA แล้วระบบยังคิดว่าผูกอยู่) · ข้อความถึงลูกค้าไม่บันทึกลง DB | backend `LINE.md` §8 ข้อ 9–10 |
+| N6 | 🟢 | BE / FE | พิมพ์ป้ายบาร์โค้ด/QR สินค้าจาก DB | backend `BACKLOG.md` (label sheet) |
+| N7 | 🟢 | BE | กู้คืนรายการที่ลบในหน้าอื่น (ตอนนี้มีแค่โซนค่าส่ง + หัวข้อรีวิว) | BACKLOG2 §16.3 |
+| N8 | 🟢 | FE | ลบ `NEXT_PUBLIC_API_MOCK` ออกจาก `.env.local` (ไม่มีผลตั้งแต่ถอด mock — I11) | ไฟล์ในเครื่อง ไม่อยู่ใน git |
+| N9 | 🟢 | FE / BE | ลบ branch ที่ merge แล้ว: backend `fix/owner-escalation` · `fix/permission-ceiling` · `feat/pos-guest-customer` · frontend `fix/permission-gates` · branch เก่าใน BACKLOG2 §16.5 | — |
+| N10 | 🟠 | FE | เอกสาร deploy ฝั่ง frontend (host · build · env · โดเมน) — backend มี `DEPLOY.md` แล้ว frontend ยังไม่มี | ทำหลังตัดสินใจ E1 |
+| N11 | 🟢 | FE | ตัวเลือก POS ส่วนที่ระบบยังไม่รองรับ: สมาชิก + ส่วนลดสมาชิก · โปรซ้อน · เลขบิลก่อนสร้าง · พิมพ์ใบเสร็จ · ลิ้นชักเงินสด · พักบิล | BACKLOG2 §16.4 (§14) |
+
+---
+
+## 6. ลำดับที่แนะนำ
+
+1. ~~**P1 · P2 · P3**~~ ✅ (backend #83 · frontend #68) → **P11** หน้าแรกหลังล็อกอินตามสิทธิ์
+2. เจ้าของร้านยืนยันตาราง §1.3 → **P6** แม่แบบตำแหน่ง → **T4** ทดสอบทีละตำแหน่ง
+3. **Q1** COGS + **E1** โดเมน (ตัดสินใจ) → **E2–E7** ตั้ง env → **E8 · E5** Console → **T2 · T3**
+4. **T1 · T5** ทดสอบหน้าที่ค้าง กับ backend `main`
+5. deploy ตาม backend DEPLOY.md → **E9** งานข้อมูล + **P9** ให้สิทธิ์ `reports` → **T6**
+6. หลัง deploy: **N1** CI · **P4 · P7** · ที่เหลือตามลำดับความจำเป็น
