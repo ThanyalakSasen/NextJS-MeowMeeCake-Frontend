@@ -30,6 +30,13 @@ const NAV_LINKS = [
   { href: "/customer/contact-us", labelKey: "contact" },
 ] as const;
 
+/** เมนูผู้ใช้ (dropdown) ต่อจาก "บัญชีของฉัน" — สมาชิก/รายการโปรดไม่อยู่ในเมนูบัญชี (AccountSideMenu) จึงเข้าจากที่นี่ */
+const USER_MENU_LINKS = [
+  { href: "/customer/account/purchases", labelKey: "myOrders" },
+  { href: "/customer/account/member", labelKey: "member" },
+  { href: "/customer/account/favorites", labelKey: "favorites" },
+] as const;
+
 export default function Navbar() {
   const t = useTranslations("shop.nav");
   const { user, status, signOut } = useCustomerSession();
@@ -221,18 +228,22 @@ export default function Navbar() {
                           onClick={() => setShowDropdown(false)}
                           className={linkClass(
                             pathname === "/customer/account" ||
-                              (pathname.startsWith("/customer/account/") && !pathname.startsWith("/customer/account/purchases")),
+                              (pathname.startsWith("/customer/account/") &&
+                                !USER_MENU_LINKS.some((l) => pathname.startsWith(l.href))),
                           )}
                         >
                           {t("myAccount")}
                         </Link>
-                        <Link
-                          href="/customer/account/purchases"
-                          onClick={() => setShowDropdown(false)}
-                          className={linkClass(pathname.startsWith("/customer/account/purchases"))}
-                        >
-                          {t("myOrders")}
-                        </Link>
+                        {USER_MENU_LINKS.map((l) => (
+                          <Link
+                            key={l.href}
+                            href={l.href}
+                            onClick={() => setShowDropdown(false)}
+                            className={linkClass(pathname.startsWith(l.href))}
+                          >
+                            {t(l.labelKey)}
+                          </Link>
+                        ))}
                         <div className="my-1 border-t border-stone-100" />
                         <button
                           type="button"
