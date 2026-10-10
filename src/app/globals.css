@@ -105,7 +105,10 @@
   --border-subtle: #F0E9E2;   /* เส้นแบ่งบาง (เดิม #F1F5F9) */
 
   /* ── a11y (WCAG 2.2 — 2.5.8 / 2.4.7) ── */
-  --touch-target:     2.75rem;  /* 44px — พื้นที่กดขั้นต่ำของปุ่ม/ไอคอน */
+  /* พื้นที่กดขั้นต่ำของปุ่ม/ไอคอน — เป็น px ตรง ๆ โดยตั้งใจ
+     นี่คือขนาดปลายนิ้วคน ไม่ใช่ขนาดตัวอักษร — ขยายตามฐานฟอนต์ไม่มีเหตุผล
+     (เดิม 2.75rem เขียนคอมเมนต์ว่า 44px แต่ที่ฐาน 18 คือ 49.5px — scripts/check-theme.mjs จับได้) */
+  --touch-target:     44px;
   --focus-ring-width: 3px;
   --focus-ring-color: var(--color-brown-800);
 
@@ -138,7 +141,7 @@
   /* ── Sidebar: submenu ── */
   --submenu-item-color:        #1F2937;
   --submenu-item-active-color: var(--color-brown-800);
-  --submenu-indent:            2rem; /* 32px — มีไอคอนหัวข้อแล้ว ลดเยื้องกันแถวอัดขวา */
+  --submenu-indent:            2rem; /* 36px — มีไอคอนหัวข้อแล้ว ลดเยื้องกันแถวอัดขวา */
 
   /* ── Navbar: breadcrumb ── */
   --bc-link-color:       var(--text-subtle);
