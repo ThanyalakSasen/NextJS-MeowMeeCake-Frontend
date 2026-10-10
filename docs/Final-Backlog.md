@@ -9,6 +9,7 @@
 > ตรวจ: 2026-10-10 · frontend `main` `6d9352f` · backend `main` `6cc6370` (หลัง merge #80 + #82)
 > อัปเดต: 2026-10-10 หลัง merge backend #83 (`f403a28`) + frontend #68 (`4bb4924`) — ปิด P1–P3 · เพิ่ม P11
 > อัปเดต: 2026-10-10 หลัง merge frontend #69 (`47bcaec`) — ปิด P11 · เพิ่ม P12 (หน้าสต็อกสินค้า) · P13 (หน้าแบนเนอร์)
+> อัปเดต: 2026-10-11 หลัง merge backend #84 (`0352b7c`) + frontend #71 (`ec08544`) — ปิด P12 · P13
 > ที่มาเดิม: [`BACKLOG4-merge.md`](BACKLOG4-merge.md) §7–§10 · [`BACKLOG2.md`](BACKLOG2.md) §11, §16 · [`fix-backend.md`](fix-backend.md) ·
 > backend `docs/DEPLOY.md` · `docs/BACKLOG5.md` · `docs/LINE.md` §8 · `docs/preorder.md` §9 · `docs/reprice.md`
 > เช็กลิสต์ให้ทีมติ๊ก: https://claude.ai/artifact/PmrzmXNWwpwi1wUuTMUmFT (หัวข้อ §2–§4 ของไฟล์นี้)
@@ -22,7 +23,7 @@
 
 | หมวด | เปิดอยู่ | ที่ต้องทำก่อน deploy |
 |---|---|---|
-| [§1 การจัดการสิทธิ์](#1-การจัดการสิทธิ์) | 9 (✅ P1–P3 · P11) | P6 (ตั้งตำแหน่งเริ่มต้น) · P9 (ให้สิทธิ์รีวิวตอน deploy) · P12 (หน้าสต็อกสินค้า) |
+| [§1 การจัดการสิทธิ์](#1-การจัดการสิทธิ์) | 7 (✅ P1–P3 · P11–P13) | P6 (ตั้งตำแหน่งเริ่มต้น) · P9 (ให้สิทธิ์รีวิวตอน deploy) |
 | [§2 ค่าตั้งและบัญชีภายนอก](#2-ค่าตั้งและบัญชีภายนอก-ก่อน-deploy) | 9 | ทั้งหมด |
 | [§3 ต้องตัดสินใจ](#3-ต้องตัดสินใจ) | 6 | Q1 (COGS) · Q2 (โดเมน — อยู่ใน E1) |
 | [§4 ทดสอบที่ค้าง](#4-ทดสอบที่ค้าง) | 8 | T1–T4 |
@@ -30,7 +31,8 @@
 
 **ปิดแล้ววันนี้:** ✅ backend #80 (คนที่ไม่ใช่ owner ยกระดับเป็น owner ไม่ได้) · ✅ backend #82 / issue #81 (ให้หรือจัดการได้ไม่เกินสิทธิ์ที่ตัวเองมี) ·
 ✅ frontend #63–#66 (เมนูบัญชีลูกค้า 5 รายการ) · ✅ `npm run build` 59 หน้า · `npm run check` · `npm audit` 0 ช่องโหว่ ·
-✅ P1–P3 สิทธิ์หน้า ↔ API ตรงกัน (backend #83 · frontend #68) · ✅ P11 หน้าแรกหลังล็อกอินตามสิทธิ์ (frontend #69)
+✅ P1–P3 สิทธิ์หน้า ↔ API ตรงกัน (backend #83 · frontend #68) · ✅ P11 หน้าแรกหลังล็อกอินตามสิทธิ์ (frontend #69) ·
+✅ P12 หน้าสต็อกสินค้าใช้ `stock` (backend #84 · frontend #71) · ✅ P13 หน้าแบนเนอร์ผูก `products` (frontend #71)
 
 ---
 
@@ -55,7 +57,7 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 | `dashboard` | แดชบอร์ด | `/admin/dashboard/overview` · `sales-by-day` · `top-products` | — |
 | `reports` | รายงานยอดขาย · **รีวิว** · ค่าใช้จ่าย · สรุปการเงิน | `/admin/expenses` · `revenue-by-channel` · `/admin/reviews` · `aspects` · `semantic-terms` | — |
 | `products` | สินค้า · ตั้งราคา · คำค้นเทียบเคียง · แบนเนอร์ · (สร้าง/แก้/ลบ หน่วยนับ) | `/admin/products` · categories · units · options/variants · banners · search-synonyms | — |
-| `stock` | สต็อกสินค้า | `/admin/products/:id/stock` · `products/low-stock` | — |
+| `stock` | สต็อกสินค้า | `/admin/products/stock-list` (#84) · `/admin/products/:id/stock` · `products/low-stock` | — |
 | `orders` | ออเดอร์ · **POS** · โซนค่าจัดส่ง | `/admin/orders` · `/admin/pos/*` (รวม `guest-customer` — #83) · delivery-zones · delivery-fee | — |
 | `preorder` | รอบพรีออเดอร์ | `/admin/preorder-rounds` · `/admin/preorders` | — |
 | `payments` | (ใน drawer ออเดอร์ · POS) | `/admin/payments` · `slips` | **ยืนยันสลิป และ คืนเงิน** (ตัวเดียวกัน — P7) |
@@ -81,8 +83,8 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 | P9 | 🔴 | ทีม | **ตอน deploy: สิทธิ์รีวิวย้ายจาก `products` → `reports`** (backend DEPLOY ⑦) — พนักงานที่เคยดูแลรีวิวต้องได้ `reports` ใหม่ | เจ้าของร้านให้ `reports` ในหน้าจัดการสิทธิ์ (P1 แก้แล้ว — มี `reports` ก็เข้าหน้ารีวิวได้) |
 | P10 | 🟢 | BE | cache สิทธิ์ 30 วินาที + rate limit เก็บในหน่วยความจำ → **ต้องรัน backend instance เดียว** (DEPLOY Y8) · ถอนสิทธิ์แล้ว instance อื่นยังเห็นของเก่าได้ | ตอนนี้ไม่ต้องทำ (ร้านขนาดนี้ instance เดียวพอ) · ถ้าขยาย ย้ายไป Redis |
 | P11 | ✅ | FE | ~~หลังล็อกอินพนักงานทุกคนไป `/owner/dashboard` แม้ไม่มี `dashboard.view` → widget ทุกตัว 403~~ | ✅ frontend #69 — `/owner/dashboard` ผูก `dashboard` (route gate + sidebar) · ไม่มีสิทธิ์ → `OwnerLayout` พาไปหน้าแรกที่มีสิทธิ์ตามลำดับ sidebar (`lib/landingPath.ts` · นับเฉพาะเมนูที่ผูก menuKey) แทน access-denied · widget เรียก `/admin/orders` · `ingredients/low-stock` · `production-orders` เฉพาะเมื่อมีสิทธิ์เมนูนั้น (ไม่มี = ซ่อน — เดิม 403 ตัวเดียวทำแดชบอร์ดล้มทั้งหน้า) · ทดสอบหน้าจริง 4 แบบ (หน้าเคาน์เตอร์ → `/owner/products` · ฝ่ายผลิต · มีแค่ `dashboard` → 1 widget ไม่มี 403 · owner ครบ 4 widget) · เหลือ: breadcrumb ยังขึ้น "แดชบอร์ด" ให้คนที่ไม่มีสิทธิ์ (กดแล้วไปหน้าแรกที่มีสิทธิ์ — ใช้ได้ แต่ชื่อชวนงง) |
-| P12 | 🔴 | FE + BE | **หน้าสต็อกสินค้า (`/owner/products/productStock`) กั้นด้วย `stock` แต่โหลดรายการจาก API ของ `products`** — `productsService.list` (`GET /admin/products` = `products.view`) · `productCategoriesService.list` (`/admin/product-categories` = `products.view`) · ปรับยอดผ่าน `/admin/products/:id/stock` (`stock.update` ถูกแล้ว) → มี `stock` ไม่มี `products` เปิดหน้าได้แต่ 403 · **ฝ่ายผลิตตาม §1.3 หลังล็อกอินลงหน้านี้ก่อน** (อยู่ก่อนหน้าการผลิตใน sidebar) — เจอตอนทดสอบ #69 | BE: ใช้ `readMenus: ["stock"]` (แบบ #83) กับ GET `/admin/product-categories` + ทำ GET รายการสินค้าสำหรับหน้าสต็อก (เช่น `GET /admin/products/stock-list` ใต้ `stock.view` · ไม่ส่ง `purchase_cost`) แบบ `/admin/pos/products` · FE: `useProductStockViewModel` ใช้ endpoint ใหม่ · ทางลัดชั่วคราว: ให้ฝ่ายผลิตมี `products` ด (ตาราง §1.3 เดิม) |
-| P13 | 🟠 | FE | **หน้าจัดการแบนเนอร์ (`/owner/store-design`) ไม่ผูกสิทธิ์** (`ROUTE_MENU_MAP` = login พอ · sidebar ไม่มี `menuKey` · `useStoreDesignViewModel` ไม่เช็คสิทธิ์ ปุ่มแสดงตลอด) แต่ `/admin/banners` ตรวจ `products.*` → พนักงานทุกคนเห็นเมนู เปิดแล้วโหลดไม่ขึ้น/บันทึกไม่ได้ (403) | ผูก `/owner/store-design` กับ `products` ใน `ROUTE_MENU_MAP` + `menuKey: "products"` ใน sidebar · `usePermission("products")` คุมปุ่มเพิ่ม/แก้/ลบ (create/update/delete) |
+| P12 | ✅ | FE + BE | ~~หน้าสต็อกสินค้ากั้นด้วย `stock` แต่โหลดรายการจาก `/admin/products` + `/admin/product-categories` (`products.view`)~~ | ✅ backend #84 — `GET /admin/products/stock-list` (`stock.view` · สินค้าปกติที่ไม่ถูกลบ · ไม่มี `purchase_cost` · populate หมวด/หน่วย — ชุดข้อมูลเดียวกับ `/admin/pos/products`) · ✅ frontend #71 — `productsService.stockList()` · ชื่อหมวด/หน่วยจากข้อมูลที่ populate · ตัวกรองหมวด = หมวดที่มีสินค้าในหน้า · ไม่เรียก categories/units แล้ว · ปรับยอดยังใช้ `PUT /:id/stock` (`stock.update`) · ทดสอบหน้าจริง: ฝ่ายผลิต (มีแค่ `stock`) · หน้าเคาน์เตอร์ · owner โหลดได้ครบ เรียกแค่ `stock-list` |
+| P13 | ✅ | FE | ~~หน้าจัดการแบนเนอร์ไม่ผูกสิทธิ์ แต่ `/admin/banners` ตรวจ `products.*`~~ | ✅ frontend #71 — `/owner/store-design` ผูก `products` (`ROUTE_MENU_MAP` + sidebar) · ปุ่มเพิ่ม (หัวหน้า + การ์ด) / แก้ / ลบ / สวิตช์เปิดปิด / ลากเรียง ตาม `products` create/update/delete · ทดสอบหน้าจริง (แบนเนอร์ชั่วคราว 1 อัน — DB ทดสอบไม่มีแบนเนอร์): ไม่มี `products` → access-denied · ดูอย่างเดียว → ไม่มีปุ่ม + สวิตช์ปิด · owner ครบ |
 
 ### 1.3 ตำแหน่งเริ่มต้นที่เสนอ (P6)
 
@@ -111,8 +113,8 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 - **หน้าเคาน์เตอร์** — เท่าที่ POS ใช้: ขาย (`orders` ส) · ยืนยันการชำระ (`payments` ส อ) · เปลี่ยนสถานะ · ส่งมอบพรีออเดอร์ (`preorder` ก) ·
   คิดส่วนลด (`promotions` ด) · ไม่เห็นตัวเลขการเงิน
 - **ฝ่ายผลิต** — เปิด/เริ่ม/ปิดงานผลิต (`production` อ = ตัดสต็อกวัตถุดิบ) · รับเข้า/เบิกวัตถุดิบ (`ingredients` ก) · ปรับสต็อกสินค้าหลังอบ (`stock` ก) ·
-  ดูสูตร (แก้ไม่ได้) · ดูยอดพรีออเดอร์ไว้วางแผน · หน่วยนับอ่านได้ด้วย `ingredients`/`recipes`/`stock` แล้ว (P2 · #83)
-  **⚠️ หน้าสต็อกสินค้ายังต้องใช้ `products` (P12)** — ก่อนแก้ P12 ให้ `products` ด หรือเอา `stock` ออกจากแม่แบบ
+  ดูสูตร (แก้ไม่ได้) · ดูยอดพรีออเดอร์ไว้วางแผน · หน่วยนับอ่านได้ด้วย `ingredients`/`recipes`/`stock` (P2 · #83) ·
+  หน้าสต็อกสินค้าใช้ `stock` อย่างเดียว (P12 · #84/#71) — ไม่ต้องมี `products`
 - หน้าเคาน์เตอร์และฝ่ายผลิตไม่มี `dashboard` → หลังล็อกอินไปหน้าแรกที่มีสิทธิ์ตามลำดับ sidebar (P11 ✅ #69): หน้าเคาน์เตอร์ = สินค้า · ฝ่ายผลิต = สต็อกสินค้า
 
 วิธีทำ (FE): เพิ่ม `ROLE_TEMPLATES` ใน `employees/permissions/permissionGroups.ts` (ข้อมูลตามตารางนี้) · ตัวเลือก "เริ่มจากแม่แบบ" ใน
@@ -162,7 +164,7 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 | T1 | 🔴 | test plan PR #16–#19 กับ backend จริง (หน้าคำสั่งซื้อหน้าร้าน · POS ดีไซน์ใหม่ · ปรับสต็อก) | ค้าง 21 ข้อ (#16: 7 · #17: 3 · #18: 6 · #19: 5) — BACKLOG2 §16.2 |
 | T2 | 🔴 | ล็อกอินด้วย Google ด้วยบัญชีจริง | หลัง E8 |
 | T3 | 🔴 | ล็อกอินด้วย LINE + ผูก LINE จากหน้าบัญชี ด้วยบัญชีจริง | หลัง E5 · backend `LINE.md` §7 |
-| T4 | 🔴 | สิทธิ์ตามตำแหน่ง: ล็อกอินเป็นแต่ละตำแหน่งใน §1.3 แล้วเปิดทุกหน้าที่ควรเข้าได้ — ต้องไม่มี 403 · หน้าที่ไม่มีสิทธิ์ต้องไป access-denied | หลัง P6 + P12 · ทดสอบแล้วเฉพาะหน้าที่แก้: P1–P3 (#68) · P11 หน้าแรกหลังล็อกอิน (#69) |
+| T4 | 🔴 | สิทธิ์ตามตำแหน่ง: ล็อกอินเป็นแต่ละตำแหน่งใน §1.3 แล้วเปิดทุกหน้าที่ควรเข้าได้ — ต้องไม่มี 403 · หน้าที่ไม่มีสิทธิ์ต้องไป access-denied | หลัง P6 · ทดสอบแล้วเฉพาะหน้าที่แก้: P1–P3 (#68) · P11 หน้าแรกหลังล็อกอิน (#69) · P12–P13 สต็อกสินค้า + แบนเนอร์ (#71) |
 | T5 | 🟠 | คลิกดูหน้าจอจริง: checkout (จุดรับ · คูปอง · แต้ม) · สมาชิก/แต้ม · สินค้าแนะนำหน้าแรก · บัญชีพร้อมเพย์รับเงินคืน + ปุ่มโอนคืนหลังร้าน · อาหารที่แพ้ | ผ่านระดับ API แล้ว (39/39 · 20/20 · 11/11) แต่ยังไม่คลิกจริง |
 | T6 | 🟠 | หลัง deploy: ตามเช็กลิสต์ backend DEPLOY "ตรวจหลัง deploy" (อัปโหลดรูป · cookie ข้าม subdomain ฯลฯ) | backend `docs/DEPLOY.md` |
 | T7 | 🟢 | ล็อกอินเป็นพนักงานที่มี `employees` แล้วลองจัดการ owner / คนที่สิทธิ์สูงกว่า → ต้องได้ข้อความ 403 ที่อ่านเข้าใจ | ยืนยัน #80 + #82 จากหน้าจอ (เทส integration ผ่านแล้ว) |
@@ -182,7 +184,7 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 | N6 | 🟢 | BE / FE | พิมพ์ป้ายบาร์โค้ด/QR สินค้าจาก DB | backend `BACKLOG.md` (label sheet) |
 | N7 | 🟢 | BE | กู้คืนรายการที่ลบในหน้าอื่น (ตอนนี้มีแค่โซนค่าส่ง + หัวข้อรีวิว) | BACKLOG2 §16.3 |
 | N8 | 🟢 | FE | ลบ `NEXT_PUBLIC_API_MOCK` ออกจาก `.env.local` (ไม่มีผลตั้งแต่ถอด mock — I11) | ไฟล์ในเครื่อง ไม่อยู่ใน git |
-| N9 | 🟢 | FE / BE | ลบ branch ที่ merge แล้ว: backend `fix/owner-escalation` · `fix/permission-ceiling` · `feat/pos-guest-customer` · frontend `fix/permission-gates` · `fix/dashboard-landing` · `docs/final-backlog` · branch เก่าใน BACKLOG2 §16.5 | — |
+| N9 | 🟢 | FE / BE | ลบ branch ที่ merge แล้ว: backend `fix/owner-escalation` · `fix/permission-ceiling` · `feat/pos-guest-customer` · `feat/product-stock-list` · frontend `fix/permission-gates` · `fix/dashboard-landing` · `fix/stock-banner-gates` · `docs/final-backlog` · `docs/final-backlog-p11` · branch เก่าใน BACKLOG2 §16.5 | — |
 | N10 | 🟠 | FE | เอกสาร deploy ฝั่ง frontend (host · build · env · โดเมน) — backend มี `DEPLOY.md` แล้ว frontend ยังไม่มี | ทำหลังตัดสินใจ E1 |
 | N11 | 🟢 | FE | ตัวเลือก POS ส่วนที่ระบบยังไม่รองรับ: สมาชิก + ส่วนลดสมาชิก · โปรซ้อน · เลขบิลก่อนสร้าง · พิมพ์ใบเสร็จ · ลิ้นชักเงินสด · พักบิล | BACKLOG2 §16.4 (§14) |
 
@@ -190,7 +192,7 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 
 ## 6. ลำดับที่แนะนำ
 
-1. ~~**P1 · P2 · P3**~~ ✅ (backend #83 · frontend #68) → ~~**P11**~~ ✅ (#69) → **P12** หน้าสต็อกสินค้า (BE + FE) · **P13** หน้าแบนเนอร์ (FE)
+1. ~~**P1 · P2 · P3**~~ ✅ (backend #83 · frontend #68) → ~~**P11**~~ ✅ (#69) → ~~**P12 · P13**~~ ✅ (backend #84 · frontend #71) — สิทธิ์ทุกหน้าที่ตรวจพบตรงกับ backend แล้ว
 2. เจ้าของร้านยืนยันตาราง §1.3 → **P6** แม่แบบตำแหน่ง → **T4** ทดสอบทีละตำแหน่ง
 3. **Q1** COGS + **E1** โดเมน (ตัดสินใจ) → **E2–E7** ตั้ง env → **E8 · E5** Console → **T2 · T3**
 4. **T1 · T5** ทดสอบหน้าที่ค้าง กับ backend `main`
