@@ -11,6 +11,8 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { FaHeart, FaRegHeart, FaShareAlt, FaSpinner } from "react-icons/fa";
 import { catalogService } from "@/services/catalog";
 import { shopLoyaltyService } from "@/services/shopLoyalty";
@@ -47,6 +49,12 @@ export default function ProductDetailPage() {
 }
 
 function ProductDetailContent() {
+  const t = useTranslations("shop.product");
+  const tpick = useTranslations("shop.pick");
+  const tcard = useTranslations("shop.productCard");
+  const tcart = useTranslations("shop.cart");
+  const tp = useTranslations("shop.products");
+  const { name: localName, names: localNames } = useLocalName();
   const { id } = useParams<{ id: string }>();
   const roundParam = useSearchParams().get("round");
   const router = useRouter();
@@ -102,13 +110,13 @@ function ProductDetailContent() {
   if (!validId || (productQ.isError && isApiError(productQ.error) && productQ.error.status === 404)) {
     return (
       <div className="w-full min-h-screen pt-52 pb-16 text-center text-[#4A342E]">
-        <p className="text-lg font-bold">ไม่พบสินค้านี้</p>
+        <p className="text-lg font-bold">{t("notFound")}</p>
         <button
           type="button"
           onClick={() => router.push("/customer/product")}
           className="mt-4 px-5 py-2 rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold hover:bg-[#4A342E] hover:text-white transition"
         >
-          ดูสินค้าทั้งหมด
+          {t("seeAll")}
         </button>
       </div>
     );
@@ -119,17 +127,17 @@ function ProductDetailContent() {
       <div className="w-full min-h-screen pt-52 pb-16 text-center">
         {productQ.isError ? (
           <div className="flex flex-col items-center gap-3">
-            <p className="text-gray-600">โหลดข้อมูลสินค้าไม่สำเร็จ</p>
+            <p className="text-gray-600">{t("loadFailed")}</p>
             <button
               type="button"
               onClick={() => productQ.refetch()}
               className="px-5 py-2 rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
             >
-              ลองใหม่
+              {t("retry")}
             </button>
           </div>
         ) : (
-          <p className="text-[#8C5A3C] font-medium animate-pulse">กำลังโหลดสินค้า...</p>
+          <p className="text-[#8C5A3C] font-medium animate-pulse">{t("loading")}</p>
         )}
       </div>
     );
@@ -161,7 +169,7 @@ function ProductDetailContent() {
     if (customQ.isLoading) return;
     if (problems.length > 0) {
       setShowProblems(true);
-      alert.warning(pickProblemText(problems[0]));
+      alert.warning(pickProblemText(problems[0], tpick));
       return;
     }
     const ok = await addToCart(product._id, qty, {
@@ -176,7 +184,7 @@ function ProductDetailContent() {
     const url = window.location.href;
     const canNativeShare = typeof navigator.share === "function";
     try {
-      if (canNativeShare) await navigator.share({ title: product.product_name_th, url });
+      if (canNativeShare) await navigator.share({ title: localName(product.product_name_th, product.product_name_eng), url });
       else await navigator.clipboard.writeText(url);
     } catch {
       return; // กดยกเลิกหน้าต่างแชร์ = ไม่ถือว่าแชร์
@@ -189,22 +197,22 @@ function ProductDetailContent() {
       setSharing(false);
       if (awarded > 0) void qc.invalidateQueries({ queryKey: shopPointsKey });
     }
-    const done = canNativeShare ? "แชร์สินค้าเรียบร้อย" : "คัดลอกลิงก์สินค้าแล้ว";
-    alert.success(awarded > 0 ? `${done} รับ ${awarded} แต้ม!` : done);
+    const done = canNativeShare ? t("shared") : t("copied");
+    alert.success(awarded > 0 ? t("sharedPoints", { done, n: awarded }) : done);
   };
 
   return (
     <div className="w-full min-h-screen text-[#4A342E] pt-46 sm:pt-50 md:pt-44 pb-16">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8">
         <div>
-          <CustomerBreadcrumb items={[{ label: "สินค้าทั้งหมด", href: "/customer/product" }, { label: product.product_name_th }]} />
+          <CustomerBreadcrumb items={[{ label: tp("allProducts"), href: "/customer/product" }, { label: localName(product.product_name_th, product.product_name_eng) }]} />
           {/* เปิดจากลิงก์ตรง (ไม่มีหน้าก่อนหน้า) → กลับไปหน้าสินค้าทั้งหมดแทน */}
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? router.back() : router.push("/customer/product"))}
             className="-mt-2 px-3.5 py-1.5 text-xs bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200"
           >
-            ← ย้อนกลับ
+            {t("back")}
           </button>
         </div>
 
@@ -227,7 +235,7 @@ function ProductDetailContent() {
                   ))}
                 </div>
               ) : (
-                <span className="text-sm text-gray-500">ไม่มีรูปภาพ</span>
+                <span className="text-sm text-gray-500">{t("noImage")}</span>
               )}
             </div>
             {images.length > 1 && (
@@ -237,7 +245,7 @@ function ProductDetailContent() {
                     key={idx}
                     type="button"
                     onClick={() => setSlideIndex(idx)}
-                    aria-label={`รูปที่ ${idx + 1}`}
+                    aria-label={t("imageN", { n: idx + 1 })}
                     className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-all ${
                       slideIndex === idx ? "border-[#8C5A3C] shadow-sm scale-95" : "border-transparent opacity-70 hover:opacity-100"
                     }`}
@@ -253,16 +261,16 @@ function ProductDetailContent() {
           <div className="w-full flex-1 flex flex-col gap-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] leading-tight">{product.product_name_th}</h1>
-                <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">{product.product_name_eng}</p>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] leading-tight">{localNames(product.product_name_th, product.product_name_eng).primary}</h1>
+                <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">{localNames(product.product_name_th, product.product_name_eng).secondary}</p>
               </div>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => void onShare()}
                   disabled={sharing}
-                  aria-label="แชร์สินค้า"
-                  title="แชร์สินค้า (สมาชิกได้แต้ม)"
+                  aria-label={t("share")}
+                  title={t("shareHint")}
                   className={iconButton}
                 >
                   {sharing ? <FaSpinner className="animate-spin text-sm text-gray-400" /> : <FaShareAlt className="text-sm text-[#8C5A3C]" />}
@@ -280,8 +288,8 @@ function ProductDetailContent() {
                   }
                   disabled={favorites.pendingId === product._id}
                   aria-pressed={favorite}
-                  aria-label={favorite ? "ลบออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
-                  title={favorite ? "ลบออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
+                  aria-label={favorite ? tcard("removeFavorite") : tcard("addFavorite")}
+                  title={favorite ? tcard("removeFavorite") : tcard("addFavorite")}
                   className={iconButton}
                 >
                   {favorites.pendingId === product._id ? (
@@ -296,23 +304,23 @@ function ProductDetailContent() {
             </div>
 
             <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#4A342E]">
-              <span>คะแนน:</span>
+              <span>{t("rating")}</span>
               <span className="text-[#8C5A3C] font-bold">{rating.toFixed(1)}</span>
               <span className="text-gray-400">|</span>
-              <a href="#reviews-title" className="text-gray-500 font-normal hover:underline">{product.review_count || 0} รีวิว</a>
+              <a href="#reviews-title" className="text-gray-500 font-normal hover:underline">{t("reviews", { n: product.review_count || 0 })}</a>
             </div>
 
             <div className="bg-[#FAF6F0]/80 p-4 rounded-xl border border-[#8C5A3C]/10 flex items-baseline gap-2 flex-wrap">
-              <span className="text-xl font-medium text-gray-600">ราคา :</span>
-              <span className={`text-3xl font-black ${discounted ? "text-red-600" : "text-[#8C5A3C]"}`}>{price.toLocaleString("th-TH")}</span>
-              <span className="text-xl font-semibold text-gray-600">บาท {unitName ? `/ ${unitName}` : ""}</span>
+              <span className="text-xl font-medium text-gray-600">{t("price")}</span>
+              <span className={`text-3xl font-black ${discounted ? "text-red-600" : "text-[#8C5A3C]"}`}>{price.toLocaleString()}</span>
+              <span className="text-xl font-semibold text-gray-600">{unitName ? t("perUnit", { unit: unitName }) : t("baht")}</span>
               {discounted && (
                 <>
-                  <span className="text-base text-gray-400 line-through">{(regularPrice + extra).toLocaleString("th-TH")} บาท</span>
-                  <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2.5 py-1 rounded-xl">ลดราคา -{Math.round((1 - (price - extra) / regularPrice) * 100)}%</span>
+                  <span className="text-base text-gray-400 line-through">{t("regularPrice", { price: (regularPrice + extra).toLocaleString() })}</span>
+                  <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2.5 py-1 rounded-xl">{t("sale", { percent: Math.round((1 - (price - extra) / regularPrice) * 100) })}</span>
                 </>
               )}
-              {extra > 0 && <span className="w-full text-xs text-gray-500">รวมตัวเลือก +฿{extra.toLocaleString("th-TH")}</span>}
+              {extra > 0 && <span className="w-full text-xs text-gray-500">{t("withOptions", { n: extra.toLocaleString() })}</span>}
             </div>
 
             {isPreorder ? (
@@ -333,7 +341,7 @@ function ProductDetailContent() {
             ) : (
               <>
                 {customQ.isLoading ? (
-                  <p className="text-xs text-gray-500 animate-pulse">กำลังโหลดตัวเลือกสินค้า...</p>
+                  <p className="text-xs text-gray-500 animate-pulse">{t("loadingOptions")}</p>
                 ) : customization && customizable ? (
                   <CustomizationPicker
                     customization={customization}
@@ -345,7 +353,7 @@ function ProductDetailContent() {
                 {showProblems && problems.length > 0 && (
                   <ul className="-mt-2 m-0 list-none space-y-0.5 p-0 text-xs text-red-600" role="alert">
                     {problems.map((p) => (
-                      <li key={`${p.key}-${JSON.stringify(p.params)}`}>{pickProblemText(p)}</li>
+                      <li key={`${p.key}-${JSON.stringify(p.params)}`}>{pickProblemText(p, tpick)}</li>
                     ))}
                   </ul>
                 )}
@@ -356,7 +364,7 @@ function ProductDetailContent() {
                       type="button"
                       onClick={() => changeQty(-1)}
                       disabled={isLoading || outOfStock || qty <= 1}
-                      aria-label="ลดจำนวน"
+                      aria-label={tcart("decrease")}
                       className="w-10 h-11 flex items-center justify-center font-bold text-lg text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40 transition-colors"
                     >
                       -
@@ -366,7 +374,7 @@ function ProductDetailContent() {
                       type="button"
                       onClick={() => changeQty(1)}
                       disabled={isLoading || outOfStock || qty >= stock}
-                      aria-label="เพิ่มจำนวน"
+                      aria-label={tcart("increase")}
                       className="w-10 h-11 flex items-center justify-center font-bold text-lg text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40 transition-colors"
                     >
                       +
@@ -380,23 +388,23 @@ function ProductDetailContent() {
                     className="flex-1 h-11 px-2 text-sm sm:text-base bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     {outOfStock
-                      ? "สินค้าหมด"
+                      ? t("soldOut")
                       : isLoading
-                        ? "กำลังเพิ่ม..."
+                        ? tcard("adding")
                         : isSuccess
-                          ? "เพิ่มแล้ว"
-                          : `เพิ่มลงตะกร้า · ฿${(price * qty).toLocaleString("th-TH")}`}
+                          ? tcard("added")
+                          : t("addToCartPrice", { price: (price * qty).toLocaleString() })}
                   </button>
                 </div>
-                {!outOfStock && <p className="-mt-2 text-xs text-gray-500">คงเหลือ {stock.toLocaleString("th-TH")} ชิ้น</p>}
+                {!outOfStock && <p className="-mt-2 text-xs text-gray-500">{t("stockLeft", { n: stock.toLocaleString() })}</p>}
               </>
             )}
 
             <div className="flex gap-2 pt-4">
               {(
                 [
-                  ["description", "ดูรายละเอียด"],
-                  ["heating", "ขั้นตอนการอุ่น"],
+                  ["description", t("tabDescription")],
+                  ["heating", t("tabHeating")],
                 ] as const
               ).map(([key, label]) => (
                 <button
@@ -416,12 +424,12 @@ function ProductDetailContent() {
             </div>
             <div className="bg-[#FAF6F0] p-5 rounded-xl border border-[#8C5A3C]/10">
               <h4 className="text-xs font-bold text-[#8C5A3C] uppercase tracking-wider mb-1">
-                {activeTab === "description" ? "รายละเอียดสินค้า" : "ขั้นตอนการอุ่น"}
+                {activeTab === "description" ? t("descriptionTitle") : t("tabHeating")}
               </h4>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                 {activeTab === "description"
-                  ? product.product_description || "ไม่มีข้อมูลรายละเอียดสินค้า"
-                  : product.preparation_heating || "ไม่มีข้อมูลขั้นตอนการอุ่น"}
+                  ? product.product_description || t("noDescription")
+                  : product.preparation_heating || t("noHeating")}
               </p>
             </div>
           </div>

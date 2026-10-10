@@ -122,6 +122,8 @@ export const MENU_SECTIONS: MenuSection[] = [
       { labelKey: "storeDesign", icon: "PaintBrushIcon", href: "/owner/store-design" },
       // พนักงานเห็นเมื่อมี store_info.view (แก้ได้เฉพาะหน้าร้านประจำสัปดาห์) · owner เห็นทุกหัวข้อ
       { labelKey: "storeInfo", icon: "BuildingStorefrontIcon", href: "/owner/store-info", menuKey: "store_info" },
+      // ค่าจัดส่งหน้าร้านออนไลน์ (F2) — /admin/shipping-zones ใช้ store_info.* · คนละชุดกับ "โซนค่าจัดส่ง" ของหลังร้าน
+      { labelKey: "webShipping", icon: "TruckIcon", href: "/owner/shipping", menuKey: "store_info" },
     ],
   },
 ];

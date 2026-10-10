@@ -14,6 +14,8 @@ export interface PreorderBasketItem {
   round_item_id: string;
   product_id: string;
   product_name_th: string;
+  /** ชื่ออังกฤษ (แสดงตอนเลือกภาษาอังกฤษ) — ตะกร้าเก่าที่บันทึกก่อนมีฟิลด์นี้ = ไม่มี */
+  product_name_eng?: string | null;
   product_img: string;
   /** ราคาต่อชิ้นรวมตัวเลือก (แสดงผล) */
   unit_price: number;

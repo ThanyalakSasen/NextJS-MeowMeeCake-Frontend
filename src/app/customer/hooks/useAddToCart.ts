@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { shopCartService, type CartCustomization } from "@/services/shopCart";
 import { catalogService } from "@/services/catalog";
@@ -22,6 +23,7 @@ import { useCartCountStore } from "../store/cartCountStore";
 type AddStatus = "idle" | "loading" | "success" | "error";
 
 export function useAddToCart() {
+  const t = useTranslations("shop.cartActions");
   const [status, setStatus] = useState<AddStatus>("idle");
   const { status: authStatus } = useCustomerSession();
   const increment = useCartCountStore((s) => s.increment);
@@ -34,7 +36,7 @@ export function useAddToCart() {
 
     if (authStatus !== "authenticated") {
       setStatus("error");
-      alert.warning("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า");
+      alert.warning(t("loginToAdd"));
       router.push(`${LOGIN_PATH}?next=${encodeURIComponent(pathname)}`);
       setTimeout(() => setStatus("idle"), 2500);
       return false;
@@ -45,12 +47,12 @@ export function useAddToCart() {
       await shopCartService.addItem({ product_id: productId, quantity: qty, ...customization });
       increment();
       setStatus("success");
-      alert.success("เพิ่มสินค้าลงตะกร้าแล้ว");
+      alert.success(t("added"));
       setTimeout(() => setStatus("idle"), 1500);
       return true;
     } catch (err) {
       setStatus("error");
-      alert.error(isApiError(err) ? err.message : "เพิ่มสินค้าไม่สำเร็จ");
+      alert.error(isApiError(err) ? err.message : t("addFailed"));
       setTimeout(() => setStatus("idle"), 2500);
       return false;
     }
@@ -69,7 +71,7 @@ export function useAddToCart() {
         .catch(() => null);
       setStatus("idle");
       if (hasCustomization(custom)) {
-        alert.info("สินค้านี้มีตัวเลือก — เลือกตัวเลือกก่อนเพิ่มลงตะกร้า");
+        alert.info(t("chooseOptions"));
         router.push(`/customer/product/${productId}`);
         return false;
       }

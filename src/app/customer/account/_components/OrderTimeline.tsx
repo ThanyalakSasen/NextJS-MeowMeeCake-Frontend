@@ -3,6 +3,7 @@
 // ที่นี่ 5 ขั้นให้เห็นช่วงชำระเงินด้วย · ขั้นที่ 4–5 ตามประเภท (ส่งตามที่อยู่ / รับเอง)
 // backend ไม่ส่งเวลาของแต่ละสถานะ → แสดงแค่ถึงขั้นไหนแล้ว · ยกเลิกแล้วไม่แสดง (หน้ามีแถบเหตุผลยกเลิกอยู่แล้ว)
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ShopOrder } from "@/services/shopOrders";
 
 const STEP_OF_STATUS = { pending: 0, confirmed: 1, preparing: 2, ready: 3, completed: 4, cancelled: -1 } as const;
@@ -16,19 +17,20 @@ export function orderTimelineStep(o: Pick<ShopOrder, "order_status" | "payment_s
 }
 
 export default function OrderTimeline({ order }: { order: ShopOrder }) {
+  const t = useTranslations("shop.orders.timeline");
   if (order.order_status === "cancelled") return null;
   const delivery = order.order_type === "delivery";
   const labels = [
-    "สั่งซื้อแล้ว",
-    "ชำระเงิน / ร้านยืนยัน",
-    "กำลังเตรียมสินค้า",
-    delivery ? "กำลังจัดส่ง" : "พร้อมรับสินค้า",
-    delivery ? "ได้รับสินค้าแล้ว" : "รับสินค้าแล้ว",
+    t("placed"),
+    t("paid"),
+    t("preparing"),
+    delivery ? t("shipping") : t("readyPickup"),
+    delivery ? t("received") : t("pickedUp"),
   ];
   const done = orderTimelineStep(order);
 
   return (
-    <ol className="flex items-start" aria-label="สถานะคำสั่งซื้อ">
+    <ol className="flex items-start" aria-label={t("aria")}>
       {labels.map((label, i) => {
         const passed = i <= done;
         const current = i === done + 1;

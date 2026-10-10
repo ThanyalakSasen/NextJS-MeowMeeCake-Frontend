@@ -1,21 +1,24 @@
 // ข้อความของปัญหาตอนเลือกตัวเลือกสินค้า (src/lib/customizationSelection.ts checkPicked)
-// POS ใช้ i18n pos.pick* · หน้าร้านเป็นภาษาไทยตรง ๆ (customer/ ยกเว้นจาก check-i18n)
+// POS ใช้ i18n pos.pick* · หน้าร้านใช้ shop.pick.* (ผู้เรียกส่ง t ของ namespace นั้นมา)
+import type { useTranslations } from "next-intl";
 import type { PickProblem } from "@/lib/customizationSelection";
 
-export function pickProblemText(p: PickProblem): string {
-  const { group, option, n } = p.params;
+export type PickT = ReturnType<typeof useTranslations<"shop.pick">>;
+
+export function pickProblemText(p: PickProblem, t: PickT): string {
+  const { group = "", option = "", n = 0 } = p.params;
   switch (p.key) {
     case "pickGroupRequired":
-      return `กรุณาเลือก${group}`;
+      return t("groupRequired", { group });
     case "pickGroupMin":
-      return `${group}: เลือกอย่างน้อย ${n} อย่าง`;
+      return t("groupMin", { group, n });
     case "pickGroupMax":
-      return `${group}: เลือกได้ไม่เกิน ${n} อย่าง`;
+      return t("groupMax", { group, n });
     case "pickOptionRequired":
-      return `กรุณาเลือก${option}`;
+      return t("optionRequired", { option });
     case "pickTextRequired":
-      return `กรุณากรอก${option}`;
+      return t("textRequired", { option });
     case "pickTextTooLong":
-      return `${option}: ยาวไม่เกิน ${n} ตัวอักษร`;
+      return t("textTooLong", { option, n });
   }
 }

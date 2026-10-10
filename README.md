@@ -38,7 +38,7 @@ Backend เป็นคนละโปรเจกต์ คุยกันผ�
 - **ใครใช้:** ลูกค้า (หน้าร้าน — guest ดูสินค้าได้ · สั่งซื้อต้อง login) · เจ้าของร้าน (หลังร้านทุกอย่าง) · พนักงาน (หลังร้านเฉพาะที่ได้รับสิทธิ์)
 - **โครงใหญ่:** เบราว์เซอร์ → **Next.js (โปรเจกต์นี้)** → เรียก API → **Backend (คนละโปรเจกต์ · `/api/catalog/*` สาธารณะ · `/api/shop/*` ลูกค้า · `/api/admin/*` หลังร้าน)** → ฐานข้อมูล
 - **โปรเจกต์นี้ไม่มี:** ฐานข้อมูล, การเข้ารหัสรหัสผ่าน, การออก token — พวกนี้อยู่ที่ backend ทั้งหมด
-- **2 ภาษา:** หลังร้าน ไทย (ค่าเริ่มต้น) / อังกฤษ สลับได้ทุกหน้า · หน้าร้านยังเป็นข้อความไทยในโค้ด (ยกเว้นจาก `lint:i18n` ไว้ก่อน — ทยอยย้ายเข้า i18n)
+- **2 ภาษา:** หลังร้าน ไทย (ค่าเริ่มต้น) / อังกฤษ สลับได้ทุกหน้า · หน้าร้านแสดงภาษาไทยอย่างเดียว (Q-BE19 — `customer/layout.tsx` บังคับ locale `th`) แต่ข้อความอยู่ใน i18n แล้ว (`shop.*` ทั้ง th/en · #44) และ `lint:i18n` ตรวจหน้าร้านด้วย
 - **Backend:** ต้องรัน backend จริงเสมอ — mock (MSW) ถูกถอดออกแล้ว 2026-10-09 (BACKLOG4 I11) · ทดสอบด้วย backend จริงในเครื่อง + MongoDB local `meowmeecake-test` (ดู `docs/MOCKS.md`)
 
 ---
@@ -102,7 +102,7 @@ src/
 
   lib/                     เครื่องมือระดับแอป
     http.ts                axios instance + interceptor (จุดเดียวที่คุยกับ network)
-    authClient.ts          login / logout / me / refresh
+    authClient.ts          login (อีเมล · Google · LINE) / logout / me / meOptional · ติดตั้ง handler 401
     queryClient.ts         ตั้งค่า React Query
     alert.ts               popup แจ้งเตือน (ครอบ sweetalert2)
     exportCsv.ts           ดาวน์โหลดตารางเป็น CSV
@@ -127,6 +127,7 @@ src/
 
 docs/                      เอกสารรายละเอียด (ดูข้อ 9)
 scripts/check-i18n.mjs     สคริปต์เช็คว่าไม่มีข้อความ hard-code
+scripts/check-theme.mjs    สคริปต์เทียบสี theme/palette.ts ↔ globals.css
 ```
 
 ---
@@ -142,12 +143,13 @@ scripts/check-i18n.mjs     สคริปต์เช็คว่าไม่�
                           ประกอบ Sidebar + Navbar รอบ ๆ เนื้อหา
 3. app/owner/products/page.tsx      เรียก useProductsViewModel()  แล้วส่งผลให้ <ProductsView/>
 4. useProductsViewModel.ts          useQuery(['products', filters], () => productsService.list(filters))
-5. src/services/products.ts         http.get('/products', { params: filters })
+5. src/services/products.ts         http.getList('/admin/products', { params: filters })
 6. src/lib/http.ts (interceptor)    - แนบ header Accept-Language ตามภาษาปัจจุบัน
                                     - ส่ง request ออกไปที่ NEXT_PUBLIC_API_BASE_URL
 7.  backend จริงตอบ (ไม่มี mock แล้ว — I11)
-8. response กลับมา              interceptor แกะ envelope { data, meta } ออก
-                                ถ้า error 401 → เรียก refresh 1 ครั้ง → สำเร็จ retry / ล้มเหลว → เด้ง login
+8. response กลับมา              getList แกะ envelope { data: { items, meta } } เป็น { data, meta }
+                                ถ้า error 401 → ล้าง cache + เด้ง /login ทันที (ไม่มี refresh/retry — backend ไม่มี refresh token)
+                                error อื่น → โยน ApiError { status, code, message, fieldErrors } ให้ ViewModel
 9. useQuery ได้ data → ViewModel ส่งต่อเป็น props → <ProductsView/> วาดตาราง (ข้อความทุกคำผ่าน t())
 ```
 
@@ -220,7 +222,7 @@ const t = await getTranslations();
 **3 อย่างที่กันพลาด:**
 - พิมพ์ key ผิด → editor autocomplete + **build error** (ผ่าน `src/i18n/messages.d.ts`)
 - ลืมเติมอีกไฟล์ → `npm run lint:i18n` เช็ค key ของ th/en ให้ตรงกัน
-- เผลอเขียนข้อความไทยตรง ๆ ใน `.tsx` → `npm run lint:i18n` จับ (ยกเว้น `i18n/` `types/` `constants/` และหน้าร้าน `app/customer/` `components/customer/`)
+- เผลอเขียนข้อความไทยตรง ๆ ใน `.tsx` → `npm run lint:i18n` จับ (ยกเว้น `i18n/` `types/` `constants/` — หน้าร้านไม่ยกเว้นแล้ว)
 
 **key จากตัวแปร/config:** ต้อง type ให้แคบ (เช่น `menu.ts` `labelKey: NavKey`) หรือ cast `t(key as Parameters<typeof t>[0])`
 
@@ -280,8 +282,8 @@ export default function ProductsPage() {
 
 | ส่วน | ไฟล์ | หน้าที่ |
 |---|---|---|
-| เรียก API auth | `lib/authClient.ts` | `login` / `logout` / `me` / `refresh` |
-| ดักทุก response | `lib/http.ts` (interceptor) | เจอ `401` → เรียก `refresh` 1 ครั้ง → สำเร็จ retry / ล้มเหลว → เด้ง `/login?reason=expired` |
+| เรียก API auth | `lib/authClient.ts` | `login` / `loginWithGoogle` / `lineLoginUrl` / `logout` / `me` / `meOptional` (หน้าร้าน — guest ได้ `null` ไม่เด้ง login) |
+| ดักทุก response | `lib/http.ts` (interceptor) | เจอ `401` → เด้ง `/login?reason=expired` ทันที — **ไม่มี refresh/retry** (backend ใช้ JWT อายุ 7 วัน ไม่มี refresh token) · ยกเว้น `/auth/login` ฯลฯ ที่ 401 = คำตอบของมันเอง (รหัสผิด) และ request ที่ส่ง `skipAuthRedirect` |
 | ข้อมูลผู้ใช้ปัจจุบัน | `hooks/useCurrentUser.ts` | `GET /auth/me` → ได้ `user` + `menuAccess` (สิทธิ์แต่ละเมนู) |
 | เก็บสิทธิ์ให้ทั้งแอป | `context/PermissionsContext` | `usePermission("orders")` → `{ view, create, update, delete, approve }` |
 | หมดเวลา idle | `hooks/useIdleTimeout.ts` | ไม่ขยับ 30 นาที → เตือน 60 วิ → logout |
@@ -291,14 +293,16 @@ export default function ProductsPage() {
 ```
 กรอก email/password → POST /auth/login (backend set cookie)
                     → GET /auth/me → เก็บ user + สิทธิ์ ใน PermissionsContext
-                    → เข้า /owner/dashboard
+                    → ไปต่อตาม role (login/nextPath.ts):
+                        ลูกค้า              → ?next= ใต้ /customer หรือ /profile · ไม่งั้น /customer
+                        เจ้าของร้าน/พนักงาน → ?next= ใต้ /owner หรือ /profile · ไม่งั้น /owner/dashboard
 ```
 
 **สิทธิ์ = แค่ UX:** frontend ซ่อนปุ่ม/เมนูตาม `menuAccess` เพื่อความสวยงาม — **ตัวบังคับจริงอยู่ที่ backend** (ต่อให้ผู้ใช้เรียก API ตรง ๆ ก็โดน backend ปฏิเสธ)
 
 **ทำไมสำคัญ:** ถ้าเข้าใจผิดว่า "ซ่อนปุ่ม = ปลอดภัย" จะเกิดช่องโหว่ · จำไว้ว่า frontend เชื่อถือไม่ได้เสมอ
 
-> รายละเอียด (interceptor, refresh, cross-tab logout): `docs/AUTH_PLAN.md`
+> รายละเอียด (interceptor, cross-tab logout · แผน refresh เดิมที่ไม่ได้ใช้): `docs/AUTH_PLAN.md`
 
 ---
 
@@ -372,7 +376,7 @@ export const productsService = {
 | **sweetalert2** | popup แจ้งเตือน/ยืนยัน | หน้าตาสวย, เรียกผ่าน `lib/alert.ts` ที่เดียว |
 | **dayjs** | จัดการวันที่ | เบา, antd ใช้ตัวนี้อยู่แล้ว, สลับ locale ได้ |
 | **recharts** | กราฟ (ยอดขาย, การผลิต) | API เป็น React component ตรงไปตรงมา |
-| **React Compiler** (`reactCompiler: true`) | ทำ memoization ให้อัตโนมัติ | ไม่ต้องใส่ `useMemo`/`useCallback` เองทุกที่ (build ช้าลงนิดหน่อย แลกมา) |
+| **React Compiler** (`reactCompiler: true`) | ทำ memoization ให้อัตโนมัติ | ไม่ต้องใส่ `useMemo`/`useCallback` เองทุกที่ (build ช้าลงนิดหน่อย แลกมา) · ใช้คู่ `react-compiler-runtime` เพราะยังเป็น React 18 (Next 16.3+ บังคับ) |
 
 ---
 
@@ -395,7 +399,7 @@ export const productsService = {
 |---|---|
 | สร้าง/จัดระเบียบ component ที่ใช้หลายหน้า | `REBUILD_PLAN.md` §6 + `COMPONENT_MAP.md` |
 | แตะข้อความบนจอ / เพิ่มภาษา / enum แปลไม่ครบ | `I18N_PLAN.md` |
-| แตะ login / session / refresh token / สิทธิ์ | `AUTH_PLAN.md` |
+| แตะ login / session / สิทธิ์ | `AUTH_PLAN.md` |
 | หาว่ามี entity/field/enum อะไรบ้าง ชื่ออะไร | `INVENTORY.md` *(เปิดหาเป็นจุด ๆ ไม่ต้องอ่านรวด)* |
 | อยากรู้ว่าทำไมโปรเจกต์ตัดสินใจแบบนี้ | `PROMPT_HISTORY.md` + `REBUILD_PLAN.md` §8 |
 
@@ -405,10 +409,10 @@ export const productsService = {
 |---|---|---|---|
 | **`REBUILD_PLAN.md`** | แผนแม่บท — เป้าหมาย, สถาปัตยกรรม frontend, 8 เฟส, การตัดสินใจ D1–D19 พร้อมเหตุผล | วันแรก / อยากรู้ทำถึงไหน / จะเริ่มเฟสใหม่ | เห็นภาพรวมทั้งโปรเจกต์ในไฟล์เดียว — ทุก decision มี "ทำไม" กำกับ |
 | **`CODE_STRUCTURE.md`** | กติกา MVVM — View/ViewModel วางยังไง ตั้งชื่ออะไร แตกไฟล์เมื่อไหร่ + ตัวอย่างเต็ม | ก่อนสร้างหน้า/component ที่มี logic | ทุกหน้าโครงโค้ดเหมือนกัน → เปิดหน้าไหนก็อ่านออกทันที |
-| **`API_CONTRACT.md`** | สัญญา REST กับ backend — envelope, params, status, auth, 40 resource, ตัวอย่าง request/response | ก่อนเขียน `service` / `mock` / DTO ใหม่ | frontend + backend + MSW อ้างเอกสารเดียว → ไม่หลุดกัน |
+| **`API_CONTRACT.md`** | สัญญา REST กับ backend — envelope, params, status, auth, 40 resource, ตัวอย่าง request/response | ก่อนเขียน `service` / DTO ใหม่ | frontend + backend อ้างเอกสารเดียว → ไม่หลุดกัน |
 | **`MOCKS.md`** | ถอด mock แล้ว — วิธีทดสอบกับ backend ในเครื่อง + DB ทดสอบ | ก่อนทดสอบงานที่เรียก API | กันทดสอบกับ DB จริง (Atlas) โดยไม่ตั้งใจ |
 | **`I18N_PLAN.md`** | ระบบ 2 ภาษา — โครง namespace, การจัดการ enum ที่ DB เก็บเป็นภาษาไทย | เพิ่มภาษา / ข้อความแปลไม่ครบ / งง key | เข้าใจว่าทำไมข้อความอยู่ใน json ไม่อยู่ในโค้ด |
-| **`AUTH_PLAN.md`** | auth ฝั่ง frontend — interceptor 401→refresh, idle timeout, cross-tab logout + ตารางว่าอะไรเป็นหน้าที่ frontend/backend | แตะโค้ด login / session / permission | auth ผิด = ช่องโหว่ · ไฟล์นี้กันเข้าใจผิดว่า "ซ่อนปุ่ม = ปลอดภัย" |
+| **`AUTH_PLAN.md`** | auth ฝั่ง frontend — interceptor 401→login, idle timeout, cross-tab logout + ตารางว่าอะไรเป็นหน้าที่ frontend/backend | แตะโค้ด login / session / permission | auth ผิด = ช่องโหว่ · ไฟล์นี้กันเข้าใจผิดว่า "ซ่อนปุ่ม = ปลอดภัย" |
 | **`INVENTORY.md`** | แจกแจงทุก entity / field / enum / util จากระบบเดิม (fullstack) | ก่อนสร้าง DTO / หน้าใหม่ / หา enum | กันสร้างของซ้ำ + ตั้งชื่อฟิลด์ให้ตรงกับ backend |
 | **`COMPONENT_MAP.md`** | ตาราง: component ชื่อนี้ → อยู่ `base`/`shared`/หน้าไหน → ใช้กี่หน้า → split ไหม | หา component / ตัดสินใจสร้างใหม่หรือใช้ของเดิม | *(สร้างตอนเฟส 3)* กัน component ซ้ำซ้อน |
 | **`PROMPT_HISTORY.md`** | ไทม์ไลน์การพัฒนา — แต่ละครั้งสั่งอะไร ทำอะไรไป ติดปัญหาอะไร | อยากรู้ที่มาของโค้ด / เฟสไหนเสร็จแล้ว | context การตัดสินใจที่ไม่ได้อยู่ในโค้ดหรือ git log |
@@ -437,10 +441,9 @@ export const productsService = {
 - เขียนข้อความไทย/อังกฤษตรง ๆ ใน `.tsx` (`npm run lint:i18n` จะจับ)
 - `fetch`/`axios` ใน `page.tsx` หรือ `*View.tsx`
 - `useState`/`useEffect` โหลดข้อมูลใน `*View.tsx` (ย้ายไป ViewModel)
-- แก้ `src/models/` (กำลังจะลบ — เป็นของ backend เดิม)
 - คิดว่า "ซ่อนปุ่ม = ปลอดภัย"
 
-**ก่อน commit:** `npm run lint` · `npm run lint:i18n` · `npm run build` ต้องผ่านทั้งหมด
+**ก่อน commit:** `npm run check` ต้องผ่าน (+ `npm run build` ถ้าแตะ route/config)
 
 ---
 
@@ -448,8 +451,10 @@ export const productsService = {
 
 | คำสั่ง | ทำอะไร |
 |---|---|
-| `npm run dev` | รัน dev server (hot reload) ที่ `:3000` |
+| `npm run dev` | รัน dev server (hot reload) ที่ `:3001` (backend ใช้ `:3000`) |
 | `npm run build` | build production + เช็ค TypeScript ทั้งโปรเจกต์ |
 | `npm run start` | รัน build ที่ทำไว้ |
 | `npm run lint` | ESLint |
-| `npm run lint:i18n` | เช็คว่าไม่มีข้อความ hard-code นอกไฟล์คำแปล |
+| `npm run lint:i18n` | เช็ค key th/en ตรงกัน + ไม่มีข้อความ hard-code นอกไฟล์คำแปล |
+| `npm run lint:theme` | เทียบสีใน `theme/palette.ts` ↔ `globals.css` |
+| **`npm run check`** | `lint:i18n` + `lint:theme` + `tsc --noEmit` + `eslint` รวดเดียว — ต้องเขียวก่อน commit |

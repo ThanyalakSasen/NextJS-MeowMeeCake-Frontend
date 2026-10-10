@@ -11,6 +11,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CakeSlice, Send, Star, Upload, Video, X } from "lucide-react";
 import { catalogService } from "@/services/catalog";
@@ -29,13 +31,13 @@ const MAX_IMAGE_MB = 5;
 const MAX_VIDEO_MB = 30;
 const MAX_TEXT = 500;
 
-const RATING_LABELS = ["", "ควรปรับปรุง", "พอใช้", "ปานกลาง", "ดีมาก", "ยอดเยี่ยมที่สุด!"];
 const sentimentForRating = (rating: number) => (rating >= 4 ? "positive" : "negative");
 
 export interface ReviewableItem {
   _id: string;
   product_id: string;
   product_name: string;
+  product_name_eng?: string | null;
   variant_name: string | null;
   quantity: number;
   unit_price: number;
@@ -59,6 +61,10 @@ export default function WriteReviewForm({
   /** หน้ารายละเอียดออเดอร์/พรีออเดอร์ — กลับไปเมื่อรีวิวครบ */
   backHref: string;
 }) {
+  const tw = useTranslations("shop.review");
+  const { name: localName } = useLocalName();
+  const tc = useTranslations("shop.common");
+  const to = useTranslations("shop.orders");
   const router = useRouter();
   const qc = useQueryClient();
   const { reviewed, loaded, isError } = useReviewedItems(kind);
@@ -126,11 +132,11 @@ export default function WriteReviewForm({
     const accepted: Media[] = [];
     for (const file of files) {
       if (images.length + accepted.length >= MAX_IMAGES) {
-        alert.warning(`แนบรูปได้สูงสุด ${MAX_IMAGES} รูป`);
+        alert.warning(tw("maxImages", { n: MAX_IMAGES }));
         break;
       }
       if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
-        alert.warning(`ไฟล์ "${file.name}" มีขนาดเกิน ${MAX_IMAGE_MB}MB กรุณาเลือกไฟล์ใหม่`);
+        alert.warning(tw("imageTooBig", { name: file.name, mb: MAX_IMAGE_MB }));
         continue;
       }
       accepted.push(toMedia(file));
@@ -146,7 +152,7 @@ export default function WriteReviewForm({
     e.target.value = "";
     if (!file) return;
     if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
-      alert.warning(`ไฟล์วิดีโอมีขนาดเกิน ${MAX_VIDEO_MB}MB กรุณาเลือกไฟล์ใหม่`);
+      alert.warning(tw("videoTooBig", { mb: MAX_VIDEO_MB }));
       return;
     }
     dropMedia(video);
@@ -168,8 +174,8 @@ export default function WriteReviewForm({
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (rating === 0) return alert.warning("กรุณาให้คะแนนดาวก่อนส่งรีวิว");
-    if (targets.length === 0) return alert.warning("กรุณาเลือกสินค้าที่ต้องการรีวิวอย่างน้อย 1 รายการ");
+    if (rating === 0) return alert.warning(tw("needRating"));
+    if (targets.length === 0) return alert.warning(tw("needItem"));
 
     setSubmitting(true);
     // ไฟล์ที่อัปสำเร็จในรอบนี้ — ส่งรีวิวไม่ผ่านเลยสักชิ้นต้องลบทิ้ง ไม่ให้ค้างบน server
@@ -201,11 +207,14 @@ export default function WriteReviewForm({
       for (const pid of new Set(productIdsDone)) void qc.invalidateQueries({ queryKey: [...catalogProductKey(pid), "reviews"] });
 
       if (failed.length > 0) {
-        const nameOf = (id: string) => targets.find((t) => t._id === id)?.product_name ?? "สินค้า";
+        const nameOf = (id: string) => targets.find((t) => t._id === id)?.product_name ?? tw("product");
         setUnchecked(new Set(pending.filter((it) => !failed.some((f) => f.item_id === it._id)).map((it) => it._id)));
         alert.error(
-          `ส่งรีวิวสำเร็จ ${targets.length - failed.length} รายการ แต่ไม่สำเร็จ ${failed.length} รายการ: ` +
-            failed.map((f) => `${nameOf(f.item_id)} (${f.message})`).join(", "),
+          tw("partialFail", {
+            ok: targets.length - failed.length,
+            failed: failed.length,
+            list: failed.map((f) => `${nameOf(f.item_id)} (${f.message})`).join(", "),
+          }),
         );
         return;
       }
@@ -214,33 +223,33 @@ export default function WriteReviewForm({
       if (remaining > 0) {
         resetForm();
         setUnchecked(new Set());
-        alert.success(`ขอบคุณสำหรับรีวิว! เหลือสินค้าที่ยังไม่ได้รีวิวอีก ${remaining} รายการ`);
+        alert.success(tw("thanksRemaining", { n: remaining }));
         return;
       }
-      alert.success("ขอบคุณสำหรับรีวิวของคุณ! ได้รับแต้มสะสมแล้ว");
+      alert.success(tw("thanks"));
       router.push(backHref);
     } catch (err) {
       void shopReviewsService.discardUploads(uploaded);
-      alert.error(isApiError(err) ? err.message : "ส่งรีวิวไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      alert.error(isApiError(err) ? err.message : tw("sendFailed"));
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (isError) return <ReviewNotice text="โหลดข้อมูลรีวิวไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" href={backHref} link="กลับไปหน้ารายละเอียด" />;
+  if (isError) return <ReviewNotice text={tw("loadFailed")} href={backHref} link={to("backToDetail")} />;
   if (!loaded) return <ReviewLoading />;
   if (pending.length === 0) {
-    return <ReviewNotice text="คุณรีวิวสินค้าในรายการนี้ครบแล้ว ขอบคุณค่ะ" href={backHref} link="กลับไปหน้ารายละเอียด" />;
+    return <ReviewNotice text={tw("allDone")} href={backHref} link={to("backToDetail")} />;
   }
 
   return (
     <form onSubmit={submit} className={`${shopCard} space-y-6`}>
       <div className="space-y-3 border-b border-stone-200 pb-5">
         <div>
-          <h1 className="text-lg font-bold sm:text-xl">รีวิวสินค้า</h1>
+          <h1 className="text-lg font-bold sm:text-xl">{tw("title")}</h1>
           <p className="text-sm text-stone-500">
-            {kind === "preorder" ? "พรีออเดอร์" : "คำสั่งซื้อ"} #{docNo}
-            {pending.length > 1 && " · เลือกสินค้าที่จะใช้รีวิวนี้ (คะแนน ข้อความ และรูปเดียวกันทุกชิ้นที่เลือก)"}
+            {kind === "preorder" ? tw("preorderNo", { no: docNo }) : tw("orderNo", { no: docNo })}
+            {pending.length > 1 && tw("pickHint")}
           </p>
         </div>
         <div className="space-y-2">
@@ -258,9 +267,9 @@ export default function WriteReviewForm({
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="m-0 truncate text-sm font-semibold text-stone-800">{it.product_name || "สินค้า"}</p>
+                  <p className="m-0 truncate text-sm font-semibold text-stone-800">{localName(it.product_name, it.product_name_eng) || tw("product")}</p>
                   <p className="m-0 truncate text-xs text-stone-500">
-                    {it.variant_name ? `ตัวเลือก: ${it.variant_name} · ` : ""}×{it.quantity} · {baht(it.unit_price)}
+                    {it.variant_name ? tw("option", { name: it.variant_name }) : ""}×{it.quantity} · {baht(it.unit_price)}
                   </p>
                 </div>
               </>
@@ -283,7 +292,7 @@ export default function WriteReviewForm({
       </div>
 
       <div className="flex flex-col items-center gap-2 py-2">
-        <span className="text-sm font-semibold text-stone-700">ให้คะแนน{shown > 0 ? `: ${shown}/5` : ""}</span>
+        <span className="text-sm font-semibold text-stone-700">{shown > 0 ? tw("rateValue", { n: shown }) : tw("rate")}</span>
         <div className="flex items-center gap-1" onMouseLeave={() => setHover(0)}>
           {[1, 2, 3, 4, 5].map((star) => {
             const active = star <= shown;
@@ -292,7 +301,7 @@ export default function WriteReviewForm({
                 key={star}
                 type="button"
                 className="p-0.5"
-                aria-label={`${star} ดาว`}
+                aria-label={tw("stars", { n: star })}
                 aria-pressed={star === rating}
                 onClick={() => changeRating(star)}
                 onMouseEnter={() => setHover(star)}
@@ -303,16 +312,16 @@ export default function WriteReviewForm({
           })}
         </div>
         {shown > 0 ? (
-          <span className="text-sm font-medium text-[#4A342E]">{RATING_LABELS[shown]}</span>
+          <span className="text-sm font-medium text-[#4A342E]">{tw(`rating.${shown as 1 | 2 | 3 | 4 | 5}`)}</span>
         ) : (
-          <span className="text-xs text-stone-400">แตะดาวเพื่อให้คะแนน</span>
+          <span className="text-xs text-stone-400">{tw("tapToRate")}</span>
         )}
       </div>
 
       {rating > 0 && aspects.length > 0 && (
         <div className="space-y-3 border-t border-stone-100 pt-5 text-center">
-          <h3 className="text-sm font-bold text-stone-800">{sentiment === "positive" ? "คุณประทับใจสิ่งใด?" : "ควรปรับปรุงตรงไหน?"}</h3>
-          <p className="text-xs text-stone-400">เลือกได้หลายข้อ (ไม่บังคับ)</p>
+          <h3 className="text-sm font-bold text-stone-800">{sentiment === "positive" ? tw("liked") : tw("improve")}</h3>
+          <p className="text-xs text-stone-400">{tw("multiOptional")}</p>
           <div className="flex flex-wrap justify-center gap-2">
             {aspects.map((a) => {
               const selected = aspectIds.includes(a._id);
@@ -328,7 +337,7 @@ export default function WriteReviewForm({
                   }`}
                 >
                   <AspectIcon icon={a.icon} size={14} />
-                  {a.aspect_name_th}
+                  {localName(a.aspect_name_th, a.aspect_name_eng)}
                 </button>
               );
             })}
@@ -337,49 +346,49 @@ export default function WriteReviewForm({
       )}
 
       <div className="space-y-3 border-t border-stone-100 pt-5">
-        <h3 className="text-sm font-bold text-stone-800">เขียนรีวิวเพิ่มเติม (ไม่บังคับ)</h3>
+        <h3 className="text-sm font-bold text-stone-800">{tw("writeMore")}</h3>
         <textarea
           className="w-full rounded-xl border border-[#8C5A3C]/25 bg-white px-3.5 py-2.5 text-sm text-[#4A342E] outline-none transition placeholder:text-gray-400 focus:border-[#8C5A3C] focus:ring-2 focus:ring-[#8C5A3C]/20"
           rows={4}
           maxLength={MAX_TEXT}
-          placeholder="บอกเล่ารายละเอียดเพิ่มเติมเกี่ยวกับสินค้า รสชาติ หรือบริการ..."
+          placeholder={tw("placeholder")}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
         <p className="m-0 text-right text-xs text-stone-400">{comment.length}/{MAX_TEXT}</p>
 
         <MediaButton icon={<Upload size={16} />} disabled={images.length >= MAX_IMAGES}
-          label={`แนบรูปภาพ (${images.length}/${MAX_IMAGES})`}>
+          label={tw("attachImages", { n: images.length, max: MAX_IMAGES })}>
           <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" className="hidden"
             disabled={images.length >= MAX_IMAGES} onChange={addImages} />
         </MediaButton>
         {images.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {images.map((m, i) => (
-              <Preview key={m.previewUrl} onRemove={() => removeImage(m)} label={`ลบรูปที่ ${i + 1}`}>
+              <Preview key={m.previewUrl} onRemove={() => removeImage(m)} label={tw("removeImage", { n: i + 1 })}>
                 {/* eslint-disable-next-line @next/next/no-img-element -- object URL ก่อนอัปโหลด */}
-                <img src={m.previewUrl} alt={`รูปที่ ${i + 1}`} className="h-full w-full object-cover" />
+                <img src={m.previewUrl} alt={tw("imageAlt", { n: i + 1 })} className="h-full w-full object-cover" />
               </Preview>
             ))}
           </div>
         )}
 
-        <MediaButton icon={<Video size={16} />} disabled={!!video} label={`แนบวิดีโอ (${video ? 1 : 0}/1 · ไม่เกิน ${MAX_VIDEO_MB}MB)`}>
+        <MediaButton icon={<Video size={16} />} disabled={!!video} label={tw("attachVideo", { n: video ? 1 : 0, mb: MAX_VIDEO_MB })}>
           <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" disabled={!!video} onChange={pickVideo} />
         </MediaButton>
         {video && (
-          <Preview onRemove={removeVideo} label="ลบวิดีโอ" large>
+          <Preview onRemove={removeVideo} label={tw("removeVideo")} large>
             <video src={video.previewUrl} className="h-full w-full object-cover" muted />
           </Preview>
         )}
-        <p className="m-0 text-xs text-stone-400">รีวิวแต่ละรายการได้รับแต้มสะสม (แนบรูปได้แต้มมากกว่า)</p>
+        <p className="m-0 text-xs text-stone-400">{tw("pointsHint")}</p>
       </div>
 
       <div className="flex flex-wrap justify-end gap-2 pt-2">
-        <Link href={backHref} className={shopButton}>ยกเลิก</Link>
+        <Link href={backHref} className={shopButton}>{tc("cancel")}</Link>
         <button type="submit" disabled={submitting || targets.length === 0} className={shopButtonPrimary}>
           <Send size={16} />
-          {submitting ? "กำลังส่งรีวิว..." : targets.length > 1 ? `ส่งรีวิว ${targets.length} รายการ` : "ส่งรีวิว"}
+          {submitting ? tw("sending") : targets.length > 1 ? tw("sendMany", { n: targets.length }) : tw("send")}
         </button>
       </div>
     </form>
@@ -397,9 +406,10 @@ export function ReviewNotice({ text, href, link }: { text: string; href: string;
 }
 
 export function ReviewLoading() {
+  const tc = useTranslations("shop.common");
   return (
     <div className={`${shopCard} flex justify-center py-12`}>
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label="กำลังโหลด" />
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label={tc("loading")} />
     </div>
   );
 }

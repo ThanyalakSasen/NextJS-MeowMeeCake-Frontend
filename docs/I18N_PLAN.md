@@ -29,7 +29,7 @@ export function Foo() {
 |---|---|
 | พิมพ์ key ผิด | `src/i18n/messages.d.ts` ทำให้ editor **autocomplete** + พิมพ์ผิด = **build error** (ไม่ใช่รอ runtime) |
 | ลืมเติมอีกไฟล์ | `npm run lint:i18n` เช็คว่า th.json / en.json มี key ตรงกันครบ |
-| เผลอเขียนข้อความไทยตรง ๆ ใน .tsx | `npm run lint:i18n` จับ (ยกเว้น `src/i18n\|mocks\|types\|constants`) |
+| เผลอเขียนข้อความไทยตรง ๆ ใน .tsx | `npm run lint:i18n` จับทั้ง string และข้อความใน JSX — รวมหน้าร้าน (`shop.*` · ย้ายครบ 2026-10-09) · ยกเว้น `src/i18n\|types\|constants` และไฟล์รูปแบบข้อมูล/regex ใน `ALLOW_FILES` · ไม่นับ ฿ |
 
 **ค่าแทรก (interpolation):**
 ```tsx

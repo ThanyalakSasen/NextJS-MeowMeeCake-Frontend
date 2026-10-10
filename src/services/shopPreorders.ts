@@ -65,6 +65,7 @@ export interface ShopPreorderItem {
   _id: string;
   product_id: string;
   product_name: string;
+  product_name_eng: string | null;
   variant_name: string | null;
   selected_options: { option_name: string; text_value: string | null }[];
   special_request: string | null;
@@ -160,6 +161,7 @@ function toShopPreorder(raw: any): ShopPreorder {
           _id: it._id,
           product_id: String(it.product_id?._id ?? it.product_id ?? ""),
           product_name: it.product_snapshot?.product_name_th ?? "",
+          product_name_eng: it.product_snapshot?.product_name_eng ?? null,
           variant_name: it.product_snapshot?.variant_name ?? null,
           selected_options: Array.isArray(it.selected_options)
             ? it.selected_options.map((o: any) => ({ option_name: o.option_name ?? "", text_value: o.text_value ?? null }))

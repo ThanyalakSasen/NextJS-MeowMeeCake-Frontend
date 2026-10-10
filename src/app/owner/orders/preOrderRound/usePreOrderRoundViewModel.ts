@@ -1,6 +1,7 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ Pre-order Round — 2 แท็บ (รอบพรีออเดอร์ / คำสั่งซื้อเค้กวันเกิด) sync กับ ?tab=
+// ViewModel ของ Pre-order Round — 3 แท็บ (รอบพรีออเดอร์ / สรุปรอบ / คำสั่งซื้อเค้กวันเกิด) sync กับ ?tab=
+// แท็บ "สรุปรอบ" (F4) มี ViewModel ของตัวเอง (useRoundDashboardViewModel) ประกอบเข้ามาเป็น vm.dashboard
 // ผ่าน router (แพทเทิร์นเดียวกับ Production) · โหลดรอบ+พรีออเดอร์ทั้งหมด 1 ครั้งต่อแท็บ แล้วกรอง/
 // แบ่งหน้าฝั่ง client เหมือน Manage Orders/Production
 //
@@ -26,9 +27,10 @@ import type { DeliveryUpdateInput } from "@/types/order";
 import { formatCurrency } from "@/i18n/format";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 import { LIST_ALL } from "@/lib/http";
+import { useRoundDashboardViewModel } from "./useRoundDashboardViewModel";
 
-export type TabKey = "rounds" | "orders";
-const TAB_KEYS: TabKey[] = ["rounds", "orders"];
+export type TabKey = "rounds" | "dashboard" | "orders";
+const TAB_KEYS: TabKey[] = ["rounds", "dashboard", "orders"];
 
 export function usePreOrderRoundViewModel() {
   const t = useTranslations();
@@ -43,6 +45,8 @@ export function usePreOrderRoundViewModel() {
   const urlOrderId = searchParams.get("id");
   const activeTab: TabKey = TAB_KEYS.includes(tabParam as TabKey) ? (tabParam as TabKey) : urlOrderId ? "orders" : "rounds";
   const setActiveTab = (key: string) => router.replace(`/owner/orders/preOrderRound?tab=${key}`, { scroll: false });
+  // แท็บสรุปรอบ — โหลดเมื่อเปิดแท็บนี้ครั้งแรก
+  const dashboard = useRoundDashboardViewModel(activeTab === "dashboard");
 
   // ── สินค้าพรีออเดอร์ (ใช้เป็นตัวเลือกตอนเพิ่มสินค้าเข้ารอบ) ──
   const productsQ = useQuery({
@@ -371,6 +375,7 @@ export function usePreOrderRoundViewModel() {
     savingDelivery: deliveryMutation.isPending,
     activeTab, setActiveTab,
     preorderProducts,
+    dashboard,
 
     // แท็บ 1: รอบ
     rounds,

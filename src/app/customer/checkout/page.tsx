@@ -11,6 +11,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cartItemOptionText, shopCartService } from "@/services/shopCart";
 import { shopAddressesService, type ShopAddress } from "@/services/shopAddresses";
@@ -27,6 +29,7 @@ import {
   baht, shopButton, shopButtonPrimary, shopCard, shopInput, shopPage,
 } from "@/components/customer/shopStyles";
 import { useCartCountStore } from "../store/cartCountStore";
+import FlowSteps from "@/components/customer/FlowSteps";
 import { pickupLocationsKey, shopAddressesKey, shopCartKey, shopCouponsKey, shopPointsKey } from "../lib/shopQueries";
 import PickupLocationPicker from "@/components/customer/PickupLocationPicker";
 import CheckoutAddressForm from "@/components/customer/CheckoutAddressForm";
@@ -39,14 +42,19 @@ const formatAddress = (a: Pick<ShopAddress, "house_no" | "sub_district" | "distr
   `${a.house_no} ${a.sub_district} ${a.district} ${a.province} ${a.zip_code}`;
 
 export default function CheckoutPage() {
+  const t = useTranslations("shop.checkout");
   return (
-    <CustomerAuthGate message="กรุณาเข้าสู่ระบบเพื่อสั่งซื้อสินค้า">
+    <CustomerAuthGate message={t("loginToOrder")}>
       <CheckoutContent />
     </CustomerAuthGate>
   );
 }
 
 function CheckoutContent() {
+  const t = useTranslations("shop.checkout");
+  const { name: localName } = useLocalName();
+  const tc = useTranslations("shop.common");
+  const tcart = useTranslations("shop.cart");
   const router = useRouter();
   const qc = useQueryClient();
   const { user } = useCustomerSession();
@@ -65,7 +73,7 @@ function CheckoutContent() {
   const [recipientPhone, setRecipientPhone] = useState("");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [promoInput, setPromoInput] = useState("");
-  const [promo, setPromo] = useState<{ code: string; discount: number; forKey: string } | null>(null);
+  const [promo, setPromo] = useState<{ code: string; discount: number; freeShipping: boolean; forKey: string } | null>(null);
   const [couponId, setCouponId] = useState<string | null>(null);
   const [pointsInput, setPointsInput] = useState(0);
   const [pickupLocationId, setPickupLocationId] = useState<string | null>(null);
@@ -92,13 +100,13 @@ function CheckoutContent() {
   const promoMutation = useMutation({
     mutationFn: (code: string) => shopOrdersService.validatePromotion(code, deliveryFee),
     onSuccess: (r) => {
-      setPromo({ code: r.promotion_code, discount: r.discount_amount, forKey: promoKey });
+      setPromo({ code: r.promotion_code, discount: r.discount_amount, freeShipping: r.free_shipping, forKey: promoKey });
       setCouponId(null); // โค้ดกับคูปองของฉันใช้พร้อมกันไม่ได้
-      alert.success("ใช้โค้ดส่วนลดแล้ว");
+      alert.success(t("promoApplied"));
     },
     onError: (e) => {
       setPromo(null);
-      alert.error(isApiError(e) ? e.message : "ใช้โค้ดส่วนลดไม่สำเร็จ");
+      alert.error(isApiError(e) ? e.message : t("promoFailed"));
     },
   });
 
@@ -112,7 +120,7 @@ function CheckoutContent() {
       router.replace(`/customer/account/purchases/${order._id}?new=1`);
     },
     onError: (e) => {
-      alert.error(isApiError(e) ? e.message : "สั่งซื้อไม่สำเร็จ กรุณาลองใหม่");
+      alert.error(isApiError(e) ? e.message : t("orderFailed"));
       // คูปองอาจถูกใช้/หมดอายุ หรือแต้มเปลี่ยนจากที่อื่น — โหลดใหม่ให้ยอดที่แสดงตรงกับ backend
       qc.invalidateQueries({ queryKey: shopPointsKey });
       qc.invalidateQueries({ queryKey: shopCouponsKey });
@@ -122,7 +130,7 @@ function CheckoutContent() {
   if (cartQ.isLoading || addressesQ.isLoading) {
     return (
       <div className={`${shopPage} flex items-center justify-center`}>
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label="กำลังโหลด" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label={tc("loading")} />
       </div>
     );
   }
@@ -132,9 +140,9 @@ function CheckoutContent() {
     return (
       <div className={`${shopPage} flex items-center justify-center px-4`}>
         <div className={`${shopCard} w-full max-w-md space-y-4 text-center`}>
-          <h2 className="text-lg font-bold">ไม่มีสินค้าในตะกร้า</h2>
+          <h2 className="text-lg font-bold">{t("emptyCart")}</h2>
           <Link href="/customer/product" className={`${shopButtonPrimary} w-full`}>
-            เลือกชมสินค้า
+            {tcart("browse")}
           </Link>
         </div>
       </div>
@@ -148,14 +156,16 @@ function CheckoutContent() {
   const selectedCoupon = coupons.find((c) => c._id === couponId) ?? null;
   const couponAmount = selectedCoupon ? (couponDiscount(selectedCoupon, subtotal, deliveryFee).amount ?? 0) : 0;
   const codeOrCouponDiscount = activePromo ? activePromo.discount : couponAmount;
+  const freeShippingDiscount = activePromo ? activePromo.freeShipping : selectedCoupon?.discount_type === "FreeShipping";
 
-  // แต้ม: ฐาน = ยอดสินค้า − ส่วนลดคูปอง/โค้ด (ไม่เกินยอดสินค้า) — ตรงกับ backend orderService.createOrder
-  // ค่าที่กรอกเกินเพดานใหม่ (เช่นเลือกคูปองทีหลัง) ถูกตัดลงอัตโนมัติ
+  // แต้ม: ฐาน = ยอดสินค้า − ส่วนลดสินค้าจากคูปอง/โค้ด (ไม่เกินยอดสินค้า) — ตรงกับ backend orderService.createOrder
+  // ส่วนลดส่งฟรีไม่ลดฐาน (Q-BE14) · ค่าที่กรอกเกินเพดานใหม่ (เช่นเลือกคูปองทีหลัง) ถูกตัดลงอัตโนมัติ
+  const goodsDiscount = freeShippingDiscount ? 0 : codeOrCouponDiscount;
   const points = pointsQ.data ?? null;
   let pointsToRedeem = 0;
   let maxPoints = 0;
   if (points) {
-    maxPoints = maxRedeemablePoints(points.balance, subtotal - Math.min(codeOrCouponDiscount, subtotal), points.rules);
+    maxPoints = maxRedeemablePoints(points.balance, subtotal - Math.min(goodsDiscount, subtotal), points.rules);
     const capped = Math.min(pointsInput, maxPoints);
     pointsToRedeem = capped - (capped % points.rules.REDEEM_STEP);
   }
@@ -195,18 +205,19 @@ function CheckoutContent() {
   return (
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
-        <CustomerBreadcrumb items={[{ label: "ตะกร้าสินค้า", href: "/customer/cart" }, { label: "ยืนยันคำสั่งซื้อ" }]} className="!mb-0" />
+        <CustomerBreadcrumb items={[{ label: tcart("title"), href: "/customer/cart" }, { label: t("confirmOrder") }]} className="!mb-0" />
+        <FlowSteps kind="order" current={2} />
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-8">
             {/* วิธีรับสินค้า */}
             <section className={`${shopCard} space-y-4`}>
-              <h2 className="text-lg font-bold">วิธีรับสินค้า</h2>
-              <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="วิธีรับสินค้า">
+              <h2 className="text-lg font-bold">{t("receiveMethod")}</h2>
+              <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t("receiveMethod")}>
                 {(
                   [
-                    ["delivery", "จัดส่งถึงบ้าน", "คิดค่าจัดส่งตามพื้นที่"],
-                    ["takeaway", "รับเองที่ร้าน", "ไม่มีค่าจัดส่ง"],
+                    ["delivery", t("delivery"), t("deliveryHint")],
+                    ["takeaway", t("takeaway"), t("takeawayHint")],
                   ] as const
                 ).map(([value, label, hint]) => (
                   <button
@@ -229,26 +240,26 @@ function CheckoutContent() {
             {isDelivery && (
               <section className={`${shopCard} space-y-4`}>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold">ที่อยู่จัดส่ง</h2>
+                  <h2 className="text-lg font-bold">{t("deliveryAddress")}</h2>
                   {!showAddressForm && (
                     <button type="button" onClick={() => setShowAddressForm(true)} className="text-sm font-semibold text-[#8C5A3C] hover:text-[#4A342E]">
-                      + เพิ่มที่อยู่ใหม่
+                      {t("addAddress")}
                     </button>
                   )}
                 </div>
 
                 {addresses.length === 0 && !showAddressForm && (
-                  <p className="text-sm text-gray-600">ยังไม่มีที่อยู่ที่บันทึกไว้ — กด &quot;เพิ่มที่อยู่ใหม่&quot;</p>
+                  <p className="text-sm text-gray-600">{t("noAddress")}</p>
                 )}
 
                 {undeliverable && (
                   <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-                    {quoteQ.data?.message ?? "จัดส่งไปที่อยู่นี้ไม่ได้"} — เลือกที่อยู่อื่น หรือเปลี่ยนเป็นรับเองที่ร้าน
+                    {t("undeliverable", { reason: quoteQ.data?.message ?? t("undeliverableDefault") })}
                   </p>
                 )}
 
                 {addresses.length > 0 && (
-                  <div className="space-y-2" role="radiogroup" aria-label="ที่อยู่จัดส่ง">
+                  <div className="space-y-2" role="radiogroup" aria-label={t("deliveryAddress")}>
                     {addresses.map((a) => {
                       const active = address?._id === a._id;
                       return (
@@ -263,7 +274,7 @@ function CheckoutContent() {
                           }`}
                         >
                           {formatAddress(a)}
-                          {a.is_default && <span className="ml-2 rounded bg-[#8C5A3C]/10 px-1.5 py-0.5 text-xs font-semibold text-[#8C5A3C]">ค่าเริ่มต้น</span>}
+                          {a.is_default && <span className="ml-2 rounded bg-[#8C5A3C]/10 px-1.5 py-0.5 text-xs font-semibold text-[#8C5A3C]">{t("default")}</span>}
                         </button>
                       );
                     })}
@@ -283,11 +294,11 @@ function CheckoutContent() {
 
                 <div className="grid gap-3 border-t border-[#8C5A3C]/10 pt-4 sm:grid-cols-2">
                   <label className="space-y-1 text-sm">
-                    <span className="font-semibold">ชื่อผู้รับ</span>
+                    <span className="font-semibold">{t("recipientName")}</span>
                     <input className={shopInput} value={recipientName} maxLength={200} onChange={(e) => setRecipientName(e.target.value)} />
                   </label>
                   <label className="space-y-1 text-sm">
-                    <span className="font-semibold">เบอร์โทรผู้รับ</span>
+                    <span className="font-semibold">{t("recipientPhone")}</span>
                     <input
                       className={shopInput}
                       inputMode="tel"
@@ -297,7 +308,7 @@ function CheckoutContent() {
                       onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, ""))}
                     />
                     {recipientPhone && !PHONE_RE.test(recipientPhone) && (
-                      <span className="text-xs text-red-600">เบอร์โทรต้องขึ้นต้นด้วย 0 และมี 9–10 หลัก</span>
+                      <span className="text-xs text-red-600">{t("phoneInvalid")}</span>
                     )}
                   </label>
                 </div>
@@ -306,9 +317,9 @@ function CheckoutContent() {
 
             {!isDelivery && (pickupQ.isLoading || pickupLocations.length > 0) && (
               <section className={`${shopCard} space-y-4`}>
-                <h2 className="text-lg font-bold">จุดรับสินค้า</h2>
+                <h2 className="text-lg font-bold">{t("pickupPoint")}</h2>
                 {pickupQ.isLoading ? (
-                  <p className="text-sm text-gray-500">กำลังโหลดจุดรับสินค้า...</p>
+                  <p className="text-sm text-gray-500">{t("loadingPickup")}</p>
                 ) : (
                   <PickupLocationPicker
                     locations={pickupLocations}
@@ -325,9 +336,9 @@ function CheckoutContent() {
 
             {/* รายการสินค้า */}
             <section className={`${shopCard} space-y-3`}>
-              <h2 className="text-lg font-bold">รายการสินค้า</h2>
+              <h2 className="text-lg font-bold">{t("items")}</h2>
               {cart.items.map((it) => {
-                const name = typeof it.product_id === "object" && it.product_id ? it.product_id.product_name_th : "สินค้า";
+                const name = typeof it.product_id === "object" && it.product_id ? localName(it.product_id.product_name_th, it.product_id.product_name_eng) : t("product");
                 const options = cartItemOptionText(it);
                 return (
                   <div key={it._id} className="flex items-center justify-between gap-3 text-sm">
@@ -347,14 +358,14 @@ function CheckoutContent() {
           {/* สรุปยอด */}
           <div className="lg:sticky lg:top-44 lg:col-span-4">
             <div className={`${shopCard} space-y-4`}>
-              <h2 className="border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">สรุปคำสั่งซื้อ</h2>
+              <h2 className="border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">{t("summary")}</h2>
 
               <div className="flex gap-2">
                 <input
                   className={shopInput}
                   value={promoInput}
-                  placeholder="โค้ดส่วนลด"
-                  aria-label="โค้ดส่วนลด"
+                  placeholder={t("promoCode")}
+                  aria-label={t("promoCode")}
                   onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                 />
                 <button
@@ -363,10 +374,10 @@ function CheckoutContent() {
                   disabled={!promoInput.trim() || promoMutation.isPending || (isDelivery && quoteQ.isLoading)}
                   onClick={() => promoMutation.mutate(promoInput.trim())}
                 >
-                  {promoMutation.isPending ? "กำลังตรวจ..." : "ใช้โค้ด"}
+                  {promoMutation.isPending ? t("checking") : t("applyCode")}
                 </button>
               </div>
-              {promo && !activePromo && <p className="text-xs text-amber-700">ค่าจัดส่งหรือวิธีรับสินค้าเปลี่ยน — กรุณากดใช้โค้ดอีกครั้ง</p>}
+              {promo && !activePromo && <p className="text-xs text-amber-700">{t("reapplyCode")}</p>}
 
               <CouponSelectBox
                 coupons={coupons}
@@ -383,60 +394,60 @@ function CheckoutContent() {
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-gray-600">
-                  <span>ยอดรวมสินค้า</span>
+                  <span>{t("subtotal")}</span>
                   <span className="font-semibold text-[#4A342E]">{baht(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>ค่าจัดส่ง</span>
+                  <span>{t("deliveryFee")}</span>
                   <span className="font-semibold text-[#4A342E]">
                     {!isDelivery
                       ? baht(0)
                       : !address
-                        ? "เลือกที่อยู่ก่อน"
+                        ? t("pickAddressFirst")
                         : quoteQ.isLoading
-                          ? "กำลังคำนวณ..."
+                          ? t("calculating")
                           : quoteQ.isError
-                            ? "คำนวณไม่สำเร็จ"
+                            ? t("calcFailed")
                             : undeliverable
-                              ? "จัดส่งไม่ได้"
+                              ? t("cannotDeliver")
                               : quoteQ.data?.free
-                                ? "ส่งฟรี"
+                                ? t("free")
                                 : baht(deliveryFee)}
                   </span>
                 </div>
                 {activePromo && (
                   <div className="flex justify-between text-green-700">
-                    <span>ส่วนลด ({activePromo.code})</span>
+                    <span>{t("discountCode", { code: activePromo.code })}</span>
                     <span className="font-semibold">-{baht(activePromo.discount)}</span>
                   </div>
                 )}
                 {!activePromo && selectedCoupon && couponAmount > 0 && (
                   <div className="flex justify-between text-green-700">
-                    <span>คูปอง ({selectedCoupon.promotion_code})</span>
+                    <span>{t("coupon", { code: selectedCoupon.promotion_code })}</span>
                     <span className="font-semibold">-{baht(couponAmount)}</span>
                   </div>
                 )}
                 {pointsDiscount > 0 && (
                   <div className="flex justify-between text-green-700">
-                    <span>ใช้แต้ม ({pointsToRedeem.toLocaleString("th-TH")} แต้ม)</span>
+                    <span>{t("points", { n: pointsToRedeem.toLocaleString() })}</span>
                     <span className="font-semibold">-{baht(pointsDiscount)}</span>
                   </div>
                 )}
               </div>
 
               <div className="flex items-baseline justify-between border-t border-[#8C5A3C]/10 pt-3">
-                <span className="font-bold">ยอดชำระ</span>
+                <span className="font-bold">{t("amountDue")}</span>
                 <span className="text-2xl font-extrabold text-[#8C5A3C]">{baht(total)}</span>
               </div>
 
               <button type="button" className={`${shopButtonPrimary} w-full`} disabled={!canSubmit || orderMutation.isPending} onClick={submit}>
-                {orderMutation.isPending ? "กำลังสั่งซื้อ..." : "ยืนยันคำสั่งซื้อ"}
+                {orderMutation.isPending ? t("ordering") : t("confirmOrder")}
               </button>
               {isDelivery && !undeliverable && (!address || !recipientOk) && (
-                <p className="text-center text-xs text-gray-500">กรอกที่อยู่ ชื่อ และเบอร์โทรผู้รับให้ครบก่อนสั่งซื้อ</p>
+                <p className="text-center text-xs text-gray-500">{t("needRecipient")}</p>
               )}
               {needsPickup && !pickupOk && (
-                <p className="text-center text-xs text-gray-500">เลือกจุดรับและวันที่รับสินค้าก่อนสั่งซื้อ</p>
+                <p className="text-center text-xs text-gray-500">{t("needPickup")}</p>
               )}
             </div>
           </div>

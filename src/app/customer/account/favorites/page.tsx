@@ -7,55 +7,59 @@
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { FaCheck, FaHeart, FaSpinner, FaStar } from "react-icons/fa";
 import { Heart, ShoppingCart } from "lucide-react";
 import type { FavoriteItem } from "@/services/shopFavorites";
 import { resolveUploadUrl } from "@/lib/uploads";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
-import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useAddToCart } from "../../hooks/useAddToCart";
 
 export default function FavoritesPage() {
+  const t = useTranslations("shop.favorites");
   return (
-    <CustomerAuthGate message="กรุณาเข้าสู่ระบบเพื่อดูรายการโปรด">
+    <CustomerAuthGate message={t("loginToView")}>
       <FavoritesContent />
     </CustomerAuthGate>
   );
 }
 
 function FavoritesContent() {
+  const t = useTranslations("shop.favorites");
+  const ta = useTranslations("shop.accountMenu");
+  const to = useTranslations("shop.orders");
   const favorites = useFavorites();
   const { query: q, items } = favorites;
 
   return (
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
-        <CustomerBreadcrumb items={[{ label: "บัญชีของฉัน", href: "/customer/account" }, { label: "รายการโปรด" }]} className="!mb-0" />
+        <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: ta("favorites") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
-          <AccountSideMenu />
           <div className="flex min-w-0 flex-1 flex-col gap-5">
             <header className="space-y-1 border-b border-stone-200 pb-5">
               <h1 className="m-0 flex items-center gap-2 text-xl font-bold text-stone-800 sm:text-2xl">
-                <Heart className="h-6 w-6 text-[#4A342E]" aria-hidden="true" /> รายการโปรดของฉัน
+                <Heart className="h-6 w-6 text-[#4A342E]" aria-hidden="true" /> {t("title")}
               </h1>
-              <p className="m-0 text-sm text-stone-500">สินค้าที่คุณบันทึกไว้ ({items.length} รายการ)</p>
+              <p className="m-0 text-sm text-stone-500">{t("count", { n: items.length })}</p>
             </header>
 
             {q.isLoading ? (
-              <p className="rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center text-sm text-stone-500">กำลังโหลดรายการโปรด...</p>
+              <p className="rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center text-sm text-stone-500">{t("loading")}</p>
             ) : q.isError ? (
-              <p className="rounded-2xl bg-red-50 p-6 text-center text-sm text-red-700">โหลดรายการโปรดไม่สำเร็จ กรุณารีเฟรชหน้านี้</p>
+              <p className="rounded-2xl bg-red-50 p-6 text-center text-sm text-red-700">{t("loadFailed")}</p>
             ) : items.length === 0 ? (
               <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center">
                 <div className="rounded-full bg-amber-50/60 p-4">
                   <Heart className="h-12 w-12 text-[#D6C7BD]" aria-hidden="true" />
                 </div>
-                <p className="m-0 font-medium text-stone-500">ยังไม่มีรายการโปรดในขณะนี้</p>
-                <p className="m-0 text-xs text-stone-400">กดรูปหัวใจบนบัตรสินค้าเพื่อบันทึกไว้ดูทีหลัง</p>
-                <Link href="/customer/product" className={shopButton}>ไปช้อปปิ้งเลย</Link>
+                <p className="m-0 font-medium text-stone-500">{t("empty")}</p>
+                <p className="m-0 text-xs text-stone-400">{t("emptyHint")}</p>
+                <Link href="/customer/product" className={shopButton}>{t("shopNow")}</Link>
               </div>
             ) : (
               <ul className="m-0 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3">
@@ -77,6 +81,8 @@ function FavoritesContent() {
 }
 
 function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removing: boolean; onRemove: () => void }) {
+  const t = useTranslations("shop.favorites");
+  const { names: localNames } = useLocalName();
   const { quickAdd, status } = useAddToCart();
   const [imgFailed, setImgFailed] = useState(false);
   const href = `/customer/product/${item.id}`;
@@ -90,7 +96,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
             // eslint-disable-next-line @next/next/no-img-element
             <img src={img} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" onError={() => setImgFailed(true)} />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-xs text-stone-500">ไม่มีรูปภาพ</span>
+            <span className="flex h-full w-full items-center justify-center text-xs text-stone-500">{t("noImage")}</span>
           )}
         </Link>
 
@@ -98,8 +104,8 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           type="button"
           onClick={onRemove}
           disabled={removing}
-          aria-label={`ลบ ${item.name} ออกจากรายการโปรด`}
-          title="ลบออกจากรายการโปรด"
+          aria-label={t("removeAria", { name: item.name })}
+          title={t("remove")}
           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-md transition hover:bg-white disabled:opacity-60"
         >
           {removing ? <FaSpinner className="animate-spin text-xs text-stone-400" /> : <FaHeart className="text-base text-[#E05353]" />}
@@ -107,11 +113,11 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
 
         {!item.inStock && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-            <span className="rounded-full bg-stone-900/80 px-3 py-1.5 text-xs font-bold text-white">หมดชั่วคราว</span>
+            <span className="rounded-full bg-stone-900/80 px-3 py-1.5 text-xs font-bold text-white">{t("outOfStock")}</span>
           </div>
         )}
         {item.is_preorder && item.inStock && (
-          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-[#4A342E] px-2.5 py-1 text-[11px] font-bold text-white">พรีออเดอร์</span>
+          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-[#4A342E] px-2.5 py-1 text-[11px] font-bold text-white">{t("preorder")}</span>
         )}
       </div>
 
@@ -119,9 +125,9 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
         <div className="space-y-1">
           {item.category && <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#4A342E]">{item.category}</span>}
           <Link href={href} className="block">
-            <h2 className="m-0 line-clamp-1 text-base font-bold leading-snug text-stone-800 hover:text-[#8C5A3C]">{item.name}</h2>
+            <h2 className="m-0 line-clamp-1 text-base font-bold leading-snug text-stone-800 hover:text-[#8C5A3C]">{localNames(item.name, item.nameeg).primary}</h2>
           </Link>
-          {item.nameeg && <span className="line-clamp-1 block text-xs text-stone-400">{item.nameeg}</span>}
+          {localNames(item.name, item.nameeg).secondary && <span className="line-clamp-1 block text-xs text-stone-400">{localNames(item.name, item.nameeg).secondary}</span>}
           {item.rating !== "-" && (
             <span className="flex items-center gap-1 pt-1 text-xs font-bold text-amber-500">
               <FaStar /> {Number(item.rating).toFixed(1)}
@@ -137,7 +143,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
 
           {item.is_preorder ? (
             <Link href={href} className="rounded-xl border border-[#8C5A3C]/30 bg-white px-3 py-2 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition hover:bg-[#4A342E] hover:text-white">
-              ดูสินค้า
+              {t("view")}
             </Link>
           ) : (
             <button
@@ -151,13 +157,13 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
               } disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none`}
             >
               {!item.inStock ? (
-                "สินค้าหมด"
+                t("soldOut")
               ) : status === "loading" ? (
-                <><FaSpinner className="animate-spin" /> กำลังเพิ่ม...</>
+                <><FaSpinner className="animate-spin" /> {t("adding")}</>
               ) : status === "success" ? (
-                <><FaCheck /> เพิ่มแล้ว</>
+                <><FaCheck /> {t("added")}</>
               ) : (
-                <><ShoppingCart className="h-4 w-4" aria-hidden="true" /> หยิบใส่ตะกร้า</>
+                <><ShoppingCart className="h-4 w-4" aria-hidden="true" /> {t("addToCart")}</>
               )}
             </button>
           )}

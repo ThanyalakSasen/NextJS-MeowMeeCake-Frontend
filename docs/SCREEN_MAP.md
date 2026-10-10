@@ -4,7 +4,7 @@
 > **เปิดอ่านเมื่อ:** ก่อนเริ่ม/หลังจบ screen ใดในเฟส 4 · สงสัยว่าทำไมกดเมนูแล้วไปหน้าอื่น/404 · เช็คว่าลืมต่อสายอะไรไหม
 > **ความสัมพันธ์กับเอกสารอื่น:** `REBUILD_PLAN.md` §7 = route/template/component ต่อหน้า (ของ "จะสร้างอะไร") · `COMPONENT_MAP.md` = ทะเบียน component (ของ "component อยู่ไหน") · **เอกสารนี้ = เข้าถึงหน้านั้นได้จริงหรือยัง**
 >
-> อัปเดตล่าสุด: 2026-10-09 — §2 = 27 หน้าเดิมของเฟส 4 · §2b = หน้าหลังร้านที่เพิ่มภายหลัง · §2c = หน้าร้าน `/customer/*` (ย้ายมาจาก FrontOffice — BACKLOG3/4) · **ข้อแก้ §2:** #22 Attendance ไม่มีในโค้ดแล้ว (ไม่มี `app/owner/attendance`) · #8 POS = `OrderInStore`
+> อัปเดตล่าสุด: 2026-10-10 (เพิ่ม #36 โซนค่าจัดส่ง · #37 ค่าจัดส่งหน้าร้านออนไลน์ · แท็บสรุปรอบใน #28 · §2c ทางเข้าตามเมนูบัญชี 5 รายการ + เมนูผู้ใช้บน Navbar — PR #63) — §2 = 27 หน้าเดิมของเฟส 4 · §2b = หน้าหลังร้านที่เพิ่มภายหลัง · §2c = หน้าร้าน `/customer/*` (ย้ายมาจาก FrontOffice — BACKLOG3/4) · **ข้อแก้ §2:** #22 Attendance ไม่มีในโค้ดแล้ว (ไม่มี `app/owner/attendance`) · #8 POS = `OrderInStore`
 
 ---
 
@@ -66,7 +66,7 @@
 
 | # | Screen | Route | Reach | menuKey | Breadcrumb key | Files | หมายเหตุ |
 |---|---|---|---|---|---|---|---|
-| 28 | รอบพรีออเดอร์ | `/owner/orders/preOrderRound` | sidebar ใต้คำสั่งซื้อ | `preorder` | `ordersPreorderRound` | MVVM + `_components/` (RoundsTab · OrdersTab · RoundFormModal ...) | รอบ + พรีออเดอร์ของลูกค้า |
+| 28 | รอบพรีออเดอร์ | `/owner/orders/preOrderRound` | sidebar ใต้คำสั่งซื้อ | `preorder` | `ordersPreorderRound` | MVVM + `_components/` (RoundsTab · DashboardTab · OrdersTab · RoundFormModal · RoundDashboardDrawer ...) | 3 แท็บ `?tab=rounds\|dashboard\|orders` — รอบ · **สรุปรอบ** (F4 — `useRoundDashboardViewModel` แยก) · พรีออเดอร์ของลูกค้า |
 | 29 | คูปอง | `/owner/promotions/coupons` | sidebar ใต้โปรโมชัน | `promotions` | `promotionsCoupons` | MVVM + CouponCard · CouponFormModal | แต้มแลกคูปอง (`points_cost`) |
 | 30 | ตั้งราคา/ราคาลด | `/owner/promotions/pricing` | sidebar ใต้โปรโมชัน | `products` (ยิง /admin/products) | `promotionsPricing` | MVVM | |
 | 31 | รายงานยอดขาย | `/owner/reports/sales` | sidebar ใต้รายงาน | `reports` | `reportsSales` | MVVM | |
@@ -74,13 +74,15 @@
 | 33 | ตั้งค่าหัวข้อรีวิว | `/owner/reports/reviews/settings` | ปุ่ม "ตั้งค่าหัวข้อรีวิว" บนหน้ารีวิว (ไม่มี sidebar leaf — ตั้งใจ) | `reports` | `reviewSettings` | MVVM + AspectsTab · TermsTab | E4 |
 | 34 | คำพ้องค้นหา | `/owner/products/search-synonyms` | sidebar ใต้สินค้า | `products` | `searchSynonyms` | MVVM + SynonymGroupForm · SearchTester | E3 |
 | 35 | ข้อมูลร้าน | `/owner/store-info` | sidebar กลุ่มพนักงาน | `store_info` (ส่วนอื่น owner เท่านั้น) | `storeInfo` | MVVM + SectionCard · StoreAddressFields · CoordinateInput · WeeklyMarketsEditor · TimeSelect | E2 — พนักงานเห็นเฉพาะหน้าร้านประจำสัปดาห์ |
+| 36 | โซนค่าจัดส่ง (หลังร้าน/POS) | `/owner/orders/delivery-zones` | sidebar ใต้คำสั่งซื้อ | `orders` | `deliveryZones` | MVVM + DeliveryZoneForm · ZoneChecker · `deliveryZoneForm.ts` | I8 — `DeliveryZones` · เพิ่ม/แก้/ลบ/กู้คืน |
+| 37 | ค่าจัดส่งหน้าร้านออนไลน์ | `/owner/shipping` | sidebar กลุ่มพนักงาน (ต่อจากข้อมูลร้าน) | `store_info` (view / update) | `webShipping` | MVVM + ShippingZoneFormFields · `shippingZoneForm.ts` | F2 — `ShippingZones` A–D (backend #74) · โซนคงที่ แก้ได้อย่างเดียว |
 | — | โปรไฟล์ | `/profile` | เมนูผู้ใช้บน Navbar | — (login-only) | — | MVVM | เชื่อม LINE · ซ่อนอีเมลชั่วคราวของบัญชี LINE (I10) |
 | — | สมัครสมาชิก · LINE login | `/register` · `/login/line` | ลิงก์จากหน้า login | — (public) | — | | B1/B3 |
 
 ## 2c. หน้าร้าน `/customer/*`
 
 > เขียนแบบหน้าเดียวไฟล์เดียว (ยกจาก FrontOffice) · ข้อความไทยในโค้ด (ยกเว้นจาก `lint:i18n`) · layout = `CustomerChrome` (Navbar + Footer) · guest เปิดได้ทุกหน้า หน้าที่ต้อง login ครอบด้วย `CustomerAuthGate` (🔒)
-> ทางเข้า: Navbar (หน้าแรก · สินค้าทั้งหมด · พรีออเดอร์ · ติดต่อเรา · ตะกร้า · กระดิ่ง · เมนูบัญชี) · Footer (สินค้า · การจัดส่ง · ติดต่อเรา) · เมนูบัญชี `AccountSideMenu` · ลิงก์ในแจ้งเตือน/LINE/อีเมล
+> ทางเข้า: Navbar (หน้าแรก · สินค้าทั้งหมด · พรีออเดอร์ · ติดต่อเรา · ตะกร้า · กระดิ่ง · **เมนูผู้ใช้**: บัญชีของฉัน · คำสั่งซื้อของฉัน · สมาชิกของฉัน · รายการโปรด) · Footer (สินค้า · การจัดส่ง · ติดต่อเรา) · **เมนูบัญชี** `AccountSideMenu` (5 รายการ: ข้อมูลของฉัน · ที่อยู่ · เปลี่ยนรหัสผ่าน · ประวัติการสั่งซื้อ · ประวัติพรีออเดอร์) · ลิงก์ในแจ้งเตือน/LINE/อีเมล
 
 | Screen | Route | Reach | API หลัก | งาน |
 |---|---|---|---|---|
@@ -93,15 +95,15 @@
 | ชำระพรีออเดอร์ 🔒 | `/customer/preorder/checkout` | รายการพรีออเดอร์ | /shop/preorders | D3 |
 | ติดต่อเรา | `/customer/contact-us` | Navbar · Footer | /catalog/store-info · contact-topics · /shop/contact | D8 |
 | การจัดส่ง | `/customer/shipping` | Footer | /catalog/shipping-zones · store-info · categories · pickup-locations | D9 |
-| บัญชีของฉัน 🔒 | `/customer/account` | เมนูบัญชี | /shop/me (+ email · line) | B2 |
+| บัญชีของฉัน 🔒 | `/customer/account` | เมนูบัญชี ("ข้อมูลของฉัน") · เมนูผู้ใช้ | /shop/me (+ email · line) | B2 |
 | ที่อยู่ 🔒 | `/customer/account/address` | เมนูบัญชี | /shop/addresses | D2 |
-| ประวัติการสั่งซื้อ 🔒 | `/customer/account/purchases` · `/[id]` (ชำระเงิน/สลิป/ยกเลิก) | เมนูบัญชี · แจ้งเตือน | /shop/orders · /shop/payments | D1 · C4 |
+| ประวัติการสั่งซื้อ 🔒 | `/customer/account/purchases` · `/[id]` (ชำระเงิน/สลิป/ยกเลิก) | เมนูบัญชี · เมนูผู้ใช้ · แจ้งเตือน | /shop/orders · /shop/payments | D1 · C4 |
 | เขียนรีวิว 🔒 | `/customer/account/purchases/[id]/review` · `/customer/account/preorders/[id]/review` | ปุ่ม "รีวิวสินค้า" (completed + ชำระแล้ว) | /shop/reviews (+upload) · /catalog/review-aspects | D7 |
 | ประวัติพรีออเดอร์ 🔒 | `/customer/account/preorders` · `/[id]` | เมนูบัญชี · แจ้งเตือน | /shop/preorders | D3 |
-| สมาชิก/แต้ม/คูปอง 🔒 | `/customer/account/member` | เมนูบัญชี | /shop/points · /shop/coupons | D4 |
-| รายการโปรด 🔒 | `/customer/account/favorites` | เมนูบัญชี · หัวใจบนบัตร | /shop/favorites | D5 |
+| สมาชิก/แต้ม/คูปอง 🔒 | `/customer/account/member` | เมนูผู้ใช้ | /shop/points · /shop/coupons | D4 |
+| รายการโปรด 🔒 | `/customer/account/favorites` | เมนูผู้ใช้ · หัวใจบนบัตร | /shop/favorites | D5 |
 | การแจ้งเตือน 🔒 | `/customer/account/notifications` | กระดิ่ง | /shop/notifications | D6 |
-| เปลี่ยนรหัสผ่าน 🔒 | `/customer/changepassword` | บัญชีของฉัน | /shop/me/password | B2 |
+| เปลี่ยนรหัสผ่าน 🔒 | `/customer/changepassword` | เมนูบัญชี | /shop/me/password | B2 |
 | ยืนยันอีเมล · ลืม/ตั้งรหัสใหม่ | `/customer/verify-email` · `/customer/forgot-password` · `/customer/reset-password` | ลิงก์ในอีเมล · หน้า login | /auth/* | B1 |
 | (ลิงก์เก่า) | `/customer/order/[id]` | — | redirect → `/customer/account/purchases/[id]` | D1 |
 

@@ -5,12 +5,12 @@
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DatePicker, Switch } from "@/components/base";
-import { UploadImageBox } from "@/components/shared/form";
 import { EXPENSE_CATEGORIES, EXPENSE_PAYMENT_METHODS } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { ExpenseFormValue } from "../expenseForm";
 import { emptyExpenseForm, fromExpense } from "../expenseForm";
+import { ReceiptUpload } from "./ReceiptUpload";
 
 export function ExpenseFormModal({
   open,
@@ -77,7 +77,7 @@ export function ExpenseFormModal({
         </FormItem>
 
         <FormItem name="receipt_url" label={t("finance.fieldReceipt")}>
-          <UploadImageBox />
+          <ReceiptUpload />
         </FormItem>
 
         <FormItem name="is_recurring" label={t("finance.fieldRecurring")} valuePropName="checked">

@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { shopCartService } from "@/services/shopCart";
 import type { ShopOrderItem } from "@/services/shopOrders";
 import { alert } from "@/lib/alert";
@@ -16,6 +17,7 @@ import { useCartCountStore } from "../store/cartCountStore";
 import { shopCartKey } from "../lib/shopQueries";
 
 export function useBuyAgain() {
+  const t = useTranslations("shop.cartActions");
   const [pending, setPending] = useState(false);
   const setCount = useCartCountStore((s) => s.setCount);
   const router = useRouter();
@@ -40,7 +42,7 @@ export function useBuyAgain() {
         added++;
       } catch (e) {
         // ข้อความของ backend มักมีชื่อสินค้าอยู่แล้ว (เช่น ตัวเลือกถูกลบ) — ไม่ต่อชื่อซ้ำ
-        const name = it.product_name || "สินค้า";
+        const name = it.product_name || t("product");
         const msg = isApiError(e) ? e.message : "";
         failed.push(!msg ? name : msg.includes(name) ? msg : `${name} (${msg})`);
       }
@@ -51,11 +53,11 @@ export function useBuyAgain() {
     setPending(false);
 
     if (added === 0) {
-      alert.error(`ใส่สินค้าลงตะกร้าไม่ได้: ${failed.join(" · ")}`);
+      alert.error(t("buyAgainNone", { failed: failed.join(" · ") }));
       return;
     }
-    if (failed.length) alert.warning(`ใส่ลงตะกร้าแล้ว ${added} รายการ · ใส่ไม่ได้: ${failed.join(" · ")}`);
-    else alert.success(`ใส่สินค้าลงตะกร้าแล้ว ${added} รายการ`);
+    if (failed.length) alert.warning(t("buyAgainPartial", { n: added, failed: failed.join(" · ") }));
+    else alert.success(t("buyAgainDone", { n: added }));
     router.push("/customer/cart");
   };
 

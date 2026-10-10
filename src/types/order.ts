@@ -67,6 +67,20 @@ export const toDeliveryInfo = (raw: any): DeliveryInfo => ({
   delivered_note: raw.delivered_note ?? null,
 });
 
+/** บัญชีพร้อมเพย์รับเงินคืนของลูกค้า — backend แนบมาเฉพาะ GET รายละเอียด (ไม่มีใน list) ของออเดอร์/พรีออเดอร์ที่รอโอนคืน (Q-BE12) */
+export interface RefundAccount {
+  /** ตัวเลขล้วน — เบอร์มือถือ 10 หลัก หรือเลขบัตรประชาชน 13 หลัก */
+  promptpay_id: string;
+  promptpay_name: string | null;
+}
+
+/** ดึง refund_account จาก raw ของ backend — ใช้ร่วมกันใน services/orders.ts + services/preorders.ts */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const toRefundAccount = (raw: any): RefundAccount | null =>
+  raw?.refund_account?.promptpay_id
+    ? { promptpay_id: String(raw.refund_account.promptpay_id), promptpay_name: raw.refund_account.promptpay_name ?? null }
+    : null;
+
 export interface Order extends DeliveryInfo {
   _id: string;
   order_no: string;
@@ -97,6 +111,8 @@ export interface Order extends DeliveryInfo {
   points_discount: number;
   user_coupon_id: string | null;
   coupon_discount: number;
+  /** มีค่าเฉพาะ ordersService.get(id) ของออเดอร์ที่รอโอนคืน + ลูกค้าตั้งบัญชีไว้ */
+  refund_account: RefundAccount | null;
   created_at: string;
   updated_at: string;
 }

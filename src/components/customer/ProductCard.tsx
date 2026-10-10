@@ -10,6 +10,8 @@
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { FaSpinner, FaCheck, FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import type { Product } from "@/types/product";
 import { resolveUploadUrl } from "@/lib/uploads";
@@ -40,10 +42,10 @@ const ALLERGEN_TONE: Record<Exclude<AllergenWarningLevel, "none">, string> = {
 };
 
 /** ป้ายแพ้อาหาร — ชื่อวัตถุดิบที่ตรงกับที่ลูกค้าบันทึกไว้ (2 ชื่อแรก + ที่เหลือ) */
-function allergenLabel(w: AllergenWarning): string {
+function allergenLabel(w: AllergenWarning, t: ReturnType<typeof useTranslations<"shop.productCard">>): string {
   const names = w.matchedAllergens.map((m) => m.name);
-  if (names.length === 0) return "มีสารก่อภูมิแพ้";
-  return `แพ้: ${names.slice(0, 2).join(", ")}${names.length > 2 ? ` +${names.length - 2}` : ""}`;
+  if (names.length === 0) return t("hasAllergen");
+  return t("allergens", { names: `${names.slice(0, 2).join(", ")}${names.length > 2 ? ` +${names.length - 2}` : ""}` });
 }
 
 export default function ProductCard({
@@ -61,6 +63,8 @@ export default function ProductCard({
   /** เหตุผลที่แนะนำ — แสดงข้อแรก */
   reasons?: string[];
 }) {
+  const t = useTranslations("shop.productCard");
+  const { names: localNames } = useLocalName();
   const { quickAdd, status } = useAddToCart();
   const favorites = useFavorites();
   const isLoading = status === "loading";
@@ -90,15 +94,15 @@ export default function ProductCard({
             onError={() => setFailedImg(imgSrc)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-black text-xs font-medium">ไม่มีรูปภาพ</div>
+          <div className="w-full h-full flex items-center justify-center text-black text-xs font-medium">{t("noImage")}</div>
         )}
 
         {showFavorite && (
           <button
             type="button"
             aria-pressed={favorite}
-            aria-label={favorite ? "ลบออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
-            title={favorite ? "ลบออกจากรายการโปรด" : "เพิ่มในรายการโปรด"}
+            aria-label={favorite ? t("removeFavorite") : t("addFavorite")}
+            title={favorite ? t("removeFavorite") : t("addFavorite")}
             disabled={favorites.pendingId === product._id}
             onClick={(e) => {
               // บัตรทั้งใบเป็นลิงก์ — กันไม่ให้กดหัวใจแล้วเปิดหน้าสินค้า
@@ -130,16 +134,16 @@ export default function ProductCard({
             title={allergenWarning.message ?? undefined}
             className={`absolute left-2 top-2 max-w-[70%] truncate rounded-full border px-2 py-0.5 text-[11px] font-bold shadow-sm ${ALLERGEN_TONE[allergenWarning.level]}`}
           >
-            ⚠ {allergenLabel(allergenWarning)}
+            ⚠ {allergenLabel(allergenWarning, t)}
           </span>
         )}
       </div>
 
       <div className="p-5 sm:p-3 flex flex-col justify-between !bg-[#fff]">
         <div>
-          <p className="text-md font-medium text-black mb-0.5 truncate">{categoryName || "หมวดหมู่ไม่ระบุ"}</p>
-          <h3 className="text-lg font-semibold text-black line-clamp-1">{product.product_name_th}</h3>
-          <p className="text-md text-black line-clamp-1 mb-2">{product.product_name_eng || " "}</p>
+          <p className="text-md font-medium text-black mb-0.5 truncate">{categoryName || t("noCategory")}</p>
+          <h3 className="text-lg font-semibold text-black line-clamp-1">{localNames(product.product_name_th, product.product_name_eng).primary}</h3>
+          <p className="text-md text-black line-clamp-1 mb-2">{localNames(product.product_name_th, product.product_name_eng).secondary || " "}</p>
           {reasons?.[0] && <p className="-mt-1 mb-2 line-clamp-1 text-xs text-[#8C5A3C]">{reasons[0]}</p>}
         </div>
 
@@ -164,7 +168,7 @@ export default function ProductCard({
               </div>
             )}
 
-            <div className="flex items-center gap-2 text-black text-xs font-medium pb-0.5" title={`${product.review_count ?? 0} รีวิว`}>
+            <div className="flex items-center gap-2 text-black text-xs font-medium pb-0.5" title={t("reviews", { n: product.review_count ?? 0 })}>
               <FaStar className="text-amber-400 text-base" />
               <span>{rating.toFixed(1)}</span>
             </div>
@@ -188,15 +192,15 @@ export default function ProductCard({
               {isLoading ? (
                 <>
                   <FaSpinner className="animate-spin text-xs" />
-                  <span>กำลังเพิ่ม...</span>
+                  <span>{t("adding")}</span>
                 </>
               ) : isSuccess ? (
                 <>
                   <FaCheck className="text-xs" />
-                  <span>เพิ่มแล้ว</span>
+                  <span>{t("added")}</span>
                 </>
               ) : (
-                "เพิ่มลงตะกร้า"
+                t("addToCart")
               )}
             </button>
           )}

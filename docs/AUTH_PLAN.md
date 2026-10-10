@@ -11,6 +11,8 @@
 >
 > **ย้ายไป backend:** bcrypt · JWT sign/verify · อายุ token + absolute cap (D11) · lockout · `requireSession`/`can_view` (D14) · Omise
 >
+> **สถานะจริง (2026-10):** backend ใช้ JWT อายุ 7 วัน **ไม่มี refresh token** → แผน D11=B / D12 (sliding refresh · single-flight) ด้านล่าง**ไม่ได้ทำ** · `http.ts` เจอ 401 = เด้ง `/login?reason=expired` ทันที (ยกเว้น `/auth/login` ฯลฯ และ request ที่ส่ง `skipAuthRedirect`) · `authClient` ไม่มี `refresh()` — มี `login` · `loginWithGoogle` · `lineLoginUrl` · `logout` · `me` · `meOptional` (หน้าร้าน guest) · ส่วนที่ยังเป็นจริง: idle timeout · `PermissionsContext` · `proxy.ts` (D18) · cross-tab logout
+>
 > **ใหม่:** D15 (auth transport: cookie+CORS vs bearer) · D18 (proxy = cookie-presence) — ดู `REBUILD_PLAN.md` §8
 
 ---

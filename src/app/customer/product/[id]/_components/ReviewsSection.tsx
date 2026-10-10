@@ -7,6 +7,9 @@
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
+import { formatDate } from "@/i18n/format";
 import { FaImage, FaStar, FaThumbtack } from "react-icons/fa";
 import { catalogService, type CatalogReview } from "@/services/catalog";
 import { resolveUploadUrl } from "@/lib/uploads";
@@ -18,14 +21,15 @@ const filterCls = (active: boolean) =>
     active ? "border-[#4A342E] bg-[#4A342E] text-white" : "border-[#8C5A3C]/20 bg-white text-[#4A342E] hover:bg-[#8C5A3C]/10"
   }`;
 
-const reviewerName = (r: CatalogReview) =>
-  r.reviewer_name || (typeof r.user_id === "object" && r.user_id ? r.user_id.user_fullname : "") || "ลูกค้า";
+const reviewerName = (r: CatalogReview, fallback: string) =>
+  r.reviewer_name || (typeof r.user_id === "object" && r.user_id ? r.user_id.user_fullname : "") || fallback;
 
 const hasMedia = (r: CatalogReview) => (r.image?.length ?? 0) > 0 || !!r.video;
 
 function Stars({ value }: { value: number }) {
+  const t = useTranslations("shop.reviews");
   return (
-    <span className="inline-flex gap-0.5" aria-label={`${value} ดาว`}>
+    <span className="inline-flex gap-0.5" aria-label={t("stars", { n: value })}>
       {[1, 2, 3, 4, 5].map((s) => (
         <FaStar key={s} className={s <= Math.round(value) ? "text-amber-400" : "text-gray-200"} />
       ))}
@@ -34,6 +38,8 @@ function Stars({ value }: { value: number }) {
 }
 
 export default function ReviewsSection({ productId }: { productId: string }) {
+  const t = useTranslations("shop.reviews");
+  const { name: localName } = useLocalName();
   const reviewsQ = useQuery({ queryKey: ["catalog", "product", productId, "reviews"], queryFn: () => catalogService.reviews(productId) });
   const summaryQ = useQuery({ queryKey: ["catalog", "product", productId, "reviews", "summary"], queryFn: () => catalogService.reviewSummary(productId) });
   const sentimentQ = useQuery({ queryKey: ["catalog", "product", productId, "sentiment"], queryFn: () => catalogService.sentiment(productId) });
@@ -59,7 +65,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
     <section className="flex flex-col gap-6 rounded-xl border border-[#8C5A3C]/10 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="reviews-title">
       <div className="flex flex-col gap-5 border-b border-gray-100 pb-5 md:flex-row md:items-center md:justify-between">
         <h2 id="reviews-title" className="m-0 text-lg font-bold text-[#4A342E] sm:text-xl">
-          รีวิวจากคุณลูกค้า ({total.toLocaleString("th-TH")} รีวิว)
+          {t("title", { n: total.toLocaleString() })}
         </h2>
         {summary && summary.count > 0 && (
           <div className="flex items-center gap-5">
@@ -87,7 +93,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
 
       {aspects.length > 0 && (
         <div className="space-y-2">
-          <p className="m-0 text-xs font-bold text-[#4A342E]">ลูกค้าพูดถึง</p>
+          <p className="m-0 text-xs font-bold text-[#4A342E]">{t("mentioned")}</p>
           <div className="flex flex-wrap gap-2">
             {aspects.map((a) => (
               <button
@@ -97,7 +103,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
                 onClick={() => setFilter(isActive({ kind: "aspect", id: a.aspect_id }) ? { kind: "all" } : { kind: "aspect", id: a.aspect_id })}
                 className={filterCls(isActive({ kind: "aspect", id: a.aspect_id }))}
               >
-                {a.aspect?.aspect_name_th}
+                {localName(a.aspect?.aspect_name_th, a.aspect?.aspect_name_eng)}
                 <span className="ml-1.5 text-[11px] font-normal opacity-80">
                   👍 {a.positive}
                   {a.negative > 0 && ` · 👎 ${a.negative}`}
@@ -110,7 +116,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
 
       <div className="flex flex-wrap gap-2">
         <button type="button" aria-pressed={isActive({ kind: "all" })} onClick={() => setFilter({ kind: "all" })} className={filterCls(isActive({ kind: "all" }))}>
-          ทั้งหมด
+          {t("all")}
         </button>
         {[5, 4, 3, 2, 1].map((star) => (
           <button
@@ -120,7 +126,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
             onClick={() => setFilter({ kind: "star", star })}
             className={filterCls(isActive({ kind: "star", star }))}
           >
-            {star} ดาว
+            {t("stars", { n: star })}
             {summary && <span className="ml-1 text-[11px] font-normal opacity-80">({summary.distribution[String(star)] ?? 0})</span>}
           </button>
         ))}
@@ -130,25 +136,25 @@ export default function ReviewsSection({ productId }: { productId: string }) {
           onClick={() => setFilter({ kind: "media" })}
           className={`flex items-center gap-1.5 ${filterCls(isActive({ kind: "media" }))}`}
         >
-          <FaImage /> มีรูป/วิดีโอ
+          <FaImage /> {t("withMedia")}
         </button>
       </div>
 
       <div className="flex flex-col gap-4">
         {reviewsQ.isLoading ? (
-          <p className="animate-pulse py-8 text-center text-sm text-[#8C5A3C]">กำลังโหลดรีวิว...</p>
+          <p className="animate-pulse py-8 text-center text-sm text-[#8C5A3C]">{t("loading")}</p>
         ) : reviewsQ.isError ? (
-          <p className="py-8 text-center text-sm text-red-600">โหลดรีวิวไม่สำเร็จ</p>
+          <p className="py-8 text-center text-sm text-red-600">{t("loadFailed")}</p>
         ) : shown.length > 0 ? (
           shown.map((r) => <ReviewItem key={r._id} review={r} />)
         ) : (
           <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/50 py-12 text-center">
-            <p className="m-0 text-sm font-bold text-[#4A342E]">{reviews.length ? "ไม่พบรีวิวในตัวกรองนี้" : "ยังไม่มีรีวิว"}</p>
-            {reviews.length > 0 && <span className="mt-1 block text-xs text-gray-400">ลองเลือกตัวกรองอื่นเพื่อดูรีวิวเพิ่มเติม</span>}
+            <p className="m-0 text-sm font-bold text-[#4A342E]">{reviews.length ? t("noMatch") : t("none")}</p>
+            {reviews.length > 0 && <span className="mt-1 block text-xs text-gray-400">{t("tryOther")}</span>}
           </div>
         )}
         {total > reviews.length && reviews.length > 0 && (
-          <p className="m-0 text-center text-xs text-gray-400">แสดง {reviews.length} รีวิวล่าสุด</p>
+          <p className="m-0 text-center text-xs text-gray-400">{t("latest", { n: reviews.length })}</p>
         )}
       </div>
     </section>
@@ -156,7 +162,9 @@ export default function ReviewsSection({ productId }: { productId: string }) {
 }
 
 function ReviewItem({ review: r }: { review: CatalogReview }) {
-  const name = reviewerName(r);
+  const t = useTranslations("shop.reviews");
+  const locale = useLocale();
+  const name = reviewerName(r, t("customer"));
   const photos = (r.image ?? []).map((u) => resolveUploadUrl(u)).filter((u): u is string => !!u);
   const video = resolveUploadUrl(r.video);
   return (
@@ -170,21 +178,21 @@ function ReviewItem({ review: r }: { review: CatalogReview }) {
             <span className="text-xs font-bold text-[#4A342E] sm:text-sm">{name}</span>
             <div className="flex items-center gap-2 text-xs">
               <Stars value={Number(r.rating || 0)} />
-              {r.from_preorder && <span className="rounded bg-[#8C5A3C]/10 px-1.5 text-[10px] font-semibold text-[#8C5A3C]">พรีออเดอร์</span>}
+              {r.from_preorder && <span className="rounded bg-[#8C5A3C]/10 px-1.5 text-[10px] font-semibold text-[#8C5A3C]">{t("preorder")}</span>}
             </div>
           </div>
         </div>
         <span className="flex items-center gap-2 text-[11px] text-gray-400">
           {r.is_pinned && (
             <span className="flex items-center gap-1 font-semibold text-amber-700">
-              <FaThumbtack /> ปักหมุด
+              <FaThumbtack /> {t("pinned")}
             </span>
           )}
-          {r.created_at ? new Date(r.created_at).toLocaleDateString("th-TH") : ""}
+          {r.created_at ? formatDate(r.created_at, locale) : ""}
         </span>
       </div>
 
-      <p className="m-0 text-xs text-gray-600 sm:pl-12 sm:text-sm">{r.review_text || "ไม่มีความเห็นเพิ่มเติม"}</p>
+      <p className="m-0 text-xs text-gray-600 sm:pl-12 sm:text-sm">{r.review_text || t("noComment")}</p>
 
       {(r.aspect_feedback?.length ?? 0) > 0 && (
         <div className="flex flex-wrap gap-1.5 sm:pl-12">
@@ -201,7 +209,7 @@ function ReviewItem({ review: r }: { review: CatalogReview }) {
           {photos.map((url, idx) => (
             <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="h-16 w-16 overflow-hidden rounded-xl border border-gray-200 bg-black/5 sm:h-20 sm:w-20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt={`รูปจากรีวิว ${idx + 1}`} className="h-full w-full object-cover" />
+              <img src={url} alt={t("photoAlt", { n: idx + 1 })} className="h-full w-full object-cover" />
             </a>
           ))}
           {video && (
@@ -214,7 +222,7 @@ function ReviewItem({ review: r }: { review: CatalogReview }) {
 
       {r.shop_reply && (
         <div className="rounded-xl border border-[#8C5A3C]/15 bg-white p-3 sm:ml-12">
-          <p className="m-0 text-xs font-bold text-[#8C5A3C]">ร้านตอบกลับ</p>
+          <p className="m-0 text-xs font-bold text-[#8C5A3C]">{t("shopReply")}</p>
           <p className="m-0 mt-1 whitespace-pre-line text-xs text-gray-600 sm:text-sm">{r.shop_reply.text}</p>
         </div>
       )}

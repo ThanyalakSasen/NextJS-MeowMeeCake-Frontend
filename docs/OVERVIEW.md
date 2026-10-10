@@ -13,7 +13,7 @@
 - **ใครใช้:** เจ้าของร้าน (เห็นทุกอย่าง) + พนักงาน (เห็นเฉพาะที่ได้รับสิทธิ์จริงจาก backend ผ่าน `/api/auth/me`)
 - **ขอบเขต:** **frontend เท่านั้น** — ไม่มี DB / ไม่เข้ารหัสรหัสผ่าน / ไม่ออก token · backend เป็นคนละโปรเจกต์ คุยผ่าน REST API
 - **2 ภาษา:** ไทย (ค่าเริ่มต้น) / อังกฤษ — สลับได้ทุกหน้า
-- **เชื่อม backend จริงแล้ว (2026-09):** `.env.local` ตั้ง `NEXT_PUBLIC_API_MOCK=0` ยิงเข้า backend จริงที่ `NEXT_PUBLIC_API_BASE_URL` เสมอ — **MSW** (backend ปลอม) ถูกถอดออกแล้ว 2026-10-09 (BACKLOG4 I11) · แผนภาพ/ตารางด้านล่างที่ยังพูดถึง MSW เป็นของยุคก่อน
+- **เชื่อม backend จริงแล้ว (2026-09):** ยิงเข้า backend จริงที่ `NEXT_PUBLIC_API_BASE_URL` เสมอ — **MSW** (backend ปลอม) และตัวแปร `NEXT_PUBLIC_API_MOCK` ถูกถอดออกแล้ว 2026-10-09 (BACKLOG4 I11)
 
 ---
 
@@ -21,7 +21,7 @@
 
 | ด้าน | ใช้ | หมายเหตุ |
 |---|---|---|
-| Framework | **Next.js 16.2.6** (App Router) | `reactCompiler: true` · `src/proxy.ts` = middleware เดิม (Node runtime) |
+| Framework | **Next.js 16.3.8** (App Router) | `reactCompiler: true` (+ `react-compiler-runtime` เพราะ React 18) · `src/proxy.ts` = middleware เดิม (Node runtime) |
 | UI | **React 18.3.1** + TypeScript | |
 | Component | **antd 6** | เรียกผ่าน `components/base/` เท่านั้น — ไม่เรียก antd ตรงจากหน้า |
 | Styling | **Tailwind 4** | จัด layout/spacing/สี · antd = component, Tailwind = จัดวาง |
@@ -44,23 +44,17 @@ Next.js (โปรเจกต์นี้: SSR/CSR + proxy guard บาง ๆ)
   │
   │  ViewModel → services/* → src/lib/http.ts (axios + interceptor)
   ▼
- ┌─────────────────────────────┐
- │ NEXT_PUBLIC_API_MOCK = 1 ?  │  ← .env.local จริงตอนนี้ตั้งเป็น 0 (ยิง backend จริงเสมอ)
- └───────────┬─────────────────┘
-     yes ────┤──── no (ค่าจริงตอนนี้)
-     ▼       │      ▼
- MSW         │   Backend REST API จริง (โปรเจกต์แยก, พอร์ต 3000)
- src/mocks/  │   /api/auth/*  /api/admin/products  /api/admin/orders ...
- (fallback   │   (path จริงมี /api/admin/* หรือ /api/shop/* นำหน้าเสมอ — ต่างจาก
-  ตอน dev    │   ที่ร่างไว้เดิมใน API_CONTRACT.md ที่ไม่มี /admin — ดู MOCKS.md)
-  ไม่มี      │
-  backend)   │
-     └───────┴──────┘
-             ▼
-   interceptor แกะ envelope { data, meta } → ViewModel ได้ข้อมูลเหมือนกันทั้ง 2 ทาง
+Backend REST API จริง (โปรเจกต์แยก, พอร์ต 3000)
+  /api/auth/*      login · me · Google · LINE
+  /api/catalog/*   สาธารณะ (หน้าร้าน guest)
+  /api/shop/*      ลูกค้าที่ login แล้ว
+  /api/admin/*     หลังร้าน (บังคับสิทธิ์ทุก route)
+  │
+  ▼
+interceptor แปลง error → ApiError · 401 → เด้ง login · getList แกะ { data: { items, meta } } → { data, meta }
 ```
 
-**จุดสำคัญ:** หน้า (`page.tsx` / `*View.tsx`) **ไม่เคย** เรียก `fetch` / `axios` เอง — ผ่าน ViewModel → `services/*` → `http.ts` เสมอ (เพื่อสลับ mock ↔ backend จริงได้ที่เดียว)
+**จุดสำคัญ:** หน้า (`page.tsx` / `*View.tsx`) **ไม่เคย** เรียก `fetch` / `axios` เอง — ผ่าน ViewModel → `services/*` → `http.ts` เสมอ (จัดการ envelope / error / 401 ได้ที่เดียว)
 
 ---
 
@@ -186,14 +180,14 @@ backend เป็นเจ้าของทุกอย่างสำคัญ
 
 | คำสั่ง | ทำอะไร |
 |---|---|
-| `npm run dev` | dev server ที่ **`:3001`** (hardcode ไว้ใน `package.json` กันชนพอร์ตกับ backend ที่ `:3000` — mock mode ถ้าตั้ง `NEXT_PUBLIC_API_MOCK=1`) |
+| `npm run dev` | dev server ที่ **`:3001`** (hardcode ไว้ใน `package.json` กันชนพอร์ตกับ backend ที่ `:3000`) |
 | `npm run build` | build + เช็ค TypeScript ทั้งโปรเจกต์ |
 | `npm run lint` | ESLint |
 | `npm run lint:i18n` | เช็ค key parity th/en + จับ literal ข้อความไทยนอกไฟล์แปล |
 | `npm run lint:theme` | เทียบสีใน `theme/palette.ts` ↔ `globals.css` |
 | **`npm run check`** | **`lint:i18n` + `lint:theme` + `tsc --noEmit` + `eslint` รวดเดียว — ต้องเขียวก่อน commit** |
 
-**env** (`.env.local` คัดจาก `.env.example`): `NEXT_PUBLIC_API_BASE_URL` (URL backend รวม `/api` ต่อท้าย — backend เสิร์ฟใต้ `/api/*`) · `NEXT_PUBLIC_API_MOCK` (`1` = MSW · **`0` = backend จริง ← ค่าจริงตอนนี้**) · `NEXT_PUBLIC_AUTH_COOKIE=session` (ชื่อ cookie จริงจาก backend ไม่ใช่ `mmc_session` ตามแผนเดิม)
+**env** (`.env.local` คัดจาก `.env.example`): `NEXT_PUBLIC_API_BASE_URL` (URL backend รวม `/api` ต่อท้าย — backend เสิร์ฟใต้ `/api/*`) · `NEXT_PUBLIC_AUTH_COOKIE=session` (**ต้องตั้ง** — ชื่อ cookie จริงจาก backend · ค่า default ในโค้ดคือ `mmc_session` ตามแผนเดิม ไม่ตั้ง = `proxy.ts` มองไม่เห็นว่า login แล้ว) · `NEXT_PUBLIC_GOOGLE_CLIENT_ID` · `NEXT_PUBLIC_AUTH_GATE` (`client` เมื่อ frontend/backend อยู่คนละ site)
 **credential:** (backend จริง): ดู `Debug.md` (ไม่ใส่ค่าจริงในไฟล์นี้)
 
 ---
@@ -205,10 +199,10 @@ backend เป็นเจ้าของทุกอย่างสำคัญ
 | `OVERVIEW.md` (นี้) | แผนที่ย่อ + สถานะปัจจุบัน | วันแรก / อยากได้ภาพรวมเร็ว |
 | `REBUILD_PLAN.md` | แผนแม่บท — เป้าหมาย, สถาปัตยกรรม, 8 เฟส, การตัดสินใจ D1–D19 พร้อมเหตุผล | อยากรู้ทำถึงไหน / ทำไมเลือกแนวนี้ |
 | `CODE_STRUCTURE.md` | กติกา MVVM — View/ViewModel วางยังไง ตั้งชื่ออะไร แตกไฟล์เมื่อไหร่ | ก่อนสร้างหน้า/component ที่มี logic |
-| `API_CONTRACT.md` | สัญญา REST กับ backend — envelope, params, status, auth, 40 resource | ก่อนเขียน service / mock / DTO ใหม่ |
+| `API_CONTRACT.md` | สัญญา REST กับ backend — envelope, params, status, auth, 40 resource | ก่อนเขียน service / DTO ใหม่ |
 | `MOCKS.md` | ถอด mock แล้ว — วิธีทดสอบกับ backend ในเครื่อง + DB ทดสอบ | ก่อนทดสอบงานที่เรียก API |
 | `I18N_PLAN.md` | ระบบ 2 ภาษา — โครง namespace, การจัดการ enum ค่าไทย | เพิ่มภาษา / ข้อความแปลไม่ครบ / งง key |
-| `AUTH_PLAN.md` | auth ฝั่ง frontend — interceptor 401→refresh, idle, cross-tab | แตะโค้ด login / session / permission |
+| `AUTH_PLAN.md` | auth ฝั่ง frontend — interceptor 401→login, idle, cross-tab | แตะโค้ด login / session / permission |
 | `THEME.md` | design token 2 ชั้น (antd + Tailwind) แก้สีที่ไหน | เปลี่ยนสีแบรนด์ / เพิ่ม token |
 | `INVENTORY.md` | แจกแจงทุก entity / field / enum / util จากระบบเดิม | ก่อนสร้าง DTO / หา enum / ตั้งชื่อฟิลด์ |
 | `COMPONENT_MAP.md` | ทะเบียน component → อยู่ `base`/`shared`/หน้าไหน → ใช้กี่หน้า | หา component / จะสร้างใหม่หรือใช้ของเดิม |

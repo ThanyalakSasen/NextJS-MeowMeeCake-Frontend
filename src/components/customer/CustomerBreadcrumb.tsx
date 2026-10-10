@@ -2,6 +2,7 @@
 // ซึ่งซับซ้อนเกินจำเป็น — ที่นี่ใช้ระยะคงที่จาก padding ของแต่ละหน้าแทน)
 import Link from "next/link";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
+import { useTranslations } from "next-intl";
 
 export interface Crumb {
   label: string;
@@ -10,7 +11,8 @@ export interface Crumb {
 }
 
 export default function CustomerBreadcrumb({ items, className = "" }: { items: Crumb[]; className?: string }) {
-  const crumbs: Crumb[] = [{ label: "หน้าแรก", href: "/customer" }, ...items];
+  const t = useTranslations("shop.common");
+  const crumbs: Crumb[] = [{ label: t("home"), href: "/customer" }, ...items];
   return (
     <nav aria-label="Breadcrumb" className={`mb-6 ${className}`}>
       <ol className="flex flex-wrap items-center gap-1.5 text-sm text-stone-500">

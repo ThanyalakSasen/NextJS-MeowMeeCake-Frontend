@@ -4,6 +4,7 @@
 // สต็อกคิดรวมทุกบรรทัดของสินค้าเดียวกัน (ตัวเลือกต่างกันแต่ตัดสต็อกชิ้นเดียวกัน — เหมือน backend ตอนสร้างออเดอร์)
 // เป็น UX เท่านั้น — backend ตรวจซ้ำตอนกดสั่งซื้อเสมอ
 // ─────────────────────────────────────────────────────────────
+import type { useTranslations } from "next-intl";
 import type { ShopCartItem } from "@/services/shopCart";
 
 export type CartIssue =
@@ -53,18 +54,7 @@ export function cartIssues(items: ShopCartItem[], stockOf: (productId: string) =
   return issues;
 }
 
-/** ข้อความต่อบรรทัด (หน้าร้านยังเขียนไทยในโค้ด — ยกเว้นจาก lint:i18n) */
-export function cartIssueText(issue: CartIssue): string {
-  switch (issue.kind) {
-    case "gone":
-      return "ไม่มีสินค้านี้แล้ว — กรุณาลบออกจากตะกร้า";
-    case "closed":
-      return "สินค้านี้ปิดการขายชั่วคราว — กรุณาลบออกจากตะกร้า";
-    case "preorder":
-      return "สินค้านี้เป็นสินค้าพรีออเดอร์แล้ว — สั่งผ่านหน้าพรีออเดอร์";
-    case "soldOut":
-      return "สินค้าหมด — กรุณาลบออกจากตะกร้า";
-    case "notEnough":
-      return `สต็อกไม่พอ (เหลือ ${issue.left} ชิ้น รวมทุกตัวเลือก) — กรุณาลดจำนวน`;
-  }
+/** ข้อความต่อบรรทัด — t = useTranslations("shop.cart") */
+export function cartIssueText(issue: CartIssue, t: ReturnType<typeof useTranslations<"shop.cart">>): string {
+  return issue.kind === "notEnough" ? t("issue.notEnough", { left: issue.left }) : t(`issue.${issue.kind}`);
 }

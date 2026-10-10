@@ -16,7 +16,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { productsService } from "@/services/products";
 import { promotionsService } from "@/services/promotions";
 import { ordersService } from "@/services/orders";
 import { paymentsService } from "@/services/payments";
@@ -29,6 +28,7 @@ import { isApiError } from "@/types/api";
 import type { Product } from "@/types/product";
 import type { Promotion } from "@/types/promotion";
 import type { ProductCustomization } from "@/types/productCustomization";
+import type { PosProduct } from "@/types/pos";
 import { nextRawInput, thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import {
   addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoLines, type CartLine,
@@ -37,9 +37,9 @@ import { posPromotions, promotionsForProduct, evaluateAll, isScoped } from "./po
 import { EMPTY_SELECTION, hasCustomization, toSelection, type CartSelection, type Picked } from "@/lib/customizationSelection";
 import { LIST_ALL } from "@/lib/http";
 
-// POS ขายเฉพาะสินค้าปกติ (พร้อมขาย มีสต็อก) — พรีออเดอร์ขายผ่านรอบพรีออเดอร์เท่านั้น
-// ใช้เป็นแหล่งของคำแนะนำในช่อง "สแกน / ค้นหา" (ไม่ได้แสดงเป็นกริดแล้ว)
-const CATALOG_PARAMS = { limit: LIST_ALL, is_preorder: false } as const;
+// POS ขายเฉพาะสินค้าปกติ — /admin/pos/products กรองพรีออเดอร์ (ขายผ่านรอบพรีออเดอร์เท่านั้น) และสินค้าที่ลบแล้วให้เอง
+// ใช้เป็นแหล่งของคำแนะนำในช่อง "สแกน / ค้นหา" (ไม่ได้แสดงเป็นกริดแล้ว) · สิทธิ์ orders.view (I15)
+const CATALOG_PARAMS = { limit: LIST_ALL } as const;
 const PROMO_PARAMS = { activeNow: true, limit: LIST_ALL } as const;
 /** คำแนะนำสูงสุดใต้ช่องค้นหา */
 const MAX_SUGGESTIONS = 6;
@@ -89,8 +89,9 @@ export function usePOSViewModel() {
   const [preparingId, setPreparingId] = useState<string | null>(null);
 
   const catalogQ = useQuery({
-    queryKey: ["products", CATALOG_PARAMS],
-    queryFn: () => productsService.list(CATALOG_PARAMS),
+    // ขึ้นต้นด้วย "products" — ขายเสร็จ invalidate ["products"] แล้วสต็อกในคำแนะนำรีเฟรชตาม
+    queryKey: ["products", "pos", CATALOG_PARAMS],
+    queryFn: () => posService.listProducts(CATALOG_PARAMS),
   });
   // backend เช็คสิทธิ์ promotions.view — พนักงานที่ไม่มีสิทธิ์ขายได้ตามปกติ แค่ไม่เห็น/ใช้โปรโมชัน
   const promotionsQ = useQuery({
@@ -107,11 +108,7 @@ export function usePOSViewModel() {
   });
   const guestUserId = guestQ.data?.data[0]?._id ?? null;
 
-  const catalog = useMemo(
-    // กันซ้ำเผื่อ backend รุ่นเก่าที่ยังไม่รู้จัก ?is_preorder=
-    () => (catalogQ.data?.data ?? []).filter((p) => !p.is_preorder),
-    [catalogQ.data],
-  );
+  const catalog = useMemo<PosProduct[]>(() => catalogQ.data?.data ?? [], [catalogQ.data]);
   const promotions = useMemo(() => posPromotions(promotionsQ.data?.data ?? []), [promotionsQ.data]);
   const promotionsEnabled = promoPerm.view && !promotionsQ.isError;
 
@@ -144,8 +141,9 @@ export function usePOSViewModel() {
   };
 
   /** เพิ่มสินค้าลงบิล (สแกน / เลือกคำแนะนำ / Enter) — แจ้งหมดสต็อก/เต็มสต็อก · มีกลุ่มตัวเลือก/ออปชัน = เปิดหน้าต่างเลือกก่อน
-   *  known = customization ที่ได้มากับผลสแกนแล้ว (ไม่ต้องถามซ้ำ) */
-  const addProduct = async (p: Product, known?: ProductCustomization) => {
+   *  known = customization ที่ได้มากับผลสแกนแล้ว (ไม่ต้องถามซ้ำ)
+   *  สินค้าจากรายการ POS ที่ has_customization = false → ลงบิลเลย ไม่ต้องยิง /pos/scan (Q-BE9) */
+  const addProduct = async (p: Product | PosProduct, known?: ProductCustomization) => {
     const stock = p.product_stock_quantity ?? 0;
     if (stock <= 0) {
       alert.warning(t("pos.scanOutOfStock", { name: p.product_name_th }));
@@ -156,7 +154,8 @@ export function usePOSViewModel() {
       return;
     }
     let customization = known;
-    if (!customization) {
+    const noOptions = "has_customization" in p && !p.has_customization;
+    if (!customization && !noOptions) {
       setPreparingId(p._id);
       try {
         customization = await qc.fetchQuery({

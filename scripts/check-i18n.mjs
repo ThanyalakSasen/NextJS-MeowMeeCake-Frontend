@@ -18,23 +18,26 @@ const STRICT = process.argv.includes("--strict");
 const ALLOW_DIRS = [
   "src/i18n",           // ตัว catalog เอง
   "src/types",          // interface/union ที่มีค่าไทยเป็น literal type (แนวทาง A)
-  "src/constants",      // *_CONFIG ที่ key ด้วยค่า DB enum ภาษาไทย (แนวทาง A)
-  // หน้าร้าน (ย้ายมาจาก FrontOffice) — ข้อความไทยเขียนตรงในโค้ด ~1,400 จุด · ตัดสินใจ (2026-10-04, แบบ ข)
-  // ยกเว้นไว้ก่อนแล้วทยอยย้ายเข้า src/i18n/messages ทีหลัง — โค้ดหน้าร้านใหม่ควรใช้ t() ตั้งแต่แรก
-  "src/app/customer",
-  "src/components/customer",
+  "src/constants",      // *_CONFIG ที่ key ด้วยค่า DB enum ภาษาไทย (แนวทาง A) · รายชื่อจังหวัด
+  // หน้าร้าน (src/app/customer · src/components/customer) ย้ายเข้า shop.* ครบแล้ว 2026-10-09 — ไม่ยกเว้นอีก
 ];
 const ALLOW_FILES = [
   "src/app/layout.tsx", // metadata.description — จะย้ายไป generateMetadata ทีหลัง
+  "src/app/customer/lib/storeFormat.ts", // รูปแบบที่อยู่ไทย (ต./อ./จ. · แขวง/เขต) — รูปแบบข้อมูล ไม่ใช่ข้อความ UI
+  "src/app/owner/orders/delivery-zones/deliveryZoneForm.ts", // regex ตัดคำนำหน้าจังหวัด (สำเนากติกา backend)
+  "src/lib/searchSynonyms.ts", // regex ตัดวรรณยุกต์ตอนเทียบคำค้น (สำเนากติกา backend)
 ];
 
-const THAI = /[฀-๿]/;
+// อักษรไทย ยกเว้น ฿ (U+0E3F — สัญลักษณ์สกุลเงิน ใช้ได้ทุกภาษา)
+const THAI = /[฀-฾เ-๿]/;
 // จับเฉพาะ string / template literal (หยาบ ๆ แต่พอสำหรับ warn)
 const STRING_LITERAL = /(["'`])(?:\\.|(?!\1)[^\\])*\1/g;
 
+/** ตัด comment ออกโดยคงบรรทัดไว้ (เลขบรรทัดในรายงานตรงกับไฟล์) */
 function stripComments(code) {
+  const keepLines = (m) => m.replace(/[^\n]/g, " ");
   return code
-    .replace(/\/\*[\s\S]*?\*\//g, "")   // block
+    .replace(/\/\*[\s\S]*?\*\//g, keepLines) // block (รวม {/* */} ใน JSX)
     .replace(/(^|[^:])\/\/.*$/gm, "$1"); // line (เลี่ยง http://)
 }
 
@@ -56,6 +59,9 @@ for (const file of walk(SRC)) {
     for (const m of line.matchAll(STRING_LITERAL)) {
       if (THAI.test(m[0])) hits.push({ rel, line: i + 1, text: m[0].slice(0, 80) });
     }
+    // ข้อความใน JSX (<p>ข้อความ</p>) ไม่ใช่ string literal — เหลืออักษรไทยหลังตัด literal ออก = ข้อความตรงในโค้ด
+    const rest = line.replace(STRING_LITERAL, "");
+    if (THAI.test(rest)) hits.push({ rel, line: i + 1, text: `(JSX) ${rest.trim().slice(0, 74)}` });
   });
 }
 

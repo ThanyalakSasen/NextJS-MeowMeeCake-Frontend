@@ -16,8 +16,8 @@ const BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/a
 
 /**
  * แปลง URL ของไฟล์อัปโหลดจาก backend ให้เป็น absolute URL เสมอ — ปล่อยผ่านตรง ๆ ถ้า absolute อยู่แล้ว
- * (http(s)://...) หรือเป็น data: URI (base64 ที่ยังฝังตรงในข้อมูลบางแถว/บางฟอร์มที่ยังไม่ผ่านการอัปโหลด
- * จริง — เช่น UploadImageBox ของแบนเนอร์/ใบเสร็จ) หรือไม่มีค่าเลย
+ * (http(s)://...) หรือเป็น data: URI (base64 ในข้อมูลเก่าบางแถว — ฟอร์มทุกตัวอัปโหลดไฟล์จริงแล้ว: สินค้า ·
+ * แบนเนอร์ · ใบเสร็จ) หรือไม่มีค่าเลย
  */
 export function resolveUploadUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;

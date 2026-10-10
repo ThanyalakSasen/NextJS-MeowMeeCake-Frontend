@@ -8,6 +8,8 @@
 >
 > ก่อนหน้า: [`BACKLOG2.md`](BACKLOG2.md) · **ถัดไป: [`BACKLOG4-merge.md`](BACKLOG4-merge.md)** — งานที่เหลือทั้งหมด (ตรวจ 2026-10-08 เทียบ FrontOffice ทุกหน้า) ดูที่นั่น
 
+> **อัปเดต 2026-10-10:** สารบัญ · ลำดับงาน · หัวข้อ C1/F1/F2/F4 ปรับตามสถานะจริงแล้ว — รายละเอียดในหมวดอื่นเป็นภาพ ณ วันที่เขียน · สถานะล่าสุดอยู่ที่ [`BACKLOG4-merge.md`](BACKLOG4-merge.md)
+
 ## สรุปล่าสุด (2026-10-06)
 
 **ภาพรวม**
@@ -31,8 +33,8 @@
 | 5 | G1 · G2 | ส่งคำถาม path หน้าออเดอร์ลูกค้า + ทางเข้าโปรไฟล์ (กระทบ 9 เรื่อง) | ⏸ |
 | 6 | ~~I4 + E1~~ | ✅ (branch `feat/product-customization` · รอทดสอบกับ backend) — หมวด I เหลือ I8–I11 | — |
 | 7 | ~~B1 · B2~~ | ✅ (B1 = PR #28 · B2 = branch `feat/customer-account`) | — |
-| 8 | ~~D1 → D2~~ → C3 → D3 → C1 | ~~ประวัติออเดอร์ · ที่อยู่~~ ✅ · checkout เต็ม · พรีออเดอร์ · รายละเอียดสินค้าเต็ม | ▢ |
-| 9 | ที่เหลือ | D4–D10 · E2–E6 · I8–I11 | ▢ / ⏸ |
+| 8 | ~~D1 → D2 → C3 → D3 → C1~~ | ประวัติออเดอร์ · ที่อยู่ · checkout เต็ม · พรีออเดอร์ · รายละเอียดสินค้าเต็ม | ✅ (BACKLOG4) |
+| 9 | ที่เหลือ | D4–D10 · E2–E6 · I8–I11 | ✅ (BACKLOG4) |
 
 **รอคนอื่น:** backend — F1 แนบสลิปย้อนหลัง · F2 admin API ค่าส่งเว็บ · F3 รีวิว analytics · F4 dashboard รอบพรีออเดอร์ · Q-BE8 เปิดปฏิเสธ `product_stock_quantity` ใน PATCH (frontend พร้อมแล้ว — I12) ·
 ทีม — G3 หลังร้านใช้ตัวไหน / ปิดพอร์ต 4000 · ผู้พัฒนา FrontOffice — Q-FO1–4
@@ -64,14 +66,14 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | หมวด | เรื่อง | จำนวน | สถานะรวม |
 |---|---|---|---|
 | [A](#a-งานที่เสร็จแล้วบน-branch-นี้) | งานที่เสร็จแล้วบน branch นี้ | 4 | ✅ (A4 เหลือคลิกดูหน้าจอจริง) |
-| [B](#b-พื้นฐานที่ต้องมีก่อน) | พื้นฐานที่ต้องมีก่อน (บัญชี · ล็อกอิน) | 3 | ▢ / ⏸ (หน้า login ยกหน้าตาแล้ว) |
-| [C](#c-หน้าร้าน--เสริมหน้าที่มีอยู่แล้ว) | หน้าร้าน — เสริมหน้าที่มีอยู่แล้ว | 4 | ▢ |
-| [D](#d-หน้าร้าน--หน้าใหม่) | หน้าร้าน — หน้าใหม่ | 10 | ▢ / ⏸ |
-| [E](#e-หลังร้าน--หน้าใหม่) | หลังร้าน — หน้าใหม่ | 6 | ▢ / ⏸ |
-| [F](#f-ต้องขอ-backend-ก่อน) | ต้องขอ backend ก่อน | 4 | ⏸ |
-| [G](#g-ตัดสินใจทีม) | ตัดสินใจทีม | 3 | ⏸ |
+| [B](#b-พื้นฐานที่ต้องมีก่อน) | พื้นฐานที่ต้องมีก่อน (บัญชี · ล็อกอิน) | 3 | ✅ B1 · B2 · 🟡 B3 (เหลือตั้งค่า Google/LINE Console ตอน deploy) |
+| [C](#c-หน้าร้าน--เสริมหน้าที่มีอยู่แล้ว) | หน้าร้าน — เสริมหน้าที่มีอยู่แล้ว | 4 | ✅ |
+| [D](#d-หน้าร้าน--หน้าใหม่) | หน้าร้าน — หน้าใหม่ | 10 | ✅ (BACKLOG4 หมวด 2) |
+| [E](#e-หลังร้าน--หน้าใหม่) | หลังร้าน — หน้าใหม่ | 6 | ✅ |
+| [F](#f-ต้องขอ-backend-ก่อน) | ต้องขอ backend ก่อน | 4 | ✅ F2 · F4 · ❌ F1 · ⏸ F3 (Q-BE4 รอคำตอบ) |
+| [G](#g-ตัดสินใจทีม) | ตัดสินใจทีม | 3 | ✅ G1 · G2 · ⏸ G3 (หลังร้าน + ปิดพอร์ต 4000) |
 | [H](#h-ไม่ทำ-ตัดสินแล้ว) | ไม่ทำ (ตัดสินแล้ว) | 6 | ❌ |
-| [I](#i-แก้ตาม-backend-main-ตรวจ-2026-10-06) | แก้ตาม backend `main` (ไม่เกี่ยวกับ FrontOffice โดยตรง) | 15 | ✅ 9 · 🟡 1 (I3) · ▢ 3 (I8–I10) · ⏸ 2 (I11 · I15) — ตรวจ 2026-10-08 |
+| [I](#i-แก้ตาม-backend-main-ตรวจ-2026-10-06) | แก้ตาม backend `main` (ไม่เกี่ยวกับ FrontOffice โดยตรง) | 15 | ✅ ครบ (I8–I11 · I15 ปิดใน BACKLOG4 · I15 = backend #72) — ตรวจ 2026-10-10 |
 
 **ลำดับที่แนะนำ:** A4 → I1 · I2 (🔴) → G1 · G2 (ถามก่อน เพราะกระทบหลายเรื่อง) → I3–I7 → B1 → B2 → D1 → D2 → C3 → D3 → C1 → ที่เหลือ
 
@@ -152,7 +154,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 ## C. หน้าร้าน — เสริมหน้าที่มีอยู่แล้ว
 
-### C1 ▢ รายละเอียดสินค้า: ตัวเลือก/ออปชัน · รีวิว · สินค้าคล้าย · สารก่อภูมิแพ้
+### C1 ✅ (BACKLOG4) รายละเอียดสินค้า: ตัวเลือก/ออปชัน · รีวิว · สินค้าคล้าย · สารก่อภูมิแพ้
 - **ไฟล์ของเรา:** `src/app/customer/product/[id]/page.tsx` · `hooks/useAddToCart.ts` · `services/shopCart.ts`
 - **ต้นแบบ:** `ProductDetailClient.tsx` (1,108) · `ProductCustomizationPicker.tsx`
 - **API:** `/catalog/products/:id/customization` · `/reviews` (+`summary`) · `/similar` · `/sentiment` · `/catalog/ingredients` · ตะกร้ารับ `variant_ids[]` + `selected_options` (BE §8.3)
@@ -189,7 +191,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 | D7 | เขียนรีวิว + รูป/วิดีโอ | `account/pendingreview/[id]` (705) | `/shop/reviews` · `/shop/reviews/upload` · `/catalog/review-aspects` | D1 | ✅ 2026-10-09 — ดู [BACKLOG4 D7](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
 | D8 | ติดต่อร้าน | `contact-us` | `/shop/contact` · `/catalog/contact-topics` | — | ✅ 2026-10-09 — ดู [BACKLOG4 D8](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
 | D9 | ตารางค่าส่ง · ข้อมูลร้าน | `shipping` · `StoreLogo` | `/catalog/shipping-zones` · `/catalog/store-info` · `/catalog/store-logo` | — | ✅ 2026-10-09 — ดู [BACKLOG4 D9](BACKLOG4-merge.md#2-หน้าร้าน--หน้าที่ยังไม่มี) |
-| D10 | ลิงก์ชำระเงินใช้ครั้งเดียว | `customer/payment` | `/shop/payment-link` (+`redeem`) | G1 · Q-FO2 | ⏸ |
+| D10 | ~~ลิงก์ชำระเงินใช้ครั้งเดียว~~ → ลิงก์หน้าคำสั่งซื้อในข้อความ LINE | หน้าคำสั่งซื้อเดิม | ไม่ใช้ `/shop/payment-link` | G1 · Q-FO2 | ✅ BACKLOG4 D10 |
 
 **หมายเหตุ D3:** พรีออเดอร์ใช้กติกาของ backend หลัก (กำหนดชำระ + ยกเลิกอัตโนมัติ · ไม่ใช่ 30 นาที) · หน้าชำระเงินใช้ `GET /shop/preorders/:id/payment` แบบเดียวกับ A1
 
@@ -257,13 +259,13 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 
 ## F. ต้องขอ backend ก่อน
 
-### F1 ⏸ แนบสลิปย้อนหลังเมื่อยังไม่มีรายการชำระเงิน
+### F1 ❌ แนบสลิปย้อนหลังเมื่อยังไม่มีรายการชำระเงิน — ไม่ทำ (Q-BE1: หมดเวลาแล้วยกเลิกไปเลย)
 - **ปัญหา:** ออเดอร์หมดเวลา → `POST /shop/payments` ต้องมี `slip_image_url` (ไม่งั้น 400) แต่สลิปเป็นไฟล์ส่วนตัว อัปโหลดได้ผ่าน `/shop/payments/:id/slip` เท่านั้น (ต้องมี payment ก่อน) → วนไม่จบ
 - **ตอนนี้:** หน้าออเดอร์แสดง "กรุณาติดต่อร้านพร้อมสลิป"
 - **ทางแก้ที่เสนอ:** (ก) `POST /shop/payments` รับ multipart พร้อมไฟล์ · (ข) ยอมสร้าง payment ไม่มีสลิปให้ออเดอร์ที่ `late_upload` · (ค) frontend สร้าง payment ทันทีที่เปิดหน้าชำระเงิน (ไม่แนะนำ — GET มีผลข้างเคียง)
 - **คำถาม:** [Q-BE1](#ถาม-backend)
 
-### F2 ⏸ หน้าจัดการโซนค่าส่งของเว็บ (ShippingZones)
+### F2 ✅ หน้าจัดการโซนค่าส่งของเว็บ (ShippingZones) — `/owner/shipping` (backend #74 · frontend #56)
 - **ปัญหา:** backend มีแค่ `/catalog/shipping-zones` (อ่าน) · หลังร้านแก้ได้เฉพาะ `DeliveryZones` (POS) · FrontOffice มี `owner/shipping` แต่เรียก `/api/owner/shipping-zones`
 - **คำถาม:** [Q-BE2](#ถาม-backend) · ทำหน้าแล้วรวมกับ BACKLOG2 §16.3 "หน้าจัดการโซนค่าส่ง"
 
@@ -271,7 +273,7 @@ FrontOffice ต่อ backend พอร์ต 4000 (`/api/customer/*` · `/api/o
 - **ปัญหา:** BE §8.20 รอทีม (R5) · ต้นแบบ `ReviewAnalyticsTab` · `reviews/products/[id]` (~900 บรรทัด)
 - **คำถาม:** [Q-BE4](#ถาม-backend)
 
-### F4 ⏸ dashboard รอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ
+### F4 ✅ dashboard รอบพรีออเดอร์ + รายชื่อลูกค้าในรอบ — แท็บ "สรุปรอบ" (backend #75 · frontend #57)
 - **ปัญหา:** FrontOffice เรียก `/api/owner/preorder-rounds/dashboard` · `/:id/customers` — ไม่มีใน backend หลัก (ตอนนี้กรองพรีออเดอร์ตามรอบได้ในหน้า `preOrderRound`)
 - **คำถาม:** [Q-BE5](#ถาม-backend) · [Q-OWN3](#ถาม-เจ้าของร้าน--ทีม)
 
@@ -362,17 +364,17 @@ deploy พร้อมกันได้ (backend ก่อน) · แต่ PR 
 
 | รหัส | คำถาม | ตัวเลือก / บริบท | ใช้กับ | คำตอบ | ผู้ตอบ · วันที่ |
 |---|---|---|---|---|---|
-| Q-BE1 | ออเดอร์ที่หมดเวลาและยังไม่มีรายการชำระเงิน ลูกค้าจะแนบสลิปเพื่อเปิดกลับได้อย่างไร | (ก) `POST /shop/payments` รับ multipart · (ข) สร้าง payment ไม่มีสลิปได้เมื่อ `late_upload` · (ค) ไม่รองรับ — ให้ติดต่อร้าน | F1 · A1 | | |
-| Q-BE2 | จะมี admin API แก้ `ShippingZones` (ค่าส่งเว็บ) ไหม หรือให้แก้ใน DB/ฝั่งอื่น | ตอนนี้มีแค่ `/catalog/shipping-zones` | F2 | | |
-| Q-BE3 | ลิงก์ในอีเมลยืนยัน/ตั้งรหัสใหม่ (`STOREFRONT_URL`) จะชี้ไปที่ frontend ตัวไหนตอน deploy | repo นี้ใช้ path `/customer/verify-email` · `/customer/reset-password` ตรงกับ FrontOffice | B1 | | |
-| Q-BE4 | รีวิว analytics / dashboard / รายสินค้า จะย้ายเมื่อไหร่ · shape ของ response | BE §8.20 (R5) | F3 | | |
-| Q-BE5 | จะมี endpoint สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบไหม | FrontOffice ใช้ `/owner/preorder-rounds/dashboard` · `/:id/customers` | F4 | | |
+| Q-BE1 | ออเดอร์ที่หมดเวลาและยังไม่มีรายการชำระเงิน ลูกค้าจะแนบสลิปเพื่อเปิดกลับได้อย่างไร | (ก) `POST /shop/payments` รับ multipart · (ข) สร้าง payment ไม่มีสลิปได้เมื่อ `late_upload` · (ค) ไม่รองรับ — ให้ติดต่อร้าน | F1 · A1 | **(ค) ไม่รองรับ** — ออเดอร์ที่หมดเวลาและยังไม่ชำระถูกยกเลิกไปเลย ไม่เปิดกลับ · F1 ปิด | หน้าคำถามค้าง · 2026-10-09 |
+| Q-BE2 | จะมี admin API แก้ `ShippingZones` (ค่าส่งเว็บ) ไหม หรือให้แก้ใน DB/ฝั่งอื่น | ตอนนี้มีแค่ `/catalog/shipping-zones` | F2 | **ทำ** — backend เพิ่ม admin API แล้ว frontend ทำหน้า `owner/shipping` (F2) | หน้าคำถามค้าง · 2026-10-09 |
+| Q-BE3 | ลิงก์ในอีเมลยืนยัน/ตั้งรหัสใหม่ (`STOREFRONT_URL`) จะชี้ไปที่ frontend ตัวไหนตอน deploy | repo นี้ใช้ path `/customer/verify-email` · `/customer/reset-password` ตรงกับ FrontOffice | B1 | ยังไม่ได้ค่า URL จริง · `STOREFRONT_URL` ตอนนี้ใช้กับลิงก์ในข้อความ LINE ด้วย (D10 · backend #70) — ไม่ตั้ง = ใช้ `NEXTAUTH_URL` | ⏸ รอค่า deploy |
+| Q-BE4 | รีวิว analytics / dashboard / รายสินค้า จะย้ายเมื่อไหร่ · shape ของ response | BE §8.20 (R5) | F3 | คำตอบ "หลังจากเมื่อสินค้าถูกจัดส่งเรียบร้อยแล้ว" — ยังไม่ชัดว่าหมายถึงจังหวะเปิดให้รีวิว หรือกำหนดย้ายหน้า analytics · ⏸ ถามซ้ำ | หน้าคำถามค้าง · 2026-10-09 |
+| Q-BE5 | จะมี endpoint สรุปรอบพรีออเดอร์ + รายชื่อลูกค้าในรอบไหม | FrontOffice ใช้ `/owner/preorder-rounds/dashboard` · `/:id/customers` | F4 | **ทำ** (คู่ Q-OWN3) | หน้าคำถามค้าง · 2026-10-09 |
 | Q-BE6 | ถ้าเลือก G1 (ก) ช่วยเปลี่ยน `link` ของแจ้งเตือนลูกค้าเป็น `/customer/order/<id>` ได้ไหม | ตอนนี้ `/customer/account/purchases/<id>` | G1 · D6 | | |
 | Q-BE9 | เพิ่ม flag `has_customization` (หรือจำนวนกลุ่ม/ออปชัน) ใน `GET /admin/products` ได้ไหม — POS จะได้ไม่ต้องถาม customization ทีละสินค้าก่อนลงบิล | ตอนนี้มีแค่ใน `/admin/pos/scan` · `/customization` รายตัว | I4 | | |
-| Q-BE10 | ขอ endpoint รายการสินค้าสำหรับ POS ใต้สิทธิ์ orders (เช่น `GET /admin/pos/products?search=`) — ตอนนี้ POS ใช้ `/admin/products` ที่ต้อง products.view | พนักงานหน้าร้านที่มีแค่ orders ได้ 403 ในช่องค้นหา | I15 | | |
+| Q-BE10 | ขอ endpoint รายการสินค้าสำหรับ POS ใต้สิทธิ์ orders (เช่น `GET /admin/pos/products?search=`) — ตอนนี้ POS ใช้ `/admin/products` ที่ต้อง products.view | พนักงานหน้าร้านที่มีแค่ orders ได้ 403 ในช่องค้นหา | I15 | **ทำ** | หน้าคำถามค้าง · 2026-10-09 |
 | Q-BE11 | `DELETE /shop/me/line` ไม่กันบัญชีที่สมัครด้วย LINE (ไม่มีรหัสผ่าน) — ยกเลิกแล้วเข้าสู่ระบบไม่ได้อีก · หน้าเว็บซ่อนปุ่มไว้แล้ว แต่ควรกันที่ backend ด้วย · ข้อความ "บัญชีนี้เข้าสู่ระบบด้วย Google…" ของเปลี่ยนรหัสใช้กับบัญชี LINE ด้วย | userService.unlinkLineAccount · changePassword | B2 | แก้แล้ว — ยกเลิก LINE ของบัญชีที่ไม่มีรหัสผ่านได้ 409 · backend PR #68 (`33e51a4`) | backend · 2026-10-09 (K7) |
-| Q-BE12 | จะย้าย `refund_promptpay_id/name` (บัญชีรับเงินคืนของลูกค้า) จากฝั่งลูกค้ามาไหม — ใช้คู่กับคืนเงินออเดอร์ที่ลูกค้ายกเลิก (I2) | BE §7.1 ข้อ 21 · ไม่อยู่ใน `updateProfileBody` | B2 · I2 | | |
-| Q-BE13 | `GET /shop/orders` (รายการ) ไม่ส่งรายการสินค้า + snapshot สินค้าในออเดอร์ไม่มีรูป — หน้า "ประวัติการสั่งซื้อ" ต้องดึงรายละเอียดทีละใบ (10 คำขอต่อหน้า) และแสดงไอคอนแทนรูป · ขอ `items` แบบย่อ (ชื่อ · จำนวน · ราคา · รูป) ใน list ได้ไหม | orderService.listOrders · productSnapshot | D1 | | |
+| Q-BE12 | จะย้าย `refund_promptpay_id/name` (บัญชีรับเงินคืนของลูกค้า) จากฝั่งลูกค้ามาไหม — ใช้คู่กับคืนเงินออเดอร์ที่ลูกค้ายกเลิก (I2) | BE §7.1 ข้อ 21 · ไม่อยู่ใน `updateProfileBody` | B2 · I2 | **ทำ** (U9) | หน้าคำถามค้าง · 2026-10-09 |
+| Q-BE13 | `GET /shop/orders` (รายการ) ไม่ส่งรายการสินค้า + snapshot สินค้าในออเดอร์ไม่มีรูป — หน้า "ประวัติการสั่งซื้อ" ต้องดึงรายละเอียดทีละใบ (10 คำขอต่อหน้า) และแสดงไอคอนแทนรูป · ขอ `items` แบบย่อ (ชื่อ · จำนวน · ราคา · รูป) ใน list ได้ไหม | orderService.listOrders · productSnapshot | D1 | **ไม่ทำ** — ดึงรายละเอียดทีละใบแบบเดิม (U7 ทำไว้แล้ว) | หน้าคำถามค้าง · 2026-10-09 |
 | Q-BE8 | frontend เลิกส่ง `product_stock_quantity` ใน PATCH แล้ว (PR #19) — เปิดการปฏิเสธฝั่ง backend ได้เลยไหม | BACKLOG5 §4 ยังรอ FrontEnd | I12 | แก้แล้ว — PATCH ที่ส่ง `product_stock_quantity` ได้ 400 ให้ใช้ `/stock` · backend PR #68 (`33e51a4`) | backend · 2026-10-09 (K7) |
 | Q-BE7 | รีวิว + merge endpoint ล็อกอินด้วย LINE (`/api/auth/line` + `/callback` — branch `feat/line-login-endpoint`) · ตั้ง `LINE_AUTH_*` + Callback URL ใน Console ตอน deploy | ทำให้แล้ว 2026-10-06 รอรีวิว | B3 | merge แล้ว — backend PR #66 (endpoint LINE login) · ค่าตั้ง `LINE_AUTH_*` ยังต้องตั้งตอน deploy (BACKLOG4 §9.6) | backend · 2026-10-08 (K7) |
 
@@ -381,7 +383,7 @@ deploy พร้อมกันได้ (backend ก่อน) · แต่ PR 
 | รหัส | คำถาม | ตัวเลือก / บริบท | ใช้กับ | คำตอบ | ผู้ตอบ · วันที่ |
 |---|---|---|---|---|---|
 | Q-FO1 | ยังพัฒนา FrontOffice ต่อไหม · โค้ดใน `Downloads` ตรงกับตัวที่รันจริงหรือเปล่า · มี git repo ไหม | ไม่มี git ให้เทียบ | G3 · ทุกเรื่องที่พอร์ต | | |
-| Q-FO2 | ลิงก์ชำระเงินแบบ token ใช้ตอนไหน (ส่งทาง LINE / แชต?) ยังต้องมีไหม | `customer/payment?token=` | D10 | | |
+| Q-FO2 | ลิงก์ชำระเงินแบบ token ใช้ตอนไหน (ส่งทาง LINE / แชต?) ยังต้องมีไหม | `customer/payment?token=` | D10 | **ส่งทาง LINE** → เลือกทาง A: แนบลิงก์หน้าคำสั่งซื้อธรรมดา (ไม่ใช้ token) ท้ายข้อความ LINE · backend #70 · frontend #51 | หน้าคำถามค้าง · 2026-10-09 |
 | Q-FO3 | หน้าไหนที่ลูกค้าใช้จริงบ่อย / หน้าไหนเลิกใช้แล้ว | ช่วยจัดลำดับหมวด C · D | C · D | | |
 | Q-FO4 | ยินดีให้นำ UI/โค้ดหน้าร้านมาปรับใช้ใน repo นี้ไหม | ใส่เครดิตในเอกสาร | ทั้งหมด | | |
 
@@ -391,8 +393,8 @@ deploy พร้อมกันได้ (backend ก่อน) · แต่ PR 
 |---|---|---|---|---|---|
 | Q-OWN1 | หน้าออเดอร์ลูกค้าใช้ path ไหน | (ก) `/customer/order/<id>` · (ข) `/customer/account/purchases/<id>` | G1 | | |
 | Q-OWN2 | ลูกค้าเข้าโปรไฟล์ทางไหน | (ก) `/profile` ร่วมกับพนักงาน · (ข) `/customer/account` แยก | G2 | | |
-| Q-OWN3 | ต้องการหน้าสรุปรอบพรีออเดอร์ไหม (ยอดต่อรอบ · รายชื่อลูกค้า) | ตอนนี้ดูได้ด้วยตัวกรองในหน้าพรีออเดอร์ | F4 | | |
-| Q-OWN4 | หลังร้านใช้ repo นี้ตัวเดียว และปิด FrontOffice พอร์ต 4000 เมื่อหน้าลูกค้าย้ายครบ — เห็นด้วยไหม | BE §8.1 ⏳ | G3 | | |
+| Q-OWN3 | ต้องการหน้าสรุปรอบพรีออเดอร์ไหม (ยอดต่อรอบ · รายชื่อลูกค้า) | ตอนนี้ดูได้ด้วยตัวกรองในหน้าพรีออเดอร์ | F4 | **ต้องการ** — รอ backend Q-BE5 | หน้าคำถามค้าง · 2026-10-09 |
+| Q-OWN4 | หลังร้านใช้ repo นี้ตัวเดียว และปิด FrontOffice พอร์ต 4000 เมื่อหน้าลูกค้าย้ายครบ — เห็นด้วยไหม | BE §8.1 ⏳ | G3 | **เห็นด้วย** — ปิด FrontOffice (ยังไม่กำหนดวัน) | หน้าคำถามค้าง · 2026-10-09 |
 
 ---
 

@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
-import { toDeliveryInfo, type DeliveryUpdateInput, type Order, type OrderInput, type OrderLineItem, type OrderListParams } from "@/types/order";
+import { toDeliveryInfo, toRefundAccount, type DeliveryUpdateInput, type Order, type OrderInput, type OrderLineItem, type OrderListParams } from "@/types/order";
 import { refId } from "@/lib/refId";
 
 const BASE = "/admin/orders";
@@ -65,6 +65,7 @@ function toOrder(raw: any): Order {
     points_discount: raw.points_discount ?? 0,
     user_coupon_id: raw.user_coupon_id ? refId(raw.user_coupon_id) : null,
     coupon_discount: raw.coupon_discount ?? 0,
+    refund_account: toRefundAccount(raw),
     ...toDeliveryInfo(raw),
     created_at: raw.created_at,
     updated_at: raw.updated_at,

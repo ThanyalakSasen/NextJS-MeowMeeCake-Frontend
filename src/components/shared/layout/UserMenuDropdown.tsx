@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { CUSTOMER_HOME_PATH } from "@/constants/auth";
 import { Avatar } from "@/components/base";
 import type { CurrentUser } from "@/types/auth";
 
@@ -38,6 +40,11 @@ export function UserMenuDropdown({ user, onLogout }: { user: CurrentUser; onLogo
               <p className="notif-item-message">{user.fullname}</p>
               <p className="notif-item-time">{user.roleName}</p>
             </div>
+          </div>
+          <div className="notif-dropdown-footer">
+            <Link href={CUSTOMER_HOME_PATH} onClick={() => setOpen(false)} className="notif-history-link">
+              {t("storefront")}
+            </Link>
           </div>
           <div className="notif-dropdown-footer">
             <button

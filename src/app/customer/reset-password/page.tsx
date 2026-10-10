@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, Eye, EyeOff, Lock, LockOpen, XCircle } from "lucide-react";
 import { checkResetToken, resetPassword } from "@/lib/authClient";
 import { alert } from "@/lib/alert";
@@ -24,6 +25,7 @@ const input =
 function PasswordField({
   label, value, onChange, placeholder,
 }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) {
+  const t = useTranslations("shop.password");
   const [show, setShow] = useState(false);
   return (
     <label className="mb-5 block text-left">
@@ -40,7 +42,7 @@ function PasswordField({
         />
         <button
           type="button"
-          aria-label={show ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+          aria-label={show ? t("hide") : t("show")}
           className="absolute right-3 text-[#8C5A3C] opacity-70 transition hover:opacity-100"
           onClick={() => setShow((v) => !v)}
         >
@@ -52,6 +54,8 @@ function PasswordField({
 }
 
 function ResetPasswordContent() {
+  const t = useTranslations("shop.password");
+  const tc = useTranslations("shop.common");
   const router = useRouter();
   const token = useSearchParams().get("token") ?? "";
   const [tokenValid, setTokenValid] = useState<boolean | null>(token ? null : false); // null = กำลังเช็ค
@@ -67,11 +71,11 @@ function ResetPasswordContent() {
 
   const submit = async () => {
     if (password.length < MIN_PASSWORD_LENGTH) {
-      alert.warning(`รหัสผ่านต้องมีอย่างน้อย ${MIN_PASSWORD_LENGTH} ตัวอักษร`);
+      alert.warning(t("minLength", { n: MIN_PASSWORD_LENGTH }));
       return;
     }
     if (password !== confirm) {
-      alert.warning("รหัสผ่านไม่ตรงกัน");
+      alert.warning(t("mismatch"));
       return;
     }
     setSubmitting(true);
@@ -80,7 +84,7 @@ function ResetPasswordContent() {
       setDone(true);
     } catch (e) {
       // ซ้ำรหัสเดิม / ลิงก์ถูกใช้ไปแล้ว — ข้อความของ backend
-      alert.error(isApiError(e) ? e.message : "ตั้งรหัสผ่านใหม่ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      alert.error(isApiError(e) ? e.message : t("resetFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -90,7 +94,7 @@ function ResetPasswordContent() {
     return (
       <div className={page}>
         <div className={card}>
-          <p className="m-0 text-base font-medium text-[#8C5A3C]">กำลังตรวจสอบลิงก์...</p>
+          <p className="m-0 text-base font-medium text-[#8C5A3C]">{t("checkingLink")}</p>
         </div>
       </div>
     );
@@ -101,13 +105,13 @@ function ResetPasswordContent() {
       <div className={page}>
         <div className={card}>
           <XCircle className="mx-auto mb-3 h-10 w-10 text-red-600" />
-          <h1 className="mb-2 text-xl font-bold text-red-700">ลิงก์ไม่ถูกต้องหรือหมดอายุแล้ว</h1>
-          <p className="mb-6 text-sm leading-relaxed text-[#77665e]">ลิงก์ตั้งรหัสผ่านใหม่ใช้ได้ครั้งเดียวและหมดอายุใน 1 ชั่วโมง</p>
+          <h1 className="mb-2 text-xl font-bold text-red-700">{t("linkInvalid")}</h1>
+          <p className="mb-6 text-sm leading-relaxed text-[#77665e]">{t("linkRule")}</p>
           <button type="button" className={`${outlineButton} mb-3`} onClick={() => router.push("/customer/forgot-password")}>
-            ขอลิงก์ใหม่
+            {t("requestNew")}
           </button>
           <button type="button" className={outlineButton} onClick={() => router.push(LOGIN_PATH)}>
-            กลับหน้าเข้าสู่ระบบ
+            {t("backToLogin")}
           </button>
         </div>
       </div>
@@ -119,10 +123,10 @@ function ResetPasswordContent() {
       <div className={page}>
         <div className={card}>
           <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-green-600" />
-          <h1 className="mb-2 text-xl font-bold text-green-700">เปลี่ยนรหัสผ่านสำเร็จ</h1>
-          <p className="mb-6 text-sm leading-relaxed text-[#77665e]">คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้แล้ว</p>
+          <h1 className="mb-2 text-xl font-bold text-green-700">{t("changed")}</h1>
+          <p className="mb-6 text-sm leading-relaxed text-[#77665e]">{t("resetDone")}</p>
           <button type="button" className={outlineButton} onClick={() => router.push(LOGIN_PATH)}>
-            ไปหน้าเข้าสู่ระบบ
+            {t("goLogin")}
           </button>
         </div>
       </div>
@@ -143,11 +147,11 @@ function ResetPasswordContent() {
         >
           {matched ? <LockOpen className="h-8 w-8" /> : <Lock className="h-8 w-8" />}
         </div>
-        <h1 className="mb-2 text-xl font-bold text-[#4a342e]">ตั้งรหัสผ่านใหม่</h1>
-        <p className="mb-6 text-sm leading-relaxed text-[#77665e]">รหัสผ่านต้องมีอย่างน้อย {MIN_PASSWORD_LENGTH} ตัวอักษร</p>
+        <h1 className="mb-2 text-xl font-bold text-[#4a342e]">{t("setNew")}</h1>
+        <p className="mb-6 text-sm leading-relaxed text-[#77665e]">{t("minLength", { n: MIN_PASSWORD_LENGTH })}</p>
 
-        <PasswordField label="รหัสผ่านใหม่" value={password} onChange={setPassword} placeholder={`อย่างน้อย ${MIN_PASSWORD_LENGTH} ตัวอักษร`} />
-        <PasswordField label="ยืนยันรหัสผ่านใหม่" value={confirm} onChange={setConfirm} placeholder="กรอกรหัสผ่านอีกครั้ง" />
+        <PasswordField label={t("new")} value={password} onChange={setPassword} placeholder={t("atLeast", { n: MIN_PASSWORD_LENGTH })} />
+        <PasswordField label={t("confirmNew")} value={confirm} onChange={setConfirm} placeholder={t("retype")} />
 
         <button
           type="button"
@@ -159,7 +163,7 @@ function ResetPasswordContent() {
           onClick={() => void submit()}
           disabled={disabled}
         >
-          {submitting ? "กำลังบันทึก..." : "บันทึกรหัสผ่านใหม่"}
+          {submitting ? tc("saving") : t("saveNew")}
         </button>
       </div>
     </div>

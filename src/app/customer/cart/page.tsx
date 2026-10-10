@@ -8,6 +8,8 @@
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+import { useLocalName } from "@/app/customer/lib/localName";
 import { FaImage, FaTrashAlt } from "react-icons/fa";
 import { cartItemOptionText, shopCartService, type ShopCart, type ShopCartItem } from "@/services/shopCart";
 import { resolveUploadUrl } from "@/lib/uploads";
@@ -21,10 +23,12 @@ import { useCartCountStore } from "../store/cartCountStore";
 import { shopCartKey } from "../lib/shopQueries";
 import { catalogProductKey } from "../lib/catalogQueries";
 import { cartIssueText, cartIssues, cartProductId, type StockInfo } from "../lib/cartIssues";
+import FlowSteps from "@/components/customer/FlowSteps";
 
 export default function CartPage() {
+  const t = useTranslations("shop.cart");
   return (
-    <CustomerAuthGate message="กรุณาเข้าสู่ระบบเพื่อดูตะกร้าสินค้า">
+    <CustomerAuthGate message={t("loginToView")}>
       <CartContent />
     </CustomerAuthGate>
   );
@@ -33,6 +37,9 @@ export default function CartPage() {
 const productOf = (item: ShopCartItem) => (typeof item.product_id === "object" && item.product_id ? item.product_id : null);
 
 function CartContent() {
+  const t = useTranslations("shop.cart");
+  const { name: localName } = useLocalName();
+  const tc = useTranslations("shop.common");
   const qc = useQueryClient();
   const setCount = useCartCountStore((s) => s.setCount);
 
@@ -71,16 +78,16 @@ function CartContent() {
   const qtyMutation = useMutation({
     mutationFn: ({ id, qty }: { id: string; qty: number }) => shopCartService.updateQuantity(id, qty),
     onSuccess: refresh,
-    onError: (e) => alert.error(isApiError(e) ? e.message : "แก้ไขจำนวนสินค้าไม่สำเร็จ"),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("qtyFailed")),
   });
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => shopCartService.removeItem(id),
     onSuccess: () => {
-      alert.success("ลบสินค้าออกจากตะกร้าแล้ว");
+      alert.success(t("removed"));
       refresh();
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : "ลบสินค้าออกจากตะกร้าไม่สำเร็จ"),
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("removeFailed")),
   });
 
   const busyId = qtyMutation.isPending
@@ -92,7 +99,7 @@ function CartContent() {
   if (cartQ.isLoading) {
     return (
       <div className={`${shopPage} flex items-center justify-center`}>
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label="กำลังโหลด" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label={tc("loading")} />
       </div>
     );
   }
@@ -101,9 +108,9 @@ function CartContent() {
     return (
       <div className={`${shopPage} flex items-center justify-center px-4`}>
         <div className={`${shopCard} max-w-md space-y-4 text-center`}>
-          <p className="font-semibold text-red-700">โหลดตะกร้าไม่สำเร็จ</p>
+          <p className="font-semibold text-red-700">{t("loadFailed")}</p>
           <button type="button" onClick={() => void cartQ.refetch()} className={shopButton}>
-            ลองใหม่
+            {t("retry")}
           </button>
         </div>
       </div>
@@ -116,13 +123,14 @@ function CartContent() {
   return (
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
-        <CustomerBreadcrumb items={[{ label: "ตะกร้าสินค้า" }]} className="!mb-0" />
+        <CustomerBreadcrumb items={[{ label: t("title") }]} className="!mb-0" />
+        {cart.items.length > 0 && <FlowSteps kind="order" current={1} />}
 
         {cart.items.length === 0 ? (
           <div className={`${shopCard} mx-auto w-full max-w-md space-y-4 text-center`}>
-            <h2 className="text-lg font-bold">ตะกร้าของคุณยังว่างอยู่</h2>
+            <h2 className="text-lg font-bold">{t("empty")}</h2>
             <Link href="/customer/product" className={`${shopButtonPrimary} w-full`}>
-              เลือกชมสินค้า
+              {t("browse")}
             </Link>
           </div>
         ) : (
@@ -130,10 +138,10 @@ function CartContent() {
             <div className="space-y-4 lg:col-span-8">
               <div className="flex items-center justify-between">
                 <h1 className="text-xl font-bold">
-                  ตะกร้าสินค้า <span className="text-sm font-medium text-gray-500">({cart.items.length} รายการ)</span>
+                  {t("title")} <span className="text-sm font-medium text-gray-500">{t("itemCount", { n: cart.items.length })}</span>
                 </h1>
                 <Link href="/customer/product" className="text-sm font-semibold text-[#8C5A3C] hover:text-[#4A342E]">
-                  ← เลือกซื้อสินค้าต่อ
+                  {t("continueShopping")}
                 </Link>
               </div>
 
@@ -160,16 +168,16 @@ function CartContent() {
                     <div className="flex min-w-0 flex-1 flex-col gap-2">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate font-bold">{product?.product_name_th ?? "สินค้า"}</p>
+                          <p className="truncate font-bold">{product ? localName(product.product_name_th, product.product_name_eng) : t("product")}</p>
                           {variant && <p className="text-xs text-gray-500">{variant}</p>}
-                          <p className="text-sm text-gray-600">{baht(item.price_snapshot)} / ชิ้น</p>
-                          {issue && <p className="mt-1 text-xs font-semibold text-red-600">{cartIssueText(issue)}</p>}
+                          <p className="text-sm text-gray-600">{t("perUnit", { price: baht(item.price_snapshot) })}</p>
+                          {issue && <p className="mt-1 text-xs font-semibold text-red-600">{cartIssueText(issue, t)}</p>}
                         </div>
                         <button
                           type="button"
                           onClick={() => removeMutation.mutate(item._id)}
                           disabled={busy}
-                          aria-label={`ลบ ${product?.product_name_th ?? "สินค้า"}`}
+                          aria-label={t("removeItem", { name: product ? localName(product.product_name_th, product.product_name_eng) : t("product") })}
                           className="rounded-lg p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                         >
                           <FaTrashAlt />
@@ -182,7 +190,7 @@ function CartContent() {
                             type="button"
                             onClick={() => qtyMutation.mutate({ id: item._id, qty: item.quantity - 1 })}
                             disabled={busy || item.quantity <= 1}
-                            aria-label="ลดจำนวน"
+                            aria-label={t("decrease")}
                             className="flex h-9 w-9 items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40"
                           >
                             -
@@ -192,7 +200,7 @@ function CartContent() {
                             type="button"
                             onClick={() => qtyMutation.mutate({ id: item._id, qty: item.quantity + 1 })}
                             disabled={busy}
-                            aria-label="เพิ่มจำนวน"
+                            aria-label={t("increase")}
                             className="flex h-9 w-9 items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40"
                           >
                             +
@@ -208,32 +216,32 @@ function CartContent() {
 
             <div className="lg:sticky lg:top-44 lg:col-span-4">
               <div className={`${shopCard} space-y-4`}>
-                <h2 className="border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">สรุปคำสั่งซื้อ</h2>
+                <h2 className="border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">{t("summary")}</h2>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-gray-600">
-                    <span>ยอดรวมสินค้า ({cart.summary.total_quantity} ชิ้น)</span>
+                    <span>{t("subtotal", { n: cart.summary.total_quantity })}</span>
                     <span className="font-semibold text-[#4A342E]">{baht(cart.summary.subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
-                    <span>ค่าจัดส่ง</span>
-                    <span className="italic text-[#8C5A3C]">คำนวณในขั้นถัดไป</span>
+                    <span>{t("deliveryFee")}</span>
+                    <span className="italic text-[#8C5A3C]">{t("nextStep")}</span>
                   </div>
                 </div>
                 {issues.size > 0 ? (
                   <>
                     <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-                      มี {issues.size} รายการที่ยังสั่งซื้อไม่ได้ — กรุณาลบหรือลดจำนวนก่อน
+                      {t("blocked", { n: issues.size })}
                     </p>
                     <button type="button" disabled className={`${shopButtonPrimary} w-full`}>
-                      ดำเนินการสั่งซื้อ
+                      {t("checkout")}
                     </button>
                   </>
                 ) : (
                   <Link href="/customer/checkout" className={`${shopButtonPrimary} w-full`}>
-                    ดำเนินการสั่งซื้อ
+                    {t("checkout")}
                   </Link>
                 )}
-                <p className="text-center text-xs text-gray-500">ชำระเงินผ่านพร้อมเพย์ แล้วแนบสลิปเพื่อยืนยัน</p>
+                <p className="text-center text-xs text-gray-500">{t("payHint")}</p>
               </div>
             </div>
           </div>
