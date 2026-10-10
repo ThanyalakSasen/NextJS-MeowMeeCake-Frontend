@@ -99,8 +99,8 @@ export const MENU_SECTIONS: MenuSection[] = [
         icon: "BeakerIcon",
         children: [
           { labelKey: "ingredients", href: "/owner/ingredients", icon: "CubeIcon", menuKey: "ingredients" },
-          { labelKey: "ingredientStock", href: "/owner/ingredients/ingredientStock", icon: "ArchiveBoxIcon", menuKey: "stock" },
-          { labelKey: "ingredientHistory", href: "/owner/ingredients/ingredientHistory", icon: "ArrowsRightLeftIcon", menuKey: "stock" },
+          { labelKey: "ingredientStock", href: "/owner/ingredients/ingredientStock", icon: "ArchiveBoxIcon", menuKey: "ingredients" },
+          { labelKey: "ingredientHistory", href: "/owner/ingredients/ingredientHistory", icon: "ArrowsRightLeftIcon", menuKey: "ingredients" },
           { labelKey: "units", href: "/owner/ingredients/units", icon: "ScaleIcon", menuKey: "ingredients" },
         ],
       },

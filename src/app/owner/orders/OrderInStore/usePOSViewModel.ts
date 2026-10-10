@@ -7,7 +7,7 @@
 //   3) POST /admin/payments/[id]/verify {approved:true} (ยืนยันจ่ายทันที)
 //   4) PATCH /admin/orders/[id]/status {order_status:"completed"}
 // backend บังคับทุกออเดอร์ต้องมี user_id จริง — ไม่มีแนวคิด "ลูกค้าไม่ระบุตัวตน" จึงผูกกับบัญชี
-// "ลูกค้าทั่วไป" ตายตัว (สร้างโดย scripts/seed.ts ฝั่ง backend) — หา id ผ่าน GET /admin/pos/guest-customer
+// "ลูกค้าทั่วไป" ตายตัว (backend scripts/seed.ts สร้างไว้ · หา id ผ่าน GET /admin/pos/guest-customer ใต้ orders.view)
 //
 // หน้าจอตามดีไซน์ใหม่ (BACKLOG2 §14): ช่อง "สแกน / ค้นหา" ช่องเดียว (บาร์โค้ด + รหัส/ชื่อ) · บิล (ปุ่ม −/+) ·
 // การ์ดโปรโมชัน · ปุ่มชำระเงินสด/QR · หน้าต่างรับเงินสด (คีย์แพด + ทอน) / QR / ชำระสำเร็จ
@@ -97,8 +97,7 @@ export function usePOSViewModel() {
     retry: false,
   });
   // บัญชี "ลูกค้าทั่วไป" ตายตัว — หา id ครั้งเดียวตอนเปิดหน้า (cache ยาว ไม่มีวันเปลี่ยน)
-  // ใช้ /admin/pos/guest-customer (orders.view) ไม่ใช่ /admin/users (ต้อง employees.view) — พนักงาน
-  // เคาน์เตอร์ที่มีแค่สิทธิ์ orders จะหา guest ไม่เจอแล้วปิดการขายไม่ได้เลย (CONSISTENCY_AUDIT ข้อ 3.15)
+  // ใช้ /admin/pos/guest-customer (orders.view) — พนักงานเคาน์เตอร์ไม่ต้องมีสิทธิ์ employees (Final-Backlog P3)
   const guestQ = useQuery({
     queryKey: ["pos", "guest-customer"],
     queryFn: () => posService.guestCustomer(),

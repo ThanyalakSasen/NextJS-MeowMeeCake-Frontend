@@ -8,14 +8,13 @@ import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { ingredientsService } from "@/services/ingredients";
-import { unitsService } from "@/services/units";
 import { ingredientTransactionsService } from "@/services/ingredientTransactions";
 import { usePermission } from "@/context/PermissionsContext";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { alert } from "@/lib/alert";
 import type { StockStatus, IngredientTxnType } from "@/constants/enumConfig";
 import { getIngredientStatus, stockPercent } from "../ingredientStatus";
-import { refId } from "@/lib/refId";
+import { unitLabel } from "@/utils/unitContext";
 import { isApiError } from "@/types/api";
 import { LIST_ALL } from "@/lib/http";
 
@@ -39,11 +38,8 @@ const skuOf = (id: string) => `ING-${id.slice(-6).toUpperCase()}`;
 export function useIngredientStockViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  // หน้านี้ "อ่าน" สต็อกวัตถุดิบ (stock.view) แต่ "เขียน" ผ่าน POST /admin/ingredient-transactions
-  // ซึ่ง backend ต้องการ ingredients.update — คนละเมนูกัน จึงต้องถือสิทธิ์ 2 ตัว
-  // (CONSISTENCY_AUDIT ข้อ 3.15 · src/app/api/admin/ingredient-transactions/route.ts)
-  const perm = usePermission("stock");
-  const ingredientPerm = usePermission("ingredients");
+  // ingredients ไม่ใช่ stock — API ของหน้านี้ตรวจ ingredients.* (Final-Backlog P2)
+  const perm = usePermission("ingredients");
   const { user } = useCurrentUser();
 
   const [search, setSearch] = useState("");
@@ -55,18 +51,13 @@ export function useIngredientStockViewModel() {
     queryKey: ["ingredients"],
     queryFn: () => ingredientsService.list({ limit: LIST_ALL }),
   });
-  const unitsQ = useQuery({
-    queryKey: ["units"],
-    queryFn: () => unitsService.list(),
-  });
 
   const rows = useMemo<StockRow[]>(() => {
-    const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, u.unit_abbr || u.unit_name]));
     return (ingredientsQ.data?.data ?? []).map((i) => ({
       _id: i._id,
       sku: skuOf(i._id),
       name: i.ingredient_name,
-      unitAbbr: (refId(i.unit_id) && unitMap.get(refId(i.unit_id))) || "",
+      unitAbbr: unitLabel(i.unit_id),
       currentStock: i.current_stock,
       reorderPoint: i.reorder_point,
       maxStock: i.max_stock ?? null,
@@ -74,7 +65,7 @@ export function useIngredientStockViewModel() {
       status: getIngredientStatus(i),
       pct: stockPercent(i),
     }));
-  }, [ingredientsQ.data, unitsQ.data]);
+  }, [ingredientsQ.data]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -120,11 +111,9 @@ export function useIngredientStockViewModel() {
 
   return {
     perm,
-    /** ปุ่มรับเข้า/เบิกใช้/ปรับยอด — ต้องเห็นหน้าได้ และมีสิทธิ์เขียน transaction ของวัตถุดิบ */
-    canWriteStock: perm.view && ingredientPerm.update,
     rows: filtered,
     stats,
-    isLoading: ingredientsQ.isLoading || unitsQ.isLoading,
+    isLoading: ingredientsQ.isLoading,
     isError: ingredientsQ.isError,
     refetch: () => ingredientsQ.refetch(),
 

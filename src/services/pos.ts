@@ -23,9 +23,8 @@ export const posService = {
 
 
   /**
-   * GET /admin/pos/guest-customer — บัญชี "ลูกค้าทั่วไป" ที่ผูกกับออเดอร์หน้าร้านที่ไม่ระบุลูกค้า · สิทธิ์ orders.view
-   * ใช้แทนการค้นผ่าน /admin/users (ต้อง employees.view — พนักงานเคาน์เตอร์ไม่ควรต้องเห็นรายชื่อพนักงาน
-   * เพื่อจะขายของได้ · backend `src/lib/posGuest.ts`) · ยังไม่ได้ seed = 404
+   * GET /admin/pos/guest-customer — บัญชี "ลูกค้าทั่วไป" ที่ผูกกับออเดอร์หน้าร้าน ใต้สิทธิ์ orders.view
+   * (เดิมค้นผ่าน /admin/users ที่ต้อง employees.view — Final-Backlog P3) · ยังไม่ได้ seed = 404
    */
   guestCustomer: async (): Promise<PosGuestCustomer> => {
     const res = await http.get<ItemResponse<PosGuestCustomer>>("/admin/pos/guest-customer");
