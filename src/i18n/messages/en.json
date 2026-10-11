@@ -1173,7 +1173,18 @@
     "historyEmpty": "No production records for this period",
     "topProducts": "Top Produced Products",
     "teamPerformance": "Team Performance",
-    "noData": "No data yet"
+    "noData": "No data yet",
+    "completeTitle": "Complete production {no}",
+    "completeHint": "Completing deducts ingredient stock by recipe and adds stock for regular products automatically",
+    "deductBy": "Deduct ingredients by",
+    "deductByPlanned": "Planned quantity",
+    "deductByActual": "Actual quantity produced",
+    "colProduct": "Product",
+    "colPlanned": "Planned",
+    "colActual": "Actual",
+    "completeNoPending": "All items have already been deducted",
+    "actualZeroHint": "Enter 0 if none were produced — the item is cancelled and no ingredients are deducted",
+    "completeSubmit": "Complete"
   },
   "pricing": {
     "title": "Product Pricing",

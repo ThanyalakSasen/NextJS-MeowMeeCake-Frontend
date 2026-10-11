@@ -21,6 +21,7 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { refId } from "@/lib/refId";
 import type { ProductionStatus } from "@/constants/enumConfig";
+import type { CompleteProductionValue } from "./_components/CompleteProductionModal";
 import type {
   ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput,
 } from "@/types/productionOrder";
@@ -297,8 +298,44 @@ export function useProductionViewModel() {
 
   const onCreateSubmit = (v: CreateProductionOrderValue) => createOrder.mutate(v);
 
+  // ปิดงานผลิต → เปิดหน้าต่างให้เลือกตัดวัตถุดิบตามจำนวนที่วางแผน / ที่ผลิตได้จริง ก่อนเรียก /complete
+  const [completeTarget, setCompleteTarget] = useState<ProductionOrder | null>(null);
+  const completeOrder = useMutation({
+    mutationFn: async ({ order, v }: { order: ProductionOrder; v: CompleteProductionValue }) => {
+      // ผลิตได้จริง: บันทึก actual_qty ทีละรายการก่อน (0 = ผลิตไม่ได้ → ยกเลิกรายการ ไม่ตัดวัตถุดิบ/ไม่เพิ่มสต็อก)
+      for (const [itemId, qty] of Object.entries(v.actuals)) {
+        await productionOrdersService.updateItem(itemId, qty > 0 ? { actual_qty: qty } : { actual_qty: 0, item_status: "cancelled" });
+      }
+      return productionOrdersService.complete(order._id, { use_actual: v.useActual });
+    },
+    onSettled: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["ingredients"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
+  const onCompleteSubmit = (v: CompleteProductionValue) => {
+    const order = completeTarget;
+    if (!order) return;
+    completeOrder.mutate(
+      { order, v },
+      {
+        onSuccess: () => {
+          alert.success(t("production.statusChanged", { no: order.production_no, status: t("enums.productionStatus.done") }));
+          setCompleteTarget(null);
+        },
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("production.statusChangeFailed")),
+      },
+    );
+  };
+
   const onChangeStatus = (order: ProductionOrder, next: ProductionStatus) => {
     if (next === order.production_status) return;
+    if (next === "done") {
+      setCompleteTarget(order);
+      return;
+    }
     changeStatus.mutate(
       { order, next },
       {
@@ -357,5 +394,6 @@ export function useProductionViewModel() {
 
     isFinalStatus, getNextStatus,
     onChangeStatus, onAdvanceStatus, onCancelOrder,
+    completeTarget, closeComplete: () => setCompleteTarget(null), onCompleteSubmit, completing: completeOrder.isPending,
   };
 }
