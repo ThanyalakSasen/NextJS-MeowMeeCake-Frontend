@@ -22,10 +22,10 @@ export type UserLogEntity =
 /**
  * shape ดิบจาก backend (userLogService.listLogs/getLogById) — `user_id` ถูก
  * `.populate("user_id", "user_fullname email")` เป็น object เต็ม ไม่ใช่ string id ดิบ
- * ไม่มี field `changes` (before/after แบบ diff รายฟิลด์) อยู่จริงเลย — backend เขียนแค่
- * `details` (Mixed, รูปแบบไม่คงที่ต่างกันไปทุก route: บางที่เป็น array ชื่อ field ที่แก้,
- * บางที่เป็น object เก็บบาง field ของ body) ส่วน `before`/`after` มีอยู่ใน schema
- * (userLogModel.ts) แต่ไม่มี route ไหนส่งค่ามาจริงเลยสักจุด — ห้ามคาดหวังว่ามันจะมีข้อมูล
+ * `before`/`after` = { ฟิลด์: ค่า } เฉพาะฟิลด์ที่เปลี่ยน (backend lib/auditDiff.ts · ค่า normalize แล้ว:
+ * ref เป็นชื่อ · วันที่เป็น ISO) — แก้ไข = มีทั้งคู่ · สร้าง = after อย่างเดียว · ลบ = before อย่างเดียว
+ * มีเฉพาะ log ใหม่ของ route ที่ใช้ auditChange (crud factory · สินค้า · โปรโมชัน · สต็อกสินค้า/วัตถุดิบ)
+ * log เก่าและ route อื่นยังมีแค่ `details` (Mixed, รูปแบบไม่คงที่ต่อ route)
  */
 export interface RawUserLog {
   _id: string;
@@ -36,6 +36,10 @@ export interface RawUserLog {
   entity_id: string | null;
   ip_address: string | null;
   details?: unknown;
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+  /** ฟิลด์ระบุตัวตนของเอกสารที่ไม่มีชื่อ (backend userLogPresenter) เช่น { role_id: "ผู้จัดการ", menu_key: "pos" } */
+  context?: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -49,6 +53,10 @@ export interface UserLog {
   ip_address: string | null;
   /** รายละเอียดเพิ่มเติมจาก backend — รูปแบบไม่คงที่ (ดูคอมเมนต์ RawUserLog ด้านบน) */
   details?: unknown;
+  /** ค่าเดิม/ค่าใหม่ของฟิลด์ที่เปลี่ยน (ดูคอมเมนต์ RawUserLog) */
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+  context?: Record<string, unknown> | null;
   created_at: string;
 }
 

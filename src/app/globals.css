@@ -162,7 +162,8 @@
   --btn-cancel-color:  var(--color-brown-800);
 
   /* ── Logout ── */
-  --logout-color:    #EF4444;
+  --logout-color:    var(--color-rose-600); /* เท่ากับปุ่มออกจากระบบในเมนูผู้ใช้ (text-rose-600) */
+  --logout-hover-color: var(--color-rose-700);
   --logout-hover-bg: #FEF2F2;
 
   /* ── เงา (โทนอุ่น อิงสีหมึกน้ำตาล ไม่ใช่ดำล้วน) ── */
@@ -530,12 +531,14 @@ body {
   cursor: pointer;
   color: var(--logout-color);
   font-size: var(--menu-item-font-size);
+  font-weight: 600;
   font-family: inherit;
   text-align: left;
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .logout-btn:hover {
+  color: var(--logout-hover-color);
   background-color: var(--logout-hover-bg);
 }
 

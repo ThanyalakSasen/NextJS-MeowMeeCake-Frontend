@@ -2,9 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { CUSTOMER_HOME_PATH } from "@/constants/auth";
+import { CUSTOMER_HOME_PATH, OWNER_ACCOUNT_PATH } from "@/constants/auth";
 import { Avatar } from "@/components/base";
 import type { CurrentUser } from "@/types/auth";
+import DoorLogoutIcon from "@/components/customer/DoorLogoutIcon";
 
 export function UserMenuDropdown({ user, onLogout }: { user: CurrentUser; onLogout: () => void }) {
   const t = useTranslations("nav");
@@ -41,9 +42,19 @@ export function UserMenuDropdown({ user, onLogout }: { user: CurrentUser; onLogo
               <p className="notif-item-time">{user.roleName}</p>
             </div>
           </div>
+          {/* ดูหน้าร้าน = ตัวหนาสีน้ำตาล · ออกจากระบบ = สีแดง + ไอคอนประตู — หน้าตาเดียวกับเมนูผู้ใช้หน้าร้าน (customer/Navbar) */}
           <div className="notif-dropdown-footer">
-            <Link href={CUSTOMER_HOME_PATH} onClick={() => setOpen(false)} className="notif-history-link">
+            <Link
+              href={CUSTOMER_HOME_PATH}
+              onClick={() => setOpen(false)}
+              className="notif-history-link !font-bold !text-[#8C5A3C] hover:!text-[#6B4329]"
+            >
               {t("storefront")}
+            </Link>
+          </div>
+          <div className="notif-dropdown-footer">
+            <Link href={OWNER_ACCOUNT_PATH} onClick={() => setOpen(false)} className="notif-history-link">
+              {t("myAccount")}
             </Link>
           </div>
           <div className="notif-dropdown-footer">
@@ -53,9 +64,10 @@ export function UserMenuDropdown({ user, onLogout }: { user: CurrentUser; onLogo
                 setOpen(false);
                 onLogout();
               }}
-              className="notif-history-link"
+              className="notif-history-link group !gap-2.5 !font-semibold !text-rose-600 hover:!text-rose-700"
               style={{ width: "100%", cursor: "pointer", background: "none", border: "none" }}
             >
+              <DoorLogoutIcon className="shrink-0 text-rose-500 transition-colors group-hover:text-rose-700" />
               {t("logout")}
             </button>
           </div>
