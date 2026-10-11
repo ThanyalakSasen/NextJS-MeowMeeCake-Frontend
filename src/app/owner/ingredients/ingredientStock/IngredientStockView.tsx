@@ -11,6 +11,7 @@ import { actionIcon } from "@/components/shared/actions";
 import type { StockRow, useIngredientStockViewModel } from "./useIngredientStockViewModel";
 import { StockActionModal } from "./_components/StockActionModal";
 import { LoadFailed } from "@/components/shared/feedback";
+import { BulkStockModal } from "@/components/shared/stock";
 
 type VM = ReturnType<typeof useIngredientStockViewModel>;
 
@@ -59,6 +60,13 @@ export function IngredientStockView(vm: VM) {
     <ListPageLayout
       title={t("ingredientStock.title")}
       description={t("ingredientStock.description")}
+      actions={
+        vm.perm.update && (
+          <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
+            {t("bulkStock.open")}
+          </Button>
+        )
+      }
       toolbar={
         <FilterToolbar
           left={
@@ -100,6 +108,15 @@ export function IngredientStockView(vm: VM) {
           />
         </div>
       )}
+
+      <BulkStockModal
+        open={vm.bulkOpen}
+        items={vm.bulkItems}
+        withNote
+        decimals={2}
+        onClose={vm.closeBulk}
+        onSubmit={vm.onBulkSubmit}
+      />
 
       <StockActionModal
         target={vm.target}
