@@ -18,9 +18,12 @@ const BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/a
  * แปลง URL ของไฟล์อัปโหลดจาก backend ให้เป็น absolute URL เสมอ — ปล่อยผ่านตรง ๆ ถ้า absolute อยู่แล้ว
  * (http(s)://...) หรือเป็น data: URI (base64 ในข้อมูลเก่าบางแถว — ฟอร์มทุกตัวอัปโหลดไฟล์จริงแล้ว: สินค้า ·
  * แบนเนอร์ · ใบเสร็จ) หรือไม่มีค่าเลย
+ * รับ array ได้ (เช่น product_img เป็น string[] ในโมเดล — บาง endpoint ไม่ได้ตัดเหลือรูปแรก) → ใช้รูปแรกที่มีค่า
+ * ค่าที่ไม่ใช่ string → undefined (เดิม crash "url.startsWith is not a function" ที่หน้ารีวิว)
  */
-export function resolveUploadUrl(url: string | null | undefined): string | undefined {
-  if (!url) return undefined;
+export function resolveUploadUrl(value: string | readonly string[] | null | undefined): string | undefined {
+  const url = Array.isArray(value) ? value.find((s) => typeof s === "string" && s.trim()) : value;
+  if (typeof url !== "string" || !url) return undefined;
   if (/^(https?:)?\/\//.test(url) || url.startsWith("data:")) return url;
   return `${BACKEND_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 }
