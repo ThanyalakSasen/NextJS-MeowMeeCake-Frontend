@@ -14,6 +14,10 @@ export interface IngredientTransaction {
   qty: number;
   unit_id?: string | { _id: string; unit_name: string; unit_abbr: string };
   note?: string;
+  /** วันที่รับเข้า/เบิกใช้/นับจริง (แยกจาก created_at — บันทึกย้อนหลังได้) · ข้อมูลเก่าอาจเป็น null */
+  transaction_date?: string | null;
+  /** วันหมดอายุของล็อตที่รับเข้า (type "receive") */
+  expiry_date?: string | null;
   performed_by?: string | { _id: string; user_fullname: string; email: string };
   created_at: string;
   updated_at: string;

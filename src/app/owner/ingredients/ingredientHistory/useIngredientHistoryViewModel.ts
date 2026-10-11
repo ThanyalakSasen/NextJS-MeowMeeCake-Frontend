@@ -21,6 +21,8 @@ export interface HistoryRow {
   quantity: number;
   unitAbbr: string;
   note: string;
+  /** วันหมดอายุของล็อตที่รับเข้า (null = ไม่ได้ระบุ) */
+  expiryDate: string | null;
   performedBy: string;
 }
 
@@ -59,7 +61,9 @@ export function useIngredientHistoryViewModel() {
           typeof tx.performed_by === "object" && tx.performed_by ? tx.performed_by.user_fullname : null;
         return {
           _id: tx._id,
-          createdAt: tx.created_at,
+          // วันที่ทำรายการจริง (บันทึกย้อนหลังได้) — ข้อมูลเก่าไม่มีใช้เวลาที่บันทึก
+          createdAt: tx.transaction_date ?? tx.created_at,
+          expiryDate: tx.expiry_date ?? null,
           ingredientName: ing?.name ?? "—",
           type: tx.type,
           quantity: tx.qty,

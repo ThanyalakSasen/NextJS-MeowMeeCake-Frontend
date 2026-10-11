@@ -113,6 +113,7 @@ export function IngredientStockView(vm: VM) {
         open={vm.bulkOpen}
         items={vm.bulkItems}
         withNote
+        withDates
         decimals={2}
         onClose={vm.closeBulk}
         onSubmit={vm.onBulkSubmit}

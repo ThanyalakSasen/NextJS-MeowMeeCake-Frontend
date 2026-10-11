@@ -4,12 +4,14 @@
 // backend ไม่มี endpoint แบบ bulk — ผู้เรียกส่งทีละรายการใน onSubmit แล้วคืน { [id]: ข้อความ error } ของที่ไม่สำเร็จ
 // สำเร็จหมด → ปิดหน้าต่าง · บางรายการไม่สำเร็จ → เหลือเฉพาะรายการนั้นพร้อมเหตุผล ให้แก้แล้วกดใหม่ได้ (ที่สำเร็จไม่ส่งซ้ำ)
 // เลือกรายการซ้ำไม่ได้ (ตัวเลือกที่ใช้แล้วถูกปิด) · เบิกใช้เกินคงเหลือเตือนก่อนส่ง
+// withDates (วัตถุดิบ): วันที่ทำรายการต่อแถว (ค่าเริ่มต้นวันนี้ · ห้ามอนาคต) + วันหมดอายุเฉพาะโหมดรับเข้า (ไม่บังคับ · ไม่ก่อนวันรับ)
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
+import dayjs, { type Dayjs } from "dayjs";
 import { Modal, Radio } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { Button, Input, InputNumber, Select } from "@/components/base";
+import { Button, DatePicker, Input, InputNumber, Select } from "@/components/base";
 import { formatNumber } from "@/i18n/format";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 
@@ -26,6 +28,10 @@ export interface BulkStockLine {
   id: string;
   value: number;
   note?: string;
+  /** ISO — วันที่รับเข้า/เบิกใช้/นับจริง (มีเฉพาะ withDates) · วันนี้ = เวลาปัจจุบัน */
+  date?: string;
+  /** ISO — วันหมดอายุของล็อตที่รับเข้า (เฉพาะโหมดรับเข้า · ไม่บังคับ) */
+  expiry?: string;
 }
 
 interface Line {
@@ -33,23 +39,31 @@ interface Line {
   id: string | null;
   value: number | null;
   note: string;
+  date: Dayjs;
+  expiry: Dayjs | null;
 }
 
 let seq = 0;
-const newLine = (): Line => ({ key: ++seq, id: null, value: null, note: "" });
+const newLine = (): Line => ({ key: ++seq, id: null, value: null, note: "", date: dayjs(), expiry: null });
+
+/** วันที่เลือก → ISO · วันนี้ใช้เวลาปัจจุบัน (เรียงในประวัติถูก) · วันก่อนหน้าใช้เที่ยงวัน (ไม่เลื่อนวันเพราะเขตเวลา) */
+const dateIso = (d: Dayjs) => (d.isSame(dayjs(), "day") ? dayjs() : d.hour(12).minute(0).second(0)).toISOString();
 
 export function BulkStockModal({
   open,
   items,
   withNote = false,
+  withDates = false,
   decimals = 0,
   onClose,
   onSubmit,
 }: {
   open: boolean;
   items: BulkStockItem[];
-  /** ช่องหมายเหตุต่อรายการ (วัตถุดิบ — backend เก็บ note ในประวัติ) */
+  /** ช่องหมายเหตุต่อรายการ (วัตถุดิบเก็บในประวัติวัตถุดิบ · สินค้าเก็บในบันทึกการทำงาน) */
   withNote?: boolean;
+  /** วันที่ทำรายการ + วันหมดอายุ (รับเข้า) ต่อรายการ — วัตถุดิบ (backend เก็บ transaction_date / expiry_date) */
+  withDates?: boolean;
   /** ทศนิยมของจำนวน (สินค้า = 0 · วัตถุดิบ = 2) */
   decimals?: number;
   onClose: () => void;
@@ -57,9 +71,9 @@ export function BulkStockModal({
   onSubmit: (mode: BulkStockMode, lines: BulkStockLine[]) => Promise<Record<string, string>>;
 }) {
   return (
-    <Modal open={open} footer={null} closable={false} width={760} destroyOnHidden onCancel={onClose}>
+    <Modal open={open} footer={null} closable={false} width={withDates ? 1080 : 760} destroyOnHidden onCancel={onClose}>
       {/* เนื้อหาแยก component — state เริ่มใหม่ทุกครั้งที่เปิด (destroyOnHidden) */}
-      {open && <Body items={items} withNote={withNote} decimals={decimals} onClose={onClose} onSubmit={onSubmit} />}
+      {open && <Body items={items} withNote={withNote} withDates={withDates} decimals={decimals} onClose={onClose} onSubmit={onSubmit} />}
     </Modal>
   );
 }
@@ -67,12 +81,14 @@ export function BulkStockModal({
 function Body({
   items,
   withNote,
+  withDates,
   decimals,
   onClose,
   onSubmit,
 }: {
   items: BulkStockItem[];
   withNote: boolean;
+  withDates: boolean;
   decimals: number;
   onClose: () => void;
   onSubmit: (mode: BulkStockMode, lines: BulkStockLine[]) => Promise<Record<string, string>>;
@@ -90,7 +106,10 @@ function Body({
   const filled = lines.filter((l) => l.id && l.value != null);
 
   const exceeds = (l: Line) => mode === "use" && !!l.id && l.value != null && l.value > (byId.get(l.id)?.stock ?? 0);
-  const invalid = filled.length === 0 || lines.some(exceeds) || lines.some((l) => !!l.id !== (l.value != null));
+  const badExpiry = (l: Line) => mode === "receive" && !!l.expiry && l.expiry.isBefore(l.date, "day");
+  const invalid =
+    filled.length === 0 || lines.some(exceeds) || lines.some(badExpiry) || lines.some((l) => !!l.id !== (l.value != null));
+  const showExpiry = withDates && mode === "receive";
 
   const update = (key: number, patch: Partial<Line>) =>
     setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
@@ -104,7 +123,13 @@ function Body({
     try {
       const failed = await onSubmit(
         mode,
-        filled.map((l) => ({ id: l.id as string, value: l.value as number, note: l.note.trim() || undefined })),
+        filled.map((l) => ({
+          id: l.id as string,
+          value: l.value as number,
+          note: l.note.trim() || undefined,
+          ...(withDates ? { date: dateIso(l.date) } : {}),
+          ...(showExpiry && l.expiry ? { expiry: l.expiry.startOf("day").toISOString() } : {}),
+        })),
       );
       if (Object.keys(failed).length === 0) return onClose();
       setErrors(failed);
@@ -114,7 +139,15 @@ function Body({
     }
   };
 
-  const cols = withNote ? "grid-cols-[minmax(0,1fr)_8rem_minmax(0,0.8fr)_2rem]" : "grid-cols-[minmax(0,1fr)_9rem_2rem]";
+  // คอลัมน์: รายการ · จำนวน · [วันที่] · [วันหมดอายุ] · [หมายเหตุ] · ลบ
+  const gridTemplateColumns = [
+    "minmax(0,1fr)",
+    withNote ? "8rem" : "9rem",
+    withDates && "9.5rem",
+    showExpiry && "9.5rem",
+    withNote && "minmax(0,0.8fr)",
+    "2rem",
+  ].filter(Boolean).join(" ");
 
   return (
     <div className="flex flex-col gap-4">
@@ -140,19 +173,24 @@ function Body({
       <p className="m-0 text-sm text-gray-600">{t(`hint_${mode}`)}</p>
 
       <div className="flex flex-col gap-2">
-        <div className={`grid ${cols} gap-2 px-1 text-xs font-medium text-gray-500`}>
+        <div className="grid gap-2 px-1 text-xs font-medium text-gray-500" style={{ gridTemplateColumns }}>
           <span>{t("colItem")}</span>
           <span>{mode === "adjust" ? t("colNewStock") : t("colQty")}</span>
+          {withDates && <span>{t(`colDate_${mode}`)}</span>}
+          {showExpiry && <span>{t("colExpiry")}</span>}
           {withNote && <span>{t("colNote")}</span>}
           <span />
         </div>
 
         {lines.map((l) => {
           const item = l.id ? byId.get(l.id) : undefined;
-          const err = (l.id && errors[l.id]) || (exceeds(l) ? t("exceeds", { qty: formatNumber(item?.stock ?? 0, locale), unit: item?.unit ?? "" }) : "");
+          const err =
+            (l.id && errors[l.id]) ||
+            (exceeds(l) ? t("exceeds", { qty: formatNumber(item?.stock ?? 0, locale), unit: item?.unit ?? "" }) : "") ||
+            (badExpiry(l) ? t("expiryBeforeDate") : "");
           return (
             <div key={l.key} className="flex flex-col gap-0.5">
-              <div className={`grid ${cols} items-start gap-2`}>
+              <div className="grid items-start gap-2" style={{ gridTemplateColumns }}>
                 <div className="min-w-0">
                   <Select
                     showSearch
@@ -178,8 +216,31 @@ function Body({
                   onChange={(v) => update(l.key, { value: v == null ? null : Number(v) })}
                   className="!w-full"
                 />
+                {withDates && (
+                  <DatePicker
+                    format="DD/MM/YYYY"
+                    allowClear={false}
+                    value={l.date}
+                    disabled={!l.id}
+                    disabledDate={(d) => d.isAfter(dayjs(), "day")}
+                    onChange={(d) => d && !Array.isArray(d) && update(l.key, { date: d })}
+                    className="!w-full"
+                  />
+                )}
+                {showExpiry && (
+                  <DatePicker
+                    format="DD/MM/YYYY"
+                    placeholder={t("expiryPlaceholder")}
+                    value={l.expiry}
+                    disabled={!l.id}
+                    status={badExpiry(l) ? "error" : undefined}
+                    disabledDate={(d) => d.isBefore(l.date, "day")}
+                    onChange={(d) => update(l.key, { expiry: d && !Array.isArray(d) ? d : null })}
+                    className="!w-full"
+                  />
+                )}
                 {withNote && (
-                  <Input value={l.note} disabled={!l.id} placeholder={t("notePlaceholder")} onChange={(e) => update(l.key, { note: e.target.value })} />
+                  <Input value={l.note} maxLength={200} disabled={!l.id} placeholder={t("notePlaceholder")} onChange={(e) => update(l.key, { note: e.target.value })} />
                 )}
                 <Button
                   type="text"

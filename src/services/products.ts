@@ -79,12 +79,13 @@ export const productsService = {
    * PUT /admin/products/{id}/stock { quantity } — ตั้งสต็อกเป็นจำนวนที่ระบุ (นับสต็อกจริงแล้วไม่ตรงระบบ)
    * สิทธิ์ stock.update · แจ้งเตือนสินค้าใกล้หมดเมื่อข้ามเกณฑ์ · สินค้าพรีออเดอร์/มีตัวเลือก backend ปฏิเสธ (409)
    */
-  setStock: (id: string, quantity: number) =>
-    http.put<ItemResponse<Product>>(`${BASE}/${id}/stock`, { quantity }),
+  setStock: (id: string, quantity: number, note?: string) =>
+    http.put<ItemResponse<Product>>(`${BASE}/${id}/stock`, { quantity, note }),
 
-  /** PATCH /admin/products/{id}/stock { delta } — ปรับด้วยส่วนต่าง (+ รับเข้า / − ตัดออก) แบบ atomic */
-  adjustStock: (id: string, delta: number) =>
-    http.patch<ItemResponse<Product>>(`${BASE}/${id}/stock`, { delta }),
+  /** PATCH /admin/products/{id}/stock { delta } — ปรับด้วยส่วนต่าง (+ รับเข้า / − ตัดออก) แบบ atomic
+   *  note (ทั้ง PUT/PATCH) = หมายเหตุ — สินค้าไม่มีที่เก็บ backend บันทึกไว้ในบันทึกการทำงาน */
+  adjustStock: (id: string, delta: number, note?: string) =>
+    http.patch<ItemResponse<Product>>(`${BASE}/${id}/stock`, { delta, note }),
 
   remove: (id: string) =>
     http.delete<EmptyResponse>(`${BASE}/${id}`),

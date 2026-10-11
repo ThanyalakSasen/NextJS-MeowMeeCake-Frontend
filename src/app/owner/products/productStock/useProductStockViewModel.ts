@@ -107,10 +107,10 @@ export function useProductStockViewModel() {
   // ผ่าน endpoint สต็อกโดยเฉพาะ (BACKLOG2 §15.2 ข้อ 5) — แจ้งเตือนสินค้าใกล้หมด · เช็คสิทธิ์ stock · บันทึก log ก่อน → หลัง
   // รับเข้า/เบิกใช้ใช้ส่วนต่างแบบ atomic (ไม่ทับยอดที่ขายไประหว่างเปิด modal) · เบิกเกินที่มี backend ปฏิเสธ
   const submit = useMutation({
-    mutationFn: ({ row, m, value }: { row: StockProductRow; m: StockActionMode; value: number }) => {
-      if (m === "receive") return productsService.adjustStock(row._id, value);
-      if (m === "use") return productsService.adjustStock(row._id, -value);
-      return productsService.setStock(row._id, value);
+    mutationFn: ({ row, m, value, note }: { row: StockProductRow; m: StockActionMode; value: number; note?: string }) => {
+      if (m === "receive") return productsService.adjustStock(row._id, value, note);
+      if (m === "use") return productsService.adjustStock(row._id, -value, note);
+      return productsService.setStock(row._id, value, note);
     },
     onSuccess: (_r, vars) => {
       alert.success(t(`productStock.done_${vars.m}`, { name: vars.row.name }));
@@ -130,9 +130,9 @@ export function useProductStockViewModel() {
     const failed: Record<string, string> = {};
     for (const l of lines) {
       try {
-        if (m === "receive") await productsService.adjustStock(l.id, l.value);
-        else if (m === "use") await productsService.adjustStock(l.id, -l.value);
-        else await productsService.setStock(l.id, l.value);
+        if (m === "receive") await productsService.adjustStock(l.id, l.value, l.note);
+        else if (m === "use") await productsService.adjustStock(l.id, -l.value, l.note);
+        else await productsService.setStock(l.id, l.value, l.note);
       } catch (e) {
         failed[l.id] = isApiError(e) ? e.message : t("productStock.actionFailed");
       }
@@ -164,8 +164,8 @@ export function useProductStockViewModel() {
     mode,
     openAction: (r: StockProductRow, m: StockActionMode) => { setTarget(r); setMode(m); },
     closeAction: () => setTarget(null),
-    onSubmit: (value: number) => {
-      if (target) submit.mutate({ row: target, m: mode, value });
+    onSubmit: (value: number, note: string) => {
+      if (target) submit.mutate({ row: target, m: mode, value, note: note.trim() || undefined });
     },
     saving: submit.isPending,
   };

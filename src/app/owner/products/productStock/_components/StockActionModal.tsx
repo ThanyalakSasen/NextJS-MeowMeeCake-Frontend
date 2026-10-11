@@ -7,7 +7,7 @@
 import { useEffect } from "react";
 import { Modal } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { Form, FormItem, useAntForm, InputNumber } from "@/components/base";
+import { Form, FormItem, useAntForm, InputNumber, Input } from "@/components/base";
 import { formatNumber } from "@/i18n/format";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { StockActionMode, StockProductRow } from "../useProductStockViewModel";
@@ -23,11 +23,11 @@ export function StockActionModal({
   mode: StockActionMode;
   saving: boolean;
   onClose: () => void;
-  onSubmit: (value: number) => void;
+  onSubmit: (value: number, note: string) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
-  const [form] = useAntForm<{ value: number }>();
+  const [form] = useAntForm<{ value: number; note?: string }>();
 
   useEffect(() => {
     if (!target) return;
@@ -38,8 +38,8 @@ export function StockActionModal({
 
   const handleOk = async () => {
     if (!target) return;
-    const { value } = await form.validateFields();
-    onSubmit(value);
+    const { value, note } = await form.validateFields();
+    onSubmit(value, note ?? "");
   };
 
   return (
@@ -73,6 +73,10 @@ export function StockActionModal({
               ]}
             >
               <InputNumber min={mode === "adjust" ? 0 : 1} precision={0} />
+            </FormItem>
+            {/* เก็บในบันทึกการทำงาน (สินค้าไม่มีประวัติสต็อกแยกแบบวัตถุดิบ) */}
+            <FormItem name="note" label={t("productStock.noteLabel")}>
+              <Input maxLength={200} placeholder={t("productStock.notePlaceholder")} />
             </FormItem>
           </Form>
         </>

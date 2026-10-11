@@ -153,7 +153,7 @@ export function ProductStockView(vm: VM) {
         </div>
       )}
 
-      <BulkStockModal open={vm.bulkOpen} items={vm.bulkItems} onClose={vm.closeBulk} onSubmit={vm.onBulkSubmit} />
+      <BulkStockModal open={vm.bulkOpen} items={vm.bulkItems} withNote onClose={vm.closeBulk} onSubmit={vm.onBulkSubmit} />
 
       <StockActionModal
         target={vm.target}

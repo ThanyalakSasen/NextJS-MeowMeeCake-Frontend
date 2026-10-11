@@ -125,6 +125,8 @@ export function useIngredientStockViewModel() {
           type: m,
           qty: l.value,
           note: l.note,
+          transaction_date: l.date,
+          expiry_date: l.expiry ?? null,
           performed_by: user?.id ?? "",
         });
       } catch (e) {

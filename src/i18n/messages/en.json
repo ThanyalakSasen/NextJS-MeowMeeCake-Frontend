@@ -682,7 +682,9 @@
     "currentStock": "Current stock {qty} {unit}",
     "qtyLabel": "Quantity ({unit})",
     "newStockLabel": "New stock ({unit})",
-    "useExceeds": "Cannot use more than available ({qty} {unit})"
+    "useExceeds": "Cannot use more than available ({qty} {unit})",
+    "noteLabel": "Note",
+    "notePlaceholder": "e.g. damaged, expired, monthly count (optional)"
   },
   "orders": {
     "title": "Manage Orders",
@@ -1117,7 +1119,8 @@
     "colQty": "Quantity",
     "colNote": "Note",
     "colBy": "Recorded by",
-    "empty": "No stock movements yet"
+    "empty": "No stock movements yet",
+    "colExpiry": "Expires"
   },
   "production": {
     "orderNotFound": "Production order not found, or the link is invalid",
@@ -3361,6 +3364,12 @@
     "submit_use": "Use {n} items",
     "submit_adjust": "Adjust {n} items",
     "done": "Saved {n} items",
-    "someFailed": "{n} items failed — see the reasons in the dialog and try again"
+    "someFailed": "{n} items failed — see the reasons in the dialog and try again",
+    "colDate_receive": "Received on",
+    "colDate_use": "Used on",
+    "colDate_adjust": "Counted on",
+    "colExpiry": "Expires on",
+    "expiryPlaceholder": "Optional",
+    "expiryBeforeDate": "Expiry date cannot be before the received date"
   }
 }
