@@ -27,6 +27,7 @@ export const expensesService = {
   /**
    * POST /admin/expenses/receipts — อัปโหลดรูปใบเสร็จจริง (multipart · JPEG/PNG/WEBP/AVIF ≤ 5 MB · สิทธิ์ reports.create)
    * คืน URL ที่ต้องเอาไปใส่ receipt_url ตอน create/update — backend ไม่รับ base64 หรือลิงก์อื่น (ตอบ 400)
+   * ใบเสร็จเป็นไฟล์ส่วนตัว: URL เป็น "/api/files/receipts/<ไฟล์>" เปิดได้เฉพาะผู้มีสิทธิ์ reports.view (backend ตรวจทุกครั้ง)
    */
   uploadReceipt: async (file: File): Promise<string> => {
     const form = new FormData();

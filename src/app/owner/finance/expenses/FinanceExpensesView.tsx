@@ -8,13 +8,13 @@ import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stat
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
-import { resolveUploadUrl } from "@/lib/uploads";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
 import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { useFinanceExpensesViewModel } from "./useFinanceExpensesViewModel";
 import { ExpenseFormModal } from "./_components/ExpenseFormModal";
+import { ReceiptThumb } from "./_components/ReceiptThumb";
 import { RecurringRemindersList } from "./_components/RecurringRemindersList";
 
 type VM = ReturnType<typeof useFinanceExpensesViewModel>;
@@ -67,10 +67,7 @@ export function FinanceExpensesView(vm: VM) {
       align: "center",
       render: (e) => (
         e.receipt_url ? (
-          <a href={resolveUploadUrl(e.receipt_url)} target="_blank" rel="noreferrer">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={resolveUploadUrl(e.receipt_url)} alt={t("finance.fieldReceipt")} className="h-8 w-8 rounded object-cover" />
-          </a>
+          <ReceiptThumb url={e.receipt_url} />
         ) : (
           <span className="text-gray-300">—</span>
         )

@@ -1627,7 +1627,8 @@
     "kpiAvgRevenuePerDay": "รายได้เฉลี่ย/วัน",
     "kpiAvgOrdersPerDay": "ออเดอร์เฉลี่ย/วัน",
     "kpiAvgOrderValue": "มูลค่าเฉลี่ย/ออเดอร์",
-    "quarterLabel": "ไตรมาส {n} ปี {year}"
+    "quarterLabel": "ไตรมาส {n} ปี {year}",
+    "receiptLoadFailed": "เปิดไม่ได้"
   },
   "salesReport": {
     "title": "เปรียบเทียบยอดขายสินค้า",
