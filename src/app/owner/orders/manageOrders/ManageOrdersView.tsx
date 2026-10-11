@@ -194,6 +194,8 @@ export function ManageOrdersView(vm: VM) {
         open={vm.drawerOpen}
         title={vm.selectedOrder ? t("orders.drawerTitle", { no: vm.selectedOrder.order_no }) : ""}
         onClose={vm.closeDrawer}
+        // กว้างเท่า drawer ของรอบพรีออเดอร์ — 400 เดิมแคบจน Steps 5 ขั้นตัดคำทีละตัวอักษร
+        size={640}
       >
         {vm.isDetailLoading && <p className="py-10 text-center text-gray-500">{t("common.loading")}</p>}
         {vm.isDetailError && !vm.isDetailLoading && <p className="py-10 text-center text-gray-500">{t("orders.orderNotFound")}</p>}
