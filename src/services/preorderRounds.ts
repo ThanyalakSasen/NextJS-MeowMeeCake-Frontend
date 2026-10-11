@@ -8,7 +8,7 @@ import { http } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type {
   PreorderRound, PreorderRoundItem, CreateRoundInput, UpdateRoundInput,
-  RoundItemInput, UpdateRoundItemInput, RoundListParams,
+  RoundItemInput, UpdateRoundItemInput, RoundListParams, CloseRoundResult, CancelRoundCascade,
 } from "@/types/preorderRound";
 import type {
   RoundCustomers, RoundCustomersParams, RoundDashboardParams, RoundDashboardRow,
@@ -77,9 +77,15 @@ export const preorderRoundsService = {
     return { data: toRound(res.data) };
   },
 
-  updateStatus: async (id: string, round_status: string) => {
-    const res = await http.patch<ItemResponse<any>>(`${ROUNDS_BASE}/${id}/status`, { round_status });
-    return { data: toRound(res.data) };
+  /** เปลี่ยนสถานะรอบ · closed → ได้ closeResult (ยกเลิกคนไม่จ่าย + ใบสั่งผลิตที่สร้างให้) · cancelled → ได้ cancelCascade
+   *  · เปิดรอบที่ปิดแล้วกลับ (closed → open) ส่ง close_date ใหม่มาด้วยได้ (จำเป็นถ้าวันปิดเดิมผ่านไปแล้ว) */
+  updateStatus: async (id: string, round_status: string, opts: { close_date?: string } = {}) => {
+    const res = await http.patch<ItemResponse<any>>(`${ROUNDS_BASE}/${id}/status`, { round_status, ...opts });
+    return {
+      data: toRound(res.data),
+      closeResult: (res.data?.close_result ?? null) as CloseRoundResult | null,
+      cancelCascade: (res.data?.cancel_cascade ?? null) as CancelRoundCascade | null,
+    };
   },
 
   remove: (id: string) => http.delete<EmptyResponse>(`${ROUNDS_BASE}/${id}`),

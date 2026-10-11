@@ -1,15 +1,17 @@
 "use client";
 // เนื้อหาใน DetailDrawer ของรอบพรีออเดอร์ — ข้อมูลรอบ + ปุ่มเปลี่ยนสถานะ + จัดการสินค้าในรอบ
+// + ขั้นตอนรอบ → การผลิต (Steps) · ผลการปิดรอบ · ลิงก์ใบสั่งผลิตของรอบ · เปิดรอบที่ปิดแล้วกลับ
 import Link from "next/link";
+import { Steps } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { Button, Divider, Tag } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency, formatDate } from "@/i18n/format";
-import type { PreorderRound } from "@/types/preorderRound";
+import type { CloseRoundResult, PreorderRound } from "@/types/preorderRound";
 import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
-import { NOTICE_TAG } from "@/constants/enumConfig";
+import { NOTICE_TAG, ROUND_STATUS_FLOW } from "@/constants/enumConfig";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -19,6 +21,18 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
   const { round } = vm;
   const final = vm.isFinalRoundStatus(round.round_status);
   const next = vm.getNextRoundStatus(round.round_status);
+  const production = round.round_status === "closed" ? vm.roundProduction : null;
+  const productionHref = production ? `/owner/production?id=${encodeURIComponent(production._id)}` : "/owner/production?tab=plan";
+
+  // ขั้นที่ 4 = การผลิต · ใบผลิตเสร็จแล้ว = จบทุกขั้น
+  const stepIndex = production ? 3 : ROUND_STATUS_FLOW.indexOf(round.round_status);
+  const steps = [
+    ...ROUND_STATUS_FLOW.map((s) => ({ title: t(`enums.roundStatus.${s}`) })),
+    {
+      title: t("preorderRound.stepProduction"),
+      content: production ? t(`enums.productionStatus.${production.production_status}`) : undefined,
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -44,23 +58,58 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
         </div>
       </div>
 
+      {round.round_status !== "cancelled" && (
+        <Steps
+          size="small"
+          titlePlacement="vertical"
+          current={stepIndex}
+          status={production?.production_status === "done" ? "finish" : "process"}
+          items={steps}
+        />
+      )}
+
       {vm.perm.update && !final && (
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
           <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancelRound(round)}>{t("preorderRound.cancelRound")}</Button>
           {next && (
-            <Button type="primary" size="small" icon={actionIcon("next", "small")} onClick={() => vm.onAdvanceRoundStatus(round)}>
-              {t("preorderRound.advanceTo", { status: t(`enums.roundStatus.${next}`) })}
+            <Button
+              type="primary"
+              size="small"
+              icon={actionIcon("next", "small")}
+              loading={vm.changingRoundStatus}
+              onClick={() => vm.onAdvanceRoundStatus(round)}
+            >
+              {next === "closed" ? t("preorderRound.closeRound") : t("preorderRound.advanceTo", { status: t(`enums.roundStatus.${next}`) })}
             </Button>
           )}
         </div>
       )}
 
+      {vm.closeResult && <CloseResultPanel result={vm.closeResult} />}
+
       {round.round_status === "closed" && (
-        <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm">
-          <span className="text-gray-600">{t("preorderRound.goToProductionHint")}</span>{" "}
-          <Link href="/owner/production?tab=plan" className="font-medium text-brown-800 hover:underline">
-            {t("preorderRound.goToProduction")}
-          </Link>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm">
+          {production ? (
+            <span className="text-gray-600">
+              {t("preorderRound.productionOfRound")}{" "}
+              <Link href={productionHref} className="font-medium text-brown-800 hover:underline">
+                {production.production_no}
+              </Link>{" "}
+              · <StatusBadge group="productionStatus" value={production.production_status} />
+            </span>
+          ) : (
+            <span>
+              <span className="text-gray-600">{t("preorderRound.goToProductionHint")}</span>{" "}
+              <Link href={productionHref} className="font-medium text-brown-800 hover:underline">
+                {t("preorderRound.goToProduction")}
+              </Link>
+            </span>
+          )}
+          {vm.perm.update && vm.canReopenRound && (
+            <Button size="small" icon={actionIcon("reset", "small")} onClick={vm.openReopen}>
+              {t("preorderRound.reopenRound")}
+            </Button>
+          )}
         </div>
       )}
 
@@ -113,6 +162,38 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** สรุปสิ่งที่ระบบทำตอนปิดรอบ (มาจาก response ของการปิดรอบ — ไม่ได้เก็บถาวร) */
+function CloseResultPanel({ result }: { result: CloseRoundResult }) {
+  const t = useTranslations("preorderRound");
+  const { production, unpaid } = result;
+  return (
+    <div
+      className={`flex flex-col gap-1 rounded-lg border px-3 py-2 text-sm ${
+        production.created ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"
+      }`}
+    >
+      <p className="m-0 font-semibold">{t("closeResultTitle")}</p>
+      {production.created ? (
+        <p className="m-0">
+          {t("closeResultProduction", { date: production.production_date ?? "-" })}{" "}
+          <Link href={`/owner/production?id=${encodeURIComponent(production.production_id ?? "")}`} className="font-semibold underline">
+            {production.production_no}
+          </Link>
+        </p>
+      ) : (
+        <p className="m-0">{t("closeResultNoProduction", { reason: production.reason ?? "-" })}</p>
+      )}
+      <p className="m-0">{t("closeResultUnpaid", { n: unpaid.cancelled.length })}</p>
+      {unpaid.waitingSlip.length > 0 && (
+        <p className="m-0">{t("closeResultWaitingSlip", { n: unpaid.waitingSlip.length, list: unpaid.waitingSlip.join(", ") })}</p>
+      )}
+      {unpaid.failed.length > 0 && (
+        <p className="m-0 text-rose-700">{t("closeResultFailed", { list: unpaid.failed.map((f) => f.preorder_no).join(", ") })}</p>
+      )}
     </div>
   );
 }

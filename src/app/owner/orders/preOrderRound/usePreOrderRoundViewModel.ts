@@ -17,11 +17,12 @@ import { preorderRoundsService } from "@/services/preorderRounds";
 import { preordersService } from "@/services/preorders";
 import { productsService } from "@/services/products";
 import { paymentsService } from "@/services/payments";
+import { productionOrdersService } from "@/services/productionOrders";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { OrderStatus, RoundStatus } from "@/constants/enumConfig";
-import type { PreorderRound, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
+import type { PreorderRound, CloseRoundResult, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
 import type { Preorder } from "@/types/preorder";
 import type { DeliveryUpdateInput } from "@/types/order";
 import { formatCurrency } from "@/i18n/format";
@@ -54,6 +55,10 @@ export function usePreOrderRoundViewModel() {
     queryFn: () => productsService.list({ limit: LIST_ALL, is_preorder: true }),
   });
   const preorderProducts = productsQ.data?.data ?? [];
+
+  // พรีออเดอร์ทั้งหมด — ใช้ทั้งแท็บคำสั่งซื้อ และนับยอดค้างในรอบตอนยืนยันปิด/ยกเลิกรอบ
+  const preordersQ = useQuery({ queryKey: ["preorders"], queryFn: () => preordersService.list({ limit: LIST_ALL }) });
+  const preorders = useMemo(() => preordersQ.data?.data ?? [], [preordersQ.data]);
 
   // ══════════════════ แท็บ 1: รอบพรีออเดอร์ ══════════════════
   const roundsQ = useQuery({ queryKey: ["preorder-rounds"], queryFn: () => preorderRoundsService.list({ limit: LIST_ALL }) });
@@ -127,30 +132,101 @@ export function usePreOrderRoundViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.updateFailed")),
   });
 
-  // เปลี่ยนสถานะรอบ (เดินหน้าทีละสถานะ) + ยกเลิก
+  // ── ใบสั่งผลิตของรอบที่เปิดดูอยู่ (เฉพาะรอบที่ปิดรับแล้ว) — ลิงก์ตรงไปที่ใบ + ใช้ตัดสินว่าเปิดรอบกลับได้ไหม
+  //    (backend ให้เปิดกลับได้เฉพาะรอบที่ยังไม่มีใบสั่งผลิตที่ไม่ถูกยกเลิก) · ไม่มีสิทธิ์ดูการผลิต = ไม่รู้ → ให้ backend ตัดสิน
+  const productionPerm = usePermission("production");
+  const roundProductionQ = useQuery({
+    queryKey: ["production-orders", "by-round", selectedRoundId],
+    queryFn: () => productionOrdersService.list({ round_id: selectedRoundId as string, limit: LIST_ALL }),
+    enabled: !!selectedRoundId && roundDrawerOpen && productionPerm.view && selectedRound?.round_status === "closed",
+  });
+  const roundProduction = roundProductionQ.data?.data.find((p) => p.production_status !== "cancelled") ?? null;
+
+  /** ยอดพรีออเดอร์ที่ยังค้างในรอบ — บอกในกล่องยืนยันว่าปิด/ยกเลิกรอบแล้วจะกระทบกี่รายการ */
+  const roundOrderCounts = (roundId: string) => {
+    const active = preorders.filter((o) => o.round_id === roundId && !isFinalOrderStatus(o.order_status));
+    const paid = active.filter((o) => o.payment_status === "paid").length;
+    return { active: active.length, paid, unpaid: active.length - paid };
+  };
+
+  // ผลการปิดรอบล่าสุด (ใบสั่งผลิตที่ได้ · ยกเลิกคนไม่จ่ายกี่ราย) — โชว์ใน drawer ของรอบนั้นจนกว่าจะปิดหน้า
+  const [closeResult, setCloseResult] = useState<{ roundId: string; result: CloseRoundResult } | null>(null);
+
+  // เปลี่ยนสถานะรอบ (เดินหน้าทีละสถานะ) + ยกเลิก + เปิดรอบที่ปิดแล้วกลับ
   const changeRoundStatus = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: RoundStatus }) => preorderRoundsService.updateStatus(id, status),
-    onSuccess: () => invalidateRounds(selectedRoundId),
+    mutationFn: ({ id, status, close_date }: { id: string; status: RoundStatus; close_date?: string }) =>
+      preorderRoundsService.updateStatus(id, status, { close_date }),
+    onSuccess: () => {
+      invalidateRounds(selectedRoundId);
+      // ปิด/ยกเลิกรอบ → พรีออเดอร์ถูกยกเลิก + ใบสั่งผลิตถูกสร้าง ฝั่ง backend
+      qc.invalidateQueries({ queryKey: ["preorders"] });
+      qc.invalidateQueries({ queryKey: ["production-orders"] });
+    },
   });
 
-  const onAdvanceRoundStatus = (round: PreorderRound) => {
+  const onAdvanceRoundStatus = async (round: PreorderRound) => {
     const next = getNextRoundStatus(round.round_status);
     if (!next) return;
+    if (next === "closed") {
+      const c = roundOrderCounts(round._id);
+      const ok = await confirmAlert(t("preorderRound.closeConfirm", { unpaid: c.unpaid, paid: c.paid }), {
+        title: t("preorderRound.closeConfirmTitle", { name: round.round_name }),
+        confirmText: t("preorderRound.closeRound"),
+        cancelText: t("common.cancel"),
+      });
+      if (!ok) return;
+    }
     changeRoundStatus.mutate(
       { id: round._id, status: next },
       {
-        onSuccess: () => alert.success(t("preorderRound.statusChanged", { name: round.round_name, status: t(`enums.roundStatus.${next}`) })),
+        onSuccess: ({ closeResult: result }) => {
+          alert.success(t("preorderRound.statusChanged", { name: round.round_name, status: t(`enums.roundStatus.${next}`) }));
+          if (result) setCloseResult({ roundId: round._id, result });
+        },
         onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.statusChangeFailed")),
       },
     );
   };
 
-  const onCancelRound = (round: PreorderRound) => {
+  const onCancelRound = async (round: PreorderRound) => {
+    const c = roundOrderCounts(round._id);
+    const ok = await confirmAlert(t("preorderRound.cancelRoundConfirm", { active: c.active, paid: c.paid }), {
+      title: t("preorderRound.cancelRoundConfirmTitle", { name: round.round_name }),
+      confirmText: t("preorderRound.cancelRound"),
+      cancelText: t("common.back"),
+      danger: true,
+    });
+    if (!ok) return;
     changeRoundStatus.mutate(
       { id: round._id, status: "cancelled" },
       {
-        onSuccess: () => alert.success(t("preorderRound.cancelled", { name: round.round_name })),
+        onSuccess: ({ cancelCascade }) => {
+          alert.success(t("preorderRound.cancelledWithOrders", { name: round.round_name, n: cancelCascade?.cancelled.length ?? 0 }));
+          if (cancelCascade?.failed.length) {
+            alert.warning(
+              t("preorderRound.cancelCascadeFailed", { list: cancelCascade.failed.map((f) => f.preorder_no).join(", ") }),
+            );
+          }
+        },
         onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.cancelFailed")),
+      },
+    );
+  };
+
+  // เปิดรอบที่ปิดแล้วกลับ — ต้องได้วันปิดรับใหม่ถ้าวันเดิมผ่านไปแล้ว (ไม่งั้นตัวตั้งเวลาปิดซ้ำทันที)
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const onReopenSubmit = (closeDate: string) => {
+    if (!selectedRound) return;
+    const round = selectedRound;
+    changeRoundStatus.mutate(
+      { id: round._id, status: "open", close_date: closeDate },
+      {
+        onSuccess: () => {
+          alert.success(t("preorderRound.reopened", { name: round.round_name }));
+          setReopenOpen(false);
+          setCloseResult(null);
+        },
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.statusChangeFailed")),
       },
     );
   };
@@ -195,8 +271,6 @@ export function usePreOrderRoundViewModel() {
   };
 
   // ══════════════════ แท็บ 2: คำสั่งซื้อเค้กวันเกิด (Preorders) ══════════════════
-  const preordersQ = useQuery({ queryKey: ["preorders"], queryFn: () => preordersService.list({ limit: LIST_ALL }) });
-  const preorders = useMemo(() => preordersQ.data?.data ?? [], [preordersQ.data]);
 
   const [orderSearch, setOrderSearchState] = useState("");
   const [orderStatusFilter, setOrderStatusFilterState] = useState<OrderStatus | "all">("all");
@@ -396,7 +470,13 @@ export function usePreOrderRoundViewModel() {
     savingRound: updateRound.isPending,
 
     isFinalRoundStatus, getNextRoundStatus,
-    onAdvanceRoundStatus, onCancelRound, onDeleteRound: (id: string) => deleteRound.mutate(id),
+    onAdvanceRoundStatus, onCancelRound, changingRoundStatus: changeRoundStatus.isPending,
+    roundProduction, canViewProduction: productionPerm.view,
+    closeResult: closeResult && selectedRound && closeResult.roundId === selectedRound._id ? closeResult.result : null,
+    // เปิดกลับได้เมื่อรู้ว่ายังไม่มีใบสั่งผลิต (ไม่มีสิทธิ์ดูการผลิต → ให้กดได้ backend ตอบ 409 ถ้ามีใบแล้ว)
+    canReopenRound: !!selectedRound && selectedRound.round_status === "closed" && !roundProduction
+      && (!productionPerm.view || roundProductionQ.isSuccess),
+    reopenOpen, openReopen: () => setReopenOpen(true), closeReopen: () => setReopenOpen(false), onReopenSubmit, onDeleteRound: (id: string) => deleteRound.mutate(id),
 
     itemFormOpen, editingItem, openAddItem, openEditItem, closeItemForm,
     onSubmitItemForm, savingItem: addRoundItem.isPending || updateRoundItem.isPending,
