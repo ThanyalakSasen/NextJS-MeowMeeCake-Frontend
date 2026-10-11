@@ -1,6 +1,6 @@
 "use client";
 import { useTranslations } from "next-intl";
-import { Form, EmptyState } from "@/components/base";
+import { Card, Form, EmptyState } from "@/components/base";
 import { SaveButton, CancelButton } from "@/components/shared/actions";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { ProductFormFields } from "../../_components/ProductFormFields";
@@ -20,13 +20,16 @@ export function EditProductView(
 
   return (
     <FormPageLayout title={t("common.edit")}>
-      <Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}>
-        <ProductFormFields mode="edit" />
-        <FormActions>
-          <SaveButton type="primary" htmlType="submit" loading={vm.submitting} />
-          <CancelButton onClick={vm.onCancel} />
-        </FormActions>
-      </Form>
+      {/* พื้นขาวให้ฟอร์ม — เหมือนการ์ดอื่นในหลังร้าน (พื้นหน้าเป็นสีครีม) */}
+      <Card className="p-6">
+        <Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}>
+          <ProductFormFields mode="edit" />
+          <FormActions>
+            <SaveButton type="primary" htmlType="submit" loading={vm.submitting} />
+            <CancelButton onClick={vm.onCancel} />
+          </FormActions>
+        </Form>
+      </Card>
       {/* ตัวเลือกสินค้า — บันทึกแยกจากฟอร์มสินค้า (PUT …/customization) */}
       <CustomizationEditor {...vm.customization} />
     </FormPageLayout>

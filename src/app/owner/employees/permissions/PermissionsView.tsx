@@ -52,7 +52,7 @@ export function PermissionsView(vm: VM) {
             />
 
             {vm.selectedRole && vm.selectedRows ? (
-              <div className="overflow-hidden rounded-xl border border-gray-100">
+              <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
                 {/* header */}
                 <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 px-4 py-3.5">
                   <div>
@@ -132,7 +132,7 @@ export function PermissionsView(vm: VM) {
                 />
               </div>
             ) : (
-              <div className="rounded-xl border border-gray-100 p-10">
+              <div className="rounded-xl border border-gray-100 bg-white p-10">
                 <EmptyState description={t("permissions.emptySelectRole")} />
               </div>
             )}
