@@ -1169,3 +1169,18 @@ body {
   @apply my-6 border-t border-gray-100;
 }
 
+/* ------------------------------------------------------------
+   แท็บ Segmented (TypeTabBar / ViewToggle) — หน้าตาเดียวกับ Radio.Group optionType="button" ของฟอร์มสินค้า
+   กรอบนอก + เส้นคั่นระหว่างปุ่ม · มุมโค้งเฉพาะขอบนอก (track ตัดด้วย overflow) · สีพื้น/เลือกอยู่ตั้งที่ antdTheme.ts
+   ------------------------------------------------------------ */
+.ant-segmented {
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.ant-segmented .ant-segmented-item,
+.ant-segmented .ant-segmented-thumb {
+  border-radius: 0;
+}
+.ant-segmented .ant-segmented-item + .ant-segmented-item {
+  border-inline-start: 1px solid var(--border);
+}

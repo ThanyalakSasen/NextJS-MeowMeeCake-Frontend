@@ -70,7 +70,10 @@ export const antdTheme: ThemeConfig = {
     // แท็บกรอง (TypeTabBar / ViewToggle) — ค่า default ของ antd คือพื้นขาวบนรางเทาอ่อน
     // บนจอแทบดูไม่ออกว่าอันไหนถูกเลือกอยู่ — ปรับให้เหมือน Radio.Group buttonStyle="solid"
     // ของฟอร์มสินค้า (น้ำตาลทึบ + ตัวอักษรขาว) ทั้งแอปจะได้ "เลือกอยู่" หน้าตาเดียว
+    // ที่ไม่ได้เลือก = ปุ่มพื้นขาวมีกรอบ ต่อกันเป็นแถบ (ไม่มีรางเทา) — เส้นกรอบ/คั่นอยู่ที่ globals.css (.ant-segmented)
     Segmented: {
+      trackBg: color.surface,
+      trackPadding: 0,
       itemSelectedBg: color.brandPrimary,
       itemSelectedColor: color.surface,
       itemColor: color.textMuted,
