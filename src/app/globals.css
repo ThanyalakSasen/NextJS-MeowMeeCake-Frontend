@@ -1071,7 +1071,7 @@ body {
 }
 
 .data-table th {
-  @apply px-5 py-4 text-left text-sm font-semibold text-gray-600;
+  @apply px-5 py-4 text-center text-sm font-semibold text-gray-600;
 }
 
 .data-table td {

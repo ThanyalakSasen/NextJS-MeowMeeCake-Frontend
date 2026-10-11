@@ -49,19 +49,22 @@ export function DataTable<T>({
   scrollClassName = "",
 }: DataTableProps<T>) {
   if (loading) return <LoadingSpin />;
-  if (rows.length === 0) return <EmptyState description={emptyText} />;
+  // ไม่ได้อยู่ในการ์ด → กล่องพื้นขาวเอง (พื้นหน้าหลังร้านเป็นสีครีม) ทั้งตอนมีข้อมูลและตอนว่าง
+  const box = inCard ? "" : "rounded-xl border border-gray-100 bg-white";
+  if (rows.length === 0) return inCard ? <EmptyState description={emptyText} /> : <div className={box}><EmptyState description={emptyText} /></div>;
 
   const keyOf = (row: T, i: number) =>
     rowKey ? rowKey(row) : ((row as { _id?: string })._id ?? String(i));
 
   return (
     <div className="flex flex-col">
-      <div className={`overflow-x-auto ${inCard ? "" : "rounded-xl border border-gray-100"} ${scrollClassName}`}>
+      <div className={`overflow-x-auto ${box} ${scrollClassName}`}>
         <table className="data-table">
           <thead>
             <tr>
+              {/* หัวตารางอยู่กลางทุกคอลัมน์ (.data-table th) — align ของคอลัมน์มีผลกับเซลล์ข้อมูลเท่านั้น */}
               {columns.map((c) => (
-                <th key={c.key} style={{ textAlign: c.align, width: c.width }}>
+                <th key={c.key} style={{ width: c.width }}>
                   {c.title}
                 </th>
               ))}
