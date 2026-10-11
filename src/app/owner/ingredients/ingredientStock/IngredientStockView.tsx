@@ -11,7 +11,7 @@ import { actionIcon } from "@/components/shared/actions";
 import type { StockRow, useIngredientStockViewModel } from "./useIngredientStockViewModel";
 import { StockActionModal } from "./_components/StockActionModal";
 import { LoadFailed } from "@/components/shared/feedback";
-import { BulkStockModal } from "@/components/shared/stock";
+import { BulkStockModal, StockAlertSection } from "@/components/shared/stock";
 
 type VM = ReturnType<typeof useIngredientStockViewModel>;
 
@@ -56,6 +56,17 @@ export function IngredientStockView(vm: VM) {
     },
   ];
 
+  // ปุ่มต่อแถว — ใช้ทั้งตารางใกล้หมด/หมดสต็อกและตารางหลัก
+  const rowActions = vm.perm.update
+    ? (r: StockRow) => (
+        <div className="flex justify-end gap-2">
+          <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("ingredientStock.ok_receive")}</Button>
+          <Button size="small" icon={actionIcon("use", "small")} onClick={() => vm.openAction(r, "use")}>{t("ingredientStock.ok_use")}</Button>
+          <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("ingredientStock.ok_adjust")}</Button>
+        </div>
+      )
+    : undefined;
+
   return (
     <ListPageLayout
       title={t("ingredientStock.title")}
@@ -89,22 +100,22 @@ export function IngredientStockView(vm: VM) {
             <StatCard label={t("ingredientStock.statValue")} value={formatCurrency(vm.stats.totalValue, locale)} sub={t("ingredientStock.statValueSub")} />
           </StatCardsGrid>
 
+          {vm.alertRows.length > 0 && (
+            <StockAlertSection
+              title={t("ingredientStock.alertTitle", { n: vm.alertRows.length })}
+              description={t("ingredientStock.alertDescription")}
+            >
+              <DataTable columns={columns} rows={vm.alertRows} inCard actions={rowActions} />
+            </StockAlertSection>
+          )}
+
+          {vm.alertRows.length > 0 && <h2 className="m-0 -mb-2 text-base font-semibold text-brown-900">{t("ingredientStock.allItemsTitle")}</h2>}
           <DataTable
             columns={columns}
             rows={vm.rows}
             loading={vm.isLoading}
             emptyText={t("ingredientStock.empty")}
-            actions={
-              vm.perm.update
-                ? (r) => (
-                    <div className="flex justify-end gap-2">
-                      <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("ingredientStock.ok_receive")}</Button>
-                      <Button size="small" icon={actionIcon("use", "small")} onClick={() => vm.openAction(r, "use")}>{t("ingredientStock.ok_use")}</Button>
-                      <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("ingredientStock.ok_adjust")}</Button>
-                    </div>
-                  )
-                : undefined
-            }
+            actions={rowActions}
           />
         </div>
       )}
@@ -112,6 +123,7 @@ export function IngredientStockView(vm: VM) {
       <BulkStockModal
         open={vm.bulkOpen}
         items={vm.bulkItems}
+        initialIds={vm.alertRows.map((r) => r._id)}
         withNote
         withDates
         decimals={2}

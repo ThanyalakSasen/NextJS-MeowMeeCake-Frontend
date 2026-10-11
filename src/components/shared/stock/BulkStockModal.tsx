@@ -54,6 +54,7 @@ export function BulkStockModal({
   items,
   withNote = false,
   withDates = false,
+  initialIds = [],
   decimals = 0,
   onClose,
   onSubmit,
@@ -64,6 +65,8 @@ export function BulkStockModal({
   withNote?: boolean;
   /** วันที่ทำรายการ + วันหมดอายุ (รับเข้า) ต่อรายการ — วัตถุดิบ (backend เก็บ transaction_date / expiry_date) */
   withDates?: boolean;
+  /** รายการที่ใส่ไว้ให้ตอนเปิด (เช่น ใกล้หมด/หมดสต็อก) — ลบออกหรือเพิ่มแถวอื่นได้ตามปกติ */
+  initialIds?: string[];
   /** ทศนิยมของจำนวน (สินค้า = 0 · วัตถุดิบ = 2) */
   decimals?: number;
   onClose: () => void;
@@ -73,7 +76,7 @@ export function BulkStockModal({
   return (
     <Modal open={open} footer={null} closable={false} width={withDates ? 1080 : 760} destroyOnHidden onCancel={onClose}>
       {/* เนื้อหาแยก component — state เริ่มใหม่ทุกครั้งที่เปิด (destroyOnHidden) */}
-      {open && <Body items={items} withNote={withNote} withDates={withDates} decimals={decimals} onClose={onClose} onSubmit={onSubmit} />}
+      {open && <Body items={items} withNote={withNote} withDates={withDates} initialIds={initialIds} decimals={decimals} onClose={onClose} onSubmit={onSubmit} />}
     </Modal>
   );
 }
@@ -82,6 +85,7 @@ function Body({
   items,
   withNote,
   withDates,
+  initialIds,
   decimals,
   onClose,
   onSubmit,
@@ -89,6 +93,7 @@ function Body({
   items: BulkStockItem[];
   withNote: boolean;
   withDates: boolean;
+  initialIds: string[];
   decimals: number;
   onClose: () => void;
   onSubmit: (mode: BulkStockMode, lines: BulkStockLine[]) => Promise<Record<string, string>>;
@@ -97,7 +102,11 @@ function Body({
   const tc = useTranslations("common");
   const locale = useLocale();
   const [mode, setMode] = useState<BulkStockMode>("receive");
-  const [lines, setLines] = useState<Line[]>(() => [newLine(), newLine(), newLine()]);
+  // ใส่รายการที่ส่งมาไว้ก่อน (+ แถวว่าง 1 แถวไว้เพิ่มรายการอื่น) · ไม่มี = แถวว่าง 3 แถว
+  const [lines, setLines] = useState<Line[]>(() => {
+    const known = initialIds.filter((id) => items.some((i) => i.id === id));
+    return known.length ? [...known.map((id) => ({ ...newLine(), id })), newLine()] : [newLine(), newLine(), newLine()];
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 

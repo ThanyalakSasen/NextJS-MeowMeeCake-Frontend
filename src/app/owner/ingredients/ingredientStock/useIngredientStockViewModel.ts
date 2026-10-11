@@ -77,6 +77,15 @@ export function useIngredientStockViewModel() {
     });
   }, [rows, search, status]);
 
+  // ใกล้หมด / หมดสต็อก — แสดงเป็นตารางแยกด้านบน (ไม่ขึ้นกับคำค้น/ตัวกรอง เพื่อไม่ให้หลุดสายตา) · หมดก่อน แล้วเหลือน้อยสุดก่อน
+  const alertRows = useMemo(
+    () =>
+      rows
+        .filter((r) => r.status === "out" || r.status === "low")
+        .sort((a, b) => (a.status === b.status ? 0 : a.status === "out" ? -1 : 1) || a.currentStock - b.currentStock),
+    [rows],
+  );
+
   const stats = useMemo(
     () => ({
       tracked: rows.length,
@@ -147,6 +156,7 @@ export function useIngredientStockViewModel() {
     perm,
     bulkOpen, openBulk: () => setBulkOpen(true), closeBulk: () => setBulkOpen(false), bulkItems, onBulkSubmit,
     rows: filtered,
+    alertRows,
     stats,
     isLoading: ingredientsQ.isLoading,
     isError: ingredientsQ.isError,

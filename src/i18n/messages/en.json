@@ -684,7 +684,10 @@
     "newStockLabel": "New stock ({unit})",
     "useExceeds": "Cannot use more than available ({qty} {unit})",
     "noteLabel": "Note",
-    "notePlaceholder": "e.g. damaged, expired, monthly count (optional)"
+    "notePlaceholder": "e.g. damaged, expired, monthly count (optional)",
+    "alertTitle": "Low / out of stock products ({n})",
+    "alertDescription": "Produce or restock before they sell out",
+    "allItemsTitle": "All products"
   },
   "orders": {
     "title": "Manage Orders",
@@ -1102,7 +1105,10 @@
     "qtyLabel": "Quantity ({unit})",
     "newStockLabel": "New stock level ({unit})",
     "noteLabel": "Note",
-    "notePlaceholder": "e.g. received from supplier, used for a cake"
+    "notePlaceholder": "e.g. received from supplier, used for a cake",
+    "alertTitle": "Low / out of stock ingredients ({n})",
+    "alertDescription": "Restock before the next production run",
+    "allItemsTitle": "All ingredients"
   },
   "ingredientHistory": {
     "title": "Ingredient Movement History",

@@ -11,7 +11,7 @@ import { LOW_STOCK_THRESHOLD } from "./stockStatus";
 import type { StockProductRow, useProductStockViewModel } from "./useProductStockViewModel";
 import { StockProgressRow } from "./_components/StockProgressRow";
 import { StockActionModal } from "./_components/StockActionModal";
-import { BulkStockModal } from "@/components/shared/stock";
+import { BulkStockModal, StockAlertSection } from "@/components/shared/stock";
 import { LoadFailed } from "@/components/shared/feedback";
 
 type VM = ReturnType<typeof useProductStockViewModel>;
@@ -57,6 +57,17 @@ export function ProductStockView(vm: VM) {
 
   // wrapper ของหน้านี้มี label กำกับ (ต่างจากหน้าวัตถุดิบ/สต็อกวัตถุดิบ) จึงไม่ใช้ StatusFilterSelect
   const statusOptions = useStockStatusOptions();
+
+  // ปุ่มต่อแถว — ใช้ทั้งตารางใกล้หมด/หมดสต็อกและตารางหลัก
+  const rowActions = vm.perm.update
+    ? (r: StockProductRow) => (
+        <div className="flex justify-end gap-2">
+          <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("productStock.ok_receive")}</Button>
+          <Button size="small" icon={actionIcon("use", "small")} disabled={r.stock <= 0} onClick={() => vm.openAction(r, "use")}>{t("productStock.ok_use")}</Button>
+          <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("productStock.ok_adjust")}</Button>
+        </div>
+      )
+    : undefined;
 
   return (
     <ListPageLayout
@@ -133,27 +144,34 @@ export function ProductStockView(vm: VM) {
             />
           </StatCardsGrid>
 
+          {vm.alertRows.length > 0 && (
+            <StockAlertSection
+              title={t("productStock.alertTitle", { n: vm.alertRows.length })}
+              description={t("productStock.alertDescription")}
+            >
+              <DataTable columns={columns} rows={vm.alertRows} inCard actions={rowActions} />
+            </StockAlertSection>
+          )}
+
+          {vm.alertRows.length > 0 && <h2 className="m-0 -mb-2 text-base font-semibold text-brown-900">{t("productStock.allItemsTitle")}</h2>}
           <DataTable
             columns={columns}
             rows={vm.rows}
             loading={vm.isLoading}
             emptyText={t("productStock.empty")}
-            actions={
-              vm.perm.update
-                ? (r) => (
-                    <div className="flex justify-end gap-2">
-                      <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("productStock.ok_receive")}</Button>
-                      <Button size="small" icon={actionIcon("use", "small")} disabled={r.stock <= 0} onClick={() => vm.openAction(r, "use")}>{t("productStock.ok_use")}</Button>
-                      <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("productStock.ok_adjust")}</Button>
-                    </div>
-                  )
-                : undefined
-            }
+            actions={rowActions}
           />
         </div>
       )}
 
-      <BulkStockModal open={vm.bulkOpen} items={vm.bulkItems} withNote onClose={vm.closeBulk} onSubmit={vm.onBulkSubmit} />
+      <BulkStockModal
+        open={vm.bulkOpen}
+        items={vm.bulkItems}
+        initialIds={vm.alertRows.map((r) => r._id)}
+        withNote
+        onClose={vm.closeBulk}
+        onSubmit={vm.onBulkSubmit}
+      />
 
       <StockActionModal
         target={vm.target}
