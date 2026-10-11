@@ -1627,7 +1627,8 @@
     "kpiAvgRevenuePerDay": "Avg. Revenue/Day",
     "kpiAvgOrdersPerDay": "Avg. Orders/Day",
     "kpiAvgOrderValue": "Avg. Order Value",
-    "quarterLabel": "Q{n} {year}"
+    "quarterLabel": "Q{n} {year}",
+    "receiptLoadFailed": "Unavailable"
   },
   "salesReport": {
     "title": "Product Sales Comparison",
