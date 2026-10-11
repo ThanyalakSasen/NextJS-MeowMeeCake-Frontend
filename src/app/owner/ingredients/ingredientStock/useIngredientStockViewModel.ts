@@ -17,6 +17,7 @@ import { getIngredientStatus, stockPercent } from "../ingredientStatus";
 import { unitLabel } from "@/utils/unitContext";
 import { isApiError } from "@/types/api";
 import { LIST_ALL } from "@/lib/http";
+import type { BulkStockItem, BulkStockLine, BulkStockMode } from "@/components/shared/stock";
 
 export interface StockRow {
   _id: string;
@@ -76,6 +77,15 @@ export function useIngredientStockViewModel() {
     });
   }, [rows, search, status]);
 
+  // ใกล้หมด / หมดสต็อก — แสดงเป็นตารางแยกด้านบน (ไม่ขึ้นกับคำค้น/ตัวกรอง เพื่อไม่ให้หลุดสายตา) · หมดก่อน แล้วเหลือน้อยสุดก่อน
+  const alertRows = useMemo(
+    () =>
+      rows
+        .filter((r) => r.status === "out" || r.status === "low")
+        .sort((a, b) => (a.status === b.status ? 0 : a.status === "out" ? -1 : 1) || a.currentStock - b.currentStock),
+    [rows],
+  );
+
   const stats = useMemo(
     () => ({
       tracked: rows.length,
@@ -109,9 +119,44 @@ export function useIngredientStockViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("ingredientStock.actionFailed")),
   });
 
+  // ── ทำหลายรายการพร้อมกัน — ส่งทีละรายการ (backend ไม่มี bulk) · คืน error ของรายการที่ไม่สำเร็จให้ modal ──
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const bulkItems = useMemo<BulkStockItem[]>(
+    () => rows.map((r) => ({ id: r._id, name: r.name, unit: r.unitAbbr, stock: r.currentStock })),
+    [rows],
+  );
+  const onBulkSubmit = async (m: BulkStockMode, lines: BulkStockLine[]) => {
+    const failed: Record<string, string> = {};
+    for (const l of lines) {
+      try {
+        await ingredientTransactionsService.create({
+          ingredient_id: l.id,
+          type: m,
+          qty: l.value,
+          note: l.note,
+          transaction_date: l.date,
+          expiry_date: l.expiry ?? null,
+          performed_by: user?.id ?? "",
+        });
+      } catch (e) {
+        failed[l.id] = isApiError(e) ? e.message : t("ingredientStock.actionFailed");
+      }
+    }
+    const done = lines.length - Object.keys(failed).length;
+    if (done > 0) {
+      alert.success(t("bulkStock.done", { n: done }));
+      qc.invalidateQueries({ queryKey: ["ingredients"] });
+      qc.invalidateQueries({ queryKey: ["ingredient-transactions"] });
+    }
+    if (done < lines.length) alert.error(t("bulkStock.someFailed", { n: lines.length - done }));
+    return failed;
+  };
+
   return {
     perm,
+    bulkOpen, openBulk: () => setBulkOpen(true), closeBulk: () => setBulkOpen(false), bulkItems, onBulkSubmit,
     rows: filtered,
+    alertRows,
     stats,
     isLoading: ingredientsQ.isLoading,
     isError: ingredientsQ.isError,

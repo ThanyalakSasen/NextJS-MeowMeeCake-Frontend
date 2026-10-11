@@ -84,3 +84,30 @@ export interface RoundListParams extends ListParams {
   status?: RoundStatus;
   upcomingOnly?: boolean;
 }
+
+/** ผลของการปิดรอบ (PATCH .../status → closed) — backend ยกเลิกคนไม่จ่าย + สร้างใบสั่งผลิตอัตโนมัติ */
+export interface CloseRoundResult {
+  unpaid: {
+    /** เลขพรีออเดอร์ที่ถูกยกเลิกเพราะยังไม่ชำระ */
+    cancelled: string[];
+    /** มีสลิปรอตรวจ — ไม่ยกเลิก · ยืนยันแล้วระบบบวกเข้าใบผลิตให้ */
+    waitingSlip: string[];
+    failed: { preorder_no: string; error: string }[];
+  };
+  production: {
+    created: boolean;
+    production_id?: string;
+    production_no?: string;
+    /** YYYY-MM-DD (เวลาไทย) */
+    production_date?: string;
+    /** เหตุผลที่ไม่ได้สร้าง เช่น ยังไม่มีใครจ่าย / สินค้าไม่มีสูตร */
+    reason?: string;
+  };
+}
+
+/** ผลของการยกเลิกรอบ — backend ยกเลิกพรีออเดอร์ที่ค้างทั้งหมด (คืนโควตา · คืนเงินคนที่จ่ายแล้ว) */
+export interface CancelRoundCascade {
+  /** เลขพรีออเดอร์ที่ยกเลิกแล้ว */
+  cancelled: string[];
+  failed: { preorder_no: string; error: string }[];
+}

@@ -14,6 +14,7 @@ import type {
 } from "@/types/productionOrder";
 
 const BASE = "/admin/production-orders";
+const ITEMS_BASE = "/admin/production-items";
 
 export const productionOrdersService = {
   list: (params: ProductionOrderListParams = {}) =>
@@ -34,6 +35,10 @@ export const productionOrdersService = {
 
   remove: (id: string) =>
     http.delete<EmptyResponse>(`${BASE}/${id}`),
+
+  /** PATCH /admin/production-items/[id] — ใช้บันทึกจำนวนที่ผลิตได้จริงก่อนปิดงาน (actual_qty) · 0 = ยกเลิกรายการ */
+  updateItem: (itemId: string, body: { actual_qty?: number; item_status?: "cancelled" }) =>
+    http.patch<ItemResponse<unknown>>(`${ITEMS_BASE}/${itemId}`, body),
 
   /** planned → in_progress */
   start: (id: string) =>

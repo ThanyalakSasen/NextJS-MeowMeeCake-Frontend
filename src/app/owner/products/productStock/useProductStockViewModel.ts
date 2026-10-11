@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────
 // ViewModel ของ Product Stock — สต็อกสินค้าปกติ (is_preorder: false)
 // รายการจาก GET /admin/products/stock-list (stock.view — Final-Backlog P12) · ชื่อหมวด/หน่วยมากับรายการ (populate)
-// ปรับยอดผ่าน PUT /admin/products/:id/stock (stock.update)
+// รับเข้า/เบิกใช้ = PATCH /admin/products/:id/stock { delta } · ปรับยอด = PUT { quantity } (stock.update ทั้งคู่)
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ import { refId } from "@/lib/refId";
 import { unitLabel } from "@/utils/unitContext";
 import { isApiError } from "@/types/api";
 import { LIST_ALL } from "@/lib/http";
+import type { BulkStockItem, BulkStockLine, BulkStockMode } from "@/components/shared/stock";
 
 export interface StockProductRow {
   _id: string;
@@ -31,6 +32,9 @@ export interface StockProductRow {
 
 export type StatusFilter = "all" | StockStatus;
 
+/** ปุ่มต่อแถว แบบหน้าสต็อกวัตถุดิบ — รับเข้า (+) · เบิกใช้ (−) · ปรับยอด (ตั้งยอดใหม่) */
+export type StockActionMode = "receive" | "use" | "adjust";
+
 // backend ส่งเฉพาะสินค้าปกติ (ไม่ใช่พรีออเดอร์ · ไม่ถูกลบ) อยู่แล้ว
 const STOCK_PARAMS = { limit: LIST_ALL } as const;
 
@@ -42,7 +46,8 @@ export function useProductStockViewModel() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
-  const [adjustTarget, setAdjustTarget] = useState<StockProductRow | null>(null);
+  const [target, setTarget] = useState<StockProductRow | null>(null);
+  const [mode, setMode] = useState<StockActionMode>("adjust");
 
   const productsQ = useQuery({
     queryKey: ["products", "stock-list", STOCK_PARAMS],
@@ -89,6 +94,15 @@ export function useProductStockViewModel() {
     });
   }, [rows, search, categoryId, status]);
 
+  // ใกล้หมด / หมดสต็อก — แสดงเป็นตารางแยกด้านบน (ไม่ขึ้นกับคำค้น/ตัวกรอง เพื่อไม่ให้หลุดสายตา) · หมดก่อน แล้วเหลือน้อยสุดก่อน
+  const alertRows = useMemo(
+    () =>
+      rows
+        .filter((r) => r.status === "out" || r.status === "low")
+        .sort((a, b) => (a.status === b.status ? 0 : a.status === "out" ? -1 : 1) || a.stock - b.stock),
+    [rows],
+  );
+
   const stats = useMemo(
     () => ({
       tracked: rows.length,
@@ -99,21 +113,53 @@ export function useProductStockViewModel() {
     [rows],
   );
 
-  // ตั้งสต็อกเป็นค่าที่นับได้ผ่าน endpoint สต็อกโดยเฉพาะ (BACKLOG2 §15.2 ข้อ 5) — เดิมใช้ PATCH สินค้าทั่วไป
-  // ซึ่งไม่แจ้งเตือนสินค้าใกล้หมด · ข้ามกติกาสินค้ามีตัวเลือก · เช็คสิทธิ์ products แทน stock · และ backend จะเลิกรับ
-  const adjust = useMutation({
-    mutationFn: ({ id, qty }: { id: string; qty: number }) => productsService.setStock(id, qty),
-    onSuccess: () => {
-      alert.success(t("productStock.adjusted"));
-      qc.invalidateQueries({ queryKey: ["products"] });
-      setAdjustTarget(null);
+  // ผ่าน endpoint สต็อกโดยเฉพาะ (BACKLOG2 §15.2 ข้อ 5) — แจ้งเตือนสินค้าใกล้หมด · เช็คสิทธิ์ stock · บันทึก log ก่อน → หลัง
+  // รับเข้า/เบิกใช้ใช้ส่วนต่างแบบ atomic (ไม่ทับยอดที่ขายไประหว่างเปิด modal) · เบิกเกินที่มี backend ปฏิเสธ
+  const submit = useMutation({
+    mutationFn: ({ row, m, value, note }: { row: StockProductRow; m: StockActionMode; value: number; note?: string }) => {
+      if (m === "receive") return productsService.adjustStock(row._id, value, note);
+      if (m === "use") return productsService.adjustStock(row._id, -value, note);
+      return productsService.setStock(row._id, value, note);
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("productStock.adjustFailed")),
+    onSuccess: (_r, vars) => {
+      alert.success(t(`productStock.done_${vars.m}`, { name: vars.row.name }));
+      qc.invalidateQueries({ queryKey: ["products"] });
+      setTarget(null);
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("productStock.actionFailed")),
   });
+
+  // ── ทำหลายรายการพร้อมกัน — ส่งทีละรายการ (backend ไม่มี bulk) · คืน error ของรายการที่ไม่สำเร็จให้ modal ──
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const bulkItems = useMemo<BulkStockItem[]>(
+    () => rows.map((r) => ({ id: r._id, name: r.name, unit: r.unit, stock: r.stock })),
+    [rows],
+  );
+  const onBulkSubmit = async (m: BulkStockMode, lines: BulkStockLine[]) => {
+    const failed: Record<string, string> = {};
+    for (const l of lines) {
+      try {
+        if (m === "receive") await productsService.adjustStock(l.id, l.value, l.note);
+        else if (m === "use") await productsService.adjustStock(l.id, -l.value, l.note);
+        else await productsService.setStock(l.id, l.value, l.note);
+      } catch (e) {
+        failed[l.id] = isApiError(e) ? e.message : t("productStock.actionFailed");
+      }
+    }
+    const done = lines.length - Object.keys(failed).length;
+    if (done > 0) {
+      alert.success(t("bulkStock.done", { n: done }));
+      qc.invalidateQueries({ queryKey: ["products"] });
+    }
+    if (done < lines.length) alert.error(t("bulkStock.someFailed", { n: lines.length - done }));
+    return failed;
+  };
 
   return {
     perm,
+    bulkOpen, openBulk: () => setBulkOpen(true), closeBulk: () => setBulkOpen(false), bulkItems, onBulkSubmit,
     rows: filtered,
+    alertRows,
     stats,
     categories,
     isLoading: productsQ.isLoading,
@@ -124,10 +170,13 @@ export function useProductStockViewModel() {
     categoryId, setCategoryId,
     status, setStatus,
 
-    adjustTarget,
-    openAdjust: (r: StockProductRow) => setAdjustTarget(r),
-    closeAdjust: () => setAdjustTarget(null),
-    onSaveAdjust: (id: string, qty: number) => adjust.mutate({ id, qty }),
-    saving: adjust.isPending,
+    target,
+    mode,
+    openAction: (r: StockProductRow, m: StockActionMode) => { setTarget(r); setMode(m); },
+    closeAction: () => setTarget(null),
+    onSubmit: (value: number, note: string) => {
+      if (target) submit.mutate({ row: target, m: mode, value, note: note.trim() || undefined });
+    },
+    saving: submit.isPending,
   };
 }

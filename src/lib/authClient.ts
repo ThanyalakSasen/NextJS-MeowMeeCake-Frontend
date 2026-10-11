@@ -106,6 +106,9 @@ export async function register(input: RegisterInput) {
 /** login แล้วได้ 403 + reason นี้ = ลูกค้ายังไม่ยืนยันอีเมล (เจ้าของร้าน/พนักงานไม่โดน) */
 export const EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
 
+/** login แล้วได้ 423 + reason นี้ = ใส่รหัสผิดครบจำนวนครั้ง บัญชีถูกล็อกชั่วคราว (มี retryAfterSeconds) */
+export const ACCOUNT_LOCKED = "ACCOUNT_LOCKED";
+
 /**
  * POST /auth/resend-verification { email } — ขอลิงก์ยืนยันอีเมลใหม่
  * backend ตอบข้อความเดียวกันทุกกรณี (กันเดาอีเมล) · จำกัด 3 ครั้ง/นาที ต่อ IP (เกิน = 429)

@@ -10,14 +10,22 @@ import {
   type RolePerms, type PermField,
 } from "../permissionGroups";
 
+/**
+ * canSet: ติ๊กช่องนี้เป็น "เปิด" ได้ไหม (เพดานสิทธิ์ — P4) · ช่องที่เปิดอยู่แล้วกดปิดได้เสมอ
+ * sectionTurnsOn: ปุ่มทั้งหมวดจะ "เปิด" (true) หรือ "ปิด" (false)
+ */
 export function PermissionMatrix({
   rows,
   canEdit,
+  canSet,
+  sectionTurnsOn,
   onField,
   onToggleSection,
 }: {
   rows: RolePerms;
   canEdit: boolean;
+  canSet: (menuKey: MenuKey, field: PermField) => boolean;
+  sectionTurnsOn: (menuKey: MenuKey) => boolean;
   onField: (menuKey: MenuKey, field: PermField, value: boolean) => void;
   onToggleSection: (menuKey: MenuKey) => void;
 }) {
@@ -41,6 +49,7 @@ export function PermissionMatrix({
             items={group.keys.map((menuKey) => {
               const row = rows[menuKey];
               const on = countRow(row);
+              const turnOn = sectionTurnsOn(menuKey);
               return {
                 key: menuKey,
                 label: (
@@ -51,14 +60,14 @@ export function PermissionMatrix({
                       onClick={(e) => e.stopPropagation()}
                     >
                       <span className="text-xs text-gray-500">{on}/5</span>
-                      {canEdit && (
+                      {canEdit && (turnOn || on > 0) && (
                         <Button
                           size="small"
                           type="text"
-                          icon={actionIcon(on < 5 ? "confirm" : "off", "small")}
+                          icon={actionIcon(turnOn ? "confirm" : "off", "small")}
                           onClick={() => onToggleSection(menuKey)}
                         >
-                          {on < 5 ? t("permissions.toggleAllOn") : t("permissions.toggleAllOff")}
+                          {turnOn ? t("permissions.toggleAllOn") : t("permissions.toggleAllOff")}
                         </Button>
                       )}
                     </span>
@@ -70,7 +79,7 @@ export function PermissionMatrix({
                       <Checkbox
                         key={field}
                         checked={row[field]}
-                        disabled={!canEdit}
+                        disabled={!canEdit || (!row[field] && !canSet(menuKey, field))}
                         onChange={(e) => onField(menuKey, field, e.target.checked)}
                       >
                         <span className="text-sm text-gray-600">{t(`fields.${field}`)}</span>

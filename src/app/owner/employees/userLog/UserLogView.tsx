@@ -11,6 +11,7 @@ import { formatDate } from "@/i18n/format";
 import { USER_LOG_ACTION_CONFIG, type UserLogAction } from "@/constants/enumConfig";
 import type { LogRow, useUserLogViewModel } from "./useUserLogViewModel";
 import { LogDetailContent } from "./_components/LogDetailContent";
+import { ChangeSummary } from "./_components/ChangeSummary";
 
 type VM = ReturnType<typeof useUserLogViewModel>;
 
@@ -57,12 +58,7 @@ export function UserLogView(vm: VM) {
       render: (r) => (
         <div>
           <p className="text-gray-700">{r.action}</p>
-          {r.entity && (
-            <p className="mt-0.5 text-xs text-gray-500">
-              {t.has(`entities.${r.entity}`) ? t(`entities.${r.entity}`) : t("entities.fallback")}
-              {r.entity_id && <span className="ml-1 font-mono">{r.entity_id}</span>}
-            </p>
-          )}
+          <ChangeSummary log={r} />
         </div>
       ),
     },

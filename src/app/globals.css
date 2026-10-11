@@ -162,7 +162,8 @@
   --btn-cancel-color:  var(--color-brown-800);
 
   /* ── Logout ── */
-  --logout-color:    #EF4444;
+  --logout-color:    var(--color-rose-600); /* เท่ากับปุ่มออกจากระบบในเมนูผู้ใช้ (text-rose-600) */
+  --logout-hover-color: var(--color-rose-700);
   --logout-hover-bg: #FEF2F2;
 
   /* ── เงา (โทนอุ่น อิงสีหมึกน้ำตาล ไม่ใช่ดำล้วน) ── */
@@ -530,12 +531,14 @@ body {
   cursor: pointer;
   color: var(--logout-color);
   font-size: var(--menu-item-font-size);
+  font-weight: 600;
   font-family: inherit;
   text-align: left;
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .logout-btn:hover {
+  color: var(--logout-hover-color);
   background-color: var(--logout-hover-bg);
 }
 
@@ -1068,7 +1071,7 @@ body {
 }
 
 .data-table th {
-  @apply px-5 py-4 text-left text-sm font-semibold text-gray-600;
+  @apply px-5 py-4 text-center text-sm font-semibold text-gray-600;
 }
 
 .data-table td {
@@ -1166,3 +1169,18 @@ body {
   @apply my-6 border-t border-gray-100;
 }
 
+/* ------------------------------------------------------------
+   แท็บ Segmented (TypeTabBar / ViewToggle) — หน้าตาเดียวกับ Radio.Group optionType="button" ของฟอร์มสินค้า
+   กรอบนอก + เส้นคั่นระหว่างปุ่ม · มุมโค้งเฉพาะขอบนอก (track ตัดด้วย overflow) · สีพื้น/เลือกอยู่ตั้งที่ antdTheme.ts
+   ------------------------------------------------------------ */
+.ant-segmented {
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.ant-segmented .ant-segmented-item,
+.ant-segmented .ant-segmented-thumb {
+  border-radius: 0;
+}
+.ant-segmented .ant-segmented-item + .ant-segmented-item {
+  border-inline-start: 1px solid var(--border);
+}

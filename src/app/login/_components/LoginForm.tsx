@@ -6,15 +6,16 @@
 // ปุ่ม Google = Google Identity Services → POST /auth/google · ปุ่ม LINE = พาไป GET /auth/line ของ backend → กลับมา /login/line
 // ไม่ยกมา (docs/BACKLOG3-merge.md B3): วิดีโอห้องอบขนม · ม่านตอน logout
 // ตรรกะยังเป็นของ repo นี้: login() ของ backend หลัก · ?next= ตาม role · 403 EMAIL_NOT_VERIFIED → ขอลิงก์ยืนยันใหม่
+// 423 ACCOUNT_LOCKED / 429 → แจ้งว่าล็อกกี่นาที + นับถอยหลังใต้ฟอร์ม (ปิดปุ่มเข้าสู่ระบบจนครบเวลา · เฉพาะอีเมลที่โดนล็อก)
 // ─────────────────────────────────────────────────────────────
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff, LockOpen } from "lucide-react";
+import { Eye, EyeOff, Lock, LockOpen } from "lucide-react";
 import { FaLine } from "react-icons/fa";
-import { EMAIL_NOT_VERIFIED, lineLoginUrl, login, loginWithGoogle, resendVerification } from "@/lib/authClient";
+import { ACCOUNT_LOCKED, EMAIL_NOT_VERIFIED, lineLoginUrl, login, loginWithGoogle, resendVerification } from "@/lib/authClient";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { CurrentUser } from "@/types/auth";
@@ -30,6 +31,26 @@ const FORGOT_PASSWORD_PATH = "/customer/forgot-password";
 
 const iconSlot = "absolute top-1/2 right-3.5 -translate-y-1/2 flex items-center justify-center";
 
+/** เวลาที่ครบกำหนดอีก sec วินาทีจากตอนนี้ (เรียกใน event handler เท่านั้น) */
+const deadlineIn = (sec: number) => Date.now() + sec * 1000;
+
+/** วินาที → "14:05" */
+const mmss = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+
+/** ล็อกชั่วคราว: ถึงเวลาไหน · อีเมลไหน · ล็อกจากบัญชี (423) หรือขอถี่เกิน (429) */
+type Lockout = { until: number; email: string; kind: "locked" | "tooMany" };
+
+/** วินาทีที่เหลือของ lockout — อัปเดตทุกวินาที · หมดเวลา = 0 */
+function useSecondsLeft(until: number | null): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!until) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [until]);
+  return until ? Math.max(0, Math.ceil((until - now) / 1000)) : 0;
+}
+
 function Form() {
   const t = useTranslations();
   const router = useRouter();
@@ -42,6 +63,10 @@ function Form() {
   const [passwordCorrect, setPasswordCorrect] = useState(false);
   const [pressed, setPressed] = useState(false);
   const [lineLoading, setLineLoading] = useState(false);
+  const [lockout, setLockout] = useState<Lockout | null>(null);
+  const secondsLeft = useSecondsLeft(lockout?.until ?? null);
+  // ล็อกเฉพาะอีเมลที่โดน — เปลี่ยนไปใช้อีเมลอื่นกดได้ตามปกติ
+  const locked = !!lockout && secondsLeft > 0 && lockout.email === email.trim().toLowerCase();
 
   const emailValid = EMAIL_RE.test(email.trim());
   const goNext = (user: CurrentUser) => {
@@ -81,6 +106,17 @@ function Form() {
       setBusy(false);
       if (isApiError(e2) && e2.status === 403 && e2.reason === EMAIL_NOT_VERIFIED) {
         await offerResendVerification(email.trim());
+        return;
+      }
+      const isLocked = isApiError(e2) && e2.reason === ACCOUNT_LOCKED;
+      const isTooMany = isApiError(e2) && e2.code === "TOO_MANY_REQUESTS";
+      if ((isLocked || isTooMany) && e2.retryAfterSeconds) {
+        setLockout({
+          until: deadlineIn(e2.retryAfterSeconds),
+          email: email.trim().toLowerCase(),
+          kind: isLocked ? "locked" : "tooMany",
+        });
+        alert.error(isLocked ? t("auth.accountLocked", { minutes: Math.ceil(e2.retryAfterSeconds / 60) }) : e2.message);
         return;
       }
       // แจ้งด้วย toast เหมือนหน้าอื่นทั้งหมด (ดู docs/BACKLOG.md §9)
@@ -168,13 +204,28 @@ function Form() {
           </Link>
         </div>
 
+        {locked && (
+          <div role="status" className="mt-2 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-700">
+            <Lock size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="m-0 font-semibold">
+                {lockout!.kind === "locked" ? t("auth.lockedCountdown") : t("auth.tooManyCountdown")}{" "}
+                <span className="font-mono text-base tabular-nums">{mmss(secondsLeft)}</span>
+              </p>
+              {lockout!.kind === "locked" && <p className="m-0 mt-0.5 text-xs text-rose-600/90">{t("auth.lockedHint")}</p>}
+            </div>
+          </div>
+        )}
+
         <button
           type="submit"
-          disabled={busy}
+          disabled={busy || locked}
           aria-busy={busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
           className={`mt-5 cursor-pointer rounded-xl border-none bg-[#f2ae00] py-3.5 text-base font-bold text-white shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait ${
+            locked ? "!cursor-not-allowed !bg-[#e1d6cd] !shadow-none" : ""
+          } ${
             busy
               ? "!bg-white !text-[#a19285] !shadow-none border-[1.5px] border-[#e1d6cd]"
               : "hover:enabled:-translate-y-px hover:enabled:bg-[#d99c00] hover:enabled:shadow-[0_6px_16px_rgba(242,174,0,0.35)]"
@@ -182,6 +233,8 @@ function Form() {
         >
           {busy ? (
             <span className="mx-auto block h-5 w-5 animate-spin rounded-full border-2 border-[#e1d6cd] border-t-[#f2ae00]" />
+          ) : locked ? (
+            <span className="tabular-nums">{mmss(secondsLeft)}</span>
           ) : (
             t("auth.submit")
           )}

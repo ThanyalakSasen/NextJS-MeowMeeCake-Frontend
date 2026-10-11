@@ -37,6 +37,7 @@ const ROUTE_NAV_KEY: Record<string, NavKey> = {
   "/owner/store-info": "storeInfo",
   "/owner/shipping": "webShipping",
   "/owner/notificationsHistory": "notificationsHistory",
+  "/owner/account": "myAccount",
 };
 
 /** กลุ่มเมนูที่ไม่มีหน้า index ของตัวเอง (เป็นแค่ label ใน sidebar, ไม่มี path จริง) —

@@ -63,6 +63,7 @@ export default function Navbar() {
   const setSidebarOpen = useSidebarMenuStore((s) => s.setMobileOpen);
 
   const isHomePage = pathname === "/customer";
+  const isStaff = !!user?.roleType && user.roleType !== "customer";
   // หน้าที่อยู่ในเมนู "บัญชีของฉัน" (SideBarMenu) — รวมหน้าเปลี่ยนรหัสผ่านด้วย
   const isAccountPage =
     (pathname?.startsWith("/customer/account") || pathname?.startsWith("/customer/changepassword")) ?? false;
@@ -210,40 +211,41 @@ export default function Navbar() {
                     </button>
                     {showDropdown && (
                       <div className="absolute right-0 top-full mt-2.5 w-60 bg-white rounded-2xl shadow-xl py-2 z-50 border border-stone-200/80 overflow-hidden">
-                        {/* เจ้าของร้าน/พนักงานที่เปิดหน้าร้านอยู่ — ทางกลับหลังร้าน */}
-                        {user.roleType && user.roleType !== "customer" && (
+                        {/* เจ้าของร้าน/พนักงานที่เปิดหน้าร้านอยู่ — มีแค่ทางกลับหลังร้าน + ออกจากระบบ
+                            (บัญชีของฉันอยู่ที่เมนูผู้ใช้หลังร้าน · คำสั่งซื้อ/สมาชิก/รายการโปรดเป็นของลูกค้า) */}
+                        {isStaff ? (
+                          <Link
+                            href={HOME_PATH}
+                            onClick={() => setShowDropdown(false)}
+                            className="flex items-center px-4 py-2.5 text-base font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 transition-all duration-150"
+                          >
+                            {t("backOffice")}
+                          </Link>
+                        ) : (
                           <>
                             <Link
-                              href={HOME_PATH}
+                              href="/customer/account"
                               onClick={() => setShowDropdown(false)}
-                              className="flex items-center px-4 py-2.5 text-base font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 transition-all duration-150"
+                              className={linkClass(
+                                pathname === "/customer/account" ||
+                                  (pathname.startsWith("/customer/account/") &&
+                                    !USER_MENU_LINKS.some((l) => pathname.startsWith(l.href))),
+                              )}
                             >
-                              {t("backOffice")}
+                              {t("myAccount")}
                             </Link>
-                            <div className="my-1 border-t border-stone-100" />
+                            {USER_MENU_LINKS.map((l) => (
+                              <Link
+                                key={l.href}
+                                href={l.href}
+                                onClick={() => setShowDropdown(false)}
+                                className={linkClass(pathname.startsWith(l.href))}
+                              >
+                                {t(l.labelKey)}
+                              </Link>
+                            ))}
                           </>
                         )}
-                        <Link
-                          href="/customer/account"
-                          onClick={() => setShowDropdown(false)}
-                          className={linkClass(
-                            pathname === "/customer/account" ||
-                              (pathname.startsWith("/customer/account/") &&
-                                !USER_MENU_LINKS.some((l) => pathname.startsWith(l.href))),
-                          )}
-                        >
-                          {t("myAccount")}
-                        </Link>
-                        {USER_MENU_LINKS.map((l) => (
-                          <Link
-                            key={l.href}
-                            href={l.href}
-                            onClick={() => setShowDropdown(false)}
-                            className={linkClass(pathname.startsWith(l.href))}
-                          >
-                            {t(l.labelKey)}
-                          </Link>
-                        ))}
                         <div className="my-1 border-t border-stone-100" />
                         <button
                           type="button"

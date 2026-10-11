@@ -53,6 +53,11 @@ export function IngredientHistoryView(vm: VM) {
         );
       },
     },
+    {
+      key: "expiry",
+      title: t("ingredientHistory.colExpiry"),
+      render: (r) => (r.expiryDate ? formatDate(r.expiryDate, locale) : "—"),
+    },
     { key: "note", title: t("ingredientHistory.colNote"), render: (r) => r.note || "—" },
     { key: "by", title: t("ingredientHistory.colBy"), render: (r) => r.performedBy },
   ];

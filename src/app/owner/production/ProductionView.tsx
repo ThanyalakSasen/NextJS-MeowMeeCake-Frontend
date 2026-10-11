@@ -11,6 +11,7 @@ import { HistoryTab } from "./_components/HistoryTab";
 import { ProductionOrderFormModal } from "./_components/ProductionOrderFormModal";
 import { CreateFromRoundModal } from "./_components/CreateFromRoundModal";
 import { ProductionOrderDetail } from "./_components/ProductionOrderDetail";
+import { CompleteProductionModal } from "./_components/CompleteProductionModal";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
@@ -64,6 +65,16 @@ export function ProductionView(vm: VM) {
           />
         )}
       </DetailDrawer>
+
+      {vm.completeTarget && (
+        <CompleteProductionModal
+          key={vm.completeTarget._id}
+          order={vm.completeTarget}
+          saving={vm.completing}
+          onClose={vm.closeComplete}
+          onSubmit={vm.onCompleteSubmit}
+        />
+      )}
     </>
   );
 }

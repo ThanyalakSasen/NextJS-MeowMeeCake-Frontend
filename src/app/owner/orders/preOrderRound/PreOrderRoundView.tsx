@@ -10,6 +10,7 @@ import { DashboardTab } from "./_components/DashboardTab";
 import { RoundDashboardDrawer } from "./_components/RoundDashboardDrawer";
 import { RoundFormModal } from "./_components/RoundFormModal";
 import { EditRoundModal } from "./_components/EditRoundModal";
+import { ReopenRoundModal } from "./_components/ReopenRoundModal";
 import { RoundItemFormModal } from "./_components/RoundItemFormModal";
 import { RoundDetailContent } from "./_components/RoundDetailContent";
 import { PreorderDetailContent } from "./_components/PreorderDetailContent";
@@ -61,6 +62,13 @@ export function PreOrderRoundView(vm: VM) {
             saving={vm.savingRound}
             onClose={vm.closeEditRound}
             onSubmit={vm.onEditRoundSubmit}
+          />
+          <ReopenRoundModal
+            open={vm.reopenOpen}
+            round={vm.selectedRound}
+            saving={vm.changingRoundStatus}
+            onClose={vm.closeReopen}
+            onSubmit={vm.onReopenSubmit}
           />
           <RoundItemFormModal
             open={vm.itemFormOpen}

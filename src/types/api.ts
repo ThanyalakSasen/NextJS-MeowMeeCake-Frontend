@@ -105,6 +105,8 @@ export interface ApiError {
    * (ลูกค้ายังไม่ยืนยันอีเมล — backend userService.verifyCredentials)
    */
   reason?: string;
+  /** error.details.retry_after_seconds — ต้องรออีกกี่วินาที (423 บัญชีถูกล็อก · 429 ขอถี่เกิน) */
+  retryAfterSeconds?: number;
   /** error ดิบ เผื่อ debug */
   cause?: unknown;
 }

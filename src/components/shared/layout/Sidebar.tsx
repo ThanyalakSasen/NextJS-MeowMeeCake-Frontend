@@ -8,7 +8,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ShoppingBagIcon, PowerIcon } from "@heroicons/react/24/solid";
+import { ShoppingBagIcon } from "@heroicons/react/24/solid";
+import DoorLogoutIcon from "@/components/customer/DoorLogoutIcon";
 import { MENU_SECTIONS, findActiveHref, findActiveGroupKey } from "@/constants/menu";
 import { useMenuAccess } from "@/context/PermissionsContext";
 import { Logo } from "@/components/base";
@@ -105,8 +106,8 @@ export function Sidebar({ onLogout }: { onLogout?: () => void }) {
       </nav>
 
       <div className="sidebar-footer">
-        <button type="button" className="logout-btn" onClick={onLogout}>
-          <PowerIcon className="menu-icon" aria-hidden="true" />
+        <button type="button" className="logout-btn group" onClick={onLogout}>
+          <DoorLogoutIcon className="menu-icon" />
           {t("logout")}
         </button>
       </div>

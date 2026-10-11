@@ -18,6 +18,12 @@ export const userLogsService = {
     return { ...res, data: res.data.map(toUserLog) };
   },
 
+  /** ประวัติการทำงานของผู้ที่ล็อกอิน (หน้า "บัญชีของฉัน" หลังร้าน) — /shop/me/activity ไม่ต้องมีสิทธิ์ employees · backend บังคับ user_id = ตัวเอง */
+  listMine: async (params: Omit<UserLogListParams, "user_id"> = {}) => {
+    const res = await http.getList<RawUserLog>("/shop/me/activity", { params });
+    return { ...res, data: res.data.map(toUserLog) };
+  },
+
   get: async (id: string) => {
     const res = await http.get<ItemResponse<RawUserLog>>(`${BASE}/${id}`);
     return { data: toUserLog(res.data) };

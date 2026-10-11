@@ -126,7 +126,8 @@ export function EmployeesView(vm: VM) {
             emptyText={t("employees.empty")}
             actions={
               vm.perm.update || vm.perm.delete
-                ? (r) => (
+                ? (r) =>
+                    vm.canManage(r) && (
                     <div className="flex justify-end gap-2">
                       {vm.perm.update && r.locked && (
                         <Button

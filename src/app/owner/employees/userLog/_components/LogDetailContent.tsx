@@ -1,12 +1,13 @@
 "use client";
 // เนื้อหาใน DetailDrawer ของหน้า User Log — แสดงรายละเอียด log 1 รายการ
-// backend ไม่มี before/after แบบ diff รายฟิลด์จริง (ดูคอมเมนต์ RawUserLog ใน types/userLog.ts)
-// มีแค่ `details` รูปแบบไม่คงที่ต่อ route — โชว์เท่าที่มีแบบ key/value ทั่วไป
+// มี before/after (log ใหม่) → ตาราง "ฟิลด์ · ก่อน → หลัง" (useLogChanges)
+// ไม่มี (log เก่า/route ที่ยังไม่ส่ง) → โชว์ `details` รูปแบบไม่คงที่แบบ key/value ทั่วไปเหมือนเดิม
 import { useTranslations, useLocale, useMessages } from "next-intl";
 import { Divider } from "@/components/base";
 import { formatDate } from "@/i18n/format";
 import { USER_LOG_ACTION_CONFIG } from "@/constants/enumConfig";
 import type { LogRow } from "../useUserLogViewModel";
+import { useLogChanges } from "../useLogChanges";
 
 function formatDetailValue(value: unknown): string {
   if (value == null) return "—";
@@ -21,12 +22,16 @@ export function LogDetailContent({ log }: { log: LogRow }) {
   const fieldMsgs = (useMessages() as { fields?: Record<string, string> }).fields ?? {};
   const fieldLabel = (field: string) => fieldMsgs[field] ?? field;
   const cfg = USER_LOG_ACTION_CONFIG[log.action_type];
+  const { changesOf, contextOf, entityOf } = useLogChanges();
+  const changes = changesOf(log);
+  const context = contextOf(log);
+  const changesTitle = !log.before ? t("userLog.createdTitle") : !log.after ? t("userLog.deletedTitle") : t("userLog.changesTitle");
 
   // details: array ของชื่อ field ที่แก้ (ไม่มีค่าเก่า/ใหม่) หรือ object เก็บบาง field ของ body
   // แล้วแต่ route — สร้างเป็นคู่ [label, value] ให้ render ได้แบบเดียวกันทั้งสองแบบ
   const detailEntries: [string, string][] = (() => {
     const details = log.details;
-    if (details == null) return [];
+    if (details == null || changes.length > 0) return [];
     if (Array.isArray(details)) {
       if (details.length === 0) return [];
       return [[t("userLog.changedFields"), details.map((f) => fieldLabel(String(f))).join(", ")]];
@@ -53,8 +58,8 @@ export function LogDetailContent({ log }: { log: LogRow }) {
       t("userLog.colEntity"),
       log.entity ? (
         <span>
-          {t.has(`entities.${log.entity}`) ? t(`entities.${log.entity}`) : t("entities.fallback")}
-          {log.entity_id && <span className="ml-1 font-mono text-xs text-gray-500">{log.entity_id}</span>}
+          {entityOf(log.entity)}
+          {context && <span className="mt-0.5 block text-xs text-gray-500">{context}</span>}
         </span>
       ) : (
         "—"
@@ -81,6 +86,32 @@ export function LogDetailContent({ log }: { log: LogRow }) {
           </div>
         ))}
       </div>
+
+      {changes.length > 0 && (
+        <>
+          <Divider className="!my-0" />
+          <div>
+            <p className="mb-2 text-sm font-semibold text-gray-700">{changesTitle}</p>
+            <div className="flex flex-col gap-2">
+              {changes.map((c) => (
+                <div key={c.field} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                  <p className="mb-1 text-xs text-gray-500">{c.label}</p>
+                  {c.before !== null && c.after !== null ? (
+                    <div className="grid grid-cols-[auto_1fr] items-baseline gap-x-2 gap-y-0.5 text-sm">
+                      <span className="text-xs text-gray-400">{t("userLog.before")}</span>
+                      <span className="break-all text-gray-500 line-through decoration-gray-300">{c.before}</span>
+                      <span className="text-xs text-gray-400">{t("userLog.after")}</span>
+                      <span className="break-all font-medium text-brown-800">{c.after}</span>
+                    </div>
+                  ) : (
+                    <p className="break-all text-sm text-gray-700">{c.after ?? c.before}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {detailEntries.length > 0 && (
         <>

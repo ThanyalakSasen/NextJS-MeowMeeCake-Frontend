@@ -19,6 +19,8 @@ export const AUTH_GATE: "cookie" | "client" = process.env.NEXT_PUBLIC_AUTH_GATE 
 export const LOGIN_PATH = "/login";
 export const HOME_PATH = "/owner/dashboard";
 export const ACCESS_DENIED_PATH = "/owner/access-denied";
+/** บัญชีของฉัน (เจ้าของร้าน/พนักงาน) — ข้อมูลตัวเอง · เปลี่ยนรหัสผ่าน · ประวัติการทำงานของตัวเอง · login พอ ไม่ผูกเมนูสิทธิ์ */
+export const OWNER_ACCOUNT_PATH = "/owner/account";
 /** หน้าแรกของหน้าร้าน (ลูกค้า + guest) — ย้ายมาจาก FrontOffice (เลิกใช้ backend port 4000) */
 export const CUSTOMER_HOME_PATH = "/customer";
 

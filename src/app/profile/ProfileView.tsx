@@ -1,7 +1,8 @@
 "use client";
 // View ของหน้าโปรไฟล์ — ข้อมูลบัญชี + การ์ดเชื่อม LINE (presentational ล้วน ตรรกะอยู่ใน useProfileViewModel)
 import { useTranslations } from "next-intl";
-import { ArrowRightOnRectangleIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import DoorLogoutIcon from "@/components/customer/DoorLogoutIcon";
 import { Button, Logo, Tag } from "@/components/base";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { isLinePlaceholderEmail } from "@/lib/lineAccount";
@@ -77,7 +78,8 @@ export function ProfileView(vm: VM) {
 
             <Button
               type="text"
-              icon={<ArrowRightOnRectangleIcon className="h-4 w-4" />}
+              className="group"
+              icon={<DoorLogoutIcon className="h-4 w-4" />}
               onClick={vm.onLogout}
             >
               {t("nav.logout")}

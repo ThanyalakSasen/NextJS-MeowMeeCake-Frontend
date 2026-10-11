@@ -15,7 +15,7 @@ export type AnalysisSource = "customer" | "model" | "inferred" | null;
 export interface Review {
   _id: string;
   user_id: { _id: string; user_fullname: string; user_img?: string | null } | string | null;
-  product_id: { _id: string; product_name_th: string; product_name_eng?: string; product_img?: string | null } | string | null;
+  product_id: { _id: string; product_name_th: string; product_name_eng?: string; product_img?: string | string[] | null } | string | null;
   /** รีวิวพรีออเดอร์ = null (ใช้ preorder_order_item_id) */
   order_item_id: { _id: string; order_id?: { _id: string; order_no: string } | null } | string | null;
   preorder_order_item_id?: { _id: string; preorder_id?: { _id: string; preorder_no: string } | null } | string | null;

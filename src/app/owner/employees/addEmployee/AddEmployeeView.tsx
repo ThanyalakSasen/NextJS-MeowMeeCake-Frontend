@@ -1,6 +1,6 @@
 "use client";
 import { useTranslations } from "next-intl";
-import { Form } from "@/components/base";
+import { Card, Form } from "@/components/base";
 import { SaveButton, CancelButton } from "@/components/shared/actions";
 import { EmployeeFormFields } from "../_components/EmployeeFormFields";
 import type { useAddEmployeeViewModel } from "./useAddEmployeeViewModel";
@@ -11,13 +11,16 @@ export function AddEmployeeView(vm: ReturnType<typeof useAddEmployeeViewModel>) 
   if (!vm.allowed) return null; // กำลังเด้งไป access-denied
   return (
     <FormPageLayout title={t("nav.employeesAdd")}>
-      <Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}>
-        <EmployeeFormFields />
-        <FormActions>
-          <SaveButton type="primary" htmlType="submit" loading={vm.submitting} />
-          <CancelButton onClick={vm.onCancel} />
-        </FormActions>
-      </Form>
+      {/* พื้นขาวให้ฟอร์ม — เหมือนการ์ดอื่นในหลังร้าน (พื้นหน้าเป็นสีครีม) */}
+      <Card className="p-6">
+        <Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}>
+          <EmployeeFormFields />
+          <FormActions>
+            <SaveButton type="primary" htmlType="submit" loading={vm.submitting} />
+            <CancelButton onClick={vm.onCancel} />
+          </FormActions>
+        </Form>
+      </Card>
     </FormPageLayout>
   );
 }
