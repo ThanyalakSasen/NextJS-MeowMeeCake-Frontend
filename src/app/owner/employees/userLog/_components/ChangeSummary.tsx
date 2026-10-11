@@ -7,7 +7,7 @@ import { useLogChanges } from "../useLogChanges";
 
 const MAX_LINES = 2;
 
-export function ChangeSummary({ log }: { log: Pick<UserLog, "before" | "after" | "context"> }) {
+export function ChangeSummary({ log }: { log: Pick<UserLog, "before" | "after" | "context" | "entity"> }) {
   const t = useTranslations("userLog");
   const { changesOf, summaryOf, contextOf } = useLogChanges();
   const rows = changesOf(log);

@@ -33,6 +33,9 @@ const ENUM_OF_FIELD: Record<string, string> = {
   discount_type: "discountType",
   auth_provider: "authProvider",
   menu_key: "menuKey",
+  round_status: "roundStatus",
+  production_status: "productionStatus",
+  item_status: "productionItemStatus",
 };
 
 type Messages = {
@@ -40,6 +43,7 @@ type Messages = {
   enums?: Record<string, Record<string, string>>;
   entities?: Record<string, string>;
   storeInfo?: { days?: Record<string, string> };
+  reviews?: { status?: Record<string, string> };
 };
 
 export function useLogChanges() {
@@ -51,6 +55,10 @@ export function useLogChanges() {
   const enumMsgs = messages.enums ?? {};
   const entityMsgs = messages.entities ?? {};
 
+  /** ตารางชื่อของค่าสถานะ — "status" ของรีวิว (approved/hidden/pending) คนละชุดกับของการชำระเงิน */
+  const enumTable = (field: string, entity?: string | null): Record<string, string> | undefined =>
+    entity === "Review" && field === "status" ? messages.reviews?.status : enumMsgs[ENUM_OF_FIELD[field]];
+
   /** "weekly_markets[ตลาดเช้า].close_time" → ["weekly_markets", "[ตลาดเช้า]", "close_time"] */
   const pathLabel = (path: string): string =>
     (path.match(/\[[^\]]*\]|[^.[\]]+/g) ?? [path])
@@ -61,27 +69,27 @@ export function useLogChanges() {
   /** ชื่อฟิลด์สุดท้ายของ path — ใช้เลือกวิธีแสดงค่า (สถานะ/วัน) */
   const leafOf = (path: string) => path.replace(/\[[^\]]*\]/g, "").split(".").pop() ?? path;
 
-  const formatValue = (v: unknown, field = ""): string => {
+  const formatValue = (v: unknown, field = "", entity?: string | null): string => {
     if (v === null || v === undefined || v === "") return "—";
     if (typeof v === "boolean") return v ? t("common.yes") : t("common.no");
     if (typeof v === "string") {
-      const ns = ENUM_OF_FIELD[field];
-      if (ns && enumMsgs[ns]?.[v]) return enumMsgs[ns][v];
+      const label = enumTable(field, entity)?.[v];
+      if (label) return label;
       if (field === "days" && dayMsgs[v]) return dayMsgs[v];
       if (ISO_RE.test(v)) return formatDate(v, locale, { withTime: true });
       return v;
     }
-    if (Array.isArray(v)) return v.length ? v.map((x) => formatValue(x, field)).join(", ") : "—";
+    if (Array.isArray(v)) return v.length ? v.map((x) => formatValue(x, field, entity)).join(", ") : "—";
     if (typeof v === "object") {
       return Object.entries(v as Record<string, unknown>)
         .filter(([, x]) => x !== null && x !== "")
-        .map(([k, x]) => `${fieldMsgs[k] ?? k}: ${formatValue(x, k)}`)
+        .map(([k, x]) => `${fieldMsgs[k] ?? k}: ${formatValue(x, k, entity)}`)
         .join(" · ");
     }
     return typeof v === "number" ? v.toLocaleString(locale === "en" ? "en-US" : "th-TH") : String(v);
   };
 
-  const changesOf = (log: Pick<UserLog, "before" | "after">): ChangeRow[] => {
+  const changesOf = (log: Pick<UserLog, "before" | "after"> & { entity?: string | null }): ChangeRow[] => {
     const b = log.before ?? null;
     const a = log.after ?? null;
     if (!b && !a) return [];
@@ -89,8 +97,8 @@ export function useLogChanges() {
     return fields.map((field) => ({
       field,
       label: pathLabel(field),
-      before: b ? formatValue(b[field], leafOf(field)) : null,
-      after: a ? formatValue(a[field], leafOf(field)) : null,
+      before: b ? formatValue(b[field], leafOf(field), log.entity) : null,
+      after: a ? formatValue(a[field], leafOf(field), log.entity) : null,
     }));
   };
 
