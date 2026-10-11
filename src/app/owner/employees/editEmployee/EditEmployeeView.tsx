@@ -17,7 +17,7 @@ export function EditEmployeeView(vm: ReturnType<typeof useEditEmployeeViewModel>
   return (
     <FormPageLayout title={t("nav.employeesEdit")}>
       <Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}>
-        <EmployeeFormFields isEdit />
+        <EmployeeFormFields isEdit currentRoleId={vm.initialValues.role_id} />
         <FormActions>
           <SaveButton type="primary" htmlType="submit" loading={vm.submitting} />
           <CancelButton onClick={vm.onCancel} />

@@ -19,7 +19,8 @@ export function PermissionsView(vm: VM) {
   const t = useTranslations();
   const [modalOpen, setModalOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
-  const canEdit = vm.perm.update;
+  // ตำแหน่งประเภท owner — คนที่ไม่ใช่ owner แก้ชื่อ / ลบ / แก้สิทธิ์ไม่ได้ (backend ownerProtection · P4)
+  const canEdit = vm.perm.update && !vm.roleLocked;
 
   const addRoleBtn = vm.perm.create && (
     <Button type="primary" icon={actionIcon("add")} onClick={() => setModalOpen(true)}>
@@ -69,7 +70,7 @@ export function PermissionsView(vm: VM) {
                     {canEdit && (
                       <EditButton size="small" label={t("permissions.renameRole")} onClick={() => setRenameOpen(true)} />
                     )}
-                    {vm.perm.delete && (
+                    {vm.perm.delete && !vm.roleLocked && (
                       <ConfirmDeletePopup
                         title={t("permissions.deleteRoleConfirm", { role: vm.selectedRole.role_name })}
                         onConfirm={vm.onDeleteRole}
@@ -112,12 +113,20 @@ export function PermissionsView(vm: VM) {
                 {vm.selectedRole.role_type === "owner" && (
                   <p className="border-b border-gray-100 bg-amber-50 px-4 py-2 text-xs text-amber-700">
                     {t("permissions.unrestrictedNote")}
+                    {vm.roleLocked && ` · ${t("permissions.ownerRoleLocked")}`}
+                  </p>
+                )}
+                {canEdit && !vm.isOwnerActor && (
+                  <p className="border-b border-gray-100 px-4 py-2 text-xs text-gray-500">
+                    {t("permissions.grantCeilingNote")}
                   </p>
                 )}
 
                 <PermissionMatrix
                   rows={vm.selectedRows}
                   canEdit={canEdit}
+                  canSet={vm.canSet}
+                  sectionTurnsOn={vm.sectionTurnsOn}
                   onField={vm.setField}
                   onToggleSection={vm.toggleSection}
                 />
@@ -134,6 +143,7 @@ export function PermissionsView(vm: VM) {
       <RoleFormModal
         open={modalOpen}
         roles={vm.roles}
+        canCopyFrom={vm.canCopyFrom}
         onCancel={() => setModalOpen(false)}
         onSubmit={async (values) => {
           const ok = await vm.onAddRole(values);

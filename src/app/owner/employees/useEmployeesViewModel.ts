@@ -12,6 +12,7 @@ import { alert, confirmAlert } from "@/lib/alert";
 import { isUserLocked, type EmploymentType } from "@/types/user";
 import { isApiError } from "@/types/api";
 import { LIST_ALL } from "@/lib/http";
+import { usePermissionCeiling } from "./usePermissionCeiling";
 
 export interface EmployeeRow {
   _id: string;
@@ -33,6 +34,7 @@ export function useEmployeesViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
   const perm = usePermission("employees");
+  const ceiling = usePermissionCeiling();
 
   const [search, setSearch] = useState("");
   const [roleId, setRoleId] = useState<string>("all");
@@ -136,6 +138,8 @@ export function useEmployeesViewModel() {
 
   return {
     perm,
+    /** แก้ / ตั้งรหัสผ่าน / ปลดล็อก / ลบ บัญชีนี้ได้ไหม — บัญชีที่สิทธิ์สูงกว่าเรา (รวม owner) backend ตอบ 403 (P4) */
+    canManage: (r: EmployeeRow) => ceiling.mayManageUser(r._id, r.roleId),
     rows: filtered,
     stats,
     staffRoles,

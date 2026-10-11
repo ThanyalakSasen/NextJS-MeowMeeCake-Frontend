@@ -8,14 +8,17 @@ import type { Role } from "@/types/role";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { AddRoleValues } from "../usePermissionsViewModel";
 
+/** canCopyFrom: คัดลอกได้เฉพาะตำแหน่งที่สิทธิ์ไม่เกินเรา (P4) — ตัวอื่นแสดงแต่ปิดไว้ */
 export function RoleFormModal({
   open,
   roles,
+  canCopyFrom,
   onCancel,
   onSubmit,
 }: {
   open: boolean;
   roles: Role[];
+  canCopyFrom: (roleId: string) => boolean;
   onCancel: () => void;
   onSubmit: (values: AddRoleValues) => Promise<boolean>;
 }) {
@@ -56,7 +59,7 @@ export function RoleFormModal({
           <Select
             allowClear
             placeholder={t("permissions.copyFromPlaceholder")}
-            options={roles.map((r) => ({ value: r._id, label: r.role_name }))}
+            options={roles.map((r) => ({ value: r._id, label: r.role_name, disabled: !canCopyFrom(r._id) }))}
           />
         </FormItem>
       </Form>

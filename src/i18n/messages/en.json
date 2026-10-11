@@ -1305,7 +1305,8 @@
     "fieldCanLogin": "Allow sign-in",
     "fieldCanLoginHint": "Turn off to revoke sign-in access immediately (separate from employment status below)",
     "fieldEmpStatusHint": "Just records employment status — has no effect on sign-in access",
-    "lineNoEmail": "This account signed up with LINE — this is a temporary system email; please enter the employee’s real email"
+    "lineNoEmail": "This account signed up with LINE — this is a temporary system email; please enter the employee’s real email",
+    "roleBeyondHint": "Roles you can’t pick have more permissions than you — ask the store owner to assign them"
   },
   "permissions": {
     "title": "Access Permissions",
@@ -1348,7 +1349,9 @@
     "emptySelectRole": "Select a role on the left to manage permissions",
     "emptyNoRoles": "No roles in the system yet",
     "loadFailed": "Could not load permissions",
-    "unrestrictedNote": "Owner / admin roles can access every menu without explicit permissions"
+    "unrestrictedNote": "Owner / admin roles can access every menu without explicit permissions",
+    "ownerRoleLocked": "Only the store owner can edit it",
+    "grantCeilingNote": "Boxes you can’t switch on are permissions you don’t have yourself, so you can’t grant them — you can switch off (revoke) any box"
   },
   "userLog": {
     "title": "Employee Activity Log",

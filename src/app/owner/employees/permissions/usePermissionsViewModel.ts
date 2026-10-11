@@ -18,9 +18,10 @@ import type { PermissionInput } from "@/types/permission";
 import type { RoleInput, RoleType } from "@/types/role";
 import { isApiError } from "@/types/api";
 import {
-  PERM_MENU_KEYS, emptyRolePerms, groupPermissions, countAll, countRow, rowHasAny,
+  PERM_FIELDS, PERM_MENU_KEYS, emptyRolePerms, groupPermissions, countAll, rowHasAny,
   type RolePerms, type PermField, type PermRow,
 } from "./permissionGroups";
+import { usePermissionCeiling } from "../usePermissionCeiling";
 
 export interface AddRoleValues {
   role_name: string;
@@ -33,6 +34,7 @@ export function usePermissionsViewModel() {
   const qc = useQueryClient();
   const perm = usePermission("employees");
   const { user } = useCurrentUser();
+  const ceiling = usePermissionCeiling();
 
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<Record<string, RolePerms>>({});
@@ -72,8 +74,22 @@ export function usePermissionsViewModel() {
   const patchRole = (roleId: string, next: RolePerms) =>
     setOverrides((prev) => ({ ...prev, [roleId]: next }));
 
+  // ── เพดานสิทธิ์ (P4 · backend permissionCeiling / ownerProtection) ──
+  // คนที่ไม่ใช่ owner: บทบาทประเภท owner แก้ไม่ได้เลย · เปิด flag ได้เฉพาะที่ตัวเองมี · ปิด (ถอน) ได้ทุกช่อง
+  const roleLocked = !ceiling.isOwner && selectedRole?.role_type === "owner";
+
+  /** ติ๊กช่องนี้ "เป็นเปิด" ได้ไหม — คืนค่าเดิมที่บันทึกไว้แล้วไม่นับเป็นการให้สิทธิ์ (PATCH ส่งเฉพาะที่เปลี่ยน) */
+  const canSet = (menuKey: MenuKey, field: PermField): boolean =>
+    !roleLocked &&
+    (ceiling.mayGrant(menuKey, field) || (!!activeRoleId && !!serverByRole[activeRoleId]?.[menuKey][field]));
+
+  /** ปุ่มทั้งหมวด: ยังมีช่องที่เปิดได้แต่ปิดอยู่ = "เปิดทั้งหมด" · ไม่งั้น = "ปิดทั้งหมด" */
+  const sectionTurnsOn = (menuKey: MenuKey): boolean =>
+    !!selectedRows && PERM_FIELDS.some((f) => canSet(menuKey, f) && !selectedRows[menuKey][f]);
+
   const setField = (menuKey: MenuKey, field: PermField, value: boolean) => {
-    if (!activeRoleId || !selectedRows) return;
+    if (!activeRoleId || !selectedRows || roleLocked) return;
+    if (value && !canSet(menuKey, field)) return;
     patchRole(activeRoleId, {
       ...selectedRows,
       [menuKey]: { ...selectedRows[menuKey], [field]: value },
@@ -81,13 +97,13 @@ export function usePermissionsViewModel() {
   };
 
   const toggleSection = (menuKey: MenuKey) => {
-    if (!activeRoleId || !selectedRows) return;
+    if (!activeRoleId || !selectedRows || roleLocked) return;
     const row = selectedRows[menuKey];
-    const on = countRow(row) < 5;
-    patchRole(activeRoleId, {
-      ...selectedRows,
-      [menuKey]: { ...row, can_view: on, can_create: on, can_update: on, can_delete: on, can_approve: on },
-    });
+    const on = sectionTurnsOn(menuKey);
+    const next = { ...row };
+    // เปิด = เฉพาะช่องที่เปิดได้ · ปิด = ทุกช่อง
+    for (const f of PERM_FIELDS) if (!on || canSet(menuKey, f)) next[f] = on;
+    patchRole(activeRoleId, { ...selectedRows, [menuKey]: next });
   };
 
   // ── persist ──
@@ -96,6 +112,8 @@ export function usePermissionsViewModel() {
     mutationFn: ({ id, b }: { id: string; b: Partial<PermissionInput> }) => permissionsService.update(id, b),
   });
 
+  // แถวที่มีอยู่แล้ว: PATCH เฉพาะช่องที่เปลี่ยน — backend ตรวจทุก flag ที่ส่งมาเป็น true กับสิทธิ์ของผู้ทำ
+  // ถ้าส่งครบ 5 ช่อง คนที่ไม่ใช่ owner จะแก้แถวที่มีช่องเกินตัวเองไม่ได้เลย แม้แค่จะถอนสิทธิ์ (P4)
   async function persistRows(roleId: string, rows: RolePerms): Promise<void> {
     for (const key of PERM_MENU_KEYS) {
       const row = rows[key];
@@ -104,7 +122,9 @@ export function usePermissionsViewModel() {
         can_delete: row.can_delete, can_approve: row.can_approve,
       };
       if (row.id) {
-        await updatePerm.mutateAsync({ id: row.id, b: payload });
+        const server = serverByRole[roleId]?.[key];
+        const changed = Object.fromEntries(PERM_FIELDS.filter((f) => !server || server[f] !== row[f]).map((f) => [f, row[f]]));
+        if (Object.keys(changed).length) await updatePerm.mutateAsync({ id: row.id, b: changed });
       } else if (rowHasAny(row)) {
         await createPerm.mutateAsync({
           role_id: roleId,
@@ -237,6 +257,13 @@ export function usePermissionsViewModel() {
     summary,
     dirty,
     saving,
+
+    isOwnerActor: ceiling.isOwner,
+    roleLocked,
+    canSet,
+    sectionTurnsOn,
+    /** คัดลอกสิทธิ์ได้เฉพาะจากตำแหน่งที่ไม่เกินเรา — ไม่งั้นสร้างตำแหน่งได้แต่ให้สิทธิ์ไม่ผ่าน (403 กลางทาง) */
+    canCopyFrom: ceiling.roleWithin,
 
     selectRole: setSelectedRoleId,
     setField,

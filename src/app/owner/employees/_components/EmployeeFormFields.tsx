@@ -9,12 +9,17 @@ import { Input, InputNumber, PasswordInput, Select, Switch, DatePicker, FormItem
 import { isLinePlaceholderEmail } from "@/lib/lineAccount";
 import { rolesService } from "@/services/roles";
 import { MIN_PASSWORD_LENGTH } from "@/constants/auth";
+import { usePermissionCeiling } from "../usePermissionCeiling";
 
-export function EmployeeFormFields({ isEdit = false }: { isEdit?: boolean }) {
+/** currentRoleId = บทบาทเดิมของบัญชีที่แก้ — ไม่ย้ายบทบาท = backend ไม่ตรวจ จึงเลือกค้างไว้ได้เสมอ */
+export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?: boolean; currentRoleId?: string }) {
   const t = useTranslations();
   const roles = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list() });
   // เลือกได้เฉพาะตำแหน่งพนักงาน — ตัด role ลูกค้าออก (เหมือนหน้ารายชื่อ)
   const staffRoles = (roles.data?.data ?? []).filter((r) => r.role_type !== "customer");
+  // ตำแหน่งที่สิทธิ์สูงกว่าเรา (รวม owner) ย้ายเข้าไม่ได้ — แสดงแต่ปิดไว้ (P4)
+  const ceiling = usePermissionCeiling();
+  const roleBlocked = (id: string) => id !== currentRoleId && !ceiling.roleWithin(id);
   // บัญชีที่สมัครผ่าน LINE ไม่มีอีเมลจริง (I10) — เตือนให้กรอกอีเมลจริงก่อนบันทึก (backend บังคับมีอีเมล)
   const email = Form.useWatch<string | undefined>("email");
 
@@ -51,11 +56,16 @@ export function EmployeeFormFields({ isEdit = false }: { isEdit?: boolean }) {
         </FormItem>
       )}
 
-      <FormItem name="role_id" label={t("fields.role_id")} rules={required}>
+      <FormItem
+        name="role_id"
+        label={t("fields.role_id")}
+        rules={required}
+        extra={!ceiling.isOwner && staffRoles.some((r) => roleBlocked(r._id)) ? t("employees.roleBeyondHint") : undefined}
+      >
         <Select
           allowClear
           loading={roles.isLoading}
-          options={staffRoles.map((r) => ({ value: r._id, label: r.role_name }))}
+          options={staffRoles.map((r) => ({ value: r._id, label: r.role_name, disabled: roleBlocked(r._id) }))}
         />
       </FormItem>
 
