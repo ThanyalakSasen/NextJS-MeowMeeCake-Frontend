@@ -55,13 +55,16 @@ function toApiError(err: AxiosError<BackendErrorBody>): ApiError {
   const status = err.response?.status ?? 0;
   const body = err.response?.data;
   const backendError = body?.success === false ? body.error : undefined;
-  const reason = (backendError?.details as { reason?: unknown } | null | undefined)?.reason;
+  const details = backendError?.details as { reason?: unknown; retry_after_seconds?: unknown } | null | undefined;
+  const reason = details?.reason;
+  const retryAfter = Number(details?.retry_after_seconds);
   return {
     status,
     code: backendError?.code,
     message: backendError?.message ?? (status === 0 ? "network error" : `request failed (${status})`),
     fieldErrors: toFieldErrors(backendError?.details ?? null),
     reason: typeof reason === "string" ? reason : undefined,
+    retryAfterSeconds: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined,
     cause: err,
   };
 }

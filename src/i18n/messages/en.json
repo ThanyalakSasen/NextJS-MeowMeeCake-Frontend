@@ -98,7 +98,7 @@
     "invalidCredentials": "Incorrect email or password",
     "missingFields": "Please enter your email and password",
     "accountDisabled": "This account is disabled. Please contact the owner.",
-    "accountLocked": "Too many failed attempts. Please wait {minutes} minutes and try again.",
+    "accountLocked": "Too many failed attempts. This account is locked for {minutes} minutes.",
     "noStaffAccess": "This account cannot access the management system",
     "emailPlaceholder": "Enter your email",
     "passwordPlaceholder": "Enter your password",
@@ -126,7 +126,10 @@
     "stayLoggedIn": "Stay signed in",
     "sessionExpired": "Session expired. Please sign in again.",
     "accessDenied": "You do not have permission to view this page",
-    "backToDashboard": "Back to dashboard"
+    "backToDashboard": "Back to dashboard",
+    "lockedCountdown": "Account temporarily locked. Try again in",
+    "lockedHint": "Or use \"Forgot password?\" to set a new password and unlock it right away",
+    "tooManyCountdown": "Too many attempts. Try again in"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
