@@ -11,6 +11,7 @@ import { formatDate } from "@/i18n/format";
 import type { PreorderRound } from "@/types/preorderRound";
 import type { ProductionOrderFromRoundInput } from "@/types/productionOrder";
 import { modalButtonIcons } from "@/components/shared/actions";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 interface StaffOption { _id: string; user_fullname: string }
 
@@ -100,7 +101,7 @@ export function CreateFromRoundModal({
           <Select
             allowClear
             placeholder={t("production.assigneePlaceholder")}
-            options={staff.map((s) => ({ value: s._id, label: s.user_fullname }))}
+            options={sortOptionsThai(staff.map((s) => ({ value: s._id, label: s.user_fullname })))}
           />
         </FormItem>
         <FormItem name="production_note" label={t("production.fieldNote")}>

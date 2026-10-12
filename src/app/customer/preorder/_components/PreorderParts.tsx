@@ -129,7 +129,7 @@ export function BasketBar() {
           {t.rich("basket", { round: basket.round_name, n: qty.toLocaleString(), amount: baht(total), b: (c) => <strong>{c}</strong> })}
         </span>
       </p>
-      <Link href="/customer/preorder/checkout" className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#4A342E] px-4 py-2 text-sm font-bold text-white hover:bg-[#8C5A3C]">
+      <Link href="/customer/preorder/checkout" className="inline-flex h-[36px] items-center justify-center gap-1.5 rounded-xl bg-[#4A342E] px-4 text-sm font-bold text-white hover:bg-[#8C5A3C]">
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> {t("goConfirm")}
       </Link>
     </div>

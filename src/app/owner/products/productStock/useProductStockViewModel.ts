@@ -17,6 +17,7 @@ import { unitLabel } from "@/utils/unitContext";
 import { isApiError } from "@/types/api";
 import { LIST_ALL } from "@/lib/http";
 import type { BulkStockItem, BulkStockLine, BulkStockMode } from "@/components/shared/stock";
+import { sortByThai } from "@/lib/thaiSort";
 
 export interface StockProductRow {
   _id: string;
@@ -61,7 +62,7 @@ export function useProductStockViewModel() {
       const c = p.category_id;
       if (c && typeof c === "object") byId.set(c._id, { _id: c._id, product_category_name: c.product_category_name });
     }
-    return [...byId.values()];
+    return sortByThai([...byId.values()], (c) => c.product_category_name);
   }, [productsQ.data]);
 
   const rows = useMemo<StockProductRow[]>(() => {

@@ -12,6 +12,7 @@ import { DeleteButton, EditButton, actionIcon } from "@/components/shared/action
 import { CategoryManagerButton } from "@/components/shared/categories";
 import type { IngredientRow, useIngredientsViewModel } from "./useIngredientsViewModel";
 import { IngredientFormModal } from "./_components/IngredientFormModal";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 type VM = ReturnType<typeof useIngredientsViewModel>;
 
@@ -98,7 +99,7 @@ export function IngredientsView(vm: VM) {
                   onChange={(v) => vm.setCategoryId(v as string)}
                   options={[
                     { value: "all", label: t("common.all") },
-                    ...vm.categories.map((c) => ({ value: c._id, label: c.ingredient_category_name })),
+                    ...sortOptionsThai(vm.categories.map((c) => ({ value: c._id, label: c.ingredient_category_name }))),
                   ]}
                 />
               </div>

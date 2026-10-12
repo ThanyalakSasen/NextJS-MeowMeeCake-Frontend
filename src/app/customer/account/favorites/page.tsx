@@ -106,7 +106,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           disabled={removing}
           aria-label={t("removeAria", { name: item.name })}
           title={t("remove")}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-md transition hover:bg-white disabled:opacity-60"
+          className="absolute right-3 top-3 flex h-[36px] w-[36px] items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-md transition hover:bg-white disabled:opacity-60"
         >
           {removing ? <FaSpinner className="animate-spin text-xs text-stone-400" /> : <FaHeart className="text-base text-[#E05353]" />}
         </button>
@@ -142,7 +142,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           </span>
 
           {item.is_preorder ? (
-            <Link href={href} className="rounded-xl border border-[#8C5A3C]/30 bg-white px-3 py-2 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition hover:bg-[#4A342E] hover:text-white">
+            <Link href={href} className="inline-flex h-[36px] items-center rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition hover:bg-[#4A342E] hover:text-white">
               {t("view")}
             </Link>
           ) : (
@@ -150,7 +150,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
               type="button"
               disabled={!item.inStock || status === "loading" || status === "success"}
               onClick={() => void quickAdd(item.id)}
-              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-200 ${
+              className={`inline-flex h-[36px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition-all duration-200 ${
                 status === "success"
                   ? "border border-emerald-600 bg-emerald-600 text-white"
                   : "border border-[#8C5A3C]/30 bg-white text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white active:scale-[0.98]"

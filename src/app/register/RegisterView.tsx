@@ -38,7 +38,7 @@ export function RegisterView(vm: VM) {
             type="button"
             onClick={() => void vm.resend()}
             disabled={vm.resending}
-            className="w-full rounded-xl border-[1.5px] border-[#e1d6cd] bg-white py-3 text-sm font-semibold text-[#4e342e] transition hover:enabled:border-[#bfaea2] disabled:cursor-wait disabled:opacity-60"
+            className="h-[40px] w-full rounded-xl border-[1.5px] border-[#e1d6cd] bg-white text-sm font-semibold text-[#4e342e] transition hover:enabled:border-[#bfaea2] disabled:cursor-wait disabled:opacity-60"
           >
             {vm.resending ? t("register.resending") : t("auth.resendVerification")}
           </button>
@@ -111,7 +111,7 @@ export function RegisterView(vm: VM) {
             {([false, true] as const).map((v) => (
               <button key={String(v)} type="button" role="radio" aria-checked={vm.form.hasAllergy === v}
                 onClick={() => vm.set("hasAllergy", v)}
-                className={`rounded-lg py-2 text-xs font-semibold transition sm:text-sm ${
+                className={`h-[27px] rounded-lg text-xs font-semibold transition sm:text-sm ${
                   vm.form.hasAllergy === v
                     ? v ? "bg-[#4A342E] text-white shadow-sm" : "bg-white text-stone-800 shadow-sm"
                     : "text-stone-200 hover:text-white md:text-stone-500 md:hover:text-stone-800"
@@ -162,7 +162,7 @@ export function RegisterView(vm: VM) {
           disabled={vm.busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
-          className={`mt-3 cursor-pointer rounded-xl border-none bg-[#f2ae00] py-3.5 text-base font-bold text-white shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
+          className={`mt-3 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-base font-bold text-white shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
             vm.busy ? "" : "hover:enabled:-translate-y-px hover:enabled:bg-[#d99c00] hover:enabled:shadow-[0_6px_16px_rgba(242,174,0,0.35)]"
           } ${pressed ? "animate-jelly" : ""}`}
         >

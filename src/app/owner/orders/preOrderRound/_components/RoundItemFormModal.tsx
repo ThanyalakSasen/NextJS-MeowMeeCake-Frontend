@@ -8,6 +8,7 @@ import { Form, FormItem, useAntForm, InputNumber, Select, Switch } from "@/compo
 import type { Product } from "@/types/product";
 import type { PreorderRound, PreorderRoundItem, RoundItemInput } from "@/types/preorderRound";
 import { modalButtonIcons } from "@/components/shared/actions";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 interface FormValues {
   product_id: string;
@@ -91,11 +92,11 @@ export function RoundItemFormModal({
             showSearch
             optionFilterProp="label"
             placeholder={t("preorderRound.selectProduct")}
-            options={products.map((p) => ({
+            options={sortOptionsThai(products.map((p) => ({
               value: p._id,
               label: p.product_name_th,
               disabled: !isEdit && usedProductIds.has(p._id),
-            }))}
+            })))}
           />
         </FormItem>
         <FormItem name="price_override" label={t("preorderRound.fieldPriceOverride")} help={t("preorderRound.priceOverrideHint")}>

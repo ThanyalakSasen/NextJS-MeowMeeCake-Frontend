@@ -22,7 +22,7 @@ import { pickProblemText } from "../../../lib/pickProblemText";
 import CustomizationPicker from "./CustomizationPicker";
 
 const btn =
-  "h-11 rounded-xl px-3 text-sm font-bold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 sm:text-base";
+  "h-[36px] rounded-xl px-3 text-sm font-bold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 sm:text-base";
 
 export default function PreorderOrderBox({
   productId,
@@ -172,10 +172,10 @@ export default function PreorderOrderBox({
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-[#8C5A3C]/30 bg-white">
           <button type="button" onClick={() => setQty(quantity - 1)} disabled={disabled || quantity <= min} aria-label={tcart("decrease")}
-            className="flex h-11 w-10 items-center justify-center text-lg font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">-</button>
+            className="flex h-[34px] w-10 items-center justify-center text-lg font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">-</button>
           <span className="w-12 text-center text-sm font-bold text-[#4A342E] sm:text-base">{quantity}</span>
           <button type="button" onClick={() => setQty(quantity + 1)} disabled={disabled || quantity >= max} aria-label={tcart("increase")}
-            className="flex h-11 w-10 items-center justify-center text-lg font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">+</button>
+            className="flex h-[34px] w-10 items-center justify-center text-lg font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">+</button>
         </div>
         <button type="button" disabled={disabled} onClick={() => add(false)}
           className={`${btn} flex-1 border border-[#8C5A3C]/30 bg-white text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white`}>

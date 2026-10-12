@@ -16,6 +16,7 @@ import type { useFinanceExpensesViewModel } from "./useFinanceExpensesViewModel"
 import { ExpenseFormModal } from "./_components/ExpenseFormModal";
 import { ReceiptThumb } from "./_components/ReceiptThumb";
 import { RecurringRemindersList } from "./_components/RecurringRemindersList";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 type VM = ReturnType<typeof useFinanceExpensesViewModel>;
 
@@ -102,7 +103,7 @@ export function FinanceExpensesView(vm: VM) {
                   onChange={(v) => vm.setCategoryFilter(v as ExpenseCategory | "all")}
                   options={[
                     { value: "all", label: t("common.all") },
-                    ...EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.expenseCategory.${c}`) })),
+                    ...sortOptionsThai(EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.expenseCategory.${c}`) }))),
                   ]}
                 />
               </div>

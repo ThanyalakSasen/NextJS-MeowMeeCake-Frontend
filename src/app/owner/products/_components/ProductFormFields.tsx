@@ -9,6 +9,7 @@ import { Input, TextArea, InputNumber, Select, Switch, Form, FormItem } from "@/
 import { productCategoriesService } from "@/services/productCategories";
 import { unitsService } from "@/services/units";
 import { ProductImageUpload } from "./ProductImageUpload";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 /** mode "edit": สต็อกโชว์อย่างเดียว (แก้ไม่ได้) — ปรับที่หน้าสต็อกสินค้าเท่านั้น (PUT …/stock) */
 export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit" }) {
@@ -46,10 +47,10 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
       </FormItem>
 
       <FormItem name="category_id" label={t("fields.category_id")} rules={required}>
-        <Select loading={cats.isLoading} options={(cats.data?.data ?? []).map((c) => ({ value: c._id, label: c.product_category_name }))} />
+        <Select loading={cats.isLoading} options={sortOptionsThai((cats.data?.data ?? []).map((c) => ({ value: c._id, label: c.product_category_name })))} />
       </FormItem>
       <FormItem name="unit_id" label={t("fields.unit_id")} rules={required}>
-        <Select loading={units.isLoading} options={(units.data?.data ?? []).map((u) => ({ value: u._id, label: u.unit_name }))} />
+        <Select loading={units.isLoading} options={sortOptionsThai((units.data?.data ?? []).map((u) => ({ value: u._id, label: u.unit_name })))} />
       </FormItem>
 
       {/* ช่องทางขาย (เว็บ/หน้าร้าน) ไม่ได้ผูกกับสินค้าแล้ว — เลือกแค่ปกติ/พรีออเดอร์ (ซ่อนจากเว็บใช้ "แสดงผล") */}

@@ -88,7 +88,7 @@ export default function HeroCarousel() {
           {/* เป็น <Link> (= <a>) — antd ตั้ง a { background-color: transparent } นอก layer จึงต้องใส่ ! กับสีพื้น */}
           <Link
             href="/customer/product"
-            className="pointer-events-auto inline-flex items-center justify-center gap-2 text-xs sm:text-sm px-5 py-2.5 sm:py-3 group self-start md:self-auto shrink-0 !bg-white border border-white/70 !text-[#4A342E] font-bold rounded-xl shadow-lg shadow-black/25 hover:!bg-[#4A342E] hover:border-[#4A342E] hover:!text-white hover:shadow-xl active:scale-[0.98] !transition-all duration-200"
+            className="pointer-events-auto inline-flex items-center justify-center gap-2 text-xs sm:text-sm h-[36px] px-5 group self-start md:self-auto shrink-0 !bg-white border border-white/70 !text-[#4A342E] font-bold rounded-xl shadow-lg shadow-black/25 hover:!bg-[#4A342E] hover:border-[#4A342E] hover:!text-white hover:shadow-xl active:scale-[0.98] !transition-all duration-200"
           >
             <span>{t("common.allProducts")}</span>
             <span className="w-6 h-6 bg-[#4A342E]/10 group-hover:bg-white/20 rounded-full flex items-center justify-center text-[#4A342E] group-hover:text-white text-xs group-hover:translate-x-1 transition-all duration-200">

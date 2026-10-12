@@ -3,6 +3,7 @@
 // แก้ไข modal ต้องพึ่ง parent ส่ง key={editTarget?._id ?? "new"} มาบังคับ remount ทุกครั้งที่เปลี่ยนเป้าหมาย
 // (เหตุผลเต็มดู ComponentFormModal ของ Recipes)
 import { Modal } from "antd";
+import { sortOptionsThai } from "@/lib/thaiSort";
 import { useTranslations } from "next-intl";
 import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DatePicker, Switch } from "@/components/base";
 import { EXPENSE_CATEGORIES, EXPENSE_PAYMENT_METHODS } from "@/constants/enumConfig";
@@ -52,7 +53,7 @@ export function ExpenseFormModal({
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
           <FormItem name="category" label={t("finance.fieldCategory")} rules={[{ required: true, message: t("validation.required") }]}>
-            <Select options={EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.expenseCategory.${c}`) }))} />
+            <Select options={sortOptionsThai(EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.expenseCategory.${c}`) })))} />
           </FormItem>
         </div>
 
@@ -65,7 +66,7 @@ export function ExpenseFormModal({
             <InputNumber min={0} step={0.01} />
           </FormItem>
           <FormItem name="payment_method" label={t("finance.fieldPaymentMethod")}>
-            <Select options={EXPENSE_PAYMENT_METHODS.map((p) => ({ value: p, label: t(`enums.expensePaymentMethod.${p}`) }))} />
+            <Select options={sortOptionsThai(EXPENSE_PAYMENT_METHODS.map((p) => ({ value: p, label: t(`enums.expensePaymentMethod.${p}`) })))} />
           </FormItem>
           <FormItem name="vendor" label={t("finance.fieldVendor")}>
             <Input placeholder={t("finance.vendorPlaceholder")} />

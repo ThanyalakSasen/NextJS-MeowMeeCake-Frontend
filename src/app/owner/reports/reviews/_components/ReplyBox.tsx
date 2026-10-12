@@ -65,7 +65,7 @@ export function ReplyBox({ rating, reply, suggestions, canEdit, onSave }: {
               type="button"
               title={t(`reviews.templates.${tpl.key}.text`)}
               onClick={() => setText(t(`reviews.templates.${tpl.key}.text`))}
-              className="rounded border border-gray-200 px-1.5 py-0.5 text-[11px] text-gray-600 hover:border-brown-300 hover:text-brown-700"
+              className="h-[36px] rounded-lg border border-gray-200 px-3 text-xs text-gray-600 hover:border-brown-300 hover:text-brown-700"
             >
               {t(`reviews.templates.${tpl.key}.label`)}
             </button>

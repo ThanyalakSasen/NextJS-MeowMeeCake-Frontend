@@ -191,7 +191,7 @@ function CartContent() {
                             onClick={() => qtyMutation.mutate({ id: item._id, qty: item.quantity - 1 })}
                             disabled={busy || item.quantity <= 1}
                             aria-label={t("decrease")}
-                            className="flex h-9 w-9 items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40"
+                            className="flex h-[34px] w-[36px] items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40"
                           >
                             -
                           </button>
@@ -201,7 +201,7 @@ function CartContent() {
                             onClick={() => qtyMutation.mutate({ id: item._id, qty: item.quantity + 1 })}
                             disabled={busy}
                             aria-label={t("increase")}
-                            className="flex h-9 w-9 items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40"
+                            className="flex h-[34px] w-[36px] items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40"
                           >
                             +
                           </button>

@@ -223,7 +223,7 @@ function Form() {
           aria-busy={busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
-          className={`mt-5 cursor-pointer rounded-xl border-none bg-[#f2ae00] py-3.5 text-base font-bold text-white shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait ${
+          className={`mt-5 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-base font-bold text-white shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait ${
             locked ? "!cursor-not-allowed !bg-[#e1d6cd] !shadow-none" : ""
           } ${
             busy
@@ -249,7 +249,7 @@ function Form() {
         type="button"
         onClick={handleLine}
         disabled={busy || lineLoading}
-        className={`mt-2.5 flex w-full items-center justify-center gap-2.5 rounded-xl py-3 text-[14.5px] font-semibold text-white transition-all ${
+        className={`mt-2.5 flex h-[40px] w-full items-center justify-center gap-2.5 rounded-xl text-[14.5px] font-semibold text-white transition-all ${
           lineLoading ? "cursor-wait bg-[#06C755]/60" : "bg-[#06C755] hover:enabled:bg-[#05b14c]"
         }`}
       >

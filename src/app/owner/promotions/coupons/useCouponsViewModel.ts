@@ -17,6 +17,7 @@ import type { Promotion } from "@/types/promotion";
 import type { CouponStatus, DiscountType } from "@/constants/enumConfig";
 import { deriveCouponStatus, toInput, type CouponFormValue } from "./couponForm";
 import { LIST_ALL } from "@/lib/http";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 export interface CouponRow extends Promotion {
   status: CouponStatus;
@@ -46,11 +47,11 @@ export function useCouponsViewModel() {
   );
 
   const productOptions = useMemo(
-    () => (productsQ.data?.data ?? []).map((p) => ({ value: p._id, label: p.product_name_th })),
+    () => sortOptionsThai((productsQ.data?.data ?? []).map((p) => ({ value: p._id, label: p.product_name_th }))),
     [productsQ.data],
   );
   const categoryOptions = useMemo(
-    () => (categoriesQ.data?.data ?? []).map((c) => ({ value: c._id, label: c.product_category_name })),
+    () => sortOptionsThai((categoriesQ.data?.data ?? []).map((c) => ({ value: c._id, label: c.product_category_name }))),
     [categoriesQ.data],
   );
 

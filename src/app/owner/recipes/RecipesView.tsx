@@ -16,6 +16,7 @@ import { RecipeCard } from "./_components/RecipeCard";
 import { RecipeDetail } from "./_components/RecipeDetail";
 import { MainRecipeModal } from "./_components/MainRecipeModal";
 import { ComponentFormModal } from "./_components/ComponentFormModal";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 type VM = ReturnType<typeof useRecipesViewModel>;
 type ComponentRow = RecipeComponent & { usedIn: string[] };
@@ -57,7 +58,7 @@ function MainTab(vm: VM) {
                 onChange={(v) => vm.setMainCategoryFilter(v as string)}
                 options={[
                   { value: "all", label: t("common.all") },
-                  ...vm.productCategories.map((c) => ({ value: c._id, label: c.product_category_name })),
+                  ...sortOptionsThai(vm.productCategories.map((c) => ({ value: c._id, label: c.product_category_name }))),
                 ]}
               />
             </div>

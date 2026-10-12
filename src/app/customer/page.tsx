@@ -14,6 +14,7 @@ import HeroCarousel from "@/components/customer/HeroCarousel";
 import { categoryNameOf, isProductCardVisible } from "@/components/customer/ProductCard";
 import HomeRecommendations from "./_components/HomeRecommendations";
 import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from "./lib/catalogQueries";
+import { thaiCompare } from "@/lib/thaiSort";
 
 
 export default function CustomerHomePage() {
@@ -26,7 +27,7 @@ export default function CustomerHomePage() {
 
   const products = useMemo(() => (productsQ.data?.data ?? []).filter(isProductCardVisible), [productsQ.data]);
 
-  // หมวดที่มีสินค้าพร้อมขาย เรียงจากจำนวนสินค้ามากไปน้อย (ซ่อนหมวดที่ไม่มีสินค้า)
+  // หมวดที่มีสินค้าพร้อมขาย เรียง ก-ฮ (ซ่อนหมวดที่ไม่มีสินค้า)
   const categoryCards = useMemo(() => {
     return (categoriesQ.data ?? [])
       .map((c) => {
@@ -35,7 +36,7 @@ export default function CustomerHomePage() {
         return { id: c._id, name: name ?? "", productCount };
       })
       .filter((c) => c.name && c.productCount > 0)
-      .sort((a, b) => b.productCount - a.productCount);
+      .sort((a, b) => thaiCompare(a.name, b.name));
   }, [categoriesQ.data, products]);
 
   const loading = productsQ.isLoading;
@@ -84,7 +85,7 @@ export default function CustomerHomePage() {
         <div className="flex justify-center mt-10 md:mt-12">
           <Link
             href="/customer/product"
-            className="inline-flex items-center justify-center gap-2 text-sm sm:text-base px-8 py-3.5 group bg-white border border-[#8C5A3C]/30 !text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:!bg-[#4A342E] hover:!text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200"
+            className="inline-flex items-center justify-center gap-2 text-sm h-[36px] px-8 group bg-white border border-[#8C5A3C]/30 !text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:!bg-[#4A342E] hover:!text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200"
           >
             <span>{t("common.allProducts")}</span>
             <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>

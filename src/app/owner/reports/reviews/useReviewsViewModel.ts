@@ -18,6 +18,7 @@ import { formatDate } from "@/i18n/format";
 import { isApiError } from "@/types/api";
 import type { Review, ReviewListParams, ReviewModeration, ReviewSort, ReviewStatus } from "@/types/review";
 import { toReviewRow, type ReviewRow } from "./reviewRow";
+import { sortByThai, sortOptionsThai, thaiCompare } from "@/lib/thaiSort";
 
 export type { ReviewRow };
 
@@ -104,7 +105,7 @@ export function useReviewsViewModel() {
   const aspectsQ = useQuery({ queryKey: ["review-aspects"], queryFn: reviewAspectsService.list });
 
   const rows = useMemo(() => (listQ.data?.data ?? []).map(toReviewRow), [listQ.data]);
-  const tagSuggestions = useMemo(() => [...new Set(rows.flatMap((r) => r.internalTags))], [rows]);
+  const tagSuggestions = useMemo(() => [...new Set(rows.flatMap((r) => r.internalTags))].sort(thaiCompare), [rows]);
 
   // ── เลือกหลายรายการ (ล้างเมื่อเปลี่ยนชุดข้อมูล) ──
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -240,9 +241,9 @@ export function useReviewsViewModel() {
       setFilters({ ...DEFAULT_FILTERS, negativeOnly: true, replied: "0", sort: "needs_reply" });
       setPage(1);
     },
-    categoryOptions: (options?.categories ?? []).map((c) => ({ value: c.category_id, label: `${c.category_name} (${c.review_count})` })),
-    productOptions: (options?.products ?? []).map((p) => ({ value: p.product_id, label: `${p.product_name_th} (${p.review_count})` })),
-    aspectOptions: activeAspects.map((a) => ({ value: a._id, label: a.aspect_name_th })),
+    categoryOptions: sortByThai((options?.categories ?? []), (c) => c.category_name).map((c) => ({ value: c.category_id, label: `${c.category_name} (${c.review_count})` })),
+    productOptions: sortByThai((options?.products ?? []), (p) => p.product_name_th).map((p) => ({ value: p.product_id, label: `${p.product_name_th} (${p.review_count})` })),
+    aspectOptions: sortOptionsThai(activeAspects.map((a) => ({ value: a._id, label: a.aspect_name_th }))),
     replySuggestions: options?.reply_suggestions ?? [],
 
     selected,

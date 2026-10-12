@@ -60,7 +60,7 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
         type="button"
         disabled
         title={t("auth.googleNotConfigured")}
-        className="flex w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-[#e1d6cd] bg-white py-3 text-[14.5px] font-semibold text-[#4e342e] opacity-60"
+        className="flex h-[40px] w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-[#e1d6cd] bg-white text-[14.5px] font-semibold text-[#4e342e] opacity-60"
       >
         <FcGoogle size={20} />
         {t("auth.loginWithGoogle")}
@@ -71,7 +71,7 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
   return (
     <>
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onReady={() => setReady(true)} />
-      <div className={`flex min-h-[44px] w-full justify-center overflow-hidden rounded-xl bg-white ${disabled ? "pointer-events-none opacity-60" : ""}`}>
+      <div className={`flex h-[40px] w-full justify-center overflow-hidden rounded-xl bg-white ${disabled ? "pointer-events-none opacity-60" : ""}`}>
         <div ref={slot} className="w-full" aria-label={t("auth.loginWithGoogle")} />
       </div>
     </>

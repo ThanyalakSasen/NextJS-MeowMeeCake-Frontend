@@ -12,6 +12,7 @@ import type { CreateProductionOrderItemInput } from "@/types/productionOrder";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import type { CreateProductionOrderValue } from "../useProductionViewModel";
 import { useEditableRows, RemoveRowButton } from "@/components/shared/form";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string }
 interface StaffOption { _id: string; user_fullname: string }
@@ -105,7 +106,7 @@ export function ProductionOrderFormModal({
             <Select
               allowClear
               placeholder={t("production.assigneePlaceholder")}
-              options={staff.map((s) => ({ value: s._id, label: s.user_fullname }))}
+              options={sortOptionsThai(staff.map((s) => ({ value: s._id, label: s.user_fullname })))}
             />
           </FormItem>
         </div>
@@ -129,11 +130,11 @@ export function ProductionOrderFormModal({
               onChange={(v) => updateRow(row.key, { product_id: v as string })}
               showSearch
               optionFilterProp="label"
-              options={products.map((p) => ({
+              options={sortOptionsThai(products.map((p) => ({
                 value: p._id,
                 label: p.name,
                 disabled: rows.some((r) => r.key !== row.key && r.product_id === p._id),
-              }))}
+              })))}
             />
             <InputNumber
               size="small"

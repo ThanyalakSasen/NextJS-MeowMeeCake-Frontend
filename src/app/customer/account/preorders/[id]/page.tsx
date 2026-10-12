@@ -237,7 +237,7 @@ function PreorderDetailContent() {
           <ReviewLink kind="preorder" doc={p} itemIds={p.items.map((it) => it._id)} href={`/customer/account/preorders/${p._id}/review`} className={shopButtonPrimary} />
           {canCustomerCancelPreorder(p) && (
             <button type="button" onClick={() => void onCancel()} disabled={cancel.isPending}
-              className="rounded-xl border border-red-600/30 bg-white px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+              className="h-[36px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
               {cancel.isPending ? to("cancelling") : t("cancelPreorder")}
             </button>
           )}

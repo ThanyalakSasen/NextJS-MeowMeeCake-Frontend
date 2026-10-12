@@ -25,6 +25,7 @@ import { productKindOf } from "@/types/product";
 import type { RecipeSubmitValue } from "./_components/MainRecipeModal";
 import type { ComponentSubmitValue } from "./_components/ComponentFormModal";
 import { LIST_ALL } from "@/lib/http";
+import { sortByThai, sortOptionsThai } from "@/lib/thaiSort";
 
 export type RecipeTab = "main" | "components";
 
@@ -94,24 +95,24 @@ export function useRecipesViewModel() {
   // ── ตัวเลือกฟอร์ม (join ไว้ล่วงหน้า — modal/View ไม่ join เอง) ──
   const ingredientOptions = useMemo(() => {
     const unitMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
-    return ingredients.map((i) => {
+    return sortByThai(ingredients.map((i) => {
       const unitId = refId(i.unit_id);
       return {
         _id: i._id, name: i.ingredient_name,
         unit_id: unitId, unit_abbr: (unitId && unitMap.get(unitId)) || "",
       };
-    });
+    }), (o) => o.name);
   }, [ingredients, units]);
 
   const productYieldUnitOptions = useMemo(
-    () => units.filter((u) => isProductUnit(u.usage_context)).map((u) => ({ value: u._id, label: `${u.unit_name} (${u.unit_abbr})` })),
+    () => sortOptionsThai(units.filter((u) => isProductUnit(u.usage_context)).map((u) => ({ value: u._id, label: `${u.unit_name} (${u.unit_abbr})` }))),
     [units],
   );
   const allUnitOptions = useMemo(
-    () => units.map((u) => ({ value: u._id, label: `${u.unit_name} (${u.unit_abbr})` })),
+    () => sortOptionsThai(units.map((u) => ({ value: u._id, label: `${u.unit_name} (${u.unit_abbr})` }))),
     [units],
   );
-  const componentOptions = useMemo(() => components.map((c) => ({ _id: c._id, name: c.component_name })), [components]);
+  const componentOptions = useMemo(() => sortByThai(components.map((c) => ({ _id: c._id, name: c.component_name })), (c) => c.name), [components]);
 
   /** สินค้าที่ยังไม่มีสูตรหลักผูกอยู่ */
   const productsWithoutRecipe = useMemo(
@@ -142,7 +143,7 @@ export function useRecipesViewModel() {
     const list = editingProductId
       ? products.filter((p) => p._id === editingProductId || !recipes.some((r) => r.product_id === p._id))
       : productsWithoutRecipe;
-    return list.map((p) => ({ _id: p._id, name: p.product_name_th, type: productKindOf(p) }));
+    return sortByThai(list.map((p) => ({ _id: p._id, name: p.product_name_th, type: productKindOf(p) })), (p) => p.name);
   }, [products, recipes, productsWithoutRecipe, recipeEditTarget]);
 
   const filteredRecipes = useMemo(() => {
@@ -169,7 +170,7 @@ export function useRecipesViewModel() {
   const [componentEditTarget, setComponentEditTarget] = useState<RecipeComponent | null>(null);
 
   const componentCategoryOptions = useMemo(
-    () => componentCategories.map((c) => ({ value: c._id, label: c.component_category_name })),
+    () => sortOptionsThai(componentCategories.map((c) => ({ value: c._id, label: c.component_category_name }))),
     [componentCategories],
   );
 

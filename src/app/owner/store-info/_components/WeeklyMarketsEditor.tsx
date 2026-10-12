@@ -96,7 +96,7 @@ export function WeeklyMarketsEditor({
                       disabled={!editable}
                       aria-pressed={on}
                       onClick={() => onToggleDay(i, day)}
-                      className={`rounded-lg border px-2.5 py-1 text-xs transition disabled:cursor-not-allowed ${
+                      className={`h-[36px] rounded-lg border px-3 text-sm transition disabled:cursor-not-allowed ${
                         on ? "border-brown-800 bg-brown-800 text-white" : "border-gray-200 bg-white text-gray-600 hover:border-gray-400"
                       } ${editable ? "" : "opacity-70"}`}
                     >

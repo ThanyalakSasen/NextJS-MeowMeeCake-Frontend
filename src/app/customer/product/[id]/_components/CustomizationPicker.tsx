@@ -19,7 +19,7 @@ function ruleText(min: number, max: number, t: CustomT): string {
 }
 
 const chip = (active: boolean) =>
-  `rounded-xl border-2 px-3 py-2 text-left text-xs sm:text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
+  `min-h-[36px] rounded-xl border-2 px-3 py-1 text-left text-xs sm:text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
     active ? "border-[#8C5A3C] bg-white font-bold text-[#4A342E] shadow-sm" : "border-[#8C5A3C]/15 bg-white/60 text-gray-700 hover:border-[#8C5A3C]/40"
   }`;
 

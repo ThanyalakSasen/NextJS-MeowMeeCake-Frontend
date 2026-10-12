@@ -265,7 +265,7 @@ function CancelOrderButton({ orderId, orderNo, paid }: { orderId: string; orderN
   };
   return (
     <button type="button" onClick={() => void onClick()} disabled={cancel.isPending}
-      className="rounded-xl border border-red-600/30 bg-white px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+      className="h-[36px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
       {cancel.isPending ? t("cancelling") : t("cancelOrder")}
     </button>
   );

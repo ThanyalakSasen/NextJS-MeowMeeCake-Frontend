@@ -14,6 +14,7 @@ import { TrashIcon } from "@heroicons/react/24/outline";
 import { Button, DatePicker, Input, InputNumber, Select } from "@/components/base";
 import { formatNumber } from "@/i18n/format";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 export type BulkStockMode = "receive" | "use" | "adjust";
 
@@ -207,7 +208,7 @@ function Body({
                     placeholder={t("selectItem")}
                     value={l.id ?? undefined}
                     onChange={(v) => pick(l.key, v as string)}
-                    options={items.map((i) => ({ value: i.id, label: i.name, disabled: used.has(i.id) && i.id !== l.id }))}
+                    options={sortOptionsThai(items.map((i) => ({ value: i.id, label: i.name, disabled: used.has(i.id) && i.id !== l.id })))}
                     className="w-full"
                   />
                   {item && (

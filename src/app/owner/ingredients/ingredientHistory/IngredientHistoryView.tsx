@@ -9,6 +9,7 @@ import { formatDate, formatNumber } from "@/i18n/format";
 import { INGREDIENT_TXN_CONFIG } from "@/constants/enumConfig";
 import type { HistoryRow, useIngredientHistoryViewModel } from "./useIngredientHistoryViewModel";
 import { LoadFailed } from "@/components/shared/feedback";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 type VM = ReturnType<typeof useIngredientHistoryViewModel>;
 
@@ -84,7 +85,7 @@ export function IngredientHistoryView(vm: VM) {
                   onChange={(v) => vm.setIngredientId(v as string)}
                   options={[
                     { value: "all", label: t("ingredientHistory.allIngredients") },
-                    ...vm.ingredients.map((i) => ({ value: i._id, label: i.ingredient_name })),
+                    ...sortOptionsThai(vm.ingredients.map((i) => ({ value: i._id, label: i.ingredient_name }))),
                   ]}
                 />
               </div>
