@@ -47,7 +47,7 @@ export function PaymentDoneModal({
           type="button"
           autoFocus
           onClick={onNewBill}
-          className="min-h-[52px] cursor-pointer rounded-[14px] border-none bg-brown-800 font-semibold text-white"
+          className="h-9 cursor-pointer rounded-lg border-none bg-brown-800 font-medium text-white"
         >
           {t("pos.newBill")}
         </button>

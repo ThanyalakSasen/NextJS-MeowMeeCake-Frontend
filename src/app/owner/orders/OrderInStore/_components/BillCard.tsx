@@ -68,7 +68,7 @@ export function BillCard({
                   type="button"
                   onClick={() => onDecrease(l)}
                   aria-label={t("pos.decreaseQty")}
-                  className="h-10 w-11 cursor-pointer border-none bg-transparent text-lg text-brown-900"
+                  className="h-[34px] w-11 cursor-pointer border-none bg-transparent text-lg text-brown-900"
                 >
                   −
                 </button>
@@ -79,7 +79,7 @@ export function BillCard({
                   disabled={atMax}
                   aria-label={t("pos.increaseQty")}
                   title={atMax ? t("pos.stockLeft", { n: l.stock }) : undefined}
-                  className="h-10 w-11 cursor-pointer border-none bg-transparent text-lg text-brown-900 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="h-[34px] w-11 cursor-pointer border-none bg-transparent text-lg text-brown-900 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   +
                 </button>
