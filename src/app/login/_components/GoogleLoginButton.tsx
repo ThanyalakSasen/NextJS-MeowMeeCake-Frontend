@@ -71,8 +71,11 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
   return (
     <>
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onReady={() => setReady(true)} />
-      <div className={`flex h-[40px] w-full justify-center overflow-hidden rounded-xl bg-white ${disabled ? "pointer-events-none opacity-60" : ""}`}>
+      {/* ปุ่มของ Google มุมโค้ง 4px — กรอบ rounded-xl (เท่าปุ่มอื่น) ตัดมุมแล้วเส้นขอบของ Google หายตรงมุม
+          → วาดเส้นขอบโค้งทับเอง (สีเดียวกับขอบ Google #dadce0 · pointer-events-none ให้คลิกทะลุไปที่ปุ่ม) */}
+      <div className={`relative flex h-[40px] w-full justify-center overflow-hidden rounded-xl bg-white ${disabled ? "pointer-events-none opacity-60" : ""}`}>
         <div ref={slot} className="w-full" aria-label={t("auth.loginWithGoogle")} />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-xl border border-[#dadce0]" />
       </div>
     </>
   );
