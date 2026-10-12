@@ -50,7 +50,7 @@ export function QRPaymentModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="min-h-11 cursor-pointer rounded-xl border-none bg-gray-100 px-3.5 text-brown-900"
+            className="h-9 cursor-pointer rounded-lg border-none bg-gray-100 px-4 font-medium text-brown-900"
           >
             {t("common.close")}
           </button>
@@ -75,7 +75,7 @@ export function QRPaymentModal({
           type="button"
           onClick={onConfirmPaid}
           disabled={submitting}
-          className="min-h-14 cursor-pointer rounded-[14px] border-none bg-info text-[17px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+          className="h-9 cursor-pointer rounded-lg border-none bg-info font-medium text-white disabled:cursor-not-allowed disabled:opacity-45"
         >
           {submitting ? t("pos.processing") : t("pos.qrConfirmPaid")}
         </button>
@@ -83,7 +83,7 @@ export function QRPaymentModal({
           type="button"
           onClick={onSwitchToCash}
           disabled={submitting}
-          className="min-h-11 cursor-pointer rounded-xl border border-gray-300 bg-white text-brown-900"
+          className="h-9 cursor-pointer rounded-lg border border-gray-300 bg-white font-medium text-brown-900"
         >
           {t("pos.qrSwitchToCash")}
         </button>

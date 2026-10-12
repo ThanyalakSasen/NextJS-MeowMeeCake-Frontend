@@ -158,7 +158,7 @@ export function PaymentAside({
           type="button"
           onClick={onClearBill}
           disabled={!hasItems}
-          className="min-h-10 cursor-pointer border-none bg-transparent font-medium text-danger underline disabled:cursor-not-allowed disabled:opacity-40"
+          className="h-9 cursor-pointer border-none bg-transparent font-medium text-danger underline disabled:cursor-not-allowed disabled:opacity-40"
         >
           {t("pos.clearBill")}
         </button>
