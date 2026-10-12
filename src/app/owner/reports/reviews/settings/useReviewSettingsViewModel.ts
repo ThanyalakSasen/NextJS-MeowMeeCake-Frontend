@@ -15,6 +15,7 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { ReviewAspect, ReviewAspectInput, SemanticTerm, SemanticTermInput } from "@/types/review";
 import { reviewAspectsKey } from "@/app/customer/lib/shopQueries";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 const ASPECTS_KEY = ["review-aspects"] as const;
 const TERMS_KEY = ["semantic-terms"] as const;
@@ -204,6 +205,6 @@ export function useReviewSettingsViewModel() {
       saveTerm.mutate(termEdit);
     },
     onDeleteTerm: (x: SemanticTerm) => removeTerm.mutate(x),
-    aspectOptions: aspects.map((a) => ({ value: a._id, label: a.aspect_name_th })),
+    aspectOptions: sortOptionsThai(aspects.map((a) => ({ value: a._id, label: a.aspect_name_th }))),
   };
 }

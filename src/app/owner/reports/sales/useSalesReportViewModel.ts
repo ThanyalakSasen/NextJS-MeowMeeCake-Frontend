@@ -6,6 +6,7 @@
 // กับ products list ที่โหลดแยกอยู่แล้ว (ไม่เพิ่ม request)
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
+import { thaiCompare } from "@/lib/thaiSort";
 import { useQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
 import { reportsService } from "@/services/reports";
@@ -48,7 +49,10 @@ export function useSalesReportViewModel() {
   const categories = useMemo(() => {
     const seen = new Map<string, string>();
     stats.forEach((s) => { if (s.category_id && !seen.has(s.category_id)) seen.set(s.category_id, s.category_name); });
-    return [...seen.entries()].map(([value, label]) => ({ value, label }));
+    // เรียง ก-ฮ (collation ภาษาไทย — สระหน้าอย่าง เ/แ ไม่นับ: "เค้กชิ้น" อยู่หมวด ค) · "ทุกหมวดหมู่" View ใส่ไว้หน้าสุดเอง
+    return [...seen.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => thaiCompare(a.label, b.label));
   }, [stats]);
 
   const rows = useMemo(() => {

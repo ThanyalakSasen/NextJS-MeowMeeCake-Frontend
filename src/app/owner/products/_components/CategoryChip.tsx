@@ -22,7 +22,7 @@ export function CategoryChip({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+      className={`inline-flex items-center gap-1.5 h-[36px] rounded-full border px-3.5 text-sm transition-colors ${
         active
           ? "border-brown-800 bg-brown-800 font-medium text-white"
           : "border-gray-300 text-gray-700 hover:bg-gray-50"

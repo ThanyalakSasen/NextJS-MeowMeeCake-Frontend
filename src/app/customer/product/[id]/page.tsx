@@ -37,7 +37,7 @@ import SimilarProducts from "./_components/SimilarProducts";
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
 const iconButton =
-  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#8C5A3C]/20 bg-white shadow-sm transition hover:scale-105 hover:bg-[#FAF6F0] disabled:opacity-60";
+  "flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full border border-[#8C5A3C]/20 bg-white shadow-sm transition hover:scale-105 hover:bg-[#FAF6F0] disabled:opacity-60";
 
 export default function ProductDetailPage() {
   return (
@@ -114,7 +114,7 @@ function ProductDetailContent() {
         <button
           type="button"
           onClick={() => router.push("/customer/product")}
-          className="mt-4 px-5 py-2 rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold hover:bg-[#4A342E] hover:text-white transition"
+          className="mt-4 h-[36px] px-5 text-sm rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold hover:bg-[#4A342E] hover:text-white transition"
         >
           {t("seeAll")}
         </button>
@@ -131,7 +131,7 @@ function ProductDetailContent() {
             <button
               type="button"
               onClick={() => productQ.refetch()}
-              className="px-5 py-2 rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
+              className="h-[36px] px-5 text-sm rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
             >
               {t("retry")}
             </button>
@@ -210,7 +210,7 @@ function ProductDetailContent() {
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? router.back() : router.push("/customer/product"))}
-            className="-mt-2 px-3.5 py-1.5 text-xs bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200"
+            className="-mt-2 h-[36px] px-3.5 text-xs bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200"
           >
             {t("back")}
           </button>
@@ -365,7 +365,7 @@ function ProductDetailContent() {
                       onClick={() => changeQty(-1)}
                       disabled={isLoading || outOfStock || qty <= 1}
                       aria-label={tcart("decrease")}
-                      className="w-10 h-11 flex items-center justify-center font-bold text-lg text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40 transition-colors"
+                      className="w-10 h-[34px] flex items-center justify-center font-bold text-lg text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40 transition-colors"
                     >
                       -
                     </button>
@@ -375,7 +375,7 @@ function ProductDetailContent() {
                       onClick={() => changeQty(1)}
                       disabled={isLoading || outOfStock || qty >= stock}
                       aria-label={tcart("increase")}
-                      className="w-10 h-11 flex items-center justify-center font-bold text-lg text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40 transition-colors"
+                      className="w-10 h-[34px] flex items-center justify-center font-bold text-lg text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40 transition-colors"
                     >
                       +
                     </button>
@@ -385,7 +385,7 @@ function ProductDetailContent() {
                     type="button"
                     disabled={isLoading || isSuccess || outOfStock || customQ.isLoading}
                     onClick={() => void onAdd()}
-                    className="flex-1 h-11 px-2 text-sm sm:text-base bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="flex-1 h-[36px] px-2 text-sm sm:text-base bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     {outOfStock
                       ? t("soldOut")
@@ -412,7 +412,7 @@ function ProductDetailContent() {
                   type="button"
                   onClick={() => setActiveTab(key)}
                   aria-pressed={activeTab === key}
-                  className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all border ${
+                  className={`flex-1 h-[36px] px-4 rounded-xl text-xs sm:text-sm font-bold transition-all border ${
                     activeTab === key
                       ? "bg-[#4A342E] text-white border-[#8C5A3C] shadow-sm"
                       : "bg-white text-[#4A342E] border-[#8C5A3C]/20 hover:bg-[#4A342E] hover:text-white"

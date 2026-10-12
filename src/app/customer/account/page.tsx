@@ -26,6 +26,7 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { shopButton, shopButtonPrimary, shopInput, shopPage } from "@/components/customer/shopStyles";
 import { shopEmailStatusKey, shopLineStatusKey, shopProfileKey } from "../lib/shopQueries";
+import { thaiCompare } from "@/lib/thaiSort";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^0\d{8,9}$/;
@@ -227,7 +228,7 @@ function ProfileSection({ profile }: { profile: ShopProfile }) {
     <section className={section}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="m-0 text-base font-bold text-stone-900">{t("accountInfo")}</h2>
-        <button type="button" onClick={openEdit} className={`${shopButton} !px-3 !py-1.5 text-sm`}>
+        <button type="button" onClick={openEdit} className={`${shopButton} !px-3 text-sm`}>
           <Pencil className="h-3.5 w-3.5" /> {t("edit")}
         </button>
       </div>
@@ -316,7 +317,7 @@ function RefundAccountSection({ profile }: { profile: ShopProfile }) {
           <h2 className="m-0 text-base font-bold text-stone-900">{t("refundTitle")}</h2>
           <p className="m-0 mt-1 text-xs text-stone-500">{t("refundHint")}</p>
         </div>
-        <button type="button" onClick={openEdit} className={`${shopButton} shrink-0 !px-3 !py-1.5 text-sm`}>
+        <button type="button" onClick={openEdit} className={`${shopButton} shrink-0 !px-3 text-sm`}>
           <Pencil className="h-3.5 w-3.5" /> {current ? t("edit") : t("refundAdd")}
         </button>
       </div>
@@ -416,14 +417,14 @@ function LineSection({ authProvider }: { authProvider: ShopProfile["auth_provide
           {/* บัญชีที่สมัครด้วย LINE ยกเลิกไม่ได้ — จะเข้าสู่ระบบไม่ได้อีก (ไม่มีรหัสผ่าน) */}
           {authProvider !== "line" && (
             <button type="button" onClick={() => void onUnlink()} disabled={unlink.isPending}
-              className="rounded-xl border border-red-600/30 bg-white px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+              className="h-[36px] rounded-xl border border-red-600/30 bg-white px-3 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
               {t("unlink")}
             </button>
           )}
         </div>
       ) : (
         <button type="button" onClick={() => connect.mutate()} disabled={connect.isPending}
-          className="rounded-xl bg-[#06C755] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#05b14c] disabled:opacity-60">
+          className="h-[36px] rounded-xl bg-[#06C755] px-4 text-sm font-bold text-white transition hover:bg-[#05b14c] disabled:opacity-60">
           {connect.isPending ? t("goingToLine") : t("connectLine")}
         </button>
       )}
@@ -443,7 +444,7 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("allergySaveFailed")),
   });
   const list = profile.user_allergies;
-  const options = (ingredientsQ.data ?? []).map((i) => i.ingredient_name).filter((n) => !list.includes(n));
+  const options = (ingredientsQ.data ?? []).map((i) => i.ingredient_name).filter((n) => !list.includes(n)).sort(thaiCompare);
 
   return (
     <section className={section}>

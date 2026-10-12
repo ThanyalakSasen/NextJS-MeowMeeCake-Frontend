@@ -72,7 +72,7 @@ export default function PickupLocationPicker({
                 role="radio"
                 aria-checked={d === date}
                 onClick={() => onChange(selected._id, d)}
-                className={`rounded-lg border-2 px-3 py-1.5 text-sm transition ${
+                className={`inline-flex h-[36px] items-center rounded-lg border-2 px-3 text-sm transition ${
                   d === date ? "border-[#8C5A3C] bg-[#FAF6F0] font-bold" : "border-gray-200 hover:border-[#8C5A3C]/40"
                 }`}
               >

@@ -171,7 +171,7 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
         {extra > 0 && (
           <button
             type="button"
-            className="w-full rounded-lg border border-dashed border-stone-200 py-2 text-xs text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]"
+            className="h-[36px] w-full rounded-lg border border-dashed border-stone-200 text-xs text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]"
             onClick={() => setExpanded((v) => !v)}
           >
             {expanded ? t("hideItems") : t("moreItems", { n: extra })}

@@ -13,6 +13,7 @@ import { catalogService } from "@/services/catalog";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { MIN_PASSWORD_LENGTH } from "@/constants/auth";
+import { thaiCompare } from "@/lib/thaiSort";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^0\d{8,9}$/;
@@ -60,7 +61,7 @@ export function useRegisterViewModel() {
   const [resending, setResending] = useState(false);
 
   const ingredientsQ = useQuery({ queryKey: ["catalog", "ingredients"], queryFn: catalogService.ingredients, staleTime: 10 * 60_000 });
-  const allergyOptions = (ingredientsQ.data ?? []).map((i) => i.ingredient_name).filter((n) => !form.allergies.includes(n));
+  const allergyOptions = (ingredientsQ.data ?? []).map((i) => i.ingredient_name).filter((n) => !form.allergies.includes(n)).sort(thaiCompare);
 
   const set = <K extends keyof RegisterForm>(key: K, value: RegisterForm[K]) => setForm((f) => ({ ...f, [key]: value }));
 

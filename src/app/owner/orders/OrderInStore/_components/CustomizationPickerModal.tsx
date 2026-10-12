@@ -78,7 +78,7 @@ export function CustomizationPickerModal({
                       aria-checked={on}
                       disabled={full}
                       onClick={() => setPicked((p) => toggleVariant(customization, p, g._id, v._id))}
-                      className={`rounded-lg border-2 px-3 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                      className={`min-h-[36px] rounded-lg border-2 px-3 py-1 text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
                         on ? "border-brown-700 bg-brown-50 font-semibold text-brown-900" : "border-gray-200 text-gray-700 hover:border-brown-300"
                       }`}
                     >

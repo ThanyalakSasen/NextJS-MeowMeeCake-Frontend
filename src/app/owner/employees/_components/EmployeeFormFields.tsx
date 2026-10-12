@@ -10,6 +10,7 @@ import { isLinePlaceholderEmail } from "@/lib/lineAccount";
 import { rolesService } from "@/services/roles";
 import { MIN_PASSWORD_LENGTH } from "@/constants/auth";
 import { usePermissionCeiling } from "../usePermissionCeiling";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 /** currentRoleId = บทบาทเดิมของบัญชีที่แก้ — ไม่ย้ายบทบาท = backend ไม่ตรวจ จึงเลือกค้างไว้ได้เสมอ */
 export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?: boolean; currentRoleId?: string }) {
@@ -65,7 +66,7 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
         <Select
           allowClear
           loading={roles.isLoading}
-          options={staffRoles.map((r) => ({ value: r._id, label: r.role_name, disabled: roleBlocked(r._id) }))}
+          options={sortOptionsThai(staffRoles.map((r) => ({ value: r._id, label: r.role_name, disabled: roleBlocked(r._id) })))}
         />
       </FormItem>
 

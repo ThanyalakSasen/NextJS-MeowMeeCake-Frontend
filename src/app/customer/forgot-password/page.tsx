@@ -19,7 +19,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const card =
   "mx-auto flex w-full max-w-[580px] flex-col items-center rounded-2xl border border-stone-100 bg-white p-8 text-center shadow-sm sm:p-10";
 const button =
-  "flex w-full max-w-xs items-center justify-center gap-2 rounded-xl border border-[#8C5A3C]/30 bg-white px-6 py-3.5 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-stone-300";
+  "flex w-full max-w-xs items-center justify-center gap-2 rounded-xl border border-[#8C5A3C]/30 bg-white h-[36px] px-6 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-stone-300";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("shop.password");

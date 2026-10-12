@@ -9,6 +9,7 @@ import type { IngredientCategory } from "@/types/ingredientCategory";
 import type { Unit } from "@/types/unit";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { IngredientRow } from "../useIngredientsViewModel";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 interface FormValues {
   ingredient_name: string;
@@ -103,7 +104,7 @@ export function IngredientFormModal({
             rules={[{ required: true, message: t("validation.required") }]}
           >
             <Select
-              options={categories.map((c) => ({ value: c._id, label: c.ingredient_category_name }))}
+              options={sortOptionsThai(categories.map((c) => ({ value: c._id, label: c.ingredient_category_name })))}
               placeholder={t("ingredients.selectCategory")}
             />
           </FormItem>
@@ -113,7 +114,7 @@ export function IngredientFormModal({
             rules={[{ required: true, message: t("validation.required") }]}
           >
             <Select
-              options={units.map((u) => ({ value: u._id, label: `${u.unit_name} (${u.unit_abbr})` }))}
+              options={sortOptionsThai(units.map((u) => ({ value: u._id, label: `${u.unit_name} (${u.unit_abbr})` })))}
               placeholder={t("ingredients.selectUnit")}
             />
           </FormItem>

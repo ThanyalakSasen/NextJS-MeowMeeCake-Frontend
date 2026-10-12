@@ -159,7 +159,7 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
         )}
         {extra > 0 && (
           <button type="button" onClick={() => setExpanded((v) => !v)}
-            className="w-full rounded-lg border border-dashed border-stone-200 py-2 text-xs text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]">
+            className="h-[36px] w-full rounded-lg border border-dashed border-stone-200 text-xs text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]">
             {expanded ? to("hideItems") : to("moreItems", { n: extra })}
           </button>
         )}

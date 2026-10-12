@@ -147,16 +147,16 @@ function AddressBookContent() {
                     </div>
                     <div className="flex shrink-0 flex-wrap items-center gap-2">
                       {!a.is_default && (
-                        <button type="button" className={`${shopButton} !px-3 !py-1.5 text-xs`} disabled={makeDefault.isPending} onClick={() => makeDefault.mutate(a._id)}>
+                        <button type="button" className={`${shopButton} !px-3 text-xs`} disabled={makeDefault.isPending} onClick={() => makeDefault.mutate(a._id)}>
                           {t("makeDefault")}
                         </button>
                       )}
-                      <button type="button" aria-label={t("editAria")} className={`${shopButton} !px-3 !py-1.5 text-xs`}
+                      <button type="button" aria-label={t("editAria")} className={`${shopButton} !px-3 text-xs`}
                         onClick={() => setEditing({ id: a._id, form: { house_no: a.house_no, sub_district: a.sub_district, district: a.district, province: a.province, zip_code: a.zip_code, is_default: a.is_default } })}>
                         <Pencil className="h-3.5 w-3.5" /> {t("edit")}
                       </button>
                       <button type="button" aria-label={t("deleteAria")} disabled={remove.isPending} onClick={() => void onDelete(a)}
-                        className="inline-flex items-center gap-1 rounded-xl border border-red-600/30 bg-white px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+                        className="inline-flex items-center gap-1 h-[36px] rounded-xl border border-red-600/30 bg-white px-3 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
                         <Trash2 className="h-3.5 w-3.5" /> {t("delete")}
                       </button>
                     </div>

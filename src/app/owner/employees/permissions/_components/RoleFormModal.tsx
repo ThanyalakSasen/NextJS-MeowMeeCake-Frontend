@@ -7,6 +7,7 @@ import type { Rule } from "antd/es/form";
 import type { Role } from "@/types/role";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { AddRoleValues } from "../usePermissionsViewModel";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 /** canCopyFrom: คัดลอกได้เฉพาะตำแหน่งที่สิทธิ์ไม่เกินเรา (P4) — ตัวอื่นแสดงแต่ปิดไว้ */
 export function RoleFormModal({
@@ -59,7 +60,7 @@ export function RoleFormModal({
           <Select
             allowClear
             placeholder={t("permissions.copyFromPlaceholder")}
-            options={roles.map((r) => ({ value: r._id, label: r.role_name, disabled: !canCopyFrom(r._id) }))}
+            options={sortOptionsThai(roles.map((r) => ({ value: r._id, label: r.role_name, disabled: !canCopyFrom(r._id) })))}
           />
         </FormItem>
       </Form>

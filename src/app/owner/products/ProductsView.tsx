@@ -17,6 +17,7 @@ import type { useProductsViewModel } from "./useProductsViewModel";
 import { ProductGrid } from "./_components/ProductGrid";
 import { CategoryChip } from "./_components/CategoryChip";
 import { RatingDisplay } from "./_components/RatingDisplay";
+import { sortByThai } from "@/lib/thaiSort";
 
 type VM = ReturnType<typeof useProductsViewModel>;
 
@@ -89,8 +90,7 @@ export function ProductsView(vm: VM) {
           />
           <div className="flex flex-wrap gap-2">
             <CategoryChip label={t("common.all")} active={!vm.categoryId} onClick={() => vm.setCategoryId(null)} />
-            {[...vm.categories]
-              .sort((a, b) => a.product_category_name.localeCompare(b.product_category_name, locale))
+            {sortByThai(vm.categories, (c) => c.product_category_name)
               .map((c) => (
               <CategoryChip
                 key={c._id}

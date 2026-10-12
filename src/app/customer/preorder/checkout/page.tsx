@@ -240,9 +240,9 @@ function PreorderCheckoutContent() {
                       />
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center overflow-hidden rounded-lg border border-[#8C5A3C]/30">
-                          <button type="button" aria-label={tcart("decrease")} disabled={it.quantity <= it.min_qty} onClick={() => updatePreorderBasketItem(key, { quantity: it.quantity - 1 })} className="h-8 w-8 font-bold text-[#8C5A3C] disabled:opacity-40">-</button>
+                          <button type="button" aria-label={tcart("decrease")} disabled={it.quantity <= it.min_qty} onClick={() => updatePreorderBasketItem(key, { quantity: it.quantity - 1 })} className="h-[34px] w-[36px] font-bold text-[#8C5A3C] disabled:opacity-40">-</button>
                           <span className="w-9 text-center text-sm font-bold">{it.quantity}</span>
-                          <button type="button" aria-label={tcart("increase")} disabled={it.quantity >= it.max_qty} onClick={() => updatePreorderBasketItem(key, { quantity: it.quantity + 1 })} className="h-8 w-8 font-bold text-[#8C5A3C] disabled:opacity-40">+</button>
+                          <button type="button" aria-label={tcart("increase")} disabled={it.quantity >= it.max_qty} onClick={() => updatePreorderBasketItem(key, { quantity: it.quantity + 1 })} className="h-[34px] w-[36px] font-bold text-[#8C5A3C] disabled:opacity-40">+</button>
                         </div>
                         <span className="text-sm font-semibold">{baht(it.unit_price * it.quantity)}</span>
                       </div>

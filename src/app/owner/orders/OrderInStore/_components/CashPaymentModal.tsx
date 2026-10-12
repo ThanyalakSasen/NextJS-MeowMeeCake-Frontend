@@ -46,7 +46,7 @@ export function CashPaymentModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="h-9 cursor-pointer rounded-lg border-none bg-gray-100 px-4 font-medium text-brown-900"
+            className="h-[36px] cursor-pointer rounded-lg border-none bg-gray-100 px-4 font-medium text-brown-900"
           >
             {t("common.close")}
           </button>
@@ -78,7 +78,7 @@ export function CashPaymentModal({
               key={q.label}
               type="button"
               onClick={() => onPick(q.value)}
-              className="h-9 cursor-pointer rounded-lg border border-success bg-green-50 font-medium text-success"
+              className="h-[36px] cursor-pointer rounded-lg border border-success bg-green-50 font-medium text-success"
             >
               {q.label}
             </button>
@@ -92,7 +92,7 @@ export function CashPaymentModal({
               type="button"
               onClick={() => onPressKey(k)}
               aria-label={k === "back" ? t("pos.keyBackspace") : k}
-              className="h-9 cursor-pointer rounded-lg border border-gray-200 bg-white text-base font-medium text-brown-900"
+              className="h-[36px] cursor-pointer rounded-lg border border-gray-200 bg-white text-base font-medium text-brown-900"
             >
               {k === "back" ? t("pos.keyBackspace") : k}
             </button>
@@ -103,7 +103,7 @@ export function CashPaymentModal({
           type="button"
           onClick={onConfirm}
           disabled={short || submitting}
-          className="h-9 cursor-pointer rounded-lg border-none bg-success font-medium text-white disabled:cursor-not-allowed disabled:opacity-45"
+          className="h-[36px] cursor-pointer rounded-lg border-none bg-success font-medium text-white disabled:cursor-not-allowed disabled:opacity-45"
         >
           {submitting ? t("pos.processing") : t("pos.cashConfirm")}
         </button>

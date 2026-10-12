@@ -183,7 +183,7 @@ export default function ProductCard({
                 e.stopPropagation();
                 void quickAdd(product._id);
               }}
-              className={`w-full py-1.5 px-2 mt-1 text-md font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1 ${
+              className={`w-full h-[36px] px-2 mt-1 text-sm font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1 ${
                 isSuccess
                   ? "!bg-emerald-600 border border-emerald-600 !text-white shadow-md"
                   : "!bg-white !text-[#4A342E] border border-[#8C5A3C]/30 shadow-md shadow-[#4A342E]/20 hover:!bg-[#4A342E] hover:!text-white hover:shadow-lg active:scale-[0.98]"

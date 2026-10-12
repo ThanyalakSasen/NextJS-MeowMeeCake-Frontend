@@ -25,6 +25,7 @@ import type { AdminWeeklyMarket, StoreSettings } from "@/types/storeAdmin";
 import type { SocialKey, WeekDay } from "@/services/storeInfo";
 import { pickupLocationsKey } from "@/app/customer/lib/shopQueries";
 import { storeInfoKey, storeLogoKey } from "@/app/customer/lib/catalogQueries";
+import { thaiCompare } from "@/lib/thaiSort";
 import {
   DAY_ORDER, EMPTY_PROFILE, EMPTY_SETTINGS, NEW_MARKET, logoError, marketsPayload, profilePayload, profileToForm, sameValue,
   sectionChanged, validateAddress, validateMarkets, validateProfile,
@@ -73,7 +74,8 @@ export function useStoreInfoViewModel() {
         value: u._id,
         label: `${u.user_fullname} (${(u.role_id && roleName.get(u.role_id)) || "—"})`,
         phone: u.user_phone ?? "",
-      }));
+      }))
+      .sort((a, b) => thaiCompare(a.label, b.label));
   }, [usersQ.data, rolesQ.data, savedProfile.phone_primary_user_id, savedProfile.phone_secondary_user_id]);
 
   // ── แก้ไขทีละหัวข้อ ──

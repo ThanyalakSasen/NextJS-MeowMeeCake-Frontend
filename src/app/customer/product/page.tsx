@@ -18,6 +18,7 @@ import { effectivePrice } from "@/lib/pricing";
 import ProductCard, { categoryNameOf, isProductCardVisible } from "@/components/customer/ProductCard";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from "../lib/catalogQueries";
+import { thaiCompare } from "@/lib/thaiSort";
 
 /** หมวด "ทั้งหมด" — ค่าภายใน (ชื่อที่แสดงมาจาก i18n) */
 const ALL = "__all__";
@@ -63,13 +64,13 @@ function ProductListContent() {
   // กรองสินค้าที่บัตรไม่แสดง (พรีออเดอร์ / หมดสต็อก / ซ่อน) ออกตั้งแต่ต้น — ตัวเลขจำนวนในหมวดจะได้ตรงกับบัตรที่เห็นจริง
   const products = useMemo(() => (productsQ.data?.data ?? []).filter(isProductCardVisible), [productsQ.data]);
 
-  // หมวดพร้อมจำนวนสินค้า — ซ่อนหมวดที่ไม่มีสินค้า เรียงจากมากไปน้อย ("ทั้งหมด" อยู่บนสุดเสมอ)
+  // หมวดพร้อมจำนวนสินค้า — ซ่อนหมวดที่ไม่มีสินค้า เรียง ก-ฮ ("ทั้งหมด" อยู่บนสุดเสมอ)
   const categoryCards = useMemo(() => {
     const names = (categoriesQ.data ?? []).map((c) => c.product_category_name?.trim()).filter((n): n is string => !!n);
     const counted = names
       .map((name) => ({ name, count: products.filter((p) => categoryNameOf(p) === name).length }))
       .filter((c) => c.count > 0)
-      .sort((a, b) => b.count - a.count);
+      .sort((a, b) => thaiCompare(a.name, b.name));
     return [{ name: ALL, count: products.length }, ...counted];
   }, [categoriesQ.data, products]);
 
@@ -156,7 +157,7 @@ function ProductListContent() {
                     type="button"
                     onClick={() => setSortBy(s)}
                     aria-pressed={sortBy === s}
-                    className={`px-3.5 py-2 rounded-xl transition-all font-medium ${
+                    className={`h-[36px] px-3.5 rounded-xl transition-all font-medium ${
                       sortBy === s ? "bg-[#8C5A3C] text-white shadow-sm" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                     }`}
                   >
@@ -176,7 +177,7 @@ function ProductListContent() {
                 <button
                   type="button"
                   onClick={() => productsQ.refetch()}
-                  className="px-5 py-2 rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
+                  className="h-[36px] px-5 text-sm rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
                 >
                   {t("retry")}
                 </button>

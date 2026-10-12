@@ -22,6 +22,7 @@ import { isApiError } from "@/types/api";
 import { refId } from "@/lib/refId";
 import type { ProductionStatus } from "@/constants/enumConfig";
 import type { CompleteProductionValue } from "./_components/CompleteProductionModal";
+import { thaiCompare } from "@/lib/thaiSort";
 import type {
   ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput,
 } from "@/types/productionOrder";
@@ -142,6 +143,7 @@ export function useProductionViewModel() {
         unit_abbr: productsById.get(p._id)?.unit_abbr ?? "",
         recipe_id: recipeByProduct.get(p._id)!,
       }))
+      .sort((a, b) => thaiCompare(a.name, b.name))
   ), [productsQ.data, recipeByProduct, productsById]);
 
   /** พนักงานที่มอบหมายงานผลิตได้ — active + ไม่ใช่ role ลูกค้า */

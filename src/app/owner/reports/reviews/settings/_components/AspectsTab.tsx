@@ -75,7 +75,7 @@ export function AspectsTab({ vm }: { vm: VM }) {
                     <div className="grid grid-cols-7 gap-1">
                       {ASPECT_ICON_KEYS.map((k) => (
                         <button key={k} type="button" aria-label={k} onClick={() => vm.onIcon(a, k)}
-                          className={`flex h-8 w-8 items-center justify-center rounded border ${k === iconKey ? "border-brown-700 bg-brown-50" : "border-gray-200 hover:border-gray-400"}`}>
+                          className={`flex h-[36px] w-[36px] items-center justify-center rounded border ${k === iconKey ? "border-brown-700 bg-brown-50" : "border-gray-200 hover:border-gray-400"}`}>
                           <AspectIcon icon={k} size={16} />
                         </button>
                       ))}

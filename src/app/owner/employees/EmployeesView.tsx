@@ -12,6 +12,7 @@ import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components
 import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel";
 import { EMPLOYEE_WORKING_CONFIG, NOTICE_TAG } from "@/constants/enumConfig";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 type VM = ReturnType<typeof useEmployeesViewModel>;
 
@@ -88,7 +89,7 @@ export function EmployeesView(vm: VM) {
                   onChange={(v) => vm.setRoleId(v as string)}
                   options={[
                     { value: "all", label: t("employees.allRoles") },
-                    ...vm.staffRoles.map((r) => ({ value: r._id, label: r.role_name })),
+                    ...sortOptionsThai(vm.staffRoles.map((r) => ({ value: r._id, label: r.role_name }))),
                   ]}
                 />
               </div>

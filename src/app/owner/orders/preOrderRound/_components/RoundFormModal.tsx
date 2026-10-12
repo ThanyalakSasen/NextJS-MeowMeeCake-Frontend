@@ -11,6 +11,7 @@ import type { Product } from "@/types/product";
 import type { CreateRoundInput, RoundItemInput } from "@/types/preorderRound";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import { useEditableRows, RemoveRowButton } from "@/components/shared/form";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 interface ItemRow {
   key: string;
@@ -132,11 +133,11 @@ export function RoundFormModal({
                 onChange={(v) => updateRow(row.key, { product_id: v as string })}
                 showSearch
                 optionFilterProp="label"
-                options={products.map((p) => ({
+                options={sortOptionsThai(products.map((p) => ({
                   value: p._id,
                   label: p.product_name_th,
                   disabled: rows.some((r) => r.key !== row.key && r.product_id === p._id),
-                }))}
+                })))}
               />
               <InputNumber
                 size="small"

@@ -249,7 +249,7 @@ function MemberContent() {
                                       type="button"
                                       onClick={() => void onRedeem(c)}
                                       disabled={disabled}
-                                      className="rounded-xl border border-[#8C5A3C]/30 bg-white px-3 py-1.5 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none"
+                                      className="h-[36px] rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none"
                                     >
                                       {busy ? t("redeeming") : c.limit_reached ? t("limitReached") : enough ? t("redeem") : t("notEnough")}
                                     </button>

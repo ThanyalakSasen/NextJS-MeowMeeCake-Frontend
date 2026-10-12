@@ -19,6 +19,7 @@ import { productKindOf, type ProductKind } from "@/types/product";
 import { isApiError } from "@/types/api";
 import { calcSalePrice, discountFromSalePrice, type Discount } from "./pricingHelpers";
 import { LIST_ALL } from "@/lib/http";
+import { sortOptionsThai } from "@/lib/thaiSort";
 
 export interface PricingRow {
   _id: string;
@@ -75,7 +76,7 @@ export function usePricingViewModel() {
   }, [productsQ.data, drafts, t]);
 
   const categories = useMemo(
-    () => (catsQ.data?.data ?? []).map((c) => ({ value: c._id, label: c.product_category_name })),
+    () => sortOptionsThai((catsQ.data?.data ?? []).map((c) => ({ value: c._id, label: c.product_category_name }))),
     [catsQ.data],
   );
 
