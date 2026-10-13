@@ -5,7 +5,7 @@ import { Button, ProgressBar, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, StatusFilterSelect, type Column, useStockStatusOptions } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, StatusFilterSelect, type Column, useStockStatusOptions, FilterField } from "@/components/shared/data";
 import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
 import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
@@ -93,7 +93,7 @@ export function IngredientsView(vm: VM) {
                 onChange={vm.setSearch}
                 placeholder={t("ingredients.searchPlaceholder")}
               />
-              <div style={{ minWidth: 170 }}>
+              <FilterField label={t("filterLabel.ingredientCategory")} minWidth={170}>
                 <Select
                   value={vm.categoryId}
                   onChange={(v) => vm.setCategoryId(v as string)}
@@ -102,8 +102,8 @@ export function IngredientsView(vm: VM) {
                     ...sortOptionsThai(vm.categories.map((c) => ({ value: c._id, label: c.ingredient_category_name }))),
                   ]}
                 />
-              </div>
-              <StatusFilterSelect value={vm.status} onChange={vm.setStatus} options={useStockStatusOptions()} />
+              </FilterField>
+              <StatusFilterSelect label={t("filterLabel.stockStatus")} value={vm.status} onChange={vm.setStatus} options={useStockStatusOptions()} />
             </>
           }
         />

@@ -4,7 +4,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, ProgressBar, Select, Tag } from "@/components/base";
-import { SearchInput } from "@/components/shared/data";
+import { SearchInput, FilterField } from "@/components/shared/data";
 import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency } from "@/i18n/format";
@@ -73,28 +73,32 @@ export function RoundDashboardDrawer(vm: DVM) {
                 {t("preorderRound.dashboard.exportCsv")}
               </Button>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
               <SearchInput value={vm.customerSearch} onChange={vm.setCustomerSearch} placeholder={t("preorderRound.dashboard.customerSearch")} className="sm:flex-1" />
-              <Select
-                className="sm:!w-40"
-                value={vm.paymentFilter}
-                onChange={(v) => vm.setPaymentFilter(v as PaymentGroup | "all")}
-                aria-label={t("preorderRound.dashboard.filterPayment")}
-                options={[
-                  { value: "all", label: t("preorderRound.dashboard.allPayments") },
-                  ...PAYMENT_GROUPS.map((g) => ({ value: g, label: t(`preorderRound.dashboard.payment.${g}`) })),
-                ]}
-              />
-              <Select
-                className="sm:!w-36"
-                value={vm.typeFilter}
-                onChange={(v) => vm.setTypeFilter(v as OrderType | "all")}
-                aria-label={t("preorderRound.dashboard.filterType")}
-                options={[
-                  { value: "all", label: t("preorderRound.dashboard.allTypes") },
-                  ...(["takeaway", "delivery"] as OrderType[]).map((o) => ({ value: o, label: t(`enums.orderType.${o}`) })),
-                ]}
-              />
+              <FilterField label={t("preorderRound.dashboard.filterPayment")} className="sm:w-40">
+                <Select
+                  className="w-full"
+                  value={vm.paymentFilter}
+                  onChange={(v) => vm.setPaymentFilter(v as PaymentGroup | "all")}
+                  aria-label={t("preorderRound.dashboard.filterPayment")}
+                  options={[
+                    { value: "all", label: t("preorderRound.dashboard.allPayments") },
+                    ...PAYMENT_GROUPS.map((g) => ({ value: g, label: t(`preorderRound.dashboard.payment.${g}`) })),
+                  ]}
+                />
+              </FilterField>
+              <FilterField label={t("preorderRound.dashboard.filterType")} className="sm:w-36">
+                <Select
+                  className="w-full"
+                  value={vm.typeFilter}
+                  onChange={(v) => vm.setTypeFilter(v as OrderType | "all")}
+                  aria-label={t("preorderRound.dashboard.filterType")}
+                  options={[
+                    { value: "all", label: t("preorderRound.dashboard.allTypes") },
+                    ...(["takeaway", "delivery"] as OrderType[]).map((o) => ({ value: o, label: t(`enums.orderType.${o}`) })),
+                  ]}
+                />
+              </FilterField>
             </div>
 
             {vm.isCustomersError ? (

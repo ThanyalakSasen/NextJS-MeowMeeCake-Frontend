@@ -205,6 +205,7 @@ function Body({
                   <Select
                     showSearch
                     optionFilterProp="label"
+                    aria-label={t("colItem")}
                     placeholder={t("selectItem")}
                     value={l.id ?? undefined}
                     onChange={(v) => pick(l.key, v as string)}

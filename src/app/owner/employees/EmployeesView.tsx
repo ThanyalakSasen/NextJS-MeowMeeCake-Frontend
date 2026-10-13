@@ -8,7 +8,7 @@ import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel";
 import { EMPLOYEE_WORKING_CONFIG, NOTICE_TAG } from "@/constants/enumConfig";
@@ -83,7 +83,7 @@ export function EmployeesView(vm: VM) {
           left={
             <>
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("employees.searchPlaceholder")} />
-              <div style={{ minWidth: 160 }}>
+              <FilterField label={t("filterLabel.role")} minWidth={160}>
                 <Select
                   value={vm.roleId}
                   onChange={(v) => vm.setRoleId(v as string)}
@@ -92,8 +92,8 @@ export function EmployeesView(vm: VM) {
                     ...sortOptionsThai(vm.staffRoles.map((r) => ({ value: r._id, label: r.role_name }))),
                   ]}
                 />
-              </div>
-              <div style={{ minWidth: 140 }}>
+              </FilterField>
+              <FilterField label={t("filterLabel.status")} minWidth={140}>
                 <Select
                   value={vm.status}
                   onChange={(v) => vm.setStatus(v as VM["status"])}
@@ -103,7 +103,7 @@ export function EmployeesView(vm: VM) {
                     { value: "left", label: t("employees.statusLeft") },
                   ]}
                 />
-              </div>
+              </FilterField>
             </>
           }
         />

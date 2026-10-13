@@ -6,7 +6,7 @@ import { Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
@@ -97,7 +97,7 @@ export function FinanceExpensesView(vm: VM) {
           left={
             <>
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("finance.searchPlaceholder")} />
-              <div style={{ minWidth: 160 }}>
+              <FilterField label={t("filterLabel.expenseCategory")} minWidth={160}>
                 <Select
                   value={vm.categoryFilter}
                   onChange={(v) => vm.setCategoryFilter(v as ExpenseCategory | "all")}
@@ -106,13 +106,13 @@ export function FinanceExpensesView(vm: VM) {
                     ...sortOptionsThai(EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.expenseCategory.${c}`) }))),
                   ]}
                 />
-              </div>
+              </FilterField>
             </>
           }
           right={
-            <div style={{ minWidth: 170 }}>
+            <FilterField label={t("filterLabel.month")} minWidth={170}>
               <Select value={vm.selectedMonth} onChange={vm.setSelectedMonth} options={vm.monthOptions} />
-            </div>
+            </FilterField>
           }
         />
       }

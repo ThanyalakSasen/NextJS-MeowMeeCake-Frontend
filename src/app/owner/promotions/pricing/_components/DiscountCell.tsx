@@ -20,6 +20,7 @@ export function DiscountCell({
   return (
     <div className="flex items-center gap-1">
       <Select
+        aria-label={t("filterLabel.discountUnit")}
         value={type}
         size="small"
         style={{ width: 64 }}
@@ -37,6 +38,7 @@ export function DiscountCell({
         size="small"
         min={0}
         max={type === "percent" ? 100 : undefined}
+        aria-label={t("pricing.colDiscount")}
         value={discount?.value ?? null}
         placeholder="—"
         style={{ width: 70 }}

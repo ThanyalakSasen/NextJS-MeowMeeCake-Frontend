@@ -109,10 +109,18 @@ export function MainRecipeModal({
         <Divider />
         <p className="mb-3 text-sm font-semibold text-gray-500">{t("recipes.componentsUsedTitle")}</p>
         <div className="flex flex-col gap-2">
+          {components.length > 0 && (
+            <div className="grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1fr 90px 24px" }}>
+              <span>{t("filterLabel.component")}</span>
+              <span>{t("filterLabel.batches")}</span>
+              <span />
+            </div>
+          )}
           {components.map((ref, i) => (
             <div key={i} className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 90px 24px" }}>
               <Select
                 size="small"
+                aria-label={t("filterLabel.component")}
                 placeholder={t("recipes.selectComponent")}
                 value={ref.component_id || undefined}
                 showSearch
@@ -131,6 +139,7 @@ export function MainRecipeModal({
                 size="small"
                 className="!w-full"
                 min={1}
+                aria-label={t("filterLabel.batches")}
                 value={ref.quantity}
                 onChange={(v) => updateComponentRef(i, { quantity: Number(v) || 1 })}
                 suffix={<span className="text-xs text-gray-500">{t("recipes.batch")}</span>}

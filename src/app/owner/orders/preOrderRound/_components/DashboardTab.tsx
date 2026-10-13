@@ -4,7 +4,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { ProgressBar, Select } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { ViewButton } from "@/components/shared/actions";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
@@ -86,7 +86,7 @@ export function DashboardTab(vm: DVM) {
         left={
           <>
             <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("preorderRound.searchRoundPlaceholder")} />
-            <div style={{ minWidth: 160 }}>
+            <FilterField label={t("filterLabel.roundStatus")} minWidth={160}>
               <Select
                 value={vm.statusFilter}
                 onChange={(v) => vm.setStatusFilter(v as RoundStatus | "all")}
@@ -95,7 +95,7 @@ export function DashboardTab(vm: DVM) {
                   ...(["scheduled", "open", "closed", "cancelled"] as RoundStatus[]).map((s) => ({ value: s, label: t(`enums.roundStatus.${s}`) })),
                 ]}
               />
-            </div>
+            </FilterField>
           </>
         }
       />

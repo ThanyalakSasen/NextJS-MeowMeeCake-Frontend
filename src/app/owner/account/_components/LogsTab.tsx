@@ -2,7 +2,7 @@
 // แท็บ "ประวัติการทำงาน" — log ของตัวเองเท่านั้น (ตารางแบบหน้าบันทึกการทำงานของพนักงาน ไม่มีคอลัมน์พนักงาน)
 import { useLocale, useTranslations } from "next-intl";
 import { RangePicker, Select } from "@/components/base";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import { USER_LOG_ACTION_CONFIG, type UserLogAction } from "@/constants/enumConfig";
@@ -64,7 +64,7 @@ export function LogsTab(vm: VM) {
         left={
           <>
             <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("myAccount.logsSearch")} />
-            <div style={{ minWidth: 150 }}>
+            <FilterField label={t("filterLabel.actionType")} minWidth={150}>
               <Select
                 value={vm.actionType}
                 onChange={(v) => vm.setActionType(v as VM["actionType"])}
@@ -73,7 +73,7 @@ export function LogsTab(vm: VM) {
                   ...ACTION_TYPES.map((a) => ({ value: a, label: t(`enums.userLogAction.${a}`) })),
                 ]}
               />
-            </div>
+            </FilterField>
             <RangePicker value={vm.dateRange} onChange={(v) => vm.setDateRange((v as VM["dateRange"]) ?? null)} />
           </>
         }

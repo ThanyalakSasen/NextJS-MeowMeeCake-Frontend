@@ -5,7 +5,7 @@ import { Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { ConfirmDeletePopup, DetailDrawer, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column, FilterField } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
 import { NOTIFICATION_TYPE_COLOR, READ_STATUS_CONFIG } from "@/constants/enumConfig";
 import { NOTIFICATION_MODULES, type NotificationDTO } from "@/types/notification";
@@ -104,7 +104,7 @@ export function NotificationHistoryView(vm: VM) {
                 ]}
               />
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("notifications.searchPlaceholder")} />
-              <div style={{ minWidth: 150 }}>
+              <FilterField label={t("filterLabel.module")} minWidth={150}>
                 <Select
                   value={vm.moduleFilter}
                   onChange={(v) => vm.setModuleFilter(v as VM["moduleFilter"])}
@@ -113,8 +113,8 @@ export function NotificationHistoryView(vm: VM) {
                     ...MODULES.map((m) => ({ value: m, label: t(`enums.notificationModule.${m}`) })),
                   ]}
                 />
-              </div>
-              <div style={{ minWidth: 140 }}>
+              </FilterField>
+              <FilterField label={t("filterLabel.notificationType")} minWidth={140}>
                 <Select
                   value={vm.typeFilter}
                   onChange={(v) => vm.setTypeFilter(v as VM["typeFilter"])}
@@ -123,7 +123,7 @@ export function NotificationHistoryView(vm: VM) {
                     ...TYPES.map((ty) => ({ value: ty, label: t(`enums.notificationType.${ty}`) })),
                   ]}
                 />
-              </div>
+              </FilterField>
             </>
           }
         />

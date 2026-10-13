@@ -8,7 +8,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
-import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column, FilterField } from "@/components/shared/data";
 import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
@@ -67,6 +67,7 @@ export function ManageOrdersView(vm: VM) {
         const select = (
           <Select
             size="small"
+            aria-label={t("filterLabel.changeOrderStatus", { orderNo: o.order_no })}
             value={o.order_status}
             disabled={!paymentVerified || !vm.perm.update}
             style={{ width: 140 }}
@@ -118,7 +119,7 @@ export function ManageOrdersView(vm: VM) {
             right={
               <>
                 <OrderStatusFilter orders={vm.ordersForStats} value={vm.statusFilter} onChange={vm.setStatusFilter} />
-                <div style={{ minWidth: 200 }}>
+                <FilterField label={t("filterLabel.paymentStatus")} minWidth={200}>
                   <Select
                     value={vm.paymentFilter}
                     onChange={(v) => vm.setPaymentFilter(v as PaymentStatus | "all")}
@@ -131,7 +132,7 @@ export function ManageOrdersView(vm: VM) {
                       })),
                     ]}
                   />
-                </div>
+                </FilterField>
               </>
             }
           />

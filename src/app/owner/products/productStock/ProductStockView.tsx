@@ -4,7 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column, useStockStatusOptions } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, useStockStatusOptions, FilterField } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
 import { actionIcon } from "@/components/shared/actions";
 import { LOW_STOCK_THRESHOLD } from "./stockStatus";
@@ -89,8 +89,7 @@ export function ProductStockView(vm: VM) {
                 onChange={vm.setSearch}
                 placeholder={t("productStock.searchPlaceholder")}
               />
-              <div className="flex min-w-40 flex-col gap-1">
-                <span className="text-xs text-gray-500">{t("productStock.categoryFilter")}</span>
+              <FilterField label={t("productStock.categoryFilter")} className="min-w-40">
                 <Select
                   value={vm.categoryId}
                   onChange={(v) => vm.setCategoryId(v as string)}
@@ -101,15 +100,14 @@ export function ProductStockView(vm: VM) {
                       .map((c) => ({ value: c._id, label: c.product_category_name })),
                   ]}
                 />
-              </div>
-              <div className="flex min-w-40 flex-col gap-1">
-                <span className="text-xs text-gray-500">{t("productStock.statusFilter")}</span>
+              </FilterField>
+              <FilterField label={t("productStock.statusFilter")} className="min-w-40">
                 <Select
                   value={vm.status}
                   onChange={(v) => vm.setStatus(v as VM["status"])}
                   options={statusOptions}
                 />
-              </div>
+              </FilterField>
             </>
           }
         />

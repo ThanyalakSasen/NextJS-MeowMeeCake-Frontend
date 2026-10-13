@@ -5,10 +5,11 @@
 // เดิมหน้าวัตถุดิบ · สต็อกวัตถุดิบ · สต็อกสินค้า เขียน <div style={{minWidth:150}}><Select .../></div>
 // เหมือนกันทุกตัวอักษร พร้อมอาร์เรย์ statusOptions ชุดเดียวกัน (CONSISTENCY_AUDIT ข้อ 3.14 A3)
 //
-//   <StatusFilterSelect value={vm.status} onChange={vm.setStatus} options={useStockStatusOptions()} />
+//   <StatusFilterSelect label={t("filterLabel.status")} value={vm.status} onChange={vm.setStatus} options={useStockStatusOptions()} />
 // ─────────────────────────────────────────────────────────────
 import { useTranslations } from "next-intl";
 import { Select } from "@/components/base";
+import { FilterField } from "./FilterField";
 
 export interface FilterOption {
   value: string;
@@ -16,20 +17,23 @@ export interface FilterOption {
 }
 
 export function StatusFilterSelect<T extends string>({
+  label,
   value,
   onChange,
   options,
   minWidth = 150,
 }: {
+  /** ป้ายเหนือช่อง — บอกว่ากรองอะไร */
+  label: string;
   value: T;
   onChange: (v: T) => void;
   options: FilterOption[];
   minWidth?: number;
 }) {
   return (
-    <div style={{ minWidth }}>
+    <FilterField label={label} minWidth={minWidth}>
       <Select value={value} onChange={(v) => onChange(v as T)} options={options} />
-    </div>
+    </FilterField>
   );
 }
 

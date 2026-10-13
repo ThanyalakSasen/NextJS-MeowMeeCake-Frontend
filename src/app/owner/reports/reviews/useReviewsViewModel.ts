@@ -5,7 +5,7 @@
 // จัดการต่อรีวิว (PATCH): สถานะ · ปักหมุด · อ่านแล้ว · ตอบกลับ (คำตอบสำเร็จรูป + คำตอบเก่าที่เคยใช้) · โน้ต/แท็กภายใน
 // เลือกหลายรายการ: อ่านแล้ว/ยังไม่อ่าน (/bulk) · ส่งออก CSV (ต้นแบบ xlsx — แอปนี้ใช้ CSV ทุกหน้า)
 // แก้แล้วอัปเดต cache ของหน้าปัจจุบันทันที แล้วโหลดชุดใหม่ (summary/ลำดับอาจเปลี่ยน) · สิทธิ์เมนู reports
-// ไม่ยกมา: แดชบอร์ด/analytics/รายสินค้า (F3 — backend ยังไม่มี)
+// แดชบอร์ดสรุป = หน้า ./dashboard (คำนวณฝั่ง client จากรายการเดียวกัน — backend ไม่มี endpoint สรุป)
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -34,10 +34,9 @@ export interface ReviewFilters {
   negativeOnly: boolean;
   aspectId: string;
   aspectSentiment: "all" | "positive" | "negative";
+  /** ไม่มี dropdown แล้ว — ตั้งจากทางลัด "รีวิวลบที่ยังไม่ตอบ" เท่านั้น (แสดงเป็นป้ายปิดได้) */
   replied: Tri;
-  read: Tri;
   media: Tri;
-  status: "all" | ReviewStatus;
   orderKind: "all" | "order" | "preorder";
   sort: ReviewSort;
 }
@@ -50,9 +49,7 @@ const DEFAULT_FILTERS: ReviewFilters = {
   aspectId: "all",
   aspectSentiment: "negative",
   replied: "all",
-  read: "all",
   media: "all",
-  status: "all",
   orderKind: "all",
   sort: "newest",
 };
@@ -69,9 +66,7 @@ function toParams(f: ReviewFilters, q: string, page: number, limit: number): Rev
     if (f.aspectSentiment !== "all") p.sentiment = f.aspectSentiment;
   }
   if (f.replied !== "all") p.replied = Number(f.replied) as 0 | 1;
-  if (f.read !== "all") p.read = Number(f.read) as 0 | 1;
   if (f.media !== "all") p.has_media = Number(f.media) as 0 | 1;
-  if (f.status !== "all") p.status = f.status;
   if (f.orderKind !== "all") p.order_kind = f.orderKind;
   return p;
 }

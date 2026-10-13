@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button, EmptyState, Select, Tag } from "@/components/base";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { DetailDrawer, ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RecipeComponent } from "@/types/recipeComponent";
@@ -52,7 +52,7 @@ function MainTab(vm: VM) {
         left={
           <>
             <SearchInput value={vm.mainSearch} onChange={vm.setMainSearch} placeholder={t("recipes.searchRecipePlaceholder")} />
-            <div style={{ minWidth: 170 }}>
+            <FilterField label={t("filterLabel.productCategory")} minWidth={170}>
               <Select
                 value={vm.mainCategoryFilter}
                 onChange={(v) => vm.setMainCategoryFilter(v as string)}
@@ -61,7 +61,7 @@ function MainTab(vm: VM) {
                   ...sortOptionsThai(vm.productCategories.map((c) => ({ value: c._id, label: c.product_category_name }))),
                 ]}
               />
-            </div>
+            </FilterField>
           </>
         }
       />
@@ -164,13 +164,13 @@ function ComponentsTab(vm: VM) {
         left={
           <>
             <SearchInput value={vm.subSearch} onChange={vm.setSubSearch} placeholder={t("recipes.searchComponentPlaceholder")} />
-            <div style={{ minWidth: 170 }}>
+            <FilterField label={t("filterLabel.componentCategory")} minWidth={170}>
               <Select
                 value={vm.subCategoryFilter}
                 onChange={(v) => vm.setSubCategoryFilter(v as string)}
                 options={[{ value: "all", label: t("common.all") }, ...vm.componentCategoryOptions]}
               />
-            </div>
+            </FilterField>
           </>
         }
       />
