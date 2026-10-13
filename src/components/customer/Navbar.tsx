@@ -30,7 +30,7 @@ const NAV_LINKS = [
   { href: "/customer/contact-us", labelKey: "contact" },
 ] as const;
 
-/** เมนูผู้ใช้ (dropdown) ต่อจาก "บัญชีของฉัน" — สมาชิก/รายการโปรดไม่อยู่ในเมนูบัญชี (AccountSideMenu) จึงเข้าจากที่นี่ */
+/** เมนูผู้ใช้ (dropdown) ต่อจาก "บัญชีของฉัน" — ทางลัด (สมาชิกอยู่ในเมนูบัญชีด้วย · รายการโปรดเข้าจากที่นี่เท่านั้น) */
 const USER_MENU_LINKS = [
   { href: "/customer/account/purchases", labelKey: "myOrders" },
   { href: "/customer/account/member", labelKey: "member" },

@@ -6,7 +6,7 @@ import { Button, Select, RangePicker } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
 import { USER_LOG_ACTION_CONFIG, type UserLogAction } from "@/constants/enumConfig";
 import type { LogRow, useUserLogViewModel } from "./useUserLogViewModel";
@@ -83,7 +83,7 @@ export function UserLogView(vm: VM) {
           left={
             <>
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("userLog.searchPlaceholder")} />
-              <div style={{ minWidth: 170 }}>
+              <FilterField label={t("filterLabel.employee")} minWidth={170}>
                 <Select
                   value={vm.employeeId}
                   onChange={(v) => vm.setEmployeeId(v as string)}
@@ -92,8 +92,8 @@ export function UserLogView(vm: VM) {
                     ...vm.employeeOptions,
                   ]}
                 />
-              </div>
-              <div style={{ minWidth: 150 }}>
+              </FilterField>
+              <FilterField label={t("filterLabel.actionType")} minWidth={150}>
                 <Select
                   value={vm.actionType}
                   onChange={(v) => vm.setActionType(v as VM["actionType"])}
@@ -102,7 +102,7 @@ export function UserLogView(vm: VM) {
                     ...ACTION_TYPES.map((a) => ({ value: a, label: t(`enums.userLogAction.${a}`) })),
                   ]}
                 />
-              </div>
+              </FilterField>
               <RangePicker
                 value={vm.dateRange}
                 onChange={(v) => vm.setDateRange((v as VM["dateRange"]) ?? null)}

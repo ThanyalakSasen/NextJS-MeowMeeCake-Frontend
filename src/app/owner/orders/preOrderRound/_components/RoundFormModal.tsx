@@ -122,12 +122,23 @@ export function RoundFormModal({
           </Button>
         </div>
 
+        {/* หัวคอลัมน์ (อยู่เหนือแถว — เดิมอยู่ใต้รายการ) */}
+        {rows.length > 0 && (
+          <div className="mb-1 grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 0.8fr 24px" }}>
+            <span>{t("preorderRound.colProduct")}</span>
+            <span>{t("preorderRound.colPriceOverride")}</span>
+            <span>{t("preorderRound.colMinQty")}</span>
+            <span>{t("preorderRound.colMaxQty")}</span>
+            <span />
+          </div>
+        )}
         {rows.map((row) => {
           const product = products.find((p) => p._id === row.product_id);
           return (
             <div key={row.key} className="grid gap-2 mb-2 items-center" style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 0.8fr 24px" }}>
               <Select
                 size="small"
+                aria-label={t("preorderRound.colProduct")}
                 placeholder={t("preorderRound.selectProduct")}
                 value={row.product_id || undefined}
                 onChange={(v) => updateRow(row.key, { product_id: v as string })}
@@ -143,6 +154,7 @@ export function RoundFormModal({
                 size="small"
                 className="!w-full"
                 min={0}
+                aria-label={t("preorderRound.colPriceOverride")}
                 placeholder={product ? formatCurrency(product.sale_price ?? product.product_price, "th") : t("preorderRound.priceOverridePlaceholder")}
                 value={row.price_override ?? undefined}
                 onChange={(v) => updateRow(row.key, { price_override: v == null ? null : Number(v) })}
@@ -151,6 +163,7 @@ export function RoundFormModal({
                 size="small"
                 className="!w-full"
                 min={1}
+                aria-label={t("preorderRound.colMinQty")}
                 value={row.min_order_qty}
                 onChange={(v) => updateRow(row.key, { min_order_qty: Number(v) || 1 })}
               />
@@ -158,6 +171,7 @@ export function RoundFormModal({
                 size="small"
                 className="!w-full"
                 min={1}
+                aria-label={t("preorderRound.colMaxQty")}
                 value={row.max_qty_total}
                 onChange={(v) => updateRow(row.key, { max_qty_total: Number(v) || 1 })}
               />
@@ -165,15 +179,6 @@ export function RoundFormModal({
             </div>
           );
         })}
-        {rows.length > 0 && (
-          <div className="grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 0.8fr 24px" }}>
-            <span>{t("preorderRound.colProduct")}</span>
-            <span>{t("preorderRound.colPriceOverride")}</span>
-            <span>{t("preorderRound.colMinQty")}</span>
-            <span>{t("preorderRound.colMaxQty")}</span>
-            <span />
-          </div>
-        )}
       </Form>
     </Modal>
   );

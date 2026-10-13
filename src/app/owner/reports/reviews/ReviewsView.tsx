@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { Checkbox, Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { ArrowDownTrayIcon, CheckIcon, Cog6ToothIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, ChartPieIcon, CheckIcon, Cog6ToothIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { Button, EmptyState, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { PaginationBar } from "@/components/shared/data";
@@ -27,9 +27,14 @@ export function ReviewsView(vm: VM) {
       title={t("reviews.title")}
       description={t("reviews.description")}
       actions={
-        <Link href="/owner/reports/reviews/settings">
-          <Button icon={<Cog6ToothIcon className="h-4 w-4" />}>{t("reviews.settingsLink")}</Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/owner/reports/reviews/dashboard">
+            <Button icon={<ChartPieIcon className="h-4 w-4" />}>{t("nav.reportsReviewsDashboard")}</Button>
+          </Link>
+          <Link href="/owner/reports/reviews/settings">
+            <Button icon={<Cog6ToothIcon className="h-4 w-4" />}>{t("reviews.settingsLink")}</Button>
+          </Link>
+        </div>
       }
     >
       <div className="flex flex-col gap-3">
@@ -131,8 +136,10 @@ export function ReviewsView(vm: VM) {
         {...modalButtonIcons("save")}
         destroyOnHidden
       >
+        <p className="m-0 mb-1 text-xs text-gray-500">{t("filterLabel.tags")}</p>
         <Select
           mode="tags"
+          aria-label={t("filterLabel.tags")}
           value={vm.tagDraft}
           onChange={(v: string[]) => vm.setTagDraft(v)}
           options={vm.tagSuggestions.map((tag) => ({ value: tag, label: tag }))}

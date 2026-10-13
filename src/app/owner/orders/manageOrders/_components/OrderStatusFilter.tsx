@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { ORDER_STATUS_FLOW, ORDER_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { OrderStatus } from "@/constants/enumConfig";
 import type { Order } from "@/types/order";
+import { FilterField } from "@/components/shared/data";
 
 export function OrderStatusFilter({
   orders,
@@ -20,7 +21,7 @@ export function OrderStatusFilter({
     s === "all" ? orders.length : orders.filter((o) => o.order_status === s).length;
 
   return (
-    <div style={{ minWidth: 210 }}>
+    <FilterField label={t("filterLabel.orderStatus")} minWidth={210}>
       <Select
         value={value}
         onChange={(v) => onChange(v as OrderStatus | "all")}
@@ -41,6 +42,6 @@ export function OrderStatusFilter({
           })),
         ]}
       />
-    </div>
+    </FilterField>
   );
 }

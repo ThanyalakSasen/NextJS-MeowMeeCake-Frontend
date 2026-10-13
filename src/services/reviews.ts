@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────────────────────
 // src/services/reviews.ts — รีวิวหลังร้าน (BACKLOG4 E4 · backend §8.20) · สิทธิ์เมนู reports ทุก endpoint
-//   /admin/reviews            กรอง/เรียง/แบ่งหน้าที่ server + summary=1 (สรุปของชุดที่กรอง — I9)
+//   /admin/reviews            กรอง/เรียง/แบ่งหน้าที่ server + summary=1 (สรุปของชุดที่กรอง — I9) · listAll = ทุกหน้า (แดชบอร์ด)
 //   /admin/reviews/:id        PATCH จัดการ (สถานะ · ปักหมุด · ตอบกลับ · แท็ก/โน้ตภายใน · อ่านแล้ว) · DELETE (soft)
 //   /admin/reviews/bulk       อ่านแล้ว/ยังไม่อ่านหลายรายการ (≤ 200)
 //   /admin/reviews/filter-options   สินค้า/หมวดที่มีรีวิว + คำตอบเก่าไว้แนะนำ
 //   /admin/aspects (+ reorder · :id/restore) · /admin/semantic-terms — หน้าตั้งค่า
 // ─────────────────────────────────────────────────────────────
-import { http, LIST_ALL } from "@/lib/http";
+import { http, LIST_ALL, PAGE_MAX } from "@/lib/http";
 import type { ItemResponse, ListMeta } from "@/types/api";
 import type {
   Review, ReviewAspect, ReviewAspectInput, ReviewFilterOptions, ReviewListParams, ReviewModeration, ReviewSummary,
@@ -54,6 +54,21 @@ export const reviewsService = {
       meta: res.data?.meta ?? { page: 1, limit: items.length, total: items.length },
       summary: res.data?.summary ?? null,
     };
+  },
+  /**
+   * ทุกรีวิวตามตัวกรอง (แดชบอร์ด) — backend จำกัด 100/หน้า จึงไล่ขอทีละหน้าจนครบ (เพดาน LIST_ALL)
+   * summary ของหน้าแรกคือสรุปของทั้งชุด (ไม่ขึ้นกับหน้า)
+   */
+  listAll: async (params: ReviewListParams = {}): Promise<{ data: Review[]; summary: ReviewSummary | null }> => {
+    const first = await reviewsService.list({ ...params, page: 1, limit: PAGE_MAX });
+    const data = [...first.data];
+    const total = Math.min(first.meta.total, LIST_ALL);
+    for (let page = 2; data.length < total; page++) {
+      const next = await reviewsService.list({ ...params, page, limit: PAGE_MAX });
+      if (next.data.length === 0) break;
+      data.push(...next.data);
+    }
+    return { data, summary: first.summary };
   },
   moderate: async (id: string, body: ReviewModeration): Promise<Review> => (await http.patch<ItemResponse<Review>>(`${BASE}/${id}`, body)).data,
   remove: (id: string) => http.delete(`${BASE}/${id}`),

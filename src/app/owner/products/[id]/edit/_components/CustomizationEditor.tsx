@@ -227,6 +227,7 @@ function OptionCard({ vm, option: o, index }: { vm: VM; option: OptionRow; index
           onMove={(d) => vm.moveOption(index, d)} onRemove={() => vm.removeOption(o.key)} />
       </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-700">
+        <span className="text-xs text-gray-500">{t("customization.optionType")}</span>
         <Select
           size="small"
           value={o.isText ? "text" : "check"}

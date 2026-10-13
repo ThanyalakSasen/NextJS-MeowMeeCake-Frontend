@@ -15,6 +15,7 @@ import { shopCartService, type CartCustomization } from "@/services/shopCart";
 import { catalogService } from "@/services/catalog";
 import { hasCustomization } from "@/lib/customizationSelection";
 import { productCustomizationKey } from "../lib/catalogQueries";
+import { shopCartKey } from "../lib/shopQueries";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { LOGIN_PATH } from "@/constants/auth";
@@ -27,6 +28,7 @@ export function useAddToCart() {
   const [status, setStatus] = useState<AddStatus>("idle");
   const { status: authStatus } = useCustomerSession();
   const increment = useCartCountStore((s) => s.increment);
+  const setCount = useCartCountStore((s) => s.setCount);
   const router = useRouter();
   const pathname = usePathname();
   const qc = useQueryClient();
@@ -46,6 +48,12 @@ export function useAddToCart() {
     try {
       await shopCartService.addItem({ product_id: productId, quantity: qty, ...customization });
       increment();
+      // ดึงตะกร้าใหม่ทันที — cache ของหน้าตะกร้า/checkout (staleTime 30 วิ) ไม่งั้นยังโชว์ของเก่าจนกว่าจะรีเฟรช
+      // จำนวนที่ไอคอนตะกร้าใช้ค่าจริงจาก backend (สินค้า+ตัวเลือกเดิม = รวมจำนวน ไม่เพิ่มบรรทัด)
+      void qc
+        .fetchQuery({ queryKey: shopCartKey, queryFn: shopCartService.get, staleTime: 0 })
+        .then((cart) => setCount(cart.summary?.item_count ?? cart.items.length))
+        .catch(() => qc.invalidateQueries({ queryKey: shopCartKey }));
       setStatus("success");
       alert.success(t("added"));
       setTimeout(() => setStatus("idle"), 1500);

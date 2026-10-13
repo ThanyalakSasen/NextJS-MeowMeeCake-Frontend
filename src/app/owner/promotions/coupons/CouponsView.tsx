@@ -5,7 +5,7 @@ import { Button, EmptyState, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
-import { FilterToolbar, SearchInput, TypeTabBar } from "@/components/shared/data";
+import { FilterToolbar, SearchInput, TypeTabBar, FilterField } from "@/components/shared/data";
 import { actionIcon } from "@/components/shared/actions";
 import type { useCouponsViewModel } from "./useCouponsViewModel";
 import { CouponCard } from "./_components/CouponCard";
@@ -42,7 +42,7 @@ export function CouponsView(vm: VM) {
                 ]}
               />
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("coupons.searchPlaceholder")} />
-              <div style={{ minWidth: 160 }}>
+              <FilterField label={t("filterLabel.discountType")} minWidth={160}>
                 <Select
                   value={vm.typeFilter}
                   onChange={(v) => vm.setTypeFilter(v as VM["typeFilter"])}
@@ -53,7 +53,7 @@ export function CouponsView(vm: VM) {
                     { value: "FreeShipping", label: t("enums.discountType.FreeShipping") },
                   ]}
                 />
-              </div>
+              </FilterField>
             </>
           }
         />

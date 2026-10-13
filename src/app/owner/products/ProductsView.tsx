@@ -83,7 +83,7 @@ export function ProductsView(vm: VM) {
             }
             right={
               <>
-                <SortDropdown value={vm.sort} onChange={(v) => vm.setSort(v as VM["sort"])} options={sortOptions} />
+                <SortDropdown label={t("filterLabel.sortBy")} value={vm.sort} onChange={(v) => vm.setSort(v as VM["sort"])} options={sortOptions} />
                 <ViewToggle value={vm.viewMode} onChange={vm.setViewMode} />
               </>
             }

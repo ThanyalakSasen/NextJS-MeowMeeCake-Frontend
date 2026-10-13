@@ -3,7 +3,7 @@
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import { Button, Card, Input, Select, Tag } from "@/components/base";
-import { DataTable, SearchInput } from "@/components/shared/data";
+import { DataTable, SearchInput, FilterField } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { DeleteButton, EditButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import { FormField } from "@/components/shared/form";
@@ -20,15 +20,17 @@ export function TermsTab({ vm }: { vm: VM }) {
     <div className="flex flex-col gap-4">
       <p className="m-0 rounded-xl border border-brown-100 bg-brown-50 px-4 py-3 text-sm text-brown-800">{t("reviewSettings.terms.intro")}</p>
       <Card className="flex flex-col gap-3 p-4">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-end gap-2">
           <SearchInput value={vm.termSearch} onChange={vm.setTermSearch} placeholder={t("reviewSettings.terms.searchPlaceholder")} />
-          <Select
-            size="small"
-            style={{ width: 180 }}
-            value={vm.termAspect}
-            options={[{ value: "all", label: t("reviewSettings.terms.allAspects") }, ...vm.aspectOptions]}
-            onChange={(v: string) => vm.setTermAspect(v)}
-          />
+          <FilterField label={t("filterLabel.aspect")}>
+            <Select
+              size="small"
+              style={{ width: 180 }}
+              value={vm.termAspect}
+              options={[{ value: "all", label: t("reviewSettings.terms.allAspects") }, ...vm.aspectOptions]}
+              onChange={(v: string) => vm.setTermAspect(v)}
+            />
+          </FilterField>
           <span className="text-xs text-gray-500">{t("reviewSettings.terms.count", { shown: vm.terms.length, total: vm.termTotal })}</span>
           {vm.perm.create && (
             <Button className="ml-auto" type="primary" icon={actionIcon("add")} onClick={vm.openNewTerm} disabled={vm.aspectOptions.length === 0}>

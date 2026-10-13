@@ -121,10 +121,19 @@ export function ProductionOrderFormModal({
           </Button>
         </div>
 
+        {rows.length > 0 && (
+          <div className="mb-1 grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1fr 90px 1fr 24px" }}>
+            <span>{t("filterLabel.product")}</span>
+            <span>{t("filterLabel.quantity")}</span>
+            <span>{t("filterLabel.note")}</span>
+            <span />
+          </div>
+        )}
         {rows.map((row) => (
           <div key={row.key} className="grid gap-2 mb-2 items-center" style={{ gridTemplateColumns: "1fr 90px 1fr 24px" }}>
             <Select
               size="small"
+              aria-label={t("filterLabel.product")}
               placeholder={t("production.selectProduct")}
               value={row.product_id || undefined}
               onChange={(v) => updateRow(row.key, { product_id: v as string })}
@@ -140,12 +149,14 @@ export function ProductionOrderFormModal({
               size="small"
               className="!w-full"
               min={1}
+              aria-label={t("filterLabel.quantity")}
               value={row.planned_qty}
               onChange={(v) => updateRow(row.key, { planned_qty: Number(v) || 1 })}
               suffix={<span className="text-xs text-gray-500">{products.find((p) => p._id === row.product_id)?.unit_abbr ?? ""}</span>}
             />
             <Input
               size="small"
+              aria-label={t("filterLabel.note")}
               value={row.notes}
               onChange={(e) => updateRow(row.key, { notes: e.target.value })}
               placeholder={t("production.itemNotePlaceholder")}

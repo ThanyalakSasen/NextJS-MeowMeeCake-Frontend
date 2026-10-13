@@ -37,6 +37,8 @@ export function useEditEmployeeViewModel() {
     onSuccess: () => {
       alert.success(t("employees.saved"));
       qc.invalidateQueries({ queryKey: ["users"] });
+      // cache ของหน้านี้เอง (คนละ key กับรายการ) — ไม่ล้าง = เปิดแก้ไขซ้ำภายใน 30 วิ เห็นค่าเดิมก่อนบันทึก
+      qc.invalidateQueries({ queryKey: ["user", id] });
       router.push(LIST);
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("employees.saveFailed")),

@@ -101,6 +101,7 @@ export function ReviewCard({
             >
               {replied ? t("reviews.replied") : t("reviews.notReplied")}
             </span>
+            <span className="text-xs text-gray-500">{t("reviews.statusLabel")}</span>
             <Select
               size="small"
               style={{ width: 112 }}

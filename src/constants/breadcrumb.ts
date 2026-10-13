@@ -10,6 +10,7 @@ const ROUTE_NAV_KEY: Record<string, NavKey> = {
   "/owner/reports/sales": "reportsSales",
   "/owner/reports/reviews": "reportsReviews",
   "/owner/reports/reviews/settings": "reviewSettings",
+  "/owner/reports/reviews/dashboard": "reportsReviewsDashboard",
   "/owner/finance/expenses": "financeExpenses",
   "/owner/finance/summary": "financeSummary",
   "/owner/products": "products",

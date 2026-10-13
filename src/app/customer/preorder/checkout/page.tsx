@@ -28,7 +28,6 @@ import PickupLocationPicker from "@/components/customer/PickupLocationPicker";
 import CouponSelectBox from "@/components/customer/CouponSelectBox";
 import PointsRedeemBox from "@/components/customer/PointsRedeemBox";
 import CheckoutAddressForm from "@/components/customer/CheckoutAddressForm";
-import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { baht, shopButtonPrimary, shopCard, shopInput, shopPage } from "@/components/customer/shopStyles";
 import {
   pickupLocationsKey, preorderRoundKey, shopAddressesKey, shopCouponsKey, shopPointsKey, shopPreordersKey,
@@ -39,6 +38,7 @@ import {
 import { preorderPickupDates, thaiDate } from "../lib/preorderDates";
 import { isRoundOpen, useNow } from "../lib/useNow";
 import FlowSteps from "@/components/customer/FlowSteps";
+import { useRecipientContact } from "../../hooks/useRecipientContact";
 
 const PHONE_RE = /^0\d{8,9}$/;
 
@@ -60,7 +60,6 @@ function PreorderCheckoutContent() {
   const locale = useLocale();
   const router = useRouter();
   const qc = useQueryClient();
-  const { user } = useCustomerSession();
   const basket = usePreorderBasket();
 
   const roundQ = useQuery({
@@ -75,8 +74,7 @@ function PreorderCheckoutContent() {
 
   const [orderType, setOrderType] = useState<OrderType>("takeaway");
   const [pickedAddressId, setPickedAddressId] = useState<string | null>(null);
-  const [recipientName, setRecipientName] = useState(user?.fullname ?? "");
-  const [recipientPhone, setRecipientPhone] = useState("");
+  const { recipientName, setRecipientName, recipientPhone, setRecipientPhone } = useRecipientContact();
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [couponId, setCouponId] = useState<string | null>(null);
   const [pointsInput, setPointsInput] = useState(0);
