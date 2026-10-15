@@ -48,9 +48,10 @@ export default function CustomerHomePage() {
       <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="mt-6 pt-6">
           <div className="mb-4">
-            <span className="inline-block !text-base font-bold tracking-wider uppercase bg-[#8C5A3C]/10 text-[#8C5A3C] px-3.5 py-1 rounded-full">
+            {/* h2 — การ์ดหมวดเป็น h3 (Lighthouse heading-order) */}
+            <h2 className="m-0 inline-block !text-base font-bold tracking-wider uppercase bg-[#8C5A3C]/10 text-[#8C5A3C] px-3.5 py-1 rounded-full">
               {t("home.allCategories")}
-            </span>
+            </h2>
           </div>
 
           {/* รอสินค้าโหลดด้วย เพราะต้องใช้จำนวนสินค้าในการซ่อน/เรียงหมวด */}

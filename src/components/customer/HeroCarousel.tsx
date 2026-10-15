@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 import { catalogService } from "@/services/catalog";
 import { resolveUploadUrl } from "@/lib/uploads";
 import type { Banner } from "@/types/banner";
+import ShopImage from "./ShopImage";
 
 const DEFAULT_BANNER_IMAGE = "/banners/dfbanner.jpg";
 
@@ -21,17 +22,12 @@ function isBannerVisible(b: Banner, now: number = Date.now()): boolean {
   return true;
 }
 
-/** <img> onError — สลับไปรูปสำรอง (กัน loop ถ้ารูปสำรองก็พัง) */
-function fallbackToDefault(e: React.SyntheticEvent<HTMLImageElement>) {
-  const el = e.currentTarget;
-  if (el.src.endsWith(DEFAULT_BANNER_IMAGE)) return;
-  el.src = DEFAULT_BANNER_IMAGE;
-}
-
 export default function HeroCarousel() {
   const t = useTranslations("shop");
   const bannersQ = useQuery({ queryKey: ["catalog", "banners"], queryFn: catalogService.banners, staleTime: 5 * 60_000 });
   const [bannerIndex, setBannerIndex] = useState(0);
+  // รูปที่โหลดไม่ขึ้น → ใช้รูปสำรอง (next/image คุม src/srcset เอง สลับ el.src ตรง ๆ แบบเดิมไม่ได้)
+  const [failed, setFailed] = useState<Set<string>>(() => new Set());
 
   const banners = useMemo(
     () => (bannersQ.data ?? []).filter((b) => isBannerVisible(b)).sort((a, b) => a.sort_order - b.sort_order),
@@ -47,14 +43,22 @@ export default function HeroCarousel() {
   const safeIndex = bannerIndex >= banners.length ? 0 : bannerIndex;
   const current = banners[safeIndex];
   const heroImage = resolveUploadUrl(current?.banner_img) ?? DEFAULT_BANNER_IMAGE;
+  const src = bannersQ.isLoading || !current || failed.has(heroImage) ? DEFAULT_BANNER_IMAGE : heroImage;
 
+  // รูปใหญ่สุดเหนือขอบจอของหน้าแรก (LCP) → priority
   const image = (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={bannersQ.isLoading || !current ? DEFAULT_BANNER_IMAGE : heroImage}
+    <ShopImage
+      key={src}
+      src={src}
       alt={current?.banner_name || "MeowMee Cake"}
+      width={1920}
+      height={1080}
+      sizes="100vw"
+      priority
       className="w-full h-full object-cover"
-      onError={fallbackToDefault}
+      onError={() => {
+        if (src !== DEFAULT_BANNER_IMAGE) setFailed((prev) => new Set(prev).add(src));
+      }}
     />
   );
 
@@ -99,17 +103,23 @@ export default function HeroCarousel() {
       </div>
 
       {banners.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl">
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center bg-black/40 backdrop-blur-md px-1.5 rounded-xl">
+          {/* ปุ่มกดได้ 24px (Lighthouse target-size) — จุดที่เห็นยังเล็กเท่าเดิม */}
           {banners.map((b, index) => (
             <button
               key={b._id}
               type="button"
-              className={`h-2 rounded-xl transition-all duration-300 ${
-                index === safeIndex ? "w-6 bg-[#e2d7c7]" : "w-2 bg-white/50 hover:bg-white/80"
-              }`}
+              className="group flex h-6 min-w-6 cursor-pointer items-center justify-center border-none bg-transparent px-1"
               onClick={() => setBannerIndex(index)}
               aria-label={t("hero.banner", { n: index + 1 })}
-            />
+              aria-current={index === safeIndex ? "true" : undefined}
+            >
+              <span
+                className={`block h-2 rounded-xl transition-all duration-300 ${
+                  index === safeIndex ? "w-6 bg-[#e2d7c7]" : "w-2 bg-white/50 group-hover:bg-white/80"
+                }`}
+              />
+            </button>
           ))}
         </div>
       )}

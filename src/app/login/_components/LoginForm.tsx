@@ -29,7 +29,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REGISTER_PATH = "/register";
 const FORGOT_PASSWORD_PATH = "/customer/forgot-password";
 
-const iconSlot = "absolute top-1/2 right-3.5 -translate-y-1/2 flex items-center justify-center";
+// ≥ 28px — ปุ่มแสดง/ซ่อนรหัสผ่านเดิมกดได้แค่ 18px (Lighthouse target-size ต้อง ≥ 24px)
+const iconSlot = "absolute top-1/2 right-2 -translate-y-1/2 flex h-7 w-7 items-center justify-center";
 
 /** เวลาที่ครบกำหนดอีก sec วินาทีจากตอนนี้ (เรียกใน event handler เท่านั้น) */
 const deadlineIn = (sec: number) => Date.now() + sec * 1000;
@@ -223,7 +224,7 @@ function Form() {
           aria-busy={busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
-          className={`mt-5 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-base font-bold text-white shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait ${
+          className={`mt-5 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-base font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait ${
             locked ? "!cursor-not-allowed !bg-[#e1d6cd] !shadow-none" : ""
           } ${
             busy

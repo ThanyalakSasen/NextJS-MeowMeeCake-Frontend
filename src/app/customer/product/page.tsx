@@ -107,7 +107,8 @@ function ProductListContent() {
           <aside className="w-full lg:w-64 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#8C5A3C]/10 shrink-0 lg:sticky lg:top-56">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-100 font-bold text-[#4A342E]">
               <FaFilter className="text-[#8C5A3C] text-sm" />
-              <span>{t("categories")}</span>
+              {/* h2 — การ์ดสินค้าเป็น h3 ต้องมี h2 คั่นจาก h1 (Lighthouse heading-order) */}
+              <h2 className="m-0 text-base font-bold">{t("categories")}</h2>
             </div>
             {loading || categoriesQ.isLoading ? (
               <div className="py-4 text-center text-xs text-[#8C5A3C] animate-pulse">{t("loadingCategories")}</div>
@@ -132,7 +133,7 @@ function ProductListContent() {
                       <span>{c.name === ALL ? t("all") : c.name}</span>
                       <span
                         className={`text-[11px] px-2 py-0.5 rounded-full ml-2 ${
-                          isActive ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
+                          isActive ? "bg-black/25 text-white" : "bg-gray-100 text-gray-600"
                         }`}
                       >
                         {c.count}
@@ -184,8 +185,9 @@ function ProductListContent() {
               </div>
             ) : visible.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {visible.map((p) => (
-                  <ProductCard key={p._id} product={p} />
+                {/* 2 ใบแรก = แถวแรกบนมือถือ (รูปใหญ่สุดเหนือขอบจอ — LCP) → โหลดก่อน */}
+                {visible.map((p, i) => (
+                  <ProductCard key={p._id} product={p} priority={i < 2} />
                 ))}
               </div>
             ) : (

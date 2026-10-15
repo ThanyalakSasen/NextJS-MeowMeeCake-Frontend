@@ -39,6 +39,7 @@ import { preorderPickupDates, thaiDate } from "../lib/preorderDates";
 import { isRoundOpen, useNow } from "../lib/useNow";
 import FlowSteps from "@/components/customer/FlowSteps";
 import { useRecipientContact } from "../../hooks/useRecipientContact";
+import ShopImage from "@/components/customer/ShopImage";
 
 const PHONE_RE = /^0\d{8,9}$/;
 
@@ -217,8 +218,7 @@ function PreorderCheckoutContent() {
                 return (
                   <div key={key} className="flex gap-3 border-t border-[#8C5A3C]/10 pt-3 first:border-0 first:pt-0">
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-stone-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {img ? <img src={img} alt="" className="h-full w-full object-cover" /> : null}
+                      {img ? <ShopImage src={img} alt={""} width={128} height={128} sizes="64px" className="h-full w-full object-cover" /> : null}
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-start justify-between gap-2">

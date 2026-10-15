@@ -13,6 +13,7 @@ import { formatDate } from "@/i18n/format";
 import { FaImage, FaStar, FaThumbtack } from "react-icons/fa";
 import { catalogService, type CatalogReview } from "@/services/catalog";
 import { resolveUploadUrl } from "@/lib/uploads";
+import ShopImage from "@/components/customer/ShopImage";
 
 type Filter = { kind: "all" } | { kind: "star"; star: number } | { kind: "media" } | { kind: "aspect"; id: string };
 
@@ -208,8 +209,7 @@ function ReviewItem({ review: r }: { review: CatalogReview }) {
         <div className="flex flex-wrap gap-2 pt-1 sm:pl-12">
           {photos.map((url, idx) => (
             <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="h-16 w-16 overflow-hidden rounded-xl border border-gray-200 bg-black/5 sm:h-20 sm:w-20">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt={t("photoAlt", { n: idx + 1 })} className="h-full w-full object-cover" />
+              <ShopImage src={url} alt={t("photoAlt", { n: idx + 1 })} width={160} height={160} sizes="80px" className="h-full w-full object-cover" />
             </a>
           ))}
           {video && (

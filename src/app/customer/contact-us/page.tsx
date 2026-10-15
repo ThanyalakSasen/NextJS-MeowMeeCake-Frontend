@@ -26,7 +26,7 @@ import { shopProfileKey } from "../lib/shopQueries";
 import { formatMarketDays, formatStoreAddress, storeMapUrl } from "../lib/storeFormat";
 
 const SOCIAL_BUTTONS: { key: SocialKey; label: string; icon: React.ReactNode; className: string }[] = [
-  { key: "facebook", label: "Facebook", icon: <FaFacebook size={20} />, className: "bg-[#1877F2] hover:bg-[#166fe5]" },
+  { key: "facebook", label: "Facebook", icon: <FaFacebook size={20} />, className: "bg-[#1464d2] hover:bg-[#1259bd]" },
   { key: "line", label: "LINE", icon: <FaLine size={20} />, className: "bg-[#06C755] hover:bg-[#05b34c]" },
   { key: "instagram", label: "Instagram", icon: <FaInstagram size={20} />, className: "bg-[#C13584] hover:bg-[#a92d73]" },
   // label ว่าง = ชื่อมาจาก i18n (shop.contact.website)

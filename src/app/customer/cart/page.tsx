@@ -24,6 +24,7 @@ import { shopCartKey } from "../lib/shopQueries";
 import { catalogProductKey } from "../lib/catalogQueries";
 import { cartIssueText, cartIssues, cartProductId, type StockInfo } from "../lib/cartIssues";
 import FlowSteps from "@/components/customer/FlowSteps";
+import ShopImage from "@/components/customer/ShopImage";
 
 export default function CartPage() {
   const t = useTranslations("shop.cart");
@@ -158,8 +159,7 @@ function CartContent() {
                       className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#FAF6F0] sm:h-24 sm:w-24"
                     >
                       {img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt={product?.product_name_th ?? ""} className="h-full w-full object-cover" />
+                        <ShopImage src={img} alt={product?.product_name_th ?? ""} width={192} height={192} sizes="96px" className="h-full w-full object-cover" />
                       ) : (
                         <FaImage className="text-2xl text-[#8C5A3C]/40" />
                       )}
