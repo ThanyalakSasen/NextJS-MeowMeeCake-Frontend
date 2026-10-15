@@ -23,6 +23,26 @@ const PERIOD_LABEL_KEY: Record<PeriodType, "finance.periodDay" | "finance.period
   year: "finance.periodYear",
 };
 
+/** ตัวเลือกช่วงเวลา (รายวัน…รายปี + วันที่) — วางแถวเดียวกับแท็บของหน้า ผ่าน toolbar ของ TabbedPageLayout */
+export function ReviewDashboardToolbar(vm: VM) {
+  const t = useTranslations();
+  return (
+    <>
+      <TypeTabBar
+        value={vm.period}
+        onChange={vm.setPeriod}
+        options={PERIOD_TYPES.map((p) => ({ value: p, label: t(PERIOD_LABEL_KEY[p]) }))}
+      />
+      <DatePicker
+        picker={pickerTypeFor(vm.period)}
+        value={vm.selectedDate}
+        onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
+        style={{ width: 180 }}
+      />
+    </>
+  );
+}
+
 /** onViewUnreplied = ไปแท็บจัดการรีวิว กรองรีวิวลบที่ยังไม่ตอบ */
 export function ReviewDashboardView({ onViewUnreplied, ...vm }: VM & { onViewUnreplied: () => void }) {
   const t = useTranslations();
@@ -30,19 +50,6 @@ export function ReviewDashboardView({ onViewUnreplied, ...vm }: VM & { onViewUnr
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <TypeTabBar
-          value={vm.period}
-          onChange={vm.setPeriod}
-          options={PERIOD_TYPES.map((p) => ({ value: p, label: t(PERIOD_LABEL_KEY[p]) }))}
-        />
-        <DatePicker
-          picker={pickerTypeFor(vm.period)}
-          value={vm.selectedDate}
-          onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
-          style={{ width: 180 }}
-        />
-      </div>
 
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />

@@ -94,9 +94,7 @@ export function FinanceExpensesView(vm: VM) {
       toolbar={
         <FilterToolbar
           left={
-            <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("finance.searchPlaceholder")} />
-              <FilterField label={t("filterLabel.expenseCategory")} minWidth={160}>
+            <FilterField label={t("filterLabel.expenseCategory")} minWidth={160}>
                 <Select
                   value={vm.categoryFilter}
                   onChange={(v) => vm.setCategoryFilter(v as ExpenseCategory | "all")}
@@ -106,7 +104,6 @@ export function FinanceExpensesView(vm: VM) {
                   ]}
                 />
               </FilterField>
-            </>
           }
           right={
             <FilterField label={t("filterLabel.month")} minWidth={170}>
@@ -133,8 +130,10 @@ export function FinanceExpensesView(vm: VM) {
             10 แถว ดู .expense-table-area) การ์ดสุดท้ายยืดเต็มที่ว่าง · จอเล็กซ้อนคอลัมน์เดียว */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white lg:col-span-3">
-            <div className="border-b border-gray-100 px-4 py-3">
+            {/* ช่องค้นหาอยู่หัวการ์ดตาราง — ค้นเฉพาะแถวในตาราง ไม่กระทบการ์ดสถิติ */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-4 py-2">
               <p className="text-sm font-semibold text-brown-900">{t("finance.expenseListTitle")}</p>
+              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("finance.searchPlaceholder")} />
             </div>
             <div className="expense-table-area">
               {vm.isError ? (
