@@ -1,6 +1,6 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ "แดชบอร์ดความคิดเห็น" — สรุปรีวิวตามช่วงเวลา (หน้า /owner/reports/reviews เป็นหน้าจัดการรายรีวิว)
+// ViewModel ของแท็บ "แดชบอร์ด" ในหน้ารายงานความคิดเห็น — สรุปรีวิวตามช่วงเวลา (แท็บ "จัดการรีวิว" = useReviewsViewModel)
 // โหลดทุกรีวิวในช่วงที่เลือก (GET /admin/reviews?since&until ทีละ 100) แล้วสรุปฝั่ง client — reviewStats.ts
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
@@ -12,7 +12,8 @@ import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { toReviewRow } from "../reviewRow";
 import { computeReviewStats } from "./reviewStats";
 
-export function useReviewDashboardViewModel() {
+/** enabled = แท็บแดชบอร์ดเปิดอยู่ — ไม่ไล่โหลดรีวิวทุกหน้าตอนอยู่แท็บจัดการรีวิว */
+export function useReviewDashboardViewModel({ enabled = true }: { enabled?: boolean } = {}) {
   const [period, setPeriod] = useState<PeriodType>("month");
   const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs());
   const range = useMemo(() => getRangeStartEnd(period, selectedDate), [period, selectedDate]);
@@ -23,6 +24,7 @@ export function useReviewDashboardViewModel() {
   const q = useQuery({
     queryKey: ["reviews", "admin", "dashboard", since, until],
     queryFn: () => reviewsService.listAll({ since, until, sort: "newest" }),
+    enabled,
   });
 
   const stats = useMemo(

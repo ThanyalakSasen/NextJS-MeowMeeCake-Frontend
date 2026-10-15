@@ -1,12 +1,11 @@
 "use client";
-// View ของ "รีวิวลูกค้า" (BACKLOG4 E4) — แถบกรอง · แถบสรุปของชุดที่กรอง · เลือกหลายรายการ · การ์ดรีวิว · แบ่งหน้า ·
-// modal แท็กภายใน · drawer รายละเอียด (ผลวิเคราะห์ความรู้สึก) · ลิงก์ไปหน้าตั้งค่าหัวข้อ/คำวิเคราะห์
-import Link from "next/link";
+// แท็บ "จัดการรีวิว" ของหน้ารายงานความคิดเห็น (BACKLOG4 E4) — แถบกรอง · แถบสรุปของชุดที่กรอง · เลือกหลายรายการ ·
+// การ์ดรีวิว · แบ่งหน้า · modal แท็กภายใน · drawer รายละเอียด (ผลวิเคราะห์ความรู้สึก)
+// หัวหน้า/แท็บ/ปุ่มตั้งค่าอยู่ที่ ReviewsReportView
 import { Checkbox, Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { ArrowDownTrayIcon, ChartPieIcon, CheckIcon, Cog6ToothIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, CheckIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { Button, EmptyState, Select } from "@/components/base";
-import { ListPageLayout } from "@/components/shared/layout";
 import { PaginationBar } from "@/components/shared/data";
 import { DetailDrawer, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { modalButtonIcons } from "@/components/shared/actions";
@@ -23,20 +22,7 @@ export function ReviewsView(vm: VM) {
   const allSelected = vm.rows.length > 0 && vm.rows.every((r) => vm.selected.has(r._id));
 
   return (
-    <ListPageLayout
-      title={t("reviews.title")}
-      description={t("reviews.description")}
-      actions={
-        <div className="flex flex-wrap gap-2">
-          <Link href="/owner/reports/reviews/dashboard">
-            <Button icon={<ChartPieIcon className="h-4 w-4" />}>{t("nav.reportsReviewsDashboard")}</Button>
-          </Link>
-          <Link href="/owner/reports/reviews/settings">
-            <Button icon={<Cog6ToothIcon className="h-4 w-4" />}>{t("reviews.settingsLink")}</Button>
-          </Link>
-        </div>
-      }
-    >
+    <>
       <div className="flex flex-col gap-3">
         <ReviewFiltersBar
           filters={vm.filters}
@@ -151,6 +137,6 @@ export function ReviewsView(vm: VM) {
       <DetailDrawer open={!!vm.detail} title={t("reviews.detailTitle")} onClose={vm.closeDetail}>
         {vm.detail && <ReviewDetailContent review={vm.detail} />}
       </DetailDrawer>
-    </ListPageLayout>
+    </>
   );
 }

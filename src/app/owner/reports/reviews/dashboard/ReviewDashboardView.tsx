@@ -1,13 +1,10 @@
 "use client";
-// View ของ "แดชบอร์ดความคิดเห็น" — ตัวเลขสรุป · การกระจายคะแนน · แนวโน้มตามเวลา · หัวข้อที่ชม/ควรปรับปรุง ·
+// แท็บ "แดชบอร์ด" ของหน้ารายงานความคิดเห็น — ตัวเลขสรุป · การกระจายคะแนน · แนวโน้มตามเวลา · หัวข้อที่ชม/ควรปรับปรุง ·
 // สินค้ารีวิวมาก/คะแนนต่ำ · รีวิวลบที่รอตอบ (กราฟเป็นแถบ HTML แบบเดียวกับรายงานยอดขาย — ไม่มีไลบรารีกราฟ)
-import Link from "next/link";
 import { Tooltip } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import type { Dayjs } from "dayjs";
-import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
-import { Button, Card, DatePicker, EmptyState } from "@/components/base";
-import { DashboardPageLayout } from "@/components/shared/layout";
+import { Card, DatePicker, EmptyState } from "@/components/base";
 import { TypeTabBar } from "@/components/shared/data";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
@@ -26,14 +23,13 @@ const PERIOD_LABEL_KEY: Record<PeriodType, "finance.periodDay" | "finance.period
   year: "finance.periodYear",
 };
 
-const REVIEWS_PATH = "/owner/reports/reviews";
-
-export function ReviewDashboardView(vm: VM) {
+/** onViewUnreplied = ไปแท็บจัดการรีวิว กรองรีวิวลบที่ยังไม่ตอบ */
+export function ReviewDashboardView({ onViewUnreplied, ...vm }: VM & { onViewUnreplied: () => void }) {
   const t = useTranslations();
   const s = vm.stats;
 
   return (
-    <DashboardPageLayout title={t("reviewsDashboard.title")} description={t("reviewsDashboard.description")}>
+    <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-3">
         <TypeTabBar
           value={vm.period}
@@ -46,10 +42,6 @@ export function ReviewDashboardView(vm: VM) {
           onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
           style={{ width: 180 }}
         />
-        <div className="flex-1" />
-        <Link href={REVIEWS_PATH}>
-          <Button icon={<ChatBubbleLeftRightIcon className="h-4 w-4" />}>{t("reviewsDashboard.manageLink")}</Button>
-        </Link>
       </div>
 
       {vm.isError ? (
@@ -80,10 +72,10 @@ export function ReviewDashboardView(vm: VM) {
               />
             </div>
           </div>
-          <NeedsReply s={s} />
+          <NeedsReply s={s} onViewAll={onViewUnreplied} />
         </div>
       )}
-    </DashboardPageLayout>
+    </div>
   );
 }
 
@@ -273,7 +265,7 @@ function ProductList({ title, hint, items, warnBelow }: { title: string; hint?: 
   );
 }
 
-function NeedsReply({ s }: { s: ReviewStats }) {
+function NeedsReply({ s, onViewAll }: { s: ReviewStats; onViewAll: () => void }) {
   const t = useTranslations();
   const locale = useLocale();
   if (s.unrepliedNegative.length === 0) return null;
@@ -281,9 +273,13 @@ function NeedsReply({ s }: { s: ReviewStats }) {
     <Section
       title={t("reviewsDashboard.needsReply")}
       action={
-        <Link href={REVIEWS_PATH} className="shrink-0 text-sm font-semibold text-brown-700 hover:underline">
+        <button
+          type="button"
+          onClick={onViewAll}
+          className="shrink-0 cursor-pointer border-none bg-transparent p-0 text-sm font-semibold text-brown-700 hover:underline"
+        >
           {t("reviewsDashboard.viewAll")}
-        </Link>
+        </button>
       }
     >
       <ul className="m-0 flex list-none flex-col p-0">

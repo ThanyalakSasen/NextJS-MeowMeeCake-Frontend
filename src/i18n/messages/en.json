@@ -89,7 +89,6 @@
     "reports": "Sales & Reviews Reports",
     "reportsSales": "Sales Report",
     "reportsReviews": "Customer Reviews",
-    "reportsReviewsDashboard": "Reviews Dashboard",
     "reviewSettings": "Review topic settings",
     "finance": "Finance",
     "financeExpenses": "Expenses",
@@ -1690,7 +1689,9 @@
   },
   "reviews": {
     "title": "Customer Reviews",
-    "description": "Reply, hide/show, pin and follow up on every review — filters update the summary instantly",
+    "description": "Customer review overview, plus reply, hide/show, pin and follow up on every review — all in one page",
+    "tabDashboard": "Dashboard",
+    "tabManage": "Manage reviews",
     "settingsLink": "Review topic settings",
     "searchPlaceholder": "Search review text...",
     "sortLabel": "Sort",
@@ -1855,9 +1856,6 @@
     }
   },
   "reviewsDashboard": {
-    "title": "Reviews Dashboard",
-    "description": "Customer review summary for the selected period — ratings, trend, liked/needs-improvement topics and products to watch",
-    "manageLink": "Manage reviews",
     "total": "Total reviews",
     "avgRating": "Average rating",
     "ofFive": "out of 5",
