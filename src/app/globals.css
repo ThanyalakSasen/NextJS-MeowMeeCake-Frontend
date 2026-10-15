@@ -961,10 +961,6 @@ body {
   @apply text-2xl font-semibold text-brown-800;
 }
 
-.page-description {
-  @apply mt-1 text-base text-gray-600;
-}
-
 /* ── Stat cards ── */
 .stat-card {
   @apply rounded-xl bg-white p-5;

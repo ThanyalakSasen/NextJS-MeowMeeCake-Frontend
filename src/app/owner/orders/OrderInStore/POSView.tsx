@@ -19,7 +19,7 @@ export function POSView(vm: VM) {
   const t = useTranslations();
 
   return (
-    <DashboardPageLayout title={t("pos.title")} description={t("pos.description")}>
+    <DashboardPageLayout title={t("pos.title")}>
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         <section aria-label={t("pos.billTitle")} className="flex min-w-0 flex-col gap-3.5">
           <ScanSearchBox

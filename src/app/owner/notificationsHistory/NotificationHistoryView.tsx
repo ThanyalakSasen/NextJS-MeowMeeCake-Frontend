@@ -75,7 +75,6 @@ export function NotificationHistoryView(vm: VM) {
   return (
     <ListPageLayout
       title={t("notifications.historyTitle")}
-      description={t("notifications.historyDescription")}
       actions={
         <>
           {vm.stats.unread > 0 && (

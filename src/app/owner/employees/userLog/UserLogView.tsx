@@ -72,7 +72,6 @@ export function UserLogView(vm: VM) {
   return (
     <ListPageLayout
       title={t("userLog.title")}
-      description={t("userLog.description")}
       actions={
         <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
           {t("common.export")}

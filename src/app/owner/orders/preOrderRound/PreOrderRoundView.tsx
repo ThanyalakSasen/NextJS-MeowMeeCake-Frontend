@@ -24,7 +24,6 @@ export function PreOrderRoundView(vm: VM) {
     <>
       <TabbedPageLayout
         title={t("preorderRound.title")}
-        description={t("preorderRound.description")}
         activeKey={vm.activeTab}
         onChange={vm.setActiveTab}
         items={[

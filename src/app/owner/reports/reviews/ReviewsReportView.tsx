@@ -28,7 +28,6 @@ export function ReviewsReportView({
   return (
     <TabbedPageLayout
       title={t("reviews.title")}
-      description={t("reviews.description")}
       actions={
         <Link href="/owner/reports/reviews/settings">
           <Button icon={<Cog6ToothIcon className="h-4 w-4" />}>{t("reviews.settingsLink")}</Button>

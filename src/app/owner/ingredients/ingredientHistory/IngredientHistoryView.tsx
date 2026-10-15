@@ -73,7 +73,6 @@ export function IngredientHistoryView(vm: VM) {
   return (
     <ListPageLayout
       title={t("ingredientHistory.title")}
-      description={t("ingredientHistory.description")}
       toolbar={
         <FilterToolbar
           left={

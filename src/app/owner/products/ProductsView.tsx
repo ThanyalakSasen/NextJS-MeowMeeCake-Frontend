@@ -53,7 +53,6 @@ export function ProductsView(vm: VM) {
   return (
     <ListPageLayout
       title={t("products.title")}
-      description={t("products.description")}
       actions={
         <div className="flex flex-wrap gap-2">
           <CategoryManagerButton kind="product" />

@@ -70,7 +70,6 @@ export function IngredientStockView(vm: VM) {
   return (
     <ListPageLayout
       title={t("ingredientStock.title")}
-      description={t("ingredientStock.description")}
       actions={
         vm.perm.update && (
           <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>

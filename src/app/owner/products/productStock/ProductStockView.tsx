@@ -72,7 +72,6 @@ export function ProductStockView(vm: VM) {
   return (
     <ListPageLayout
       title={t("productStock.title")}
-      description={t("productStock.description")}
       actions={
         vm.perm.update && (
           <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>

@@ -624,8 +624,6 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "description": "Store overview at a glance",
-    "asOf": "As of {date}",
     "statRevenueToday": "Revenue today",
     "statRevenueTodaySub": "{n} orders today",
     "statOrdersToday": "Orders today",
@@ -657,7 +655,6 @@
   },
   "products": {
     "title": "Products",
-    "description": "All products — filter by category/type, search, manage visibility",
     "addProduct": "Add product",
     "searchPlaceholder": "Search product name...",
     "stock": "Stock {n}",
@@ -684,7 +681,6 @@
   },
   "productStock": {
     "title": "Finished product stock",
-    "description": "Track stock of ready-to-sell products — receive, use, and adjust when the physical count differs",
     "searchPlaceholder": "Search product name...",
     "categoryFilter": "Product type",
     "statusFilter": "Stock status",
@@ -728,7 +724,6 @@
   },
   "orders": {
     "title": "Manage Orders",
-    "description": "Track and manage all in-store and pre-order purchases",
     "searchPlaceholder": "Search order number or customer name...",
     "colOrder": "Order",
     "colCustomer": "Customer",
@@ -821,7 +816,6 @@
     "paymentRejectFailed": "Could not reject the slip",
     "slipRejected": "Slip rejected — waiting for the customer to upload a new one",
     "title": "Pre-order Rounds",
-    "description": "Manage advance birthday-cake ordering rounds and view customers' orders within each round",
     "tabRounds": "Pre-order Rounds",
     "tabDashboard": "Round Summary",
     "tabOrders": "Birthday Cake Orders",
@@ -968,7 +962,6 @@
   },
   "pos": {
     "title": "In-store Orders",
-    "description": "Fast point-of-sale — the customer pays and takes the goods right away",
     "scanLabel": "Scan / search",
     "scanPlaceholder": "Scan a barcode, or type a product code / name",
     "searchNoResult": "No products found — check the code or name",
@@ -1050,7 +1043,6 @@
   },
   "ingredients": {
     "title": "Ingredients",
-    "description": "All ingredients — stock levels, unit cost and suppliers",
     "addIngredient": "Add ingredient",
     "searchPlaceholder": "Search name, SKU, supplier...",
     "statTotal": "Total ingredients",
@@ -1090,7 +1082,6 @@
   },
   "units": {
     "title": "Manage Units",
-    "description": "Keep units for \"ingredients / recipes\" separate from units for \"products\"",
     "addUnit": "Add unit",
     "emptyGroup": "No units in this group yet",
     "bothContexts": "Both",
@@ -1119,7 +1110,6 @@
   },
   "ingredientStock": {
     "title": "Ingredient Stock",
-    "description": "Receive, use and adjust ingredient stock — every change is logged automatically",
     "searchPlaceholder": "Search name, SKU...",
     "statTracked": "Ingredients tracked",
     "statTrackedSub": "items",
@@ -1153,7 +1143,6 @@
   },
   "ingredientHistory": {
     "title": "Ingredient Movement History",
-    "description": "All ingredient stock movements — receive, use, adjust",
     "searchPlaceholder": "Search ingredient, note, person...",
     "allIngredients": "All ingredients",
     "statTotal": "Total records",
@@ -1249,7 +1238,6 @@
   },
   "pricing": {
     "title": "Product Pricing",
-    "description": "Edit the regular price, sale price and visibility of each product",
     "colProduct": "Product",
     "colCategory": "Category",
     "colType": "Type",
@@ -1278,7 +1266,6 @@
   },
   "coupons": {
     "title": "Coupons / Discounts",
-    "description": "Create and manage promotion coupons for customers",
     "addCoupon": "Create coupon",
     "addTitle": "Create new coupon",
     "editTitle": "Edit coupon {code}",
@@ -1425,7 +1412,6 @@
   },
   "employees": {
     "title": "Employees",
-    "description": "All staff — role, employment type and working status",
     "addEmployee": "Add employee",
     "searchPlaceholder": "Search name, phone, role...",
     "allRoles": "All roles",
@@ -1474,7 +1460,6 @@
   },
   "permissions": {
     "title": "Access Permissions",
-    "description": "Set per-menu permissions for each staff role",
     "allRolesTitle": "All roles",
     "members": "{n} members",
     "addRole": "Add role",
@@ -1519,7 +1504,6 @@
   },
   "userLog": {
     "title": "Employee Activity Log",
-    "description": "Sign-in history and data changes made by every staff member",
     "searchPlaceholder": "Search employee or action...",
     "allEmployees": "All employees",
     "allTypes": "All types",
@@ -1549,7 +1533,6 @@
   },
   "myAccount": {
     "title": "My account",
-    "description": "Your personal details, password and work history",
     "tabProfile": "My details",
     "tabPassword": "Change password",
     "tabLogs": "Work history",
@@ -1581,7 +1564,6 @@
   },
   "finance": {
     "expensesTitle": "Expense Log",
-    "expensesDescription": "Tracking {n} expenses this month",
     "expenseListTitle": "Expenses",
     "addExpense": "Log Expense",
     "searchPlaceholder": "Search item, vendor...",
@@ -1673,7 +1655,6 @@
   },
   "salesReport": {
     "title": "Product Sales Comparison",
-    "description": "Rank products by revenue or quantity sold over the selected period",
     "modeRevenue": "Revenue",
     "modeQty": "Quantity",
     "sortDesc": "High → Low",
@@ -1689,7 +1670,6 @@
   },
   "reviews": {
     "title": "Customer Reviews",
-    "description": "Customer review overview, plus reply, hide/show, pin and follow up on every review — all in one page",
     "tabDashboard": "Dashboard",
     "tabManage": "Manage reviews",
     "settingsLink": "Review topic settings",
@@ -1888,7 +1868,6 @@
   },
   "reviewSettings": {
     "title": "Review topic settings",
-    "description": "Topics customers pick in the review form, and words the system uses to analyze review text",
     "back": "Back to reviews",
     "tabAspects": "Review topics",
     "tabTerms": "Analysis keywords",
@@ -1942,7 +1921,6 @@
   },
   "storeDesign": {
     "title": "Store Design — Banners",
-    "description": "Upload and order the banners shown on the online storefront",
     "addBanner": "Add banner",
     "searchPlaceholder": "Search banners...",
     "statTotal": "Total banners",
@@ -1977,8 +1955,6 @@
   },
   "storeInfo": {
     "title": "Store info",
-    "description": "General info, contact channels, payment account, address and weekly markets shown on the online store — click \"Edit\" and save one section at a time",
-    "staffDescription": "Weekly markets (pickup points) — other store info can be edited by the owner only",
     "notSet": "— not set",
     "finishOtherFirst": "Save or cancel the section you are editing first",
     "unsavedTitle": "Unsaved changes",
@@ -2105,7 +2081,6 @@
   },
   "searchSynonyms": {
     "title": "Search synonyms",
-    "description": "Group words with the same meaning so customers find products whichever word they type — used by the storefront search, takes effect right after saving",
     "example": "Example: term \"ช็อกโกแลต\" + synonyms \"chocolate, ช็อค, ชอคโกแลต\" → typing \"chocolate\" finds products named \"ช็อกโกแลต\" · case and Thai tone marks are ignored already · avoid very short words (e.g. \"ชา\") as they match many other searches",
     "addTitle": "Add a word group",
     "add": "Add group",
@@ -2152,7 +2127,6 @@
     "title": "Notifications",
     "viewAll": "View all",
     "historyTitle": "Notification History",
-    "historyDescription": "All system notifications — type, module and read status",
     "searchPlaceholder": "Search title or message...",
     "tabAll": "All",
     "tabUnread": "Unread",
@@ -2329,7 +2303,6 @@
   },
   "deliveryZones": {
     "title": "Delivery Zones",
-    "description": "Delivery fees by province for delivery orders created in the back office — changes apply to new orders immediately",
     "usage": "Used for the delivery fee of back-office orders and pre-orders shipped to an address (when no fee is entered manually). The online storefront has its own shipping rates.",
     "freeShipping": "Orders of {amount} or more ship free in every zone (set on the server)",
     "add": "Add zone",
@@ -2387,7 +2360,6 @@
   },
   "shippingZones": {
     "title": "Online Shipping Fees",
-    "description": "Shipping fees by province for orders customers place on the website (zones A–D) — changes apply to new orders immediately",
     "usage": "The customer's delivery province is matched against zones A–C — anything else uses zone D · no free shipping by order total (free shipping only via coupons) · orders created in the back office use \"Delivery Zones\" instead",
     "scopeNote": "Categories without \"ships nationwide\" can only be delivered within the store's province — set this in category management on the products page",
     "fallbackTag": "All other provinces",

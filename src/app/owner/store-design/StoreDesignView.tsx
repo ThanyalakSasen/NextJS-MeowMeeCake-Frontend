@@ -32,7 +32,6 @@ export function StoreDesignView(vm: VM) {
   return (
     <ListPageLayout
       title={t("storeDesign.title")}
-      description={t("storeDesign.description")}
       actions={
         vm.perm.create && (
           <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>

@@ -83,7 +83,7 @@ export function StoreInfoView(vm: VM) {
   );
 
   return (
-    <ListPageLayout title={t("storeInfo.title")} description={vm.isOwner ? t("storeInfo.description") : t("storeInfo.staffDescription")}>
+    <ListPageLayout title={t("storeInfo.title")}>
       {/* โหมดดู: ค่าที่บันทึกแล้วเป็นตัวเข้ม (antd disabled จางเกินจนแยกจาก placeholder ไม่ออก) */}
       <div className="[&_.ant-input-disabled]:!text-gray-800 [&_.ant-select-disabled_.ant-select-content]:!text-gray-800 [&_.ant-select-disabled_.ant-select-selection-item]:!text-gray-800">
       {vm.isError ? (

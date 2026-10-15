@@ -27,7 +27,7 @@ export function SalesReportView(vm: VM) {
   const locale = useLocale();
 
   return (
-    <DashboardPageLayout title={t("salesReport.title")} description={t("salesReport.description")}>
+    <DashboardPageLayout title={t("salesReport.title")}>
       <div className="flex flex-wrap items-center gap-3">
         <TypeTabBar
           value={vm.period}

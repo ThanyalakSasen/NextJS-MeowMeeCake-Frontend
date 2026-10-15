@@ -17,7 +17,6 @@ export function ReviewSettingsView(vm: VM) {
   return (
     <TabbedPageLayout
       title={t("reviewSettings.title")}
-      description={t("reviewSettings.description")}
       actions={
         <Link href="/owner/reports/reviews">
           <Button icon={<ArrowLeftIcon className="h-4 w-4" />}>{t("reviewSettings.back")}</Button>
