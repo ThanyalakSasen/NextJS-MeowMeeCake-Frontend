@@ -2,7 +2,7 @@
 // View ของ Finance Expenses — JSX ล้วน รับ props จาก useFinanceExpensesViewModel
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import { Button, Select, Tag } from "@/components/base";
+import { Button, DatePicker, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
@@ -107,7 +107,13 @@ export function FinanceExpensesView(vm: VM) {
           }
           right={
             <FilterField label={t("filterLabel.month")} minWidth={170}>
-              <Select value={vm.selectedMonth} onChange={vm.setSelectedMonth} options={vm.monthOptions} />
+              <DatePicker
+                picker="month"
+                value={vm.selectedMonthDate}
+                allowClear={false}
+                onChange={(d) => { if (d && !Array.isArray(d)) vm.setSelectedMonthDate(d); }}
+                style={{ width: 180 }}
+              />
             </FilterField>
           }
         />
