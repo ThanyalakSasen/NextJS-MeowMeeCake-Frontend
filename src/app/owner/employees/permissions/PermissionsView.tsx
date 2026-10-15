@@ -29,7 +29,7 @@ export function PermissionsView(vm: VM) {
   );
 
   return (
-    <DashboardPageLayout title={t("permissions.title")} description={t("permissions.description")}>
+    <DashboardPageLayout title={t("permissions.title")}>
       {vm.isError ? (
         <div className="py-10 text-center text-gray-600">{t("permissions.loadFailed")}</div>
       ) : vm.isLoading ? (

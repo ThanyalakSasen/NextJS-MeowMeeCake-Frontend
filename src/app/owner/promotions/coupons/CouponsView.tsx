@@ -19,7 +19,6 @@ export function CouponsView(vm: VM) {
   return (
     <ListPageLayout
       title={t("coupons.title")}
-      description={t("coupons.description")}
       actions={
         vm.perm.create && (
           <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>

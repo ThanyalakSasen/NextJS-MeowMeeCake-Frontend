@@ -14,7 +14,6 @@ export function AccountView(vm: VM) {
   return (
     <TabbedPageLayout
       title={t("title")}
-      description={t("description")}
       activeKey={vm.tab}
       onChange={vm.setTab}
       items={[

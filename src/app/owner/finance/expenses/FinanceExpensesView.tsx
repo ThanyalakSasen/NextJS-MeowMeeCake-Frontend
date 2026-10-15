@@ -79,7 +79,6 @@ export function FinanceExpensesView(vm: VM) {
   return (
     <ListPageLayout
       title={t("finance.expensesTitle")}
-      description={t("finance.expensesDescription", { n: vm.monthCount })}
       actions={
         <>
           <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>

@@ -13,7 +13,7 @@ export function UnitsView(vm: VM) {
   const t = useTranslations();
 
   return (
-    <DashboardPageLayout title={t("units.title")} description={t("units.description")}>
+    <DashboardPageLayout title={t("units.title")}>
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (

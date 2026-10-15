@@ -66,7 +66,6 @@ export function PricingView(vm: VM) {
   return (
     <ListPageLayout
       title={t("pricing.title")}
-      description={t("pricing.description")}
       actions={
         vm.perm.update && (
           <Button

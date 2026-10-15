@@ -27,7 +27,6 @@ export function DeliveryZonesView(vm: VM) {
   return (
     <ListPageLayout
       title={t("deliveryZones.title")}
-      description={t("deliveryZones.description")}
       actions={
         vm.perm.create && !vm.isLoading && !vm.isError ? (
           <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>

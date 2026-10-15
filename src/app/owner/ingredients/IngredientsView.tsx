@@ -73,7 +73,6 @@ export function IngredientsView(vm: VM) {
   return (
     <ListPageLayout
       title={t("ingredients.title")}
-      description={t("ingredients.description")}
       actions={
         <div className="flex flex-wrap gap-2">
           <CategoryManagerButton kind="ingredient" />

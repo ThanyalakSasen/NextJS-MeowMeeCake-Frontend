@@ -25,7 +25,7 @@ export function ShippingZonesView(vm: VM) {
   const money = (n: number) => formatCurrency(n, locale);
 
   return (
-    <ListPageLayout title={t("shippingZones.title")} description={t("shippingZones.description")}>
+    <ListPageLayout title={t("shippingZones.title")}>
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (

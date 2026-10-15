@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
-import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
+import { formatCurrency, formatNumber } from "@/i18n/format";
 import type { useDashboardViewModel } from "./useDashboardViewModel";
 import { RecentOrdersWidget } from "./_components/RecentOrdersWidget";
 import { LowStockWidget } from "./_components/LowStockWidget";
@@ -18,12 +18,8 @@ export function DashboardView(vm: VM) {
   const t = useTranslations();
   const locale = useLocale();
 
-  const description = vm.generatedAt
-    ? t("dashboard.asOf", { date: formatDate(vm.generatedAt, locale) })
-    : t("dashboard.description");
-
   return (
-    <DashboardPageLayout title={t("dashboard.title")} description={description}>
+    <DashboardPageLayout title={t("dashboard.title")}>
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (

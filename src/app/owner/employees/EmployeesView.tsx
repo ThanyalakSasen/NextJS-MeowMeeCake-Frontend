@@ -70,7 +70,6 @@ export function EmployeesView(vm: VM) {
   return (
     <ListPageLayout
       title={t("employees.title")}
-      description={t("employees.description")}
       actions={
         vm.perm.create && (
           <Button type="primary" icon={actionIcon("add")} href="/owner/employees/addEmployee">

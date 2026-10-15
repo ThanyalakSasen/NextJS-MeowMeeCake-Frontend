@@ -94,7 +94,6 @@ export function ManageOrdersView(vm: VM) {
   return (
     <ListPageLayout
       title={t("orders.title")}
-      description={t("orders.description")}
       actions={
         <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
           {t("orders.export")}
