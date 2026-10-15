@@ -41,7 +41,6 @@ export const MENU_SECTIONS: MenuSection[] = [
           { labelKey: "reportsSales", href: "/owner/reports/sales", icon: "ArrowTrendingUpIcon", menuKey: "reports" },
           // menuKey ต้องตรงกับสิทธิ์ที่ /admin/reviews ตรวจจริง — backend ย้ายจาก products.* เป็น reports.*
           // (customer-backend-merge.md §8.20) · เดิม "products" ตาม docs/BACKLOG.md §1
-          { labelKey: "reportsReviewsDashboard", href: "/owner/reports/reviews/dashboard", icon: "ChartPieIcon", menuKey: "reports" },
           { labelKey: "reportsReviews", href: "/owner/reports/reviews", icon: "ChatBubbleLeftRightIcon", menuKey: "reports" },
         ],
       },
