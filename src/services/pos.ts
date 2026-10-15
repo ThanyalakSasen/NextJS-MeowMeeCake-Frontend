@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse, ListResponse } from "@/types/api";
-import type { PosGuestCustomer, PosProduct, PosProductListParams, PosScanResult } from "@/types/pos";
+import type { PosGuestCustomer, PosProduct, PosProductListParams, PosPromptPayQr, PosScanResult } from "@/types/pos";
 import { toProduct } from "@/services/products";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -28,6 +28,15 @@ export const posService = {
    */
   guestCustomer: async (): Promise<PosGuestCustomer> => {
     const res = await http.get<ItemResponse<PosGuestCustomer>>("/admin/pos/guest-customer");
+    return res.data;
+  },
+
+  /**
+   * GET /admin/pos/promptpay-qr?amount= — QR พร้อมเพย์จริง (เลข + ชื่อบัญชีจาก "ข้อมูลร้านค้า") ใต้สิทธิ์ orders.view
+   * ร้านยังไม่ตั้งเลขพร้อมเพย์ = 422 · ไม่มีการยืนยันเงินเข้าอัตโนมัติ (พนักงานตรวจในแอปธนาคารเอง)
+   */
+  promptpayQr: async (amount: number): Promise<PosPromptPayQr> => {
+    const res = await http.get<ItemResponse<PosPromptPayQr>>("/admin/pos/promptpay-qr", { params: { amount } });
     return res.data;
   },
 
