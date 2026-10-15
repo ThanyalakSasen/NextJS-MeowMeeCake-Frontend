@@ -8,6 +8,7 @@ import { catalogService } from "@/services/catalog";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { isApiError } from "@/types/api";
 import { catalogProductKey } from "../../lib/catalogQueries";
+import ShopImage from "@/components/customer/ShopImage";
 
 export default function OrderItemThumb({ productId, alt, className = "h-14 w-14" }: { productId: string; alt: string; className?: string }) {
   const q = useQuery({
@@ -21,8 +22,7 @@ export default function OrderItemThumb({ productId, alt, className = "h-14 w-14"
   return (
     <div className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#FAF6F0] text-[#8C5A3C] ${className}`}>
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element -- รูปจาก backend (คนละ origin)
-        <img src={src} alt={alt} className="h-full w-full object-cover" />
+        <ShopImage src={src} alt={alt} width={160} height={160} sizes="80px" className="h-full w-full object-cover" />
       ) : (
         <CakeSlice className="h-6 w-6" aria-hidden="true" />
       )}

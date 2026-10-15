@@ -98,7 +98,7 @@ export function RegisterView(vm: VM) {
               value={vm.form.password} placeholder={t("register.passwordPlaceholder")} onChange={(e) => vm.set("password", e.target.value)} />
             <button type="button" onClick={vm.toggleShowPassword}
               aria-label={vm.showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-              className="absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center text-[#a19285] hover:text-[#4e342e]">
+              className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center text-[#a19285] hover:text-[#4e342e]">
               {vm.showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
@@ -162,7 +162,7 @@ export function RegisterView(vm: VM) {
           disabled={vm.busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
-          className={`mt-3 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-base font-bold text-white shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
+          className={`mt-3 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-base font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
             vm.busy ? "" : "hover:enabled:-translate-y-px hover:enabled:bg-[#d99c00] hover:enabled:shadow-[0_6px_16px_rgba(242,174,0,0.35)]"
           } ${pressed ? "animate-jelly" : ""}`}
         >

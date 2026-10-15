@@ -25,6 +25,7 @@ import { baht, shopButton, shopButtonPrimary, shopCard } from "@/components/cust
 import { useReviewedItems } from "../../hooks/useReviewedItems";
 import { catalogProductKey } from "../../lib/catalogQueries";
 import { reviewAspectsKey, shopPointsKey, shopReviewsKey } from "../../lib/shopQueries";
+import ShopImage from "@/components/customer/ShopImage";
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_MB = 5;
@@ -260,8 +261,7 @@ export default function WriteReviewForm({
               <>
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#FAF6F0] text-[#8C5A3C]">
                   {img ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- รูปจาก backend คนละ origin
-                    <img src={img} alt={it.product_name} className="h-full w-full object-cover" />
+                    <ShopImage src={img} alt={it.product_name} width={96} height={96} sizes="48px" className="h-full w-full object-cover" />
                   ) : (
                     <CakeSlice className="h-5 w-5" aria-hidden="true" />
                   )}

@@ -19,6 +19,7 @@ import { effectivePrice, hasSalePrice, salePercent } from "@/lib/pricing";
 import { useAddToCart } from "@/app/customer/hooks/useAddToCart";
 import { useFavorites } from "@/app/customer/hooks/useFavorites";
 import type { AllergenWarning, AllergenWarningLevel } from "@/services/catalog";
+import ShopImage from "./ShopImage";
 
 /**
  * สินค้านี้จะถูกแสดงเป็นบัตรหรือไม่ — ProductCard จะ return null ถ้าได้ false
@@ -54,6 +55,7 @@ export default function ProductCard({
   showFavorite = true,
   allergenWarning = null,
   reasons,
+  priority = false,
 }: {
   product: Product;
   showAddToCart?: boolean;
@@ -62,6 +64,8 @@ export default function ProductCard({
   allergenWarning?: AllergenWarning | null;
   /** เหตุผลที่แนะนำ — แสดงข้อแรก */
   reasons?: string[];
+  /** บัตรแถวแรกของหน้า (เหนือขอบจอ) — โหลดรูปทันทีด้วยความสำคัญสูง (LCP) */
+  priority?: boolean;
 }) {
   const t = useTranslations("shop.productCard");
   const { names: localNames } = useLocalName();
@@ -86,10 +90,11 @@ export default function ProductCard({
       <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
         {/* รูปที่โหลดไม่ขึ้น (ไฟล์หายจากเซิร์ฟเวอร์) → แสดง "ไม่มีรูปภาพ" แทนรูปแตก */}
         {imgSrc && imgSrc !== failedImg ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <ShopImage
             src={imgSrc}
             alt={product.product_name_eng || product.product_name_th}
+            sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            priority={priority}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             onError={() => setFailedImg(imgSrc)}
           />
@@ -156,7 +161,7 @@ export default function ProductCard({
                   <span className="text-base font-bold text-red-600">฿</span>
                   <span className="text-lg font-extrabold text-red-600">{effectivePrice(product).toLocaleString()}</span>
                 </span>
-                <span className="text-xs text-stone-400 line-through">฿{product.product_price?.toLocaleString()}</span>
+                <span className="text-xs text-stone-500 line-through">฿{product.product_price?.toLocaleString()}</span>
                 <span className="text-[10px] font-bold text-white bg-red-500 rounded px-1 py-0.5 leading-none">
                   -{salePercent(product)}%
                 </span>

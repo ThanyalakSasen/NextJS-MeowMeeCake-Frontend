@@ -18,6 +18,7 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useAddToCart } from "../../hooks/useAddToCart";
+import ShopImage from "@/components/customer/ShopImage";
 
 export default function FavoritesPage() {
   const t = useTranslations("shop.favorites");
@@ -93,8 +94,13 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
       <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden bg-stone-100">
         <Link href={href} className="block h-full w-full" tabIndex={-1} aria-hidden="true">
           {img && !imgFailed ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" onError={() => setImgFailed(true)} />
+            <ShopImage
+              src={img}
+              alt=""
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              onError={() => setImgFailed(true)}
+            />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-xs text-stone-500">{t("noImage")}</span>
           )}
@@ -138,7 +144,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
         <div className="flex items-center justify-between gap-2 border-t border-stone-200/60 pt-2">
           <span className="flex items-baseline gap-1.5">
             <span className={`text-lg font-bold ${item.originalPrice ? "text-red-600" : "text-stone-900"}`}>{baht(item.price)}</span>
-            {item.originalPrice ? <span className="text-xs text-stone-400 line-through">{baht(item.originalPrice)}</span> : null}
+            {item.originalPrice ? <span className="text-xs text-stone-500 line-through">{baht(item.originalPrice)}</span> : null}
           </span>
 
           {item.is_preorder ? (

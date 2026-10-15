@@ -33,6 +33,7 @@ import CustomizationPicker from "./_components/CustomizationPicker";
 import { pickProblemText } from "../../lib/pickProblemText";
 import ReviewsSection from "./_components/ReviewsSection";
 import SimilarProducts from "./_components/SimilarProducts";
+import ShopImage from "@/components/customer/ShopImage";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -229,9 +230,17 @@ function ProductDetailContent() {
                   className="flex w-full h-full transition-transform duration-700 ease-in-out"
                   style={{ transform: `translateX(-${slideIndex * 100}%)` }}
                 >
+                  {/* รูปแรก = LCP ของหน้า → priority · สไลด์ถัดไปโหลดทันทีด้วย (ซ่อนอยู่ข้าง ๆ เลื่อนมาแล้วต้องขึ้นเลย) */}
                   {images.map((img, idx) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={idx} src={img} alt={product.product_name_eng || product.product_name_th} className="w-full h-full object-cover shrink-0" />
+                    <ShopImage
+                      key={idx}
+                      src={img}
+                      alt={product.product_name_eng || product.product_name_th}
+                      sizes="(min-width: 640px) 360px, 90vw"
+                      priority={idx === 0}
+                      eager
+                      className="w-full h-full object-cover shrink-0"
+                    />
                   ))}
                 </div>
               ) : (
@@ -250,8 +259,7 @@ function ProductDetailContent() {
                       slideIndex === idx ? "border-[#8C5A3C] shadow-sm scale-95" : "border-transparent opacity-70 hover:opacity-100"
                     }`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <ShopImage src={img} alt="" width={128} height={128} sizes="64px" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -317,7 +325,7 @@ function ProductDetailContent() {
               {discounted && (
                 <>
                   <span className="text-base text-gray-500 line-through">{t("regularPrice", { price: (regularPrice + extra).toLocaleString() })}</span>
-                  <span className="ml-auto text-xs font-bold text-white bg-red-500 px-2.5 py-1 rounded-xl">{t("sale", { percent: Math.round((1 - (price - extra) / regularPrice) * 100) })}</span>
+                  <span className="ml-auto text-xs font-bold text-white bg-red-700 px-2.5 py-1 rounded-xl">{t("sale", { percent: Math.round((1 - (price - extra) / regularPrice) * 100) })}</span>
                 </>
               )}
               {extra > 0 && <span className="w-full text-xs text-gray-500">{t("withOptions", { n: extra.toLocaleString() })}</span>}
@@ -423,9 +431,9 @@ function ProductDetailContent() {
               ))}
             </div>
             <div className="bg-[#FAF6F0] p-5 rounded-xl border border-[#8C5A3C]/10">
-              <h4 className="text-xs font-bold text-[#8C5A3C] uppercase tracking-wider mb-1">
+              <h2 className="m-0 mb-1 text-xs font-bold text-[#8C5A3C] uppercase tracking-wider">
                 {activeTab === "description" ? t("descriptionTitle") : t("tabHeating")}
-              </h4>
+              </h2>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                 {activeTab === "description"
                   ? product.product_description || t("noDescription")
