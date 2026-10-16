@@ -9,7 +9,8 @@ import { useQuery } from "@tanstack/react-query";
 import { me } from "@/lib/authClient";
 import type { CurrentUser } from "@/types/auth";
 
-export const CURRENT_USER_KEY = ["auth", "me"] as const;
+import { CURRENT_USER_KEY } from "@/constants/auth";
+export { CURRENT_USER_KEY };
 
 export function useCurrentUser() {
   const q = useQuery<CurrentUser>({

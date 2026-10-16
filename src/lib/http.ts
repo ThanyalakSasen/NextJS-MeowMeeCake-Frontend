@@ -19,7 +19,7 @@ const isServer = typeof window === "undefined";
  * API_PROXY_TARGET/api (ตอน deploy — NEXT_PUBLIC_API_BASE_URL เป็น "/api" แบบ relative ใช้บน server ไม่ได้)
  * หรือ NEXT_PUBLIC_API_BASE_URL ถ้าเป็น URL เต็ม (dev บนเครื่อง)
  */
-function serverBaseURL(): string | undefined {
+export function serverBaseURL(): string | undefined {
   const target = (process.env.API_PROXY_TARGET ?? "").trim().replace(/\/+$/, "");
   if (target) return `${target}/api`;
   const pub = process.env.NEXT_PUBLIC_API_BASE_URL;
