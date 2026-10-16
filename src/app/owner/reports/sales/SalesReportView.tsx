@@ -57,7 +57,7 @@ export function SalesReportView(vm: VM) {
         <LoadingSpin />
       ) : (
         <>
-          <StatCardsGrid>
+          <StatCardsGrid cols={3}>
             <StatCard
               label={t("salesReport.statRevenue")}
               value={formatCurrency(vm.totalRevenue, locale)}

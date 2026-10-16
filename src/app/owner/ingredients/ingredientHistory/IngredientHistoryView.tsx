@@ -104,7 +104,7 @@ export function IngredientHistoryView(vm: VM) {
         <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
-          <StatCardsGrid>
+          <StatCardsGrid cols={3}>
             <StatCard label={t("ingredientHistory.statTotal")} value={vm.stats.total} sub={t("ingredientHistory.statTotalSub")} />
             <StatCard label={t("enums.ingredientTxnType.receive")} value={vm.stats.receive} sub={t("ingredientHistory.statReceiveSub")} tone="up" />
             <StatCard label={t("enums.ingredientTxnType.use")} value={vm.stats.use} sub={t("ingredientHistory.statUseSub")} tone="muted" />
