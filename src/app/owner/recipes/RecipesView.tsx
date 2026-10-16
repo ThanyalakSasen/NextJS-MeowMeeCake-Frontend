@@ -154,7 +154,7 @@ function ComponentsTab(vm: VM) {
         </div>
       </div>
 
-      <StatCardsGrid>
+      <StatCardsGrid cols={3}>
         <StatCard label={t("recipes.statTotalComponents")} value={vm.subStats.total} />
         <StatCard label={t("recipes.statUsed")} value={vm.subStats.used} tone="up" />
         <StatCard label={t("recipes.statAvgCost")} value={`${vm.subStats.avgCost}/${t("recipes.batch")}`} />
