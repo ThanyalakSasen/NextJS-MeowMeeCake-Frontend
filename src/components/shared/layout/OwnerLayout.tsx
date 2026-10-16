@@ -4,7 +4,7 @@
 // OwnerLayout — เทมเพลตหน้าหลังบ้าน
 // auth gate (useCurrentUser) + idle timeout + PermissionsProvider + Sidebar + Navbar
 // ─────────────────────────────────────────────────────────────
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -19,11 +19,15 @@ import { LoadingSpin } from "@/components/shared/feedback";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
 
+const noopSubscribe = () => () => {};
+
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations();
   const { user, isLoading, isError } = useCurrentUser();
+  // false ตอน render ฝั่ง server + รอบ hydrate (ค่าเดียวกัน) → true หลัง hydrate
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -110,7 +114,10 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
         <div className="layout-main">
           <Navbar user={user} onLogout={handleLogout} onToggleSidebar={() => setDrawerOpen((p) => !p)} />
-          <main className="layout-content">{children}</main>
+          {/* เนื้อหาหน้า render หลัง hydrate เท่านั้น — user มาจาก server แล้ว (src/lib/serverAuth.ts) โครงหน้า (sidebar/navbar)
+              จึงอยู่ใน HTML แรก แต่หน้าต่าง ๆ ยังใช้ isLoading ของ react-query ซึ่งเป็น false ตอน render ฝั่ง server
+              (จะได้สถานะ "ไม่มีข้อมูล" แวบก่อนวงหมุน) — คงพฤติกรรมเดิมของเนื้อหาหน้าไว้ ไม่ render ฝั่ง server */}
+          <main className="layout-content">{hydrated ? children : <LoadingSpin />}</main>
         </div>
       </div>
     </PermissionsProvider>
