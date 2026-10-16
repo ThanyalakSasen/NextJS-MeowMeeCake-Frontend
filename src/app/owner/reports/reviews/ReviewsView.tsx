@@ -39,11 +39,11 @@ export function ReviewsView(vm: VM) {
         <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brown-100 bg-brown-50 px-4 py-2.5 text-sm text-brown-800">
           <span>{t("reviews.summary.count", { n: (s?.count ?? 0).toLocaleString() })}</span>
           <span>{t("reviews.summary.avg", { v: s?.avg_rating != null ? s.avg_rating.toFixed(2) : "—" })}</span>
-          <span className={(s?.negative_rate ?? 0) >= 0.25 ? "text-rose-600" : ""}>
+          <span className={(s?.negative_rate ?? 0) >= 0.25 ? "text-rose-700" : ""}>
             {t("reviews.summary.negative", { v: s?.negative_rate != null ? `${Math.round(s.negative_rate * 100)}%` : "—" })}
           </span>
           {(s?.unreplied_negative ?? 0) > 0 && (
-            <button type="button" onClick={vm.showUnrepliedNegative} className="font-semibold text-rose-600 hover:underline">
+            <button type="button" onClick={vm.showUnrepliedNegative} className="font-semibold text-rose-700 hover:underline">
               {t("reviews.summary.unrepliedNegative", { n: s!.unreplied_negative })}
             </button>
           )}

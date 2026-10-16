@@ -1833,7 +1833,8 @@
       "reply": "Shop reply",
       "tags": "Internal tags",
       "note": "Internal note"
-    }
+    },
+    "photoAlt": "Review photo {n}"
   },
   "reviewsDashboard": {
     "total": "Total reviews",
