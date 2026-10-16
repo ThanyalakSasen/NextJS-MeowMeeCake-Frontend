@@ -203,7 +203,8 @@ export function useReviewsViewModel() {
 
   return {
     perm,
-    isLoading: listQ.isLoading,
+    // isPending — render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+    isLoading: listQ.isPending,
     isFetching: listQ.isFetching,
     isError: listQ.isError,
     refetch: () => listQ.refetch(),
