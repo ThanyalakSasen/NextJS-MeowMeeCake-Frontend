@@ -5,10 +5,9 @@
 // เดิมอยู่ใน providers.tsx ที่ครอบทุกหน้า → หน้าร้านสาธารณะ (Tailwind ล้วน) โหลด antd ~180 KB (gzip) ทุกหน้า
 // ทำให้ Lighthouse Performance หน้าร้านต่ำ (JS เยอะ → LCP/TBT จำลองบนมือถือช้า)
 // ─────────────────────────────────────────────────────────────
-import { useEffect, useState } from "react";
-import { useServerInsertedHTML } from "next/navigation";
+import { useEffect } from "react";
 import { App, ConfigProvider } from "antd";
-import { StyleProvider, createCache, extractStyle } from "@ant-design/cssinjs";
+import { StyleProvider } from "@ant-design/cssinjs";
 import thTH from "antd/locale/th_TH";
 import enUS from "antd/locale/en_US";
 import { useLocale } from "next-intl";
@@ -24,14 +23,6 @@ dayjs.locale("th");
 // antd ThemeConfig มาจาก theme system ของโปรเจกต์ — แก้ token ที่ src/theme/tokens.ts (ดู docs/THEME.md)
 export function AntdProviders({ children }: { children: React.ReactNode }) {
   const locale = useLocale();
-  // ดึง CSS ของ antd ที่สร้างระหว่าง render ฝั่ง server ใส่ลง HTML (แบบ @ant-design/nextjs-registry)
-  // ไม่งั้นคอมโพเนนต์ antd ที่ render ฝั่ง server จะไม่มีสไตล์จนกว่า JS ทำงาน → หน้ากระโดด (CLS)
-  // once: ส่งเฉพาะสไตล์ที่ยังไม่เคยส่ง (render แบบ streaming เรียกหลายรอบ)
-  const [cache] = useState(() => createCache());
-  useServerInsertedHTML(() => {
-    const css = extractStyle(cache, { plain: true, once: true });
-    return css ? <style id="antd-ssr" dangerouslySetInnerHTML={{ __html: css }} /> : null;
-  });
 
   // ซิงก์ dayjs กับภาษาที่ผู้ใช้เลือก (i18n) — กระทบ DatePicker/Calendar/relativeTime
   useEffect(() => {
@@ -40,7 +31,7 @@ export function AntdProviders({ children }: { children: React.ReactNode }) {
 
   return (
     // layer: style ของ antd อยู่ใน @layer antd — class Tailwind ชนะได้ (ลำดับ layer ประกาศใน globals.css · BACKLOG4 V9)
-    <StyleProvider cache={cache} layer>
+    <StyleProvider layer>
       {/* locale ของ antd (ชื่อเดือน/วัน, ปุ่ม "วันนี้"/"ตกลง", ข้อความแบ่งหน้า ฯลฯ) ตามภาษาที่เลือก */}
       <ConfigProvider theme={antdTheme} locale={locale === "en" ? enUS : thTH}>
         {/* <App> ส่ง theme ต่อไปถึง feedback component ของ antd */}

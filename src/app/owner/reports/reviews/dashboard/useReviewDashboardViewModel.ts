@@ -37,8 +37,7 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
     setPeriod,
     selectedDate,
     setSelectedDate,
-    // isPending (เฉพาะตอนเปิดแท็บ — query ที่ปิดอยู่ pending ตลอด) · render ฝั่ง server ด้วย
-    isLoading: enabled && q.isPending,
+    isLoading: q.isLoading,
     isFetching: q.isFetching,
     isError: q.isError,
     refetch: () => q.refetch(),

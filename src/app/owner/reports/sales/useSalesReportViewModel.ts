@@ -38,8 +38,7 @@ export function useSalesReportViewModel() {
   });
   const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: LIST_ALL }) });
 
-  // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
-  const isLoading = topProductsQ.isPending || productsQ.isPending;
+  const isLoading = topProductsQ.isLoading || productsQ.isLoading;
   const isError = topProductsQ.isError;
 
   const stats = useMemo<ProductSalesStat[]>(
