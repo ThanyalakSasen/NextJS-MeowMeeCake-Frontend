@@ -12,8 +12,22 @@ import { readCookie } from "@/lib/cookies";
 import { LOCALE_COOKIE, defaultLocale } from "@/i18n/config";
 import type { ApiError, BackendErrorBody, ListResponse, RawListResponse } from "@/types/api";
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
-if (!baseURL && typeof window !== "undefined") {
+const isServer = typeof window === "undefined";
+
+/**
+ * ฝั่ง server (prefetch ข้อมูลสาธารณะของหน้าร้าน — src/app/customer/lib/prefetchPublic.ts) ยิง backend ตรง:
+ * API_PROXY_TARGET/api (ตอน deploy — NEXT_PUBLIC_API_BASE_URL เป็น "/api" แบบ relative ใช้บน server ไม่ได้)
+ * หรือ NEXT_PUBLIC_API_BASE_URL ถ้าเป็น URL เต็ม (dev บนเครื่อง)
+ */
+function serverBaseURL(): string | undefined {
+  const target = (process.env.API_PROXY_TARGET ?? "").trim().replace(/\/+$/, "");
+  if (target) return `${target}/api`;
+  const pub = process.env.NEXT_PUBLIC_API_BASE_URL;
+  return pub && /^https?:\/\//.test(pub) ? pub : undefined;
+}
+
+const baseURL = isServer ? serverBaseURL() : process.env.NEXT_PUBLIC_API_BASE_URL;
+if (!baseURL && !isServer) {
   console.warn("[http] NEXT_PUBLIC_API_BASE_URL is not set - requests will not resolve (set it in .env.local)");
 }
 
@@ -21,6 +35,9 @@ const client = axios.create({
   baseURL,
   withCredentials: true, // ส่ง auth cookie ไปกับทุก request (D15)
   timeout: 15_000,
+  // ฝั่ง server ใช้ fetch ของ Next (แคช 60 วิ) — มีแค่ข้อมูลสาธารณะ (/catalog/*) ที่ prefetch ตอน render หน้าร้าน
+  // เปิดหน้าซ้ำไม่ต้องรอ backend (Render) ทุกครั้ง · ฝั่ง browser ใช้ XHR ตามเดิม
+  ...(isServer ? { adapter: "fetch" as const, fetchOptions: { next: { revalidate: 60 } } } : {}),
 });
 
 // ── request: แนบภาษาปัจจุบัน ──

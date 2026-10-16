@@ -8,17 +8,7 @@
 // รูปหลักของหน้า (LCP) ส่ง priority → loading="eager" + fetchPriority="high"
 // ─────────────────────────────────────────────────────────────
 import Image from "next/image";
-import { IMAGE_QUALITY, OPTIMIZED_IMAGE_HOSTS } from "@/constants/images";
-
-function isOptimizable(src: string): boolean {
-  if (src.startsWith("/") && !src.startsWith("//")) return true; // ไฟล์ใน public/ ของ frontend
-  try {
-    const u = new URL(src);
-    return u.protocol === "https:" && OPTIMIZED_IMAGE_HOSTS.includes(u.hostname);
-  } catch {
-    return false;
-  }
-}
+import { IMAGE_QUALITY, isOptimizableImage } from "@/constants/images";
 
 export default function ShopImage({
   src,
@@ -28,7 +18,6 @@ export default function ShopImage({
   width = 800,
   height = 800,
   priority = false,
-  eager = false,
   onError,
 }: {
   src: string;
@@ -40,8 +29,6 @@ export default function ShopImage({
   height?: number;
   /** รูปหลักเหนือขอบจอ (LCP) — โหลดทันทีด้วยความสำคัญสูง */
   priority?: boolean;
-  /** โหลดทันทีแต่ความสำคัญปกติ — รูปที่ซ่อนอยู่ในสไลด์ (เลื่อนมาแล้วต้องขึ้นเลย ไม่ใช่เพิ่งเริ่มโหลด) */
-  eager?: boolean;
   onError?: () => void;
 }) {
   return (
@@ -52,9 +39,9 @@ export default function ShopImage({
       height={height}
       sizes={sizes}
       quality={IMAGE_QUALITY}
-      unoptimized={!isOptimizable(src)}
+      unoptimized={!isOptimizableImage(src)}
       className={className}
-      loading={priority || eager ? "eager" : "lazy"}
+      loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : undefined}
       onError={onError}
     />

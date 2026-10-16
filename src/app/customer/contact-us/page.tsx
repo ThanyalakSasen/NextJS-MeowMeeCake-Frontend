@@ -57,8 +57,21 @@ export default function ContactPage() {
               {info?.store_name ? t("storeInfoNamed", { name: info.store_name }) : t("storeInfo")}
             </h2>
 
-            {infoQ.isLoading ? (
-              <p className="text-sm text-gray-500">{t("loading")}</p>
+            {/* isPending — ตอน render ฝั่ง server isLoading = false ทำให้ HTML แรกเป็น "โหลดไม่สำเร็จ" แล้วหน้ากระโดด (CLS) */}
+            {infoQ.isPending ? (
+              // โครงขนาดใกล้ของจริง (ที่อยู่ · โทร · ตลาด · อีเมล · ปุ่มโซเชียล) — เดิมข้อความบรรทัดเดียว
+              // พอข้อมูลมา ฟอร์มข้างล่างถูกดันลง (Lighthouse CLS 0.19)
+              <div className="min-h-[24rem] space-y-5" aria-busy="true" aria-label={t("loading")}>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-stone-200/70" />
+                    <div className="flex-1 space-y-2 pt-1">
+                      <div className="h-4 w-24 animate-pulse rounded bg-stone-200/70" />
+                      <div className="h-4 w-full animate-pulse rounded bg-stone-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : !info ? (
               <p className="text-sm text-red-600">{t("loadFailed")}</p>
             ) : (
@@ -187,7 +200,8 @@ function ContactForm({ storeName }: { storeName: string }) {
       ),
   });
 
-  if (status === "loading") return <p className="text-sm text-gray-500">{tc("loadingDots")}</p>;
+  // สูงเท่ากล่อง "เข้าสู่ระบบก่อน" ข้างล่าง — ไม่ให้เนื้อหาขยับตอนรู้สถานะ login (CLS)
+  if (status === "loading") return <div className="h-40 animate-pulse rounded-2xl bg-[#FAF6F0]/50" aria-busy="true" aria-label={tc("loadingDots")} />;
   if (!authed) {
     return (
       <div className="space-y-3 rounded-2xl border border-dashed border-[#8C5A3C]/20 bg-[#FAF6F0]/50 py-10 text-center">

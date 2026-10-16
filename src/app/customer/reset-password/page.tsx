@@ -173,7 +173,7 @@ function ResetPasswordContent() {
 // useSearchParams() ต้องอยู่ใต้ <Suspense> ให้ prerender ได้
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <ResetPasswordContent />
     </Suspense>
   );

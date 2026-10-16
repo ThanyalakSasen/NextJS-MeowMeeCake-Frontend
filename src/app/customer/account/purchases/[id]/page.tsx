@@ -41,7 +41,8 @@ export default function OrderPage() {
   return (
     <CustomerAuthGate message={t("loginToViewOne")}>
       {/* useSearchParams ต้องอยู่ใต้ Suspense (ไม่งั้น next build error) */}
-      <Suspense fallback={null}>
+      {/* fallback สูงเต็มจอ — เนื้อหาใต้ Suspense (useSearchParams) ส่งมาช้ากว่าส่วนแรกของ HTML · fallback ว่างทำให้ footer ขึ้นมาก่อนแล้วถูกดันลง (Lighthouse CLS ~0.9) */}
+    <Suspense fallback={<div className="min-h-screen" />}>
         <OrderContent />
       </Suspense>
     </CustomerAuthGate>

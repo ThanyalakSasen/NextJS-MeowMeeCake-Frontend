@@ -33,7 +33,8 @@ export default function PreorderDetailPage() {
   const t = useTranslations("shop.preorders");
   return (
     <CustomerAuthGate message={t("loginToViewOne")}>
-      <Suspense fallback={null}>
+      {/* fallback สูงเต็มจอ — เนื้อหาใต้ Suspense (useSearchParams) ส่งมาช้ากว่าส่วนแรกของ HTML · fallback ว่างทำให้ footer ขึ้นมาก่อนแล้วถูกดันลง (Lighthouse CLS ~0.9) */}
+    <Suspense fallback={<div className="min-h-screen" />}>
         <PreorderDetailContent />
       </Suspense>
     </CustomerAuthGate>

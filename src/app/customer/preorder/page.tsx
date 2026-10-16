@@ -35,8 +35,17 @@ export default function PreorderRoundsPage() {
 
         <BasketBar />
 
-        {q.isLoading ? (
-          <p className="rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center text-sm text-stone-500">{t("loadingRounds")}</p>
+        {/* isPending — ตอน render ฝั่ง server isLoading = false ทำให้ HTML แรกเป็น "ไม่มีรอบ" แล้วหน้ากระโดด (CLS) */}
+        {q.isPending ? (
+          // โครงการ์ดขนาดใกล้ของจริง — เดิมเป็นข้อความบรรทัดเดียว พอรอบโหลดเสร็จ กล่องขั้นตอนข้างล่างถูกดันลง (Lighthouse CLS 0.29)
+          <section className="space-y-4" aria-busy="true" aria-label={t("loadingRounds")}>
+            <div className="h-7 w-48 animate-pulse rounded-lg bg-stone-200/70" />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {[0, 1].map((i) => (
+                <div key={i} className="h-[17rem] animate-pulse rounded-2xl border border-stone-200 bg-white" />
+              ))}
+            </div>
+          </section>
         ) : q.isError ? (
           <p className="rounded-2xl bg-red-50 p-6 text-center text-sm text-red-700">{t("roundsFailed")}</p>
         ) : (

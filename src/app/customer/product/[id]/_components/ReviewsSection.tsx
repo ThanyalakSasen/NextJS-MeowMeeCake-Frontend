@@ -142,7 +142,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
       </div>
 
       <div className="flex flex-col gap-4">
-        {reviewsQ.isLoading ? (
+        {reviewsQ.isPending ? (
           <p className="animate-pulse py-8 text-center text-sm text-[#8C5A3C]">{t("loading")}</p>
         ) : reviewsQ.isError ? (
           <p className="py-8 text-center text-sm text-red-600">{t("loadFailed")}</p>
