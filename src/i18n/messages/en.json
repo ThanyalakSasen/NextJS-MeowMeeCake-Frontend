@@ -151,6 +151,13 @@
     "redirectingToLine": "Redirecting to LINE...",
     "lineCancelled": "LINE sign-in was cancelled",
     "googleNotConfigured": "NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set",
+    "forgotConfirmTitle": "Reset password",
+    "forgotConfirm": "Send a password reset link to {email}?",
+    "forgotSend": "Send link",
+    "forgotSent": "Link sent — check the inbox of {email} (valid for 1 hour)",
+    "forgotFailed": "Could not send the password reset link",
+    "forgotPickFailed": "Could not choose a Google account. Please try again.",
+    "forgotOtherEmail": "Use another email",
     "socialLoginFailed": "Sign-in failed. Please try again.",
     "emailNotVerified": "Email not verified",
     "emailNotVerifiedDetail": "Please click the verification link in the email we sent when you signed up. Can't find it or the link expired? Request a new one.",
@@ -2423,6 +2430,7 @@
     },
     "accountMenu": {
       "aria": "My account menu",
+      "home": "MeowMee Cake — Home",
       "closeMenu": "Close menu",
       "groupAccount": "My account",
       "groupOrders": "My orders",
@@ -3128,7 +3136,12 @@
       "noMatch": "No products match \"{q}\"",
       "noInCategory": "No products in this category",
       "tryOtherSearch": "Try another search, or choose a category to see all products",
-      "tryOtherCategory": "Try another category to find your favorite bakes"
+      "tryOtherCategory": "Try another category to find your favorite bakes",
+      "filters": "Filters",
+      "openFilters": "Open filters and sorting",
+      "closeFilters": "Close filters",
+      "filterActive": "Filters applied",
+      "clearFilters": "Clear filters"
     },
     "product": {
       "notFound": "Product not found",
@@ -3357,7 +3370,9 @@
       "recommended": "Recommended",
       "forYou": "Picked just for you",
       "loadingRecs": "Finding recommendations...",
-      "noProducts": "Sorry, there are no products yet"
+      "noProducts": "Sorry, there are no products yet",
+      "allFilter": "All",
+      "bestSellers": "Best sellers"
     },
     "flow": {
       "aria": "Order steps",

@@ -18,7 +18,7 @@ const REDIRECT_MS = 2500;
 const card =
   "w-full max-w-[420px] rounded-2xl border border-[#8C5A3C]/10 bg-white p-9 text-center shadow-[0_10px_30px_rgba(74,52,46,0.08)]";
 const button =
-  "mt-6 flex h-[36px] w-full items-center justify-center rounded-xl border border-[#8C5A3C]/30 bg-white text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98]";
+  "mt-6 flex h-[44px] w-full items-center justify-center rounded-xl border border-[#8C5A3C]/30 bg-white text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98]";
 
 type Status = { kind: "loading" } | { kind: "success"; message?: string } | { kind: "error"; message?: string };
 

@@ -64,7 +64,7 @@ function AccountContent() {
   const profile = profileQ.data;
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("myAccount") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <AccountSideMenu />
@@ -418,14 +418,14 @@ function LineSection({ authProvider }: { authProvider: ShopProfile["auth_provide
           {/* บัญชีที่สมัครด้วย LINE ยกเลิกไม่ได้ — จะเข้าสู่ระบบไม่ได้อีก (ไม่มีรหัสผ่าน) */}
           {authProvider !== "line" && (
             <button type="button" onClick={() => void onUnlink()} disabled={unlink.isPending}
-              className="h-[36px] rounded-xl border border-red-600/30 bg-white px-3 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+              className="h-[44px] rounded-xl border border-red-600/30 bg-white px-3 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
               {t("unlink")}
             </button>
           )}
         </div>
       ) : (
         <button type="button" onClick={() => connect.mutate()} disabled={connect.isPending}
-          className="h-[36px] rounded-xl bg-[#06C755] px-4 text-sm font-bold text-white transition hover:bg-[#05b14c] disabled:opacity-60">
+          className="h-[44px] rounded-xl bg-[#06C755] px-4 text-sm font-bold text-white transition hover:bg-[#05b14c] disabled:opacity-60">
           {connect.isPending ? t("goingToLine") : t("connectLine")}
         </button>
       )}

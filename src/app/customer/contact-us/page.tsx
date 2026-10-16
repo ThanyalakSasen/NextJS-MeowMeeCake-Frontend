@@ -47,7 +47,7 @@ export default function ContactPage() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: tf("contact") }]} className="!mb-0" />
         <h1 className="text-center text-3xl font-extrabold sm:text-4xl">{t("title")}</h1>
 
@@ -128,7 +128,7 @@ export default function ContactPage() {
                     href={info!.social_links[s.key]}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex w-full items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition active:scale-[0.98] ${s.className}`}
+                    className={`flex h-[44px] w-full items-center justify-center gap-3 rounded-2xl px-4 text-sm font-semibold text-white shadow-sm transition active:scale-[0.98] ${s.className}`}
                   >
                     {s.icon}
                     <span>{s.key === "website" ? t("website") : s.label}: {storeName}</span>

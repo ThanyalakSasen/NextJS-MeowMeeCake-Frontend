@@ -137,18 +137,23 @@ export default function ProductCard({
         {allergenWarning && allergenWarning.level !== "none" && (
           <span
             title={allergenWarning.message ?? undefined}
-            className={`absolute left-2 top-2 max-w-[70%] truncate rounded-full border px-2 py-0.5 text-[11px] font-bold shadow-sm ${ALLERGEN_TONE[allergenWarning.level]}`}
+            className={`absolute left-2 top-2 max-w-[70%] truncate rounded-full border px-2 py-0.5 text-sm font-bold shadow-sm ${ALLERGEN_TONE[allergenWarning.level]}`}
           >
             ⚠ {allergenLabel(allergenWarning, t)}
           </span>
         )}
       </div>
 
+      {/* ฟอนต์อิงฐาน 18px (globals.css html 112.5%) · ขั้นต่ำของแอป 16px = text-sm/text-xs · 17px = text-[0.9444rem] · 18px = text-base
+          ชื่อ/ราคา โตตามจอ 16 → 17 (≥768) → 18 (≥1280) · ชื่อรอง/฿/ปุ่ม คงที่ 16 (ขั้นต่ำ — ห้ามใช้ค่า px ที่เล็กกว่านี้) */}
       <div className="p-5 sm:p-3 flex flex-col justify-between !bg-[#fff]">
         <div>
-          <p className="text-md font-medium text-black mb-0.5 truncate">{categoryName || t("noCategory")}</p>
-          <h3 className="text-lg font-semibold text-black line-clamp-1">{localNames(product.product_name_th, product.product_name_eng).primary}</h3>
-          <p className="text-md text-black line-clamp-1 mb-2">{localNames(product.product_name_th, product.product_name_eng).secondary || " "}</p>
+          <h3 className="text-sm md:text-[0.9444rem] xl:text-base font-semibold text-black line-clamp-1">
+            {localNames(product.product_name_th, product.product_name_eng).primary}
+          </h3>
+          <p className="text-sm text-black line-clamp-1 mb-2">
+            {localNames(product.product_name_th, product.product_name_eng).secondary || " "}
+          </p>
           {reasons?.[0] && <p className="-mt-1 mb-2 line-clamp-1 text-xs text-[#8C5A3C]">{reasons[0]}</p>}
         </div>
 
@@ -158,18 +163,22 @@ export default function ProductCard({
             {hasSalePrice(product) ? (
               <div className="flex items-baseline gap-1.5 flex-wrap">
                 <span className="flex items-baseline gap-1">
-                  <span className="text-base font-bold text-red-600">฿</span>
-                  <span className="text-lg font-extrabold text-red-600">{effectivePrice(product).toLocaleString()}</span>
+                  <span className="text-sm font-bold text-red-600">฿</span>
+                  <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-red-600">
+                    {effectivePrice(product).toLocaleString()}
+                  </span>
                 </span>
                 <span className="text-xs text-stone-500 line-through">฿{product.product_price?.toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-white bg-red-500 rounded px-1 py-0.5 leading-none">
+                <span className="text-sm font-bold text-white bg-red-500 rounded px-1 py-0.5 leading-none">
                   -{salePercent(product)}%
                 </span>
               </div>
             ) : (
               <div className="flex items-baseline gap-1">
-                <span className="text-base font-bold text-[#8C5A3C]">฿</span>
-                <span className="text-lg font-extrabold text-[#8C5A3C]">{product.product_price?.toLocaleString()}</span>
+                <span className="text-sm font-bold text-[#8C5A3C]">฿</span>
+                <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-[#8C5A3C]">
+                  {product.product_price?.toLocaleString()}
+                </span>
               </div>
             )}
 
@@ -188,7 +197,7 @@ export default function ProductCard({
                 e.stopPropagation();
                 void quickAdd(product._id);
               }}
-              className={`w-full h-[36px] px-2 mt-1 text-sm font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1 ${
+              className={`w-full h-[44px] px-2 mt-1 text-sm font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1 ${
                 isSuccess
                   ? "!bg-emerald-600 border border-emerald-600 !text-white shadow-md"
                   : "!bg-white !text-[#4A342E] border border-[#8C5A3C]/30 shadow-md shadow-[#4A342E]/20 hover:!bg-[#4A342E] hover:!text-white hover:shadow-lg active:scale-[0.98]"

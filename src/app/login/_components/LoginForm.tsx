@@ -15,12 +15,21 @@ import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Lock, LockOpen } from "lucide-react";
 import { FaLine } from "react-icons/fa";
-import { ACCOUNT_LOCKED, EMAIL_NOT_VERIFIED, lineLoginUrl, login, loginWithGoogle, resendVerification } from "@/lib/authClient";
+import {
+  ACCOUNT_LOCKED,
+  EMAIL_NOT_VERIFIED,
+  lineLoginUrl,
+  login,
+  loginWithGoogle,
+  requestPasswordReset,
+  resendVerification,
+} from "@/lib/authClient";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { CurrentUser } from "@/types/auth";
 import { nextPathFor } from "../nextPath";
 import { GoogleLoginButton } from "./GoogleLoginButton";
+import { GOOGLE_CLIENT_ID, pickGoogleEmail, preloadGoogleAccountPicker } from "./googleAccountPicker";
 import { AuthBackdrop, authInputClass as inputClass, authLabelClass as labelClass, authLinkClass, authMutedClass } from "@/components/shared/layout/AuthBackdrop";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -142,6 +151,50 @@ function Form() {
     }
   }
 
+  // ลืมรหัสผ่าน: เปิดหน้าต่างเลือกบัญชี Google → ยืนยัน → POST /auth/forgot-password ด้วยอีเมลนั้น
+  // backend ตอบเหมือนกันไม่ว่าอีเมลจะมีในระบบไหม · บัญชี Google/LINE ที่ไม่มีรหัสผ่าน = 400 พร้อมข้อความ (แสดงตรง ๆ)
+  // ไม่ได้ตั้ง Client ID = ใช้หน้ากรอกอีเมลเดิม (FORGOT_PASSWORD_PATH)
+  const [forgotBusy, setForgotBusy] = useState(false);
+  // โหลดสคริปต์ Google เมื่อผู้ใช้เริ่มใช้งานหน้าครั้งแรก — จังหวะเดียวกับปุ่ม Google (GoogleLoginButton · #91)
+  // ไม่โหลดตอนเปิดหน้า (cookie บุคคลที่สามของ Google · Lighthouse Best Practices) · ชี้/โฟกัสลิงก์ก็โหลดด้วย
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+    const events = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
+    const on = () => preloadGoogleAccountPicker();
+    for (const e of events) window.addEventListener(e, on, { once: true, passive: true });
+    return () => {
+      for (const e of events) window.removeEventListener(e, on);
+    };
+  }, []);
+  async function handleForgotPassword() {
+    if (!GOOGLE_CLIENT_ID) {
+      router.push(FORGOT_PASSWORD_PATH);
+      return;
+    }
+    setForgotBusy(true);
+    try {
+      const picked = await pickGoogleEmail();
+      if (!picked) return; // ผู้ใช้ปิดหน้าต่าง
+      const ok = await confirmAlert(t("auth.forgotConfirm", { email: picked }), {
+        title: t("auth.forgotConfirmTitle"),
+        confirmText: t("auth.forgotSend"),
+        cancelText: t("common.cancel"),
+      });
+      if (!ok) return;
+      try {
+        await requestPasswordReset(picked);
+        alert.success(t("auth.forgotSent", { email: picked }));
+      } catch (e4) {
+        // 400 บัญชีไม่มีรหัสผ่าน · 429 ขอถี่เกิน — ข้อความของ backend อธิบายเอง
+        alert.error(isApiError(e4) ? e4.message : t("auth.forgotFailed"));
+      }
+    } catch {
+      alert.error(t("auth.forgotPickFailed"));
+    } finally {
+      setForgotBusy(false);
+    }
+  }
+
   return (
     <AuthBackdrop title={t("auth.loginTitle")}>
       <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
@@ -199,10 +252,24 @@ function Form() {
           )}
         </div>
 
-        <div className="-mt-1 flex justify-end">
-          <Link href={FORGOT_PASSWORD_PATH} className="text-xs font-semibold text-[#F2AE00] hover:underline sm:text-sm md:text-[#8C5A3C]">
+        {/* ลืมรหัสผ่าน? = เลือกบัญชี Google · ใช้อีเมลอื่น (ไม่ใช่ Gmail) = หน้ากรอกอีเมลเดิม */}
+        <div className="-mt-1 flex items-center justify-end gap-3">
+          {GOOGLE_CLIENT_ID && (
+            <Link href={FORGOT_PASSWORD_PATH} className={`text-xs hover:underline sm:text-sm ${authMutedClass}`}>
+              {t("auth.forgotOtherEmail")}
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => void handleForgotPassword()}
+            onPointerEnter={preloadGoogleAccountPicker}
+            onFocus={preloadGoogleAccountPicker}
+            disabled={forgotBusy}
+            aria-busy={forgotBusy}
+            className="cursor-pointer border-0 bg-transparent p-0 text-xs font-semibold text-[#8C5A3C] hover:underline disabled:cursor-wait disabled:opacity-60 sm:text-sm"
+          >
             {t("auth.forgotPassword")}
-          </Link>
+          </button>
         </div>
 
         {locked && (
@@ -224,7 +291,7 @@ function Form() {
           aria-busy={busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
-          className={`mt-5 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-base font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait ${
+          className={`mt-5 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-sm font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait ${
             locked ? "!cursor-not-allowed !bg-[#e1d6cd] !shadow-none" : ""
           } ${
             busy
@@ -242,7 +309,7 @@ function Form() {
         </button>
       </form>
 
-      <div className="my-4 text-center text-[#a19285]">{t("auth.or")}</div>
+      <div className="my-4 text-center text-stone-600 md:text-[#a19285]">{t("auth.or")}</div>
 
       <GoogleLoginButton disabled={busy || lineLoading} onCredential={handleGoogle} />
 
@@ -250,7 +317,7 @@ function Form() {
         type="button"
         onClick={handleLine}
         disabled={busy || lineLoading}
-        className={`mt-2.5 flex h-[40px] w-full items-center justify-center gap-2.5 rounded-xl text-[14.5px] font-semibold text-white transition-all ${
+        className={`mt-2.5 flex h-[40px] w-full items-center justify-center gap-2.5 rounded-xl text-sm font-semibold text-white transition-all ${
           lineLoading ? "cursor-wait bg-[#06C755]/60" : "bg-[#06C755] hover:enabled:bg-[#05b14c]"
         }`}
       >

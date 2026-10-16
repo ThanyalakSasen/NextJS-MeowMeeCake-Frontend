@@ -332,7 +332,7 @@ export default function WriteReviewForm({
                   title={a.placeholder_text ?? undefined}
                   aria-pressed={selected}
                   onClick={() => toggleAspect(a._id)}
-                  className={`inline-flex h-[36px] items-center gap-1.5 rounded-full border px-4 text-xs font-medium transition ${
+                  className={`inline-flex h-[44px] items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition ${
                     selected ? "border-[#4A342E] bg-[#4A342E] text-white" : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
                   }`}
                 >
@@ -417,7 +417,7 @@ export function ReviewLoading() {
 function MediaButton({ icon, label, disabled, children }: { icon: React.ReactNode; label: string; disabled: boolean; children: React.ReactNode }) {
   return (
     <label
-      className={`mr-2 inline-flex h-[36px] items-center gap-2 rounded-lg border px-4 text-xs font-medium transition ${
+      className={`mr-2 inline-flex h-[44px] items-center gap-2 rounded-lg border px-4 text-sm font-medium transition ${
         disabled ? "cursor-not-allowed border-stone-200 text-stone-300" : "cursor-pointer border-stone-300 text-stone-600 hover:bg-stone-50"
       }`}
     >

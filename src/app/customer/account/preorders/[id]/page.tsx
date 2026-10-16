@@ -116,7 +116,7 @@ function PreorderDetailContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb
           items={[{ label: to("myAccount"), href: "/customer/account" }, { label: t("history"), href: "/customer/account/preorders" }, { label: p.preorder_no }]}
           className="!mb-0"
@@ -234,11 +234,10 @@ function PreorderDetailContent() {
 
         <div className="flex flex-wrap justify-center gap-2">
           <Link href="/customer/account/preorders" className={shopButton}>{t("viewAll")}</Link>
-          <Link href="/customer/preorder" className={shopButton}>{t("viewRounds")}</Link>
           <ReviewLink kind="preorder" doc={p} itemIds={p.items.map((it) => it._id)} href={`/customer/account/preorders/${p._id}/review`} className={shopButtonPrimary} />
           {canCustomerCancelPreorder(p) && (
             <button type="button" onClick={() => void onCancel()} disabled={cancel.isPending}
-              className="h-[36px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+              className="h-[44px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
               {cancel.isPending ? to("cancelling") : t("cancelPreorder")}
             </button>
           )}

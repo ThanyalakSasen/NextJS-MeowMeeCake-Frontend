@@ -46,6 +46,14 @@ export default function HeroCarousel() {
   const heroImage = resolveUploadUrl(current?.banner_img) ?? DEFAULT_BANNER_IMAGE;
   const src = bannersQ.isPending || !current || failed.has(heroImage) ? DEFAULT_BANNER_IMAGE : heroImage;
 
+  // ข้อความบนแบนเนอร์ = "ข้อความเพิ่มเติม" (banner_description) ของแบนเนอร์ที่กำลังแสดง
+  // บรรทัดแรก = หัวข้อใหญ่ · บรรทัดที่เหลือ = ประโยคใต้หัวข้อ · ไม่มีข้อความ = แสดงแค่รูป + ปุ่ม
+  const [title, ...restLines] = (current?.banner_description ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const subtitle = restLines.join("\n");
+
   // รูปใหญ่สุดเหนือขอบจอของหน้าแรก (LCP) → priority
   const image = (
     <ShopImage
@@ -64,7 +72,7 @@ export default function HeroCarousel() {
   );
 
   return (
-    <header className="w-full h-[340px] sm:h-[400px] md:h-[600px] relative overflow-hidden bg-[#4A342E] flex flex-col justify-end">
+    <header className="w-full h-[280px] sm:h-[340px] md:h-[460px] relative overflow-hidden bg-[#4A342E] flex flex-col justify-end">
       <div className="absolute inset-0 w-full h-full z-0">
         {current?.banner_link ? (
           <Link href={current.banner_link} className="block w-full h-full">
@@ -77,23 +85,29 @@ export default function HeroCarousel() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 pointer-events-none" />
       </div>
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-12 sm:pb-14 pt-16 pointer-events-none">
-        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight flex flex-wrap items-center gap-x-3 gap-y-1 mb-2 sm:mb-3 drop-shadow-lg">
-          <span>MeowMee</span>
-          <span className="hidden sm:inline-block w-8 sm:w-16 h-1 bg-white/60 rounded-xl my-auto" />
-          <span className="italic font-serif">Cake</span>
-        </h1>
+      <div className="relative z-10 w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px] flex flex-col justify-end pb-12 sm:pb-14 pt-16 pointer-events-none">
+        {/* h1 ของหน้าแรกเสมอ (Lighthouse heading-order) — แบนเนอร์ไม่มีข้อความ = ชื่อร้านแบบซ่อน (screen reader อ่านได้) */}
+        {title ? (
+          <h1 className="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-extrabold text-white tracking-tight mb-2 sm:mb-3 drop-shadow-lg line-clamp-2">
+            {title}
+          </h1>
+        ) : (
+          <h1 className="sr-only">MeowMee Cake</h1>
+        )}
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4">
-          <p className="text-xs sm:text-sm md:text-base text-gray-200 max-w-xl font-light leading-relaxed drop-shadow line-clamp-2 sm:line-clamp-none">
-            Freshly baked daily with premium ingredients, bringing the authentic taste of French pastries directly to your table
-            with love and care.
-          </p>
+          {subtitle ? (
+            <p className="text-xs sm:text-sm xl:text-base text-gray-200 max-w-xl font-light leading-relaxed drop-shadow whitespace-pre-line line-clamp-2 sm:line-clamp-3">
+              {subtitle}
+            </p>
+          ) : (
+            <span aria-hidden="true" />
+          )}
 
           {/* เป็น <Link> (= <a>) — antd ตั้ง a { background-color: transparent } นอก layer จึงต้องใส่ ! กับสีพื้น */}
           <Link
             href="/customer/product"
-            className="pointer-events-auto inline-flex items-center justify-center gap-2 text-xs sm:text-sm h-[36px] px-5 group self-start md:self-auto shrink-0 !bg-white border border-white/70 !text-[#4A342E] font-bold rounded-xl shadow-lg shadow-black/25 hover:!bg-[#4A342E] hover:border-[#4A342E] hover:!text-white hover:shadow-xl active:scale-[0.98] !transition-all duration-200"
+            className="pointer-events-auto inline-flex items-center justify-center gap-2 text-sm h-[44px] px-5 group self-start md:self-auto shrink-0 !bg-white border border-white/70 !text-[#4A342E] font-bold rounded-xl shadow-lg shadow-black/25 hover:!bg-[#4A342E] hover:border-[#4A342E] hover:!text-white hover:shadow-xl active:scale-[0.98] !transition-all duration-200"
           >
             <span>{t("common.allProducts")}</span>
             <span className="w-6 h-6 bg-[#4A342E]/10 group-hover:bg-white/20 rounded-full flex items-center justify-center text-[#4A342E] group-hover:text-white text-xs group-hover:translate-x-1 transition-all duration-200">

@@ -24,7 +24,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full bg-gray-100 text-gray-900 border-t border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px] py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <div className="flex flex-col gap-3">
             <h3 className="text-lg font-bold text-gray-900">{t("social")}</h3>
@@ -55,7 +55,7 @@ export default function Footer() {
         </div>
 
         <div className="text-center py-6 my-8">
-          <h2 className="text-4xl sm:text-6xl font-serif tracking-wider text-gray-800 drop-shadow-sm italic">Meowmee Cake</h2>
+          <h2 className="text-4xl sm:text-6xl tracking-wider text-gray-800 drop-shadow-sm italic">Meowmee Cake</h2>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 text-sm text-gray-600">

@@ -114,7 +114,7 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
         <button
           type="button"
           onClick={() => router.push("/customer/product")}
-          className="mt-4 h-[36px] px-5 text-sm rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold hover:bg-[#4A342E] hover:text-white transition"
+          className="mt-4 h-[44px] px-5 text-sm rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold hover:bg-[#4A342E] hover:text-white transition"
         >
           {t("seeAll")}
         </button>
@@ -131,7 +131,7 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
             <button
               type="button"
               onClick={() => productQ.refetch()}
-              className="h-[36px] px-5 text-sm rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
+              className="h-[44px] px-5 text-sm rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
             >
               {t("retry")}
             </button>
@@ -203,14 +203,14 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
 
   return (
     <div className="w-full min-h-screen text-[#4A342E] pt-46 sm:pt-50 md:pt-44 pb-16">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8">
+      <div className="w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px] flex flex-col gap-8">
         <div>
           <CustomerBreadcrumb items={[{ label: tp("allProducts"), href: "/customer/product" }, { label: localName(product.product_name_th, product.product_name_eng) }]} />
           {/* เปิดจากลิงก์ตรง (ไม่มีหน้าก่อนหน้า) → กลับไปหน้าสินค้าทั้งหมดแทน */}
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? router.back() : router.push("/customer/product"))}
-            className="-mt-2 h-[36px] px-3.5 text-xs bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200"
+            className="-mt-2 h-[44px] px-3.5 text-sm bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200"
           >
             {t("back")}
           </button>
@@ -392,7 +392,7 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
                     type="button"
                     disabled={isLoading || isSuccess || outOfStock || customQ.isLoading}
                     onClick={() => void onAdd()}
-                    className="flex-1 h-[36px] px-2 text-sm sm:text-base bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="flex-1 h-[44px] px-2 text-sm bg-white border border-[#8C5A3C]/30 text-[#4A342E] font-bold rounded-xl shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] transition-all duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     {outOfStock
                       ? t("soldOut")
@@ -419,7 +419,7 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
                   type="button"
                   onClick={() => setActiveTab(key)}
                   aria-pressed={activeTab === key}
-                  className={`flex-1 h-[36px] px-4 rounded-xl text-xs sm:text-sm font-bold transition-all border ${
+                  className={`flex-1 h-[44px] px-4 rounded-xl text-sm font-bold transition-all border ${
                     activeTab === key
                       ? "bg-[#4A342E] text-white border-[#8C5A3C] shadow-sm"
                       : "bg-white text-[#4A342E] border-[#8C5A3C]/20 hover:bg-[#4A342E] hover:text-white"

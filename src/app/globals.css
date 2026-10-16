@@ -61,6 +61,14 @@
   /* ── อนิเมชันหน้า login (ยกมาจาก FrontOffice) — animate-jelly / animate-lock-pop ── */
   --animate-jelly: jellyPress 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-lock-pop: lockPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── แผงเลื่อนเข้าจากขวา (แผงตัวกรองหน้าสินค้าทั้งหมด จอ <768px) — animate-slide-in-right ── */
+  --animate-slide-in-right: slideInRight 0.25s ease-out;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
 }
 
 /* ปุ่มยุบ-เด้งตอนกด */
@@ -82,7 +90,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .animate-jelly,
-  .animate-lock-pop {
+  .animate-lock-pop,
+  .animate-slide-in-right {
     animation: none !important;
   }
 }

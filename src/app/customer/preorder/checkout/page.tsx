@@ -189,7 +189,7 @@ function PreorderCheckoutContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb
           items={[{ label: t("crumb"), href: "/customer/preorder" }, { label: basket.round_name, href: `/customer/preorder/${basket.round_id}` }, { label: t("confirm") }]}
           className="!mb-0"
@@ -229,7 +229,7 @@ function PreorderCheckoutContent() {
                       </div>
                       {it.option_text && <p className="m-0 text-xs text-gray-500">{it.option_text}</p>}
                       <input
-                        className="w-full rounded-lg border border-[#8C5A3C]/15 px-2 py-1 text-xs"
+                        className="h-[44px] w-full rounded-lg border border-[#8C5A3C]/15 px-2 text-xs"
                         maxLength={500}
                         placeholder={t("notePlaceholder")}
                         aria-label={t("noteAria", { name: localName(it.product_name_th, it.product_name_eng) })}

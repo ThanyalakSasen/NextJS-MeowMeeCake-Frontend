@@ -18,7 +18,7 @@ import ShopImage from "@/components/customer/ShopImage";
 type Filter = { kind: "all" } | { kind: "star"; star: number } | { kind: "media" } | { kind: "aspect"; id: string };
 
 const filterCls = (active: boolean) =>
-  `inline-flex h-[36px] items-center rounded-xl border px-3.5 text-xs font-semibold transition-all sm:text-sm ${
+  `inline-flex h-[44px] items-center rounded-xl border px-3.5 text-sm font-semibold transition-all ${
     active ? "border-[#4A342E] bg-[#4A342E] text-white" : "border-[#8C5A3C]/20 bg-white text-[#4A342E] hover:bg-[#8C5A3C]/10"
   }`;
 

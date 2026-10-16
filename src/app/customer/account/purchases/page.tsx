@@ -63,7 +63,7 @@ function PurchasesContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("myAccount"), href: "/customer/account" }, { label: t("history") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <AccountSideMenu />
@@ -171,7 +171,7 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
         {extra > 0 && (
           <button
             type="button"
-            className="h-[36px] w-full rounded-lg border border-dashed border-stone-200 text-xs text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]"
+            className="h-[44px] w-full rounded-lg border border-dashed border-stone-200 text-sm text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]"
             onClick={() => setExpanded((v) => !v)}
           >
             {expanded ? t("hideItems") : t("moreItems", { n: extra })}
@@ -203,7 +203,6 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {unpaid && <Link href={href} className={actionLink}>{order.has_payment ? t("payReupload") : t("payUpload")}</Link>}
           <ReviewLink kind="order" doc={order} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={actionLink} />
           {detail && (order.order_status === "completed" || order.order_status === "cancelled") && (
             <BuyAgainButton items={detail.items} className={actionLink} />

@@ -41,7 +41,7 @@ export default function ShippingInfoPage() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("crumb") }]} className="!mb-0" />
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-extrabold sm:text-3xl">{t("title")}</h1>

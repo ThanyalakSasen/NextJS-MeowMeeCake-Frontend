@@ -29,7 +29,7 @@ export function RegisterView(vm: VM) {
     return (
       <AuthBackdrop title={t("register.doneTitle")} maxWidth={520}>
         <div className="flex flex-col items-center gap-4 text-center">
-          <MailCheck className="h-12 w-12 text-[#F2AE00] md:text-[#8C5A3C]" aria-hidden="true" />
+          <MailCheck className="h-12 w-12 text-[#8C5A3C]" aria-hidden="true" />
           <p className={`m-0 text-sm leading-relaxed ${authMutedClass}`}>
             {t("register.doneDetail", { email: vm.doneEmail })}
           </p>
@@ -114,7 +114,7 @@ export function RegisterView(vm: VM) {
                 className={`h-[27px] rounded-lg text-xs font-semibold transition sm:text-sm ${
                   vm.form.hasAllergy === v
                     ? v ? "bg-[#4A342E] text-white shadow-sm" : "bg-white text-stone-800 shadow-sm"
-                    : "text-stone-200 hover:text-white md:text-stone-500 md:hover:text-stone-800"
+                    : "text-stone-600 hover:text-stone-900 md:text-stone-500 md:hover:text-stone-800"
                 }`}>
                 {v ? t("register.hasAllergy") : t("register.noAllergy")}
               </button>
@@ -162,7 +162,7 @@ export function RegisterView(vm: VM) {
           disabled={vm.busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
-          className={`mt-3 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-base font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
+          className={`mt-3 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-sm font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
             vm.busy ? "" : "hover:enabled:-translate-y-px hover:enabled:bg-[#d99c00] hover:enabled:shadow-[0_6px_16px_rgba(242,174,0,0.35)]"
           } ${pressed ? "animate-jelly" : ""}`}
         >
