@@ -8,7 +8,7 @@
 // ยังไม่ยกมา: หมายเหตุต่อชิ้นของสินค้าปกติ (ตะกร้าไม่มีฟิลด์นี้ — ใช้ออปชันกรอกข้อความแทน)
 // · รายการส่วนประกอบ (/catalog/products/{id} ไม่ส่งวัตถุดิบ — มีแค่ในผลของระบบแนะนำ)
 // ─────────────────────────────────────────────────────────────
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -33,6 +33,9 @@ import CustomizationPicker from "./CustomizationPicker";
 import { pickProblemText } from "../../../lib/pickProblemText";
 import ReviewsSection from "./ReviewsSection";
 import SimilarProducts from "./SimilarProducts";
+import WhenVisible from "@/components/customer/WhenVisible";
+
+const noopSubscribe = () => () => {};
 import ShopImage from "@/components/customer/ShopImage";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
@@ -45,6 +48,8 @@ const iconButton =
  * ซึ่งทำให้เนื้อหาทั้งหน้าถูกส่งตามมาท้าย HTML → รูปสินค้า (LCP) ขึ้นช้า
  */
 export default function ProductDetailPage({ roundParam }: { roundParam: string | null }) {
+  // false ตอน render ฝั่ง server + รอบ hydrate (ค่าเดียวกัน ไม่ mismatch) → true หลัง hydrate
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const t = useTranslations("shop.product");
   const tpick = useTranslations("shop.pick");
   const tcard = useTranslations("shop.productCard");
@@ -225,7 +230,8 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
                   style={{ transform: `translateX(-${slideIndex * 100}%)` }}
                 >
                   {/* รูปแรก = LCP ของหน้า → priority · สไลด์ถัดไป lazy (เดิมโหลดพร้อมกัน แย่งแบนด์วิดท์รูปแรก — Lighthouse LCP) */}
-                  {images.map((img, idx) => (
+                  {/* HTML แรก/รอบ hydrate มีแค่รูปแรก — สไลด์อื่นอยู่ข้าง ๆ Chrome ถือว่าใกล้จอ โหลดพร้อมกันแย่งแบนด์วิดท์รูปหลัก (LCP) */}
+                  {(hydrated ? images : images.slice(0, 1)).map((img, idx) => (
                     <ShopImage
                       key={idx}
                       src={img}
@@ -436,10 +442,17 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
           </div>
         </div>
 
-        <ReviewsSection productId={product._id} />
+        {/* ใต้ขอบจอ — render/ยิง API เมื่อเลื่อนมาใกล้ (เดิมยิง 4 API + วาดการ์ดสินค้าตอนเปิดหน้า: Lighthouse TBT/LCP) */}
+        <WhenVisible minHeight={320}>
+          <ReviewsSection productId={product._id} />
+        </WhenVisible>
 
         {/* สินค้าพรีออเดอร์ไม่แสดงสินค้าคล้ายกัน (เหมือนต้นแบบ) */}
-        {!isPreorder && <SimilarProducts productId={product._id} />}
+        {!isPreorder && (
+          <WhenVisible minHeight={420}>
+            <SimilarProducts productId={product._id} />
+          </WhenVisible>
+        )}
       </div>
     </div>
   );
