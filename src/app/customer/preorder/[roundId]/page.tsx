@@ -45,7 +45,7 @@ export default function PreorderRoundPage() {
   if (q.isLoading || !round) {
     return (
       <div className={`${shopPage} text-center`}>
-        {q.isError ? <p className="text-sm text-red-700">{t("roundFailed")}</p> : <p className="animate-pulse text-sm text-[#8C5A3C]">{t("loadingRounds")}</p>}
+        {q.isError ? <p className="text-sm text-red-700">{t("roundFailed")}</p> : <p className=" text-sm text-[#8C5A3C]">{t("loadingRounds")}</p>}
       </div>
     );
   }

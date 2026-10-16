@@ -15,8 +15,22 @@ export const OPTIMIZED_IMAGE_HOSTS: string[] = (process.env.NEXT_PUBLIC_IMAGE_HO
   .filter(Boolean)
   .concat(process.env.NEXT_PUBLIC_IMAGE_HOSTS ? [] : DEFAULT_IMAGE_HOSTS);
 
-/** คุณภาพที่อนุญาต (Next 16 บังคับต้องระบุ) — ใช้ค่าเดียว ไม่ให้มีคนขอหลายคุณภาพเปลืองโควตาแปลงรูป */
-export const IMAGE_QUALITY = 75;
+/**
+ * คุณภาพที่อนุญาต (Next 16 บังคับต้องระบุ) — ใช้ค่าเดียว ไม่ให้มีคนขอหลายคุณภาพเปลืองโควตาแปลงรูป
+ * 60 (เดิม 75): รูปขนมเป็นภาพถ่ายรายละเอียดเยอะ WebP 640px ที่ 75 = ~116 KB · รูปหลักของหน้าโหลดช้าบนมือถือ (Lighthouse LCP)
+ */
+export const IMAGE_QUALITY = 60;
+
+/** รูปนี้ให้ Next.js ย่อได้ไหม — ไฟล์ใน public/ หรือ https จาก host ที่อนุญาต (อย่างอื่นส่งแบบ unoptimized) */
+export function isOptimizableImage(src: string): boolean {
+  if (src.startsWith("/") && !src.startsWith("//")) return true;
+  try {
+    const u = new URL(src);
+    return u.protocol === "https:" && OPTIMIZED_IMAGE_HOSTS.includes(u.hostname);
+  } catch {
+    return false;
+  }
+}
 
 /** ไฟล์อัปโหลดได้ชื่อใหม่ทุกครั้ง (เวลา + สุ่ม) URL เดิมไม่เปลี่ยนเนื้อหา → แคชรูปที่ย่อแล้วนานได้ */
 export const IMAGE_CACHE_TTL_SECONDS = 31 * 24 * 60 * 60;

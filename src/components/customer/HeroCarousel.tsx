@@ -12,6 +12,7 @@ import { catalogService } from "@/services/catalog";
 import { resolveUploadUrl } from "@/lib/uploads";
 import type { Banner } from "@/types/banner";
 import ShopImage from "./ShopImage";
+import { catalogBannersKey } from "@/app/customer/lib/catalogQueries";
 
 const DEFAULT_BANNER_IMAGE = "/banners/dfbanner.jpg";
 
@@ -24,7 +25,7 @@ function isBannerVisible(b: Banner, now: number = Date.now()): boolean {
 
 export default function HeroCarousel() {
   const t = useTranslations("shop");
-  const bannersQ = useQuery({ queryKey: ["catalog", "banners"], queryFn: catalogService.banners, staleTime: 5 * 60_000 });
+  const bannersQ = useQuery({ queryKey: catalogBannersKey, queryFn: catalogService.banners, staleTime: 5 * 60_000 });
   const [bannerIndex, setBannerIndex] = useState(0);
   // รูปที่โหลดไม่ขึ้น → ใช้รูปสำรอง (next/image คุม src/srcset เอง สลับ el.src ตรง ๆ แบบเดิมไม่ได้)
   const [failed, setFailed] = useState<Set<string>>(() => new Set());
@@ -43,7 +44,7 @@ export default function HeroCarousel() {
   const safeIndex = bannerIndex >= banners.length ? 0 : bannerIndex;
   const current = banners[safeIndex];
   const heroImage = resolveUploadUrl(current?.banner_img) ?? DEFAULT_BANNER_IMAGE;
-  const src = bannersQ.isLoading || !current || failed.has(heroImage) ? DEFAULT_BANNER_IMAGE : heroImage;
+  const src = bannersQ.isPending || !current || failed.has(heroImage) ? DEFAULT_BANNER_IMAGE : heroImage;
 
   // รูปใหญ่สุดเหนือขอบจอของหน้าแรก (LCP) → priority
   const image = (

@@ -14,7 +14,8 @@ const nextConfig: NextConfig = {
   // รูปหน้าร้านผ่าน next/image (ShopImage) — ย่อ/แปลง WebP/แคชเฉพาะรูปจาก host ที่อนุญาต (src/constants/images.ts)
   // Lighthouse เดิม: JPEG ต้นฉบับ 500–900 KB ต่อรูป · R2 ไม่มี cache header → LCP 6–12 วิ บนมือถือ
   images: {
-    remotePatterns: OPTIMIZED_IMAGE_HOSTS.map((hostname) => ({ protocol: "https" as const, hostname, pathname: "/**", search: "" })),
+    // ไม่ล็อก search — โลโก้มี ?v=<เวลาแก้ไข> กันแคชเก่า (storeLogoSrc)
+    remotePatterns: OPTIMIZED_IMAGE_HOSTS.map((hostname) => ({ protocol: "https" as const, hostname, pathname: "/**" })),
     qualities: [IMAGE_QUALITY],
     // WebP อย่างเดียว — เปิด AVIF ด้วยจะแคชแยก 2 ชุด = ใช้โควตาแปลงรูปของ Vercel (แพ็กเกจฟรี) เป็น 2 เท่า
     formats: ["image/webp"],

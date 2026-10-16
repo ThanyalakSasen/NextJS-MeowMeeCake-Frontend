@@ -58,7 +58,7 @@ function LineReturn() {
 
 export default function LoginLinePage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <LineReturn />
     </Suspense>
   );
