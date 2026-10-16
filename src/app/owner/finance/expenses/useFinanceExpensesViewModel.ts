@@ -6,14 +6,13 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { expensesService } from "@/services/expenses";
 import { ordersService } from "@/services/orders";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
 import { formatDate } from "@/i18n/format";
-import { buildMonthOptions } from "@/utils/dateRange";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense, ExpenseInput } from "@/types/expense";
 import { isApiError } from "@/types/api";
@@ -37,8 +36,8 @@ export function useFinanceExpensesViewModel() {
   const isError = expensesQ.isError;
   const refetch = () => expensesQ.refetch();
 
-  const monthOptions = useMemo(() => buildMonthOptions(locale), [locale]);
-  const [selectedMonth, setSelectedMonth] = useState(monthOptions[0].value);
+  const [selectedMonthDate, setSelectedMonthDate] = useState<Dayjs>(dayjs());
+  const selectedMonth = selectedMonthDate.format("YYYY-MM");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | "all">("all");
   const [page, setPage] = useState(1);
@@ -150,7 +149,7 @@ export function useFinanceExpensesViewModel() {
     perm,
     isLoading, isError, refetch,
 
-    monthOptions, selectedMonth, setSelectedMonth,
+    selectedMonth, selectedMonthDate, setSelectedMonthDate: (d: Dayjs) => { setSelectedMonthDate(d); setPage(1); },
     search, setSearch: (v: string) => { setSearch(v); setPage(1); },
     categoryFilter, setCategoryFilter: (v: ExpenseCategory | "all") => { setCategoryFilter(v); setPage(1); },
     page, pageSize, setPagination: (p: number, ps: number) => { setPage(p); setPageSize(ps); },
