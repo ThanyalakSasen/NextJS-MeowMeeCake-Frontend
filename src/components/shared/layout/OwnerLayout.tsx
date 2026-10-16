@@ -21,6 +21,13 @@ import { Navbar } from "./Navbar";
 
 const noopSubscribe = () => () => {};
 
+/**
+ * หน้าที่ render เนื้อหาฝั่ง server ได้ (สถานะโหลดใช้ isPending — ปลอดภัยตอน SSR) → หัวข้อหน้า (LCP) อยู่ใน HTML แรก
+ * หน้าอื่นยังใช้ isLoading ของ react-query (false ตอน SSR = เห็นสถานะว่างแวบ) → render หลัง hydrate
+ * เพิ่มหน้าได้เมื่อแก้สถานะโหลดของหน้านั้นเป็น isPending แล้ว
+ */
+const SSR_PAGES = ["/owner/dashboard", "/owner/reports/sales", "/owner/reports/reviews"];
+
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -114,10 +121,10 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
         <div className="layout-main">
           <Navbar user={user} onLogout={handleLogout} onToggleSidebar={() => setDrawerOpen((p) => !p)} />
-          {/* เนื้อหาหน้า render หลัง hydrate เท่านั้น — user มาจาก server แล้ว (src/lib/serverAuth.ts) โครงหน้า (sidebar/navbar)
-              จึงอยู่ใน HTML แรก แต่หน้าต่าง ๆ ยังใช้ isLoading ของ react-query ซึ่งเป็น false ตอน render ฝั่ง server
-              (จะได้สถานะ "ไม่มีข้อมูล" แวบก่อนวงหมุน) — คงพฤติกรรมเดิมของเนื้อหาหน้าไว้ ไม่ render ฝั่ง server */}
-          <main className="layout-content">{hydrated ? children : <LoadingSpin />}</main>
+          {/* user มาจาก server แล้ว (src/lib/serverAuth.ts) → โครงหน้า (sidebar/navbar) อยู่ใน HTML แรก
+              เนื้อหาหน้า: SSR_PAGES render ฝั่ง server ด้วย · หน้าอื่น render หลัง hydrate (ระหว่างนั้นว่าง — เดิมใส่วงหมุน
+              แล้วพอหน้าขึ้นวงหมุนถูกดันลง = CLS 0.22 · ว่างไว้ไม่มีอะไรให้ขยับ) */}
+          <main className="layout-content">{hydrated || SSR_PAGES.includes(pathname) ? children : null}</main>
         </div>
       </div>
     </PermissionsProvider>
