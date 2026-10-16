@@ -41,6 +41,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
         <div className="ml-auto flex items-center gap-2">
           <span className="text-xs text-gray-500">{t("reviews.sortLabel")}</span>
           <Select
+            aria-label={t("reviews.sortLabel")}
             size="small"
             style={{ width: 150 }}
             value={filters.sort}

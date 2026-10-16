@@ -14,6 +14,8 @@ import { Button, Select } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DeleteButton, ViewButton } from "@/components/shared/actions";
 import { formatDate } from "@/i18n/format";
+import ShopImage from "@/components/customer/ShopImage";
+import { thumbSrc } from "@/lib/thumbSrc";
 import type { ReplySuggestion, ReviewStatus } from "@/types/review";
 import type { ReviewRow } from "../reviewRow";
 import { StarRating } from "./StarRating";
@@ -65,8 +67,8 @@ export function ReviewCard({
       {/* รูปสินค้า — ซ่อนบนจอแคบ ให้เนื้อหารีวิวได้ความกว้างเต็ม */}
       <div className="hidden h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100 sm:flex">
         {r.productImage ? (
-          // eslint-disable-next-line @next/next/no-img-element -- รูปจาก backend (คนละ origin)
-          <img src={r.productImage} alt={r.productName} className="h-full w-full object-cover" />
+          // ย่อ/WebP ผ่าน optimizer (เดิมโหลดไฟล์ต้นฉบับหลายร้อย KB มาแสดง 48px) · lazy — จอแคบกล่องนี้ซ่อนอยู่ ไม่ต้องโหลด
+          <ShopImage src={r.productImage} alt={r.productName} width={96} height={96} sizes="48px" className="h-full w-full object-cover" />
         ) : (
           <PhotoIcon className="h-5 w-5 text-gray-300" />
         )}
@@ -158,8 +160,17 @@ export function ReviewCard({
         {(r.images.length > 0 || r.videoUrl) && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             <Image.PreviewGroup>
-              {r.images.map((src) => (
-                <Image key={src} src={src} width={48} height={48} className="rounded object-cover" alt="" />
+              {/* รูปย่อ 48px ผ่าน optimizer · กดดู = รูปต้นฉบับ · alt = ชื่อปุ่มดูรูป (antd ใช้เป็น aria-label) */}
+              {r.images.map((src, i) => (
+                <Image
+                  key={src}
+                  src={thumbSrc(src, 48)}
+                  preview={{ src }}
+                  width={48}
+                  height={48}
+                  className="rounded object-cover"
+                  alt={t("reviews.photoAlt", { n: i + 1 })}
+                />
               ))}
             </Image.PreviewGroup>
             {r.videoUrl && (
