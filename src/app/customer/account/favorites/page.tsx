@@ -59,7 +59,7 @@ function FavoritesContent() {
                   <Heart className="h-12 w-12 text-[#D6C7BD]" aria-hidden="true" />
                 </div>
                 <p className="m-0 font-medium text-stone-500">{t("empty")}</p>
-                <p className="m-0 text-xs text-stone-400">{t("emptyHint")}</p>
+                <p className="m-0 text-xs text-stone-500">{t("emptyHint")}</p>
                 <Link href="/customer/product" className={shopButton}>{t("shopNow")}</Link>
               </div>
             ) : (
@@ -114,7 +114,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           title={t("remove")}
           className="absolute right-3 top-3 flex h-[36px] w-[36px] items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-md transition hover:bg-white disabled:opacity-60"
         >
-          {removing ? <FaSpinner className="animate-spin text-xs text-stone-400" /> : <FaHeart className="text-base text-[#E05353]" />}
+          {removing ? <FaSpinner className="animate-spin text-xs text-stone-500" /> : <FaHeart className="text-base text-[#E05353]" />}
         </button>
 
         {!item.inStock && (
@@ -133,7 +133,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           <Link href={href} className="block">
             <h2 className="m-0 line-clamp-1 text-base font-bold leading-snug text-stone-800 hover:text-[#8C5A3C]">{localNames(item.name, item.nameeg).primary}</h2>
           </Link>
-          {localNames(item.name, item.nameeg).secondary && <span className="line-clamp-1 block text-xs text-stone-400">{localNames(item.name, item.nameeg).secondary}</span>}
+          {localNames(item.name, item.nameeg).secondary && <span className="line-clamp-1 block text-xs text-stone-500">{localNames(item.name, item.nameeg).secondary}</span>}
           {item.rating !== "-" && (
             <span className="flex items-center gap-1 pt-1 text-xs font-bold text-amber-500">
               <FaStar /> {Number(item.rating).toFixed(1)}

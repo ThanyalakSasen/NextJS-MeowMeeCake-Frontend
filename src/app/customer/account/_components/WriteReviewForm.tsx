@@ -314,14 +314,14 @@ export default function WriteReviewForm({
         {shown > 0 ? (
           <span className="text-sm font-medium text-[#4A342E]">{tw(`rating.${shown as 1 | 2 | 3 | 4 | 5}`)}</span>
         ) : (
-          <span className="text-xs text-stone-400">{tw("tapToRate")}</span>
+          <span className="text-xs text-stone-500">{tw("tapToRate")}</span>
         )}
       </div>
 
       {rating > 0 && aspects.length > 0 && (
         <div className="space-y-3 border-t border-stone-100 pt-5 text-center">
           <h3 className="text-sm font-bold text-stone-800">{sentiment === "positive" ? tw("liked") : tw("improve")}</h3>
-          <p className="text-xs text-stone-400">{tw("multiOptional")}</p>
+          <p className="text-xs text-stone-500">{tw("multiOptional")}</p>
           <div className="flex flex-wrap justify-center gap-2">
             {aspects.map((a) => {
               const selected = aspectIds.includes(a._id);
@@ -355,7 +355,7 @@ export default function WriteReviewForm({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
-        <p className="m-0 text-right text-xs text-stone-400">{comment.length}/{MAX_TEXT}</p>
+        <p className="m-0 text-right text-xs text-stone-500">{comment.length}/{MAX_TEXT}</p>
 
         <MediaButton icon={<Upload size={16} />} disabled={images.length >= MAX_IMAGES}
           label={tw("attachImages", { n: images.length, max: MAX_IMAGES })}>
@@ -381,7 +381,7 @@ export default function WriteReviewForm({
             <video src={video.previewUrl} className="h-full w-full object-cover" muted />
           </Preview>
         )}
-        <p className="m-0 text-xs text-stone-400">{tw("pointsHint")}</p>
+        <p className="m-0 text-xs text-stone-500">{tw("pointsHint")}</p>
       </div>
 
       <div className="flex flex-wrap justify-end gap-2 pt-2">

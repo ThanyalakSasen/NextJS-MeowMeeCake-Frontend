@@ -131,7 +131,7 @@ function AddressBookContent() {
               <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center">
                 <MapPin className="h-8 w-8 text-stone-300" aria-hidden="true" />
                 <p className="m-0 text-sm font-medium text-stone-500">{t("empty")}</p>
-                <p className="m-0 text-xs text-stone-400">{t("emptyHint")}</p>
+                <p className="m-0 text-xs text-stone-500">{t("emptyHint")}</p>
               </div>
             ) : (
               <ul className="m-0 flex list-none flex-col gap-3 p-0">
@@ -197,7 +197,7 @@ function AddressBookContent() {
             {t("setDefaultAuto")}
           </label>
           {problem && <p className="m-0 text-xs text-red-600 sm:col-span-2">{problem}</p>}
-          <p className="m-0 text-xs text-stone-400 sm:col-span-2">{t("recipientHint")}</p>
+          <p className="m-0 text-xs text-stone-500 sm:col-span-2">{t("recipientHint")}</p>
         </div>
       </Modal>
     </div>

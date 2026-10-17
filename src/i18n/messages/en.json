@@ -3149,7 +3149,8 @@
       "openFilters": "Open filters and sorting",
       "closeFilters": "Close filters",
       "filterActive": "Filters applied",
-      "clearFilters": "Clear filters"
+      "clearFilters": "Clear filters",
+      "listHeading": "Product list"
     },
     "product": {
       "notFound": "Product not found",

@@ -330,6 +330,8 @@ export default function ProductListPage({ query }: { query: string }) {
               </div>
             ) : visible.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {/* h2 ซ่อน (absolute — ไม่กินช่อง grid) (สำหรับ screen reader) — จอมือถือแผงหมวดหมู่ที่มี h2 ถูกซ่อน การ์ดสินค้า (h3) จะต่อจาก h1 ตรง ๆ (Lighthouse heading-order) */}
+                <h2 className="sr-only">{t("listHeading")}</h2>
                 {/* 2 ใบแรก = แถวแรกบนมือถือ (รูปใหญ่สุดเหนือขอบจอ — LCP) → โหลดก่อน */}
                 {visible.map((p, i) => (
                   <ProductCard key={p._id} product={p} priority={i < 2} />

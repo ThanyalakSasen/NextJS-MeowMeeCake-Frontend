@@ -56,7 +56,7 @@ export default function PreorderRoundsPage() {
                 <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-stone-200 bg-white p-10 text-center">
                   <PackageOpen className="h-8 w-8 text-stone-300" aria-hidden="true" />
                   <p className="m-0 text-sm font-medium text-stone-600">{t("noOpen")}</p>
-                  {upcoming.length > 0 && <p className="m-0 text-xs text-stone-400">{t("seeUpcoming")}</p>}
+                  {upcoming.length > 0 && <p className="m-0 text-xs text-stone-500">{t("seeUpcoming")}</p>}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

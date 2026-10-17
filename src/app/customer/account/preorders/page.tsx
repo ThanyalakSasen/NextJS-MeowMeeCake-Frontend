@@ -147,10 +147,10 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
               <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="m-0 truncate text-sm font-semibold text-stone-800">{localName(it.product_name, it.product_name_eng) || to("product")}</p>
-                  {it.variant_name && <p className="m-0 text-xs text-stone-400">{to("option", { name: it.variant_name })}</p>}
+                  {it.variant_name && <p className="m-0 text-xs text-stone-500">{to("option", { name: it.variant_name })}</p>}
                 </div>
                 <div className="flex shrink-0 items-center gap-2 text-right">
-                  <span className="text-xs text-stone-400">×{it.quantity}</span>
+                  <span className="text-xs text-stone-500">×{it.quantity}</span>
                   <span className="text-sm font-semibold text-stone-800">{baht(it.total_price)}</span>
                 </div>
               </div>

@@ -83,7 +83,7 @@ export default function AccountSideMenu() {
     <div className="flex flex-col gap-2 rounded-2xl border border-stone-100 bg-white p-2 shadow-sm">
       {GROUPS.map((group, gi) => (
         <div key={group.titleKey} className={`flex flex-col gap-2 ${gi > 0 ? "mt-2 border-t border-stone-100 pt-2" : ""}`}>
-          <p className="m-0 px-3.5 pb-1 pt-2 text-xs font-bold uppercase tracking-wide text-stone-400">{t(group.titleKey)}</p>
+          <p className="m-0 px-3.5 pb-1 pt-2 text-xs font-bold uppercase tracking-wide text-stone-500">{t(group.titleKey)}</p>
           {group.items.map(({ href, labelKey, icon: Icon }) => (
             <Link
               key={href}
