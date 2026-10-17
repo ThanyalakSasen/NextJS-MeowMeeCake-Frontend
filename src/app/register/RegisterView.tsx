@@ -131,13 +131,13 @@ export function RegisterView(vm: VM) {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-stone-500">{t("register.allergyCount", { n: vm.form.allergies.length })}</span>
                 {vm.form.allergies.length > 0 && (
-                  <button type="button" onClick={vm.clearAllergies} className="text-[11px] text-stone-400 underline transition hover:text-red-500">
+                  <button type="button" onClick={vm.clearAllergies} className="text-[11px] text-stone-500 underline transition hover:text-red-500">
                     {t("register.allergyClear")}
                   </button>
                 )}
               </div>
               {vm.form.allergies.length === 0 ? (
-                <p className="m-0 rounded-xl border border-dashed border-stone-300 bg-white/50 px-2 py-3 text-center text-xs text-stone-400">
+                <p className="m-0 rounded-xl border border-dashed border-stone-300 bg-white/50 px-2 py-3 text-center text-xs text-stone-500">
                   {t("register.allergyEmpty")}
                 </p>
               ) : (
@@ -146,7 +146,7 @@ export function RegisterView(vm: VM) {
                     <span key={name} className="inline-flex items-center gap-1.5 rounded-xl bg-[#FFF8E7] py-1.5 pl-3.5 pr-2 text-xs font-semibold text-[#5C3A21]">
                       {name}
                       <button type="button" onClick={() => vm.removeAllergy(name)} aria-label={t("register.allergyRemove", { name })}
-                        className="flex h-4 w-4 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-200/60 hover:text-red-500">
+                        className="flex h-4 w-4 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-200/60 hover:text-red-500">
                         <X size={12} />
                       </button>
                     </span>

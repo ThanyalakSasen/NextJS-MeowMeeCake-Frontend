@@ -3149,7 +3149,8 @@
       "openFilters": "เปิดตัวกรองและการเรียง",
       "closeFilters": "ปิดตัวกรอง",
       "filterActive": "กำลังกรองอยู่",
-      "clearFilters": "ล้างตัวกรอง"
+      "clearFilters": "ล้างตัวกรอง",
+      "listHeading": "รายการสินค้า"
     },
     "product": {
       "notFound": "ไม่พบสินค้านี้",

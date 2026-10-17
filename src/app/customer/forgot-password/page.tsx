@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
               <p className="mb-2 text-sm leading-relaxed text-stone-500">
                 {t.rich("sentBody", { email, b: (c) => <strong className="font-semibold text-stone-800">{c}</strong>, br: () => <br /> })}
               </p>
-              <p className="mt-3 text-xs text-stone-400">{t("spamHint")}</p>
+              <p className="mt-3 text-xs text-stone-500">{t("spamHint")}</p>
               <Link href={LOGIN_PATH} className="mt-6 text-sm font-semibold text-[#4A342E] hover:underline">
                 {t("backToLogin")}
               </Link>
@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
               <button type="button" className={button} onClick={() => void send()} disabled={sending}>
                 {sending ? t("sending") : t("sendLink")}
               </button>
-              <p className="mt-4 text-xs text-stone-400">
+              <p className="mt-4 text-xs text-stone-500">
                 {t("socialNoPassword")}
               </p>
               <Link href={LOGIN_PATH} className="mt-4 text-sm font-semibold text-[#4A342E] hover:underline">

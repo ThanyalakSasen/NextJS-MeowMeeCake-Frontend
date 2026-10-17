@@ -89,7 +89,7 @@ export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem;
               className={`h-full w-full object-cover transition duration-300 group-hover:scale-105 ${soldOut ? "grayscale" : ""}`}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-stone-400">{t("noImage")}</div>
+            <div className="flex h-full w-full items-center justify-center text-xs text-stone-500">{t("noImage")}</div>
           )}
           <span
             className={`absolute right-2 top-2 rounded border px-2 py-0.5 text-[10px] font-semibold ${
@@ -102,7 +102,7 @@ export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem;
         <div className="flex flex-grow flex-col justify-between p-4">
           <div>
             <h3 className="m-0 line-clamp-1 text-sm font-bold text-stone-800 group-hover:text-[#4A342E]">{localNames(p.product_name_th, p.product_name_eng).primary}</h3>
-            <p className="m-0 mb-3 line-clamp-1 text-xs text-stone-400">{localNames(p.product_name_th, p.product_name_eng).secondary}</p>
+            <p className="m-0 mb-3 line-clamp-1 text-xs text-stone-500">{localNames(p.product_name_th, p.product_name_eng).secondary}</p>
           </div>
           <div>
             <p className="m-0 mb-1 flex items-baseline gap-1.5">

@@ -125,7 +125,7 @@ export default function ProductCard({
             className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-sm transition hover:scale-110 hover:bg-white disabled:opacity-60"
           >
             {favorites.pendingId === product._id ? (
-              <FaSpinner className="animate-spin text-xs text-stone-400" />
+              <FaSpinner className="animate-spin text-xs text-stone-500" />
             ) : favorite ? (
               <FaHeart className="text-sm text-red-500" />
             ) : (

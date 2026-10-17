@@ -175,7 +175,7 @@ function MemberContent() {
                               <div className="flex shrink-0 flex-col items-end gap-0.5">
                                 <span className="whitespace-nowrap rounded bg-amber-100/70 px-2 py-0.5 text-xs font-semibold text-amber-800">{t("pointsBadge", { points })}</span>
                                 {done !== undefined && (
-                                  <span className={`text-[11px] font-semibold ${done ? "text-emerald-600" : "text-stone-400"}`}>{done ? t("received") : t("notReceived")}</span>
+                                  <span className={`text-[11px] font-semibold ${done ? "text-emerald-600" : "text-stone-500"}`}>{done ? t("received") : t("notReceived")}</span>
                                 )}
                               </div>
                             </li>
@@ -242,7 +242,7 @@ function MemberContent() {
                                     {c.min_order_amount ? t("minOrder", { amount: baht(c.min_order_amount) }) : ""}
                                     {t("until", { date: formatDate(c.end_date) })}
                                   </p>
-                                  {c.promotion_desc && <p className="m-0 line-clamp-1 text-xs text-stone-400">{c.promotion_desc}</p>}
+                                  {c.promotion_desc && <p className="m-0 line-clamp-1 text-xs text-stone-500">{c.promotion_desc}</p>}
                                   <div className="flex items-center justify-between gap-2 pt-1">
                                     <span className="rounded bg-amber-100/70 px-2 py-0.5 text-xs font-semibold text-amber-800">
                                       {t("pointsBadge", { points: c.points_cost.toLocaleString() })}
@@ -281,7 +281,7 @@ function MemberContent() {
                             <li key={c._id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                               <div className="min-w-0 space-y-0.5">
                                 <p className="m-0 truncate text-sm font-semibold text-stone-800">{c.promotion_name}</p>
-                                <p className="m-0 text-xs text-stone-400">
+                                <p className="m-0 text-xs text-stone-500">
                                   {couponLabel(c, tcp)}
                                   {c.min_order_amount ? t("minOrder", { amount: baht(c.min_order_amount) }) : ""}
                                   {t("validUntil", { date: formatDate(c.expires_at) })}
@@ -310,7 +310,7 @@ function MemberContent() {
                         <li key={h._id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                           <div className="min-w-0 space-y-0.5">
                             <p className="m-0 text-sm font-semibold text-stone-800">{h.description}</p>
-                            <p className="m-0 text-xs text-stone-400">{formatDate(h.created_at)}</p>
+                            <p className="m-0 text-xs text-stone-500">{formatDate(h.created_at)}</p>
                           </div>
                           <span className={`shrink-0 text-sm font-bold ${h.points >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                             {h.points >= 0 ? "+" : ""}
@@ -320,7 +320,7 @@ function MemberContent() {
                       ))}
                     </ul>
                   )}
-                  {p.history.length >= 50 && <p className="m-0 text-center text-xs text-stone-400">{t("latest50")}</p>}
+                  {p.history.length >= 50 && <p className="m-0 text-center text-xs text-stone-500">{t("latest50")}</p>}
                 </section>
               </>
             )}

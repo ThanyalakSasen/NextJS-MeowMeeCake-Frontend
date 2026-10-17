@@ -241,7 +241,7 @@ function ProfileSection({ profile }: { profile: ShopProfile }) {
           { label: t("birthday"), value: birthdayText(profile.user_birthdate, locale) },
         ].map(({ label, value }) => (
           <div key={label} className={field}>
-            <span className="block text-xs font-medium text-stone-400">{label}</span>
+            <span className="block text-xs font-medium text-stone-500">{label}</span>
             <span className="block break-all font-semibold text-stone-800">{value}</span>
           </div>
         ))}
@@ -265,7 +265,7 @@ function ProfileSection({ profile }: { profile: ShopProfile }) {
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("email")}</span>
             <input className={`${shopInput} cursor-not-allowed bg-stone-100 text-stone-500`} value={shownEmail} disabled readOnly />
-            <span className="block text-xs text-stone-400">{t("emailLocked")}</span>
+            <span className="block text-xs text-stone-500">{t("emailLocked")}</span>
           </label>
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("phone")}</span>
@@ -278,7 +278,7 @@ function ProfileSection({ profile }: { profile: ShopProfile }) {
               onChange={(e) => setForm({ ...form, birthday: e.target.value })} />
           </label>
           {problem && <p className="m-0 text-xs text-red-600">{problem}</p>}
-          <p className="m-0 text-xs text-stone-400">{t("bonusHint")}</p>
+          <p className="m-0 text-xs text-stone-500">{t("bonusHint")}</p>
         </div>
       </Modal>
     </section>
@@ -329,13 +329,13 @@ function RefundAccountSection({ profile }: { profile: ShopProfile }) {
             { label: t("refundName"), value: profile.refund_promptpay_name || "-" },
           ].map(({ label, value }) => (
             <div key={label} className={field}>
-              <span className="block text-xs font-medium text-stone-400">{label}</span>
+              <span className="block text-xs font-medium text-stone-500">{label}</span>
               <span className="block break-all font-semibold text-stone-800">{value}</span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-400">{t("refundEmpty")}</p>
+        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-500">{t("refundEmpty")}</p>
       )}
 
       <Modal
@@ -360,7 +360,7 @@ function RefundAccountSection({ profile }: { profile: ShopProfile }) {
               onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </label>
           {problem && <p className="m-0 text-xs text-red-600">{problem}</p>}
-          <p className="m-0 text-xs text-stone-400">{t("refundModalHint")}</p>
+          <p className="m-0 text-xs text-stone-500">{t("refundModalHint")}</p>
         </div>
       </Modal>
     </section>
@@ -457,7 +457,7 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
         {options.map((n) => <option key={n} value={n}>{n}</option>)}
       </select>
       {list.length === 0 ? (
-        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-400">{t("noAllergies")}</p>
+        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-500">{t("noAllergies")}</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {list.map((name) => (
@@ -465,7 +465,7 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
               {name}
               <button type="button" aria-label={t("removeItem", { name })} disabled={save.isPending}
                 onClick={() => save.mutate(list.filter((a) => a !== name))}
-                className="flex h-4 w-4 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-200/60 hover:text-red-500">
+                className="flex h-4 w-4 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-200/60 hover:text-red-500">
                 <X size={12} />
               </button>
             </span>

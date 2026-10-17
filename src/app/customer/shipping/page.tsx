@@ -64,7 +64,7 @@ export default function ShippingInfoPage() {
         <section className={`${shopCard} space-y-5`}>
           <h2 className="text-lg font-bold">{t("deliveryTitle")}</h2>
           {zonesQ.isLoading ? (
-            <p className="m-0 text-sm text-stone-400">{t("loadingRates")}</p>
+            <p className="m-0 text-sm text-stone-500">{t("loadingRates")}</p>
           ) : zones.length === 0 ? (
             <p className="m-0 text-sm text-stone-500">{t("ratesFailed")}</p>
           ) : (
@@ -101,7 +101,7 @@ export default function ShippingInfoPage() {
             {t("pickupHint")}
           </p>
           {pickupsQ.isLoading ? (
-            <p className="m-0 text-sm text-stone-400">{t("loadingPickup")}</p>
+            <p className="m-0 text-sm text-stone-500">{t("loadingPickup")}</p>
           ) : pickups.length === 0 ? (
             <p className="m-0 text-sm text-stone-500">{t("noPickup")}</p>
           ) : (
