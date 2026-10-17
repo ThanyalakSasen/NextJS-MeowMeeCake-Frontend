@@ -26,10 +26,11 @@ export function FinanceSummaryView(vm: VM) {
   const t = useTranslations();
   const locale = useLocale();
 
+  // ตารางเปรียบเทียบ: ยอดเป็น 0 = เทา (gray-700) ทุกคอลัมน์ · รายรับ = เขียว · รายจ่าย = แดง · กำไร-ขาดทุน ตามเครื่องหมาย
   const trendColumns: Column<TrendRow>[] = [
     { key: "label", title: t(`finance.trendCol_${vm.period}`) },
-    { key: "income", title: t("finance.trendColIncome"), align: "right", render: (r) => <span className="text-green-600">{formatCurrency(r.income, locale)}</span> },
-    { key: "expense", title: t("finance.trendColExpense"), align: "right", render: (r) => <span className="text-red-500">{formatCurrency(r.expense, locale)}</span> },
+    { key: "income", title: t("finance.trendColIncome"), align: "right", render: (r) => <span className={r.income !== 0 ? "text-green-600" : "text-gray-700"}>{formatCurrency(r.income, locale)}</span> },
+    { key: "expense", title: t("finance.trendColExpense"), align: "right", render: (r) => <span className={r.expense !== 0 ? "text-red-500" : "text-gray-700"}>{formatCurrency(r.expense, locale)}</span> },
     { key: "profit", title: t("finance.trendColProfit"), align: "right", render: (r) => (
         // กำไร = เขียว · เท่าทุน (0) = เทา · ขาดทุน = แดง
         <span className={`font-semibold ${r.profit > 0 ? "text-green-600" : r.profit < 0 ? "text-red-500" : "text-gray-700"}`}>
