@@ -22,6 +22,9 @@ import type { ExpenseCategory } from "@/constants/enumConfig";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { LIST_ALL } from "@/lib/http";
 
+/** จำนวนช่วงในตารางเปรียบเทียบต่อรูปแบบช่วงเวลา (รวมช่วงที่เลือก) */
+const TREND_LENGTH: Record<PeriodType, number> = { day: 7, week: 6, month: 6, quarter: 4, year: 3 };
+
 export interface PnLRow {
   key: string;
   label: string;
@@ -103,16 +106,22 @@ export function useFinanceSummaryViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webIncome, posIncome, preorderIncome, otherIncome, totalIncome, totalCogs, grossProfit, totalOpex, netProfit, expenseByCategory, opexEntries, locale]);
 
-  // ── เปรียบเทียบรายเดือน (6 เดือนล่าสุด) ──
-  // รายรับต่อเดือนจาก revenue-by-channel เดือนละ 1 request (นับพรีออเดอร์ด้วย ตัวเลขชุดเดียวกับตาราง P&L)
-  const [trendMonths] = useState(() =>
-    Array.from({ length: 6 }, (_, i) => {
-      const d = dayjs().subtract(5 - i, "month");
-      return { key: d.format("YYYY-MM"), from: d.startOf("month").toISOString(), to: d.endOf("month").toISOString() };
-    }),
+  // ── ตารางเปรียบเทียบ — ตามช่วงเวลาที่เลือก (เดิมเป็น 6 เดือนล่าสุดเสมอ ไม่ว่าจะเลือกรายวัน/สัปดาห์/ไตรมาส/ปี) ──
+  // ช่วงย่อย N ช่วงย้อนหลัง จบที่ช่วงที่เลือก · รายรับต่อช่วงจาก revenue-by-channel ช่วงละ 1 request
+  // (นับพรีออเดอร์ด้วย ตัวเลขชุดเดียวกับตาราง P&L) · รายจ่ายรวมจากรายการค่าใช้จ่ายที่วันที่อยู่ในช่วง
+  const trendBuckets = useMemo(
+    () =>
+      Array.from({ length: TREND_LENGTH[period] }, (_, i) => {
+        const back = TREND_LENGTH[period] - 1 - i;
+        // ไตรมาส = 3 เดือน (subtract ของ dayjs แยก type ไตรมาสกับหน่วยอื่น)
+        const anchor = period === "quarter" ? selectedDate.subtract(back * 3, "month") : selectedDate.subtract(back, period);
+        const [from, to] = getRangeStartEnd(period, anchor);
+        return { key: from.toISOString(), start: from, end: to, from: from.toISOString(), to: to.toISOString() };
+      }),
+    [period, selectedDate],
   );
   const trendQs = useQueries({
-    queries: trendMonths.map((m) => ({
+    queries: trendBuckets.map((m) => ({
       queryKey: ["reports", "revenue-by-channel", m.from, m.to],
       queryFn: () => reportsService.revenueByChannel({ date_from: m.from, date_to: m.to }),
     })),
@@ -121,21 +130,25 @@ export function useFinanceSummaryViewModel() {
   const trendIncomeKey = trendIncome.join(",");
 
   const monthlyTrend = useMemo(() => {
-    const months = trendMonths.map((m, i) => ({
-      key: m.key,
-      label: dayjs(m.from).format("MMM YYYY"),
-      income: trendIncome[i],
-      expense: 0,
-    }));
-    const byKey = new Map(months.map((m) => [m.key, m]));
-    expenses.forEach((e) => {
-      const m = byKey.get(dayjs(e.date).format("YYYY-MM"));
-      if (m) m.expense += e.amount;
+    const intlLocale = locale === "en" ? "en-US" : "th-TH";
+    const label = (b: (typeof trendBuckets)[number]) => {
+      if (period === "day") return formatDate(b.from, locale);
+      if (period === "week") return `${formatDate(b.from, locale)} – ${formatDate(b.to, locale)}`;
+      if (period === "quarter") return t("finance.quarterLabel", { n: b.start.quarter(), year: b.start.year() });
+      if (period === "year") return String(b.start.year());
+      return new Intl.DateTimeFormat(intlLocale, { month: "short", year: "numeric" }).format(b.start.toDate());
+    };
+    return trendBuckets.map((b, i) => {
+      const expense = expenses.reduce((s, e) => {
+        const d = dayjs(e.date);
+        return !d.isBefore(b.start) && !d.isAfter(b.end) ? s + e.amount : s;
+      }, 0);
+      const income = trendIncome[i];
+      return { key: b.key, label: label(b), income, expense, profit: income - expense };
     });
-    return months.map((m) => ({ ...m, profit: m.income - m.expense }));
     // trendIncome เป็น array ใหม่ทุก render — ใช้ trendIncomeKey แทน
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trendMonths, trendIncomeKey, expenses]);
+  }, [trendBuckets, trendIncomeKey, expenses, period, locale]);
 
   // ── KPI ──
   const daysInPeriod = Math.max(1, rangeEnd.diff(rangeStart, "day") + 1);
