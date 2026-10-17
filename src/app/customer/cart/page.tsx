@@ -123,7 +123,7 @@ function CartContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("title") }]} className="!mb-0" />
         {cart.items.length > 0 && <FlowSteps kind="order" current={1} />}
 

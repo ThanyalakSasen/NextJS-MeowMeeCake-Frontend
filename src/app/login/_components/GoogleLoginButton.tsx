@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { useLocale, useTranslations } from "next-intl";
 import { FcGoogle } from "react-icons/fc";
+import type { GoogleOAuth2 } from "./googleAccountPicker";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
@@ -24,7 +25,8 @@ interface GoogleId {
 }
 declare global {
   interface Window {
-    google?: { accounts: { id: GoogleId } };
+    // oauth2 = หน้าต่างเลือกบัญชีของลิงก์ "ลืมรหัสผ่าน?" (googleAccountPicker.ts) — มากับสคริปต์ gsi/client ไฟล์เดียวกัน
+    google?: { accounts: { id: GoogleId; oauth2?: GoogleOAuth2 } };
   }
 }
 
@@ -79,7 +81,7 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
         type="button"
         disabled
         title={t("auth.googleNotConfigured")}
-        className="flex h-[40px] w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-[#e1d6cd] bg-white text-[14.5px] font-semibold text-[#4e342e] opacity-60"
+        className="flex h-[40px] w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-[#e1d6cd] bg-white text-sm font-semibold text-[#4e342e] opacity-60"
       >
         <FcGoogle size={20} />
         {t("auth.loginWithGoogle")}

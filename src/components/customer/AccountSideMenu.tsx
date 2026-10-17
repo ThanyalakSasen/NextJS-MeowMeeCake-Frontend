@@ -15,6 +15,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useSidebarMenuStore } from "@/app/customer/store/sidebarMenuStore";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import DoorLogoutIcon from "./DoorLogoutIcon";
+import StoreLogo from "./StoreLogo";
 
 const GROUPS = [
   {
@@ -97,10 +98,17 @@ export default function AccountSideMenu() {
           ))}
         </div>
       ))}
-      <button type="button" onClick={() => void onLogout()} className={`${item(false)} mt-2 border-t border-stone-100`}>
-        <DoorLogoutIcon className="h-4 w-4 shrink-0" />
-        {t("logout")}
-      </button>
+      {/* ออกจากระบบ — หน้าตาเดียวกับเมนูผู้ใช้ใน Navbar (เส้นคั่น · ตัวอักษร/ไอคอนแดง · พื้นชมพูอ่อนตอนชี้) */}
+      <div className="mt-1 border-t border-stone-100 pt-1">
+        <button
+          type="button"
+          onClick={() => void onLogout()}
+          className="group flex h-[44px] w-full items-center gap-2.5 rounded-xl px-3.5 text-sm font-semibold text-rose-600 transition duration-150 hover:bg-rose-50/80 hover:text-rose-700"
+        >
+          <DoorLogoutIcon className="h-4 w-4 shrink-0 text-rose-500 transition-colors group-hover:text-rose-700" />
+          {t("logout")}
+        </button>
+      </div>
     </div>
   );
 
@@ -116,12 +124,16 @@ export default function AccountSideMenu() {
         <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true" aria-label={t("aria")}>
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} aria-hidden="true" />
           <nav aria-label={t("aria")} className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col gap-3 overflow-y-auto bg-stone-50 p-4 shadow-xl">
-            <div className="flex justify-end">
+            {/* หัวลิ้นชัก: โลโก้ร้านกึ่งกลาง (80px เท่า Navbar · กลับหน้าแรก) + ปุ่มปิดมุมขวาบน */}
+            <div className="relative flex items-center justify-center pt-2">
+              <Link href="/customer" onClick={() => setMobileOpen(false)} aria-label={t("home")}>
+                <StoreLogo size={80} />
+              </Link>
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
                 aria-label={t("closeMenu")}
-                className="rounded-xl p-2 text-stone-600 hover:bg-stone-200"
+                className="absolute right-0 top-0 rounded-xl p-2 text-stone-600 hover:bg-stone-200"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>

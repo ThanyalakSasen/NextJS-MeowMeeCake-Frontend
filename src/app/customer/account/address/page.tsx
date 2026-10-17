@@ -108,7 +108,7 @@ function AddressBookContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: ta("address") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <AccountSideMenu />
@@ -156,7 +156,7 @@ function AddressBookContent() {
                         <Pencil className="h-3.5 w-3.5" /> {t("edit")}
                       </button>
                       <button type="button" aria-label={t("deleteAria")} disabled={remove.isPending} onClick={() => void onDelete(a)}
-                        className="inline-flex items-center gap-1 h-[36px] rounded-xl border border-red-600/30 bg-white px-3 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+                        className="inline-flex items-center gap-1 h-[44px] rounded-xl border border-red-600/30 bg-white px-3 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
                         <Trash2 className="h-3.5 w-3.5" /> {t("delete")}
                       </button>
                     </div>

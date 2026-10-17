@@ -110,7 +110,8 @@ export function NotificationBell({ size = 24 }: { size?: number }) {
         }}
         aria-label={unread > 0 ? t("bellWithCount", { n: unread }) : t("title")}
         aria-expanded={open}
-        className="relative flex items-center p-1 !text-white transition hover:!text-[#e2d7c7]"
+        // ขนาดเดียวกับปุ่มอื่นใน Navbar (navButtonOnDark) — 44×44
+        className="relative flex h-[44px] min-w-[44px] items-center justify-center rounded-xl px-[10px] !text-white transition hover:bg-white/10"
       >
         <Bell size={size} />
         {unread > 0 && (

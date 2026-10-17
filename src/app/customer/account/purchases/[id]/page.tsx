@@ -102,7 +102,7 @@ function OrderContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb
           items={[
             { label: t("myAccount"), href: "/customer/account" },
@@ -229,9 +229,6 @@ function OrderContent() {
           <Link href="/customer/account/purchases" className={shopButton}>
             {t("viewAll")}
           </Link>
-          <Link href="/customer/product" className={shopButton}>
-            {t("continueShopping")}
-          </Link>
           <ReviewLink kind="order" doc={order} itemIds={order.items.map((it) => it._id)} href={`/customer/account/purchases/${order._id}/review`} className={shopButtonPrimary} />
           {(order.order_status === "completed" || order.order_status === "cancelled") && <BuyAgainButton items={order.items} className={shopButton} />}
           {canCustomerCancel(order) && <CancelOrderButton orderId={order._id} orderNo={order.order_no} paid={order.payment_status === "paid"} />}
@@ -266,7 +263,7 @@ function CancelOrderButton({ orderId, orderNo, paid }: { orderId: string; orderN
   };
   return (
     <button type="button" onClick={() => void onClick()} disabled={cancel.isPending}
-      className="h-[36px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+      className="h-[44px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
       {cancel.isPending ? t("cancelling") : t("cancelOrder")}
     </button>
   );

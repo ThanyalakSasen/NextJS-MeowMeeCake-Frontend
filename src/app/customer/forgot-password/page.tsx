@@ -14,12 +14,13 @@ import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { LOGIN_PATH } from "@/constants/auth";
+import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const card =
   "mx-auto flex w-full max-w-[580px] flex-col items-center rounded-2xl border border-stone-100 bg-white p-8 text-center shadow-sm sm:p-10";
 const button =
-  "flex w-full max-w-xs items-center justify-center gap-2 rounded-xl border border-[#8C5A3C]/30 bg-white h-[36px] px-6 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-stone-300";
+  "flex w-full max-w-xs items-center justify-center gap-2 rounded-xl border border-[#8C5A3C]/30 bg-white h-[44px] px-6 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-stone-300";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("shop.password");
@@ -46,8 +47,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-[70vh] bg-[#f5f5f5] pb-16 pt-32 text-stone-800 sm:pt-36">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    // ระยะบนเท่าหน้าอื่นของหน้าร้าน (shopPage) — ให้พ้น Navbar แบบ fixed (สูง ~170px)
+    <div className="min-h-[70vh] bg-[#f5f5f5] pb-16 pt-46 text-stone-800 sm:pt-50 md:pt-44">
+      <div className="mx-auto max-w-[1200px] px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
+        <CustomerBreadcrumb items={[{ label: t("forgotTitle") }]} className="!mb-4" />
         <h1 className="mb-6 text-xl font-bold text-stone-900 sm:text-2xl">{t("forgotTitle")}</h1>
         <div className={card}>
           {sent ? (

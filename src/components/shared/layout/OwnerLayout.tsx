@@ -55,7 +55,9 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   // นี่คือ UX gate — ข้อมูลจริงถูก backend กั้นอยู่แล้วทุก route (403) · สิทธิ์ถูกเพิกถอนระหว่างใช้งาน
   // จะมีผลเมื่อ useCurrentUser refetch (โฟกัสแท็บ / ทุก 60 วินาที)
   const menuKey = resolveMenuKey(pathname);
-  const denied = !!user && !!menuKey && !user.menuAccess[menuKey]?.view;
+  // ลูกค้าไม่นับ — effect ด้านบนส่งกลับหน้าร้านอยู่แล้ว (เดิมสองอันชนกัน: ลูกค้าที่เปิด /login ซ้ำถูก proxy พามา
+  // /owner/dashboard แล้ว access-denied ชนะ → ค้างหน้า "ไม่มีสิทธิ์" ของหลังร้าน)
+  const denied = !!user && !isCustomer && !!menuKey && !user.menuAccess[menuKey]?.view;
   const deniedTarget = denied
     ? (menuKey === "dashboard" && user ? firstPermittedPath(user.menuAccess) : null) ?? ACCESS_DENIED_PATH
     : null;

@@ -38,7 +38,7 @@ function FavoritesContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: ta("favorites") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <div className="flex min-w-0 flex-1 flex-col gap-5">
@@ -148,7 +148,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           </span>
 
           {item.is_preorder ? (
-            <Link href={href} className="inline-flex h-[36px] items-center rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition hover:bg-[#4A342E] hover:text-white">
+            <Link href={href} className="inline-flex h-[44px] items-center rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition hover:bg-[#4A342E] hover:text-white">
               {t("view")}
             </Link>
           ) : (
@@ -156,7 +156,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
               type="button"
               disabled={!item.inStock || status === "loading" || status === "success"}
               onClick={() => void quickAdd(item.id)}
-              className={`inline-flex h-[36px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition-all duration-200 ${
+              className={`inline-flex h-[44px] items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-all duration-200 ${
                 status === "success"
                   ? "border border-emerald-600 bg-emerald-600 text-white"
                   : "border border-[#8C5A3C]/30 bg-white text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white active:scale-[0.98]"

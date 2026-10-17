@@ -7,12 +7,12 @@
 // · เรียงตามเก็บใน ?sort= (กลับจากหน้าสินค้าแล้วยังเรียงแบบเดิม)
 // ต่างจากต้นแบบ: "ขายดี" → "คะแนนรีวิวสูงสุด" (catalog ไม่ส่งยอดขายมา · avg_rating มี)
 // ─────────────────────────────────────────────────────────────
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { FaFilter, FaSortAmountDown } from "react-icons/fa";
+import { FaFilter, FaSortAmountDown, FaTimes } from "react-icons/fa";
 import { catalogService } from "@/services/catalog";
 import { effectivePrice } from "@/lib/pricing";
 import ProductCard, { categoryNameOf, isProductCardVisible } from "@/components/customer/ProductCard";
@@ -89,20 +89,171 @@ export default function ProductListPage({ query }: { query: string }) {
     return result;
   }, [products, currentCategory, sortBy]);
 
+  // จอ <768px: ตัวกรอง (หมวด + เรียง) อยู่ในแผงเลื่อนเข้าจากขวา เปิดด้วยปุ่มไอคอน
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!sheetOpen) return;
+    closeBtnRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSheetOpen(false);
+    // ล็อกการเลื่อนหน้าข้างหลังระหว่างเปิดแผ่น
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [sheetOpen]);
+  const filterActive = currentCategory !== ALL || sortBy !== "latest";
+
+  /** ลิงก์เปลี่ยนหมวด — คงคำค้น + การเรียงไว้ */
+  const categoryHref = (name: string) => {
+    const params = new URLSearchParams();
+    if (name !== ALL) params.set("category", name);
+    if (searchQuery) params.set("q", searchQuery);
+    if (sortBy !== "latest") params.set("sort", sortBy);
+    const qs = params.toString();
+    return `/customer/product${qs ? `?${qs}` : ""}`;
+  };
+
+  /** ล้างตัวกรอง = หมวดกลับเป็น "ทั้งหมด" + เรียงแบบมาใหม่ล่าสุด · คงคำค้น (?q=) ไว้ */
+  const clearFilters = () => {
+    setSheetOpen(false);
+    const qs = searchQuery ? `?${new URLSearchParams({ q: searchQuery }).toString()}` : "";
+    router.replace(`/customer/product${qs}`, { scroll: false });
+  };
+
   return (
     <div className="w-full min-h-screen text-[#4A342E] pt-54 sm:pt-52 md:pt-50 pb-36">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("allProducts") }]} />
 
-        <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] tracking-tight">
-            {searchQuery ? t("searchResult", { q: searchQuery }) : t("allProducts")}
-          </h1>
+        {/* หัวข้อ · จอ <768px: ปุ่มล้าง (เมื่อกำลังกรอง) + ปุ่มไอคอนตัวกรอง ชิดขวาแถวเดียวกัน · หมวด/การเรียงที่เลือกอยู่ใต้หัวข้อ */}
+        <div className="mb-4 md:mb-8 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] tracking-tight break-words">
+              {searchQuery ? t("searchResult", { q: searchQuery }) : t("allProducts")}
+            </h1>
+            <p className="md:hidden m-0 mt-1 truncate text-sm text-[#4A342E]">
+              <span className="font-semibold">{currentCategory === ALL ? t("all") : currentCategory}</span>
+              <span className="text-stone-500"> · {t(`sort.${sortBy}`)}</span>
+            </p>
+          </div>
+
+          <div className="md:hidden flex shrink-0 items-center gap-2">
+            {filterActive && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="flex h-[44px] items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-[#8C5A3C] transition hover:bg-[#8C5A3C]/10"
+              >
+                <FaTimes size={14} aria-hidden="true" />
+                {t("clearFilters")}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              aria-label={t("openFilters")}
+              aria-haspopup="dialog"
+              aria-expanded={sheetOpen}
+              className="relative flex h-[44px] w-[44px] items-center justify-center rounded-xl border border-[#8C5A3C]/20 bg-white text-[#8C5A3C] shadow-sm transition hover:bg-[#8C5A3C]/10"
+            >
+              <FaFilter size={18} />
+              {filterActive && (
+                <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-red-500" aria-label={t("filterActive")} />
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* ซ้าย = หมวดหมู่ / ขวา = รายการสินค้า */}
+        {/* แผงตัวกรอง (จอ <768px) — เลื่อนเข้าจากขวา เต็มความสูง · เลือกแล้วกรองทันทีและปิดแผง · Esc / แตะพื้นหลัง = ปิด */}
+        {sheetOpen && (
+          <div className="md:hidden fixed inset-0 z-[60] flex justify-end">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setSheetOpen(false)} aria-hidden="true" />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="product-filter-title"
+              className="relative h-full w-[85vw] max-w-[360px] overflow-y-auto rounded-l-2xl bg-white px-[20px] pb-8 pt-4 shadow-2xl animate-slide-in-right"
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h2 id="product-filter-title" className="m-0 flex items-center gap-2 text-base font-bold text-[#4A342E]">
+                  <FaFilter className="text-[#8C5A3C]" size={16} />
+                  {t("filters")}
+                </h2>
+                <button
+                  ref={closeBtnRef}
+                  type="button"
+                  onClick={() => setSheetOpen(false)}
+                  aria-label={t("closeFilters")}
+                  className="flex h-[44px] w-[44px] items-center justify-center rounded-xl text-stone-500 transition hover:bg-stone-100"
+                >
+                  <FaTimes size={18} />
+                </button>
+              </div>
+
+              <h3 className="m-0 mb-2 text-sm font-semibold text-stone-600">{t("categories")}</h3>
+              <div className="mb-5 flex flex-wrap gap-2">
+                {categoryCards.map((c) => {
+                  const isActive = currentCategory === c.name;
+                  return (
+                    <Link
+                      key={c.name}
+                      href={categoryHref(c.name)}
+                      onClick={() => setSheetOpen(false)}
+                      aria-current={isActive ? "true" : undefined}
+                      className={`flex h-[44px] items-center gap-2 rounded-xl px-3.5 text-sm font-medium transition ${
+                        isActive ? "bg-[#8C5A3C] text-white shadow-sm font-semibold" : "bg-gray-50 text-[#4A342E] hover:bg-[#8C5A3C]/10"
+                      }`}
+                    >
+                      <span>{c.name === ALL ? t("all") : c.name}</span>
+                      <span className={`rounded-full px-2 text-sm ${isActive ? "bg-black/25 text-white" : "bg-white text-gray-600"}`}>
+                        {c.count}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <h3 className="m-0 mb-2 text-sm font-semibold text-stone-600">{t("sortBy")}</h3>
+              <div className="flex flex-wrap gap-2">
+                {SORTS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setSortBy(s);
+                      setSheetOpen(false);
+                    }}
+                    aria-pressed={sortBy === s}
+                    className={`h-[44px] rounded-xl px-3.5 text-sm font-medium transition ${
+                      sortBy === s ? "bg-[#8C5A3C] text-white shadow-sm" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    {t(`sort.${s}`)}
+                  </button>
+                ))}
+              </div>
+
+              {/* ล้างตัวกรอง — กดไม่ได้เมื่อเป็นค่าเริ่มต้นอยู่แล้ว */}
+              <button
+                type="button"
+                onClick={clearFilters}
+                disabled={!filterActive}
+                className="mt-6 flex h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-[#8C5A3C]/30 text-sm font-semibold text-[#8C5A3C] transition hover:bg-[#8C5A3C]/10 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-500 disabled:hover:bg-transparent"
+              >
+                <FaTimes size={14} aria-hidden="true" />
+                {t("clearFilters")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ซ้าย = หมวดหมู่ / ขวา = รายการสินค้า · จอ <768px ซ่อน (ใช้แผ่นตัวกรองแทน) */}
         <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <aside className="w-full lg:w-64 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#8C5A3C]/10 shrink-0 lg:sticky lg:top-56">
+          <aside className="hidden md:block w-full lg:w-64 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#8C5A3C]/10 shrink-0 lg:sticky lg:top-56">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-100 font-bold text-[#4A342E]">
               <FaFilter className="text-[#8C5A3C] text-sm" />
               {/* h2 — การ์ดสินค้าเป็น h3 ต้องมี h2 คั่นจาก h1 (Lighthouse heading-order) */}
@@ -111,26 +262,21 @@ export default function ProductListPage({ query }: { query: string }) {
             {loading || categoriesQ.isPending ? (
               <div className="py-4 text-center text-xs text-[#8C5A3C]">{t("loadingCategories")}</div>
             ) : (
-              <div className="flex flex-row lg:flex-col gap-1.5 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+              // 768–1023px: หลายแถว (ขึ้นบรรทัดใหม่เมื่อไม่พอ) ไม่ต้องเลื่อนซ้ายขวา · ≥1024px: แถบซ้ายแนวตั้ง
+              <div className="flex flex-row flex-wrap lg:flex-col lg:flex-nowrap gap-1.5">
                 {categoryCards.map((c) => {
                   const isActive = currentCategory === c.name;
-                  // คงคำค้น + การเรียงไว้ตอนเปลี่ยนหมวด
-                  const params = new URLSearchParams();
-                  if (c.name !== ALL) params.set("category", c.name);
-                  if (searchQuery) params.set("q", searchQuery);
-                  if (sortBy !== "latest") params.set("sort", sortBy);
-                  const qs = params.toString();
                   return (
                     <Link
                       key={c.name}
-                      href={`/customer/product${qs ? `?${qs}` : ""}`}
-                      className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap lg:whitespace-normal ${
+                      href={categoryHref(c.name)}
+                      className={`flex min-h-[44px] items-center justify-between px-3.5 py-1 rounded-xl text-sm font-medium transition-all whitespace-nowrap lg:whitespace-normal ${
                         isActive ? "bg-[#8C5A3C] text-white shadow-sm font-semibold" : "text-[#4A342E] hover:bg-[#8C5A3C]/10"
                       }`}
                     >
                       <span>{c.name === ALL ? t("all") : c.name}</span>
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full ml-2 ${
+                        className={`text-sm px-2 rounded-full ml-2 ${
                           isActive ? "bg-black/25 text-white" : "bg-gray-100 text-gray-600"
                         }`}
                       >
@@ -144,7 +290,8 @@ export default function ProductListPage({ query }: { query: string }) {
           </aside>
 
           <section className="flex-1 w-full">
-            <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-[#8C5A3C]/10 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* เรียงตาม — จอ <768px อยู่ในแผ่นตัวกรอง */}
+            <div className="hidden md:flex bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-[#8C5A3C]/10 mb-6 flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#4A342E]">
                 <FaSortAmountDown className="text-[#8C5A3C]" />
                 <span>{t("sortBy")}</span>
@@ -156,7 +303,7 @@ export default function ProductListPage({ query }: { query: string }) {
                     type="button"
                     onClick={() => setSortBy(s)}
                     aria-pressed={sortBy === s}
-                    className={`h-[36px] px-3.5 rounded-xl transition-all font-medium ${
+                    className={`h-[44px] px-3.5 rounded-xl transition-all font-medium ${
                       sortBy === s ? "bg-[#8C5A3C] text-white shadow-sm" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                     }`}
                   >
@@ -176,7 +323,7 @@ export default function ProductListPage({ query }: { query: string }) {
                 <button
                   type="button"
                   onClick={() => productsQ.refetch()}
-                  className="h-[36px] px-5 text-sm rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
+                  className="h-[44px] px-5 text-sm rounded-xl border border-[#8C5A3C]/30 bg-white font-semibold text-[#4A342E] hover:bg-[#4A342E] hover:text-white transition"
                 >
                   {t("retry")}
                 </button>
