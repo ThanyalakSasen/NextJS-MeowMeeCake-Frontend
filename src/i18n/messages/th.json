@@ -1643,7 +1643,7 @@
     "trendCol_year": "ปี",
     "trendColIncome": "รายรับ",
     "trendColExpense": "รายจ่าย",
-    "trendColProfit": "กำไร",
+    "trendColProfit": "กำไร-ขาดทุน",
     "statementTitle": "งบกำไร-ขาดทุน",
     "rowIncomeHeader": "รายรับ",
     "rowWebSales": "ยอดขายเว็บไซต์",
