@@ -27,7 +27,7 @@ export function FinanceSummaryView(vm: VM) {
   const locale = useLocale();
 
   const trendColumns: Column<TrendRow>[] = [
-    { key: "label", title: t("finance.trendColMonth") },
+    { key: "label", title: t(`finance.trendCol_${vm.period}`) },
     { key: "income", title: t("finance.trendColIncome"), align: "right", render: (r) => <span className="text-green-600">{formatCurrency(r.income, locale)}</span> },
     { key: "expense", title: t("finance.trendColExpense"), align: "right", render: (r) => <span className="text-red-500">{formatCurrency(r.expense, locale)}</span> },
     { key: "profit", title: t("finance.trendColProfit"), align: "right", render: (r) => <span className={r.profit >= 0 ? "font-semibold text-blue-700" : "font-semibold text-red-500"}>{formatCurrency(r.profit, locale)}</span> },
@@ -83,7 +83,7 @@ export function FinanceSummaryView(vm: VM) {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white lg:col-span-2">
               <div className="border-b border-gray-100 px-4 py-3">
-                <p className="text-sm font-semibold text-brown-900">{t("finance.trendTitle")}</p>
+                <p className="text-sm font-semibold text-brown-900">{t(`finance.trendTitle_${vm.period}`)}</p>
               </div>
               <DataTable inCard columns={trendColumns} rows={vm.monthlyTrend} />
             </div>
