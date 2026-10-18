@@ -26,7 +26,7 @@ const noopSubscribe = () => () => {};
  * หน้าอื่นยังใช้ isLoading ของ react-query (false ตอน SSR = เห็นสถานะว่างแวบ) → render หลัง hydrate
  * เพิ่มหน้าได้เมื่อแก้สถานะโหลดของหน้านั้นเป็น isPending แล้ว
  */
-const SSR_PAGES = ["/owner/dashboard", "/owner/reports/sales", "/owner/reports/reviews", "/owner/finance/expenses", "/owner/finance/summary", "/owner/products", "/owner/orders/manageOrders"];
+const SSR_PAGES = ["/owner/dashboard", "/owner/reports/sales", "/owner/reports/reviews", "/owner/finance/expenses", "/owner/finance/summary", "/owner/products", "/owner/orders/manageOrders", "/owner/products/productStock"];
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();

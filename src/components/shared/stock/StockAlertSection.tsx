@@ -20,7 +20,7 @@ export function StockAlertSection({
         <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" aria-hidden="true" />
         <div>
           <h2 className="m-0 text-base font-semibold text-rose-700">{title}</h2>
-          {description && <p className="m-0 mt-0.5 text-sm text-rose-700/80">{description}</p>}
+          {description && <p className="m-0 mt-0.5 text-sm text-rose-700">{description}</p>}
         </div>
       </div>
       {children}
