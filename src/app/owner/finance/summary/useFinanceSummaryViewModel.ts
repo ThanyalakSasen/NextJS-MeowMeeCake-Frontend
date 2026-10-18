@@ -21,9 +21,7 @@ import { COGS_EXPENSE_CATEGORIES } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { LIST_ALL } from "@/lib/http";
-
-/** จำนวนช่วงในตารางเปรียบเทียบต่อรูปแบบช่วงเวลา (รวมช่วงที่เลือก) */
-const TREND_LENGTH: Record<PeriodType, number> = { day: 7, week: 6, month: 6, quarter: 4, year: 3 };
+import { revenueKey, trendBuckets as buildTrendBuckets } from "./summaryRanges";
 
 export interface PnLRow {
   key: string;
@@ -46,10 +44,11 @@ export function useFinanceSummaryViewModel() {
 
   // รายรับแยกตามช่องทาง (คิดที่ backend ทั้งหมด — ชำระแล้ว, ช่วงวันที่ตาม created_at เหมือนที่หน้านี้เคยกรองเอง)
   const revenueQ = useQuery({
-    queryKey: ["reports", "revenue-by-channel", rangeStart.toISOString(), rangeEnd.toISOString()],
+    queryKey: revenueKey(rangeStart.toISOString(), rangeEnd.toISOString()),
     queryFn: () => reportsService.revenueByChannel({ date_from: rangeStart.toISOString(), date_to: rangeEnd.toISOString() }),
   });
-  const isLoading = expensesQ.isLoading || revenueQ.isLoading;
+  // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+  const isLoading = expensesQ.isPending || revenueQ.isPending;
   // รายรับมาจาก revenueQ อย่างเดียว — ถ้าโหลดไม่ได้ต้องบอกผู้ใช้ ห้ามโชว์รายรับ 0 / กำไรติดลบที่ผิดเงียบ ๆ
   const isError = expensesQ.isError || revenueQ.isError;
 
@@ -109,20 +108,10 @@ export function useFinanceSummaryViewModel() {
   // ── ตารางเปรียบเทียบ — ตามช่วงเวลาที่เลือก (เดิมเป็น 6 เดือนล่าสุดเสมอ ไม่ว่าจะเลือกรายวัน/สัปดาห์/ไตรมาส/ปี) ──
   // ช่วงย่อย N ช่วงย้อนหลัง จบที่ช่วงที่เลือก · รายรับต่อช่วงจาก revenue-by-channel ช่วงละ 1 request
   // (นับพรีออเดอร์ด้วย ตัวเลขชุดเดียวกับตาราง P&L) · รายจ่ายรวมจากรายการค่าใช้จ่ายที่วันที่อยู่ในช่วง
-  const trendBuckets = useMemo(
-    () =>
-      Array.from({ length: TREND_LENGTH[period] }, (_, i) => {
-        const back = TREND_LENGTH[period] - 1 - i;
-        // ไตรมาส = 3 เดือน (subtract ของ dayjs แยก type ไตรมาสกับหน่วยอื่น)
-        const anchor = period === "quarter" ? selectedDate.subtract(back * 3, "month") : selectedDate.subtract(back, period);
-        const [from, to] = getRangeStartEnd(period, anchor);
-        return { key: from.toISOString(), start: from, end: to, from: from.toISOString(), to: to.toISOString() };
-      }),
-    [period, selectedDate],
-  );
+  const trendBuckets = useMemo(() => buildTrendBuckets(period, selectedDate), [period, selectedDate]);
   const trendQs = useQueries({
     queries: trendBuckets.map((m) => ({
-      queryKey: ["reports", "revenue-by-channel", m.from, m.to],
+      queryKey: revenueKey(m.from, m.to),
       queryFn: () => reportsService.revenueByChannel({ date_from: m.from, date_to: m.to }),
     })),
   });
