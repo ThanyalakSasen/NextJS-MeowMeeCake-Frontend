@@ -4,7 +4,7 @@
 // object เต็มตอน get/listItems — แปลงเป็น product_name/product_img ที่นี่จุดเดียว (แพทเทิร์นเดียวกับ
 // services/orders.ts toOrder())
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type {
   PreorderRound, PreorderRoundItem, CreateRoundInput, UpdateRoundInput,
@@ -57,8 +57,8 @@ function toRound(raw: any): PreorderRound {
 }
 
 export const preorderRoundsService = {
-  list: async (params: RoundListParams = {}) => {
-    const res = await http.getList<any>(ROUNDS_BASE, { params });
+  list: async (params: RoundListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<any>(ROUNDS_BASE, { params });
     return { ...res, data: res.data.map(toRound) };
   },
 
@@ -108,7 +108,7 @@ export const preorderRoundsService = {
   removeItem: (itemId: string) => http.delete<EmptyResponse>(`${ROUND_ITEMS_BASE}/${itemId}`),
 
   /** GET /admin/preorder-rounds/dashboard — สรุปต่อรอบ (จอง/โควตา · ยอดแยกสถานะชำระเงิน) · รอบล่าสุดก่อน (F4 · Q-BE5) */
-  dashboard: (params: RoundDashboardParams = {}) => http.getList<RoundDashboardRow>(`${ROUNDS_BASE}/dashboard`, { params }),
+  dashboard: (params: RoundDashboardParams = {}, h: HttpReader = http) => h.getList<RoundDashboardRow>(`${ROUNDS_BASE}/dashboard`, { params }),
 
   /** GET /admin/preorder-rounds/:id/customers — รายชื่อลูกค้าในรอบ จัดกลุ่มตามคน (F4 · Q-BE5) */
   customers: async (roundId: string, params: RoundCustomersParams = {}): Promise<RoundCustomers> =>

@@ -12,6 +12,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { preorderRoundsService } from "@/services/preorderRounds";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
 import { LIST_ALL } from "@/lib/http";
+import { ROUND_DASHBOARD_KEY } from "./preorderQuery";
 import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { OrderType } from "@/types/order";
@@ -41,7 +42,7 @@ export function useRoundDashboardViewModel(enabled: boolean) {
   const locale = useLocale();
 
   const q = useQuery({
-    queryKey: ["preorder-rounds", "dashboard"],
+    queryKey: ROUND_DASHBOARD_KEY,
     queryFn: () => preorderRoundsService.dashboard({ limit: LIST_ALL }),
     enabled,
   });
@@ -125,7 +126,8 @@ export function useRoundDashboardViewModel(enabled: boolean) {
   };
 
   return {
-    isLoading: q.isLoading,
+    // isPending — แท็บนี้ render ฝั่ง server ได้ (?tab=dashboard) · query ปิดอยู่ตอนไม่ได้เปิดแท็บ แต่ตอนนั้นไม่ได้แสดงผล
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => void q.refetch(),
     stats,
