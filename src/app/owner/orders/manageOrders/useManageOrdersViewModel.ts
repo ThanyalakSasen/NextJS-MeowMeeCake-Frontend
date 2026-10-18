@@ -20,6 +20,7 @@ import { isAwaitingRefund, type DeliveryUpdateInput, type Order, type OrderType 
 import { isApiError } from "@/types/api";
 import { STATUS_SELECT_OPTIONS, isFinalStatus } from "./orderStatus";
 import { LIST_ALL } from "@/lib/http";
+import { ORDERS_KEY } from "./ordersQuery";
 
 export function useManageOrdersViewModel() {
   const t = useTranslations();
@@ -56,7 +57,7 @@ export function useManageOrdersViewModel() {
   const closeDrawer = () => router.replace(pathname, { scroll: false });
 
   const ordersQ = useQuery({
-    queryKey: ["orders"],
+    queryKey: ORDERS_KEY,
     queryFn: () => ordersService.list({ limit: LIST_ALL }),
   });
 
@@ -252,7 +253,8 @@ export function useManageOrdersViewModel() {
     total: filtered.length,
     deliveryCount, takeawayCount, unreviewedCount, awaitingRefundCount, readyCount,
 
-    isLoading: ordersQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+    isLoading: ordersQ.isPending,
     isError: ordersQ.isError,
     refetch: () => ordersQ.refetch(),
 

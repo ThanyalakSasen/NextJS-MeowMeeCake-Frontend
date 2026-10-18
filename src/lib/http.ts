@@ -148,8 +148,9 @@ async function getPage<T>(url: string, config: AxiosRequestConfig | undefined): 
  * ไม่ใช่ data: T[] ตรง ๆ — ฟังก์ชันนี้แกะให้เป็น ListResponse<T> ที่ ViewModel ทั้งแอปใช้อยู่แล้ว
  * (`.data` = array, `.meta` = อยู่ระดับบนสุด) ทุก service ต้องเรียกอันนี้แทน http.get สำหรับ .list()
  *
- * params.limit > PAGE_MAX (เช่น LIST_ALL) → ขอหน้า 1, 2, … ทีละ PAGE_MAX จนครบจำนวนที่ขอหรือหมดข้อมูล
+ * params.limit > PAGE_MAX (เช่น LIST_ALL) → ขอทีละ PAGE_MAX จนครบจำนวนที่ขอหรือหมดข้อมูล
  * (เริ่มจาก params.page ถ้ามี) · meta ที่คืน = { page, limit: ที่ขอ, total: ของ backend }
+ * หน้าแรกก่อน (ได้ total) แล้วหน้าที่เหลือยิง "พร้อมกัน" — เดิมไล่ทีละหน้า 300 รายการ = รอ backend 3 รอบต่อกัน
  */
 async function getList<T>(url: string, config?: AxiosRequestConfig): Promise<ListResponse<T>> {
   const params = (config?.params ?? {}) as Record<string, unknown>;
@@ -157,15 +158,16 @@ async function getList<T>(url: string, config?: AxiosRequestConfig): Promise<Lis
   if (!Number.isFinite(wanted) || wanted <= PAGE_MAX) return getPage<T>(url, config);
 
   const startPage = Math.max(1, Number(params.page) || 1);
-  const data: T[] = [];
-  let total = 0;
-  for (let page = startPage; data.length < wanted; page++) {
-    const res = await getPage<T>(url, { ...config, params: { ...params, page, limit: PAGE_MAX } });
-    data.push(...res.data);
-    total = res.meta.total;
-    // หมดข้อมูล (หน้าไม่เต็ม / ครบ total) · endpoint ที่ไม่แบ่งหน้าคืนทั้งหมดในรอบเดียว (ได้ ≠ PAGE_MAX) → จบรอบแรก ไม่ขอซ้ำ
-    if (res.data.length !== PAGE_MAX || page * PAGE_MAX >= total) break;
+  const pageOf = (page: number) => getPage<T>(url, { ...config, params: { ...params, page, limit: PAGE_MAX } });
+  const first = await pageOf(startPage);
+  const total = first.meta.total;
+  // หมดข้อมูลในหน้าแรก (หน้าไม่เต็ม / ครบ total) · endpoint ที่ไม่แบ่งหน้าคืนทั้งหมดในรอบเดียว (ได้ ≠ PAGE_MAX) → จบ ไม่ขอซ้ำ
+  if (first.data.length !== PAGE_MAX || startPage * PAGE_MAX >= total) {
+    return { data: first.data.slice(0, wanted), meta: { page: startPage, limit: wanted, total } };
   }
+  const lastPage = Math.min(Math.ceil(total / PAGE_MAX), startPage - 1 + Math.ceil(wanted / PAGE_MAX));
+  const rest = await Promise.all(Array.from({ length: lastPage - startPage }, (_, i) => pageOf(startPage + 1 + i)));
+  const data = [first, ...rest].flatMap((r) => r.data);
   return { data: data.slice(0, wanted), meta: { page: startPage, limit: wanted, total } };
 }
 
