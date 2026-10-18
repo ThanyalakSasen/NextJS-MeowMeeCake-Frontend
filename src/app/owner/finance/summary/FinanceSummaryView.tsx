@@ -52,6 +52,7 @@ export function FinanceSummaryView(vm: VM) {
           value={vm.selectedDate}
           onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
           style={{ width: 180 }}
+          aria-label={t("filterLabel.period")}
         />
       </div>
 
