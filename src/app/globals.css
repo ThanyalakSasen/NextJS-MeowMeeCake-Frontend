@@ -1075,8 +1075,9 @@ body {
   @apply border-b border-gray-200;
 }
 
+/* หัวตารางไม่ตัดบรรทัด — ภาษาไทยไม่มีเว้นวรรค ตารางแคบจะตัดทีละตัวอักษร ("มูล/ค่า/สต็/อก") · กล่องตารางเลื่อนแนวนอนได้อยู่แล้ว */
 .data-table th {
-  @apply px-5 py-4 text-center text-sm font-semibold text-gray-600;
+  @apply px-5 py-4 text-center text-sm font-semibold text-gray-600 whitespace-nowrap;
 }
 
 .data-table td {
