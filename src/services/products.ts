@@ -58,8 +58,8 @@ export const productsService = {
    * GET /admin/products/stock-list — รายการสำหรับหน้าสต็อกสินค้า ใต้สิทธิ์ stock.view (ไม่ต้องมี products.view)
    * สินค้าปกติที่ไม่ถูกลบ · ไม่มี purchase_cost · populate category_id / unit_id มาแล้ว (Final-Backlog P12)
    */
-  stockList: async (params: { search?: string; page?: number; limit?: number } = {}) => {
-    const res = await http.getList<any>(`${BASE}/stock-list`, { params });
+  stockList: async (params: { search?: string; page?: number; limit?: number } = {}, h: HttpReader = http) => {
+    const res = await h.getList<any>(`${BASE}/stock-list`, { params });
     return { ...res, data: res.data.map(toProduct) };
   },
 

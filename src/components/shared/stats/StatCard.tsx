@@ -11,7 +11,8 @@ export function StatCard({
   sub?: string;
   tone?: "up" | "down" | "warn" | "muted";
 }) {
-  const toneCls = { up: "text-green-600", down: "text-red-600", warn: "text-amber-600", muted: "text-gray-600" }[tone];
+  // green/amber ใช้เฉด 700 — เฉด 600 บนพื้นขาวคอนทราสต์ ~3.2:1 ไม่ถึง 4.5:1 (Lighthouse Accessibility) · red-600 = 4.8 ผ่านแล้ว
+  const toneCls = { up: "text-green-700", down: "text-red-600", warn: "text-amber-700", muted: "text-gray-600" }[tone];
   return (
     <Card className="p-5">
       <p className="text-sm text-gray-600">{label}</p>
