@@ -10,12 +10,14 @@ import { productsService } from "@/services/products";
 import { productCategoriesService } from "@/services/productCategories";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import type { Product, ProductKind } from "@/types/product";
+import type { Product } from "@/types/product";
 import { isApiError } from "@/types/api";
+import {
+  PRODUCT_CATEGORIES_KEY, PRODUCTS_DEFAULT_SORT, PRODUCTS_PAGE_SIZE, productListParams,
+  type SortValue, type TypeFilter,
+} from "./productsQuery";
 
-type TypeFilter = "all" | ProductKind;
-
-export type SortValue = "-created_at" | "product_price" | "-product_price" | "-avg_rating";
+export type { SortValue };
 
 export function useProductsViewModel() {
   const t = useTranslations();
@@ -25,20 +27,13 @@ export function useProductsViewModel() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [type, setType] = useState<TypeFilter>("all");
-  const [sort, setSort] = useState<SortValue>("-created_at");
+  const [sort, setSort] = useState<SortValue>(PRODUCTS_DEFAULT_SORT);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
+  const [pageSize, setPageSize] = useState(PRODUCTS_PAGE_SIZE);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   const params = useMemo(
-    () => ({
-      search: search.trim() || undefined,
-      category_id: categoryId ?? undefined,
-      is_preorder: type === "all" ? undefined : type === "preorder",
-      sort,
-      page,
-      limit: pageSize,
-    }),
+    () => productListParams({ search, categoryId, type, sort, page, pageSize }),
     [search, categoryId, type, sort, page, pageSize],
   );
 
@@ -48,7 +43,7 @@ export function useProductsViewModel() {
   });
 
   const categoriesQ = useQuery({
-    queryKey: ["product-categories"],
+    queryKey: PRODUCT_CATEGORIES_KEY,
     queryFn: () => productCategoriesService.list(),
   });
 
@@ -76,7 +71,8 @@ export function useProductsViewModel() {
     perm,
     products: productsQ.data?.data ?? [],
     total: productsQ.data?.meta.total ?? 0,
-    isLoading: productsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+    isLoading: productsQ.isPending,
     isError: productsQ.isError,
     refetch: () => productsQ.refetch(),
     categories: categoriesQ.data?.data ?? [],

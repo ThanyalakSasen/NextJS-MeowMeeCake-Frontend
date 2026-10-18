@@ -32,7 +32,9 @@
     "retry": "Retry",
     "export": "Export CSV",
     "currencySymbol": "฿",
-    "ok": "OK"
+    "ok": "OK",
+    "viewGrid": "Grid view",
+    "viewTable": "Table view"
   },
   "filterLabel": {
     "role": "Role",
@@ -685,7 +687,8 @@
     "lowStockThresholdHint": "Leave blank = 5",
     "stockEditHint": "Adjust stock on the Product Stock page",
     "lowStockThresholdInvalid": "Must be a whole number, 0 or more",
-    "imageUploadFailed": "Could not upload the image. Please try again."
+    "imageUploadFailed": "Could not upload the image. Please try again.",
+    "visibleFor": "Show {name} in the shop"
   },
   "productStock": {
     "title": "Finished product stock",

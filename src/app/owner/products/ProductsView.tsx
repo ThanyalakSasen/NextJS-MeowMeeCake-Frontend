@@ -38,7 +38,7 @@ export function ProductsView(vm: VM) {
       key: "is_visible", title: t("products.colVisible"), align: "center",
       render: (p) => (
         <Switch size="small" checked={p.is_visible} disabled={!vm.perm.update}
-          onChange={() => vm.onToggleVisible(p)} />
+          onChange={() => vm.onToggleVisible(p)} aria-label={t("products.visibleFor", { name: p.product_name_th })} />
       ),
     },
   ];

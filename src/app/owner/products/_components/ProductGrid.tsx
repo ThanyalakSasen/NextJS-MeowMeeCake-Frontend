@@ -17,9 +17,10 @@ export function ProductGrid({
 }) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-      {products.map((p) => (
+      {products.map((p, i) => (
         <ProductCard
           key={p._id}
+          priority={i < 2}
           product={p}
           canUpdate={canUpdate}
           canDelete={canDelete}
