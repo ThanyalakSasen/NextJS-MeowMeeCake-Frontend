@@ -34,6 +34,7 @@ const SSR_PAGES = [
   "/owner/finance/summary",
   "/owner/products",
   "/owner/products/productStock",
+  "/owner/products/search-synonyms",
   "/owner/orders/manageOrders",
   "/owner/orders/preOrderRound",
 ];
