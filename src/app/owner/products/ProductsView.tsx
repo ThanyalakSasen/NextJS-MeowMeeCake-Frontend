@@ -6,7 +6,7 @@ import { Button, EmptyState, Switch } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import {
-  DataTable, FilterToolbar, SearchInput, SortDropdown, TypeTabBar, ViewToggle,
+  DataTable, FilterToolbar, PaginationBar, SearchInput, SortDropdown, TypeTabBar, ViewToggle,
   type Column,
 } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
@@ -110,13 +110,17 @@ export function ProductsView(vm: VM) {
         ) : vm.products.length === 0 ? (
           <EmptyState description={t("common.noData")} />
         ) : (
-          <ProductGrid
-            products={vm.products}
-            canUpdate={vm.perm.update}
-            canDelete={vm.perm.delete}
-            onToggleVisible={vm.onToggleVisible}
-            onDelete={vm.onDelete}
-          />
+          <>
+            <ProductGrid
+              products={vm.products}
+              canUpdate={vm.perm.update}
+              canDelete={vm.perm.delete}
+              onToggleVisible={vm.onToggleVisible}
+              onDelete={vm.onDelete}
+            />
+            {/* แบ่งหน้าแบบเดียวกับมุมมองตาราง (backend ส่งมาทีละหน้า) · ใช้ page/pageSize ชุดเดียวกัน สลับมุมมองแล้วอยู่หน้าเดิม */}
+            <PaginationBar page={vm.page} pageSize={vm.pageSize} total={vm.total} onChange={vm.setPagination} />
+          </>
         )
       ) : (
         <DataTable
