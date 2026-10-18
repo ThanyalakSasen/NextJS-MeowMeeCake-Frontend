@@ -22,3 +22,18 @@ export function getRangeStartEnd(period: PeriodType, picker: Dayjs): [Dayjs, Day
 export function pickerTypeFor(period: PeriodType): "date" | "week" | "month" | "quarter" | "year" {
   return period === "day" ? "date" : period;
 }
+
+const BKK_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+/**
+ * [ต้นเดือน, สิ้นเดือน] ของเดือนปัจจุบัน "ตามเวลาไทย" เป็น ISO — ใช้ฝั่ง server (UTC) ตอน prefetch
+ * ให้ได้ค่าเดียวกับ getRangeStartEnd("month", dayjs()) ที่ browser ในไทยคำนวณ → query key ตรงกัน ไม่ดึงซ้ำ
+ */
+export function bangkokMonthRangeIso(): [string, string] {
+  const bkk = new Date(Date.now() + BKK_OFFSET_MS);
+  const y = bkk.getUTCFullYear();
+  const m = bkk.getUTCMonth();
+  const start = Date.UTC(y, m, 1) - BKK_OFFSET_MS;
+  const end = Date.UTC(y, m + 1, 1) - BKK_OFFSET_MS - 1;
+  return [new Date(start).toISOString(), new Date(end).toISOString()];
+}
