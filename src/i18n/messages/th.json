@@ -32,7 +32,9 @@
     "retry": "ลองใหม่",
     "export": "ส่งออก CSV",
     "currencySymbol": "฿",
-    "ok": "ตกลง"
+    "ok": "ตกลง",
+    "viewGrid": "มุมมองการ์ด",
+    "viewTable": "มุมมองตาราง"
   },
   "filterLabel": {
     "role": "ตำแหน่ง",
@@ -685,7 +687,8 @@
     "lowStockThresholdHint": "เว้นว่าง = 5",
     "stockEditHint": "ปรับจำนวนสต็อกได้ที่หน้า \"สต็อกสินค้า\"",
     "lowStockThresholdInvalid": "ต้องเป็นจำนวนเต็มตั้งแต่ 0 ขึ้นไป",
-    "imageUploadFailed": "อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่"
+    "imageUploadFailed": "อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่",
+    "visibleFor": "แสดง {name} ในหน้าร้าน"
   },
   "productStock": {
     "title": "สต็อกสินค้าสำเร็จรูป",
