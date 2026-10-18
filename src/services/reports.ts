@@ -89,8 +89,11 @@ export interface RevenueByChannel extends Record<RevenueChannel, number> {
 }
 
 export const reportsService = {
-  revenueByChannel: async (params: { date_from?: string; date_to?: string } = {}): Promise<RevenueByChannel> => {
-    const res = await http.get<{ data: RevenueByChannel }>("/admin/dashboard/revenue-by-channel", { params });
+  revenueByChannel: async (
+    params: { date_from?: string; date_to?: string } = {},
+    h: HttpReader = http,
+  ): Promise<RevenueByChannel> => {
+    const res = await h.get<{ data: RevenueByChannel }>("/admin/dashboard/revenue-by-channel", { params });
     return res.data;
   },
 
