@@ -3,9 +3,10 @@
 // ไม่มี endpoint /reports/dashboard เดียวจบ — backend แยกเป็นหลาย endpoint (dashboard/*, ingredients/
 // low-stock, orders, production-orders) ประกอบ DashboardSummary ที่นี่จุดเดียว (ViewModel ไม่ต้องรู้)
 //
-// ที่ไม่ได้ทำให้ครบ 100% (แลกความง่าย — ไม่เพิ่ม N+1 request ต่อรายการ):
-//   - recent_orders[].items_summary และ production_status[].items_summary ปล่อยว่าง เพราะ items
-//     ของ order/production แยก collection กัน ต้องยิงเพิ่มทีละรายการถึงจะได้ (ยังไม่คุ้มสำหรับ dashboard)
+// recent_orders[].items_summary — items ของออเดอร์อยู่คนละ collection จึงยิง /admin/orders/:id/items
+// เพิ่มทีละออเดอร์ (แค่ 5 ออเดอร์ล่าสุด ยิงพร้อมกัน) · โหลดไม่ได้ = ปล่อยว่าง ไม่ทำให้ทั้งหน้าล้ม
+//
+// ที่ยังไม่ได้ทำ: production_status[].items_summary ยังว่าง (items ของใบสั่งผลิตแยก collection เหมือนกัน)
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type {
@@ -39,6 +40,10 @@ interface RawOrder {
   order_status: string;
   user_id?: { user_fullname?: string } | string | null;
 }
+interface RawOrderItem {
+  product_snapshot?: { product_name_th?: string } | null;
+  quantity: number;
+}
 interface RawProductionOrder {
   _id: string;
   production_no: string;
@@ -66,6 +71,16 @@ function unitAbbrOf(unit: RawLowStockIngredient["unit_id"]): string {
 function customerNameOf(user: RawOrder["user_id"]): string {
   if (!user || typeof user === "string") return "-";
   return user.user_fullname || "-";
+}
+
+/** "คัพเค้ก × 6, เค้กลาวา × 1" — โหลดรายการไม่ได้ = "" (ช่องว่าง ไม่ล้มทั้ง dashboard) */
+async function orderItemsSummary(orderId: string): Promise<string> {
+  try {
+    const res = await http.get<{ data: RawOrderItem[] }>(`/admin/orders/${orderId}/items`);
+    return res.data.map((it) => `${it.product_snapshot?.product_name_th || "-"} × ${it.quantity}`).join(", ");
+  } catch {
+    return "";
+  }
 }
 
 export interface TopProductRow {
@@ -151,11 +166,12 @@ export const reportsService = {
       percent: Math.round((p.quantity_sold / maxQty) * 100),
     }));
 
-    const recentOrders: DashboardRecentOrder[] = recentOrdersRes.data.map((o) => ({
+    const itemSummaries = await Promise.all(recentOrdersRes.data.map((o) => orderItemsSummary(o._id)));
+    const recentOrders: DashboardRecentOrder[] = recentOrdersRes.data.map((o, i) => ({
       _id: o._id,
       order_no: o.order_no,
       customer_name: customerNameOf(o.user_id),
-      items_summary: "",
+      items_summary: itemSummaries[i],
       total_amount: o.total_amount,
       order_status: o.order_status as DashboardRecentOrder["order_status"],
     }));
