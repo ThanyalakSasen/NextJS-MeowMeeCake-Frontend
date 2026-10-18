@@ -58,6 +58,7 @@
     "discountStatus": "สถานะส่วนลด",
     "componentCategory": "หมวดส่วนประกอบ",
     "aspect": "หัวข้อรีวิว",
+    "period": "ช่วงเวลา",
     "sortBy": "เรียงตาม",
     "hour": "{label} — ชั่วโมง",
     "minute": "{label} — นาที",

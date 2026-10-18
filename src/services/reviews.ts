@@ -6,7 +6,7 @@
 //   /admin/reviews/filter-options   สินค้า/หมวดที่มีรีวิว + คำตอบเก่าไว้แนะนำ
 //   /admin/aspects (+ reorder · :id/restore) · /admin/semantic-terms — หน้าตั้งค่า
 // ─────────────────────────────────────────────────────────────
-import { http, LIST_ALL, PAGE_MAX } from "@/lib/http";
+import { http, LIST_ALL, PAGE_MAX, type HttpReader } from "@/lib/http";
 import type { ItemResponse, ListMeta } from "@/types/api";
 import type {
   Review, ReviewAspect, ReviewAspectInput, ReviewFilterOptions, ReviewListParams, ReviewModeration, ReviewSummary,
@@ -44,8 +44,11 @@ const toTerm = (t: any): SemanticTerm => ({
 
 export const reviewsService = {
   /** ส่ง summary=1 เสมอ — getList ทั่วไปทิ้ง data.summary (I9) จึงแกะเอง */
-  list: async (params: ReviewListParams = {}): Promise<{ data: Review[]; meta: ListMeta; summary: ReviewSummary | null }> => {
-    const res = await http.get<ItemResponse<{ items?: Review[]; meta?: ListMeta; summary?: ReviewSummary }>>(BASE, {
+  list: async (
+    params: ReviewListParams = {},
+    h: HttpReader = http,
+  ): Promise<{ data: Review[]; meta: ListMeta; summary: ReviewSummary | null }> => {
+    const res = await h.get<ItemResponse<{ items?: Review[]; meta?: ListMeta; summary?: ReviewSummary }>>(BASE, {
       params: { ...params, summary: 1 },
     });
     const items = res.data?.items ?? [];
@@ -74,7 +77,7 @@ export const reviewsService = {
   remove: (id: string) => http.delete(`${BASE}/${id}`),
   bulkRead: async (ids: string[], read: boolean): Promise<{ matched: number; modified: number }> =>
     (await http.post<ItemResponse<{ matched: number; modified: number }>>(`${BASE}/bulk`, { ids, action: read ? "mark_read" : "mark_unread" })).data,
-  filterOptions: async (): Promise<ReviewFilterOptions> => (await http.get<ItemResponse<ReviewFilterOptions>>(`${BASE}/filter-options`)).data,
+  filterOptions: async (h: HttpReader = http): Promise<ReviewFilterOptions> => (await h.get<ItemResponse<ReviewFilterOptions>>(`${BASE}/filter-options`)).data,
 
   /** ผลวิเคราะห์ sentiment รายรีวิว — มีเฉพาะรีวิวที่ is_analyzed แล้ว */
   sentiment: async (id: string): Promise<SentimentResult[]> => {
@@ -86,8 +89,8 @@ export const reviewsService = {
 /** แง่มุมรีวิว — list ของ backend เรียงตามชื่อ (ไม่รองรับ display_order) → เรียงเองตามลำดับในฟอร์ม */
 export const reviewAspectsService = {
   /** ทั้งที่ใช้อยู่และที่ลบแล้ว (deleted_at ≠ null) */
-  list: async (): Promise<ReviewAspect[]> =>
-    (await http.getList<any>("/admin/aspects", { params: { limit: LIST_ALL, includeDeleted: true } })).data
+  list: async (h: HttpReader = http): Promise<ReviewAspect[]> =>
+    (await h.getList<any>("/admin/aspects", { params: { limit: LIST_ALL, includeDeleted: true } })).data
       .map(toAspect)
       .sort((a, b) => a.display_order - b.display_order || a.aspect_name_th.localeCompare(b.aspect_name_th, "th")),
   create: async (body: ReviewAspectInput): Promise<ReviewAspect> => toAspect((await http.post<ItemResponse<any>>("/admin/aspects", body)).data),

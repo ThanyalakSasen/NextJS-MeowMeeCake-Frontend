@@ -3,7 +3,8 @@
 // การ์ดรีวิว · แบ่งหน้า · modal แท็กภายใน · drawer รายละเอียด (ผลวิเคราะห์ความรู้สึก)
 // หัวหน้า/แท็บ/ปุ่มตั้งค่าอยู่ที่ ReviewsReportView
 import { Checkbox, Modal } from "antd";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatNumber } from "@/i18n/format";
 import { ArrowDownTrayIcon, CheckIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { Button, EmptyState, Select } from "@/components/base";
 import { PaginationBar } from "@/components/shared/data";
@@ -18,6 +19,7 @@ type VM = ReturnType<typeof useReviewsViewModel>;
 
 export function ReviewsView(vm: VM) {
   const t = useTranslations();
+  const locale = useLocale();
   const s = vm.summary;
   const allSelected = vm.rows.length > 0 && vm.rows.every((r) => vm.selected.has(r._id));
 
@@ -37,7 +39,7 @@ export function ReviewsView(vm: VM) {
 
         {/* สรุปของชุดที่กรอง (ทุกหน้า ไม่ใช่แค่หน้านี้) */}
         <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brown-100 bg-brown-50 px-4 py-2.5 text-sm text-brown-800">
-          <span>{t("reviews.summary.count", { n: (s?.count ?? 0).toLocaleString() })}</span>
+          <span>{t("reviews.summary.count", { n: formatNumber(s?.count ?? 0, locale) })}</span>
           <span>{t("reviews.summary.avg", { v: s?.avg_rating != null ? s.avg_rating.toFixed(2) : "—" })}</span>
           <span className={(s?.negative_rate ?? 0) >= 0.25 ? "text-rose-700" : ""}>
             {t("reviews.summary.negative", { v: s?.negative_rate != null ? `${Math.round(s.negative_rate * 100)}%` : "—" })}

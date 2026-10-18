@@ -18,11 +18,12 @@ import { formatDate } from "@/i18n/format";
 import { isApiError } from "@/types/api";
 import type { Review, ReviewListParams, ReviewModeration, ReviewSort, ReviewStatus } from "@/types/review";
 import { toReviewRow, type ReviewRow } from "./reviewRow";
+import { REVIEWS_LIST_KEY, REVIEW_ASPECTS_KEY, REVIEW_FILTER_OPTIONS_KEY, REVIEWS_PAGE_SIZE, REVIEWS_DEFAULT_SORT } from "./reviewsQuery";
 import { sortByThai, sortOptionsThai, thaiCompare } from "@/lib/thaiSort";
 
 export type { ReviewRow };
 
-const LIST_KEY = ["reviews", "admin"] as const;
+const LIST_KEY = REVIEWS_LIST_KEY;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export type Tri = "all" | "1" | "0";
@@ -51,7 +52,7 @@ const DEFAULT_FILTERS: ReviewFilters = {
   replied: "all",
   media: "all",
   orderKind: "all",
-  sort: "newest",
+  sort: REVIEWS_DEFAULT_SORT,
 };
 
 function toParams(f: ReviewFilters, q: string, page: number, limit: number): ReviewListParams {
@@ -82,7 +83,7 @@ export function useReviewsViewModel() {
   const [search, setSearchRaw] = useState("");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(REVIEWS_PAGE_SIZE);
   useEffect(() => {
     const id = setTimeout(() => setQ(search.trim()), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(id);
@@ -96,8 +97,8 @@ export function useReviewsViewModel() {
   const params = toParams(filters, q, page, pageSize);
   const listKey = [...LIST_KEY, params] as const;
   const listQ = useQuery({ queryKey: listKey, queryFn: () => reviewsService.list(params), placeholderData: keepPreviousData });
-  const optionsQ = useQuery({ queryKey: ["reviews", "filter-options"], queryFn: reviewsService.filterOptions, staleTime: 60_000 });
-  const aspectsQ = useQuery({ queryKey: ["review-aspects"], queryFn: reviewAspectsService.list });
+  const optionsQ = useQuery({ queryKey: REVIEW_FILTER_OPTIONS_KEY, queryFn: () => reviewsService.filterOptions(), staleTime: 60_000 });
+  const aspectsQ = useQuery({ queryKey: REVIEW_ASPECTS_KEY, queryFn: () => reviewAspectsService.list() });
 
   const rows = useMemo(() => (listQ.data?.data ?? []).map(toReviewRow), [listQ.data]);
   const tagSuggestions = useMemo(() => [...new Set(rows.flatMap((r) => r.internalTags))].sort(thaiCompare), [rows]);
@@ -118,7 +119,7 @@ export function useReviewsViewModel() {
     );
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: LIST_KEY });
-    void qc.invalidateQueries({ queryKey: ["reviews", "filter-options"] });
+    void qc.invalidateQueries({ queryKey: REVIEW_FILTER_OPTIONS_KEY });
   };
 
   const moderate = useMutation({

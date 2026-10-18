@@ -63,5 +63,8 @@ export function formatDate(
     month: "short",
     year: "numeric",
     ...(opts.withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
+    // เวลาไทยเสมอ — ร้านอยู่ไทย · server (Vercel) เป็น UTC ถ้าไม่ระบุ หน้าที่ render ฝั่ง server
+    // จะได้วันที่/เวลาคนละวันกับ browser ตอนใกล้เที่ยงคืน (ผิด + hydration ไม่ตรง)
+    timeZone: "Asia/Bangkok",
   }).format(d);
 }

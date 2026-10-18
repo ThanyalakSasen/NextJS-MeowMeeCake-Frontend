@@ -10,15 +10,17 @@
 // ส่ง cookie ทั้งหมดต่อแล้วให้ backend ตัดสินเอง — เดิมเช็คชื่อ cookie (NEXT_PUBLIC_AUTH_COOKIE) ก่อน ถ้า env ไม่ได้ตั้ง
 // จะไม่ถามเลย (production เป็นแบบนั้น: HTML ยังเป็นแค่วงหมุน) · error ที่ไม่ใช่ 401 log ไว้ดูใน Vercel
 // ─────────────────────────────────────────────────────────────
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { LOCALE_COOKIE, defaultLocale } from "@/i18n/config";
-import { serverBaseURL } from "@/lib/http";
+import { serverBaseURL, withConfig, type HttpReader } from "@/lib/http";
 import { toCurrentUser } from "@/lib/authClient";
 import type { CurrentUser, RawAuthUser, RawMenuPermissions } from "@/types/auth";
 
 const TIMEOUT_MS = 2500;
 
-export async function currentUserOnServer(): Promise<CurrentUser | null> {
+/** cache = เรียกซ้ำใน request เดียวกัน (layout + page) ถาม backend ครั้งเดียว */
+export const currentUserOnServer = cache(async (): Promise<CurrentUser | null> => {
   const jar = await cookies();
   const base = serverBaseURL();
   if (!base || jar.size === 0) return null;
@@ -41,4 +43,18 @@ export async function currentUserOnServer(): Promise<CurrentUser | null> {
     console.warn("[serverAuth] /auth/me failed", (e as Error)?.name ?? e);
     return null;
   }
+});
+
+/**
+ * http ฝั่ง server ที่ทำงานแทนผู้ใช้ที่ login อยู่ — ส่ง cookie ต่อ · ไม่แคช (ข้อมูลรายคน)
+ * ใช้ prefetch ข้อมูลหลังร้านตอน render (เช่น dashboard/page.tsx) · ไม่มี cookie = null
+ */
+export async function serverHttpAsUser(): Promise<HttpReader | null> {
+  const jar = await cookies();
+  if (jar.size === 0) return null;
+  return withConfig({
+    headers: { cookie: jar.toString(), "Accept-Language": jar.get(LOCALE_COOKIE)?.value ?? defaultLocale },
+    fetchOptions: { cache: "no-store" },
+    timeout: TIMEOUT_MS,
+  });
 }
