@@ -58,6 +58,7 @@
     "discountStatus": "Discount status",
     "componentCategory": "Component category",
     "aspect": "Review topic",
+    "period": "Period",
     "sortBy": "Sort by",
     "hour": "{label} — hour",
     "minute": "{label} — minute",

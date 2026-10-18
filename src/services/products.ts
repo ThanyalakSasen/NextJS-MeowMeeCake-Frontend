@@ -13,7 +13,7 @@
 //     ถ้า response ยังเป็นรุ่นเก่า (backend ยังไม่ deploy / เอกสารที่ยังไม่ migrate) derive จากฟิลด์เดิมให้
 //     ที่นี่จุดเดียว — ที่เหลือของแอปอ่านแค่ is_preorder
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { Product, ProductInput, ProductListParams } from "@/types/product";
 
@@ -49,8 +49,8 @@ export function toProduct(raw: any): Product {
 }
 
 export const productsService = {
-  list: async (params: ProductListParams = {}) => {
-    const res = await http.getList<any>(BASE, { params });
+  list: async (params: ProductListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<any>(BASE, { params });
     return { ...res, data: res.data.map(toProduct) };
   },
 
