@@ -6,7 +6,7 @@
 // ไม่มี create/update ทั่วไป — แอดมินไม่สร้างพรีออเดอร์แทนลูกค้าในหน้านี้ มีแค่ดู + เปลี่ยนสถานะ
 // (ขอบเขตที่ยืนยันแล้ว — ดู types/preorder.ts หัวไฟล์)
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
 import type { Preorder, PreorderItem, PreorderListParams } from "@/types/preorder";
 import { toDeliveryInfo, toRefundAccount, type DeliveryUpdateInput } from "@/types/order";
@@ -63,8 +63,8 @@ function toPreorder(raw: any): Preorder {
 }
 
 export const preordersService = {
-  list: async (params: PreorderListParams = {}) => {
-    const res = await http.getList<any>(BASE, { params });
+  list: async (params: PreorderListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<any>(BASE, { params });
     return { ...res, data: res.data.map(toPreorder) };
   },
 
