@@ -180,3 +180,23 @@ export const http = {
   /** axios instance ตรง ๆ — สำหรับกรณีพิเศษที่ facade ไม่พอ (ตอนนี้ยังไม่มีผู้ใช้) */
   raw: client,
 };
+
+/** ส่วนของ http ที่ service อ่านข้อมูลใช้ — ให้ส่ง client ที่ตั้งค่าพิเศษเข้า service ได้ (ดู withConfig) */
+export type HttpReader = Pick<typeof http, "get" | "getList">;
+
+/**
+ * http ที่ทุก request แนบ config เพิ่ม — ใช้ฝั่ง server ดึงข้อมูลแทนผู้ใช้ที่ login อยู่
+ * เช่น withConfig({ headers: { cookie }, fetchOptions: { cache: "no-store" } }) (src/lib/serverAuth.ts)
+ * ⚠️ ข้อมูลรายคนต้อง no-store เสมอ — ค่าเริ่มต้นฝั่ง server แคช 60 วิ (สำหรับ /catalog/* สาธารณะ)
+ */
+export function withConfig(extra: AxiosRequestConfig): HttpReader {
+  const merge = (c?: AxiosRequestConfig): AxiosRequestConfig => ({
+    ...extra,
+    ...c,
+    headers: { ...(extra.headers as object), ...(c?.headers as object) },
+  });
+  return {
+    get: (url, c) => http.get(url, merge(c)),
+    getList: (url, c) => getList(url, merge(c)),
+  };
+}

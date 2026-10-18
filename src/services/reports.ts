@@ -7,7 +7,7 @@
 //   - recent_orders[].items_summary และ production_status[].items_summary ปล่อยว่าง เพราะ items
 //     ของ order/production แยก collection กัน ต้องยิงเพิ่มทีละรายการถึงจะได้ (ยังไม่คุ้มสำหรับ dashboard)
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type {
   DashboardSummary,
   DashboardLowStock,
@@ -111,25 +111,29 @@ export const reportsService = {
    * overview / top-products ใช้ dashboard.view (หน้านี้กั้นไว้แล้ว) · ออเดอร์ล่าสุด = orders · วัตถุดิบใกล้หมด = ingredients ·
    * สถานะการผลิต = production (Final-Backlog P11)
    */
-  dashboard: async (scope: { orders: boolean; ingredients: boolean; production: boolean }): Promise<{ data: DashboardSummary }> => {
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (dashboard/page.tsx) */
+  dashboard: async (
+    scope: { orders: boolean; ingredients: boolean; production: boolean },
+    h: HttpReader = http,
+  ): Promise<{ data: DashboardSummary }> => {
     const today = bangkokTodayRangeUtc();
 
     const [overviewToday, overviewAllTime, lowStockRes, topProductsRes, recentOrdersRes, productionRes] =
       await Promise.all([
-        http.get<{ data: RawOverview }>("/admin/dashboard/overview", { params: today }),
-        http.get<{ data: RawOverview }>("/admin/dashboard/overview"),
+        h.get<{ data: RawOverview }>("/admin/dashboard/overview", { params: today }),
+        h.get<{ data: RawOverview }>("/admin/dashboard/overview"),
         scope.ingredients
-          ? http.get<{ data: { count: number; items: RawLowStockIngredient[] } }>(
+          ? h.get<{ data: { count: number; items: RawLowStockIngredient[] } }>(
               "/admin/ingredients/low-stock",
               { params: { limit: 10 } }
             )
           : { data: { count: 0, items: [] as RawLowStockIngredient[] } },
-        http.get<{ data: RawTopProductsResult }>("/admin/dashboard/top-products", {
+        h.get<{ data: RawTopProductsResult }>("/admin/dashboard/top-products", {
           params: { limit: 5 },
         }),
-        scope.orders ? http.getList<RawOrder>("/admin/orders", { params: { limit: 5 } }) : { data: [] as RawOrder[] },
+        scope.orders ? h.getList<RawOrder>("/admin/orders", { params: { limit: 5 } }) : { data: [] as RawOrder[] },
         scope.production
-          ? http.getList<RawProductionOrder>("/admin/production-orders", { params: { limit: 20 } })
+          ? h.getList<RawProductionOrder>("/admin/production-orders", { params: { limit: 20 } })
           : { data: [] as RawProductionOrder[] },
       ]);
 
