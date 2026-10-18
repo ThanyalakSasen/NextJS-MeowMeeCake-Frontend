@@ -22,9 +22,6 @@ import type { ExpenseCategory } from "@/constants/enumConfig";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { LIST_ALL } from "@/lib/http";
 
-/** จำนวนช่วงในตารางเปรียบเทียบต่อรูปแบบช่วงเวลา (รวมช่วงที่เลือก) */
-const TREND_LENGTH: Record<PeriodType, number> = { day: 7, week: 6, month: 6, quarter: 4, year: 3 };
-
 export interface PnLRow {
   key: string;
   label: string;
@@ -106,20 +103,33 @@ export function useFinanceSummaryViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webIncome, posIncome, preorderIncome, otherIncome, totalIncome, totalCogs, grossProfit, totalOpex, netProfit, expenseByCategory, opexEntries, locale]);
 
-  // ── ตารางเปรียบเทียบ — ตามช่วงเวลาที่เลือก (เดิมเป็น 6 เดือนล่าสุดเสมอ ไม่ว่าจะเลือกรายวัน/สัปดาห์/ไตรมาส/ปี) ──
-  // ช่วงย่อย N ช่วงย้อนหลัง จบที่ช่วงที่เลือก · รายรับต่อช่วงจาก revenue-by-channel ช่วงละ 1 request
-  // (นับพรีออเดอร์ด้วย ตัวเลขชุดเดียวกับตาราง P&L) · รายจ่ายรวมจากรายการค่าใช้จ่ายที่วันที่อยู่ในช่วง
-  const trendBuckets = useMemo(
-    () =>
-      Array.from({ length: TREND_LENGTH[period] }, (_, i) => {
-        const back = TREND_LENGTH[period] - 1 - i;
-        // ไตรมาส = 3 เดือน (subtract ของ dayjs แยก type ไตรมาสกับหน่วยอื่น)
-        const anchor = period === "quarter" ? selectedDate.subtract(back * 3, "month") : selectedDate.subtract(back, period);
-        const [from, to] = getRangeStartEnd(period, anchor);
-        return { key: from.toISOString(), start: from, end: to, from: from.toISOString(), to: to.toISOString() };
-      }),
-    [period, selectedDate],
+  // ── ตารางเปรียบเทียบ — ตามช่วงเวลาที่เลือก (ช่วงเก่าอยู่บน ใหม่อยู่ล่าง) ──
+  // รายวัน = 7 วันย้อนจากวันที่เลือก · รายสัปดาห์ = 6 สัปดาห์ย้อนจากสัปดาห์ที่เลือก
+  // รายเดือน = ม.ค.–ธ.ค. ของปีที่เลือก · รายไตรมาส = Q1–Q4 ของปีที่เลือก (ผลรวมทีละ 3 เดือน)
+  // รายปี = ทุกปี ตั้งแต่ปีแรกที่มีค่าใช้จ่ายบันทึก ถึงปีปัจจุบัน (หรือปีที่เลือก ถ้าเลือกไกลกว่า)
+  // รายรับต่อช่วงจาก revenue-by-channel ช่วงละ 1 request (นับพรีออเดอร์ด้วย ตัวเลขชุดเดียวกับตาราง P&L)
+  // · รายจ่ายรวมจากรายการค่าใช้จ่ายที่วันที่อยู่ในช่วง
+  const firstExpenseYear = useMemo(
+    () => expenses.reduce((y, e) => Math.min(y, dayjs(e.date).year()), Infinity),
+    [expenses],
   );
+  const trendBuckets = useMemo(() => {
+    const yearStart = selectedDate.startOf("year");
+    let anchors: Dayjs[];
+    if (period === "day") anchors = Array.from({ length: 7 }, (_, i) => selectedDate.subtract(6 - i, "day"));
+    else if (period === "week") anchors = Array.from({ length: 6 }, (_, i) => selectedDate.subtract(5 - i, "week"));
+    else if (period === "month") anchors = Array.from({ length: 12 }, (_, i) => yearStart.add(i, "month"));
+    else if (period === "quarter") anchors = Array.from({ length: 4 }, (_, i) => yearStart.add(i * 3, "month"));
+    else {
+      const last = Math.max(dayjs().year(), selectedDate.year());
+      const first = Math.min(firstExpenseYear, last);
+      anchors = Array.from({ length: last - first + 1 }, (_, i) => yearStart.year(first + i));
+    }
+    return anchors.map((anchor) => {
+      const [from, to] = getRangeStartEnd(period, anchor);
+      return { key: from.toISOString(), start: from, end: to, from: from.toISOString(), to: to.toISOString() };
+    });
+  }, [period, selectedDate, firstExpenseYear]);
   const trendQs = useQueries({
     queries: trendBuckets.map((m) => ({
       queryKey: ["reports", "revenue-by-channel", m.from, m.to],
