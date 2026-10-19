@@ -1,5 +1,5 @@
 // เรียก endpoint /users (docs/API_CONTRACT.md §3) — แพทเทิร์นเดียวกับ services/products.ts
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import { refId } from "@/lib/refId";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { AppUser, AppUserInput, CreateAppUserInput, UserListParams } from "@/types/user";
@@ -17,8 +17,9 @@ function normalize(u: AppUser): AppUser {
 }
 
 export const usersService = {
-  list: async (params: UserListParams = {}) => {
-    const res = await http.getList<AppUser>(BASE, { params });
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (employees/page.tsx) */
+  list: async (params: UserListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<AppUser>(BASE, { params });
     return { ...res, data: res.data.map(normalize) };
   },
   get: async (id: string) => {
