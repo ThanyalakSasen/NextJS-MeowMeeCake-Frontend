@@ -1,24 +1,42 @@
 "use client";
 // View ของ Pre-order Round — 3 แท็บ (รอบพรีออเดอร์ / สรุปรอบ / คำสั่งซื้อเค้กวันเกิด) sync กับ ?tab= ผ่าน TabbedPageLayout
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { DetailDrawer } from "@/components/shared/feedback";
 import type { usePreOrderRoundViewModel } from "./usePreOrderRoundViewModel";
 import { RoundsTab } from "./_components/RoundsTab";
-import { OrdersTab } from "./_components/OrdersTab";
-import { DashboardTab } from "./_components/DashboardTab";
-import { RoundDashboardDrawer } from "./_components/RoundDashboardDrawer";
-import { RoundFormModal } from "./_components/RoundFormModal";
-import { EditRoundModal } from "./_components/EditRoundModal";
-import { ReopenRoundModal } from "./_components/ReopenRoundModal";
-import { RoundItemFormModal } from "./_components/RoundItemFormModal";
-import { RoundDetailContent } from "./_components/RoundDetailContent";
-import { PreorderDetailContent } from "./_components/PreorderDetailContent";
+
+// โหลดเฉพาะส่วนที่เห็นตอนเปิดหน้า (แท็บรอบ) — แท็บอื่น/โมดัล/ลิ้นชัก (Form, DatePicker, Steps …) แยก chunk
+// โหลดเมื่อใช้ครั้งแรก · เดิม import ทั้งหมดตั้งแต่แรก → JS ที่ต้อง parse/รันตอนโหลดหน้าเยอะ (TBT 420ms)
+// แท็บ: antd Tabs วาดเฉพาะแท็บที่เปิด → chunk แท็บอื่นยังไม่โหลด · SSR ยังทำงาน (เปิดด้วย ?tab= ได้ HTML ครบ)
+const DashboardTab = dynamic(() => import("./_components/DashboardTab").then((m) => m.DashboardTab));
+const OrdersTab = dynamic(() => import("./_components/OrdersTab").then((m) => m.OrdersTab));
+const RoundDashboardDrawer = dynamic(() => import("./_components/RoundDashboardDrawer").then((m) => m.RoundDashboardDrawer), { ssr: false });
+const RoundFormModal = dynamic(() => import("./_components/RoundFormModal").then((m) => m.RoundFormModal), { ssr: false });
+const EditRoundModal = dynamic(() => import("./_components/EditRoundModal").then((m) => m.EditRoundModal), { ssr: false });
+const ReopenRoundModal = dynamic(() => import("./_components/ReopenRoundModal").then((m) => m.ReopenRoundModal), { ssr: false });
+const RoundItemFormModal = dynamic(() => import("./_components/RoundItemFormModal").then((m) => m.RoundItemFormModal), { ssr: false });
+const RoundDetailContent = dynamic(() => import("./_components/RoundDetailContent").then((m) => m.RoundDetailContent), { ssr: false });
+const PreorderDetailContent = dynamic(() => import("./_components/PreorderDetailContent").then((m) => m.PreorderDetailContent), { ssr: false });
+
+/** true ตั้งแต่ open เป็น true ครั้งแรก — mount โมดัลเมื่อเปิดครั้งแรกแล้วคาไว้ (แอนิเมชันปิด/สถานะฟอร์มเหมือนเดิม) */
+function useOpenedOnce(open: boolean) {
+  const [opened, setOpened] = useState(open);
+  if (open && !opened) setOpened(true);
+  return opened;
+}
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
 export function PreOrderRoundView(vm: VM) {
   const t = useTranslations();
+  const dashboardDrawerUsed = useOpenedOnce(!!vm.dashboard.selected);
+  const createUsed = useOpenedOnce(vm.createRoundOpen);
+  const editUsed = useOpenedOnce(vm.editRoundOpen);
+  const reopenUsed = useOpenedOnce(vm.reopenOpen);
+  const itemFormUsed = useOpenedOnce(vm.itemFormOpen);
 
   return (
     <>
@@ -33,15 +51,17 @@ export function PreOrderRoundView(vm: VM) {
         ]}
       />
 
-      <RoundDashboardDrawer {...vm.dashboard} />
+      {dashboardDrawerUsed && <RoundDashboardDrawer {...vm.dashboard} />}
 
-      <RoundFormModal
-        open={vm.createRoundOpen}
-        products={vm.preorderProducts}
-        saving={vm.creatingRound}
-        onClose={vm.closeCreateRound}
-        onSubmit={vm.onCreateRoundSubmit}
-      />
+      {createUsed && (
+        <RoundFormModal
+          open={vm.createRoundOpen}
+          products={vm.preorderProducts}
+          saving={vm.creatingRound}
+          onClose={vm.closeCreateRound}
+          onSubmit={vm.onCreateRoundSubmit}
+        />
+      )}
 
       <DetailDrawer
         open={vm.roundDrawerOpen}
@@ -55,29 +75,35 @@ export function PreOrderRoundView(vm: VM) {
 
       {vm.selectedRound && (
         <>
-          <EditRoundModal
-            open={vm.editRoundOpen}
-            round={vm.selectedRound}
-            saving={vm.savingRound}
-            onClose={vm.closeEditRound}
-            onSubmit={vm.onEditRoundSubmit}
-          />
-          <ReopenRoundModal
-            open={vm.reopenOpen}
-            round={vm.selectedRound}
-            saving={vm.changingRoundStatus}
-            onClose={vm.closeReopen}
-            onSubmit={vm.onReopenSubmit}
-          />
-          <RoundItemFormModal
-            open={vm.itemFormOpen}
-            round={vm.selectedRound}
-            item={vm.editingItem}
-            products={vm.preorderProducts}
-            saving={vm.savingItem}
-            onClose={vm.closeItemForm}
-            onSubmit={(body) => vm.onSubmitItemForm(vm.selectedRound!._id, body)}
-          />
+          {editUsed && (
+            <EditRoundModal
+              open={vm.editRoundOpen}
+              round={vm.selectedRound}
+              saving={vm.savingRound}
+              onClose={vm.closeEditRound}
+              onSubmit={vm.onEditRoundSubmit}
+            />
+          )}
+          {reopenUsed && (
+            <ReopenRoundModal
+              open={vm.reopenOpen}
+              round={vm.selectedRound}
+              saving={vm.changingRoundStatus}
+              onClose={vm.closeReopen}
+              onSubmit={vm.onReopenSubmit}
+            />
+          )}
+          {itemFormUsed && (
+            <RoundItemFormModal
+              open={vm.itemFormOpen}
+              round={vm.selectedRound}
+              item={vm.editingItem}
+              products={vm.preorderProducts}
+              saving={vm.savingItem}
+              onClose={vm.closeItemForm}
+              onSubmit={(body) => vm.onSubmitItemForm(vm.selectedRound!._id, body)}
+            />
+          )}
         </>
       )}
 

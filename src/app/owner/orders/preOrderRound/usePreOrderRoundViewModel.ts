@@ -49,13 +49,6 @@ export function usePreOrderRoundViewModel() {
   // แท็บสรุปรอบ — โหลดเมื่อเปิดแท็บนี้ครั้งแรก
   const dashboard = useRoundDashboardViewModel(activeTab === "dashboard");
 
-  // ── สินค้าพรีออเดอร์ (ใช้เป็นตัวเลือกตอนเพิ่มสินค้าเข้ารอบ) ──
-  const productsQ = useQuery({
-    queryKey: ["products", "preorder-type"],
-    queryFn: () => productsService.list({ limit: LIST_ALL, is_preorder: true }),
-  });
-  const preorderProducts = productsQ.data?.data ?? [];
-
   // พรีออเดอร์ทั้งหมด — ใช้ทั้งแท็บคำสั่งซื้อ และนับยอดค้างในรอบตอนยืนยันปิด/ยกเลิกรอบ
   const preordersQ = useQuery({ queryKey: PREORDERS_KEY, queryFn: () => preordersService.list({ limit: LIST_ALL }) });
   const preorders = useMemo(() => preordersQ.data?.data ?? [], [preordersQ.data]);
@@ -242,6 +235,15 @@ export function usePreOrderRoundViewModel() {
   const [itemFormOpen, setItemFormOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const editingItem = selectedRound?.items?.find((it) => it._id === editingItemId) ?? null;
+
+  // ── สินค้าพรีออเดอร์ (ตัวเลือกในฟอร์มสร้างรอบ/เพิ่มสินค้าเข้ารอบ) — ดึงเมื่อเปิดฟอร์มเท่านั้น ·
+  // เดิมดึงตอนโหลดหน้า ข้อมูลมาถึงทีหลัง → ทั้งหน้าวาดใหม่อีกรอบระหว่างโหลด (เพิ่ม TBT) ทั้งที่ยังไม่มีใครเปิดฟอร์ม
+  const productsQ = useQuery({
+    queryKey: ["products", "preorder-type"],
+    queryFn: () => productsService.list({ limit: LIST_ALL, is_preorder: true }),
+    enabled: createRoundOpen || itemFormOpen,
+  });
+  const preorderProducts = productsQ.data?.data ?? [];
 
   const openAddItem = () => { setEditingItemId(null); setItemFormOpen(true); };
   const openEditItem = (itemId: string) => { setEditingItemId(itemId); setItemFormOpen(true); };
