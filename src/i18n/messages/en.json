@@ -1465,7 +1465,7 @@
     "passwordReset": "New password set",
     "passwordResetFailed": "Could not set the new password",
     "fieldCanLogin": "Allow sign-in",
-    "fieldCanLoginHint": "Turn off to revoke sign-in access immediately (separate from employment status below)",
+    "fieldCanLoginHint": "Turn off to revoke sign-in access immediately (separate from employment status)",
     "fieldEmpStatusHint": "Just records employment status — has no effect on sign-in access",
     "lineNoEmail": "This account signed up with LINE — this is a temporary system email; please enter the employee’s real email",
     "roleBeyondHint": "Roles you can’t pick have more permissions than you — ask the store owner to assign them"
