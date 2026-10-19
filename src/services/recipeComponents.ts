@@ -3,7 +3,7 @@
 // map ที่นี่จุดเดียว: steps_content (JSON string) <-> steps (array) — เหมือน services/recipes.ts
 // category_name/ingredient_name enrich ต่อที่ useRecipesViewModel.ts (join กับ list ที่โหลดแยกอยู่แล้ว)
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { RecipeComponent, RecipeComponentInput, RecipeComponentListParams } from "@/types/recipeComponent";
 import type { RecipeStep } from "@/types/recipeShared";
@@ -55,8 +55,9 @@ function toBody(v: RecipeComponentInput | Partial<RecipeComponentInput>) {
 }
 
 export const recipeComponentsService = {
-  list: async (params: RecipeComponentListParams = {}) => {
-    const res = await http.getList<any>(BASE, { params });
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (recipes/page.tsx) */
+  list: async (params: RecipeComponentListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<any>(BASE, { params });
     return { ...res, data: res.data.map(toComponent) };
   },
 

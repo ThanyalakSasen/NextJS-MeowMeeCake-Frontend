@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { RECIPES_QUERIES as Q } from "./recipesQuery";
 import { useTranslations } from "next-intl";
 import { recipesService } from "@/services/recipes";
 import { recipeComponentsService } from "@/services/recipeComponents";
@@ -24,7 +25,6 @@ import { isApiError } from "@/types/api";
 import { productKindOf } from "@/types/product";
 import type { RecipeSubmitValue } from "./_components/MainRecipeModal";
 import type { ComponentSubmitValue } from "./_components/ComponentFormModal";
-import { LIST_ALL } from "@/lib/http";
 import { sortByThai, sortOptionsThai } from "@/lib/thaiSort";
 
 export type RecipeTab = "main" | "components";
@@ -36,13 +36,15 @@ export function useRecipesViewModel() {
 
   const [activeTab, setActiveTab] = useState<RecipeTab>("main");
 
-  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: LIST_ALL }) });
-  const componentsQ = useQuery({ queryKey: ["components"], queryFn: () => recipeComponentsService.list({ limit: LIST_ALL }) });
-  const componentCategoriesQ = useQuery({ queryKey: ["component-categories"], queryFn: () => componentCategoriesService.list() });
-  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: LIST_ALL }) });
-  const productCategoriesQ = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
-  const unitsQ = useQuery({ queryKey: ["units"], queryFn: () => unitsService.list() });
-  const ingredientsQ = useQuery({ queryKey: ["ingredients"], queryFn: () => ingredientsService.list({ limit: LIST_ALL }) });
+  // ทั้ง 7 ก้อนใช้ประกอบสิ่งที่เห็นบนหน้า (ชื่อวัตถุดิบ/ส่วนประกอบ/หน่วยในการ์ด · สถิติ · กล่องสินค้าที่ยังไม่มีสูตร · ตัวกรอง)
+  // page.tsx ดึงไว้ฝั่ง server แล้ว (key/params ที่ recipesQuery.ts)
+  const recipesQ = useQuery({ queryKey: Q.recipes.key, queryFn: () => recipesService.list(Q.recipes.params) });
+  const componentsQ = useQuery({ queryKey: Q.components.key, queryFn: () => recipeComponentsService.list(Q.components.params) });
+  const componentCategoriesQ = useQuery({ queryKey: Q.componentCategories.key, queryFn: () => componentCategoriesService.list() });
+  const productsQ = useQuery({ queryKey: Q.products.key, queryFn: () => productsService.list(Q.products.params) });
+  const productCategoriesQ = useQuery({ queryKey: Q.productCategories.key, queryFn: () => productCategoriesService.list() });
+  const unitsQ = useQuery({ queryKey: Q.units.key, queryFn: () => unitsService.list() });
+  const ingredientsQ = useQuery({ queryKey: Q.ingredients.key, queryFn: () => ingredientsService.list(Q.ingredients.params) });
 
   const rawRecipes = useMemo(() => recipesQ.data?.data ?? [], [recipesQ.data]);
   const rawComponents = useMemo(() => componentsQ.data?.data ?? [], [componentsQ.data]);
@@ -88,7 +90,9 @@ export function useRecipesViewModel() {
     }));
   }, [rawRecipes, ingredients, units, components]);
 
-  const isLoading = recipesQ.isLoading || componentsQ.isLoading;
+  // รอครบทุกก้อนที่มีผลกับสิ่งที่เห็น แล้ววาดทีเดียว — เดิมรอแค่สูตร+ส่วนประกอบ ที่เหลือทยอยมาทีละก้อน หน้าวาดใหม่หลายรอบ
+  // (TBT) และกล่อง "สินค้าที่ยังไม่มีสูตร" โผล่ทีหลังดันเนื้อหาลง (CLS 0.118) · isPending (ไม่ใช่ isLoading) = ตรงกับ SSR
+  const isLoading = [recipesQ, componentsQ, componentCategoriesQ, productsQ, productCategoriesQ, unitsQ, ingredientsQ].some((q) => q.isPending);
   const isError = recipesQ.isError || componentsQ.isError;
   const refetch = () => { recipesQ.refetch(); componentsQ.refetch(); };
 
