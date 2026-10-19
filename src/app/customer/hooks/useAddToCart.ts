@@ -54,8 +54,8 @@ export function useAddToCart() {
         .fetchQuery({ queryKey: shopCartKey, queryFn: shopCartService.get, staleTime: 0 })
         .then((cart) => setCount(cart.summary?.item_count ?? cart.items.length))
         .catch(() => qc.invalidateQueries({ queryKey: shopCartKey }));
+      // ไม่แจ้งเตือนเมื่อสำเร็จ — ปุ่มแสดงสถานะสำเร็จ + จำนวนบนไอคอนตะกร้าเพิ่มให้เห็นเอง
       setStatus("success");
-      alert.success(t("added"));
       setTimeout(() => setStatus("idle"), 1500);
       return true;
     } catch (err) {

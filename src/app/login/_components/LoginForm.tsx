@@ -21,7 +21,6 @@ import {
   lineLoginUrl,
   login,
   loginWithGoogle,
-  requestPasswordReset,
   resendVerification,
 } from "@/lib/authClient";
 import { alert, confirmAlert } from "@/lib/alert";
@@ -29,14 +28,14 @@ import { isApiError } from "@/types/api";
 import type { CurrentUser } from "@/types/auth";
 import { nextPathFor } from "../nextPath";
 import { GoogleLoginButton } from "./GoogleLoginButton";
-import { GOOGLE_CLIENT_ID, pickGoogleEmail, preloadGoogleAccountPicker } from "./googleAccountPicker";
+import { GOOGLE_CLIENT_ID, preloadGoogleAccountPicker } from "./googleAccountPicker";
+import { FORGOT_PASSWORD_PATH, resetPasswordWithGoogle } from "./forgotPasswordFlow";
 import { AuthBackdrop, authInputClass as inputClass, authLabelClass as labelClass, authLinkClass, authMutedClass } from "@/components/shared/layout/AuthBackdrop";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// หน้าสมัคร / ลืมรหัสผ่าน — path เดียวกับ FrontOffice + ลิงก์ในอีเมลของ backend (BACKLOG3-merge B1)
+// หน้าสมัคร — path เดียวกับ FrontOffice (BACKLOG3-merge B1) · หน้าลืมรหัสผ่านอยู่ใน forgotPasswordFlow.ts
 const REGISTER_PATH = "/register";
-const FORGOT_PASSWORD_PATH = "/customer/forgot-password";
 
 // ≥ 28px — ปุ่มแสดง/ซ่อนรหัสผ่านเดิมกดได้แค่ 18px (Lighthouse target-size ต้อง ≥ 24px)
 const iconSlot = "absolute top-1/2 right-2 -translate-y-1/2 flex h-7 w-7 items-center justify-center";
@@ -151,9 +150,9 @@ function Form() {
     }
   }
 
-  // ลืมรหัสผ่าน: เปิดหน้าต่างเลือกบัญชี Google → ยืนยัน → POST /auth/forgot-password ด้วยอีเมลนั้น
+  // ลืมรหัสผ่าน: เปิดหน้าต่างเลือกบัญชี Google ทันที → ส่งลิงก์ตั้งรหัสใหม่ไปที่อีเมลนั้น → แจ้งเตือนว่าส่งแล้ว (อยู่หน้า login ต่อ)
   // backend ตอบเหมือนกันไม่ว่าอีเมลจะมีในระบบไหม · บัญชี Google/LINE ที่ไม่มีรหัสผ่าน = 400 พร้อมข้อความ (แสดงตรง ๆ)
-  // ไม่ได้ตั้ง Client ID = ใช้หน้ากรอกอีเมลเดิม (FORGOT_PASSWORD_PATH)
+  // ไม่ได้ตั้ง Client ID = ไปหน้ากรอกอีเมล (FORGOT_PASSWORD_PATH)
   const [forgotBusy, setForgotBusy] = useState(false);
   // โหลดสคริปต์ Google เมื่อผู้ใช้เริ่มใช้งานหน้าครั้งแรก — จังหวะเดียวกับปุ่ม Google (GoogleLoginButton · #91)
   // ไม่โหลดตอนเปิดหน้า (cookie บุคคลที่สามของ Google · Lighthouse Best Practices) · ชี้/โฟกัสลิงก์ก็โหลดด้วย
@@ -173,23 +172,17 @@ function Form() {
     }
     setForgotBusy(true);
     try {
-      const picked = await pickGoogleEmail();
-      if (!picked) return; // ผู้ใช้ปิดหน้าต่าง
-      const ok = await confirmAlert(t("auth.forgotConfirm", { email: picked }), {
-        title: t("auth.forgotConfirmTitle"),
-        confirmText: t("auth.forgotSend"),
-        cancelText: t("common.cancel"),
-      });
-      if (!ok) return;
-      try {
-        await requestPasswordReset(picked);
-        alert.success(t("auth.forgotSent", { email: picked }));
-      } catch (e4) {
-        // 400 บัญชีไม่มีรหัสผ่าน · 429 ขอถี่เกิน — ข้อความของ backend อธิบายเอง
-        alert.error(isApiError(e4) ? e4.message : t("auth.forgotFailed"));
+      const result = await resetPasswordWithGoogle();
+      if (result.status === "sent") {
+        alert.success(t("auth.forgotSent", { email: result.email }), {
+          title: t("shop.password.sentTitle"),
+          note: t("shop.password.spamHint"),
+        });
+      } else if (result.status === "pickFailed") {
+        alert.error(t("shop.password.pickGoogleFailed"));
+      } else if (result.status === "sendFailed") {
+        alert.error(isApiError(result.error) ? result.error.message : t("shop.password.sendFailed"));
       }
-    } catch {
-      alert.error(t("auth.forgotPickFailed"));
     } finally {
       setForgotBusy(false);
     }
@@ -252,13 +245,8 @@ function Form() {
           )}
         </div>
 
-        {/* ลืมรหัสผ่าน? = เลือกบัญชี Google · ใช้อีเมลอื่น (ไม่ใช่ Gmail) = หน้ากรอกอีเมลเดิม */}
-        <div className="-mt-1 flex items-center justify-end gap-3">
-          {GOOGLE_CLIENT_ID && (
-            <Link href={FORGOT_PASSWORD_PATH} className={`text-xs hover:underline sm:text-sm ${authMutedClass}`}>
-              {t("auth.forgotOtherEmail")}
-            </Link>
-          )}
+        {/* ลืมรหัสผ่าน? = เปิดหน้าต่างเลือกบัญชี Google ทันที */}
+        <div className="-mt-1 flex items-center justify-end">
           <button
             type="button"
             onClick={() => void handleForgotPassword()}

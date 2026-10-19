@@ -20,21 +20,15 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { MenuKey } from "@/constants/menuKeys";
-import { guessShipsNationwide } from "@/constants/shipping";
+import { CATEGORY_SHIPPING_KEY } from "@/hooks/useCategoryShipping";
 
 export type CategoryKind = "product" | "ingredient" | "component";
 
 export interface CategoryItem {
   id: string;
   name: string;
-  /**
-   * เฉพาะหมวดสินค้า: ออเดอร์เว็บส่งทั่วประเทศได้ไหม (ค่าที่มีผลจริง) · undefined = ชนิดอื่น
-   * backend ใช้ค่าที่ตั้งไว้ · ไม่ได้ตั้ง = เดาจากชื่อ (ซาวโดว์/sourdough = ได้) — shipping.ts categoryShipsNationwide
-   */
-  shipsNationwide?: boolean;
-  /** true = ยังไม่เคยตั้ง ใช้ค่าที่เดาจากชื่อ */
-  shipsNationwideAuto?: boolean;
 }
+// สวิตช์ "ส่งทั่วประเทศ" ของหมวดสินค้า มาจาก useCategoryShipping (API ค่าจัดส่ง · สิทธิ์ store_info) — ไม่ได้อยู่ใน hook นี้
 
 interface KindConfig {
   queryKey: readonly string[];
@@ -43,8 +37,6 @@ interface KindConfig {
   create: (name: string) => Promise<unknown>;
   rename: (id: string, name: string) => Promise<unknown>;
   remove: (id: string) => Promise<unknown>;
-  /** ตั้งค่าส่งทั่วประเทศ — เฉพาะหมวดสินค้า (customer-backend-merge.md §8.7) */
-  setShipsNationwide?: (id: string, value: boolean) => Promise<unknown>;
   /** จำนวนของที่ยังใช้หมวดนี้ — มีเฉพาะชนิดที่ backend ยังไม่กันเอง */
   usageCount?: (id: string) => Promise<number>;
 }
@@ -59,16 +51,10 @@ const CONFIG: Record<CategoryKind, KindConfig> = {
     menu: "products",
     list: async () =>
       (await productCategoriesService.list()).data
-        .map((c) => ({
-          id: c._id,
-          name: c.product_category_name,
-          shipsNationwide: typeof c.ships_nationwide === "boolean" ? c.ships_nationwide : guessShipsNationwide(c.product_category_name),
-          shipsNationwideAuto: typeof c.ships_nationwide !== "boolean",
-        }))
+        .map((c) => ({ id: c._id, name: c.product_category_name }))
         .sort(byName),
     create: (name) => productCategoriesService.create({ product_category_name: name }),
     rename: (id, name) => productCategoriesService.update(id, { product_category_name: name }),
-    setShipsNationwide: (id, value) => productCategoriesService.update(id, { ships_nationwide: value }),
     remove: (id) => productCategoriesService.remove(id),
     usageCount: async (id) => (await productsService.list({ category_id: id, limit: 1 })).meta.total,
   },
@@ -104,7 +90,11 @@ export function useCategoryManager(kind: CategoryKind, { enabled = true }: { ena
 
   // queryKey แยกจากที่หน้าอื่นใช้ (data คนละรูป) แต่ขึ้นต้นเหมือนกัน — invalidate ชุดเดียวครอบทั้งสองแบบ
   const q = useQuery({ queryKey: [...cfg.queryKey, "manager"], queryFn: cfg.list, enabled });
-  const invalidate = () => qc.invalidateQueries({ queryKey: cfg.queryKey });
+  const invalidate = () => {
+    // หมวดสินค้า: รายการสวิตช์ส่งทั่วประเทศ (คนละ endpoint) ต้องดึงใหม่ด้วย — หมวดที่เพิ่งเพิ่มจะได้มีสวิตช์
+    if (kind === "product") void qc.invalidateQueries({ queryKey: CATEGORY_SHIPPING_KEY });
+    return qc.invalidateQueries({ queryKey: cfg.queryKey });
+  };
   const onError = (fallbackKey: "categories.saveFailed" | "categories.deleteFailed") => (e: unknown) =>
     alert.error(isApiError(e) ? e.message : t(fallbackKey));
 
@@ -124,18 +114,6 @@ export function useCategoryManager(kind: CategoryKind, { enabled = true }: { ena
       invalidate();
       // ชื่อหมวดที่ populate ไว้ในรายการสินค้า/วัตถุดิบ/ส่วนประกอบต้องดึงใหม่ด้วย
       qc.invalidateQueries({ queryKey: kind === "product" ? ["products"] : kind === "ingredient" ? ["ingredients"] : ["components"] });
-    },
-    onError: onError("categories.saveFailed"),
-  });
-
-  const shipping = useMutation({
-    mutationFn: ({ id, value }: { id: string; value: boolean }) => {
-      if (!cfg.setShipsNationwide) throw new Error("unsupported");
-      return cfg.setShipsNationwide(id, value);
-    },
-    onSuccess: () => {
-      alert.success(t("categories.shippingSaved"));
-      invalidate();
     },
     onError: onError("categories.saveFailed"),
   });
@@ -165,11 +143,6 @@ export function useCategoryManager(kind: CategoryKind, { enabled = true }: { ena
     onCreate: (name: string) => create.mutateAsync(name).then(() => true, () => false),
     onRename: (id: string, name: string) => rename.mutateAsync({ id, name }).then(() => true, () => false),
     onDelete: (item: CategoryItem) => remove.mutate(item),
-    /** undefined = ชนิดนี้ไม่มีตัวเลือกส่งทั่วประเทศ */
-    onToggleShipping: cfg.setShipsNationwide
-      ? (id: string, value: boolean) => shipping.mutate({ id, value })
-      : undefined,
-    shippingId: shipping.isPending ? shipping.variables?.id ?? null : null,
     creating: create.isPending,
     savingId: rename.isPending ? rename.variables?.id ?? null : null,
     deletingId: remove.isPending ? remove.variables?.id ?? null : null,

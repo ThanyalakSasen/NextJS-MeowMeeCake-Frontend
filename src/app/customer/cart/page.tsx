@@ -84,10 +84,8 @@ function CartContent() {
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => shopCartService.removeItem(id),
-    onSuccess: () => {
-      alert.success(t("removed"));
-      refresh();
-    },
+    // ไม่แจ้งเตือนเมื่อสำเร็จ — รายการหายจากตะกร้าให้เห็นเอง
+    onSuccess: refresh,
     onError: (e) => alert.error(isApiError(e) ? e.message : t("removeFailed")),
   });
 

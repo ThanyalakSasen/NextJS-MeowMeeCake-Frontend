@@ -91,7 +91,6 @@ function MemberContent() {
   const p = pointsQ.data;
   const balance = p?.balance ?? 0;
   const minToRedeem = p?.rules.MIN_BALANCE_TO_REDEEM ?? 100;
-  const progress = Math.round(Math.min((balance / Math.max(minToRedeem, 1)) * 100, 100));
   const catalog = couponsQ.data?.catalog ?? [];
   const myCoupons = couponsQ.data?.coupons ?? [];
 
@@ -123,18 +122,6 @@ function MemberContent() {
                         <span className="shrink-0 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
                           Member card
                         </span>
-                      </div>
-
-                      <div className="relative z-10 space-y-1.5">
-                        <div className="flex justify-between text-xs text-stone-300">
-                          <span>
-                            {balance >= minToRedeem ? t("readyToRedeem") : t("collectMore", { n: (minToRedeem - balance).toLocaleString() })}
-                          </span>
-                          <span>{progress}%</span>
-                        </div>
-                        <div className="h-2 w-full overflow-hidden rounded-full border border-white/10 bg-black/30 p-0.5" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-                          <div className="h-full rounded-full bg-amber-400 transition-all duration-500" style={{ width: `${progress}%` }} />
-                        </div>
                       </div>
 
                       <div className="relative z-10 flex items-end justify-between border-t border-white/10 pt-2">

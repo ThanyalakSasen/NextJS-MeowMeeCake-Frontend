@@ -3,11 +3,12 @@
 // /customer/reset-password?token= — ตั้งรหัสผ่านใหม่จากลิงก์ในอีเมล (ใช้ครั้งเดียว · หมดอายุ 1 ชม.)
 // ยกจาก FrontOffice src/app/customer/reset-password/page.tsx · API GET (เช็คลิงก์) + POST /auth/reset-password { token, newPassword }
 // CustomerChrome ซ่อน Navbar/Footer ของหน้านี้อยู่แล้ว (HIDE_CHROME_ROUTES)
+// บันทึกสำเร็จ → พากลับหน้า /login ทันที + แจ้ง "เปลี่ยนรหัสผ่านสำเร็จ" (AlertHost อยู่ที่ providers จึงค้างข้ามหน้าได้)
 // ─────────────────────────────────────────────────────────────
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { CheckCircle2, Eye, EyeOff, Lock, LockOpen, XCircle } from "lucide-react";
+import { Eye, EyeOff, Lock, LockOpen, XCircle } from "lucide-react";
 import { checkResetToken, resetPassword } from "@/lib/authClient";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
@@ -62,7 +63,6 @@ function ResetPasswordContent() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -81,13 +81,15 @@ function ResetPasswordContent() {
     setSubmitting(true);
     try {
       await resetPassword(token, password);
-      setDone(true);
     } catch (e) {
       // ซ้ำรหัสเดิม / ลิงก์ถูกใช้ไปแล้ว — ข้อความของ backend
       alert.error(isApiError(e) ? e.message : t("resetFailed"));
-    } finally {
       setSubmitting(false);
+      return;
     }
+    // ไม่ปลด submitting — กันกดซ้ำระหว่างเปลี่ยนหน้า
+    void alert.success(t("resetDone"), { title: t("changed") });
+    router.replace(LOGIN_PATH);
   };
 
   if (tokenValid === null) {
@@ -112,21 +114,6 @@ function ResetPasswordContent() {
           </button>
           <button type="button" className={outlineButton} onClick={() => router.push(LOGIN_PATH)}>
             {t("backToLogin")}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (done) {
-    return (
-      <div className={page}>
-        <div className={card}>
-          <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-green-600" />
-          <h1 className="mb-2 text-xl font-bold text-green-700">{t("changed")}</h1>
-          <p className="mb-6 text-sm leading-relaxed text-[#77665e]">{t("resetDone")}</p>
-          <button type="button" className={outlineButton} onClick={() => router.push(LOGIN_PATH)}>
-            {t("goLogin")}
           </button>
         </div>
       </div>
