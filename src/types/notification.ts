@@ -3,8 +3,8 @@ import type { ListParams } from "@/types/api";
 import type { NotificationType } from "@/types";
 
 /** หมวดที่ backend สร้าง/กรองได้ (ตรงกับ enum ของ notificationModel) */
-export type NotificationModule = "order" | "ingredient" | "production" | "finance" | "customer" | "system";
-export const NOTIFICATION_MODULES: NotificationModule[] = ["order", "ingredient", "production", "finance", "customer", "system"];
+export type NotificationModule = "order" | "product" | "ingredient" | "production" | "finance" | "customer" | "system";
+export const NOTIFICATION_MODULES: NotificationModule[] = ["order", "product", "ingredient", "production", "finance", "customer", "system"];
 
 /**
  * หมวดที่เลิกใช้แล้วแต่ยังมีในเอกสารเก่า — แสดงผลอย่างเดียว (BACKLOG3 I3)
