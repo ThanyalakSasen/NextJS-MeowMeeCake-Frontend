@@ -36,7 +36,8 @@ export function RoleListPanel({
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-brown-800">{role.role_name}</p>
-              <p className="mt-0.5 text-xs text-gray-500">
+              {/* gray-600 — แถวที่เลือกพื้น brown-50 ทำให้ gray-500 ได้แค่ 4.46:1 */}
+              <p className="mt-0.5 text-xs text-gray-600">
                 {t("permissions.members", { n: memberCounts[role._id] ?? 0 })}
               </p>
             </div>

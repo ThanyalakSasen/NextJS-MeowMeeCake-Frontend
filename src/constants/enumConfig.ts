@@ -250,7 +250,8 @@ export const SENTIMENT_LABEL_CONFIG: Record<SentimentLabel, StatusStyle> = {
 export type RoleTypeKind = "owner" | "staff" | "customer";
 
 export const ROLE_TYPE_CONFIG: Record<RoleTypeKind, StatusStyle> = {
-  owner:    { color: "#a16207", antColor: "gold" },
+  // antColor "purple" — แท็ก gold ของ antd ตัวอักษรบนพื้นได้คอนทราสต์แค่ 2.75:1 (Lighthouse Accessibility ตก) · purple 8.9:1
+  owner:    { color: "#a16207", antColor: "purple" },
   staff:    { color: "#1d4ed8", antColor: "blue" },
   customer: { color: "#475569", antColor: "default" },
 };

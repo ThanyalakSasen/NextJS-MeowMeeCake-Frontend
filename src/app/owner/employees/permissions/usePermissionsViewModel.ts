@@ -12,7 +12,6 @@ import { permissionsService } from "@/services/permissions";
 import { usePermission } from "@/context/PermissionsContext";
 import { CURRENT_USER_KEY, useCurrentUser } from "@/hooks/useCurrentUser";
 import { alert, confirmAlert } from "@/lib/alert";
-import { LIST_ALL } from "@/lib/http";
 import type { MenuKey } from "@/constants/menuKeys";
 import type { PermissionInput } from "@/types/permission";
 import type { RoleInput, RoleType } from "@/types/role";
@@ -22,6 +21,7 @@ import {
   type RolePerms, type PermField, type PermRow,
 } from "./permissionGroups";
 import { usePermissionCeiling } from "../usePermissionCeiling";
+import { PERMISSIONS_KEY, PERMISSIONS_PARAMS, ROLES_KEY, STAFF_KEY, STAFF_PARAMS } from "../employeesQuery";
 
 export interface AddRoleValues {
   role_name: string;
@@ -40,9 +40,12 @@ export function usePermissionsViewModel() {
   const [overrides, setOverrides] = useState<Record<string, RolePerms>>({});
   const [saving, setSaving] = useState(false);
 
-  const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list() });
-  const usersQ = useQuery({ queryKey: ["users"], queryFn: () => usersService.list({ limit: LIST_ALL }) });
-  const permsQ = useQuery({ queryKey: ["permissions"], queryFn: () => permissionsService.list({ limit: LIST_ALL }) });
+  // page.tsx ดึงทั้ง 3 ก้อนไว้ฝั่ง server แล้ว (key ที่ employeesQuery.ts)
+  const rolesQ = useQuery({ queryKey: ROLES_KEY, queryFn: () => rolesService.list() });
+  // ใช้แค่นับจำนวนคนต่อตำแหน่ง (ตำแหน่งลูกค้าถูกตัดออกอยู่แล้ว) — ดึงเฉพาะเจ้าของ+พนักงาน ชุดเดียวกับหน้ารายชื่อ
+  // เดิมดึงผู้ใช้ทั้งระบบ (รวมลูกค้าทุกคน) มาแค่นับ
+  const usersQ = useQuery({ queryKey: STAFF_KEY, queryFn: () => usersService.list(STAFF_PARAMS) });
+  const permsQ = useQuery({ queryKey: PERMISSIONS_KEY, queryFn: () => permissionsService.list(PERMISSIONS_PARAMS) });
 
   const roles = useMemo(
     () => (rolesQ.data?.data ?? []).filter((r) => r.role_type !== "customer"),
@@ -246,7 +249,8 @@ export function usePermissionsViewModel() {
 
   return {
     perm,
-    isLoading: rolesQ.isLoading || usersQ.isLoading || permsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: rolesQ.isPending || usersQ.isPending || permsQ.isPending,
     isError: rolesQ.isError || permsQ.isError,
 
     roles,

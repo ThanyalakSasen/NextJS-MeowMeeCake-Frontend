@@ -1,6 +1,8 @@
 "use client";
 // View ของ Permissions Mgmt — 2 คอลัมน์: รายการ Role | matrix สิทธิ์
 import { useState } from "react";
+import dynamic from "next/dynamic";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { useTranslations } from "next-intl";
 import { Button, Tag, EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
@@ -9,9 +11,11 @@ import { DeleteButton, EditButton, SaveButton, actionIcon } from "@/components/s
 import type { usePermissionsViewModel } from "./usePermissionsViewModel";
 import { RoleListPanel } from "./_components/RoleListPanel";
 import { PermissionMatrix } from "./_components/PermissionMatrix";
-import { RoleFormModal } from "./_components/RoleFormModal";
-import { RenameRoleModal } from "./_components/RenameRoleModal";
 import { ROLE_TYPE_CONFIG } from "@/constants/enumConfig";
+
+// โมดัลเพิ่ม/เปลี่ยนชื่อตำแหน่งแยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
+const RoleFormModal = dynamic(() => import("./_components/RoleFormModal").then((m) => m.RoleFormModal), { ssr: false });
+const RenameRoleModal = dynamic(() => import("./_components/RenameRoleModal").then((m) => m.RenameRoleModal), { ssr: false });
 
 type VM = ReturnType<typeof usePermissionsViewModel>;
 
@@ -19,6 +23,8 @@ export function PermissionsView(vm: VM) {
   const t = useTranslations();
   const [modalOpen, setModalOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
+  const addUsed = useOpenedOnce(modalOpen);
+  const renameUsed = useOpenedOnce(renameOpen);
   // ตำแหน่งประเภท owner — คนที่ไม่ใช่ owner แก้ชื่อ / ลบ / แก้สิทธิ์ไม่ได้ (backend ownerProtection · P4)
   const canEdit = vm.perm.update && !vm.roleLocked;
 
@@ -100,7 +106,7 @@ export function PermissionsView(vm: VM) {
                 <div className="grid grid-cols-3 border-b border-gray-100 bg-gray-50 text-center">
                   {[
                     { v: vm.summary.total, l: t("permissions.summaryTotal"), c: "text-brown-900" },
-                    { v: vm.summary.on, l: t("permissions.summaryOn"), c: "text-green-600" },
+                    { v: vm.summary.on, l: t("permissions.summaryOn"), c: "text-green-700" },
                     { v: vm.summary.total - vm.summary.on, l: t("permissions.summaryOff"), c: "text-gray-500" },
                   ].map((s) => (
                     <div key={s.l} className="border-r border-gray-100 py-3 last:border-0">
@@ -140,29 +146,33 @@ export function PermissionsView(vm: VM) {
         </>
       )}
 
-      <RoleFormModal
-        open={modalOpen}
-        roles={vm.roles}
-        canCopyFrom={vm.canCopyFrom}
-        onCancel={() => setModalOpen(false)}
-        onSubmit={async (values) => {
-          const ok = await vm.onAddRole(values);
-          if (ok) setModalOpen(false);
-          return ok;
-        }}
-      />
+      {addUsed && (
+        <RoleFormModal
+          open={modalOpen}
+          roles={vm.roles}
+          canCopyFrom={vm.canCopyFrom}
+          onCancel={() => setModalOpen(false)}
+          onSubmit={async (values) => {
+            const ok = await vm.onAddRole(values);
+            if (ok) setModalOpen(false);
+            return ok;
+          }}
+        />
+      )}
 
-      <RenameRoleModal
-        role={renameOpen ? vm.selectedRole : null}
-        roles={vm.roles}
-        saving={vm.renaming}
-        onCancel={() => setRenameOpen(false)}
-        onSubmit={async (name) => {
-          const ok = await vm.onRenameRole(name);
-          if (ok) setRenameOpen(false);
-          return ok;
-        }}
-      />
+      {renameUsed && (
+        <RenameRoleModal
+          role={renameOpen ? vm.selectedRole : null}
+          roles={vm.roles}
+          saving={vm.renaming}
+          onCancel={() => setRenameOpen(false)}
+          onSubmit={async (name) => {
+            const ok = await vm.onRenameRole(name);
+            if (ok) setRenameOpen(false);
+            return ok;
+          }}
+        />
+      )}
     </DashboardPageLayout>
   );
 }
