@@ -1,6 +1,6 @@
 import { HydrationBoundary } from "@tanstack/react-query";
 import { reviewAspectsService, reviewsService } from "@/services/reviews";
-import { currentUserOnServer, serverHttpAsUser } from "@/lib/serverAuth";
+import { serverHttpAsUser } from "@/lib/serverAuth";
 import { prefetchPublic } from "@/app/customer/lib/prefetchPublic";
 import ReviewsPageClient from "./ReviewsPageClient";
 import { initialReviewListParams, REVIEW_ASPECTS_KEY, REVIEW_FILTER_OPTIONS_KEY, REVIEWS_LIST_KEY } from "./reviewsQuery";
@@ -11,10 +11,11 @@ import { initialReviewListParams, REVIEW_ASPECTS_KEY, REVIEW_FILTER_OPTIONS_KEY,
 // backend ช้า/ไม่มี user → browser ดึงเองเหมือนเดิม (รอไม่เกิน 2.5 วิ)
 export default async function ReviewsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const tab = (await searchParams).tab === "dashboard" ? "dashboard" : "manage";
-  const [user, h] = await Promise.all([currentUserOnServer(), serverHttpAsUser()]);
+  // ไม่รอ /auth/me ก่อน — ยิงข้อมูลพร้อมกับที่ layout ถาม /auth/me (เดิมรอต่อกัน 2 ทอดไป backend) · ดู serverHttpAsUser
+  const h = await serverHttpAsUser();
   const params = initialReviewListParams();
   const state = await prefetchPublic(
-    tab === "manage" && user && h
+    tab === "manage" && h
       ? [
           { queryKey: [...REVIEWS_LIST_KEY, params], queryFn: () => reviewsService.list(params, h) },
           { queryKey: [...REVIEW_FILTER_OPTIONS_KEY], queryFn: () => reviewsService.filterOptions(h) },
