@@ -22,16 +22,6 @@ export function POSView(vm: VM) {
     <DashboardPageLayout title={t("pos.title")}>
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         <section aria-label={t("pos.billTitle")} className="flex min-w-0 flex-col gap-3.5">
-          <ScanSearchBox
-            value={vm.query}
-            scanning={vm.scanning || !!vm.preparingId}
-            suggestions={vm.suggestions}
-            promosOf={vm.promosOf}
-            onChange={vm.setQuery}
-            onSubmit={vm.onSubmitQuery}
-            onPick={vm.onPickSuggestion}
-          />
-
           {vm.isCatalogError && (
             // ค้นหาด้วยชื่อใช้ไม่ได้ถ้าโหลดรายการสินค้าไม่สำเร็จ — ยิงบาร์โค้ด/พิมพ์รหัสแล้ว Enter ยังใช้ได้ (ถาม backend ทีละรหัส)
             <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3">
@@ -47,6 +37,17 @@ export function POSView(vm: VM) {
             onIncrease={vm.increaseQty}
             onDecrease={vm.decreaseQty}
             isProductAtStock={vm.isProductAtStock}
+            search={
+              <ScanSearchBox
+                value={vm.query}
+                scanning={vm.scanning || !!vm.preparingId}
+                suggestions={vm.suggestions}
+                promosOf={vm.promosOf}
+                onChange={vm.setQuery}
+                onSubmit={vm.onSubmitQuery}
+                onPick={vm.onPickSuggestion}
+              />
+            }
           />
         </section>
 
