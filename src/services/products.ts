@@ -63,8 +63,8 @@ export const productsService = {
     return { ...res, data: res.data.map(toProduct) };
   },
 
-  get: async (id: string) => {
-    const res = await http.get<ItemResponse<any>>(`${BASE}/${id}`);
+  get: async (id: string, h: HttpReader = http) => {
+    const res = await h.get<ItemResponse<any>>(`${BASE}/${id}`);
     return { data: toProduct(res.data) };
   },
 
