@@ -1,7 +1,7 @@
 // เรียก endpoint /admin/user-logs — อ่านอย่างเดียว
 // user_id ถูก backend populate เป็น object เต็ม {_id, user_fullname, email} — แกะกลับเป็น
 // string id ตรงนี้ที่เดียว (refId) ให้ ViewModel เทียบ/join กับ users list ได้ตรง ๆ
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import { refId } from "@/lib/refId";
 import type { ItemResponse } from "@/types/api";
 import type { RawUserLog, UserLog, UserLogListParams } from "@/types/userLog";
@@ -13,8 +13,9 @@ function toUserLog(raw: RawUserLog): UserLog {
 }
 
 export const userLogsService = {
-  list: async (params: UserLogListParams = {}) => {
-    const res = await http.getList<RawUserLog>(BASE, { params });
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (userLog/page.tsx) */
+  list: async (params: UserLogListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<RawUserLog>(BASE, { params });
     return { ...res, data: res.data.map(toUserLog) };
   },
 
