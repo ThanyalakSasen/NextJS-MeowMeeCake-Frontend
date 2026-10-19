@@ -9,6 +9,7 @@ import { ACCESS_DENIED_PATH } from "@/constants/auth";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { fromUser, toInput, type EmployeeFormValue } from "../employeeForm";
+import { userKey } from "../employeesQuery";
 
 const LIST = "/owner/employees";
 
@@ -27,7 +28,7 @@ export function useEditEmployeeViewModel() {
   }, [perm.update, router]);
 
   const q = useQuery({
-    queryKey: ["user", id],
+    queryKey: userKey(id),
     queryFn: () => usersService.get(id),
     enabled: !!id,
   });
@@ -47,7 +48,8 @@ export function useEditEmployeeViewModel() {
   return {
     /** false = ไม่มีสิทธิ์แก้ไข กำลังเด้งไป access-denied — View ไม่ต้อง render ฟอร์ม (กันภาพแวบ) */
     allowed: perm.update,
-    isLoading: !!id && q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: !!id && q.isPending,
     isError: !id || q.isError,
     // Form mount หลังโหลดเสร็จ → ใช้ initialValues ตรง ๆ ได้ ไม่ต้อง setFieldsValue
     initialValues: q.data ? fromUser(q.data.data) : undefined,

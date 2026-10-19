@@ -22,8 +22,8 @@ export const usersService = {
     const res = await h.getList<AppUser>(BASE, { params });
     return { ...res, data: res.data.map(normalize) };
   },
-  get: async (id: string) => {
-    const res = await http.get<ItemResponse<AppUser>>(`${BASE}/${id}`);
+  get: async (id: string, h: HttpReader = http) => {
+    const res = await h.get<ItemResponse<AppUser>>(`${BASE}/${id}`);
     return { ...res, data: normalize(res.data) };
   },
   create: (body: CreateAppUserInput) => http.post<ItemResponse<AppUser>>(BASE, body),
