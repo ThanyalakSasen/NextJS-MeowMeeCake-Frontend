@@ -13,6 +13,7 @@ export function BillCard({
   onIncrease,
   onDecrease,
   isProductAtStock,
+  search,
 }: {
   cart: CartLine[];
   itemCount: number;
@@ -21,15 +22,20 @@ export function BillCard({
   onDecrease: (line: CartLine) => void;
   /** จำนวนรวมทุกบรรทัดของสินค้านี้เต็มสต็อกแล้ว (สินค้าเดียวกันคนละตัวเลือก = คนละบรรทัด) */
   isProductAtStock: (productId: string) => boolean;
+  /** ช่อง "สแกน / ค้นหา" — วางชิดขวาในหัวการ์ดบิล (จอเล็กขึ้นบรรทัดใหม่เต็มความกว้าง) */
+  search?: React.ReactNode;
 }) {
   const t = useTranslations();
   const locale = useLocale();
 
   return (
     <div className="flex flex-col rounded-[20px] border border-gray-200 bg-white">
-      <div className="flex flex-wrap items-baseline gap-3 border-b border-gray-100 px-[18px] pb-3 pt-4">
-        <h2 className="m-0 text-xl font-semibold text-brown-900">{t("pos.billTitle")}</h2>
-        <span className="text-sm text-gray-600">{t("pos.itemCount", { n: itemCount })}</span>
+      <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 px-[18px] pb-3 pt-4">
+        <div className="flex items-baseline gap-3">
+          <h2 className="m-0 text-xl font-semibold text-brown-900">{t("pos.billTitle")}</h2>
+          <span className="text-sm text-gray-600">{t("pos.itemCount", { n: itemCount })}</span>
+        </div>
+        {search && <div className="w-full sm:ml-auto sm:w-auto sm:min-w-[22rem] sm:flex-1 sm:max-w-xl">{search}</div>}
       </div>
 
       <div className="flex gap-2.5 border-b border-gray-100 px-[18px] py-2 text-sm font-semibold text-gray-600">
