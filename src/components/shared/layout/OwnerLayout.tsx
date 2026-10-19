@@ -40,6 +40,7 @@ const SSR_PAGES = [
   "/owner/orders/OrderInStore",
   "/owner/promotions/pricing",
   "/owner/promotions/coupons",
+  "/owner/production",
 ];
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
