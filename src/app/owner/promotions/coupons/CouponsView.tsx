@@ -1,8 +1,8 @@
 "use client";
 // View ของ Coupons — กริดการ์ดคูปอง + modal เพิ่ม/แก้ไข
-import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { Button, EmptyState, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
@@ -18,9 +18,7 @@ type VM = ReturnType<typeof useCouponsViewModel>;
 
 export function CouponsView(vm: VM) {
   const t = useTranslations();
-  // mount ฟอร์มเมื่อเปิดครั้งแรก แล้วคาไว้ (แอนิเมชันปิดยังทำงาน)
-  const [formUsed, setFormUsed] = useState(vm.modalOpen);
-  if (vm.modalOpen && !formUsed) setFormUsed(true);
+  const formUsed = useOpenedOnce(vm.modalOpen);
 
   return (
     <ListPageLayout

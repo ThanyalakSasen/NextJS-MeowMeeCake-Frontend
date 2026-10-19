@@ -1,8 +1,8 @@
 "use client";
 // View ของ Pre-order Round — 3 แท็บ (รอบพรีออเดอร์ / สรุปรอบ / คำสั่งซื้อเค้กวันเกิด) sync กับ ?tab= ผ่าน TabbedPageLayout
-import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { DetailDrawer } from "@/components/shared/feedback";
 import type { usePreOrderRoundViewModel } from "./usePreOrderRoundViewModel";
@@ -20,13 +20,6 @@ const ReopenRoundModal = dynamic(() => import("./_components/ReopenRoundModal").
 const RoundItemFormModal = dynamic(() => import("./_components/RoundItemFormModal").then((m) => m.RoundItemFormModal), { ssr: false });
 const RoundDetailContent = dynamic(() => import("./_components/RoundDetailContent").then((m) => m.RoundDetailContent), { ssr: false });
 const PreorderDetailContent = dynamic(() => import("./_components/PreorderDetailContent").then((m) => m.PreorderDetailContent), { ssr: false });
-
-/** true ตั้งแต่ open เป็น true ครั้งแรก — mount โมดัลเมื่อเปิดครั้งแรกแล้วคาไว้ (แอนิเมชันปิด/สถานะฟอร์มเหมือนเดิม) */
-function useOpenedOnce(open: boolean) {
-  const [opened, setOpened] = useState(open);
-  if (open && !opened) setOpened(true);
-  return opened;
-}
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
