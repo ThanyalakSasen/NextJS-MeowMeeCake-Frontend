@@ -1448,6 +1448,7 @@
     "saved": "Employee saved",
     "saveFailed": "Could not save",
     "passwordHint": "At least 8 characters — used the first time this employee signs in",
+    "generatePassword": "Generate password",
     "statusLocked": "Locked",
     "lockedUntil": "Locked after too many failed sign-ins, until {time}",
     "unlock": "Unlock",

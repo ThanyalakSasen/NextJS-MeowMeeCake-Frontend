@@ -1,16 +1,19 @@
 "use client";
 // ฟิลด์ของฟอร์มพนักงาน — render ข้างใน <Form> (antd) เท่านั้น
 // <FormItem> จัดการ label + error + validation ให้เอง
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import type { Rule } from "antd/es/form";
 import { Form } from "antd";
-import { Input, InputNumber, PasswordInput, Select, Switch, DatePicker, FormItem } from "@/components/base";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { Button, Input, InputNumber, PasswordInput, Select, Switch, DatePicker, FormItem } from "@/components/base";
 import { isLinePlaceholderEmail } from "@/lib/lineAccount";
 import { rolesService } from "@/services/roles";
 import { MIN_PASSWORD_LENGTH } from "@/constants/auth";
 import { usePermissionCeiling } from "../usePermissionCeiling";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { generatePassword } from "./generatePassword";
 
 /** currentRoleId = บทบาทเดิมของบัญชีที่แก้ — ไม่ย้ายบทบาท = backend ไม่ตรวจ จึงเลือกค้างไว้ได้เสมอ */
 export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?: boolean; currentRoleId?: string }) {
@@ -23,6 +26,14 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
   const roleBlocked = (id: string) => id !== currentRoleId && !ceiling.roleWithin(id);
   // บัญชีที่สมัครผ่าน LINE ไม่มีอีเมลจริง (I10) — เตือนให้กรอกอีเมลจริงก่อนบันทึก (backend บังคับมีอีเมล)
   const email = Form.useWatch<string | undefined>("email");
+  // ปุ่มสุ่มรหัสผ่าน (หน้าเพิ่มเท่านั้น) — สุ่มแล้วเปิดให้เห็นทันที เจ้าของร้านต้องอ่านไปบอกพนักงาน
+  const form = Form.useFormInstance();
+  const [showPassword, setShowPassword] = useState(false);
+  const fillRandomPassword = () => {
+    form.setFieldValue("password", generatePassword());
+    setShowPassword(true);
+    void form.validateFields(["password"]);
+  };
 
   const required: Rule[] = [{ required: true, message: t("validation.required") }];
   // backend (schemas/user.ts createUserBody) บังคับ email จริง (ไม่ optional) ทั้งตอนสร้างและแก้ไข
@@ -52,8 +63,20 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
         <Input />
       </FormItem>
       {!isEdit && (
-        <FormItem name="password" label={t("fields.password")} extra={t("employees.passwordHint")} rules={passwordRule}>
-          <PasswordInput />
+        // FormItem นอก (ไม่มี name) = label + hint + error · ตัวใน noStyle ผูกค่า — วางปุ่มข้างช่องได้
+        <FormItem label={t("fields.password")} extra={t("employees.passwordHint")} required>
+          <div className="flex gap-2">
+            <FormItem name="password" rules={passwordRule} noStyle>
+              <PasswordInput
+                className="min-w-0 flex-1"
+                autoComplete="new-password"
+                visibilityToggle={{ visible: showPassword, onVisibleChange: setShowPassword }}
+              />
+            </FormItem>
+            <Button icon={<ArrowPathIcon className="h-4 w-4" aria-hidden="true" />} onClick={fillRandomPassword} className="shrink-0">
+              {t("employees.generatePassword")}
+            </Button>
+          </div>
         </FormItem>
       )}
 
