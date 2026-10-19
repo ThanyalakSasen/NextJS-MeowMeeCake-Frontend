@@ -1,6 +1,8 @@
 "use client";
 // View ของ Ingredient Stock — ตาราง + ปุ่ม รับเข้า / เบิกใช้ / ปรับยอด ต่อแถว
+import dynamic from "next/dynamic";
 import { useTranslations, useLocale } from "next-intl";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { Button, ProgressBar } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
@@ -9,14 +11,19 @@ import { formatCurrency, formatNumber } from "@/i18n/format";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
 import { actionIcon } from "@/components/shared/actions";
 import type { StockRow, useIngredientStockViewModel } from "./useIngredientStockViewModel";
-import { StockActionModal } from "./_components/StockActionModal";
 import { LoadFailed } from "@/components/shared/feedback";
-import { BulkStockModal, StockAlertSection } from "@/components/shared/stock";
+import { StockAlertSection } from "@/components/shared/stock";
+
+// ฟอร์ม/โมดัลแยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
+const StockActionModal = dynamic(() => import("./_components/StockActionModal").then((m) => m.StockActionModal), { ssr: false });
+const BulkStockModal = dynamic(() => import("@/components/shared/stock/BulkStockModal").then((m) => m.BulkStockModal), { ssr: false });
 
 type VM = ReturnType<typeof useIngredientStockViewModel>;
 
 export function IngredientStockView(vm: VM) {
   const t = useTranslations();
+  const bulkUsed = useOpenedOnce(vm.bulkOpen);
+  const actionUsed = useOpenedOnce(!!vm.target);
   const locale = useLocale();
 
   const columns: Column<StockRow>[] = [
@@ -119,24 +126,28 @@ export function IngredientStockView(vm: VM) {
         </div>
       )}
 
-      <BulkStockModal
-        open={vm.bulkOpen}
-        items={vm.bulkItems}
-        initialIds={vm.alertRows.map((r) => r._id)}
-        withNote
-        withDates
-        decimals={2}
-        onClose={vm.closeBulk}
-        onSubmit={vm.onBulkSubmit}
-      />
+      {bulkUsed && (
+        <BulkStockModal
+          open={vm.bulkOpen}
+          items={vm.bulkItems}
+          initialIds={vm.alertRows.map((r) => r._id)}
+          withNote
+          withDates
+          decimals={2}
+          onClose={vm.closeBulk}
+          onSubmit={vm.onBulkSubmit}
+        />
+      )}
 
-      <StockActionModal
-        target={vm.target}
-        mode={vm.mode}
-        saving={vm.submitting}
-        onClose={vm.closeAction}
-        onSubmit={vm.onSubmit}
-      />
+      {actionUsed && (
+        <StockActionModal
+          target={vm.target}
+          mode={vm.mode}
+          saving={vm.submitting}
+          onClose={vm.closeAction}
+          onSubmit={vm.onSubmit}
+        />
+      )}
     </ListPageLayout>
   );
 }

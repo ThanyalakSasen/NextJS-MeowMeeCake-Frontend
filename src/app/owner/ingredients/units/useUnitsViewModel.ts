@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { UNITS_KEY } from "../ingredientsQuery";
 import { useTranslations } from "next-intl";
 import { unitsService } from "@/services/units";
 import { usePermission } from "@/context/PermissionsContext";
@@ -33,7 +34,7 @@ export function useUnitsViewModel() {
   const [defaultContext, setDefaultContext] = useState<UnitContext>("ingredient");
 
   const unitsQ = useQuery({
-    queryKey: ["units"],
+    queryKey: UNITS_KEY,
     queryFn: () => unitsService.list(),
   });
 
@@ -87,7 +88,8 @@ export function useUnitsViewModel() {
     perm,
     ingredientUnits,
     productUnits,
-    isLoading: unitsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: unitsQ.isPending,
     isError: unitsQ.isError,
     refetch: () => unitsQ.refetch(),
 
