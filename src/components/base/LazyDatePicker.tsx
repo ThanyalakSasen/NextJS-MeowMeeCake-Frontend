@@ -12,7 +12,7 @@ import { useContext, useState, type ComponentType } from "react";
 import { ConfigProvider } from "antd";
 import type { DatePickerProps } from "antd";
 import dayjs from "dayjs";
-import { CalendarIcon } from "@heroicons/react/24/outline";
+import { ArrowLongRightIcon, CalendarIcon } from "@heroicons/react/24/outline";
 
 type PickerModule = typeof import("./DatePicker");
 let loaded: PickerModule | null = null;
@@ -44,6 +44,44 @@ export function LazyDatePicker(props: DatePickerProps) {
       <span className={value?.isValid() ? "truncate" : "truncate text-gray-500"}>
         {value?.isValid() ? value.format(format) : placeholder}
       </span>
+      <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+    </button>
+  );
+}
+
+type RangeProps = React.ComponentProps<PickerModule["RangePicker"]>;
+
+/** ช่องช่วงวันที่แบบโหลดเมื่อกด — เหมือน LazyDatePicker แต่เป็น RangePicker (เหตุผลอยู่ด้านบนของไฟล์) */
+export function LazyRangePicker(props: RangeProps) {
+  const { locale } = useContext(ConfigProvider.ConfigContext);
+  const [Picker, setPicker] = useState<PickerModule["RangePicker"] | null>(null);
+
+  if (Picker) return <Picker {...props} defaultOpen autoFocus />;
+
+  const format = typeof props.format === "string" ? props.format : "YYYY-MM-DD";
+  const [start, end] = (props.value ?? [null, null]).map((v) => (v ? dayjs(v as dayjs.ConfigType) : null));
+  const [phStart, phEnd] = locale?.DatePicker?.lang.rangePlaceholder ?? ["", ""];
+  const part = (d: dayjs.Dayjs | null, ph: string) => (
+    <span className={d?.isValid() ? "min-w-0 flex-1 truncate" : "min-w-0 flex-1 truncate text-gray-500"}>
+      {d?.isValid() ? d.format(format) : ph}
+    </span>
+  );
+  const activate = () => {
+    void (loaded ? Promise.resolve(loaded) : loadPicker()).then((m) => setPicker(() => m.RangePicker));
+  };
+
+  return (
+    <button
+      type="button"
+      id={typeof props.id === "string" ? props.id : props.id?.start}
+      disabled={props.disabled === true}
+      onClick={activate}
+      onPointerEnter={() => void loadPicker()}
+      className="flex h-9 w-[20rem] max-w-full items-center gap-3 rounded-lg border border-[#e4dad1] bg-white px-[11px] text-left transition-colors hover:border-brown-800 focus-visible:border-brown-800 disabled:cursor-not-allowed disabled:bg-gray-50"
+    >
+      {part(start, phStart)}
+      <ArrowLongRightIcon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
+      {part(end, phEnd)}
       <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
     </button>
   );

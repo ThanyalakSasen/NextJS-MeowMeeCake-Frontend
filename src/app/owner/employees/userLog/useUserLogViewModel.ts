@@ -18,7 +18,7 @@ import { refId } from "@/lib/refId";
 import { formatDate } from "@/i18n/format";
 import type { UserLog } from "@/types/userLog";
 import type { UserLogAction } from "@/constants/enumConfig";
-import { LIST_ALL } from "@/lib/http";
+import { ALL_USERS_KEY, ALL_USERS_PARAMS, ROLES_KEY, USER_LOGS_KEY, USER_LOGS_PARAMS } from "../employeesQuery";
 
 export interface LogRow extends UserLog {
   userName: string;
@@ -41,15 +41,15 @@ export function useUserLogViewModel() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const logsQ = useQuery({
-    queryKey: ["user-logs"],
-    queryFn: () => userLogsService.list({ limit: LIST_ALL }),
+    queryKey: USER_LOGS_KEY,
+    queryFn: () => userLogsService.list(USER_LOGS_PARAMS),
   });
   const usersQ = useQuery({
-    queryKey: ["users"],
-    queryFn: () => usersService.list({ limit: LIST_ALL }),
+    queryKey: ALL_USERS_KEY,
+    queryFn: () => usersService.list(ALL_USERS_PARAMS),
   });
   const rolesQ = useQuery({
-    queryKey: ["roles"],
+    queryKey: ROLES_KEY,
     queryFn: () => rolesService.list(),
   });
 
@@ -128,7 +128,8 @@ export function useUserLogViewModel() {
     rows: filtered,
     stats,
     employeeOptions,
-    isLoading: logsQ.isLoading || usersQ.isLoading || rolesQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: logsQ.isPending || usersQ.isPending || rolesQ.isPending,
     isError: logsQ.isError,
     refetch: () => logsQ.refetch(),
 
