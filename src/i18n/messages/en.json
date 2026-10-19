@@ -1506,7 +1506,8 @@
     "loadFailed": "Could not load permissions",
     "unrestrictedNote": "Owner / admin roles can access every menu without explicit permissions",
     "ownerRoleLocked": "Only the store owner can edit it",
-    "grantCeilingNote": "Boxes you can’t switch on are permissions you don’t have yourself, so you can’t grant them — you can switch off (revoke) any box"
+    "grantCeilingNote": "Boxes you can’t switch on are permissions you don’t have yourself, so you can’t grant them — you can switch off (revoke) any box",
+    "paymentsHint": "Approve = confirm/reject slips (incl. POS payments) · Delete = delete payment records and confirm refunds — grant \"Delete\" only to trusted staff"
   },
   "userLog": {
     "title": "Employee Activity Log",
@@ -1711,7 +1712,6 @@
       "liked": "Liked",
       "both": "Both",
       "replied": "Reply",
-      "read": "Read status",
       "media": "Photo / video",
       "hasMedia": "Has media",
       "noMedia": "None",
@@ -1730,15 +1730,9 @@
     "selectPage": "Select page",
     "selectOne": "Select this review",
     "selectedCount": "{n} selected",
-    "markRead": "Mark as read",
-    "markUnread": "Mark as unread",
     "exportCsv": "Export CSV",
     "exported": "Exported {n} reviews",
-    "bulkReadDone": "Marked {n} as read",
-    "bulkUnreadDone": "Marked {n} as unread",
     "empty": "No reviews match the filters",
-    "unread": "Unread",
-    "read": "Read",
     "replied": "Replied",
     "notReplied": "Not replied",
     "pinned": "Pinned",
@@ -1859,7 +1853,6 @@
     "replyRate": "Replied",
     "unrepliedNegative": "{n} negative reviews unanswered",
     "allReplied": "All answered",
-    "unread": "Unread",
     "withMedia": "{n} with photo/video",
     "ratingDist": "Rating distribution",
     "starsLabel": "{n} stars",
@@ -1879,7 +1872,40 @@
     "empty": "No reviews in this period",
     "emptySection": "No data yet",
     "unknownProduct": "(Unknown product)",
-    "truncated": "Based on the latest {n} reviews of this period"
+    "comparedTo": "Green/red figures = compared with the previous period ({from} – {to})",
+    "vsPrev": "{delta} vs previous period",
+    "vsPrevSame": "Same as previous period",
+    "vsPrevNone": "No reviews in the previous period",
+    "points": "{n} pts",
+    "categories": "By product category",
+    "categoriesHint": "Red tags = the category's most criticized topics (times mentioned)",
+    "categoryNegative": "{n} negative",
+    "issueChip": "{name} {n}",
+    "noIssues": "No criticized topics",
+    "unknownCategory": "(Unknown category)",
+    "aspectTrend": "Criticized topics vs previous period",
+    "aspectTrendHint": "Times customers chose \"needs improvement\" · biggest increase first",
+    "aspectTrendTopic": "Topic",
+    "aspectTrendNow": "This period",
+    "aspectTrendPrev": "Previous",
+    "aspectTrendChange": "Change",
+    "aspectTrendSame": "No change",
+    "aspectTrendEmpty": "No criticized topics in either period",
+    "productFilter": "All products",
+    "viewAllProducts": "Show all products",
+    "productTable": "Product analysis",
+    "productTableHint": "Click a column header to sort · Click a product to see its dashboard",
+    "colProduct": "Product",
+    "colReviews": "Reviews",
+    "colAvg": "★ Avg",
+    "colAvgDelta": "vs previous",
+    "colNegative": "% negative",
+    "colTopIssue": "Top complaint",
+    "csvCategory": "Category",
+    "csvAvg": "Average rating",
+    "csvPrevAvg": "Previous average",
+    "csvAvgDelta": "Change",
+    "csvNegative": "Negative reviews (1–2★)"
   },
   "reviewSettings": {
     "title": "Review topic settings",
@@ -2403,7 +2429,7 @@
     "categories": {
       "button": "Out-of-province delivery",
       "title": "Out-of-province delivery by category",
-      "hint": "The switch on each category turns the whole category on/off (on = ships nationwide · off = store province only · pickup is always allowed) · open a category with the arrow to turn on only some products — turning on a product turns its category on · * = not set yet, guessed from the name",
+      "hint": "On = ships nationwide · Off = store province only (customers can always pick up) · The \"Whole category\" switch sets every product in the category at once · Click a category to set individual products · * = never set, guessed from the category name",
       "empty": "No product categories yet",
       "nationwide": "Ships nationwide",
       "provinceOnly": "Store province only",
@@ -2419,8 +2445,13 @@
       "saveFailed": "Could not save the product delivery setting",
       "groupSummary": "{n} products",
       "noCategory": "No category",
-      "noProductsInCategory": "No products in this category yet",
-      "groupOnCount": "{on}/{n} on"
+      "statusAll": "All ship nationwide",
+      "statusSome": "{on}/{n} ship nationwide",
+      "statusNone": "All province only",
+      "wholeCategory": "Whole category",
+      "custom": "Custom",
+      "scopeFilter": "All delivery scopes",
+      "noProducts": "No products to set up yet"
     }
   },
   "shop": {
@@ -2754,7 +2785,8 @@
         "readyPickup": "Ready for pickup",
         "received": "Received",
         "pickedUp": "Picked up"
-      }
+      },
+      "reviewStatus": "Review status"
     },
     "preorders": {
       "all": "All pre-orders",

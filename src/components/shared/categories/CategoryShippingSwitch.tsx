@@ -15,7 +15,10 @@ export function CategoryShippingSwitch({
   canUpdate,
   saving,
   onToggle,
+  label,
 }: {
+  /** ข้อความข้างสวิตช์ — ไม่ส่ง = "ส่งทั่วประเทศ" / "เฉพาะจังหวัดร้าน" ตามสถานะ */
+  label?: string;
   item: CategoryShipping;
   /** สถานะที่แสดง — ไม่ส่ง = ค่าของหมวด · หน้า "จัดส่งนอกจังหวัด" ส่ง "มีสินค้าเปิดอย่างน้อย 1 ชิ้น" */
   checked?: boolean;
@@ -35,7 +38,7 @@ export function CategoryShippingSwitch({
           onChange={(v) => onToggle(item._id, v)}
           aria-label={t("shippingZones.categories.toggleLabel", { name: item.product_category_name })}
         />
-        {checked ? t("shippingZones.categories.nationwide") : t("shippingZones.categories.provinceOnly")}
+        {label ?? (checked ? t("shippingZones.categories.nationwide") : t("shippingZones.categories.provinceOnly"))}
         {item.ships_nationwide_auto && <span className="text-gray-500">*</span>}
       </label>
     </Tooltip>

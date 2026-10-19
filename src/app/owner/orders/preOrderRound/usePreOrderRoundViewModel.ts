@@ -496,6 +496,8 @@ export function usePreOrderRoundViewModel() {
     selectedOrder, orderDrawerOpen, isOrderDetailLoading: orderDetailQ.isLoading || paymentQ.isLoading,
     isOrderDetailError: orderDetailQ.isError,
     selectedPayment, canViewPayment: paymentPerm.view, canApprovePayment: paymentPerm.approve,
+    // คืนเงิน = payments.delete (ไม่ใช่ approve — Final-Backlog P7)
+    canRefundPayment: paymentPerm.delete,
     verifyingPayment: verifyPayment.isPending, onApprovePayment, onRejectPayment,
     paidPayment, onRefund, refunding: refundPayment.isPending,
     onViewOrder, closeOrderDrawer,

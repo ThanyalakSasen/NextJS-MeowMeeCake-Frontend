@@ -17,6 +17,7 @@ export function OrderDetailContent({
   order,
   payment,
   canApprovePayment,
+  canRefundPayment,
   verifyingPayment,
   onVerifyPayment,
   onRejectPayment,
@@ -30,6 +31,8 @@ export function OrderDetailContent({
   order: Order;
   payment: Payment | null;
   canApprovePayment: boolean;
+  /** payments.delete — ปุ่มยืนยันคืนเงิน */
+  canRefundPayment: boolean;
   verifyingPayment: boolean;
   onVerifyPayment: (paymentId: string) => void;
   onRejectPayment: (paymentId: string) => void;
@@ -75,7 +78,7 @@ export function OrderDetailContent({
           reason={order.cancelled_reason}
           account={order.refund_account}
           paidPaymentId={paidPaymentId}
-          canRefund={canApprovePayment}
+          canRefund={canRefundPayment}
           refunding={refunding}
           onRefund={onRefund}
         />

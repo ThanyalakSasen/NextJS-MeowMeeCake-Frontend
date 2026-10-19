@@ -40,7 +40,7 @@ export function CategoryShippingButton() {
         onCancel={() => setOpen(false)}
         footer={null}
         destroyOnHidden
-        width={680}
+        width={760}
       >
         {open && <Body />}
       </Modal>

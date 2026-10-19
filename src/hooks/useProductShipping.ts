@@ -19,6 +19,9 @@ import { shippingExceptionsKey } from "@/app/customer/lib/catalogQueries";
 
 export const PRODUCT_SHIPPING_KEY = ["admin", "shipping-zones", "products"] as const;
 
+/** ตัวกรองขอบเขตจัดส่ง (ค่าที่ใช้จริงของสินค้า) */
+export type ShippingScopeFilter = "nationwide" | "province";
+
 export function useProductShipping({ enabled = true }: { enabled?: boolean } = {}) {
   const t = useTranslations();
   const qc = useQueryClient();
@@ -31,23 +34,26 @@ export function useProductShipping({ enabled = true }: { enabled?: boolean } = {
   });
   const items = useMemo(() => q.data ?? [], [q.data]);
 
-  // ── ค้นหา (ชื่อ/รหัสสินค้า) + กรองหมวด (ตัวเลือกหมวดมาจาก useCategoryShipping ที่ panel) ──
+  // ── ค้นหา (ชื่อ/รหัสสินค้า) + กรองหมวด (ตัวเลือกหมวดมาจาก useCategoryShipping ที่ panel) + กรองขอบเขตจัดส่ง ──
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
+  const [scope, setScope] = useState<ShippingScopeFilter | undefined>(undefined);
   const keyword = search.trim().toLowerCase();
-  /** สินค้าที่ตรงคำค้น จัดกลุ่มตาม category_id ("" = ไม่มีหมวด) */
+  /** สินค้าที่ตรงคำค้น + ขอบเขตที่เลือก จัดกลุ่มตาม category_id ("" = ไม่มีหมวด) */
   const byCategory = useMemo(() => {
     const map = new Map<string, ProductShipping[]>();
     for (const p of items) {
       if (keyword && !p.product_name_th.toLowerCase().includes(keyword) && !(p.product_code ?? "").toLowerCase().includes(keyword)) continue;
+      if (scope && (scope === "nationwide") !== p.effective_ships_nationwide) continue;
       const key = p.category_id ?? "";
       map.set(key, [...(map.get(key) ?? []), p]);
     }
     return map;
-  }, [items, keyword]);
+  }, [items, keyword, scope]);
+  const filtering = keyword.length > 0 || scope !== undefined;
 
   // ── กาง/ย่อหมวด — ตอนค้นหากางทุกหมวดให้เห็นสินค้าที่ตรงคำค้น ──
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   /** สินค้าทั้งหมดของหมวด (ไม่กรองคำค้น) — ใช้คิดสถานะหัวหมวด "เปิด x/n" */
   const allByCategory = useMemo(() => {
     const map = new Map<string, ProductShipping[]>();
@@ -77,7 +83,13 @@ export function useProductShipping({ enabled = true }: { enabled?: boolean } = {
     /** กรองให้เหลือหมวดเดียว · undefined = ทุกหมวด */
     categoryId,
     setCategoryId,
-    searching: keyword.length > 0,
+    /** ขอบเขตจัดส่งที่กรอง · undefined = ทั้งหมด */
+    scope,
+    setScope,
+    /** กำลังค้นหาหรือกรองขอบเขต — กางทุกหมวด + ซ่อนหมวดที่ไม่มีสินค้าตรงเงื่อนไข */
+    searching: filtering,
+    /** ยอดรวมทั้งร้าน (ไม่สนตัวกรอง) */
+    totals: { n: items.length, on: items.filter((p) => p.effective_ships_nationwide).length },
     /** สินค้า (ที่ตรงคำค้น) ของหมวดนี้ */
     productsOf: (categoryId: string) => byCategory.get(categoryId) ?? [],
     /** สินค้าทั้งหมดของหมวด ไม่สนคำค้น */
@@ -85,14 +97,9 @@ export function useProductShipping({ enabled = true }: { enabled?: boolean } = {
     /** category_id ที่มีสินค้าตรงคำค้น (รวมหมวดที่ไม่อยู่ในรายการหมวด เช่น หมวดถูกลบแล้ว) */
     categoryIdsWithProducts: [...byCategory.keys()],
 
-    isExpanded: (categoryId: string) => keyword.length > 0 || expanded.has(categoryId),
-    toggleGroup: (categoryId: string) =>
-      setExpanded((s) => {
-        const next = new Set(s);
-        if (next.has(categoryId)) next.delete(categoryId);
-        else next.add(categoryId);
-        return next;
-      }),
+    isExpanded: (categoryId: string) => filtering || expandedId === categoryId,
+    /** กางได้ทีละหมวด — กางหมวดใหม่ = หมวดที่กางอยู่ย่อลงเอง · กดหมวดที่กางอยู่ = ย่อ */
+    toggleGroup: (categoryId: string) => setExpandedId((cur) => (cur === categoryId ? null : categoryId)),
 
     /** สลับสวิตช์: เปิด = ส่งทั่วประเทศ · ปิด = เฉพาะจังหวัดร้าน — ตรงกับหมวดเก็บเป็น null (ตามหมวด) */
     onToggle: (p: ProductShipping, nationwide: boolean) =>
