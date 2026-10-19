@@ -3,6 +3,8 @@
 // ลากการ์ดจัดลำดับ (HTML5 drag-and-drop เนทีฟ ไม่พึ่งไลบรารีเพิ่ม — แพทเทิร์นเดียวกับ StatusBoard
 // ของหน้า Production) state การลาก (draggingId/dragOverId) อยู่ในนี้ ธุรกิจ (ยิง PATCH อะไร) อยู่ที่
 // useStoreDesignViewModel.onReorder แล้ว
+import dynamic from "next/dynamic";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/base";
@@ -13,7 +15,9 @@ import { FilterToolbar, SearchInput, TypeTabBar } from "@/components/shared/data
 import { actionIcon } from "@/components/shared/actions";
 import type { useStoreDesignViewModel } from "./useStoreDesignViewModel";
 import { BannerCard } from "./_components/BannerCard";
-import { BannerFormModal } from "./_components/BannerFormModal";
+
+// ฟอร์มแบนเนอร์ (Form/DatePicker/อัปโหลดรูป) แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
+const BannerFormModal = dynamic(() => import("./_components/BannerFormModal").then((m) => m.BannerFormModal), { ssr: false });
 
 type VM = ReturnType<typeof useStoreDesignViewModel>;
 
@@ -21,6 +25,7 @@ export function StoreDesignView(vm: VM) {
   const t = useTranslations();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const formUsed = useOpenedOnce(vm.modalOpen);
 
   const handleDrop = (targetId: string) => {
     const id = draggingId;
@@ -83,10 +88,11 @@ export function StoreDesignView(vm: VM) {
 
           {/* ไม่ใส่ items-start → การ์ดยืดเต็มแถว (BannerCard h-full) สูงเท่ากัน รวมถึงปุ่ม "เพิ่มแบนเนอร์" */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {vm.rows.map((b) => (
+            {vm.rows.map((b, i) => (
               <BannerCard
                 key={b._id}
                 banner={b}
+                priority={i < 2}
                 draggable={vm.canReorder && vm.perm.update}
                 dragging={draggingId === b._id}
                 dragOver={dragOverId === b._id}
@@ -117,14 +123,16 @@ export function StoreDesignView(vm: VM) {
         </div>
       )}
 
-      <BannerFormModal
-        key={vm.editTarget?._id ?? "new"}
-        open={vm.modalOpen}
-        editTarget={vm.editTarget}
-        saving={vm.saving}
-        onClose={vm.closeModal}
-        onSubmit={vm.onSubmit}
-      />
+      {formUsed && (
+        <BannerFormModal
+          key={vm.editTarget?._id ?? "new"}
+          open={vm.modalOpen}
+          editTarget={vm.editTarget}
+          saving={vm.saving}
+          onClose={vm.closeModal}
+          onSubmit={vm.onSubmit}
+        />
+      )}
     </ListPageLayout>
   );
 }

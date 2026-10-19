@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { BANNERS_KEY, BANNERS_PARAMS } from "./bannersQuery";
 import { useTranslations } from "next-intl";
 import { bannersService } from "@/services/banners";
 import { usePermission } from "@/context/PermissionsContext";
@@ -13,7 +14,6 @@ import { isApiError } from "@/types/api";
 import type { Banner } from "@/types/banner";
 import type { BannerStatus } from "@/constants/enumConfig";
 import { getBannerStatus, toInput, type BannerFormValue } from "./bannerForm";
-import { LIST_ALL } from "@/lib/http";
 
 export interface BannerRow extends Banner {
   status: BannerStatus;
@@ -35,8 +35,8 @@ export function useStoreDesignViewModel() {
   const [editTarget, setEditTarget] = useState<Banner | null>(null);
 
   const q = useQuery({
-    queryKey: ["banners"],
-    queryFn: () => bannersService.list({ limit: LIST_ALL, sort: "sort_order" }),
+    queryKey: BANNERS_KEY,
+    queryFn: () => bannersService.list(BANNERS_PARAMS),
   });
 
   const rows = useMemo<BannerRow[]>(
@@ -131,7 +131,8 @@ export function useStoreDesignViewModel() {
     perm,
     rows: filtered,
     counts,
-    isLoading: q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
 
