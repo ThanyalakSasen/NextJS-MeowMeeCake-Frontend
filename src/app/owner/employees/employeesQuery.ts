@@ -8,3 +8,5 @@ import { LIST_ALL } from "@/lib/http";
 export const STAFF_PARAMS = { limit: LIST_ALL, role_type: "owner,staff" };
 export const STAFF_KEY = ["users", "staff"] as const;
 export const ROLES_KEY = ["roles"] as const;
+/** พนักงาน 1 คน (หน้าแก้ไข) — key แยกจากรายการ (ดู useEditEmployeeViewModel) */
+export const userKey = (id: string) => ["user", id] as const;
