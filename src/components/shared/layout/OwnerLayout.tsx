@@ -46,6 +46,7 @@ const SSR_PAGES = [
   "/owner/ingredients/ingredientHistory",
   "/owner/ingredients/units",
   "/owner/recipes",
+  "/owner/employees",
 ];
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {

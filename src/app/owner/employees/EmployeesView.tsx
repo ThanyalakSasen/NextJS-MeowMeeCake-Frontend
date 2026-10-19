@@ -1,9 +1,10 @@
 "use client";
 // View ของ Employees List — JSX ล้วน (+ ResetPasswordModal สำหรับตั้งรหัสผ่านใหม่)
+import dynamic from "next/dynamic";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { useTranslations, useLocale } from "next-intl";
 import { KeyIcon, LockOpenIcon } from "@heroicons/react/24/outline";
 import { formatDate } from "@/i18n/format";
-import { ResetPasswordModal } from "./_components/ResetPasswordModal";
 import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
@@ -14,10 +15,14 @@ import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel
 import { EMPLOYEE_WORKING_CONFIG, NOTICE_TAG } from "@/constants/enumConfig";
 import { sortOptionsThai } from "@/lib/thaiSort";
 
+// โมดัลตั้งรหัสผ่านใหม่แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
+const ResetPasswordModal = dynamic(() => import("./_components/ResetPasswordModal").then((m) => m.ResetPasswordModal), { ssr: false });
+
 type VM = ReturnType<typeof useEmployeesViewModel>;
 
 export function EmployeesView(vm: VM) {
   const t = useTranslations();
+  const passwordUsed = useOpenedOnce(!!vm.passwordTarget);
   const locale = useLocale();
 
   const columns: Column<EmployeeRow>[] = [
@@ -167,12 +172,14 @@ export function EmployeesView(vm: VM) {
         </div>
       )}
 
-      <ResetPasswordModal
-        target={vm.passwordTarget}
-        saving={vm.savingPassword}
-        onClose={vm.closePassword}
-        onSave={vm.onSavePassword}
-      />
+      {passwordUsed && (
+        <ResetPasswordModal
+          target={vm.passwordTarget}
+          saving={vm.savingPassword}
+          onClose={vm.closePassword}
+          onSave={vm.onSavePassword}
+        />
+      )}
     </ListPageLayout>
   );
 }
