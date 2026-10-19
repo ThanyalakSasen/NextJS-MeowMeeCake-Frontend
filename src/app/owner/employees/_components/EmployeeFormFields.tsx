@@ -7,18 +7,20 @@ import { useQuery } from "@tanstack/react-query";
 import type { Rule } from "antd/es/form";
 import { Form } from "antd";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
-import { Button, Input, InputNumber, PasswordInput, Select, Switch, DatePicker, FormItem } from "@/components/base";
+import { Button, Input, InputNumber, PasswordInput, Select, Switch, LazyDatePicker, FormItem } from "@/components/base";
 import { isLinePlaceholderEmail } from "@/lib/lineAccount";
 import { rolesService } from "@/services/roles";
 import { MIN_PASSWORD_LENGTH } from "@/constants/auth";
 import { usePermissionCeiling } from "../usePermissionCeiling";
 import { sortOptionsThai } from "@/lib/thaiSort";
 import { generatePassword } from "./generatePassword";
+import { ROLES_KEY } from "../employeesQuery";
 
 /** currentRoleId = บทบาทเดิมของบัญชีที่แก้ — ไม่ย้ายบทบาท = backend ไม่ตรวจ จึงเลือกค้างไว้ได้เสมอ */
 export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?: boolean; currentRoleId?: string }) {
   const t = useTranslations();
-  const roles = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list() });
+  // key เดียวกับหน้ารายชื่อ — หน้าเพิ่มพนักงานดึงไว้ฝั่ง server แล้ว (addEmployee/page.tsx)
+  const roles = useQuery({ queryKey: ROLES_KEY, queryFn: () => rolesService.list() });
   // เลือกได้เฉพาะตำแหน่งพนักงาน — ตัด role ลูกค้าออก (เหมือนหน้ารายชื่อ)
   const staffRoles = (roles.data?.data ?? []).filter((r) => r.role_type !== "customer");
   // ตำแหน่งที่สิทธิ์สูงกว่าเรา (รวม owner) ย้ายเข้าไม่ได้ — แสดงแต่ปิดไว้ (P4)
@@ -61,13 +63,14 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
         name="email"
         label={t("fields.email")}
         rules={emailRule}
-        extra={isLinePlaceholderEmail(email) ? hint(<span className="text-amber-600">{t("employees.lineNoEmail")}</span>) : undefined}
+        extra={isLinePlaceholderEmail(email) ? hint(<span className="text-amber-700">{t("employees.lineNoEmail")}</span>) : undefined}
       >
         <Input />
       </FormItem>
       {!isEdit && (
         // FormItem นอก (ไม่มี name) = label + hint + error · ตัวใน noStyle ผูกค่า — วางปุ่มข้างช่องได้
-        <FormItem label={t("fields.password")} extra={hint(t("employees.passwordHint"))} required>
+        // htmlFor ผูก label กับช่องจริง (antd ตั้ง id ของช่อง = ชื่อฟิลด์) — ไม่มี = ช่องรหัสผ่านไม่มีชื่อให้ screen reader
+        <FormItem label={t("fields.password")} htmlFor="password" extra={hint(t("employees.passwordHint"))} required>
           <div className="flex gap-2">
             <FormItem name="password" rules={passwordRule} noStyle>
               <PasswordInput
@@ -91,7 +94,7 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
       >
         <Select
           allowClear
-          loading={roles.isLoading}
+          loading={roles.isPending}
           options={sortOptionsThai(staffRoles.map((r) => ({ value: r._id, label: r.role_name, disabled: roleBlocked(r._id) })))}
         />
       </FormItem>
@@ -109,11 +112,11 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
       </FormItem>
 
       <FormItem name="start_working_date" label={t("fields.start_working_date")}>
-        <DatePicker />
+        <LazyDatePicker />
       </FormItem>
       {/* วันสุดท้ายที่ทำงาน อยู่คอลัมน์ขวา ใต้วันเริ่มงาน (จอเล็กเป็นคอลัมน์เดียว — ต่อกันตามลำดับ) */}
       <FormItem name="last_working_date" label={t("fields.last_working_date")} className="md:col-start-2">
-        <DatePicker />
+        <LazyDatePicker />
       </FormItem>
 
       {/* สวิตช์ 2 ตัวอยู่แถวเดียวกัน: สถานะพนักงาน (ซ้าย) · อนุญาตให้เข้าสู่ระบบ (ขวา) */}

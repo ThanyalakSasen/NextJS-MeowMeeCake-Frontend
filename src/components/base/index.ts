@@ -10,6 +10,7 @@ export { Badge, type BadgeProps } from "./Badge";
 export { Spinner, type SpinProps } from "./Spinner";
 export { Divider, type DividerProps } from "./Divider";
 export { DatePicker, RangePicker, type DatePickerProps } from "./DatePicker";
+export { LazyDatePicker } from "./LazyDatePicker";
 export { Avatar, initialsOf } from "./Avatar";
 export { DotIndicator } from "./DotIndicator";
 export { ProgressBar } from "./ProgressBar";
