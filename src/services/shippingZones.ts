@@ -4,7 +4,7 @@
 //   PATCH /admin/shipping-zones/:zone_code   { zone_label?, fee?, provinces? } — จังหวัดซ้ำโซนอื่น = 409 · ไม่ใช่ 77 จังหวัด = 400
 // หน้าร้านอ่านชุดเดียวกันจาก catalogService.shippingZones() (/catalog/shipping-zones)
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
 import type { ShippingZone, ShippingZoneCode, ShippingZoneUpdate } from "@/types/shippingZone";
 
@@ -20,7 +20,9 @@ const toZone = (raw: any): ShippingZone => ({
 });
 
 export const shippingZonesService = {
-  list: async (): Promise<ShippingZone[]> => (await http.getList<any>(BASE)).data.map(toZone),
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (shipping/page.tsx)
+   *  ส่งเป็น queryFn ตรง ๆ ไม่ได้ (react-query จะส่ง context มาเป็น h) — ห่อ () => เสมอ */
+  list: async (h: HttpReader = http): Promise<ShippingZone[]> => (await h.getList<any>(BASE)).data.map(toZone),
 
   update: async (code: ShippingZoneCode, body: ShippingZoneUpdate): Promise<ShippingZone> =>
     toZone((await http.patch<ItemResponse<any>>(`${BASE}/${code}`, body)).data),

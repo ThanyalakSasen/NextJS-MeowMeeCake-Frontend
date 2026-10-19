@@ -1,26 +1,30 @@
 "use client";
 // View ของ "ค่าจัดส่งหน้าร้านออนไลน์" (BACKLOG4 F2) — ใช้กับอะไร · ตรวจจังหวัด · ตารางโซน A–D + modal แก้ไข
 // ปุ่มแก้ไขตามสิทธิ์ store_info.update · โซนคงที่ 4 โซน (ไม่มีเพิ่ม/ลบ)
-import { Modal } from "antd";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { Card, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable } from "@/components/shared/data";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
-import { EditButton, modalButtonIcons } from "@/components/shared/actions";
+import { EditButton } from "@/components/shared/actions";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { PROVINCE_OPTIONS } from "@/constants/thaiProvinces";
 import { formatCurrency } from "@/i18n/format";
 import type { ShippingZone } from "@/types/shippingZone";
 import type { useShippingZonesViewModel } from "./useShippingZonesViewModel";
 import { FALLBACK_ZONE } from "./shippingZoneForm";
-import { ShippingZoneFormFields } from "./_components/ShippingZoneFormFields";
 import { NOTICE_TAG, SHIPPING_ZONE_CONFIG } from "@/constants/enumConfig";
+
+// โมดัลแก้ไขโซน (antd Modal + ฟอร์ม) แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
+const ShippingZoneEditModal = dynamic(() => import("./_components/ShippingZoneEditModal").then((m) => m.ShippingZoneEditModal), { ssr: false });
 
 type VM = ReturnType<typeof useShippingZonesViewModel>;
 const PROVINCES_SHOWN = 8;
 
 export function ShippingZonesView(vm: VM) {
   const t = useTranslations();
+  const modalUsed = useOpenedOnce(!!vm.editing);
   const locale = useLocale();
   const money = (n: number) => formatCurrency(n, locale);
 
@@ -107,28 +111,7 @@ export function ShippingZonesView(vm: VM) {
         </div>
       )}
 
-      <Modal
-        open={!!vm.editing}
-        title={vm.editing ? t("shippingZones.editTitle", { code: vm.editing.code }) : ""}
-        width={640}
-        onCancel={vm.closeEdit}
-        onOk={vm.onSave}
-        confirmLoading={vm.saving}
-        okText={t("common.save")}
-        cancelText={t("common.cancel")}
-        {...modalButtonIcons("save")}
-        destroyOnHidden
-      >
-        {vm.editing && (
-          <ShippingZoneFormFields
-            code={vm.editing.code}
-            form={vm.editing.form}
-            errors={vm.errors}
-            taken={vm.takenProvinces}
-            onChange={vm.setForm}
-          />
-        )}
-      </Modal>
+      {modalUsed && <ShippingZoneEditModal {...vm} />}
     </ListPageLayout>
   );
 }
