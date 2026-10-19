@@ -563,6 +563,7 @@
     },
     "notificationModule": {
       "order": "คำสั่งซื้อ",
+      "product": "สินค้า",
       "ingredient": "วัตถุดิบ",
       "production": "การผลิต",
       "employee": "พนักงาน",

@@ -563,6 +563,7 @@
     },
     "notificationModule": {
       "order": "Order",
+      "product": "Product",
       "ingredient": "Ingredient",
       "production": "Production",
       "employee": "Employee",
