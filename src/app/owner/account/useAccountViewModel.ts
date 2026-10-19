@@ -36,7 +36,7 @@ export function useAccountViewModel() {
   const [tab, setTab] = useState<AccountTab>("profile");
 
   // ── ข้อมูลของฉัน ──
-  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: shopProfileService.get });
+  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: () => shopProfileService.get() });
   const profile = profileQ.data;
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", birthday: null as Dayjs | null });
@@ -138,7 +138,8 @@ export function useAccountViewModel() {
     roleName: user?.roleName ?? "",
 
     profile,
-    profileLoading: profileQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    profileLoading: profileQ.isPending,
     profileFailed: profileQ.isError,
     refetchProfile: () => profileQ.refetch(),
     editing,

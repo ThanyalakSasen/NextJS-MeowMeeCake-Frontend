@@ -5,7 +5,7 @@
 //   GET/POST /shop/me/email       บัญชีที่สมัครด้วย LINE: ตั้งอีเมลจริงแทนอีเมลชั่วคราว + ส่งลิงก์ยืนยัน
 // ผูก/ยกเลิก LINE ใช้ services/shopLine.ts (/shop/me/line)
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
 
 export type AuthProvider = "local" | "google" | "line";
@@ -67,8 +67,10 @@ function toProfile(raw: any): ShopProfile {
 }
 
 export const shopProfileService = {
-  get: async (): Promise<ShopProfile> => {
-    const res = await http.get<ItemResponse<{ user: any }>>("/shop/me");
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (owner/account/page.tsx)
+   *  ส่งเป็น queryFn ตรง ๆ ไม่ได้ (react-query จะส่ง context มาเป็น h) — ห่อ () => เสมอ */
+  get: async (h: HttpReader = http): Promise<ShopProfile> => {
+    const res = await h.get<ItemResponse<{ user: any }>>("/shop/me");
     return toProfile(res.data.user);
   },
 
