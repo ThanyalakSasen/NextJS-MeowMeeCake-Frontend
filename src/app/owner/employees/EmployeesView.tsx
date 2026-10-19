@@ -84,9 +84,10 @@ export function EmployeesView(vm: VM) {
       }
       toolbar={
         <FilterToolbar
-          left={
+          left={<SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("employees.searchPlaceholder")} />}
+          // ตัวกรองชิดขวา: ตำแหน่ง → สถานะ
+          right={
             <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("employees.searchPlaceholder")} />
               <FilterField label={t("filterLabel.role")} minWidth={160}>
                 <Select
                   value={vm.roleId}
