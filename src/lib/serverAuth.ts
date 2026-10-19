@@ -48,6 +48,10 @@ export const currentUserOnServer = cache(async (): Promise<CurrentUser | null> =
 /**
  * http ฝั่ง server ที่ทำงานแทนผู้ใช้ที่ login อยู่ — ส่ง cookie ต่อ · ไม่แคช (ข้อมูลรายคน)
  * ใช้ prefetch ข้อมูลหลังร้านตอน render (เช่น dashboard/page.tsx) · ไม่มี cookie = null
+ *
+ * page.tsx ไม่ต้องรอ currentUserOnServer() ก่อนยิง — layout ถาม /auth/me ขนานกันอยู่แล้ว ถ้ารอก่อนจะเป็น
+ * backend 2 ทอดต่อกัน (HTML ช้าลงเท่า 1 round trip ไป Render) · session หมดอายุ → backend ตอบ 401 →
+ * prefetchQuery กลืน error และ query ที่ไม่สำเร็จไม่ถูกส่งไป browser (ฝั่ง server ไม่มีตัวเด้ง login ของ http)
  */
 export async function serverHttpAsUser(): Promise<HttpReader | null> {
   const jar = await cookies();

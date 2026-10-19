@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { expensesService } from "@/services/expenses";
 import { reportsService } from "@/services/reports";
 import { LIST_ALL } from "@/lib/http";
-import { currentUserOnServer, serverHttpAsUser } from "@/lib/serverAuth";
+import { serverHttpAsUser } from "@/lib/serverAuth";
 import { prefetchPublic } from "@/app/customer/lib/prefetchPublic";
 import FinanceSummaryPage from "./FinanceSummaryPageClient";
 import { revenueKey, trendBuckets } from "./summaryRanges";
@@ -13,10 +13,11 @@ import { revenueKey, trendBuckets } from "./summaryRanges";
 // เดิมเนื้อหาขึ้นหลัง JS ทำงาน + ยิง API (Lighthouse มือถือ LCP 3.8 วิ) · ช่วงเวลาคำนวณด้วยโค้ดเดียวกับ ViewModel
 // (summaryRanges.ts · server ตั้งเวลาไทยใน instrumentation.ts) · backend ช้า/ไม่มี user → browser ดึงเอง (รอไม่เกิน 2.5 วิ)
 export default async function FinanceSummaryRoute() {
-  const [user, h] = await Promise.all([currentUserOnServer(), serverHttpAsUser()]);
+  // ไม่รอ /auth/me ก่อน — ยิงข้อมูลพร้อมกับที่ layout ถาม /auth/me (เดิมรอต่อกัน 2 ทอดไป backend) · ดู serverHttpAsUser
+  const h = await serverHttpAsUser();
   const buckets = trendBuckets("month", dayjs());
   const state = await prefetchPublic(
-    user && h
+    h
       ? [
           { queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: LIST_ALL }, h) },
           ...buckets.map((b) => ({
