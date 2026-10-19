@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { deliveryZonesService } from "@/services/deliveryZones";
 import { usePermission } from "@/context/PermissionsContext";
+import { DELIVERY_FEE_OVERVIEW_KEY as OVERVIEW_KEY, DELIVERY_ZONES_KEY as KEY } from "./deliveryZonesQuery";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { DeliveryZone, DeliveryZoneInput } from "@/types/deliveryZone";
@@ -16,16 +17,15 @@ import {
   EMPTY_ZONE_FORM, activeZones, cleanZoneInput, duplicateProvinces, resolveZone, toZoneForm, validateZone, type ZoneErrors,
 } from "./deliveryZoneForm";
 
-const KEY = ["delivery-zones"] as const;
-const OVERVIEW_KEY = ["delivery-fee"] as const;
 
 export function useDeliveryZonesViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
   const perm = usePermission("orders");
 
-  const q = useQuery({ queryKey: KEY, queryFn: deliveryZonesService.list });
-  const overviewQ = useQuery({ queryKey: OVERVIEW_KEY, queryFn: deliveryZonesService.overview });
+  // page.tsx ดึงไว้ฝั่ง server แล้ว (key ที่ deliveryZonesQuery.ts) · queryFn ต้องห่อ () => (ดู deliveryZonesService)
+  const q = useQuery({ queryKey: KEY, queryFn: () => deliveryZonesService.list() });
+  const overviewQ = useQuery({ queryKey: OVERVIEW_KEY, queryFn: () => deliveryZonesService.overview() });
   const zones = useMemo(() => q.data ?? [], [q.data]);
   const live = useMemo(() => zones.filter((z) => !z.deleted_at).sort((a, b) => a.sort_order - b.sort_order), [zones]);
   const deleted = useMemo(() => zones.filter((z) => z.deleted_at), [zones]);
@@ -90,7 +90,8 @@ export function useDeliveryZonesViewModel() {
 
   return {
     perm,
-    isLoading: q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
     overview: overviewQ.data ?? null,
