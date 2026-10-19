@@ -18,15 +18,16 @@ import {
   provinceOwners, resolveShippingZone, toShippingZoneForm, toShippingZoneUpdate, validateShippingZone,
   type ShippingZoneErrors, type ShippingZoneForm,
 } from "./shippingZoneForm";
+import { SHIPPING_ZONES_KEY as KEY } from "./shippingQuery";
 
-const KEY = ["admin", "shipping-zones"] as const;
 
 export function useShippingZonesViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
   const perm = usePermission("store_info");
 
-  const q = useQuery({ queryKey: KEY, queryFn: shippingZonesService.list });
+  // page.tsx ดึงไว้ฝั่ง server แล้ว (key ที่ shippingQuery.ts)
+  const q = useQuery({ queryKey: KEY, queryFn: () => shippingZonesService.list() });
   const zones = useMemo(() => q.data ?? [], [q.data]);
 
   // ── แก้ไข (modal) ──
@@ -57,7 +58,8 @@ export function useShippingZonesViewModel() {
 
   return {
     perm,
-    isLoading: q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
     zones,

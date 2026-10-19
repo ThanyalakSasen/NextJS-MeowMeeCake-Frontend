@@ -45,6 +45,9 @@ export const antdTheme: ThemeConfig = {
     colorText: color.text,
     colorTextSecondary: color.textMuted,
     colorTextTertiary: color.textSubtle,
+    // placeholder ของ antd ค่าเริ่มต้น = ดำโปร่ง 25% (~1.9:1 บนพื้นขาว) — Select วาด placeholder เป็นข้อความจริง
+    // Lighthouse "color-contrast" จึงตก · ใช้สีเดียวกับข้อความรอง (#64748B ~4.8:1)
+    colorTextPlaceholder: color.textSubtle,
     colorBorder: color.border,
     colorBorderSecondary: color.borderSubtle,
     colorBgContainer: color.surface,
