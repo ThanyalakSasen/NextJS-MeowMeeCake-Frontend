@@ -79,7 +79,7 @@ export function UserLogView(vm: VM) {
     <ListPageLayout
       title={t("userLog.title")}
       actions={
-        <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
+        <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport} loading={vm.exporting}>
           {t("common.export")}
         </Button>
       }
@@ -135,6 +135,7 @@ export function UserLogView(vm: VM) {
             loading={vm.isLoading}
             emptyText={t("userLog.empty")}
             onRowClick={vm.onView}
+            pagination={vm.pagination}
           />
         </div>
       )}

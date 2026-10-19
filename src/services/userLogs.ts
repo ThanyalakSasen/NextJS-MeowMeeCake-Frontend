@@ -9,7 +9,11 @@ import type { RawUserLog, UserLog, UserLogListParams } from "@/types/userLog";
 const BASE = "/admin/user-logs";
 
 function toUserLog(raw: RawUserLog): UserLog {
-  return { ...raw, user_id: refId(raw.user_id) };
+  return {
+    ...raw,
+    user_id: refId(raw.user_id),
+    user_name: typeof raw.user_id === "object" && raw.user_id ? raw.user_id.user_fullname : null,
+  };
 }
 
 export const userLogsService = {
