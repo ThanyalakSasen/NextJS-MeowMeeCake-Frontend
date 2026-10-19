@@ -1,12 +1,12 @@
 // เรียก endpoint /permissions (docs/API_CONTRACT.md §3) — แพทเทิร์นเดียวกับ services/products.ts
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { Permission, PermissionInput, PermissionListParams } from "@/types/permission";
 
 const BASE = "/admin/permissions";
 
 export const permissionsService = {
-  list: (params: PermissionListParams = {}) => http.getList<Permission>(BASE, { params }),
+  list: (params: PermissionListParams = {}, h: HttpReader = http) => h.getList<Permission>(BASE, { params }),
   create: (body: PermissionInput) => http.post<ItemResponse<Permission>>(BASE, body),
   update: (id: string, body: Partial<PermissionInput>) => http.patch<ItemResponse<Permission>>(`${BASE}/${id}`, body),
   remove: (id: string) => http.delete<EmptyResponse>(`${BASE}/${id}`),
