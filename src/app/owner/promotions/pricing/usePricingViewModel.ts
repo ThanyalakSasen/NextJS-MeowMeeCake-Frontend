@@ -18,7 +18,7 @@ import { refId } from "@/lib/refId";
 import { productKindOf, type ProductKind } from "@/types/product";
 import { isApiError } from "@/types/api";
 import { calcSalePrice, discountFromSalePrice, type Discount } from "./pricingHelpers";
-import { LIST_ALL } from "@/lib/http";
+import { PRICING_CATEGORIES_KEY, PRICING_PRODUCTS_KEY, PRICING_PRODUCTS_PARAMS } from "./pricingQuery";
 import { sortOptionsThai } from "@/lib/thaiSort";
 
 export interface PricingRow {
@@ -43,8 +43,8 @@ export function usePricingViewModel() {
   const qc = useQueryClient();
   const perm = usePermission("products");
 
-  const productsQ = useQuery({ queryKey: ["products", { limit: LIST_ALL }], queryFn: () => productsService.list({ limit: LIST_ALL }) });
-  const catsQ = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
+  const productsQ = useQuery({ queryKey: PRICING_PRODUCTS_KEY, queryFn: () => productsService.list(PRICING_PRODUCTS_PARAMS) });
+  const catsQ = useQuery({ queryKey: PRICING_CATEGORIES_KEY, queryFn: () => productCategoriesService.list() });
 
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("all");
@@ -144,7 +144,8 @@ export function usePricingViewModel() {
 
   return {
     perm,
-    isLoading: productsQ.isLoading || catsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: productsQ.isPending || catsQ.isPending,
     isError: productsQ.isError,
     refetch: () => productsQ.refetch(),
 

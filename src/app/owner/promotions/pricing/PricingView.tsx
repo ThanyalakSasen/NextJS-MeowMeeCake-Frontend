@@ -43,12 +43,12 @@ export function PricingView(vm: VM) {
     {
       key: "basePrice",
       title: t("pricing.colBasePrice"),
-      render: (r) => <PriceCell value={r.basePrice} onChange={(v) => vm.onChangeBasePrice(r, v)} highlight={r.isDirty} />,
+      render: (r) => <PriceCell ariaLabel={`${t("pricing.colBasePrice")} ${r.name}`} value={r.basePrice} onChange={(v) => vm.onChangeBasePrice(r, v)} highlight={r.isDirty} />,
     },
     {
       key: "salePrice",
       title: t("pricing.colSalePrice"),
-      render: (r) => <PriceCell value={r.salePrice} onChange={(v) => vm.onChangeSalePrice(r, v)} highlight={r.isDirty && r.salePrice !== null} />,
+      render: (r) => <PriceCell ariaLabel={`${t("pricing.colSalePrice")} ${r.name}`} value={r.salePrice} onChange={(v) => vm.onChangeSalePrice(r, v)} highlight={r.isDirty && r.salePrice !== null} />,
     },
     {
       key: "discount",
@@ -59,7 +59,7 @@ export function PricingView(vm: VM) {
       key: "is_visible",
       title: t("pricing.colVisible"),
       align: "center",
-      render: (r) => <Switch size="small" checked={r.isVisible} onChange={() => vm.onToggleVisible(r)} />,
+      render: (r) => <Switch size="small" aria-label={`${t("pricing.colVisible")} ${r.name}`} checked={r.isVisible} onChange={() => vm.onToggleVisible(r)} />,
     },
   ];
 
