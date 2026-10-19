@@ -51,6 +51,7 @@ const SSR_PAGES = [
   "/owner/employees/editEmployee",
   "/owner/employees/permissions",
   "/owner/employees/userLog",
+  "/owner/store-design",
 ];
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
