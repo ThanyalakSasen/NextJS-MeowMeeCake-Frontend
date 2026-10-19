@@ -17,8 +17,10 @@ import {
   emptyGroup, emptyOption, emptyVariant, fromCustomization, move, toInput, validate,
   type CustomizationState, type GroupRow, type OptionRow, type VariantRow,
 } from "./customizationForm";
+import { customizationKey } from "../../productFormQuery";
 
-export const customizationKey = (productId: string) => ["product-customization", productId] as const;
+// key อยู่ไฟล์ pure (server prefetch ใช้ได้) — export ต่อจากที่นี่ให้ที่ import เดิม (POS) ใช้ได้เหมือนเดิม
+export { customizationKey } from "../../productFormQuery";
 
 export function useCustomizationEditor() {
   const t = useTranslations();
@@ -58,7 +60,8 @@ export function useCustomizationEditor() {
 
   return {
     canEdit: perm.update,
-    isLoading: q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: !!id && q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
     groups: state.groups,
