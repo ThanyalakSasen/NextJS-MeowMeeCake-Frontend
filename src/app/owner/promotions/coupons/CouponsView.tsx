@@ -1,5 +1,7 @@
 "use client";
 // View ของ Coupons — กริดการ์ดคูปอง + modal เพิ่ม/แก้ไข
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Button, EmptyState, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
@@ -9,12 +11,16 @@ import { FilterToolbar, SearchInput, TypeTabBar, FilterField } from "@/component
 import { actionIcon } from "@/components/shared/actions";
 import type { useCouponsViewModel } from "./useCouponsViewModel";
 import { CouponCard } from "./_components/CouponCard";
-import { CouponFormModal } from "./_components/CouponFormModal";
+// ฟอร์มคูปอง (Form/DatePicker/Select หลายตัว) แยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า
+const CouponFormModal = dynamic(() => import("./_components/CouponFormModal").then((m) => m.CouponFormModal), { ssr: false });
 
 type VM = ReturnType<typeof useCouponsViewModel>;
 
 export function CouponsView(vm: VM) {
   const t = useTranslations();
+  // mount ฟอร์มเมื่อเปิดครั้งแรก แล้วคาไว้ (แอนิเมชันปิดยังทำงาน)
+  const [formUsed, setFormUsed] = useState(vm.modalOpen);
+  if (vm.modalOpen && !formUsed) setFormUsed(true);
 
   return (
     <ListPageLayout
@@ -101,16 +107,18 @@ export function CouponsView(vm: VM) {
         </div>
       )}
 
-      <CouponFormModal
-        key={vm.editTarget?._id ?? "new"}
-        open={vm.modalOpen}
-        editTarget={vm.editTarget}
-        productOptions={vm.productOptions}
-        categoryOptions={vm.categoryOptions}
-        saving={vm.saving}
-        onClose={vm.closeModal}
-        onSubmit={vm.onSubmit}
-      />
+      {formUsed && (
+        <CouponFormModal
+          key={vm.editTarget?._id ?? "new"}
+          open={vm.modalOpen}
+          editTarget={vm.editTarget}
+          productOptions={vm.productOptions}
+          categoryOptions={vm.categoryOptions}
+          saving={vm.saving}
+          onClose={vm.closeModal}
+          onSubmit={vm.onSubmit}
+        />
+      )}
     </ListPageLayout>
   );
 }
