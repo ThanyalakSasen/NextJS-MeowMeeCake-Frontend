@@ -3,6 +3,7 @@
 // DataTable — ตารางข้อมูล reusable (loading / empty / row action / pagination)
 // ใช้ CSS class .data-table จาก globals.css · columns.title = ข้อความที่แปลแล้ว
 // ไม่ส่ง pagination → แบ่งหน้าฝั่ง client ให้เอง (10 แถว/หน้า เปลี่ยนได้) · ส่ง pagination={false} = แสดงทุกแถว
+// ส่ง renderCard → จอ <1280px แสดงเป็นการ์ดแทนตาราง (ตารางหลายคอลัมน์บีบจนข้อความไทยตัดทีละตัวอักษร) · ≥1280px เป็นตารางเหมือนเดิม
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { LoadingSpin } from "@/components/shared/feedback";
@@ -41,6 +42,8 @@ export interface DataTableProps<T> {
   inCard?: boolean;
   /** class เพิ่มให้กล่อง scroll ของตาราง — เช่นกำหนดความสูงตายตัว (ดู .expense-table-scroll) */
   scrollClassName?: string;
+  /** การ์ดต่อแถวสำหรับจอ <1280px (xl) — ไม่ส่ง = เป็นตารางทุกขนาดจอ · ปุ่ม action ผู้เรียกใส่ในการ์ดเอง */
+  renderCard?: (row: T) => React.ReactNode;
 }
 
 export function DataTable<T>({
@@ -54,6 +57,7 @@ export function DataTable<T>({
   pagination,
   inCard,
   scrollClassName = "",
+  renderCard,
 }: DataTableProps<T>) {
   const [localPage, setLocalPage] = useState(1);
   const [localPageSize, setLocalPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -91,7 +95,20 @@ export function DataTable<T>({
 
   return (
     <div className="flex flex-col">
-      <div className={`overflow-x-auto ${box} ${scrollClassName}`}>
+      {renderCard && (
+        <ul className={`m-0 grid list-none grid-cols-1 gap-3 md:grid-cols-2 xl:hidden ${inCard ? "p-3" : "p-0"}`}>
+          {visible.map((row, i) => (
+            <li
+              key={keyOf(row, i)}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              className={`rounded-xl border border-gray-100 bg-white p-4 ${onRowClick ? "cursor-pointer" : ""}`}
+            >
+              {renderCard(row)}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className={`overflow-x-auto ${box} ${scrollClassName} ${renderCard ? "hidden xl:block" : ""}`}>
         <table className="data-table">
           <thead>
             <tr>
