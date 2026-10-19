@@ -18,7 +18,6 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { usePermission } from "@/context/PermissionsContext";
 import { isUnrestrictedRole } from "@/constants/menuKeys";
 import { alert, confirmAlert } from "@/lib/alert";
-import { LIST_ALL } from "@/lib/http";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { isApiError } from "@/types/api";
 import type { AdminWeeklyMarket, StoreSettings } from "@/types/storeAdmin";
@@ -31,10 +30,9 @@ import {
   sectionChanged, validateAddress, validateMarkets, validateProfile,
   type FieldError, type FormErrors, type ProfileForm, type SectionKey,
 } from "./storeInfoForm";
+import { MARKETS_KEY, PROFILE_KEY, SETTINGS_KEY } from "./storeInfoQuery";
+import { ROLES_KEY, STAFF_KEY, STAFF_PARAMS } from "../employees/employeesQuery";
 
-const PROFILE_KEY = ["store-admin", "profile"] as const;
-const SETTINGS_KEY = ["store-admin", "settings"] as const;
-const MARKETS_KEY = ["store-admin", "weekly-markets"] as const;
 const DEFAULT_LOGO = "/pictures/logoMoewMeeCake.png";
 
 export interface StaffOption {
@@ -50,15 +48,12 @@ export function useStoreInfoViewModel() {
   const isOwner = isUnrestrictedRole(user?.roleType);
   const perm = usePermission("store_info");
 
-  const profileQ = useQuery({ queryKey: PROFILE_KEY, queryFn: storeAdminService.profile, enabled: isOwner });
-  const settingsQ = useQuery({ queryKey: SETTINGS_KEY, queryFn: storeAdminService.settings, enabled: isOwner });
-  const marketsQ = useQuery({ queryKey: MARKETS_KEY, queryFn: storeAdminService.weeklyMarkets, enabled: perm.view });
-  const usersQ = useQuery({
-    queryKey: ["users", "staff"],
-    queryFn: () => usersService.list({ limit: LIST_ALL, role_type: "owner,staff" }),
-    enabled: isOwner,
-  });
-  const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list(), enabled: isOwner });
+  // page.tsx ดึงไว้ฝั่ง server แล้ว (key ที่ storeInfoQuery.ts / employeesQuery.ts) · queryFn ต้องห่อ () => (ดู storeAdminService)
+  const profileQ = useQuery({ queryKey: PROFILE_KEY, queryFn: () => storeAdminService.profile(), enabled: isOwner });
+  const settingsQ = useQuery({ queryKey: SETTINGS_KEY, queryFn: () => storeAdminService.settings(), enabled: isOwner });
+  const marketsQ = useQuery({ queryKey: MARKETS_KEY, queryFn: () => storeAdminService.weeklyMarkets(), enabled: perm.view });
+  const usersQ = useQuery({ queryKey: STAFF_KEY, queryFn: () => usersService.list(STAFF_PARAMS), enabled: isOwner });
+  const rolesQ = useQuery({ queryKey: ROLES_KEY, queryFn: () => rolesService.list(), enabled: isOwner });
 
   const savedProfile = useMemo(() => (profileQ.data ? profileToForm(profileQ.data) : EMPTY_PROFILE), [profileQ.data]);
   const savedSettings = settingsQ.data ?? EMPTY_SETTINGS;
@@ -258,7 +253,9 @@ export function useStoreInfoViewModel() {
   return {
     isOwner,
     canView: isOwner || perm.view,
-    isLoading: (isOwner && (profileQ.isLoading || settingsQ.isLoading)) || marketsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    // query ที่ปิดอยู่ (enabled: false) isPending ค้างเป็น true — นับเฉพาะก้อนที่เปิดใช้จริง
+    isLoading: (isOwner && (profileQ.isPending || settingsQ.isPending)) || (perm.view && marketsQ.isPending),
     isError: (isOwner && (profileQ.isError || settingsQ.isError)) || marketsQ.isError,
     refetch: () => {
       void profileQ.refetch();
