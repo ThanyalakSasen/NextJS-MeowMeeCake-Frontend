@@ -40,6 +40,9 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
   const emailRule: Rule[] = [{ required: true, message: t("validation.required") }, { type: "email", message: t("validation.email") }];
   const nonNegative: Rule[] = [{ type: "number", min: 0, message: t("validation.nonNegative") }];
   // backend (schemas/user.ts createUserBody → userService.assertPasswordStrength) บังคับอย่างน้อย MIN_PASSWORD_LENGTH ตัวอักษร
+  /** ข้อความช่วยใต้ช่อง — 16px (เล็กกว่าตัวอักษรของฟอร์ม ให้แยกจาก label/ค่าที่กรอกชัด) */
+  const hint = (text: React.ReactNode) => <span className="text-[16px] leading-normal">{text}</span>;
+
   const passwordRule: Rule[] = [
     { required: true, message: t("validation.required") },
     { min: MIN_PASSWORD_LENGTH, message: t("employees.passwordHint") },
@@ -58,13 +61,13 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
         name="email"
         label={t("fields.email")}
         rules={emailRule}
-        extra={isLinePlaceholderEmail(email) ? <span className="text-amber-600">{t("employees.lineNoEmail")}</span> : undefined}
+        extra={isLinePlaceholderEmail(email) ? hint(<span className="text-amber-600">{t("employees.lineNoEmail")}</span>) : undefined}
       >
         <Input />
       </FormItem>
       {!isEdit && (
         // FormItem นอก (ไม่มี name) = label + hint + error · ตัวใน noStyle ผูกค่า — วางปุ่มข้างช่องได้
-        <FormItem label={t("fields.password")} extra={t("employees.passwordHint")} required>
+        <FormItem label={t("fields.password")} extra={hint(t("employees.passwordHint"))} required>
           <div className="flex gap-2">
             <FormItem name="password" rules={passwordRule} noStyle>
               <PasswordInput
@@ -84,7 +87,7 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
         name="role_id"
         label={t("fields.role_id")}
         rules={required}
-        extra={!ceiling.isOwner && staffRoles.some((r) => roleBlocked(r._id)) ? t("employees.roleBeyondHint") : undefined}
+        extra={!ceiling.isOwner && staffRoles.some((r) => roleBlocked(r._id)) ? hint(t("employees.roleBeyondHint")) : undefined}
       >
         <Select
           allowClear
@@ -108,22 +111,24 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
       <FormItem name="start_working_date" label={t("fields.start_working_date")}>
         <DatePicker />
       </FormItem>
-      <FormItem name="last_working_date" label={t("fields.last_working_date")}>
+      {/* วันสุดท้ายที่ทำงาน อยู่คอลัมน์ขวา ใต้วันเริ่มงาน (จอเล็กเป็นคอลัมน์เดียว — ต่อกันตามลำดับ) */}
+      <FormItem name="last_working_date" label={t("fields.last_working_date")} className="md:col-start-2">
         <DatePicker />
       </FormItem>
 
+      {/* สวิตช์ 2 ตัวอยู่แถวเดียวกัน: สถานะพนักงาน (ซ้าย) · อนุญาตให้เข้าสู่ระบบ (ขวา) */}
       <FormItem
-        name="is_active"
-        label={t("employees.fieldCanLogin")}
-        extra={t("employees.fieldCanLoginHint")}
+        name="emp_status"
+        label={t("fields.emp_status")}
+        extra={hint(t("employees.fieldEmpStatusHint"))}
         valuePropName="checked"
       >
         <Switch />
       </FormItem>
       <FormItem
-        name="emp_status"
-        label={t("fields.emp_status")}
-        extra={t("employees.fieldEmpStatusHint")}
+        name="is_active"
+        label={t("employees.fieldCanLogin")}
+        extra={hint(t("employees.fieldCanLoginHint"))}
         valuePropName="checked"
       >
         <Switch />
