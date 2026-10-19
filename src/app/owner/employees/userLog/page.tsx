@@ -5,19 +5,27 @@ import { rolesService } from "@/services/roles";
 import { serverHttpAsUser } from "@/lib/serverAuth";
 import { prefetchPublic } from "@/app/customer/lib/prefetchPublic";
 import UserLogPage from "./UserLogPageClient";
-import { ALL_USERS_KEY, ALL_USERS_PARAMS, ROLES_KEY, USER_LOGS_KEY, USER_LOGS_PARAMS } from "../employeesQuery";
+import {
+  NO_USER_LOG_FILTERS, ROLES_KEY, STAFF_KEY, STAFF_PARAMS, USER_LOG_PAGE_SIZE,
+  userLogCountQueries, userLogPageKey, userLogPageParams, userLogTodayRange,
+} from "../employeesQuery";
 
-// บันทึกการทำงานของพนักงาน — ดึงบันทึก + ผู้ใช้ + ตำแหน่ง (เติมชื่อ/ตำแหน่งผู้ทำรายการ) ฝั่ง server ด้วย cookie ของผู้ใช้
-// ก่อนส่ง HTML · เดิมการ์ดสถิติขึ้น 0 จน JS ทำงาน + รอ API 3 ก้อน (Lighthouse มือถือ Performance 83 · LCP 4.0 วิ) ·
-// key ร่วมกับ ViewModel ที่ employeesQuery.ts
+// บันทึกการทำงานของพนักงาน — ดึงหน้าแรก (10 รายการ) + จำนวนสำหรับการ์ดสถิติ 4 ก้อน (limit 1) + พนักงาน + ตำแหน่ง
+// ฝั่ง server ด้วย cookie ของผู้ใช้ — ทุกก้อนยิงรอบเดียว ทันเพดาน 2.5 วิ · เดิมดึงทุกรายการ + ผู้ใช้ทั้งระบบ ไม่ทันเพดาน
+// หน้าเลยว่างรอแล้ว browser ดึงซ้ำ (Lighthouse มือถือ SI 5.3 วิ) · key ร่วมกับ ViewModel ที่ employeesQuery.ts
 export default async function UserLogRoute() {
   // ไม่รอ /auth/me ก่อน — ยิงข้อมูลพร้อมกับที่ layout ถาม /auth/me · ดู serverHttpAsUser
   const h = await serverHttpAsUser();
+  const pageParams = userLogPageParams(NO_USER_LOG_FILTERS, 1, USER_LOG_PAGE_SIZE);
   const state = await prefetchPublic(
     h
       ? [
-          { queryKey: [...USER_LOGS_KEY], queryFn: () => userLogsService.list(USER_LOGS_PARAMS, h) },
-          { queryKey: [...ALL_USERS_KEY], queryFn: () => usersService.list(ALL_USERS_PARAMS, h) },
+          { queryKey: [...userLogPageKey(pageParams)], queryFn: () => userLogsService.list(pageParams, h) },
+          ...userLogCountQueries(userLogTodayRange()).map((c) => ({
+            queryKey: [...c.key],
+            queryFn: () => userLogsService.list(c.params, h),
+          })),
+          { queryKey: [...STAFF_KEY], queryFn: () => usersService.list(STAFF_PARAMS, h) },
           { queryKey: [...ROLES_KEY], queryFn: () => rolesService.list(h) },
         ]
       : [],
