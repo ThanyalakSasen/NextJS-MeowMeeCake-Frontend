@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { RECIPES_QUERIES as Q } from "./recipesQuery";
+import { RECIPES_PAGE_SIZE, RECIPES_QUERIES as Q } from "./recipesQuery";
 import { useTranslations } from "next-intl";
 import { recipesService } from "@/services/recipes";
 import { recipeComponentsService } from "@/services/recipeComponents";
@@ -134,8 +134,14 @@ export function useRecipesViewModel() {
   }, [recipes]);
 
   // ── แท็บ 1: สูตรหลัก ──
-  const [mainSearch, setMainSearch] = useState("");
-  const [mainCategoryFilter, setMainCategoryFilter] = useState("all");
+  const [mainSearch, setMainSearchState] = useState("");
+  const [mainCategoryFilter, setMainCategoryFilterState] = useState("all");
+  // การ์ดสูตรแบ่งหน้า — เดิมวาดทุกสูตรพร้อมกัน (การ์ดละหลายปุ่ม + Popconfirm ของ antd) งาน hydrate ก้อนใหญ่สุดของหน้า
+  // (Lighthouse TBT 410ms) · เปลี่ยนตัวกรอง/ค้นหา → กลับหน้าแรก
+  const [mainPage, setMainPage] = useState(1);
+  const [mainPageSize, setMainPageSize] = useState(RECIPES_PAGE_SIZE);
+  const setMainSearch = (v: string) => { setMainSearchState(v); setMainPage(1); };
+  const setMainCategoryFilter = (v: string) => { setMainCategoryFilterState(v); setMainPage(1); };
   const [recipeFormOpen, setRecipeFormOpen] = useState(false);
   const [recipeEditTarget, setRecipeEditTarget] = useState<Recipe | null>(null);
   const [detailRecipe, setDetailRecipe] = useState<Recipe | null>(null);
@@ -159,6 +165,11 @@ export function useRecipesViewModel() {
       return matchSearch && matchCategory;
     });
   }, [recipes, products, mainSearch, mainCategoryFilter]);
+
+  const pagedRecipes = useMemo(
+    () => filteredRecipes.slice((mainPage - 1) * mainPageSize, mainPage * mainPageSize),
+    [filteredRecipes, mainPage, mainPageSize],
+  );
 
   const mainStats = useMemo(() => ({
     total: recipes.length,
@@ -299,7 +310,8 @@ export function useRecipesViewModel() {
     // แท็บ 1: สูตรหลัก
     mainSearch, setMainSearch,
     mainCategoryFilter, setMainCategoryFilter,
-    filteredRecipes, mainStats, productsWithoutRecipe, eligibleProductOptions,
+    filteredRecipes, pagedRecipes, mainStats,
+    mainPage, mainPageSize, setMainPagination: (p: number, ps: number) => { setMainPage(ps === mainPageSize ? p : 1); setMainPageSize(ps); }, productsWithoutRecipe, eligibleProductOptions,
     recipeFormOpen, recipeEditTarget,
     openAddRecipe: () => { setRecipeEditTarget(null); setRecipeFormOpen(true); },
     openEditRecipe: (r: Recipe) => { setRecipeEditTarget(r); setRecipeFormOpen(true); },

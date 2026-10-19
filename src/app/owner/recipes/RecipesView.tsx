@@ -7,7 +7,7 @@ import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { Button, EmptyState, Select, Tag } from "@/components/base";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
+import { DataTable, FilterToolbar, PaginationBar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RecipeComponent } from "@/types/recipeComponent";
@@ -77,18 +77,21 @@ function MainTab(vm: VM) {
       ) : vm.filteredRecipes.length === 0 ? (
         <EmptyState description={t("recipes.emptyRecipes")} />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {vm.filteredRecipes.map((r) => (
-            <RecipeCard
-              key={r._id}
-              recipe={r}
-              canUpdate={vm.perm.update}
-              canDelete={vm.perm.delete}
-              onView={() => vm.onViewRecipe(r)}
-              onEdit={() => vm.openEditRecipe(r)}
-              onDelete={() => vm.onDeleteRecipe(r._id)}
-            />
-          ))}
+        <div className="flex flex-col">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {vm.pagedRecipes.map((r) => (
+              <RecipeCard
+                key={r._id}
+                recipe={r}
+                canUpdate={vm.perm.update}
+                canDelete={vm.perm.delete}
+                onView={() => vm.onViewRecipe(r)}
+                onEdit={() => vm.openEditRecipe(r)}
+                onDelete={() => vm.onDeleteRecipe(r._id)}
+              />
+            ))}
+          </div>
+          <PaginationBar page={vm.mainPage} pageSize={vm.mainPageSize} total={vm.filteredRecipes.length} onChange={vm.setMainPagination} />
         </div>
       )}
     </div>

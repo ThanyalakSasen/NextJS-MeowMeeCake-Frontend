@@ -7,6 +7,9 @@ import { LIST_ALL } from "@/lib/http";
 
 const ALL = { limit: LIST_ALL };
 
+/** การ์ดสูตรหลักต่อหน้า — 3 แถว × 3 คอลัมน์บนจอใหญ่ */
+export const RECIPES_PAGE_SIZE = 9;
+
 export const RECIPES_QUERIES = {
   recipes: { key: ["recipes"] as const, params: ALL },
   components: { key: ["components"] as const, params: ALL },
