@@ -5,13 +5,13 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { INGREDIENTS_KEY, INGREDIENTS_PARAMS, INGREDIENT_TXNS_KEY, INGREDIENT_TXNS_PARAMS } from "../ingredientsQuery";
 import { ingredientTransactionsService } from "@/services/ingredientTransactions";
 import { ingredientsService } from "@/services/ingredients";
 import { usePermission } from "@/context/PermissionsContext";
 import type { IngredientTxnType } from "@/constants/enumConfig";
 import { refId } from "@/lib/refId";
 import { unitLabel } from "@/utils/unitContext";
-import { LIST_ALL } from "@/lib/http";
 
 export interface HistoryRow {
   _id: string;
@@ -37,12 +37,12 @@ export function useIngredientHistoryViewModel() {
   const [ingredientId, setIngredientId] = useState<string>("all");
 
   const txnsQ = useQuery({
-    queryKey: ["ingredient-transactions"],
-    queryFn: () => ingredientTransactionsService.list({ limit: LIST_ALL }),
+    queryKey: INGREDIENT_TXNS_KEY,
+    queryFn: () => ingredientTransactionsService.list(INGREDIENT_TXNS_PARAMS),
   });
   const ingredientsQ = useQuery({
-    queryKey: ["ingredients"],
-    queryFn: () => ingredientsService.list({ limit: LIST_ALL }),
+    queryKey: INGREDIENTS_KEY,
+    queryFn: () => ingredientsService.list(INGREDIENTS_PARAMS),
   });
 
   const ingredients = ingredientsQ.data?.data ?? [];
@@ -107,7 +107,8 @@ export function useIngredientHistoryViewModel() {
     rows: filtered,
     stats,
     ingredients,
-    isLoading: txnsQ.isLoading || ingredientsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: txnsQ.isPending || ingredientsQ.isPending,
     isError: txnsQ.isError,
     refetch: () => txnsQ.refetch(),
 

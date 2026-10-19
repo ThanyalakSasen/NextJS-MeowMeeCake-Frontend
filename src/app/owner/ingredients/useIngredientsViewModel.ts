@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { INGREDIENTS_KEY, INGREDIENTS_PARAMS, INGREDIENT_CATEGORIES_KEY, UNITS_KEY } from "./ingredientsQuery";
 import { useTranslations } from "next-intl";
 import { ingredientsService } from "@/services/ingredients";
 import { ingredientCategoriesService } from "@/services/ingredientCategories";
@@ -17,7 +18,6 @@ import type { IngredientInput } from "@/types/ingredient";
 import { getIngredientStatus, stockPercent } from "./ingredientStatus";
 import { refId } from "@/lib/refId";
 import { isApiError } from "@/types/api";
-import { LIST_ALL } from "@/lib/http";
 
 export interface IngredientRow {
   _id: string;
@@ -53,15 +53,15 @@ export function useIngredientsViewModel() {
   const [editTarget, setEditTarget] = useState<IngredientRow | null>(null);
 
   const ingredientsQ = useQuery({
-    queryKey: ["ingredients"],
-    queryFn: () => ingredientsService.list({ limit: LIST_ALL }),
+    queryKey: INGREDIENTS_KEY,
+    queryFn: () => ingredientsService.list(INGREDIENTS_PARAMS),
   });
   const categoriesQ = useQuery({
-    queryKey: ["ingredient-categories"],
+    queryKey: INGREDIENT_CATEGORIES_KEY,
     queryFn: () => ingredientCategoriesService.list(),
   });
   const unitsQ = useQuery({
-    queryKey: ["units"],
+    queryKey: UNITS_KEY,
     queryFn: () => unitsService.list(),
   });
 
@@ -148,7 +148,8 @@ export function useIngredientsViewModel() {
     stats,
     categories,
     ingredientUnits,
-    isLoading: ingredientsQ.isLoading || categoriesQ.isLoading || unitsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: ingredientsQ.isPending || categoriesQ.isPending || unitsQ.isPending,
     isError: ingredientsQ.isError,
     refetch: () => ingredientsQ.refetch(),
 
