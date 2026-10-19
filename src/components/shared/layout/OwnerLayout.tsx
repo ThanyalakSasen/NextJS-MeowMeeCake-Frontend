@@ -57,6 +57,7 @@ const SSR_PAGES = [
   "/owner/account",
   "/owner/notificationsHistory",
   "/owner/products/addProducts",
+  "/owner/reports/reviews/settings",
 ];
 /** หน้าที่ path มี id (dynamic segment) — เทียบด้วย pattern */
 const SSR_PAGE_PATTERNS = [/^\/owner\/products\/[^/]+\/edit$/];
