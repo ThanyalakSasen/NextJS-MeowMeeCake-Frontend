@@ -14,6 +14,7 @@ import { isApiError } from "@/types/api";
 import type { Banner } from "@/types/banner";
 import type { BannerStatus } from "@/constants/enumConfig";
 import { getBannerStatus, toInput, type BannerFormValue } from "./bannerForm";
+import { refreshStorefrontBanners } from "@/app/customer/lib/refreshCatalog";
 
 export interface BannerRow extends Banner {
   status: BannerStatus;
@@ -67,7 +68,12 @@ export function useStoreDesignViewModel() {
     });
   }, [rows, tab, search]);
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["banners"] });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["banners"] });
+    // หน้าร้านแคชแบนเนอร์ฝั่ง server 60 วิ — ล้างทันทีให้ลูกค้าที่เปิดหน้าแรกหลังจากนี้เห็นของใหม่เลย
+    // ล้มเหลวก็ไม่เป็นไร (แคชหมดอายุเองใน 60 วิ) — ไม่ต้องเตือนผู้ใช้
+    refreshStorefrontBanners().catch(() => {});
+  };
 
   const save = useMutation({
     mutationFn: (v: BannerFormValue) =>

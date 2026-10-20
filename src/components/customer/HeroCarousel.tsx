@@ -25,7 +25,8 @@ function isBannerVisible(b: Banner, now: number = Date.now()): boolean {
 
 export default function HeroCarousel() {
   const t = useTranslations("shop");
-  const bannersQ = useQuery({ queryKey: catalogBannersKey, queryFn: catalogService.banners, staleTime: 5 * 60_000 });
+  // staleTime 30 วิ (เดิม 5 นาที) — แท็บที่เปิดค้างไว้ กลับมาโฟกัสแล้วดึงแบนเนอร์ใหม่ได้เร็ว (หลังร้านแก้แล้วเห็นไว)
+  const bannersQ = useQuery({ queryKey: catalogBannersKey, queryFn: catalogService.banners, staleTime: 30_000 });
   const [bannerIndex, setBannerIndex] = useState(0);
   // รูปที่โหลดไม่ขึ้น → ใช้รูปสำรอง (next/image คุม src/srcset เอง สลับ el.src ตรง ๆ แบบเดิมไม่ได้)
   const [failed, setFailed] = useState<Set<string>>(() => new Set());
