@@ -12,7 +12,6 @@ export { Divider, type DividerProps } from "./Divider";
 export { DatePicker, RangePicker, type DatePickerProps } from "./DatePicker";
 export { LazyDatePicker, LazyRangePicker } from "./LazyDatePicker";
 export { Avatar, initialsOf } from "./Avatar";
-export { DotIndicator } from "./DotIndicator";
 export { ProgressBar } from "./ProgressBar";
 export { Card } from "./Card";
 export { Form, FormItem, useAntForm } from "./Form";
