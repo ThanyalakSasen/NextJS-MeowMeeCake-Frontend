@@ -1491,6 +1491,7 @@
     "deleteRoleFailed": "Could not delete role",
     "createRoleSuccess": "Created role \"{role}\"",
     "createRoleFailed": "Could not create role",
+    "copyPermsFailed": "Role \"{role}\" was created, but some permissions could not be copied. Please review and save them in the table.",
     "renameRole": "Rename",
     "renameRoleTitle": "Rename role",
     "renameRoleHint": "Members and permissions of this role stay the same — the role type cannot be changed",
