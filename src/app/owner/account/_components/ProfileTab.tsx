@@ -1,7 +1,7 @@
 "use client";
 // แท็บ "ข้อมูลของฉัน" — โหมดดู/แก้ไขในการ์ดเดียว (ปุ่มแก้ไข/ยกเลิก/บันทึกที่หัวการ์ด แบบหน้าข้อมูลร้าน)
 import { useLocale, useTranslations } from "next-intl";
-import { Button, Card, DatePicker, Input } from "@/components/base";
+import { Button, Card, Input, LazyDatePicker } from "@/components/base";
 import { FormField } from "@/components/shared/form";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
@@ -75,7 +75,8 @@ export function ProfileTab(vm: VM) {
               />
             </FormField>
             <FormField label={tm("birthday")} error={err("birthday")}>
-              <DatePicker
+              {/* โหลดปฏิทินเมื่อกด (base/LazyDatePicker) — ไม่ต้อง hydrate DatePicker ของ antd ตอนเปิดหน้า */}
+              <LazyDatePicker
                 value={vm.form.birthday}
                 disabledDate={(d) => d.isAfter(new Date(), "day")}
                 onChange={(d) => vm.setFormField("birthday", Array.isArray(d) ? null : d)}

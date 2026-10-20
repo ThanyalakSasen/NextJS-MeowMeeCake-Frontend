@@ -55,7 +55,7 @@ function ChangePasswordContent() {
   const t = useTranslations("shop.password");
   const tc = useTranslations("shop.common");
   const to = useTranslations("shop.orders");
-  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: shopProfileService.get });
+  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: () => shopProfileService.get() });
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");

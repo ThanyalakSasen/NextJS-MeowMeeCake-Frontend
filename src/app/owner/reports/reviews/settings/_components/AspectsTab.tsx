@@ -110,7 +110,7 @@ export function AspectsTab({ vm }: { vm: VM }) {
 
                 <span className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">{a.is_active ? t("reviewSettings.aspects.shown") : t("reviewSettings.aspects.hidden")}</span>
-                  <Switch size="small" checked={a.is_active} disabled={!canEdit} onChange={() => vm.onToggleActive(a)} />
+                  <Switch size="small" aria-label={a.aspect_name_th} checked={a.is_active} disabled={!canEdit} onChange={() => vm.onToggleActive(a)} />
                   {vm.perm.delete && (
                     <ConfirmDeletePopup title={t("reviewSettings.aspects.deleteConfirm", { name: a.aspect_name_th })} onConfirm={() => vm.onDeleteAspect(a)}>
                       <DeleteButton size="small" />

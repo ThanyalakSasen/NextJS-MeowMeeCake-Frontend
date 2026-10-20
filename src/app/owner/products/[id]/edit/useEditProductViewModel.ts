@@ -9,6 +9,7 @@ import { ACCESS_DENIED_PATH } from "@/constants/auth";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { fromProduct, toUpdateInput, type ProductFormValue } from "../../productForm";
+import { productKey } from "../../productFormQuery";
 
 export function useEditProductViewModel() {
   const t = useTranslations();
@@ -23,7 +24,7 @@ export function useEditProductViewModel() {
   }, [perm.update, router]);
 
   const q = useQuery({
-    queryKey: ["product", id],
+    queryKey: productKey(id),
     queryFn: () => productsService.get(id),
     enabled: !!id,
   });
@@ -41,7 +42,8 @@ export function useEditProductViewModel() {
   return {
     /** false = ไม่มีสิทธิ์แก้ไข กำลังเด้งไป access-denied — View ไม่ต้อง render ฟอร์ม (กันภาพแวบ) */
     allowed: perm.update,
-    isLoading: q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: !!id && q.isPending,
     isError: q.isError,
     // Form mount หลังโหลดเสร็จ → ใช้ initialValues ตรง ๆ ได้ ไม่ต้อง setFieldsValue
     initialValues: q.data ? fromProduct(q.data.data) : undefined,

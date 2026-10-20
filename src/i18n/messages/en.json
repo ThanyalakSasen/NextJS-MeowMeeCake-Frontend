@@ -557,6 +557,7 @@
     },
     "notificationModule": {
       "order": "Order",
+      "product": "Product",
       "ingredient": "Ingredient",
       "production": "Production",
       "employee": "Employee",
@@ -682,6 +683,7 @@
     "stockEditHint": "Adjust stock on the Product Stock page",
     "lowStockThresholdInvalid": "Must be a whole number, 0 or more",
     "imageUploadFailed": "Could not upload the image. Please try again.",
+    "imageTooLarge": "This image is too large to upload. Please choose one under 4 MB.",
     "visibleFor": "Show {name} in the shop"
   },
   "productStock": {

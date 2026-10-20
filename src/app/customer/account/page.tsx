@@ -57,7 +57,7 @@ export default function AccountPage() {
 function AccountContent() {
   const t = useTranslations("shop.account");
   const tc = useTranslations("shop.common");
-  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: shopProfileService.get });
+  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: () => shopProfileService.get() });
   const emailQ = useQuery({ queryKey: shopEmailStatusKey, queryFn: shopProfileService.emailStatus });
   useLineResultToast();
 

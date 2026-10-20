@@ -73,7 +73,6 @@ export function usePOSViewModel() {
   // ช่อง "สแกน / ค้นหา" — เก็บ "ข้อความดิบ" ตามปุ่มที่กดจริง แล้วแปลงแป้นไทย→QWERTY รอบเดียวตอนโชว์ (query) —
   // ห้ามเก็บค่าที่แปลงแล้วแล้วแปลงซ้ำ: "-"/"/" จะถูกตีความเป็นปุ่ม 3/2 ของแป้นไทยอีกรอบ (ดู nextRawInput)
   const [queryRaw, setQueryRaw] = useState("");
-  const query = thaiLayoutToQwerty(queryRaw);
   const [selectedPromoId, setSelectedPromoId] = useState<string | null>(null);
   const [payDialog, setPayDialog] = useState<PayDialog>(null);
   /** "รับเงินมา" (เงินสด) — เก็บเป็นตัวเลขหลักแบบคีย์แพด */
@@ -113,14 +112,28 @@ export function usePOSViewModel() {
   const promosOf = (productId: string, categoryId: string | null): Promotion[] =>
     promotionEnabledList(promotionsEnabled, promotionsForProduct(promotions, productId, categoryId));
 
-  // ── คำแนะนำใต้ช่อง "สแกน / ค้นหา" — ตามรหัสสินค้าหรือชื่อ ──
+  // ── ข้อความในช่อง: พิมพ์ชื่อสินค้าภาษาไทย หรือ สแกน/พิมพ์รหัสตอนแป้นเป็นภาษาไทย ──
+  // เครื่องสแกนส่ง "ตำแหน่งปุ่ม" → ตอนแป้นไทยรหัสกลายเป็นอักษรไทย ต้องแปลงกลับเป็น QWERTY (code)
+  // แต่คนพิมพ์ชื่อสินค้าภาษาไทยตั้งใจพิมพ์ไทย — ถ้าข้อความดิบตรงกับชื่อสินค้าในรายการ = ค้นหาด้วยชื่อ (โชว์ตามที่พิมพ์)
+  // ไม่ตรงชื่อไหนเลย = ถือเป็นรหัส (โชว์แบบแปลงแล้วเหมือนเดิม) · ข้อความไม่มีอักษรไทย ทั้งสองแบบเหมือนกัน
+  const queryCode = thaiLayoutToQwerty(queryRaw);
+  const nameTerm = queryRaw.trim().toLowerCase();
+  const codeTerm = queryCode.trim().toLowerCase();
+  const nameHits = useMemo(
+    () => (nameTerm ? catalog.filter((p) => p.product_name_th.toLowerCase().includes(nameTerm)) : []),
+    [catalog, nameTerm],
+  );
+  const searchingByName = nameHits.length > 0;
+  const query = searchingByName ? queryRaw : queryCode;
+
+  // ── คำแนะนำใต้ช่อง "สแกน / ค้นหา" — ตามชื่อ (ข้อความที่พิมพ์) หรือรหัส/ชื่ออังกฤษ (ข้อความที่แปลงแล้ว) ──
   const suggestions = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
+    if (!codeTerm) return [];
+    if (searchingByName) return nameHits.slice(0, MAX_SUGGESTIONS);
     return catalog
-      .filter((p) => (p.product_id ?? "").toLowerCase().includes(q) || p.product_name_th.toLowerCase().includes(q))
+      .filter((p) => (p.product_id ?? "").toLowerCase().includes(codeTerm) || p.product_name_th.toLowerCase().includes(codeTerm))
       .slice(0, MAX_SUGGESTIONS);
-  }, [catalog, query]);
+  }, [catalog, codeTerm, searchingByName, nameHits]);
 
   /** ลงบิลจริง (หลังเลือกตัวเลือกแล้ว ถ้ามี) — แจ้งโปรโมชันของสินค้านั้น */
   const commitAdd = (p: Product, sel: CartSelection) => {
@@ -190,17 +203,23 @@ export function usePOSViewModel() {
    *  รหัสตรงกับสินค้าในรายการ หรือคำแนะนำเหลือตัวเดียว → เพิ่มทันที · ไม่งั้นถาม backend (/admin/pos/scan) */
   const submitQuery = (rawText: string) => {
     const code = thaiLayoutToQwerty(rawText).trim().toLowerCase();
+    const name = rawText.trim().toLowerCase();
     if (!code) return;
     const exact = catalog.find((p) => (p.product_id ?? "").toLowerCase() === code || p._id === code);
-    const matches = catalog.filter(
-      (p) => (p.product_id ?? "").toLowerCase().includes(code) || p.product_name_th.toLowerCase().includes(code),
-    );
+    // ชื่อภาษาไทยตามที่พิมพ์ (name) มาก่อน · ไม่ตรงชื่อไหน → รหัส/ชื่ออังกฤษจากข้อความที่แปลงแล้ว (code)
+    const byName = catalog.filter((p) => p.product_name_th.toLowerCase().includes(name));
+    const matches =
+      byName.length > 0
+        ? byName
+        : catalog.filter((p) => (p.product_id ?? "").toLowerCase().includes(code) || p.product_name_th.toLowerCase().includes(code));
     const local = exact ?? (matches.length === 1 ? matches[0] : null);
     if (local) {
       void addProduct(local);
       setQueryRaw("");
       return;
     }
+    // ชื่อตรงหลายรายการ = ให้เลือกจากคำแนะนำ (ไม่ส่งไป /admin/pos/scan — ชื่อไม่ใช่รหัส ส่งไปก็ไม่เจอ)
+    if (byName.length > 1) return;
     scan.mutate(code);
   };
 
@@ -352,7 +371,8 @@ export function usePOSViewModel() {
 
     // ช่อง "สแกน / ค้นหา" (controlled) — onChange ได้ค่าแปลงแล้ว + ตัวใหม่ดิบ → ต่อเข้าข้อความดิบเดิม
     query,
-    setQuery: (v: string) => setQueryRaw((raw) => nextRawInput(raw, thaiLayoutToQwerty(raw), v)),
+    // nextRawInput ต้องได้ "ข้อความที่โชว์อยู่" — ตอนค้นชื่อโชว์ข้อความดิบ (แปลง 1:1 แบบไม่เปลี่ยน) ตอนรหัสโชว์แบบแปลงแล้ว
+    setQuery: (v: string) => setQueryRaw((raw) => nextRawInput(raw, query, v)),
     onSubmitQuery: () => submitQuery(queryRaw),
     scanning: scan.isPending,
     suggestions,

@@ -10,12 +10,14 @@ import { productCategoriesService } from "@/services/productCategories";
 import { unitsService } from "@/services/units";
 import { ProductImageUpload } from "./ProductImageUpload";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { PRODUCT_CATEGORIES_KEY, PRODUCT_UNITS_KEY, PRODUCT_UNITS_PARAMS } from "../productFormQuery";
 
 /** mode "edit": สต็อกโชว์อย่างเดียว (แก้ไม่ได้) — ปรับที่หน้าสต็อกสินค้าเท่านั้น (PUT …/stock) */
 export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit" }) {
   const t = useTranslations();
-  const cats = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
-  const units = useQuery({ queryKey: ["units", { usage: "Product" }], queryFn: () => unitsService.list({ usage_context: "Product" }) });
+  // key ร่วมกับ page.tsx ของหน้าเพิ่ม/แก้ไขสินค้า (ดึงไว้ฝั่ง server แล้ว)
+  const cats = useQuery({ queryKey: PRODUCT_CATEGORIES_KEY, queryFn: () => productCategoriesService.list() });
+  const units = useQuery({ queryKey: PRODUCT_UNITS_KEY, queryFn: () => unitsService.list(PRODUCT_UNITS_PARAMS) });
   // ซ่อน/โชว์ field ตามประเภทที่เลือกอยู่ (พรีออเดอร์ต้องการ preorder_config แทน stock)
   const form = Form.useFormInstance();
   const isPreorder = Form.useWatch("is_preorder", form) === true;

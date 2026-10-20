@@ -151,7 +151,8 @@ export function useReviewSettingsViewModel() {
     tab,
     setTab,
 
-    aspectsLoading: aspectsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    aspectsLoading: aspectsQ.isPending,
     aspectsError: aspectsQ.isError,
     refetchAspects: () => aspectsQ.refetch(),
     aspects,
