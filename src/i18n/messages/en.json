@@ -1242,7 +1242,8 @@
     "colActual": "Actual",
     "completeNoPending": "All items have already been deducted",
     "actualZeroHint": "Enter 0 if none were produced — the item is cancelled and no ingredients are deducted",
-    "completeSubmit": "Complete"
+    "completeSubmit": "Complete",
+    "completeNeedsApprove": "Completing production requires the \"approve\" permission for Production — contact the owner"
   },
   "pricing": {
     "title": "Product Pricing",
