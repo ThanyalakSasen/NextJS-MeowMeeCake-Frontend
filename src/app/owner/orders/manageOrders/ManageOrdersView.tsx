@@ -204,6 +204,7 @@ export function ManageOrdersView(vm: VM) {
             order={vm.selectedOrder}
             payment={vm.selectedPayment}
             canApprovePayment={vm.canApprovePayment}
+            canRefundPayment={vm.canRefundPayment}
             onVerifyPayment={vm.onVerifyPayment}
             onRejectPayment={vm.onRejectPayment}
             verifyingPayment={vm.verifyingPayment}

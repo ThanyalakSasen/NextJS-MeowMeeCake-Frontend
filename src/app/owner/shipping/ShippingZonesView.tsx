@@ -1,9 +1,11 @@
 "use client";
 // View ของ "ค่าจัดส่งหน้าร้านออนไลน์" (BACKLOG4 F2) — ใช้กับอะไร · ตรวจจังหวัด · ตารางโซน A–D + modal แก้ไข
-// ปุ่มแก้ไขตามสิทธิ์ store_info.update · โซนคงที่ 4 โซน (ไม่มีเพิ่ม/ลบ)
+// + ปุ่ม "จัดส่งนอกจังหวัด" มุมขวาบน (สวิตช์ส่งทั่วประเทศรายหมวด — ปุ่มเดียวกับหน้าจัดการข้อมูลสินค้า)
+// แก้ไขตามสิทธิ์ store_info.update · โซนคงที่ 4 โซน (ไม่มีเพิ่ม/ลบ)
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { Card, Select, Tag } from "@/components/base";
+import { CategoryShippingButton } from "@/components/shared/categories";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable } from "@/components/shared/data";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
@@ -29,7 +31,7 @@ export function ShippingZonesView(vm: VM) {
   const money = (n: number) => formatCurrency(n, locale);
 
   return (
-    <ListPageLayout title={t("shippingZones.title")}>
+    <ListPageLayout title={t("shippingZones.title")} actions={<CategoryShippingButton />}>
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (

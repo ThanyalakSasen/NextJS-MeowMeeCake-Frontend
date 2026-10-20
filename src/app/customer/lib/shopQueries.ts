@@ -28,4 +28,6 @@ export const preorderRoundKey = (id: string) => ["catalog", "preorder-rounds", i
 export const shopNotificationsKey = ["shop", "notifications"] as const;
 /** รีวิวของฉัน (D7) — ใช้ดูว่ารายการไหนรีวิวแล้ว · ส่งรีวิวแล้ว invalidate */
 export const shopReviewsKey = ["shop", "reviews"] as const;
+/** หน้า "รีวิวของฉัน" — ขึ้นต้นด้วย shopReviewsKey: เขียนรีวิวใหม่ (invalidate shopReviewsKey) แล้วหน้านี้โหลดใหม่ด้วย */
+export const shopReviewHistoryKey = [...shopReviewsKey, "history"] as const;
 export const reviewAspectsKey = ["catalog", "review-aspects"] as const;

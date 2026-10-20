@@ -239,6 +239,8 @@ export function useManageOrdersViewModel() {
   return {
     perm,
     canApprovePayment: paymentPerm.approve,
+    /** คืนเงิน = payments.delete (ไม่ใช่ approve — คนยืนยันสลิปได้จะไม่ได้คืนเงินไปด้วย · Final-Backlog P7) */
+    canRefundPayment: paymentPerm.delete,
 
     activeTab,
     setActiveTab: (v: OrderType) => { setActiveTabState(v); setPage(1); setStatusFilterState("all"); },

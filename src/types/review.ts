@@ -68,6 +68,80 @@ export interface ReviewSummary {
   unreplied_negative: number;
 }
 
+/**
+ * GET /admin/reviews/stats — สรุปรีวิวของช่วงเวลา (คำนวณที่ backend จากทุกรีวิว · services/reviewStatsService.ts)
+ * แดชบอร์ดของหน้ารายงานความคิดเห็นใช้ — ส่ง prev_since/prev_until ด้วยเพื่อได้ previous + previous_aspects ไว้เทียบ
+ */
+export interface ReviewStatsSummary {
+  total: number;
+  avg: number | null;
+  /** รีวิว 1–2 ดาว */
+  negative: number;
+  replied: number;
+  unread: number;
+  with_media: number;
+}
+export interface ReviewStatsAspect {
+  name: string;
+  positive: number;
+  negative: number;
+}
+export interface ReviewStatsItem {
+  id: string;
+  name: string;
+  count: number;
+  avg: number;
+}
+export interface ReviewStatsCategory extends ReviewStatsItem {
+  negative: number;
+  /** หัวข้อของหมวด เรียงที่ถูกติมากสุดก่อน (≤ 3) */
+  aspects: ReviewStatsAspect[];
+}
+export interface ReviewStatsProduct extends ReviewStatsItem {
+  category_name: string;
+  /** รีวิว 1–2 ดาว */
+  negative: number;
+  /** ช่วงก่อนหน้า · ไม่มีรีวิว = 0 / null */
+  prev_count: number;
+  prev_avg: number | null;
+  /** หัวข้อที่ถูกติมากสุดในช่วงนี้ */
+  top_issue: { name: string; count: number } | null;
+}
+export interface AdminReviewStats {
+  summary: ReviewStatsSummary;
+  previous: ReviewStatsSummary | null;
+  previous_aspects: ReviewStatsAspect[] | null;
+  /** [1★ … 5★] */
+  rating_counts: number[];
+  bucket: "day" | "month";
+  /** เฉพาะช่วงที่มีรีวิว · key = YYYY-MM-DD / YYYY-MM (เวลาไทย) */
+  buckets: Array<{ key: string; count: number; avg: number }>;
+  aspects: ReviewStatsAspect[];
+  top_products: ReviewStatsItem[];
+  low_products: ReviewStatsItem[];
+  categories: ReviewStatsCategory[];
+  /** ทุกสินค้าที่มีรีวิวในช่วงนี้ (ตาราง "วิเคราะห์รายสินค้า") · กรอง product_id = เหลือแถวเดียว */
+  products: ReviewStatsProduct[];
+  unreplied_negative_count: number;
+  unreplied_negative: Array<{
+    _id: string;
+    rating: number;
+    review_text: string | null;
+    created_at: string;
+    product_name: string;
+    user_name: string;
+  }>;
+}
+export interface ReviewStatsParams {
+  since: string;
+  until: string;
+  bucket: "day" | "month";
+  prev_since?: string;
+  prev_until?: string;
+  /** เฉพาะสินค้านี้ */
+  product_id?: string;
+}
+
 /** PATCH /admin/reviews/:id — ส่งบางส่วน · ตอบกลับ = นับว่าอ่านแล้ว · ข้อความว่าง = ลบคำตอบ/โน้ต */
 export interface ReviewModeration {
   status?: ReviewStatus;

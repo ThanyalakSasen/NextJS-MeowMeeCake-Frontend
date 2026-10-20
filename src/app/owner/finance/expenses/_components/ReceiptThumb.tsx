@@ -13,7 +13,7 @@ export function ReceiptThumb({ url }: { url: string }) {
   const src = resolveUploadUrl(url);
 
   if (failedUrl === url || !src) {
-    return <span className="text-xs text-gray-400">{t("receiptLoadFailed")}</span>;
+    return <span className="text-xs text-gray-500">{t("receiptLoadFailed")}</span>;
   }
   return (
     <a href={src} target="_blank" rel="noreferrer">

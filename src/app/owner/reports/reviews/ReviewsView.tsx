@@ -5,7 +5,7 @@
 import { Checkbox, Modal } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import { formatNumber } from "@/i18n/format";
-import { ArrowDownTrayIcon, CheckIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, EmptyState, Select } from "@/components/base";
 import { PaginationBar } from "@/components/shared/data";
 import { DetailDrawer, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
@@ -45,7 +45,7 @@ export function ReviewsView(vm: VM) {
             {t("reviews.summary.negative", { v: s?.negative_rate != null ? `${Math.round(s.negative_rate * 100)}%` : "—" })}
           </span>
           {(s?.unreplied_negative ?? 0) > 0 && (
-            <button type="button" onClick={vm.showUnrepliedNegative} className="font-semibold text-rose-700 hover:underline">
+            <button type="button" onClick={() => vm.showUnrepliedNegative()} className="font-semibold text-rose-700 hover:underline">
               {t("reviews.summary.unrepliedNegative", { n: s!.unreplied_negative })}
             </button>
           )}
@@ -63,16 +63,6 @@ export function ReviewsView(vm: VM) {
           {vm.selected.size > 0 && (
             <>
               <span className="text-xs font-semibold text-brown-800">{t("reviews.selectedCount", { n: vm.selected.size })}</span>
-              {vm.perm.update && (
-                <>
-                  <Button size="small" icon={<CheckIcon className="h-4 w-4" />} loading={vm.bulkBusy} onClick={() => vm.onBulkRead(true)}>
-                    {t("reviews.markRead")}
-                  </Button>
-                  <Button size="small" icon={<EyeSlashIcon className="h-4 w-4" />} disabled={vm.bulkBusy} onClick={() => vm.onBulkRead(false)}>
-                    {t("reviews.markUnread")}
-                  </Button>
-                </>
-              )}
               <Button size="small" icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
                 {t("reviews.exportCsv")}
               </Button>
@@ -99,7 +89,6 @@ export function ReviewsView(vm: VM) {
                 onSelect={() => vm.toggleSelect(r._id)}
                 onStatus={(st) => vm.onStatus(r, st)}
                 onTogglePin={() => vm.onTogglePin(r)}
-                onToggleRead={() => vm.onToggleRead(r)}
                 onSaveReply={(text) => vm.onSaveReply(r, text)}
                 onSaveNote={(text) => vm.onSaveNote(r, text)}
                 onTags={() => vm.openTags(r)}

@@ -15,6 +15,11 @@ export const ORDER_STATUS_TONE: Record<OrderStatus, string> = {
   cancelled: "bg-stone-100 text-stone-500",
 };
 
+/** ป้ายสถานะรีวิว (ReviewLink) — ยังรีวิวไม่ครบ = ป้ายกดได้ไปหน้าเขียนรีวิว · ครบแล้ว = ป้ายเขียว */
+export const REVIEW_PILL =
+  "self-start whitespace-nowrap rounded-full bg-[#8C5A3C] px-3 py-1 text-xs font-semibold text-white transition hover:bg-[#4A342E]";
+export const REVIEWED_PILL = "self-start whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700";
+
 /**
  * วันนัดรับ → "จ. 6 ต.ค. 2569" / "Mon, Oct 6, 2026" — รับทั้ง "YYYY-MM-DD" และ ISO เต็มที่ backend ส่ง (เที่ยงคืนเวลาไทย = 17:00Z ของวันก่อน)
  * แสดงตามเวลาไทยเสมอ (เดิมต่อ "T00:00:00" ท้าย ISO → Invalid Date ทุกออเดอร์ที่มีวันรับ)

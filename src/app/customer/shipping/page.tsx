@@ -3,6 +3,7 @@
 // /customer/shipping — การจัดส่งและส่งมอบสินค้า (BACKLOG3-merge D9 · ลิงก์จาก Footer) · ยกจาก FrontOffice src/app/customer/shipping/page.tsx
 // ข้อมูลจาก API เดียวกับที่ checkout คิดจริง:
 //   โซนค่าส่ง → /catalog/shipping-zones · จังหวัดร้าน → /catalog/store-info · หมวดส่งทั่วประเทศ → /catalog/categories (ships_nationwide)
+//   สินค้าที่ยกเว้นต่างจากหมวด → /catalog/shipping-exceptions
 //   จุดรับ → /catalog/pickup-locations (schedule สรุปมาจาก backend) · ส่วนไหนโหลดไม่ได้ ส่วนที่เหลือยังแสดง
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
@@ -13,7 +14,7 @@ import { pickupLocationsService } from "@/services/pickupLocations";
 import { storeInfoService } from "@/services/storeInfo";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopCard, shopPage } from "@/components/customer/shopStyles";
-import { catalogCategoriesKey, shippingZonesKey, storeInfoKey } from "../lib/catalogQueries";
+import { catalogCategoriesKey, shippingExceptionsKey, shippingZonesKey, storeInfoKey } from "../lib/catalogQueries";
 import { pickupLocationsKey } from "../lib/shopQueries";
 import { nationwideCategoryNames } from "../lib/storeFormat";
 
@@ -33,10 +34,15 @@ export default function ShippingInfoPage() {
   const infoQ = useQuery({ queryKey: storeInfoKey, queryFn: storeInfoService.get, staleTime: 5 * 60_000 });
   const catsQ = useQuery({ queryKey: catalogCategoriesKey, queryFn: catalogService.categories });
   const pickupsQ = useQuery({ queryKey: pickupLocationsKey, queryFn: pickupLocationsService.list });
+  // สินค้าที่ร้านตั้งยกเว้นต่างจากหมวด — โหลดไม่ได้ = ไม่แสดงส่วนนี้ (ส่วนอื่นยังแสดง)
+  const exceptionsQ = useQuery({ queryKey: shippingExceptionsKey, queryFn: storeInfoService.shippingExceptions });
 
   const zones = zonesQ.data ?? [];
   const storeProvince = infoQ.data?.address.province.trim() ?? "";
   const nationwide = nationwideCategoryNames(catsQ.data ?? []);
+  const extraNationwide = (exceptionsQ.data?.nationwide ?? []).map((p) => p.product_name_th);
+  const extraLocal = (exceptionsQ.data?.province_only ?? []).map((p) => p.product_name_th);
+  const localArea = storeProvince ? t("inProvince", { province: storeProvince }) : t("sameProvince");
   const pickups = pickupsQ.data ?? [];
 
   return (
@@ -90,8 +96,19 @@ export default function ShippingInfoPage() {
               {nationwide.length > 0
                 ? t.rich("scopeNationwide", { cats: nationwide.join(", "), b: (c) => <span className="font-semibold">{c}</span> })
                 : t("scopeFresh")}{" "}
-              {t("scopeLocal", { area: storeProvince ? t("inProvince", { province: storeProvince }) : t("sameProvince") })}
+              {t("scopeLocal", { area: localArea })}
             </p>
+            {/* ยกเว้นรายสินค้า — ตรงกับ productShipsNationwide ของ backend (ค่าของสินค้าก่อน ไม่ตั้งค่อยตามหมวด) */}
+            {extraNationwide.length > 0 && (
+              <p className="m-0 text-amber-900/80">
+                {t.rich("scopeExtraNationwide", { items: extraNationwide.join(", "), b: (c) => <span className="font-semibold">{c}</span> })}
+              </p>
+            )}
+            {extraLocal.length > 0 && (
+              <p className="m-0 text-amber-900/80">
+                {t.rich("scopeExtraLocal", { items: extraLocal.join(", "), area: localArea, b: (c) => <span className="font-semibold">{c}</span> })}
+              </p>
+            )}
           </div>
         </section>
 

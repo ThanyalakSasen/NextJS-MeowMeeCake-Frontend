@@ -145,6 +145,7 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "forgotPassword": "Forgot password?",
+    "forgotOtherEmail": "Use another email",
     "noAccount": "Don't have an account?",
     "register": "Sign up",
     "loginBackground": "Bakery background",
@@ -154,13 +155,6 @@
     "redirectingToLine": "Redirecting to LINE...",
     "lineCancelled": "LINE sign-in was cancelled",
     "googleNotConfigured": "NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set",
-    "forgotConfirmTitle": "Reset password",
-    "forgotConfirm": "Send a password reset link to {email}?",
-    "forgotSend": "Send link",
-    "forgotSent": "Link sent — check the inbox of {email} (valid for 1 hour)",
-    "forgotFailed": "Could not send the password reset link",
-    "forgotPickFailed": "Could not choose a Google account. Please try again.",
-    "forgotOtherEmail": "Use another email",
     "socialLoginFailed": "Sign-in failed. Please try again.",
     "emailNotVerified": "Email not verified",
     "emailNotVerifiedDetail": "Please click the verification link in the email we sent when you signed up. Can't find it or the link expired? Request a new one.",
@@ -176,7 +170,8 @@
     "backToDashboard": "Back to dashboard",
     "lockedCountdown": "Account temporarily locked. Try again in",
     "lockedHint": "Or use \"Forgot password?\" to set a new password and unlock it right away",
-    "tooManyCountdown": "Too many attempts. Try again in"
+    "tooManyCountdown": "Too many attempts. Try again in",
+    "forgotSent": "A password reset link has been sent to {email}. Open Gmail and click the link within 1 hour."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -1514,7 +1509,8 @@
     "loadFailed": "Could not load permissions",
     "unrestrictedNote": "Owner / admin roles can access every menu without explicit permissions",
     "ownerRoleLocked": "Only the store owner can edit it",
-    "grantCeilingNote": "Boxes you can’t switch on are permissions you don’t have yourself, so you can’t grant them — you can switch off (revoke) any box"
+    "grantCeilingNote": "Boxes you can’t switch on are permissions you don’t have yourself, so you can’t grant them — you can switch off (revoke) any box",
+    "paymentsHint": "Approve = confirm/reject slips (incl. POS payments) · Delete = delete payment records and confirm refunds — grant \"Delete\" only to trusted staff"
   },
   "userLog": {
     "title": "Employee Activity Log",
@@ -1719,7 +1715,6 @@
       "liked": "Liked",
       "both": "Both",
       "replied": "Reply",
-      "read": "Read status",
       "media": "Photo / video",
       "hasMedia": "Has media",
       "noMedia": "None",
@@ -1738,15 +1733,9 @@
     "selectPage": "Select page",
     "selectOne": "Select this review",
     "selectedCount": "{n} selected",
-    "markRead": "Mark as read",
-    "markUnread": "Mark as unread",
     "exportCsv": "Export CSV",
     "exported": "Exported {n} reviews",
-    "bulkReadDone": "Marked {n} as read",
-    "bulkUnreadDone": "Marked {n} as unread",
     "empty": "No reviews match the filters",
-    "unread": "Unread",
-    "read": "Read",
     "replied": "Replied",
     "notReplied": "Not replied",
     "pinned": "Pinned",
@@ -1867,7 +1856,6 @@
     "replyRate": "Replied",
     "unrepliedNegative": "{n} negative reviews unanswered",
     "allReplied": "All answered",
-    "unread": "Unread",
     "withMedia": "{n} with photo/video",
     "ratingDist": "Rating distribution",
     "starsLabel": "{n} stars",
@@ -1887,7 +1875,40 @@
     "empty": "No reviews in this period",
     "emptySection": "No data yet",
     "unknownProduct": "(Unknown product)",
-    "truncated": "Based on the latest {n} reviews of this period"
+    "comparedTo": "Green/red figures = compared with the previous period ({from} – {to})",
+    "vsPrev": "{delta} vs previous period",
+    "vsPrevSame": "Same as previous period",
+    "vsPrevNone": "No reviews in the previous period",
+    "points": "{n} pts",
+    "categories": "By product category",
+    "categoriesHint": "Red tags = the category's most criticized topics (times mentioned)",
+    "categoryNegative": "{n} negative",
+    "issueChip": "{name} {n}",
+    "noIssues": "No criticized topics",
+    "unknownCategory": "(Unknown category)",
+    "aspectTrend": "Criticized topics vs previous period",
+    "aspectTrendHint": "Times customers chose \"needs improvement\" · biggest increase first",
+    "aspectTrendTopic": "Topic",
+    "aspectTrendNow": "This period",
+    "aspectTrendPrev": "Previous",
+    "aspectTrendChange": "Change",
+    "aspectTrendSame": "No change",
+    "aspectTrendEmpty": "No criticized topics in either period",
+    "productFilter": "All products",
+    "viewAllProducts": "Show all products",
+    "productTable": "Product analysis",
+    "productTableHint": "Click a column header to sort · Click a product to see its dashboard",
+    "colProduct": "Product",
+    "colReviews": "Reviews",
+    "colAvg": "★ Avg",
+    "colAvgDelta": "vs previous",
+    "colNegative": "% negative",
+    "colTopIssue": "Top complaint",
+    "csvCategory": "Category",
+    "csvAvg": "Average rating",
+    "csvPrevAvg": "Previous average",
+    "csvAvgDelta": "Change",
+    "csvNegative": "Negative reviews (1–2★)"
   },
   "reviewSettings": {
     "title": "Review topic settings",
@@ -2223,10 +2244,7 @@
     "saveFailed": "Failed to save category",
     "deleteFailed": "Failed to delete category",
     "inUse": "Cannot delete \"{name}\": {n} products still use this category",
-    "shipsNationwide": "Ships nationwide",
-    "shipsNationwideAuto": "Not set yet — guessed from the name (sourdough = nationwide). Toggle to set it.",
-    "shipsNationwideHint": "Ships nationwide = web orders can be delivered to any province · off = store province only (pickup is always allowed)",
-    "shippingSaved": "Category shipping saved"
+    "shippingHint": "Ships nationwide = web orders can be delivered to any province · store province only = delivery within the store province (pickup is always allowed) · * = not set yet, guessed from the name"
   },
   "customization": {
     "title": "Product options",
@@ -2384,7 +2402,7 @@
   "shippingZones": {
     "title": "Online Shipping Fees",
     "usage": "The customer's delivery province is matched against zones A–C — anything else uses zone D · no free shipping by order total (free shipping only via coupons) · orders created in the back office use \"Delivery Zones\" instead",
-    "scopeNote": "Categories without \"ships nationwide\" can only be delivered within the store's province — set this in category management on the products page",
+    "scopeNote": "Categories without \"ships nationwide\" can only be delivered within the store province — set this with the \"Out-of-province delivery\" button at the top right, or in \"Manage categories\" on the products page",
     "fallbackTag": "All other provinces",
     "fallbackHint": "Zone D automatically covers every province not in zones A–C — only its name and fee can be edited",
     "noProvinces": "No provinces yet",
@@ -2410,6 +2428,33 @@
       "title": "Check fee by province",
       "placeholder": "Pick a province",
       "result": "Zone {code} — fee {fee}"
+    },
+    "categories": {
+      "button": "Out-of-province delivery",
+      "title": "Out-of-province delivery by category",
+      "hint": "On = ships nationwide · Off = store province only (customers can always pick up) · The \"Whole category\" switch sets every product in the category at once · Click a category to set individual products · * = never set, guessed from the category name",
+      "empty": "No product categories yet",
+      "nationwide": "Ships nationwide",
+      "provinceOnly": "Store province only",
+      "autoHint": "Not set yet — guessed from the name (sourdough = nationwide). Toggle to set it.",
+      "toggleLabel": "Ships nationwide: {name}",
+      "saveFailed": "Could not save the category delivery setting"
+    },
+    "products": {
+      "searchPlaceholder": "Search product name or code",
+      "categoryFilter": "All categories",
+      "empty": "No products found",
+      "preorder": "Pre-order",
+      "saveFailed": "Could not save the product delivery setting",
+      "groupSummary": "{n} products",
+      "noCategory": "No category",
+      "statusAll": "All ship nationwide",
+      "statusSome": "{on}/{n} ship nationwide",
+      "statusNone": "All province only",
+      "wholeCategory": "Whole category",
+      "custom": "Custom",
+      "scopeFilter": "All delivery scopes",
+      "noProducts": "No products to set up yet"
     }
   },
   "shop": {
@@ -2457,7 +2502,8 @@
       "preorders": "Pre-order history",
       "favorites": "Favorites",
       "notifications": "Notifications",
-      "logout": "Log out"
+      "logout": "Log out",
+      "reviews": "My reviews"
     },
     "address": {
       "saved": "Address saved",
@@ -2548,7 +2594,11 @@
       "locations": "Pickup points",
       "closed": "Not open for pickup right now",
       "viewMap": "View map: {name} ↗",
-      "date": "Pickup date"
+      "date": "Pickup date",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "selectedDate": "Selected: {date}",
+      "pickDateHint": "Pick a pickup date from the calendar (highlighted dates are available)"
     },
     "points": {
       "title": "Use reward points",
@@ -2590,7 +2640,6 @@
       },
       "loginToView": "Please log in to see your cart",
       "qtyFailed": "Could not change the quantity",
-      "removed": "Removed from cart",
       "removeFailed": "Could not remove the item",
       "loadFailed": "Could not load your cart",
       "retry": "Try again",
@@ -2648,7 +2697,6 @@
     },
     "cartActions": {
       "loginToAdd": "Please log in before adding to your cart",
-      "added": "Added to cart",
       "addFailed": "Could not add the product",
       "chooseOptions": "This product has options — choose them before adding to your cart",
       "product": "Product",
@@ -2656,8 +2704,6 @@
       "buyAgainPartial": "Added {n} items · couldn't add: {failed}",
       "buyAgainDone": "Added {n} items to your cart",
       "loginToFavorite": "Please log in to save favorites",
-      "favoriteAdded": "Added to favorites",
-      "favoriteRemoved": "Removed from favorites",
       "favoriteFailed": "Could not update favorites"
     },
     "orders": {
@@ -2742,7 +2788,8 @@
         "readyPickup": "Ready for pickup",
         "received": "Received",
         "pickedUp": "Picked up"
-      }
+      },
+      "reviewStatus": "Review status"
     },
     "preorders": {
       "all": "All pre-orders",
@@ -2975,8 +3022,6 @@
       "loading": "Loading membership...",
       "loadFailed": "Could not load membership",
       "refresh": "{error} — please refresh the page",
-      "readyToRedeem": "You can now use points as a discount",
-      "collectMore": "Collect {n} more points to start redeeming",
       "balanceLabel": "Points balance",
       "pointsUnit": "points",
       "worth": "Worth {amount}",
@@ -3321,7 +3366,9 @@
       "note2": "Once shipped, you'll see the tracking number on the order details page",
       "note3": "If a paid order is cancelled, the store refunds the full amount — you can set up a <link>PromptPay account for refunds</link> in advance",
       "moreQuestions": "More questions?",
-      "contact": "Contact us"
+      "contact": "Contact us",
+      "scopeExtraNationwide": "Also delivered nationwide (even though their category is local only): <b>{items}</b>",
+      "scopeExtraLocal": "These products can only be delivered within {area}: <b>{items}</b>"
     },
     "password": {
       "loginToChange": "Please log in to change your password",
@@ -3363,11 +3410,13 @@
       "linkRule": "Reset links can be used once and expire after 1 hour",
       "requestNew": "Request a new link",
       "resetDone": "You can now log in with your new password",
-      "goLogin": "Go to login",
       "setNew": "Set a new password",
       "atLeast": "At least {n} characters",
       "retype": "Re-enter your password",
-      "saveNew": "Save new password"
+      "saveNew": "Save new password",
+      "pickGoogleFailed": "Could not choose a Google account. Please try again.",
+      "useGoogle": "Choose a Google account instead",
+      "openGmail": "Open Gmail"
     },
     "verify": {
       "verifying": "Verifying your email...",
@@ -3424,6 +3473,44 @@
       "payDeadline": "Please pay and attach your slip within 30 minutes, or the order will be cancelled automatically",
       "payDeadlinePreorder": "Please pay and attach your slip within 24 hours (and before the round closes), or it will be cancelled automatically",
       "home": "Back to home"
+    },
+    "myReviews": {
+      "loginToView": "Log in to see your reviews",
+      "title": "My reviews",
+      "count": "{n} reviews",
+      "filterLabel": "Filter reviews",
+      "filterAll": "All",
+      "filterReplied": "Shop replied ({n})",
+      "loading": "Loading reviews...",
+      "loadFailed": "Could not load reviews. Please try again.",
+      "empty": "You have not reviewed any products yet",
+      "emptyHint": "You can review products from your order history once an order is completed",
+      "goPurchases": "Go to order history",
+      "shopReply": "Reply from the shop",
+      "noReply": "The shop has not replied to this review yet",
+      "hidden": "Not shown on the product page",
+      "preorder": "Pre-order",
+      "noComment": "No comment written",
+      "productRemoved": "This product is no longer available",
+      "photoAlt": "Review photo {n}",
+      "stars": "{n} stars",
+      "liked": "Liked",
+      "improve": "Could improve",
+      "countFiltered": "Showing {shown} of {n} reviews",
+      "searchLabel": "Search reviews",
+      "searchPlaceholder": "Search product name or review text",
+      "sortLabel": "Sort by",
+      "sortNewest": "Newest",
+      "sortOldest": "Oldest",
+      "sortHighest": "Highest rating",
+      "sortLowest": "Lowest rating",
+      "filterMedia": "With photos/video ({n})",
+      "filterPreorder": "Pre-order ({n})",
+      "filterStarsLabel": "Filter by rating",
+      "allStars": "All ratings",
+      "starsChip": "{n} ({count})",
+      "emptyFiltered": "No reviews match these filters",
+      "clearFilters": "Clear filters"
     }
   },
   "bulkStock": {

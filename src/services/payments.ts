@@ -14,7 +14,7 @@ export const paymentsService = {
   verify: (id: string, approved: boolean) =>
     http.post<ItemResponse<Payment>>(`${BASE}/${id}/verify`, { approved }),
   /**
-   * POST /admin/payments/{id}/refund — ร้านโอนคืนแล้ว: paid → refunded (+ propagate ไป order/preorder) · สิทธิ์ payments.approve
+   * POST /admin/payments/{id}/refund — ร้านโอนคืนแล้ว: paid → refunded (+ propagate ไป order/preorder) · สิทธิ์ payments.delete (P7)
    * ใช้กับออเดอร์ "ยกเลิก + ชำระแล้ว" (isAwaitingRefund) — ลูกค้ายกเลิกเองแล้ว backend ไม่คืนอัตโนมัติ (§8.8)
    */
   refund: (id: string) => http.post<ItemResponse<Payment>>(`${BASE}/${id}/refund`),

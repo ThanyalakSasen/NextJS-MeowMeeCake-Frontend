@@ -98,9 +98,9 @@ export function LogDetailContent({ log }: { log: LogRow }) {
                   <p className="mb-1 text-xs text-gray-500">{c.label}</p>
                   {c.before !== null && c.after !== null ? (
                     <div className="grid grid-cols-[auto_1fr] items-baseline gap-x-2 gap-y-0.5 text-sm">
-                      <span className="text-xs text-gray-400">{t("userLog.before")}</span>
+                      <span className="text-xs text-gray-500">{t("userLog.before")}</span>
                       <span className="break-all text-gray-500 line-through decoration-gray-300">{c.before}</span>
-                      <span className="text-xs text-gray-400">{t("userLog.after")}</span>
+                      <span className="text-xs text-gray-500">{t("userLog.after")}</span>
                       <span className="break-all font-medium text-brown-800">{c.after}</span>
                     </div>
                   ) : (

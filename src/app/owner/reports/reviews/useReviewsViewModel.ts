@@ -3,7 +3,7 @@
 // ViewModel ของ "รีวิวลูกค้า" (BACKLOG4 E4) — ยกจาก FrontOffice reports/reviews/ReviewTable (MVVM + i18n)
 // กรอง/ค้นหา/เรียง/แบ่งหน้าที่ server + สรุปของชุดที่กรอง (summary=1 — I9) · เดิมโหลดทั้งหมดมากรองในหน้า
 // จัดการต่อรีวิว (PATCH): สถานะ · ปักหมุด · อ่านแล้ว · ตอบกลับ (คำตอบสำเร็จรูป + คำตอบเก่าที่เคยใช้) · โน้ต/แท็กภายใน
-// เลือกหลายรายการ: อ่านแล้ว/ยังไม่อ่าน (/bulk) · ส่งออก CSV (ต้นแบบ xlsx — แอปนี้ใช้ CSV ทุกหน้า)
+// เลือกหลายรายการ: ส่งออก CSV (ต้นแบบ xlsx — แอปนี้ใช้ CSV ทุกหน้า)
 // แก้แล้วอัปเดต cache ของหน้าปัจจุบันทันที แล้วโหลดชุดใหม่ (summary/ลำดับอาจเปลี่ยน) · สิทธิ์เมนู reports
 // แดชบอร์ดสรุป = หน้า ./dashboard (คำนวณฝั่ง client จากรายการเดียวกัน — backend ไม่มี endpoint สรุป)
 // ─────────────────────────────────────────────────────────────
@@ -159,16 +159,6 @@ export function useReviewsViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("reviews.deleteFailed")),
   });
 
-  const bulk = useMutation({
-    mutationFn: (read: boolean) => reviewsService.bulkRead([...selected], read),
-    onSuccess: (_, read) => {
-      alert.success(t(read ? "reviews.bulkReadDone" : "reviews.bulkUnreadDone", { n: selected.size }));
-      setSelected(new Set());
-      refresh();
-    },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("reviews.updateFailed")),
-  });
-
   const exportSelected = () => {
     const chosen = rows.filter((r) => selected.has(r._id));
     exportToCsv(
@@ -233,9 +223,12 @@ export function useReviewsViewModel() {
       setQ("");
       setPage(1);
     },
-    /** ทางลัดจากแถบสรุป: รีวิวลบที่ยังไม่ตอบ เรียงที่ควรตอบก่อน */
-    showUnrepliedNegative: () => {
-      setFilters({ ...DEFAULT_FILTERS, negativeOnly: true, replied: "0", sort: "needs_reply" });
+    /**
+     * ทางลัดจากแถบสรุป/แดชบอร์ด: รีวิวลบที่ยังไม่ตอบ เรียงที่ควรตอบก่อน
+     * productId = แดชบอร์ดกำลังดูสินค้านี้อยู่ → กรองสินค้าเดียวกัน (ตัวเลขตรงกับที่เพิ่งเห็น)
+     */
+    showUnrepliedNegative: (productId?: string) => {
+      setFilters({ ...DEFAULT_FILTERS, productId: productId ?? "all", negativeOnly: true, replied: "0", sort: "needs_reply" });
       setPage(1);
     },
     categoryOptions: sortByThai((options?.categories ?? []), (c) => c.category_name).map((c) => ({ value: c.category_id, label: `${c.category_name} (${c.review_count})` })),
@@ -252,13 +245,10 @@ export function useReviewsViewModel() {
         return next;
       }),
     selectAllOnPage: (on: boolean) => setSelected(on ? new Set(rows.map((r) => r._id)) : new Set()),
-    bulkBusy: bulk.isPending,
-    onBulkRead: (read: boolean) => bulk.mutate(read),
     onExport: exportSelected,
 
     onStatus: (r: ReviewRow, status: ReviewStatus) => void run(r._id, { status }, `reviews.statusChanged.${status}`),
     onTogglePin: (r: ReviewRow) => void run(r._id, { is_pinned: !r.is_pinned }),
-    onToggleRead: (r: ReviewRow) => void run(r._id, { read: !r.isRead }),
     onSaveReply: (r: ReviewRow, text: string) => run(r._id, { shop_reply_text: text }, text.trim() ? "reviews.replySaved" : "reviews.replyRemoved"),
     onSaveNote: (r: ReviewRow, text: string) => run(r._id, { internal_note_text: text }, text.trim() ? "reviews.noteSaved" : "reviews.noteRemoved"),
     onDelete: (id: string) => remove.mutate(id),

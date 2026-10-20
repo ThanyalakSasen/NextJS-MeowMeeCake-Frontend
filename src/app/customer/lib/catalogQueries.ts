@@ -14,6 +14,8 @@ export const storeInfoKey = ["catalog", "store-info"] as const;
 export const contactTopicsKey = ["catalog", "contact-topics"] as const;
 /** หน้าค่าจัดส่ง (D9) + โลโก้ร้าน (Navbar/Footer) */
 export const shippingZonesKey = ["catalog", "shipping-zones"] as const;
+/** หน้าค่าจัดส่ง — สินค้าที่ร้านตั้งขอบเขตจัดส่งต่างจากหมวด (ยกเว้นรายสินค้า) */
+export const shippingExceptionsKey = ["catalog", "shipping-exceptions"] as const;
 export const storeLogoKey = ["catalog", "store-logo"] as const;
 /** สินค้าแนะนำหน้าแรก (C2) — ต่อท้ายด้วยสถานะ login (ผลต่างกัน) */
 export const homeRecommendationsKey = ["catalog", "recommended"] as const;

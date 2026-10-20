@@ -7,9 +7,11 @@
 //                                  ชื่อ/เบอร์/อีเมลผู้ส่ง backend ดึงจากบัญชีเอง · 1 ข้อความ/นาที (429)
 //   GET  /catalog/shipping-zones   โซนค่าส่งเว็บ A–D ตามจังหวัด (D9 · โซนที่ไม่มีจังหวัด = จังหวัดที่เหลือ)
 //   GET  /catalog/store-logo       { url, updated_at } โลโก้ล่าสุด (D9 · ยังไม่อัปโหลด = /pictures/logoMoewMeeCake.png ของหน้าเว็บ)
+//   GET  /catalog/shipping-exceptions  { nationwide, province_only } สินค้าที่ตั้งยกเว้นต่างจากหมวด (หน้าค่าจัดส่ง)
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
+import type { ShippingExceptions } from "@/types/shippingZone";
 
 export type WeekDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 export type SocialKey = "facebook" | "line" | "instagram" | "website";
@@ -60,6 +62,10 @@ export const storeInfoService = {
   },
 
   shippingZones: async (): Promise<ShippingZone[]> => (await http.getList<ShippingZone>("/catalog/shipping-zones")).data,
+
+  /** สินค้าที่ตั้งขอบเขตจัดส่งต่างจากหมวด — เฉพาะที่เปิดขาย · ค่าเดียวกับหมวดไม่นับ */
+  shippingExceptions: async (): Promise<ShippingExceptions> =>
+    (await http.get<ItemResponse<ShippingExceptions>>("/catalog/shipping-exceptions")).data,
 
   logo: async (): Promise<StoreLogo> => (await http.get<ItemResponse<StoreLogo>>("/catalog/store-logo")).data,
 };

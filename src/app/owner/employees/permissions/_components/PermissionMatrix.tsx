@@ -85,6 +85,10 @@ export function PermissionMatrix({
                         <span className="text-sm text-gray-600">{t(`fields.${field}`)}</span>
                       </Checkbox>
                     ))}
+                    {/* การชำระเงิน: อนุมัติ กับ ลบ ทำคนละอย่าง — คืนเงินอยู่ที่ "ลบ" (Final-Backlog P7) */}
+                    {menuKey === "payments" && (
+                      <p className="m-0 w-full text-xs text-gray-500">{t("permissions.paymentsHint")}</p>
+                    )}
                   </div>
                 ),
               };

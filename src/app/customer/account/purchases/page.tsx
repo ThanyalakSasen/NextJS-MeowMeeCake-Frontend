@@ -23,7 +23,7 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { shopOrderKey, shopOrdersKey } from "../../lib/shopQueries";
-import { ORDER_STATUSES, ORDER_STATUS_TONE, useOrderLabels } from "./orderLabels";
+import { ORDER_STATUSES, ORDER_STATUS_TONE, REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "./orderLabels";
 import ReviewLink from "../_components/ReviewLink";
 import OrderItemThumb from "../_components/OrderItemThumb";
 import BuyAgainButton from "../_components/BuyAgainButton";
@@ -142,9 +142,20 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
           <span className="block text-sm font-semibold text-stone-800">{t("orderNo", { no: order.order_no })}</span>
           <span className="block text-xs text-stone-500">{t("orderedAt", { date: formatDate(order.created_at, locale, { withTime: true }) })}</span>
         </div>
-        <span className={`self-start rounded-full px-3 py-1 text-xs font-semibold ${ORDER_STATUS_TONE[order.order_status]}`}>
-          {labels.orderStatus(order.order_status)}
-        </span>
+        {/* สถานะรีวิวแทนสถานะคำสั่งซื้อ — ออเดอร์ที่ยังรีวิวไม่ได้ (ยังไม่สำเร็จ/ยังไม่ชำระ) แสดงสถานะคำสั่งซื้อเหมือนเดิม */}
+        <ReviewLink
+          kind="order"
+          doc={order}
+          itemIds={detail?.items.map((it) => it._id)}
+          href={`${href}/review`}
+          className={REVIEW_PILL}
+          reviewedClassName={REVIEWED_PILL}
+          fallback={
+            <span className={`self-start rounded-full px-3 py-1 text-xs font-semibold ${ORDER_STATUS_TONE[order.order_status]}`}>
+              {labels.orderStatus(order.order_status)}
+            </span>
+          }
+        />
       </div>
 
       <div className="flex flex-col gap-3">
@@ -203,7 +214,6 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <ReviewLink kind="order" doc={order} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={actionLink} />
           {detail && (order.order_status === "completed" || order.order_status === "cancelled") && (
             <BuyAgainButton items={detail.items} className={actionLink} />
           )}
