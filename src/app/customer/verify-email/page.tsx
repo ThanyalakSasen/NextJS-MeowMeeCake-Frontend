@@ -42,7 +42,7 @@ function VerifyEmailContent() {
   }, [token, router]);
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center bg-[#f8f6f3] p-5">
+    <div className="flex min-h-screen items-center justify-center bg-[#f8f6f3] p-5">
       <div className={card}>
         {status.kind === "loading" && (
           <>

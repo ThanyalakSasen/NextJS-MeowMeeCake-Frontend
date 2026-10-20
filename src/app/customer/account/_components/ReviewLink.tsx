@@ -5,6 +5,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { Star } from "lucide-react";
 import type { ReviewKind } from "@/services/shopReviews";
 import { canReview, useReviewedItems } from "../../hooks/useReviewedItems";
 
@@ -37,6 +38,7 @@ export default function ReviewLink({
   if (left === 0) return <span className={reviewedClassName}>{t("reviewed")}</span>;
   return (
     <Link href={href} className={className}>
+      <Star size={16} className="shrink-0 fill-current" aria-hidden="true" />
       {itemIds.length > 1 ? t("reviewCount", { n: left }) : t("reviewProducts")}
     </Link>
   );

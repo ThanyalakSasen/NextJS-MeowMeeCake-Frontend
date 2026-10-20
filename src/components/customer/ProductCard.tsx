@@ -4,8 +4,9 @@
 // เปลี่ยนจากเดิม: ใช้ Product ของ backend หลัก (is_preorder แทน product_type) · รูปผ่าน resolveUploadUrl
 // · คะแนนรีวิวแสดง avg_rating (เดิมแสดง review_count ผิดช่อง)
 // · ปุ่มหัวใจ (รายการโปรด D5/U3) อ่านจาก cache เดียวของ useFavorites — ไม่ยิงขอรายการต่อใบแบบต้นแบบ
-// · ป้ายแพ้อาหาร + เหตุผลที่แนะนำ: ส่งมาเป็น props จากผลของระบบแนะนำ (สินค้าคล้าย C1 · แนะนำสำหรับคุณ C2) เท่านั้น
-//   — /catalog/products ทั่วไปไม่มีข้อมูลนี้
+// · ป้ายแพ้อาหาร: ทุกบัตร — จาก /shop/allergen-warnings (useAllergenWarnings · ล็อกอิน + บันทึกอาหารที่แพ้ไว้)
+//   ผลของระบบแนะนำ (สินค้าคล้าย C1 · แนะนำสำหรับคุณ C2) ส่งมาเป็น props ได้ — ใช้ props ก่อน
+// · เหตุผลที่แนะนำ: ส่งมาเป็น props จากผลของระบบแนะนำเท่านั้น
 // · "เพิ่มลงตะกร้า" = quickAdd: สินค้ามีตัวเลือก → พาไปหน้าสินค้าให้เลือกก่อน
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
@@ -18,6 +19,7 @@ import { resolveUploadUrl } from "@/lib/uploads";
 import { effectivePrice, hasSalePrice, salePercent } from "@/lib/pricing";
 import { useAddToCart } from "@/app/customer/hooks/useAddToCart";
 import { useFavorites } from "@/app/customer/hooks/useFavorites";
+import { useAllergenWarnings } from "@/app/customer/hooks/useAllergenWarnings";
 import type { AllergenWarning, AllergenWarningLevel } from "@/services/catalog";
 import ShopImage from "./ShopImage";
 
@@ -49,11 +51,25 @@ function allergenLabel(w: AllergenWarning, t: ReturnType<typeof useTranslations<
   return t("allergens", { names: `${names.slice(0, 2).join(", ")}${names.length > 2 ? ` +${names.length - 2}` : ""}` });
 }
 
+/** ป้ายเตือนแพ้อาหารมุมซ้ายบนของรูปสินค้า — ใช้ทั้งบัตรสินค้าปกติและบัตรพรีออเดอร์ · ไม่มีคำเตือน = ไม่แสดง */
+export function AllergenBadge({ warning }: { warning: AllergenWarning | null }) {
+  const t = useTranslations("shop.productCard");
+  if (!warning || warning.level === "none") return null;
+  return (
+    <span
+      title={warning.message ?? undefined}
+      className={`absolute left-1 top-1 max-w-[55%] truncate rounded-full border px-1.5 py-0 text-[11px] font-medium leading-4 shadow-sm ${ALLERGEN_TONE[warning.level]}`}
+    >
+      {allergenLabel(warning, t)}
+    </span>
+  );
+}
+
 export default function ProductCard({
   product,
   showAddToCart = true,
   showFavorite = true,
-  allergenWarning = null,
+  allergenWarning: allergenWarningProp = null,
   reasons,
   priority = false,
 }: {
@@ -71,6 +87,7 @@ export default function ProductCard({
   const { names: localNames } = useLocalName();
   const { quickAdd, status } = useAddToCart();
   const favorites = useFavorites();
+  const allergenWarningOf = useAllergenWarnings();
   const isLoading = status === "loading";
   const isSuccess = status === "success";
   const [failedImg, setFailedImg] = useState<string | null>(null);
@@ -81,6 +98,7 @@ export default function ProductCard({
   const imgSrc = resolveUploadUrl(product.product_img?.[0]);
   const rating = Number(product.avg_rating ?? 0);
   const favorite = favorites.isFavorite(product._id);
+  const allergenWarning = allergenWarningProp ?? allergenWarningOf(product._id);
 
   return (
     <Link
@@ -134,14 +152,7 @@ export default function ProductCard({
           </button>
         )}
 
-        {allergenWarning && allergenWarning.level !== "none" && (
-          <span
-            title={allergenWarning.message ?? undefined}
-            className={`absolute left-2 top-2 max-w-[70%] truncate rounded-full border px-2 py-0.5 text-sm font-bold shadow-sm ${ALLERGEN_TONE[allergenWarning.level]}`}
-          >
-            ⚠ {allergenLabel(allergenWarning, t)}
-          </span>
-        )}
+        <AllergenBadge warning={allergenWarning} />
       </div>
 
       {/* ฟอนต์อิงฐาน 18px (globals.css html 112.5%) · ขั้นต่ำของแอป 16px = text-sm/text-xs · 17px = text-[0.9444rem] · 18px = text-base
