@@ -71,6 +71,7 @@ export function HistoryTab(vm: VM) {
           <div className="flex flex-wrap items-center gap-2">
             <Select
               value={vm.historyViewMode}
+              aria-label={t("filterLabel.period")}
               onChange={(v) => vm.setHistoryViewMode(v as HistoryViewMode)}
               options={VIEW_MODES.map((m) => ({ value: m, label: t(`production.viewMode.${m}`) }))}
               style={{ width: 130 }}
