@@ -30,8 +30,8 @@ export function ScanSearchBox({
 
   return (
     <div className="relative">
-      {/* อยู่ในหัวการ์ดบิล (พื้นขาวเดียวกัน) — ใช้ขอบแทนพื้นแยก */}
-      <label className="flex min-h-12 items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-4 focus-within:border-brown-800">
+      {/* อยู่ในหัวการ์ดบิล (พื้นขาวเดียวกัน) — ขอบอยู่ที่ช่องพิมพ์ ป้าย "สแกน / ค้นหา" อยู่นอกกรอบ */}
+      <label className="flex items-center gap-2.5">
         <span className="whitespace-nowrap text-sm font-semibold text-brown-800">{t("pos.scanLabel")}</span>
         <input
           type="search"
@@ -46,7 +46,7 @@ export function ScanSearchBox({
             }
           }}
           placeholder={t("pos.scanPlaceholder")}
-          className="min-w-0 flex-1 border-none bg-transparent text-lg text-brown-900 outline-none placeholder:text-sm placeholder:text-gray-500"
+          className="min-h-11 min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3.5 text-lg text-brown-900 outline-none focus:border-brown-800 placeholder:text-sm placeholder:text-gray-500"
         />
       </label>
 
