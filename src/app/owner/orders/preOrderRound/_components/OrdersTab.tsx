@@ -4,7 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Select, Tag } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { isAwaitingRefund } from "@/types/order";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { OrderStatus } from "@/constants/enumConfig";
 import type { Preorder } from "@/types/preorder";
@@ -105,14 +105,14 @@ export function OrdersTab(vm: VM) {
         left={
           <>
             <SearchInput value={vm.orderSearch} onChange={vm.setOrderSearch} placeholder={t("preorderRound.searchOrderPlaceholder")} />
-            <div style={{ minWidth: 180 }}>
+            <FilterField label={t("filterLabel.round")} minWidth={180}>
               <Select
                 value={vm.orderRoundFilter}
                 onChange={(v) => vm.setOrderRoundFilter(v as string)}
                 options={[{ value: "all", label: t("preorderRound.allRounds") }, ...vm.roundOptions]}
               />
-            </div>
-            <div style={{ minWidth: 160 }}>
+            </FilterField>
+            <FilterField label={t("filterLabel.orderStatus")} minWidth={160}>
               <Select
                 value={vm.orderStatusFilter}
                 onChange={(v) => vm.setOrderStatusFilter(v as OrderStatus | "all")}
@@ -124,7 +124,7 @@ export function OrdersTab(vm: VM) {
                   })),
                 ]}
               />
-            </div>
+            </FilterField>
           </>
         }
       />

@@ -42,3 +42,14 @@ export interface PosScanResult {
   /** กลุ่มตัวเลือก + ออปชันเสริม — มี = ต้องให้พนักงานเลือกก่อนลงบิล */
   customization: ProductCustomization;
 }
+
+/** GET /admin/pos/promptpay-qr?amount= — QR พร้อมเพย์จริงของร้านสำหรับยอดบิล */
+export interface PosPromptPayQr {
+  /** data URL รูป PNG */
+  qr_image: string;
+  /** ชื่อบัญชีจากหน้า "ข้อมูลร้านค้า" ("" = ไม่ได้ตั้ง / ใช้เลขจาก env ของ backend) */
+  account_name: string;
+  promptpay_id: string;
+  /** ยอดใน QR (บาท) */
+  amount: number;
+}

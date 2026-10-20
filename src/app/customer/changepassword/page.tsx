@@ -55,7 +55,7 @@ function ChangePasswordContent() {
   const t = useTranslations("shop.password");
   const tc = useTranslations("shop.common");
   const to = useTranslations("shop.orders");
-  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: shopProfileService.get });
+  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: () => shopProfileService.get() });
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -86,7 +86,7 @@ function ChangePasswordContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: t("change") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <AccountSideMenu />

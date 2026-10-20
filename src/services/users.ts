@@ -1,13 +1,31 @@
 // เรียก endpoint /users (docs/API_CONTRACT.md §3) — แพทเทิร์นเดียวกับ services/products.ts
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
+import { refId } from "@/lib/refId";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { AppUser, AppUserInput, CreateAppUserInput, UserListParams } from "@/types/user";
 
 const BASE = "/admin/users";
 
+/**
+ * backend populate role_id เป็น { _id, role_name, role_type } ทั้ง list และ get (userService.listUsers/getUserById)
+ * → แปลงกลับเป็น string id ตาม AppUser · เดิมส่ง object ต่อไปตรง ๆ: ตารางพนักงานหาชื่อตำแหน่งไม่เจอ ("—")
+ * และ dropdown ตำแหน่งในฟอร์มแก้ไขได้ค่าเริ่มต้นเป็น object (แก้ตำแหน่งแล้วดูเหมือนไม่เปลี่ยน)
+ */
+function normalize(u: AppUser): AppUser {
+  const role = u.role_id as unknown as { _id: string } | string | null | undefined;
+  return { ...u, role_id: role ? refId(role) : null };
+}
+
 export const usersService = {
-  list: (params: UserListParams = {}) => http.getList<AppUser>(BASE, { params }),
-  get: (id: string) => http.get<ItemResponse<AppUser>>(`${BASE}/${id}`),
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (employees/page.tsx) */
+  list: async (params: UserListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<AppUser>(BASE, { params });
+    return { ...res, data: res.data.map(normalize) };
+  },
+  get: async (id: string, h: HttpReader = http) => {
+    const res = await h.get<ItemResponse<AppUser>>(`${BASE}/${id}`);
+    return { ...res, data: normalize(res.data) };
+  },
   create: (body: CreateAppUserInput) => http.post<ItemResponse<AppUser>>(BASE, body),
   update: (id: string, body: Partial<AppUserInput>) => http.patch<ItemResponse<AppUser>>(`${BASE}/${id}`, body),
   remove: (id: string) => http.delete<EmptyResponse>(`${BASE}/${id}`),

@@ -19,6 +19,7 @@ import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
+import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopPage } from "@/components/customer/shopStyles";
 import { shopCouponOverviewKey, shopCouponsKey, shopPointsKey } from "../../lib/shopQueries";
 import { couponLabel } from "../../lib/couponLabel";
@@ -90,15 +91,15 @@ function MemberContent() {
   const p = pointsQ.data;
   const balance = p?.balance ?? 0;
   const minToRedeem = p?.rules.MIN_BALANCE_TO_REDEEM ?? 100;
-  const progress = Math.round(Math.min((balance / Math.max(minToRedeem, 1)) * 100, 100));
   const catalog = couponsQ.data?.catalog ?? [];
   const myCoupons = couponsQ.data?.coupons ?? [];
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: ta("member") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
+          <AccountSideMenu />
           <div className="flex min-w-0 flex-1 flex-col gap-6">
             {pointsQ.isLoading ? (
               <p className="rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center text-sm text-stone-500">{t("loading")}</p>
@@ -121,18 +122,6 @@ function MemberContent() {
                         <span className="shrink-0 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
                           Member card
                         </span>
-                      </div>
-
-                      <div className="relative z-10 space-y-1.5">
-                        <div className="flex justify-between text-xs text-stone-300">
-                          <span>
-                            {balance >= minToRedeem ? t("readyToRedeem") : t("collectMore", { n: (minToRedeem - balance).toLocaleString() })}
-                          </span>
-                          <span>{progress}%</span>
-                        </div>
-                        <div className="h-2 w-full overflow-hidden rounded-full border border-white/10 bg-black/30 p-0.5" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-                          <div className="h-full rounded-full bg-amber-400 transition-all duration-500" style={{ width: `${progress}%` }} />
-                        </div>
                       </div>
 
                       <div className="relative z-10 flex items-end justify-between border-t border-white/10 pt-2">
@@ -173,7 +162,7 @@ function MemberContent() {
                               <div className="flex shrink-0 flex-col items-end gap-0.5">
                                 <span className="whitespace-nowrap rounded bg-amber-100/70 px-2 py-0.5 text-xs font-semibold text-amber-800">{t("pointsBadge", { points })}</span>
                                 {done !== undefined && (
-                                  <span className={`text-[11px] font-semibold ${done ? "text-emerald-600" : "text-stone-400"}`}>{done ? t("received") : t("notReceived")}</span>
+                                  <span className={`text-[11px] font-semibold ${done ? "text-emerald-600" : "text-stone-500"}`}>{done ? t("received") : t("notReceived")}</span>
                                 )}
                               </div>
                             </li>
@@ -240,7 +229,7 @@ function MemberContent() {
                                     {c.min_order_amount ? t("minOrder", { amount: baht(c.min_order_amount) }) : ""}
                                     {t("until", { date: formatDate(c.end_date) })}
                                   </p>
-                                  {c.promotion_desc && <p className="m-0 line-clamp-1 text-xs text-stone-400">{c.promotion_desc}</p>}
+                                  {c.promotion_desc && <p className="m-0 line-clamp-1 text-xs text-stone-500">{c.promotion_desc}</p>}
                                   <div className="flex items-center justify-between gap-2 pt-1">
                                     <span className="rounded bg-amber-100/70 px-2 py-0.5 text-xs font-semibold text-amber-800">
                                       {t("pointsBadge", { points: c.points_cost.toLocaleString() })}
@@ -249,7 +238,7 @@ function MemberContent() {
                                       type="button"
                                       onClick={() => void onRedeem(c)}
                                       disabled={disabled}
-                                      className="h-[36px] rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none"
+                                      className="h-[44px] rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none"
                                     >
                                       {busy ? t("redeeming") : c.limit_reached ? t("limitReached") : enough ? t("redeem") : t("notEnough")}
                                     </button>
@@ -279,7 +268,7 @@ function MemberContent() {
                             <li key={c._id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                               <div className="min-w-0 space-y-0.5">
                                 <p className="m-0 truncate text-sm font-semibold text-stone-800">{c.promotion_name}</p>
-                                <p className="m-0 text-xs text-stone-400">
+                                <p className="m-0 text-xs text-stone-500">
                                   {couponLabel(c, tcp)}
                                   {c.min_order_amount ? t("minOrder", { amount: baht(c.min_order_amount) }) : ""}
                                   {t("validUntil", { date: formatDate(c.expires_at) })}
@@ -308,7 +297,7 @@ function MemberContent() {
                         <li key={h._id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                           <div className="min-w-0 space-y-0.5">
                             <p className="m-0 text-sm font-semibold text-stone-800">{h.description}</p>
-                            <p className="m-0 text-xs text-stone-400">{formatDate(h.created_at)}</p>
+                            <p className="m-0 text-xs text-stone-500">{formatDate(h.created_at)}</p>
                           </div>
                           <span className={`shrink-0 text-sm font-bold ${h.points >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                             {h.points >= 0 ? "+" : ""}
@@ -318,7 +307,7 @@ function MemberContent() {
                       ))}
                     </ul>
                   )}
-                  {p.history.length >= 50 && <p className="m-0 text-center text-xs text-stone-400">{t("latest50")}</p>}
+                  {p.history.length >= 50 && <p className="m-0 text-center text-xs text-stone-500">{t("latest50")}</p>}
                 </section>
               </>
             )}

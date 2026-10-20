@@ -15,7 +15,6 @@ export interface ReviewRow extends Review {
   /** "" = ไม่ทราบ */
   orderNo: string;
   isPreorder: boolean;
-  isRead: boolean;
   internalTags: string[];
   topics: ReviewTopic[];
   images: string[];
@@ -44,7 +43,6 @@ export function toReviewRow(r: Review): ReviewRow {
     productImage: resolveUploadUrl(product?.product_img ?? null),
     orderNo: order?.order_no ?? pre?.preorder_no ?? "",
     isPreorder: !!r.preorder_order_item_id,
-    isRead: !!r.read_at,
     internalTags: r.internal_tags ?? [],
     topics,
     images: (r.image ?? []).map((u) => resolveUploadUrl(u)).filter((u): u is string => !!u),

@@ -56,7 +56,7 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
           reason={order.cancelled_reason}
           account={order.refund_account}
           paidPaymentId={vm.paidPayment?._id ?? null}
-          canRefund={vm.canApprovePayment}
+          canRefund={vm.canRefundPayment}
           refunding={vm.refunding}
           onRefund={vm.onRefund}
         />

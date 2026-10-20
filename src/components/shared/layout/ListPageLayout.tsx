@@ -4,23 +4,21 @@
 // ─────────────────────────────────────────────────────────────
 export function ListPageLayout({
   title,
-  description,
   actions,
   toolbar,
   children,
 }: {
   title: string;
-  description?: string;
   actions?: React.ReactNode;
   toolbar?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-start justify-between gap-4">
+      {/* จอแคบ: ปุ่ม action ขึ้นบรรทัดใหม่แทนการบีบหัวข้อ */}
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <div>
           <h1 className="text-xl font-semibold text-brown-900">{title}</h1>
-          {description && <p className="mt-1 text-base text-gray-600">{description}</p>}
         </div>
         {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
       </div>

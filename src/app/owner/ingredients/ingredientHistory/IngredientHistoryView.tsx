@@ -4,7 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatDate, formatNumber } from "@/i18n/format";
 import { INGREDIENT_TXN_CONFIG } from "@/constants/enumConfig";
 import type { HistoryRow, useIngredientHistoryViewModel } from "./useIngredientHistoryViewModel";
@@ -73,13 +73,12 @@ export function IngredientHistoryView(vm: VM) {
   return (
     <ListPageLayout
       title={t("ingredientHistory.title")}
-      description={t("ingredientHistory.description")}
       toolbar={
         <FilterToolbar
           left={
             <>
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("ingredientHistory.searchPlaceholder")} />
-              <div style={{ minWidth: 170 }}>
+              <FilterField label={t("filterLabel.ingredient")} minWidth={170}>
                 <Select
                   value={vm.ingredientId}
                   onChange={(v) => vm.setIngredientId(v as string)}
@@ -88,14 +87,14 @@ export function IngredientHistoryView(vm: VM) {
                     ...sortOptionsThai(vm.ingredients.map((i) => ({ value: i._id, label: i.ingredient_name }))),
                   ]}
                 />
-              </div>
-              <div style={{ minWidth: 140 }}>
+              </FilterField>
+              <FilterField label={t("filterLabel.transactionType")} minWidth={140}>
                 <Select
                   value={vm.typeFilter}
                   onChange={(v) => vm.setTypeFilter(v as VM["typeFilter"])}
                   options={typeOptions}
                 />
-              </div>
+              </FilterField>
             </>
           }
         />
@@ -105,7 +104,7 @@ export function IngredientHistoryView(vm: VM) {
         <LoadFailed onRetry={vm.refetch} />
       ) : (
         <div className="flex flex-col gap-5">
-          <StatCardsGrid>
+          <StatCardsGrid cols={3}>
             <StatCard label={t("ingredientHistory.statTotal")} value={vm.stats.total} sub={t("ingredientHistory.statTotalSub")} />
             <StatCard label={t("enums.ingredientTxnType.receive")} value={vm.stats.receive} sub={t("ingredientHistory.statReceiveSub")} tone="up" />
             <StatCard label={t("enums.ingredientTxnType.use")} value={vm.stats.use} sub={t("ingredientHistory.statUseSub")} tone="muted" />

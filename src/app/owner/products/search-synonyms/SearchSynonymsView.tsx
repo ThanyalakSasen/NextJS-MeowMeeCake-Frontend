@@ -19,7 +19,7 @@ export function SearchSynonymsView(vm: VM) {
   const t = useTranslations();
 
   return (
-    <ListPageLayout title={t("searchSynonyms.title")} description={t("searchSynonyms.description")}>
+    <ListPageLayout title={t("searchSynonyms.title")}>
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (

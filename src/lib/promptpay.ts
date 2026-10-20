@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
-// src/lib/promptpay.ts — เลขพร้อมเพย์รับเงินคืนของลูกค้า (backend schemas/user.ts refundPromptpayId · Q-BE12)
-// ใช้ทั้งหน้าบัญชีลูกค้า (U9) และหลังร้านตอนโอนคืน (RefundSection · I2)
+// src/lib/promptpay.ts — เลขพร้อมเพย์: รับเงินคืนของลูกค้า (backend schemas/user.ts refundPromptpayId · Q-BE12)
+// ใช้ทั้งหน้าบัญชีลูกค้า (U9) · หลังร้านตอนโอนคืน (RefundSection · I2) · แสดงเลขใต้ QR ใน POS (QRPaymentModal)
 // ─────────────────────────────────────────────────────────────
 
 /** ตัดขีด/ช่องว่างแบบเดียวกับ backend */

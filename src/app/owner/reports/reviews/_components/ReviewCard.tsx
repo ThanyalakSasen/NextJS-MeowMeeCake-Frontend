@@ -5,15 +5,15 @@
 import { useState } from "react";
 import { Checkbox, Image, Tooltip } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-// EyeIcon/EyeSlashIcon ที่นี่เป็น "สลับอ่านแล้ว/ยังไม่อ่าน" เป็นคู่ ไม่ใช่ปุ่ม "ดู" ของ actionIcon("view")
-// — EyeSlashIcon ไม่มีในตาราง §1.1 ถ้าดึงมาแค่ตัวเดียวจะกลายเป็นคนละแหล่งกัน จึง import เองทั้งคู่
-import { EyeIcon, EyeSlashIcon, PhotoIcon, TagIcon } from "@heroicons/react/24/outline";
+import { PhotoIcon, TagIcon } from "@heroicons/react/24/outline";
 import { MapPinIcon as PinSolid } from "@heroicons/react/24/solid";
 import { MapPinIcon as PinOutline } from "@heroicons/react/24/outline";
 import { Button, Select } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DeleteButton, ViewButton } from "@/components/shared/actions";
 import { formatDate } from "@/i18n/format";
+import ShopImage from "@/components/customer/ShopImage";
+import { thumbSrc } from "@/lib/thumbSrc";
 import type { ReplySuggestion, ReviewStatus } from "@/types/review";
 import type { ReviewRow } from "../reviewRow";
 import { StarRating } from "./StarRating";
@@ -35,7 +35,7 @@ const SOURCE_CLASS = {
 
 export function ReviewCard({
   review: r, selected, canUpdate, canDelete, suggestions,
-  onSelect, onStatus, onTogglePin, onToggleRead, onSaveReply, onSaveNote, onTags, onDetail, onDelete,
+  onSelect, onStatus, onTogglePin, onSaveReply, onSaveNote, onTags, onDetail, onDelete,
 }: {
   review: ReviewRow;
   selected: boolean;
@@ -45,7 +45,6 @@ export function ReviewCard({
   onSelect: () => void;
   onStatus: (s: ReviewStatus) => void;
   onTogglePin: () => void;
-  onToggleRead: () => void;
   onSaveReply: (text: string) => Promise<boolean>;
   onSaveNote: (text: string) => Promise<boolean>;
   onTags: () => void;
@@ -65,8 +64,8 @@ export function ReviewCard({
       {/* รูปสินค้า — ซ่อนบนจอแคบ ให้เนื้อหารีวิวได้ความกว้างเต็ม */}
       <div className="hidden h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100 sm:flex">
         {r.productImage ? (
-          // eslint-disable-next-line @next/next/no-img-element -- รูปจาก backend (คนละ origin)
-          <img src={r.productImage} alt={r.productName} className="h-full w-full object-cover" />
+          // ย่อ/WebP ผ่าน optimizer (เดิมโหลดไฟล์ต้นฉบับหลายร้อย KB มาแสดง 48px) · lazy — จอแคบกล่องนี้ซ่อนอยู่ ไม่ต้องโหลด
+          <ShopImage src={r.productImage} alt={r.productName} width={96} height={96} sizes="48px" className="h-full w-full object-cover" />
         ) : (
           <PhotoIcon className="h-5 w-5 text-gray-300" />
         )}
@@ -76,7 +75,6 @@ export function ReviewCard({
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="m-0 flex items-center gap-1.5 text-sm font-semibold text-brown-800">
-              {!r.isRead && <span className="h-2 w-2 shrink-0 rounded-full bg-sky-500" title={t("reviews.unread")} />}
               <span className="truncate">{r.productName || t("reviews.unknownProduct")}</span>
               {r.is_pinned && <PinSolid className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-label={t("reviews.pinned")} />}
             </p>
@@ -101,6 +99,7 @@ export function ReviewCard({
             >
               {replied ? t("reviews.replied") : t("reviews.notReplied")}
             </span>
+            <span className="text-xs text-gray-500">{t("reviews.statusLabel")}</span>
             <Select
               size="small"
               style={{ width: 112 }}
@@ -117,13 +116,7 @@ export function ReviewCard({
                   <Button size="small" type="text" onClick={onTogglePin}
                     aria-label={r.is_pinned ? t("reviews.unpin") : t("reviews.pin")}
                     icon={r.is_pinned ? <PinSolid className="h-4 w-4 text-amber-500" /> : <PinOutline className="h-4 w-4" />} />
-                </Tooltip>
-                <Tooltip title={r.isRead ? t("reviews.markUnread") : t("reviews.markRead")}>
-                  <Button size="small" type="text" onClick={onToggleRead}
-                    aria-label={r.isRead ? t("reviews.markUnread") : t("reviews.markRead")}
-                    icon={r.isRead ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4 text-sky-600" />} />
-                </Tooltip>
-              </>
+                </Tooltip>              </>
             )}
           </div>
         </div>
@@ -157,8 +150,17 @@ export function ReviewCard({
         {(r.images.length > 0 || r.videoUrl) && (
           <div className="mt-2 flex flex-wrap gap-1.5">
             <Image.PreviewGroup>
-              {r.images.map((src) => (
-                <Image key={src} src={src} width={48} height={48} className="rounded object-cover" alt="" />
+              {/* รูปย่อ 48px ผ่าน optimizer · กดดู = รูปต้นฉบับ · alt = ชื่อปุ่มดูรูป (antd ใช้เป็น aria-label) */}
+              {r.images.map((src, i) => (
+                <Image
+                  key={src}
+                  src={thumbSrc(src, 48)}
+                  preview={{ src }}
+                  width={48}
+                  height={48}
+                  className="rounded object-cover"
+                  alt={t("reviews.photoAlt", { n: i + 1 })}
+                />
               ))}
             </Image.PreviewGroup>
             {r.videoUrl && (

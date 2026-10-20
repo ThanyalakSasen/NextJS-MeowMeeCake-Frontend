@@ -63,7 +63,7 @@ function NotificationRow({ n, onOpen, compact, now }: { n: CustomerNotification;
           {!n.read_at && <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" aria-label={t("unreadDot")} />}
         </span>
         <span className={`block whitespace-pre-line text-xs text-stone-600 ${compact ? "line-clamp-2" : ""}`}>{n.message}</span>
-        <span className="mt-0.5 block text-[11px] text-stone-400">{timeAgo(n.visible_at ?? n.created_at, now, t, locale)}</span>
+        <span className="mt-0.5 block text-[11px] text-stone-500">{timeAgo(n.visible_at ?? n.created_at, now, t, locale)}</span>
       </span>
     </button>
   );
@@ -110,7 +110,8 @@ export function NotificationBell({ size = 24 }: { size?: number }) {
         }}
         aria-label={unread > 0 ? t("bellWithCount", { n: unread }) : t("title")}
         aria-expanded={open}
-        className="relative flex items-center p-1 !text-white transition hover:!text-[#e2d7c7]"
+        // ขนาดเดียวกับปุ่มอื่นใน Navbar (navButtonOnDark) — 44×44
+        className="relative flex h-[44px] min-w-[44px] items-center justify-center rounded-xl px-[10px] !text-white transition hover:bg-white/10"
       >
         <Bell size={size} />
         {unread > 0 && (
@@ -132,7 +133,7 @@ export function NotificationBell({ size = 24 }: { size?: number }) {
           </div>
           <div className="max-h-96 divide-y divide-stone-100 overflow-y-auto">
             {items.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm text-stone-400">{t("empty")}</p>
+              <p className="px-4 py-8 text-center text-sm text-stone-500">{t("empty")}</p>
             ) : (
               items.map((n) => <NotificationRow key={n._id} n={n} onOpen={openItem} compact now={now} />)
             )}
@@ -178,14 +179,14 @@ export function NotificationList() {
         {isError ? (
           <p className="px-5 py-10 text-center text-sm text-red-600">{t("loadFailed")}</p>
         ) : !loaded ? (
-          <p className="px-5 py-10 text-center text-sm text-stone-400">{tc("loadingDots")}</p>
+          <p className="px-5 py-10 text-center text-sm text-stone-500">{tc("loadingDots")}</p>
         ) : items.length === 0 ? (
-          <p className="px-5 py-10 text-center text-sm text-stone-400">{t("emptyLong")}</p>
+          <p className="px-5 py-10 text-center text-sm text-stone-500">{t("emptyLong")}</p>
         ) : (
           items.map((n) => <NotificationRow key={n._id} n={n} onOpen={openItem} now={now} />)
         )}
       </div>
-      {items.length >= 100 && <p className="m-0 border-t border-stone-100 py-2 text-center text-xs text-stone-400">{t("latest100")}</p>}
+      {items.length >= 100 && <p className="m-0 border-t border-stone-100 py-2 text-center text-xs text-stone-500">{t("latest100")}</p>}
     </div>
   );
 }

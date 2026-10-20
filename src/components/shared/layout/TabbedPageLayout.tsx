@@ -25,36 +25,41 @@ export interface TabbedPageLayoutItem {
   key: string;
   label: string;
   children: React.ReactNode;
+  /** ตัวควบคุมของแท็บนี้ (เช่น ช่วงเวลา) — วางแถวเดียวกับแท็บ ฝั่งซ้าย */
+  toolbar?: React.ReactNode;
 }
 
 export function TabbedPageLayout({
   title,
-  description,
   actions,
   activeKey,
   onChange,
   items,
+  tabsAlign = "start",
 }: {
   title: string;
-  description?: string;
   actions?: React.ReactNode;
   activeKey: string;
   onChange: (key: string) => void;
   items: TabbedPageLayoutItem[];
+  /** "end" = แท็บชิดขวา (แบบหน้ารายงานยอดขาย: ตัวกรองซ้าย · สวิตช์ขวา) */
+  tabsAlign?: "start" | "end";
 }) {
+  const active = items.find((i) => i.key === activeKey);
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-brown-900">{title}</h1>
-          {description && <p className="mt-1 text-base text-gray-600">{description}</p>}
         </div>
         {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
       </div>
 
-      {/* ครอบด้วย div ธรรมดา — ถ้าวาง Segmented เป็นลูกของ flex-col ตรง ๆ มันจะถูกยืดเต็มความกว้าง
+      {/* ครอบด้วย flex row — ถ้าวาง Segmented เป็นลูกของ flex-col ตรง ๆ มันจะถูกยืดเต็มความกว้าง
           (align-items ของ flex column คือ stretch) ผิดจากหน้าอื่นที่แท็บหดตามเนื้อหา */}
-      <div>
+      <div className="flex flex-wrap items-center gap-3">
+        {active?.toolbar}
+        {tabsAlign === "end" && <div className="flex-1" />}
         <TypeTabBar
           value={activeKey}
           onChange={onChange}
@@ -62,7 +67,7 @@ export function TabbedPageLayout({
         />
       </div>
 
-      {items.find((i) => i.key === activeKey)?.children}
+      {active?.children}
     </div>
   );
 }

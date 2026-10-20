@@ -30,7 +30,8 @@ export function useDashboardViewModel() {
     topProducts: d?.top_products ?? [],
     productionStatus: d?.production_status ?? [],
     generatedAt: d?.generated_at,
-    isLoading: q.isLoading,
+    // isPending — render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
   };

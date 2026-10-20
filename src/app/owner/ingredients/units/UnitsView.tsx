@@ -1,19 +1,24 @@
 "use client";
 // View ของ Manage Units — 2 คอลัมน์: หน่วยวัตถุดิบ | หน่วยสินค้า
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { useUnitsViewModel } from "./useUnitsViewModel";
 import { UnitListCard } from "./_components/UnitListCard";
-import { UnitFormModal } from "./_components/UnitFormModal";
+
+// ฟอร์ม/โมดัลแยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
+const UnitFormModal = dynamic(() => import("./_components/UnitFormModal").then((m) => m.UnitFormModal), { ssr: false });
 
 type VM = ReturnType<typeof useUnitsViewModel>;
 
 export function UnitsView(vm: VM) {
   const t = useTranslations();
+  const formUsed = useOpenedOnce(vm.modalOpen);
 
   return (
-    <DashboardPageLayout title={t("units.title")} description={t("units.description")}>
+    <DashboardPageLayout title={t("units.title")}>
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
@@ -45,14 +50,16 @@ export function UnitsView(vm: VM) {
         </div>
       )}
 
-      <UnitFormModal
-        open={vm.modalOpen}
-        editTarget={vm.editTarget}
-        defaultContext={vm.defaultContext}
-        saving={vm.saving}
-        onClose={vm.closeModal}
-        onSubmit={vm.onSubmit}
-      />
+      {formUsed && (
+        <UnitFormModal
+          open={vm.modalOpen}
+          editTarget={vm.editTarget}
+          defaultContext={vm.defaultContext}
+          saving={vm.saving}
+          onClose={vm.closeModal}
+          onSubmit={vm.onSubmit}
+        />
+      )}
     </DashboardPageLayout>
   );
 }

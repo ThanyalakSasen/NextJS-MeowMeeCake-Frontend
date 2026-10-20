@@ -94,7 +94,7 @@ export function CompleteProductionModal({
                   onChange={(v) => setActuals((a) => ({ ...a, [it._id]: v }))}
                 />
               ) : (
-                <span className="text-right text-sm text-gray-400">—</span>
+                <span className="text-right text-sm text-gray-500">—</span>
               )}
             </div>
           ))}

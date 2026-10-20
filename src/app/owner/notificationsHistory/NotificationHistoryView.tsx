@@ -1,18 +1,23 @@
 "use client";
 // View ของ Notification History — ตารางประวัติแจ้งเตือน + drawer รายละเอียด
+import dynamic from "next/dynamic";
 import { useTranslations, useLocale } from "next-intl";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { ConfirmDeletePopup, DetailDrawer, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column } from "@/components/shared/data";
+import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
+import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column, FilterField } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
 import { NOTIFICATION_TYPE_COLOR, READ_STATUS_CONFIG } from "@/constants/enumConfig";
 import { NOTIFICATION_MODULES, type NotificationDTO } from "@/types/notification";
 import type { NotificationType } from "@/types";
 import { DeleteButton, actionIcon } from "@/components/shared/actions";
 import type { useNotificationHistoryViewModel } from "./useNotificationHistoryViewModel";
-import { NotificationDetailContent } from "./_components/NotificationDetailContent";
+
+// ลิ้นชักรายละเอียดแยก chunk — โหลดเมื่อเปิดครั้งแรก (ลิ้นชักไม่ render ฝั่ง server อยู่แล้ว)
+const DetailDrawer = dynamic(() => import("@/components/shared/feedback/DetailDrawer").then((m) => m.DetailDrawer), { ssr: false });
+const NotificationDetailContent = dynamic(() => import("./_components/NotificationDetailContent").then((m) => m.NotificationDetailContent), { ssr: false });
 
 type VM = ReturnType<typeof useNotificationHistoryViewModel>;
 
@@ -23,6 +28,7 @@ const TYPES: NotificationType[] = ["warning", "info", "success", "error"];
 
 export function NotificationHistoryView(vm: VM) {
   const t = useTranslations();
+  const drawerUsed = useOpenedOnce(vm.drawerOpen);
   const locale = useLocale();
 
   const columns: Column<NotificationDTO>[] = [
@@ -75,7 +81,6 @@ export function NotificationHistoryView(vm: VM) {
   return (
     <ListPageLayout
       title={t("notifications.historyTitle")}
-      description={t("notifications.historyDescription")}
       actions={
         <>
           {vm.stats.unread > 0 && (
@@ -104,7 +109,7 @@ export function NotificationHistoryView(vm: VM) {
                 ]}
               />
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("notifications.searchPlaceholder")} />
-              <div style={{ minWidth: 150 }}>
+              <FilterField label={t("filterLabel.module")} minWidth={150}>
                 <Select
                   value={vm.moduleFilter}
                   onChange={(v) => vm.setModuleFilter(v as VM["moduleFilter"])}
@@ -113,8 +118,8 @@ export function NotificationHistoryView(vm: VM) {
                     ...MODULES.map((m) => ({ value: m, label: t(`enums.notificationModule.${m}`) })),
                   ]}
                 />
-              </div>
-              <div style={{ minWidth: 140 }}>
+              </FilterField>
+              <FilterField label={t("filterLabel.notificationType")} minWidth={140}>
                 <Select
                   value={vm.typeFilter}
                   onChange={(v) => vm.setTypeFilter(v as VM["typeFilter"])}
@@ -123,7 +128,7 @@ export function NotificationHistoryView(vm: VM) {
                     ...TYPES.map((ty) => ({ value: ty, label: t(`enums.notificationType.${ty}`) })),
                   ]}
                 />
-              </div>
+              </FilterField>
             </>
           }
         />
@@ -159,20 +164,22 @@ export function NotificationHistoryView(vm: VM) {
         </div>
       )}
 
-      <DetailDrawer
-        open={vm.drawerOpen}
-        title={t("notifications.detailTitle")}
-        onClose={vm.closeDrawer}
-        footer={
-          vm.selected?.link ? (
-            <Button type="primary" block icon={actionIcon("external")} href={vm.selected.link}>
-              {t("notifications.goToLink")}
-            </Button>
-          ) : undefined
-        }
-      >
-        {vm.selected && <NotificationDetailContent notif={vm.selected} />}
-      </DetailDrawer>
+      {drawerUsed && (
+        <DetailDrawer
+          open={vm.drawerOpen}
+          title={t("notifications.detailTitle")}
+          onClose={vm.closeDrawer}
+          footer={
+            vm.selected?.link ? (
+              <Button type="primary" block icon={actionIcon("external")} href={vm.selected.link}>
+                {t("notifications.goToLink")}
+              </Button>
+            ) : undefined
+          }
+        >
+          {vm.selected && <NotificationDetailContent notif={vm.selected} />}
+        </DetailDrawer>
+      )}
     </ListPageLayout>
   );
 }

@@ -14,6 +14,9 @@ import { roundItemLimits } from "@/services/shopPreorders";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { baht } from "@/components/customer/shopStyles";
 import { usePreorderBasket } from "../lib/preorderBasket";
+import ShopImage from "@/components/customer/ShopImage";
+import { AllergenBadge } from "@/components/customer/ProductCard";
+import { useAllergenWarnings } from "@/app/customer/hooks/useAllergenWarnings";
 
 const STEPS = [
   { title: "s1", detail: "d1" },
@@ -71,6 +74,7 @@ export function CountdownText({ target, prefix }: { target: string; prefix: stri
 export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem; roundId: string }) {
   const t = useTranslations("shop.preorderShop");
   const { names: localNames } = useLocalName();
+  const allergenWarningOf = useAllergenWarnings();
   const p = item.product;
   const { min, max } = roundItemLimits(item);
   const soldOut = item.remaining_qty <= 0 || max < min;
@@ -81,11 +85,16 @@ export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem;
       <div className={`flex h-full flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition hover:shadow-md ${soldOut ? "opacity-75" : ""}`}>
         <div className="relative aspect-square overflow-hidden bg-stone-100">
           {img ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt={p.product_name_th} className={`h-full w-full object-cover transition duration-300 group-hover:scale-105 ${soldOut ? "grayscale" : ""}`} />
+            <ShopImage
+              src={img}
+              alt={p.product_name_th}
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              className={`h-full w-full object-cover transition duration-300 group-hover:scale-105 ${soldOut ? "grayscale" : ""}`}
+            />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-stone-400">{t("noImage")}</div>
+            <div className="flex h-full w-full items-center justify-center text-xs text-stone-500">{t("noImage")}</div>
           )}
+          <AllergenBadge warning={allergenWarningOf(p._id)} />
           <span
             className={`absolute right-2 top-2 rounded border px-2 py-0.5 text-[10px] font-semibold ${
               soldOut ? "border-red-200 bg-red-50 text-red-600" : item.remaining_qty <= Math.max(3, item.max_qty_total * 0.2) ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -97,12 +106,12 @@ export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem;
         <div className="flex flex-grow flex-col justify-between p-4">
           <div>
             <h3 className="m-0 line-clamp-1 text-sm font-bold text-stone-800 group-hover:text-[#4A342E]">{localNames(p.product_name_th, p.product_name_eng).primary}</h3>
-            <p className="m-0 mb-3 line-clamp-1 text-xs text-stone-400">{localNames(p.product_name_th, p.product_name_eng).secondary}</p>
+            <p className="m-0 mb-3 line-clamp-1 text-xs text-stone-500">{localNames(p.product_name_th, p.product_name_eng).secondary}</p>
           </div>
           <div>
             <p className="m-0 mb-1 flex items-baseline gap-1.5">
               <span className={`text-sm font-bold ${item.current_price < regular ? "text-red-600" : "text-[#4A342E]"}`}>{baht(item.current_price)}</span>
-              {item.current_price < regular && <span className="text-[11px] text-stone-400 line-through">{baht(regular)}</span>}
+              {item.current_price < regular && <span className="text-[11px] text-stone-500 line-through">{baht(regular)}</span>}
             </p>
             <p className={`m-0 text-[11px] ${soldOut ? "font-semibold text-red-500" : "text-stone-500"}`}>
               {soldOut ? t("soldOut") : min > 1 ? t("leftMin", { n: item.remaining_qty.toLocaleString(), min }) : t("left", { n: item.remaining_qty.toLocaleString() })}
@@ -129,7 +138,7 @@ export function BasketBar() {
           {t.rich("basket", { round: basket.round_name, n: qty.toLocaleString(), amount: baht(total), b: (c) => <strong>{c}</strong> })}
         </span>
       </p>
-      <Link href="/customer/preorder/checkout" className="inline-flex h-[36px] items-center justify-center gap-1.5 rounded-xl bg-[#4A342E] px-4 text-sm font-bold text-white hover:bg-[#8C5A3C]">
+      <Link href="/customer/preorder/checkout" className="inline-flex h-[44px] items-center justify-center gap-1.5 rounded-xl bg-[#4A342E] px-4 text-sm font-bold text-white hover:bg-[#8C5A3C]">
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> {t("goConfirm")}
       </Link>
     </div>

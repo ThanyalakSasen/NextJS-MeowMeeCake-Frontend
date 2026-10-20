@@ -1,25 +1,25 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ Finance Expenses — โหลด expenses + orders (ไว้โชว์รายรับคู่เทียบ) ครั้งเดียว
+// ViewModel ของ Finance Expenses — โหลด expenses ครั้งเดียว + รายรับของเดือนที่เลือก (ไว้โชว์คู่เทียบ)
 // filter/pagination ฝั่ง client ภายในเดือนที่เลือก (แพทเทิร์นเดียวกับ Production/Ingredient History)
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { expensesService } from "@/services/expenses";
-import { ordersService } from "@/services/orders";
+import { reportsService } from "@/services/reports";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
 import { formatDate } from "@/i18n/format";
-import { buildMonthOptions } from "@/utils/dateRange";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense, ExpenseInput } from "@/types/expense";
 import { isApiError } from "@/types/api";
 import { toExpenseInput, type ExpenseFormValue } from "./expenseForm";
 import type { RecurringReminder } from "./_components/RecurringRemindersList";
 import { LIST_ALL } from "@/lib/http";
+import { getRangeStartEnd } from "@/utils/period";
 
 export function useFinanceExpensesViewModel() {
   const t = useTranslations();
@@ -28,17 +28,23 @@ export function useFinanceExpensesViewModel() {
   const perm = usePermission("reports");
 
   const expensesQ = useQuery({ queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: LIST_ALL }) });
-  const ordersQ = useQuery({ queryKey: ["orders"], queryFn: () => ordersService.list({ limit: LIST_ALL }) });
-
   const expenses = useMemo(() => expensesQ.data?.data ?? [], [expensesQ.data]);
-  const orders = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);
 
-  const isLoading = expensesQ.isLoading;
+  // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+  const isLoading = expensesQ.isPending;
   const isError = expensesQ.isError;
   const refetch = () => expensesQ.refetch();
 
-  const monthOptions = useMemo(() => buildMonthOptions(locale), [locale]);
-  const [selectedMonth, setSelectedMonth] = useState(monthOptions[0].value);
+  const [selectedMonthDate, setSelectedMonthDate] = useState<Dayjs>(dayjs());
+  const selectedMonth = selectedMonthDate.format("YYYY-MM");
+
+  // รายรับของเดือน — คิดที่ backend (ชำระแล้ว ออเดอร์ + พรีออเดอร์) query key เดียวกับหน้าสรุปกำไร-ขาดทุน ·
+  // เดิมโหลดออเดอร์ทั้งร้าน (LIST_ALL) มารวมเองในเครื่อง = JSON ก้อนใหญ่ + งานหนักบน main thread (Lighthouse TBT)
+  const [monthStart, monthEnd] = useMemo(() => getRangeStartEnd("month", selectedMonthDate), [selectedMonthDate]);
+  const revenueQ = useQuery({
+    queryKey: ["reports", "revenue-by-channel", monthStart.toISOString(), monthEnd.toISOString()],
+    queryFn: () => reportsService.revenueByChannel({ date_from: monthStart.toISOString(), date_to: monthEnd.toISOString() }),
+  });
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | "all">("all");
   const [page, setPage] = useState(1);
@@ -73,12 +79,7 @@ export function useFinanceExpensesViewModel() {
 
   const topCategory = categoryBreakdown[0] ?? null;
 
-  const monthIncome = useMemo(
-    () => orders
-      .filter((o) => o.payment_status === "paid" && o.created_at.startsWith(selectedMonth))
-      .reduce((s, o) => s + o.total_amount, 0),
-    [orders, selectedMonth],
-  );
+  const monthIncome = revenueQ.data?.total ?? 0;
   const netProfit = monthIncome - monthTotal;
 
   /** รายจ่ายประจำที่ยังไม่ถึงกำหนด — เลื่อนวันครบกำหนดไปเรื่อย ๆ ทีละเดือนจนกว่าจะถึงอนาคต */
@@ -150,7 +151,7 @@ export function useFinanceExpensesViewModel() {
     perm,
     isLoading, isError, refetch,
 
-    monthOptions, selectedMonth, setSelectedMonth,
+    selectedMonth, selectedMonthDate, setSelectedMonthDate: (d: Dayjs) => { setSelectedMonthDate(d); setPage(1); },
     search, setSearch: (v: string) => { setSearch(v); setPage(1); },
     categoryFilter, setCategoryFilter: (v: ExpenseCategory | "all") => { setCategoryFilter(v); setPage(1); },
     page, pageSize, setPagination: (p: number, ps: number) => { setPage(p); setPageSize(ps); },

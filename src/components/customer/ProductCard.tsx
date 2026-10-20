@@ -4,8 +4,9 @@
 // เปลี่ยนจากเดิม: ใช้ Product ของ backend หลัก (is_preorder แทน product_type) · รูปผ่าน resolveUploadUrl
 // · คะแนนรีวิวแสดง avg_rating (เดิมแสดง review_count ผิดช่อง)
 // · ปุ่มหัวใจ (รายการโปรด D5/U3) อ่านจาก cache เดียวของ useFavorites — ไม่ยิงขอรายการต่อใบแบบต้นแบบ
-// · ป้ายแพ้อาหาร + เหตุผลที่แนะนำ: ส่งมาเป็น props จากผลของระบบแนะนำ (สินค้าคล้าย C1 · แนะนำสำหรับคุณ C2) เท่านั้น
-//   — /catalog/products ทั่วไปไม่มีข้อมูลนี้
+// · ป้ายแพ้อาหาร: ทุกบัตร — จาก /shop/allergen-warnings (useAllergenWarnings · ล็อกอิน + บันทึกอาหารที่แพ้ไว้)
+//   ผลของระบบแนะนำ (สินค้าคล้าย C1 · แนะนำสำหรับคุณ C2) ส่งมาเป็น props ได้ — ใช้ props ก่อน
+// · เหตุผลที่แนะนำ: ส่งมาเป็น props จากผลของระบบแนะนำเท่านั้น
 // · "เพิ่มลงตะกร้า" = quickAdd: สินค้ามีตัวเลือก → พาไปหน้าสินค้าให้เลือกก่อน
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
@@ -18,7 +19,9 @@ import { resolveUploadUrl } from "@/lib/uploads";
 import { effectivePrice, hasSalePrice, salePercent } from "@/lib/pricing";
 import { useAddToCart } from "@/app/customer/hooks/useAddToCart";
 import { useFavorites } from "@/app/customer/hooks/useFavorites";
+import { useAllergenWarnings } from "@/app/customer/hooks/useAllergenWarnings";
 import type { AllergenWarning, AllergenWarningLevel } from "@/services/catalog";
+import ShopImage from "./ShopImage";
 
 /**
  * สินค้านี้จะถูกแสดงเป็นบัตรหรือไม่ — ProductCard จะ return null ถ้าได้ false
@@ -48,12 +51,27 @@ function allergenLabel(w: AllergenWarning, t: ReturnType<typeof useTranslations<
   return t("allergens", { names: `${names.slice(0, 2).join(", ")}${names.length > 2 ? ` +${names.length - 2}` : ""}` });
 }
 
+/** ป้ายเตือนแพ้อาหารมุมซ้ายบนของรูปสินค้า — ใช้ทั้งบัตรสินค้าปกติและบัตรพรีออเดอร์ · ไม่มีคำเตือน = ไม่แสดง */
+export function AllergenBadge({ warning }: { warning: AllergenWarning | null }) {
+  const t = useTranslations("shop.productCard");
+  if (!warning || warning.level === "none") return null;
+  return (
+    <span
+      title={warning.message ?? undefined}
+      className={`absolute left-1 top-1 max-w-[55%] truncate rounded-full border px-1.5 py-0 text-[11px] font-medium leading-4 shadow-sm ${ALLERGEN_TONE[warning.level]}`}
+    >
+      {allergenLabel(warning, t)}
+    </span>
+  );
+}
+
 export default function ProductCard({
   product,
   showAddToCart = true,
   showFavorite = true,
-  allergenWarning = null,
+  allergenWarning: allergenWarningProp = null,
   reasons,
+  priority = false,
 }: {
   product: Product;
   showAddToCart?: boolean;
@@ -62,11 +80,14 @@ export default function ProductCard({
   allergenWarning?: AllergenWarning | null;
   /** เหตุผลที่แนะนำ — แสดงข้อแรก */
   reasons?: string[];
+  /** บัตรแถวแรกของหน้า (เหนือขอบจอ) — โหลดรูปทันทีด้วยความสำคัญสูง (LCP) */
+  priority?: boolean;
 }) {
   const t = useTranslations("shop.productCard");
   const { names: localNames } = useLocalName();
   const { quickAdd, status } = useAddToCart();
   const favorites = useFavorites();
+  const allergenWarningOf = useAllergenWarnings();
   const isLoading = status === "loading";
   const isSuccess = status === "success";
   const [failedImg, setFailedImg] = useState<string | null>(null);
@@ -77,6 +98,7 @@ export default function ProductCard({
   const imgSrc = resolveUploadUrl(product.product_img?.[0]);
   const rating = Number(product.avg_rating ?? 0);
   const favorite = favorites.isFavorite(product._id);
+  const allergenWarning = allergenWarningProp ?? allergenWarningOf(product._id);
 
   return (
     <Link
@@ -86,10 +108,11 @@ export default function ProductCard({
       <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
         {/* รูปที่โหลดไม่ขึ้น (ไฟล์หายจากเซิร์ฟเวอร์) → แสดง "ไม่มีรูปภาพ" แทนรูปแตก */}
         {imgSrc && imgSrc !== failedImg ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <ShopImage
             src={imgSrc}
             alt={product.product_name_eng || product.product_name_th}
+            sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            priority={priority}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             onError={() => setFailedImg(imgSrc)}
           />
@@ -120,7 +143,7 @@ export default function ProductCard({
             className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-sm transition hover:scale-110 hover:bg-white disabled:opacity-60"
           >
             {favorites.pendingId === product._id ? (
-              <FaSpinner className="animate-spin text-xs text-stone-400" />
+              <FaSpinner className="animate-spin text-xs text-stone-500" />
             ) : favorite ? (
               <FaHeart className="text-sm text-red-500" />
             ) : (
@@ -129,21 +152,19 @@ export default function ProductCard({
           </button>
         )}
 
-        {allergenWarning && allergenWarning.level !== "none" && (
-          <span
-            title={allergenWarning.message ?? undefined}
-            className={`absolute left-2 top-2 max-w-[70%] truncate rounded-full border px-2 py-0.5 text-[11px] font-bold shadow-sm ${ALLERGEN_TONE[allergenWarning.level]}`}
-          >
-            ⚠ {allergenLabel(allergenWarning, t)}
-          </span>
-        )}
+        <AllergenBadge warning={allergenWarning} />
       </div>
 
+      {/* ฟอนต์อิงฐาน 18px (globals.css html 112.5%) · ขั้นต่ำของแอป 16px = text-sm/text-xs · 17px = text-[0.9444rem] · 18px = text-base
+          ชื่อ/ราคา โตตามจอ 16 → 17 (≥768) → 18 (≥1280) · ชื่อรอง/฿/ปุ่ม คงที่ 16 (ขั้นต่ำ — ห้ามใช้ค่า px ที่เล็กกว่านี้) */}
       <div className="p-5 sm:p-3 flex flex-col justify-between !bg-[#fff]">
         <div>
-          <p className="text-md font-medium text-black mb-0.5 truncate">{categoryName || t("noCategory")}</p>
-          <h3 className="text-lg font-semibold text-black line-clamp-1">{localNames(product.product_name_th, product.product_name_eng).primary}</h3>
-          <p className="text-md text-black line-clamp-1 mb-2">{localNames(product.product_name_th, product.product_name_eng).secondary || " "}</p>
+          <h3 className="text-sm md:text-[0.9444rem] xl:text-base font-semibold text-black line-clamp-1">
+            {localNames(product.product_name_th, product.product_name_eng).primary}
+          </h3>
+          <p className="text-sm text-black line-clamp-1 mb-2">
+            {localNames(product.product_name_th, product.product_name_eng).secondary || " "}
+          </p>
           {reasons?.[0] && <p className="-mt-1 mb-2 line-clamp-1 text-xs text-[#8C5A3C]">{reasons[0]}</p>}
         </div>
 
@@ -153,18 +174,22 @@ export default function ProductCard({
             {hasSalePrice(product) ? (
               <div className="flex items-baseline gap-1.5 flex-wrap">
                 <span className="flex items-baseline gap-1">
-                  <span className="text-base font-bold text-red-600">฿</span>
-                  <span className="text-lg font-extrabold text-red-600">{effectivePrice(product).toLocaleString()}</span>
+                  <span className="text-sm font-bold text-red-600">฿</span>
+                  <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-red-600">
+                    {effectivePrice(product).toLocaleString()}
+                  </span>
                 </span>
-                <span className="text-xs text-stone-400 line-through">฿{product.product_price?.toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-white bg-red-500 rounded px-1 py-0.5 leading-none">
+                <span className="text-xs text-stone-500 line-through">฿{product.product_price?.toLocaleString()}</span>
+                <span className="text-sm font-bold text-white bg-red-500 rounded px-1 py-0.5 leading-none">
                   -{salePercent(product)}%
                 </span>
               </div>
             ) : (
               <div className="flex items-baseline gap-1">
-                <span className="text-base font-bold text-[#8C5A3C]">฿</span>
-                <span className="text-lg font-extrabold text-[#8C5A3C]">{product.product_price?.toLocaleString()}</span>
+                <span className="text-sm font-bold text-[#8C5A3C]">฿</span>
+                <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-[#8C5A3C]">
+                  {product.product_price?.toLocaleString()}
+                </span>
               </div>
             )}
 
@@ -183,7 +208,7 @@ export default function ProductCard({
                 e.stopPropagation();
                 void quickAdd(product._id);
               }}
-              className={`w-full h-[36px] px-2 mt-1 text-sm font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1 ${
+              className={`w-full h-[44px] px-2 mt-1 text-sm font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1 ${
                 isSuccess
                   ? "!bg-emerald-600 border border-emerald-600 !text-white shadow-md"
                   : "!bg-white !text-[#4A342E] border border-[#8C5A3C]/30 shadow-md shadow-[#4A342E]/20 hover:!bg-[#4A342E] hover:!text-white hover:shadow-lg active:scale-[0.98]"

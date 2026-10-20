@@ -28,10 +28,10 @@ import type { DeliveryUpdateInput } from "@/types/order";
 import { formatCurrency } from "@/i18n/format";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 import { LIST_ALL } from "@/lib/http";
+import { PREORDERS_KEY, ROUNDS_KEY, tabFrom, type TabKey } from "./preorderQuery";
 import { useRoundDashboardViewModel } from "./useRoundDashboardViewModel";
 
-export type TabKey = "rounds" | "dashboard" | "orders";
-const TAB_KEYS: TabKey[] = ["rounds", "dashboard", "orders"];
+export type { TabKey };
 
 export function usePreOrderRoundViewModel() {
   const t = useTranslations();
@@ -44,24 +44,17 @@ export function usePreOrderRoundViewModel() {
   const tabParam = searchParams.get("tab");
   // ?id=<preorderId> (ลิงก์จากแจ้งเตือน/LINE — BACKLOG2 §8) เปิด drawer พรีออเดอร์นั้น · ไม่ระบุ tab มา = ไปแท็บคำสั่งซื้อ
   const urlOrderId = searchParams.get("id");
-  const activeTab: TabKey = TAB_KEYS.includes(tabParam as TabKey) ? (tabParam as TabKey) : urlOrderId ? "orders" : "rounds";
+  const activeTab: TabKey = tabFrom(tabParam, urlOrderId);
   const setActiveTab = (key: string) => router.replace(`/owner/orders/preOrderRound?tab=${key}`, { scroll: false });
   // แท็บสรุปรอบ — โหลดเมื่อเปิดแท็บนี้ครั้งแรก
   const dashboard = useRoundDashboardViewModel(activeTab === "dashboard");
 
-  // ── สินค้าพรีออเดอร์ (ใช้เป็นตัวเลือกตอนเพิ่มสินค้าเข้ารอบ) ──
-  const productsQ = useQuery({
-    queryKey: ["products", "preorder-type"],
-    queryFn: () => productsService.list({ limit: LIST_ALL, is_preorder: true }),
-  });
-  const preorderProducts = productsQ.data?.data ?? [];
-
   // พรีออเดอร์ทั้งหมด — ใช้ทั้งแท็บคำสั่งซื้อ และนับยอดค้างในรอบตอนยืนยันปิด/ยกเลิกรอบ
-  const preordersQ = useQuery({ queryKey: ["preorders"], queryFn: () => preordersService.list({ limit: LIST_ALL }) });
+  const preordersQ = useQuery({ queryKey: PREORDERS_KEY, queryFn: () => preordersService.list({ limit: LIST_ALL }) });
   const preorders = useMemo(() => preordersQ.data?.data ?? [], [preordersQ.data]);
 
   // ══════════════════ แท็บ 1: รอบพรีออเดอร์ ══════════════════
-  const roundsQ = useQuery({ queryKey: ["preorder-rounds"], queryFn: () => preorderRoundsService.list({ limit: LIST_ALL }) });
+  const roundsQ = useQuery({ queryKey: ROUNDS_KEY, queryFn: () => preorderRoundsService.list({ limit: LIST_ALL }) });
   const rounds = useMemo(() => roundsQ.data?.data ?? [], [roundsQ.data]);
 
   const [roundSearch, setRoundSearchState] = useState("");
@@ -242,6 +235,15 @@ export function usePreOrderRoundViewModel() {
   const [itemFormOpen, setItemFormOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const editingItem = selectedRound?.items?.find((it) => it._id === editingItemId) ?? null;
+
+  // ── สินค้าพรีออเดอร์ (ตัวเลือกในฟอร์มสร้างรอบ/เพิ่มสินค้าเข้ารอบ) — ดึงเมื่อเปิดฟอร์มเท่านั้น ·
+  // เดิมดึงตอนโหลดหน้า ข้อมูลมาถึงทีหลัง → ทั้งหน้าวาดใหม่อีกรอบระหว่างโหลด (เพิ่ม TBT) ทั้งที่ยังไม่มีใครเปิดฟอร์ม
+  const productsQ = useQuery({
+    queryKey: ["products", "preorder-type"],
+    queryFn: () => productsService.list({ limit: LIST_ALL, is_preorder: true }),
+    enabled: createRoundOpen || itemFormOpen,
+  });
+  const preorderProducts = productsQ.data?.data ?? [];
 
   const openAddItem = () => { setEditingItemId(null); setItemFormOpen(true); };
   const openEditItem = (itemId: string) => { setEditingItemId(itemId); setItemFormOpen(true); };
@@ -457,7 +459,8 @@ export function usePreOrderRoundViewModel() {
     roundStatusFilter, setRoundStatusFilter: (v: RoundStatus | "all") => { setRoundStatusFilterState(v); setRoundPage(1); },
     roundPage, roundPageSize, setRoundPagination: (p: number, ps: number) => { setRoundPage(p); setRoundPageSize(ps); },
     roundRows, roundTotal: roundsFiltered.length, roundStats,
-    isRoundsLoading: roundsQ.isLoading, isRoundsError: roundsQ.isError, refetchRounds: () => roundsQ.refetch(),
+    // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+    isRoundsLoading: roundsQ.isPending, isRoundsError: roundsQ.isError, refetchRounds: () => roundsQ.refetch(),
 
     createRoundOpen, openCreateRound: () => setCreateRoundOpen(true), closeCreateRound: () => setCreateRoundOpen(false),
     onCreateRoundSubmit: (v: CreateRoundInput) => createRound.mutate(v), creatingRound: createRound.isPending,
@@ -488,11 +491,13 @@ export function usePreOrderRoundViewModel() {
     orderRoundFilter, setOrderRoundFilter: (v: string) => { setOrderRoundFilterState(v); setOrderPage(1); },
     orderPage, orderPageSize, setOrderPagination: (p: number, ps: number) => { setOrderPage(p); setOrderPageSize(ps); },
     orderRows, orderTotal: ordersFiltered.length, orderStats, roundOptions,
-    isOrdersLoading: preordersQ.isLoading, isOrdersError: preordersQ.isError, refetchOrders: () => preordersQ.refetch(),
+    isOrdersLoading: preordersQ.isPending, isOrdersError: preordersQ.isError, refetchOrders: () => preordersQ.refetch(),
 
     selectedOrder, orderDrawerOpen, isOrderDetailLoading: orderDetailQ.isLoading || paymentQ.isLoading,
     isOrderDetailError: orderDetailQ.isError,
     selectedPayment, canViewPayment: paymentPerm.view, canApprovePayment: paymentPerm.approve,
+    // คืนเงิน = payments.delete (ไม่ใช่ approve — Final-Backlog P7)
+    canRefundPayment: paymentPerm.delete,
     verifyingPayment: verifyPayment.isPending, onApprovePayment, onRejectPayment,
     paidPayment, onRefund, refunding: refundPayment.isPending,
     onViewOrder, closeOrderDrawer,

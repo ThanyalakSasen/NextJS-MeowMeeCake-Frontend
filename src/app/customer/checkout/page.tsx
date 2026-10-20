@@ -19,7 +19,6 @@ import { shopAddressesService, type ShopAddress } from "@/services/shopAddresses
 import { shopOrdersService, type CreateShopOrderInput } from "@/services/shopOrders";
 import { pickupLocationsService } from "@/services/pickupLocations";
 import { couponDiscount, maxRedeemablePoints, pointsToBaht, shopLoyaltyService } from "@/services/shopLoyalty";
-import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { OrderType } from "@/types/order";
@@ -30,6 +29,7 @@ import {
 } from "@/components/customer/shopStyles";
 import { useCartCountStore } from "../store/cartCountStore";
 import FlowSteps from "@/components/customer/FlowSteps";
+import { useRecipientContact } from "../hooks/useRecipientContact";
 import { pickupLocationsKey, shopAddressesKey, shopCartKey, shopCouponsKey, shopPointsKey } from "../lib/shopQueries";
 import PickupLocationPicker from "@/components/customer/PickupLocationPicker";
 import CheckoutAddressForm from "@/components/customer/CheckoutAddressForm";
@@ -57,7 +57,6 @@ function CheckoutContent() {
   const tcart = useTranslations("shop.cart");
   const router = useRouter();
   const qc = useQueryClient();
-  const { user } = useCustomerSession();
   const setCount = useCartCountStore((s) => s.setCount);
 
   const cartQ = useQuery({ queryKey: shopCartKey, queryFn: shopCartService.get });
@@ -69,8 +68,7 @@ function CheckoutContent() {
 
   const [orderType, setOrderType] = useState<OrderType>("delivery");
   const [pickedAddressId, setPickedAddressId] = useState<string | null>(null);
-  const [recipientName, setRecipientName] = useState(user?.fullname ?? "");
-  const [recipientPhone, setRecipientPhone] = useState("");
+  const { recipientName, setRecipientName, recipientPhone, setRecipientPhone } = useRecipientContact();
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discount: number; freeShipping: boolean; forKey: string } | null>(null);
@@ -204,7 +202,7 @@ function CheckoutContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: tcart("title"), href: "/customer/cart" }, { label: t("confirmOrder") }]} className="!mb-0" />
         <FlowSteps kind="order" current={2} />
 

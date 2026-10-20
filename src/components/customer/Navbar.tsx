@@ -30,7 +30,7 @@ const NAV_LINKS = [
   { href: "/customer/contact-us", labelKey: "contact" },
 ] as const;
 
-/** เมนูผู้ใช้ (dropdown) ต่อจาก "บัญชีของฉัน" — สมาชิก/รายการโปรดไม่อยู่ในเมนูบัญชี (AccountSideMenu) จึงเข้าจากที่นี่ */
+/** เมนูผู้ใช้ (dropdown) ต่อจาก "บัญชีของฉัน" — ทางลัด (สมาชิกอยู่ในเมนูบัญชีด้วย · รายการโปรดเข้าจากที่นี่เท่านั้น) */
 const USER_MENU_LINKS = [
   { href: "/customer/account/purchases", labelKey: "myOrders" },
   { href: "/customer/account/member", labelKey: "member" },
@@ -129,6 +129,8 @@ export default function Navbar() {
     router.replace(LOGIN_PATH);
   };
 
+  // ขนาดเป็น px ตายตัว (ไม่ใช่ rem) — ฐานฟอนต์ของแอป 18px จะขยาย h-11 ฯลฯ เป็น ~50px
+  // ช่องค้นหาสูง 44px · ปุ่มค้นหาในช่อง 36×36 · ปุ่มทุกปุ่มใน Navbar สูง 44px (ขนาดแตะขั้นต่ำที่แนะนำ)
   const searchForm = (
     <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
       <input
@@ -137,20 +139,25 @@ export default function Navbar() {
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder={t("searchPlaceholder")}
         aria-label={t("searchAria")}
-        className="w-full h-11 pl-4 pr-14 text-base text-[#4A342E] bg-white placeholder:text-gray-500 rounded-xl outline-none focus:ring-2 focus:ring-white shadow-inner transition"
+        className="w-full h-[44px] pl-4 pr-[48px] text-base text-[#4A342E] bg-white placeholder:text-gray-500 rounded-xl outline-none focus:ring-2 focus:ring-white shadow-inner transition"
       />
       <button
         type="submit"
         aria-label={t("search")}
-        className="absolute right-1 top-1 bottom-1 px-5 bg-[#8C5A3C] !text-white rounded-xl hover:bg-[#8C5A3C]/90 flex items-center justify-center transition"
+        className="absolute right-[4px] top-[4px] h-[36px] w-[36px] bg-[#8C5A3C] !text-white rounded-lg hover:bg-[#8C5A3C]/90 flex items-center justify-center transition"
       >
-        <AiOutlineSearch size={24} className="!text-white" />
+        <AiOutlineSearch size={20} className="!text-white" />
       </button>
     </form>
   );
 
+  /** ปุ่มไอคอนบนพื้นเข้มของ Navbar — สูง 44 · กว้างอย่างน้อย 44 (มีข้อความก็ยืดออก) */
+  const navButton =
+    "relative flex h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-xl px-[10px] whitespace-nowrap transition";
+  const navButtonOnDark = `${navButton} !text-white hover:bg-white/10`;
+
   const linkClass = (active: boolean) =>
-    `relative flex items-center px-4 py-2.5 text-base font-semibold transition-all duration-150 ${
+    `relative flex h-[44px] items-center px-4 text-sm font-semibold transition-all duration-150 ${
       active
         ? "text-[#4A342E] bg-[#4A342E]/10 border-l-4 border-[#4A342E] pl-3.5"
         : "text-stone-600 hover:bg-stone-100/70 hover:text-stone-900"
@@ -163,9 +170,9 @@ export default function Navbar() {
         isHomePage ? "bg-[#4A342E]/95 !text-white backdrop-blur-md" : "bg-[#4A342E] !text-white"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* มือถือ: flex แถวเดียว · จอ md ขึ้นไป: grid 3 คอลัมน์ [โลโก้ | ช่องค้นหา | ผู้ใช้/ตะกร้า] */}
-        <div className="flex items-center justify-between gap-3 py-4 md:grid md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-12">
+      <div className="max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
+        {/* มือถือ: flex แถวเดียว · จอ md ขึ้นไป: grid 3 คอลัมน์ [โลโก้ | ช่องค้นหา (กลาง · กว้างสุด 560) | ปุ่ม] */}
+        <div className="flex items-center justify-between gap-3 py-4 md:grid md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-8">
           {/* มือถือ + หน้าที่มี SideBarMenu: ปุ่มเปิดเมนูวางแทนโลโก้ */}
           {hasSidebarMenu && (
             <button
@@ -187,19 +194,35 @@ export default function Navbar() {
           </div>
 
           {/* ช่องค้นหา (จอ md ขึ้นไป) */}
-          <div className="hidden md:block md:self-end w-full">{searchForm}</div>
+          <div className="hidden md:block w-full max-w-[560px] justify-self-center">{searchForm}</div>
 
-          {/* ฝั่งขวา 2 แถว: บน = ผู้ใช้ (เล็ก) · ล่าง = ตะกร้า (ระดับเดียวกับช่องค้นหา) */}
-          <div className="flex-1 min-w-0 flex flex-col gap-2 md:self-stretch md:justify-between md:justify-self-end">
-            <ul className="flex items-center justify-end gap-4 text-sm font-medium">
+          {/* ฝั่งขวาแถวเดียว: ค้นหา (มือถือ) · กระดิ่ง · ผู้ใช้ · ตะกร้า — สูง 44px ทุกปุ่ม */}
+          <ul className="flex-1 min-w-0 flex items-center justify-end gap-1 md:gap-2 text-base font-medium md:justify-self-end">
+            <li className="md:hidden">
+              <button
+                type="button"
+                onClick={() => setShowMobileSearch((v) => !v)}
+                aria-label={t("search")}
+                aria-expanded={showMobileSearch}
+                className={navButtonOnDark}
+              >
+                <AiOutlineSearch size={24} className="!text-white" />
+              </button>
+            </li>
+            {/* กระดิ่งแจ้งเตือน (D6) — เฉพาะลูกค้าที่ login (guest ไม่มีแจ้งเตือน) */}
+            {status === "authenticated" && (
+              <li>
+                <NotificationBell />
+              </li>
+            )}
               <li className="relative">
                 {!hydrated || status === "loading" ? (
-                  <span className="!text-white">...</span>
+                  <span className={navButtonOnDark}>...</span>
                 ) : user ? (
                   <>
                     <button
                       type="button"
-                      className="flex items-center gap-1.5 cursor-pointer !text-white hover:!text-[#e2d7c7] transition py-0.5"
+                      className={`${navButtonOnDark} cursor-pointer`}
                       onClick={() => setShowDropdown((v) => !v)}
                       aria-label={t("accountMenu")}
                       aria-expanded={showDropdown}
@@ -217,7 +240,7 @@ export default function Navbar() {
                           <Link
                             href={HOME_PATH}
                             onClick={() => setShowDropdown(false)}
-                            className="flex items-center px-4 py-2.5 text-base font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 transition-all duration-150"
+                            className="flex h-[44px] items-center px-4 text-sm font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 transition-all duration-150"
                           >
                             {t("backOffice")}
                           </Link>
@@ -250,7 +273,7 @@ export default function Navbar() {
                         <button
                           type="button"
                           onClick={handleLogout}
-                          className="group w-full flex items-center gap-2.5 px-4 py-2.5 text-base font-semibold text-rose-600 hover:bg-rose-50/80 hover:text-rose-700 transition duration-150"
+                          className="group w-full flex h-[44px] items-center gap-2.5 px-4 text-sm font-semibold text-rose-600 hover:bg-rose-50/80 hover:text-rose-700 transition duration-150"
                         >
                           <DoorLogoutIcon className="w-4 h-4 shrink-0 text-rose-500 group-hover:text-rose-700 transition-colors" />
                           <span>{t("logout")}</span>
@@ -261,7 +284,7 @@ export default function Navbar() {
                 ) : (
                   <Link
                     href={`${LOGIN_PATH}?next=${encodeURIComponent(pathname)}`}
-                    className="flex items-center gap-2 !text-white hover:!text-[#e2d7c7] transition text-sm font-semibold"
+                    className={`${navButtonOnDark} text-sm font-semibold`}
                     aria-label={t("login")}
                   >
                     <FaUser size={18} className="!text-white" />
@@ -269,33 +292,12 @@ export default function Navbar() {
                   </Link>
                 )}
               </li>
-            </ul>
-
-            {/* แถวล่าง: ปุ่มค้นหา (มือถือ) + กระดิ่ง + ตะกร้า */}
-            <ul className="flex items-center justify-end md:justify-start gap-3 md:gap-4 text-base font-medium">
-              <li className="md:hidden">
-                <button
-                  type="button"
-                  onClick={() => setShowMobileSearch((v) => !v)}
-                  aria-label={t("search")}
-                  aria-expanded={showMobileSearch}
-                  className="flex items-center p-1 !text-white hover:!text-[#e2d7c7] transition"
-                >
-                  <AiOutlineSearch size={26} className="!text-white" />
-                </button>
-              </li>
-              {/* กระดิ่งแจ้งเตือน (D6) — เฉพาะลูกค้าที่ login (guest ไม่มีแจ้งเตือน) */}
-              {status === "authenticated" && (
-                <li>
-                  <NotificationBell />
-                </li>
-              )}
               <li>
                 <Link
                   href="/customer/cart"
                   aria-label={count > 0 ? t("cartWithCount", { count }) : t("cart")}
-                  className={`relative flex items-center justify-center gap-2 p-2 md:h-11 md:min-w-11 md:py-0 lg:px-2 whitespace-nowrap rounded-xl transition shadow-sm text-base !bg-[#fff] !text-[#4A342E] ${
-                    pathname === "/customer/cart" ? "ring-2 ring-white" : "hover:bg-[#8C5A3C]/90"
+                  className={`${navButton} shadow-sm text-sm !bg-[#fff] !text-[#4A342E] ${
+                    pathname === "/customer/cart" ? "ring-2 ring-white" : "hover:!bg-[#e2d7c7]"
                   }`}
                 >
                   <FaShoppingCart size={22} />
@@ -307,8 +309,7 @@ export default function Navbar() {
                   )}
                 </Link>
               </li>
-            </ul>
-          </div>
+          </ul>
         </div>
 
         {/* ช่องค้นหาแบบกาง (มือถือ) */}
@@ -317,7 +318,7 @@ export default function Navbar() {
         {/* แถวล่าง: เมนูหลัก — ซ่อนในหน้าบัญชีเพราะมีเมนูของตัวเองแล้ว */}
         {!isAccountPage && (
           <div className="border-t border-[#8C5A3C]/40 py-2.5">
-            <ul className="flex items-center justify-between gap-3 overflow-x-auto text-[13px] font-medium sm:justify-center sm:gap-10 sm:text-base">
+            <ul className="flex items-center justify-between gap-3 overflow-x-auto text-sm font-medium sm:justify-center sm:gap-10 sm:text-base">
               {NAV_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link

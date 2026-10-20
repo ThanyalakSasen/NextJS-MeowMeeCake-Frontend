@@ -13,11 +13,12 @@ import { formatDate } from "@/i18n/format";
 import { FaImage, FaStar, FaThumbtack } from "react-icons/fa";
 import { catalogService, type CatalogReview } from "@/services/catalog";
 import { resolveUploadUrl } from "@/lib/uploads";
+import ShopImage from "@/components/customer/ShopImage";
 
 type Filter = { kind: "all" } | { kind: "star"; star: number } | { kind: "media" } | { kind: "aspect"; id: string };
 
 const filterCls = (active: boolean) =>
-  `inline-flex h-[36px] items-center rounded-xl border px-3.5 text-xs font-semibold transition-all sm:text-sm ${
+  `inline-flex h-[44px] items-center rounded-xl border px-3.5 text-sm font-semibold transition-all ${
     active ? "border-[#4A342E] bg-[#4A342E] text-white" : "border-[#8C5A3C]/20 bg-white text-[#4A342E] hover:bg-[#8C5A3C]/10"
   }`;
 
@@ -141,7 +142,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
       </div>
 
       <div className="flex flex-col gap-4">
-        {reviewsQ.isLoading ? (
+        {reviewsQ.isPending ? (
           <p className="animate-pulse py-8 text-center text-sm text-[#8C5A3C]">{t("loading")}</p>
         ) : reviewsQ.isError ? (
           <p className="py-8 text-center text-sm text-red-600">{t("loadFailed")}</p>
@@ -208,8 +209,7 @@ function ReviewItem({ review: r }: { review: CatalogReview }) {
         <div className="flex flex-wrap gap-2 pt-1 sm:pl-12">
           {photos.map((url, idx) => (
             <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="h-16 w-16 overflow-hidden rounded-xl border border-gray-200 bg-black/5 sm:h-20 sm:w-20">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt={t("photoAlt", { n: idx + 1 })} className="h-full w-full object-cover" />
+              <ShopImage src={url} alt={t("photoAlt", { n: idx + 1 })} width={160} height={160} sizes="80px" className="h-full w-full object-cover" />
             </a>
           ))}
           {video && (

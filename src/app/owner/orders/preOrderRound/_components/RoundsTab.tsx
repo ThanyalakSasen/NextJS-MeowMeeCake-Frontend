@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from "next-intl";
 import { Button, Select } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
@@ -72,7 +72,7 @@ export function RoundsTab(vm: VM) {
         left={
           <>
             <SearchInput value={vm.roundSearch} onChange={vm.setRoundSearch} placeholder={t("preorderRound.searchRoundPlaceholder")} />
-            <div style={{ minWidth: 160 }}>
+            <FilterField label={t("filterLabel.roundStatus")} minWidth={160}>
               <Select
                 value={vm.roundStatusFilter}
                 onChange={(v) => vm.setRoundStatusFilter(v as RoundStatus | "all")}
@@ -84,7 +84,7 @@ export function RoundsTab(vm: VM) {
                   })),
                 ]}
               />
-            </div>
+            </FilterField>
           </>
         }
       />

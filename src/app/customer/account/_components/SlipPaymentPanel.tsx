@@ -150,7 +150,7 @@ export default function SlipPaymentPanel({
       {rejected && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{t("rejected")}</p>}
       {showCountdown && (
         <p className={`rounded-xl p-3 text-center text-sm ${secondsLeft < 300 ? "bg-red-50 text-red-700" : "bg-[#FAF6F0] text-gray-700"}`}>
-          {t("payWithin")} <span className="font-mono text-base font-bold">{timeLeftText(secondsLeft, t)}</span>
+          {t("payWithin")} <span className="tabular-nums text-base font-bold">{timeLeftText(secondsLeft, t)}</span>
           {kind === "preorder" && page.payment_due_at && (
             <span className="mt-1 block text-xs text-gray-500">
               {t("dueAt", { date: formatDate(page.payment_due_at, locale, { withTime: true }) })}

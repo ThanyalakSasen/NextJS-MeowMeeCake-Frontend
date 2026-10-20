@@ -5,7 +5,7 @@ import { CurrencyDollarIcon } from "@heroicons/react/24/solid";
 import { Button, Select, Switch, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
 import type { PricingRow, usePricingViewModel } from "./usePricingViewModel";
 import { tagColorFor } from "./pricingHelpers";
@@ -43,12 +43,12 @@ export function PricingView(vm: VM) {
     {
       key: "basePrice",
       title: t("pricing.colBasePrice"),
-      render: (r) => <PriceCell value={r.basePrice} onChange={(v) => vm.onChangeBasePrice(r, v)} highlight={r.isDirty} />,
+      render: (r) => <PriceCell ariaLabel={`${t("pricing.colBasePrice")} ${r.name}`} value={r.basePrice} onChange={(v) => vm.onChangeBasePrice(r, v)} highlight={r.isDirty} />,
     },
     {
       key: "salePrice",
       title: t("pricing.colSalePrice"),
-      render: (r) => <PriceCell value={r.salePrice} onChange={(v) => vm.onChangeSalePrice(r, v)} highlight={r.isDirty && r.salePrice !== null} />,
+      render: (r) => <PriceCell ariaLabel={`${t("pricing.colSalePrice")} ${r.name}`} value={r.salePrice} onChange={(v) => vm.onChangeSalePrice(r, v)} highlight={r.isDirty && r.salePrice !== null} />,
     },
     {
       key: "discount",
@@ -59,14 +59,13 @@ export function PricingView(vm: VM) {
       key: "is_visible",
       title: t("pricing.colVisible"),
       align: "center",
-      render: (r) => <Switch size="small" checked={r.isVisible} onChange={() => vm.onToggleVisible(r)} />,
+      render: (r) => <Switch size="small" aria-label={`${t("pricing.colVisible")} ${r.name}`} checked={r.isVisible} onChange={() => vm.onToggleVisible(r)} />,
     },
   ];
 
   return (
     <ListPageLayout
       title={t("pricing.title")}
-      description={t("pricing.description")}
       actions={
         vm.perm.update && (
           <Button
@@ -85,14 +84,14 @@ export function PricingView(vm: VM) {
           left={
             <>
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("pricing.searchPlaceholder")} />
-              <div style={{ minWidth: 160 }}>
+              <FilterField label={t("filterLabel.productCategory")} minWidth={160}>
                 <Select
                   value={vm.categoryId}
                   onChange={(v) => vm.setCategoryId(v as string)}
                   options={[{ value: "all", label: t("pricing.allCategories") }, ...vm.categories]}
                 />
-              </div>
-              <div style={{ minWidth: 140 }}>
+              </FilterField>
+              <FilterField label={t("filterLabel.productType")} minWidth={140}>
                 <Select
                   value={vm.typeFilter}
                   onChange={(v) => vm.setTypeFilter(v as VM["typeFilter"])}
@@ -102,8 +101,8 @@ export function PricingView(vm: VM) {
                     { value: "preorder", label: t("enums.productType.preorder") },
                   ]}
                 />
-              </div>
-              <div style={{ minWidth: 150 }}>
+              </FilterField>
+              <FilterField label={t("filterLabel.discountStatus")} minWidth={150}>
                 <Select
                   value={vm.discFilter}
                   onChange={(v) => vm.setDiscFilter(v as VM["discFilter"])}
@@ -113,7 +112,7 @@ export function PricingView(vm: VM) {
                     { value: "none", label: t("pricing.noDiscount") },
                   ]}
                 />
-              </div>
+              </FilterField>
             </>
           }
         />

@@ -1,19 +1,22 @@
 "use client";
 // View ของ "โซนค่าจัดส่ง" (BACKLOG4 I8) — ใช้กับอะไร · ค่าส่งที่ใช้อยู่ + คำเตือน · ตรวจจังหวัด · ตารางโซน + modal เพิ่ม/แก้ · โซนที่ลบแล้ว (กู้คืน)
 // ปุ่มเพิ่ม/แก้/ลบ/กู้คืน + สวิตช์เปิดใช้ ตามสิทธิ์ orders.create/update/delete
-import { Modal } from "antd";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { Button, Card, Switch, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
-import { DeleteButton, EditButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { formatCurrency } from "@/i18n/format";
 import type { DeliveryZone } from "@/types/deliveryZone";
 import type { useDeliveryZonesViewModel } from "./useDeliveryZonesViewModel";
-import { DeliveryZoneForm } from "./_components/DeliveryZoneForm";
 import { ZoneChecker } from "./_components/ZoneChecker";
 import { NOTICE_TAG } from "@/constants/enumConfig";
+
+// โมดัลเพิ่ม/แก้ไขโซน (antd Modal + ฟอร์ม) แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
+const DeliveryZoneEditModal = dynamic(() => import("./_components/DeliveryZoneEditModal").then((m) => m.DeliveryZoneEditModal), { ssr: false });
 
 type VM = ReturnType<typeof useDeliveryZonesViewModel>;
 const PROVINCES_SHOWN = 8;
@@ -21,13 +24,13 @@ const WARN = "m-0 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-
 
 export function DeliveryZonesView(vm: VM) {
   const t = useTranslations();
+  const modalUsed = useOpenedOnce(!!vm.editing);
   const locale = useLocale();
   const money = (n: number) => formatCurrency(n, locale);
 
   return (
     <ListPageLayout
       title={t("deliveryZones.title")}
-      description={t("deliveryZones.description")}
       actions={
         vm.perm.create && !vm.isLoading && !vm.isError ? (
           <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
@@ -159,20 +162,7 @@ export function DeliveryZonesView(vm: VM) {
         </div>
       )}
 
-      <Modal
-        open={!!vm.editing}
-        title={vm.editing?.id ? t("deliveryZones.editTitle") : t("deliveryZones.addTitle")}
-        width={640}
-        onCancel={vm.closeEdit}
-        onOk={vm.onSave}
-        confirmLoading={vm.saving}
-        okText={t("common.save")}
-        cancelText={t("common.cancel")}
-        {...modalButtonIcons("save")}
-        destroyOnHidden
-      >
-        {vm.editing && <DeliveryZoneForm form={vm.editing.form} errors={vm.errors} otherCatchAll={vm.otherCatchAll} onChange={vm.setForm} />}
-      </Modal>
+      {modalUsed && <DeliveryZoneEditModal {...vm} />}
     </ListPageLayout>
   );
 }

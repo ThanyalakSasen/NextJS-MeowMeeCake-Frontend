@@ -2,11 +2,11 @@
 // View ของ Finance Expenses — JSX ล้วน รับ props จาก useFinanceExpensesViewModel
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import { Button, Select, Tag } from "@/components/base";
+import { Button, DatePicker, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
@@ -79,7 +79,6 @@ export function FinanceExpensesView(vm: VM) {
   return (
     <ListPageLayout
       title={t("finance.expensesTitle")}
-      description={t("finance.expensesDescription", { n: vm.monthCount })}
       actions={
         <>
           <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
@@ -95,9 +94,7 @@ export function FinanceExpensesView(vm: VM) {
       toolbar={
         <FilterToolbar
           left={
-            <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("finance.searchPlaceholder")} />
-              <div style={{ minWidth: 160 }}>
+            <FilterField label={t("filterLabel.expenseCategory")} minWidth={160}>
                 <Select
                   value={vm.categoryFilter}
                   onChange={(v) => vm.setCategoryFilter(v as ExpenseCategory | "all")}
@@ -106,13 +103,18 @@ export function FinanceExpensesView(vm: VM) {
                     ...sortOptionsThai(EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.expenseCategory.${c}`) }))),
                   ]}
                 />
-              </div>
-            </>
+              </FilterField>
           }
           right={
-            <div style={{ minWidth: 170 }}>
-              <Select value={vm.selectedMonth} onChange={vm.setSelectedMonth} options={vm.monthOptions} />
-            </div>
+            <FilterField label={t("filterLabel.month")} minWidth={170}>
+              <DatePicker
+                picker="month"
+                value={vm.selectedMonthDate}
+                allowClear={false}
+                onChange={(d) => { if (d && !Array.isArray(d)) vm.setSelectedMonthDate(d); }}
+                style={{ width: 180 }}
+              />
+            </FilterField>
           }
         />
       }
@@ -134,8 +136,10 @@ export function FinanceExpensesView(vm: VM) {
             10 แถว ดู .expense-table-area) การ์ดสุดท้ายยืดเต็มที่ว่าง · จอเล็กซ้อนคอลัมน์เดียว */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
           <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white lg:col-span-3">
-            <div className="border-b border-gray-100 px-4 py-3">
+            {/* ช่องค้นหาอยู่หัวการ์ดตาราง — ค้นเฉพาะแถวในตาราง ไม่กระทบการ์ดสถิติ */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-4 py-2">
               <p className="text-sm font-semibold text-brown-900">{t("finance.expenseListTitle")}</p>
+              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("finance.searchPlaceholder")} />
             </div>
             <div className="expense-table-area">
               {vm.isError ? (

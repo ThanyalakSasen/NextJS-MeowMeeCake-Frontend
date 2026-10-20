@@ -27,7 +27,7 @@ export function SalesReportView(vm: VM) {
   const locale = useLocale();
 
   return (
-    <DashboardPageLayout title={t("salesReport.title")} description={t("salesReport.description")}>
+    <DashboardPageLayout title={t("salesReport.title")}>
       <div className="flex flex-wrap items-center gap-3">
         <TypeTabBar
           value={vm.period}
@@ -39,6 +39,7 @@ export function SalesReportView(vm: VM) {
           value={vm.selectedDate}
           onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
           style={{ width: 180 }}
+          aria-label={t("filterLabel.period")}
         />
         <div className="flex-1" />
         <TypeTabBar<SalesMode>
@@ -57,7 +58,7 @@ export function SalesReportView(vm: VM) {
         <LoadingSpin />
       ) : (
         <>
-          <StatCardsGrid>
+          <StatCardsGrid cols={3}>
             <StatCard
               label={t("salesReport.statRevenue")}
               value={formatCurrency(vm.totalRevenue, locale)}
@@ -78,7 +79,7 @@ export function SalesReportView(vm: VM) {
 
           <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
             <div className="p-4">
-              <div className="mb-4 flex flex-wrap items-center gap-2">
+              <div className="mb-4 flex flex-wrap items-end gap-2">
                 <TypeTabBar
                   value={vm.categoryId}
                   onChange={vm.setCategoryId}
@@ -89,6 +90,7 @@ export function SalesReportView(vm: VM) {
                 />
                 <div className="flex-1" />
                 <SortDropdown
+                  label={t("filterLabel.sortBy")}
                   value={vm.sort}
                   onChange={(v) => vm.setSort(v as VM["sort"])}
                   options={[

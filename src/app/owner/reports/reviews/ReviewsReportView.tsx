@@ -1,0 +1,59 @@
+"use client";
+// หน้า "รายงานความคิดเห็น" — หน้าเดียว 2 แท็บ (?tab= sync กับ URL): จัดการรีวิว (รายรีวิว · ค่าเริ่มต้น) · แดชบอร์ด (สรุป)
+// เดิมแยกเป็น 2 เมนู/2 หน้า · ปุ่มตั้งค่าหัวข้อรีวิวอยู่มุมขวาบนร่วมกันทั้ง 2 แท็บ
+// แท็บชิดขวา · ช่วงเวลาของแท็บแดชบอร์ดอยู่ซ้ายในแถวเดียวกัน (แบบหน้ารายงานยอดขาย)
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/components/base";
+import { TabbedPageLayout } from "@/components/shared/layout";
+import type { useReviewsViewModel } from "./useReviewsViewModel";
+import type { useReviewDashboardViewModel } from "./dashboard/useReviewDashboardViewModel";
+import { ReviewsView } from "./ReviewsView";
+import { ReviewDashboardToolbar, ReviewDashboardView } from "./dashboard/ReviewDashboardView";
+
+export type ReviewsTab = "dashboard" | "manage";
+
+export function ReviewsReportView({
+  tab,
+  onTab,
+  manage,
+  dashboard,
+}: {
+  tab: ReviewsTab;
+  onTab: (tab: ReviewsTab) => void;
+  manage: ReturnType<typeof useReviewsViewModel>;
+  dashboard: ReturnType<typeof useReviewDashboardViewModel>;
+}) {
+  const t = useTranslations();
+  return (
+    <TabbedPageLayout
+      title={t("reviews.title")}
+      actions={
+        <Link href="/owner/reports/reviews/settings">
+          <Button icon={<Cog6ToothIcon className="h-4 w-4" />}>{t("reviews.settingsLink")}</Button>
+        </Link>
+      }
+      tabsAlign="end"
+      activeKey={tab}
+      onChange={(k) => onTab(k as ReviewsTab)}
+      items={[
+        { key: "manage", label: t("reviews.tabManage"), children: <ReviewsView {...manage} /> },
+        {
+          key: "dashboard",
+          label: t("reviews.tabDashboard"),
+          toolbar: <ReviewDashboardToolbar {...dashboard} />,
+          children: (
+            <ReviewDashboardView
+              {...dashboard}
+              onViewUnreplied={() => {
+                manage.showUnrepliedNegative(dashboard.productId);
+                onTab("manage");
+              }}
+            />
+          ),
+        },
+      ]}
+    />
+  );
+}

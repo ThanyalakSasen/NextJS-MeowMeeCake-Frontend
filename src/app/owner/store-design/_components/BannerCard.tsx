@@ -1,5 +1,6 @@
 "use client";
 // การ์ดแบนเนอร์ 1 ใบ — พรีวิว (รูปจริง หรือ gradient placeholder) + สถานะ + ปุ่มจัดการ
+import ShopImage from "@/components/customer/ShopImage";
 import { useTranslations, useLocale } from "next-intl";
 import { Switch, Tag } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
@@ -25,6 +26,7 @@ function paletteOf(seed: string) {
 
 export function BannerCard({
   banner,
+  priority = false,
   draggable,
   dragging,
   dragOver,
@@ -40,6 +42,8 @@ export function BannerCard({
   onDragEnd,
 }: {
   banner: BannerRow;
+  /** การ์ดแรก ๆ เหนือขอบจอ — โหลดรูปทันที */
+  priority?: boolean;
   draggable: boolean;
   dragging: boolean;
   dragOver: boolean;
@@ -92,8 +96,16 @@ export function BannerCard({
           (เดิม h-40 ตายตัว สัดส่วนจริง ~2.5:1 ทำให้ object-cover ตัดข้างรูปทิ้ง ~16%) */}
       <div className="relative aspect-[3/1] shrink-0 overflow-hidden">
         {banner.banner_img ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={resolveUploadUrl(banner.banner_img)} alt={banner.banner_name} className="h-full w-full object-cover" />
+          // ShopImage (next/image) — ย่อ + WebP ตามขนาดการ์ด แทน <img> ต้นฉบับจาก R2 (200–440 KB ต่อรูป · ไม่มี cache header)
+          <ShopImage
+            src={resolveUploadUrl(banner.banner_img)!}
+            alt={banner.banner_name}
+            width={1200}
+            height={400}
+            sizes="(min-width: 1280px) 30vw, (min-width: 640px) 45vw, 100vw"
+            priority={priority}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div
             className="flex h-full w-full flex-col items-center justify-center gap-1 px-3 text-center"

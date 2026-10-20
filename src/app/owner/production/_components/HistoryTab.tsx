@@ -60,7 +60,7 @@ export function HistoryTab(vm: VM) {
     <div className="flex flex-col gap-5">
       <p className="text-base text-gray-600">{t("production.historyDescription", { n: vm.historyStats.totalOrders })}</p>
 
-      <StatCardsGrid>
+      <StatCardsGrid cols={3}>
         <StatCard label={t("production.statTotalOrders")} value={vm.historyStats.totalOrders} sub={t("production.statTotalOrdersSub")} />
         <StatCard label={t("production.statTotalQty")} value={vm.historyStats.totalQty} sub={t("production.statTotalQtySub")} />
         <StatCard label={t("production.statAvgDuration")} value={t("production.hours", { n: vm.historyStats.avgDuration.toFixed(1) })} />
@@ -71,6 +71,7 @@ export function HistoryTab(vm: VM) {
           <div className="flex flex-wrap items-center gap-2">
             <Select
               value={vm.historyViewMode}
+              aria-label={t("filterLabel.period")}
               onChange={(v) => vm.setHistoryViewMode(v as HistoryViewMode)}
               options={VIEW_MODES.map((m) => ({ value: m, label: t(`production.viewMode.${m}`) }))}
               style={{ width: 130 }}

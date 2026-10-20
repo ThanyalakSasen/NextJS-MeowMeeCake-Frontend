@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { IMAGE_QUALITY, isOptimizableImage } from "@/constants/images";
 
 const DEFAULT_LOGO = "/pictures/logoMoewMeeCake.png";
 
@@ -28,9 +29,11 @@ export function Logo({
           width={size}
           height={size}
           className="w-full h-full object-cover"
-          // รูปจาก backend (คนละ origin) ไม่ผ่าน image optimizer — ไม่ต้องตั้ง remotePatterns
-          unoptimized={src !== DEFAULT_LOGO}
-          priority
+          // โลโก้ที่ร้านอัปโหลดอยู่บน R2 → ย่อ/WebP ได้ (เดิมโหลดไฟล์ต้นฉบับ ~38 KB มาแสดง 80px)
+          quality={IMAGE_QUALITY}
+          unoptimized={!isOptimizableImage(src)}
+          // eager แต่ไม่ priority — เดิม priority ทำให้โลโก้แย่งโหลดก่อนรูปหลักของหน้า
+          loading="eager"
         />
       </span>
       {showText && (

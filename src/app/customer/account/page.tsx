@@ -25,7 +25,7 @@ import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { shopButton, shopButtonPrimary, shopInput, shopPage } from "@/components/customer/shopStyles";
-import { shopEmailStatusKey, shopLineStatusKey, shopProfileKey } from "../lib/shopQueries";
+import { shopAllergenWarningsKey, shopEmailStatusKey, shopLineStatusKey, shopProfileKey } from "../lib/shopQueries";
 import { thaiCompare } from "@/lib/thaiSort";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -46,7 +46,8 @@ export default function AccountPage() {
   const t = useTranslations("shop.account");
   return (
     <CustomerAuthGate message={t("loginToManage")}>
-      <Suspense fallback={null}>
+      {/* fallback สูงเต็มจอ — เนื้อหาใต้ Suspense (useSearchParams) ส่งมาช้ากว่าส่วนแรกของ HTML · fallback ว่างทำให้ footer ขึ้นมาก่อนแล้วถูกดันลง (Lighthouse CLS ~0.9) */}
+    <Suspense fallback={<div className="min-h-screen" />}>
         <AccountContent />
       </Suspense>
     </CustomerAuthGate>
@@ -56,14 +57,14 @@ export default function AccountPage() {
 function AccountContent() {
   const t = useTranslations("shop.account");
   const tc = useTranslations("shop.common");
-  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: shopProfileService.get });
+  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: () => shopProfileService.get() });
   const emailQ = useQuery({ queryKey: shopEmailStatusKey, queryFn: shopProfileService.emailStatus });
   useLineResultToast();
 
   const profile = profileQ.data;
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("myAccount") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <AccountSideMenu />
@@ -240,7 +241,7 @@ function ProfileSection({ profile }: { profile: ShopProfile }) {
           { label: t("birthday"), value: birthdayText(profile.user_birthdate, locale) },
         ].map(({ label, value }) => (
           <div key={label} className={field}>
-            <span className="block text-xs font-medium text-stone-400">{label}</span>
+            <span className="block text-xs font-medium text-stone-500">{label}</span>
             <span className="block break-all font-semibold text-stone-800">{value}</span>
           </div>
         ))}
@@ -264,7 +265,7 @@ function ProfileSection({ profile }: { profile: ShopProfile }) {
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("email")}</span>
             <input className={`${shopInput} cursor-not-allowed bg-stone-100 text-stone-500`} value={shownEmail} disabled readOnly />
-            <span className="block text-xs text-stone-400">{t("emailLocked")}</span>
+            <span className="block text-xs text-stone-500">{t("emailLocked")}</span>
           </label>
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("phone")}</span>
@@ -277,7 +278,7 @@ function ProfileSection({ profile }: { profile: ShopProfile }) {
               onChange={(e) => setForm({ ...form, birthday: e.target.value })} />
           </label>
           {problem && <p className="m-0 text-xs text-red-600">{problem}</p>}
-          <p className="m-0 text-xs text-stone-400">{t("bonusHint")}</p>
+          <p className="m-0 text-xs text-stone-500">{t("bonusHint")}</p>
         </div>
       </Modal>
     </section>
@@ -328,13 +329,13 @@ function RefundAccountSection({ profile }: { profile: ShopProfile }) {
             { label: t("refundName"), value: profile.refund_promptpay_name || "-" },
           ].map(({ label, value }) => (
             <div key={label} className={field}>
-              <span className="block text-xs font-medium text-stone-400">{label}</span>
+              <span className="block text-xs font-medium text-stone-500">{label}</span>
               <span className="block break-all font-semibold text-stone-800">{value}</span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-400">{t("refundEmpty")}</p>
+        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-500">{t("refundEmpty")}</p>
       )}
 
       <Modal
@@ -359,7 +360,7 @@ function RefundAccountSection({ profile }: { profile: ShopProfile }) {
               onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </label>
           {problem && <p className="m-0 text-xs text-red-600">{problem}</p>}
-          <p className="m-0 text-xs text-stone-400">{t("refundModalHint")}</p>
+          <p className="m-0 text-xs text-stone-500">{t("refundModalHint")}</p>
         </div>
       </Modal>
     </section>
@@ -417,14 +418,14 @@ function LineSection({ authProvider }: { authProvider: ShopProfile["auth_provide
           {/* บัญชีที่สมัครด้วย LINE ยกเลิกไม่ได้ — จะเข้าสู่ระบบไม่ได้อีก (ไม่มีรหัสผ่าน) */}
           {authProvider !== "line" && (
             <button type="button" onClick={() => void onUnlink()} disabled={unlink.isPending}
-              className="h-[36px] rounded-xl border border-red-600/30 bg-white px-3 text-xs font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+              className="h-[44px] rounded-xl border border-red-600/30 bg-white px-3 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
               {t("unlink")}
             </button>
           )}
         </div>
       ) : (
         <button type="button" onClick={() => connect.mutate()} disabled={connect.isPending}
-          className="h-[36px] rounded-xl bg-[#06C755] px-4 text-sm font-bold text-white transition hover:bg-[#05b14c] disabled:opacity-60">
+          className="h-[44px] rounded-xl bg-[#06C755] px-4 text-sm font-bold text-white transition hover:bg-[#05b14c] disabled:opacity-60">
           {connect.isPending ? t("goingToLine") : t("connectLine")}
         </button>
       )}
@@ -440,7 +441,10 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
   const ingredientsQ = useQuery({ queryKey: ["catalog", "ingredients"], queryFn: catalogService.ingredients, staleTime: 10 * 60_000 });
   const save = useMutation({
     mutationFn: (list: string[]) => shopProfileService.update({ user_allergies: list }),
-    onSuccess: (p) => qc.setQueryData(shopProfileKey, p),
+    onSuccess: (p) => {
+      qc.setQueryData(shopProfileKey, p);
+      void qc.invalidateQueries({ queryKey: shopAllergenWarningsKey });
+    },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("allergySaveFailed")),
   });
   const list = profile.user_allergies;
@@ -456,7 +460,7 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
         {options.map((n) => <option key={n} value={n}>{n}</option>)}
       </select>
       {list.length === 0 ? (
-        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-400">{t("noAllergies")}</p>
+        <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-500">{t("noAllergies")}</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {list.map((name) => (
@@ -464,7 +468,7 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
               {name}
               <button type="button" aria-label={t("removeItem", { name })} disabled={save.isPending}
                 onClick={() => save.mutate(list.filter((a) => a !== name))}
-                className="flex h-4 w-4 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-200/60 hover:text-red-500">
+                className="flex h-4 w-4 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-200/60 hover:text-red-500">
                 <X size={12} />
               </button>
             </span>

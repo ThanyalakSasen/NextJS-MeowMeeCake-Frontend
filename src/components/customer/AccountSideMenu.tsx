@@ -1,16 +1,21 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// เมนูบัญชีของลูกค้า (ด้านซ้ายบนจอใหญ่ · แถบบนสุดบนมือถือ) — ย่อจาก FrontOffice src/app/components/customer/SideBarMenu.tsx
-// เหลือ 5 เมนู: ข้อมูลของฉัน · ที่อยู่ · เปลี่ยนรหัสผ่าน · ประวัติการสั่งซื้อ · ประวัติพรีออเดอร์
-// (สมาชิกของฉัน · รายการโปรด ย้ายไปเมนูผู้ใช้บน Navbar · การแจ้งเตือนเข้าจากกระดิ่ง)
-// แบ่ง 2 หัวข้อแบบต้นแบบ: "บัญชีของฉัน" / "คำสั่งซื้อของฉัน" (BACKLOG4 U2) — มือถือเป็นแถบเลื่อนแถวเดียว หัวข้อซ่อน
+// เมนูบัญชีของลูกค้า (ด้านซ้ายบนจอใหญ่ · ลิ้นชักจากปุ่มแฮมเบอร์เกอร์บน Navbar เมื่อจอเล็กกว่า md) — ย่อจาก FrontOffice SideBarMenu.tsx
+// 7 เมนู: ข้อมูลของฉัน · ที่อยู่ · เปลี่ยนรหัสผ่าน · สมาชิกของฉัน · ประวัติการสั่งซื้อ · ประวัติพรีออเดอร์ · รีวิวของฉัน
+// (รายการโปรด อยู่ในเมนูผู้ใช้บน Navbar · การแจ้งเตือนเข้าจากกระดิ่ง)
+// แบ่ง 2 หัวข้อแบบต้นแบบ: "บัญชีของฉัน" / "คำสั่งซื้อของฉัน" (BACKLOG4 U2)
+// มือถือ: register กับ sidebarMenuStore → Navbar โชว์ปุ่มแฮมเบอร์เกอร์แทนโลโก้ · กดแล้วเปิดลิ้นชักนี้
 // ─────────────────────────────────────────────────────────────
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, CalendarDaysIcon } from "@heroicons/react/24/solid";
+import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, CalendarDaysIcon, StarIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/solid";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useSidebarMenuStore } from "@/app/customer/store/sidebarMenuStore";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import DoorLogoutIcon from "./DoorLogoutIcon";
+import StoreLogo from "./StoreLogo";
 
 const GROUPS = [
   {
@@ -19,6 +24,7 @@ const GROUPS = [
       { href: "/customer/account", labelKey: "profile", icon: UserIcon },
       { href: "/customer/account/address", labelKey: "address", icon: MapPinIcon },
       { href: "/customer/changepassword", labelKey: "changePassword", icon: KeyIcon },
+      { href: "/customer/account/member", labelKey: "member", icon: StarIcon },
     ],
   },
   {
@@ -26,6 +32,7 @@ const GROUPS = [
     items: [
       { href: "/customer/account/purchases", labelKey: "purchases", icon: ShoppingBagIcon },
       { href: "/customer/account/preorders", labelKey: "preorders", icon: CalendarDaysIcon },
+      { href: "/customer/account/reviews", labelKey: "reviews", icon: ChatBubbleLeftRightIcon },
     ],
   },
 ] as const;
@@ -35,11 +42,35 @@ export default function AccountSideMenu() {
   const pathname = usePathname();
   const router = useRouter();
   const { signOut } = useCustomerSession();
+  const mobileOpen = useSidebarMenuStore((s) => s.isMobileOpen);
+  const setMobileOpen = useSidebarMenuStore((s) => s.setMobileOpen);
+  const register = useSidebarMenuStore((s) => s.register);
+  const unregister = useSidebarMenuStore((s) => s.unregister);
+
+  // บอก Navbar ว่าหน้านี้มีเมนูบัญชี → โชว์ปุ่มแฮมเบอร์เกอร์บนจอเล็ก (unregister ปิดลิ้นชักให้ด้วยตอนเปลี่ยนหน้า)
+  useEffect(() => {
+    register();
+    return unregister;
+  }, [register, unregister]);
+
+  // ลิ้นชักเปิดอยู่: Esc ปิด · ล็อกการเลื่อนหน้าข้างหลัง
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen, setMobileOpen]);
   // ประวัติการสั่งซื้อ = รวมหน้ารายละเอียด /customer/account/purchases/[id]
   const isActive = (href: string) =>
     pathname === href || ((href.endsWith("/purchases") || href.endsWith("/preorders")) && !!pathname?.startsWith(`${href}/`));
 
   const onLogout = async () => {
+    setMobileOpen(false);
     await signOut();
     router.replace("/customer");
   };
@@ -49,25 +80,69 @@ export default function AccountSideMenu() {
       active ? "bg-[#4A342E] text-white shadow-sm" : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
     }`;
 
-  return (
-    <nav aria-label={t("aria")} className="w-full shrink-0 md:w-56">
-      <div className="flex gap-2 overflow-x-auto rounded-2xl border border-stone-100 bg-white p-2 shadow-sm md:flex-col md:overflow-visible">
-        {GROUPS.map((group, gi) => (
-          <div key={group.titleKey} className={`contents md:flex md:flex-col md:gap-2 ${gi > 0 ? "md:mt-2 md:border-t md:border-stone-100 md:pt-2" : ""}`}>
-            <p className="m-0 hidden px-3.5 pb-1 pt-2 text-xs font-bold uppercase tracking-wide text-stone-400 md:block">{t(group.titleKey)}</p>
-            {group.items.map(({ href, labelKey, icon: Icon }) => (
-              <Link key={href} href={href} className={item(isActive(href))} aria-current={isActive(href) ? "page" : undefined}>
-                <Icon className="h-4 w-4 shrink-0" />
-                {t(labelKey)}
-              </Link>
-            ))}
-          </div>
-        ))}
-        <button type="button" onClick={() => void onLogout()} className={`${item(false)} md:mt-2 md:border-t md:border-stone-100`}>
-          <DoorLogoutIcon className="h-4 w-4 shrink-0" />
+  const menu = (
+    <div className="flex flex-col gap-2 rounded-2xl border border-stone-100 bg-white p-2 shadow-sm">
+      {GROUPS.map((group, gi) => (
+        <div key={group.titleKey} className={`flex flex-col gap-2 ${gi > 0 ? "mt-2 border-t border-stone-100 pt-2" : ""}`}>
+          <p className="m-0 px-3.5 pb-1 pt-2 text-xs font-bold uppercase tracking-wide text-stone-500">{t(group.titleKey)}</p>
+          {group.items.map(({ href, labelKey, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setMobileOpen(false)}
+              className={item(isActive(href))}
+              aria-current={isActive(href) ? "page" : undefined}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {t(labelKey)}
+            </Link>
+          ))}
+        </div>
+      ))}
+      {/* ออกจากระบบ — หน้าตาเดียวกับเมนูผู้ใช้ใน Navbar (เส้นคั่น · ตัวอักษร/ไอคอนแดง · พื้นชมพูอ่อนตอนชี้) */}
+      <div className="mt-1 border-t border-stone-100 pt-1">
+        <button
+          type="button"
+          onClick={() => void onLogout()}
+          className="group flex h-[44px] w-full items-center gap-2.5 rounded-xl px-3.5 text-sm font-semibold text-rose-600 transition duration-150 hover:bg-rose-50/80 hover:text-rose-700"
+        >
+          <DoorLogoutIcon className="h-4 w-4 shrink-0 text-rose-500 transition-colors group-hover:text-rose-700" />
           {t("logout")}
         </button>
       </div>
-    </nav>
+    </div>
+  );
+
+  return (
+    <>
+      {/* จอ md ขึ้นไป: เมนูด้านซ้าย */}
+      <nav aria-label={t("aria")} className="hidden w-56 shrink-0 md:block">
+        {menu}
+      </nav>
+
+      {/* จอเล็ก: ลิ้นชักจากซ้าย เปิดด้วยปุ่มแฮมเบอร์เกอร์บน Navbar */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true" aria-label={t("aria")}>
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+          <nav aria-label={t("aria")} className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col gap-3 overflow-y-auto bg-stone-50 p-4 shadow-xl">
+            {/* หัวลิ้นชัก: โลโก้ร้านกึ่งกลาง (80px เท่า Navbar · กลับหน้าแรก) + ปุ่มปิดมุมขวาบน */}
+            <div className="relative flex items-center justify-center pt-2">
+              <Link href="/customer" onClick={() => setMobileOpen(false)} aria-label={t("home")}>
+                <StoreLogo size={80} />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label={t("closeMenu")}
+                className="absolute right-0 top-0 rounded-xl p-2 text-stone-600 hover:bg-stone-200"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            {menu}
+          </nav>
+        </div>
+      )}
+    </>
   );
 }

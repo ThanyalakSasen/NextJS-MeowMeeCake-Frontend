@@ -38,10 +38,18 @@ export function IngredientEditor({
 
   return (
     <div className="flex flex-col gap-2">
+      {rows.length > 0 && (
+        <div className="grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1fr 110px 24px" }}>
+          <span>{t("filterLabel.ingredient")}</span>
+          <span>{t("filterLabel.quantity")}</span>
+          <span />
+        </div>
+      )}
       {rows.map((row, i) => (
         <div key={i} className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 110px 24px" }}>
           <Select
             size="small"
+            aria-label={t("filterLabel.ingredient")}
             placeholder={t("recipes.selectIngredient")}
             value={row.ingredient_id || undefined}
             onChange={(v) => updateIngredient(i, v as string)}
@@ -58,6 +66,7 @@ export function IngredientEditor({
             className="!w-full"
             min={0}
             step={0.01}
+            aria-label={t("filterLabel.quantity")}
             value={row.quantity}
             onChange={(v) => updateQty(i, Number(v) || 0)}
             suffix={<span className="text-xs text-gray-500">{row.unit_abbr}</span>}

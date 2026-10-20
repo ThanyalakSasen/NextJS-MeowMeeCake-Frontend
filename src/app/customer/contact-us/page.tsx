@@ -26,7 +26,7 @@ import { shopProfileKey } from "../lib/shopQueries";
 import { formatMarketDays, formatStoreAddress, storeMapUrl } from "../lib/storeFormat";
 
 const SOCIAL_BUTTONS: { key: SocialKey; label: string; icon: React.ReactNode; className: string }[] = [
-  { key: "facebook", label: "Facebook", icon: <FaFacebook size={20} />, className: "bg-[#1877F2] hover:bg-[#166fe5]" },
+  { key: "facebook", label: "Facebook", icon: <FaFacebook size={20} />, className: "bg-[#1464d2] hover:bg-[#1259bd]" },
   { key: "line", label: "LINE", icon: <FaLine size={20} />, className: "bg-[#06C755] hover:bg-[#05b34c]" },
   { key: "instagram", label: "Instagram", icon: <FaInstagram size={20} />, className: "bg-[#C13584] hover:bg-[#a92d73]" },
   // label ว่าง = ชื่อมาจาก i18n (shop.contact.website)
@@ -47,7 +47,7 @@ export default function ContactPage() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: tf("contact") }]} className="!mb-0" />
         <h1 className="text-center text-3xl font-extrabold sm:text-4xl">{t("title")}</h1>
 
@@ -57,8 +57,21 @@ export default function ContactPage() {
               {info?.store_name ? t("storeInfoNamed", { name: info.store_name }) : t("storeInfo")}
             </h2>
 
-            {infoQ.isLoading ? (
-              <p className="text-sm text-gray-500">{t("loading")}</p>
+            {/* isPending — ตอน render ฝั่ง server isLoading = false ทำให้ HTML แรกเป็น "โหลดไม่สำเร็จ" แล้วหน้ากระโดด (CLS) */}
+            {infoQ.isPending ? (
+              // โครงขนาดใกล้ของจริง (ที่อยู่ · โทร · ตลาด · อีเมล · ปุ่มโซเชียล) — เดิมข้อความบรรทัดเดียว
+              // พอข้อมูลมา ฟอร์มข้างล่างถูกดันลง (Lighthouse CLS 0.19)
+              <div className="min-h-[24rem] space-y-5" aria-busy="true" aria-label={t("loading")}>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-stone-200/70" />
+                    <div className="flex-1 space-y-2 pt-1">
+                      <div className="h-4 w-24 animate-pulse rounded bg-stone-200/70" />
+                      <div className="h-4 w-full animate-pulse rounded bg-stone-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : !info ? (
               <p className="text-sm text-red-600">{t("loadFailed")}</p>
             ) : (
@@ -115,7 +128,7 @@ export default function ContactPage() {
                     href={info!.social_links[s.key]}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`flex w-full items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition active:scale-[0.98] ${s.className}`}
+                    className={`flex h-[44px] w-full items-center justify-center gap-3 rounded-2xl px-4 text-sm font-semibold text-white shadow-sm transition active:scale-[0.98] ${s.className}`}
                   >
                     {s.icon}
                     <span>{s.key === "website" ? t("website") : s.label}: {storeName}</span>
@@ -161,7 +174,7 @@ function ContactForm({ storeName }: { storeName: string }) {
   const authed = status === "authenticated";
   const topicsQ = useQuery({ queryKey: contactTopicsKey, queryFn: storeInfoService.contactTopics, staleTime: 10 * 60_000 });
   // ผู้ส่ง = บัญชีที่ login (แสดงให้รู้ว่าร้านจะติดต่อกลับทางไหน) · cache เดียวกับหน้าบัญชีของฉัน
-  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: shopProfileService.get, enabled: authed });
+  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: () => shopProfileService.get(), enabled: authed });
   const profile = profileQ.data;
   const email = profile && !isLinePlaceholderEmail(profile.email) ? profile.email : "";
 
@@ -187,7 +200,8 @@ function ContactForm({ storeName }: { storeName: string }) {
       ),
   });
 
-  if (status === "loading") return <p className="text-sm text-gray-500">{tc("loadingDots")}</p>;
+  // สูงเท่ากล่อง "เข้าสู่ระบบก่อน" ข้างล่าง — ไม่ให้เนื้อหาขยับตอนรู้สถานะ login (CLS)
+  if (status === "loading") return <div className="h-40 animate-pulse rounded-2xl bg-[#FAF6F0]/50" aria-busy="true" aria-label={tc("loadingDots")} />;
   if (!authed) {
     return (
       <div className="space-y-3 rounded-2xl border border-dashed border-[#8C5A3C]/20 bg-[#FAF6F0]/50 py-10 text-center">

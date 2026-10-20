@@ -28,7 +28,6 @@ import PickupLocationPicker from "@/components/customer/PickupLocationPicker";
 import CouponSelectBox from "@/components/customer/CouponSelectBox";
 import PointsRedeemBox from "@/components/customer/PointsRedeemBox";
 import CheckoutAddressForm from "@/components/customer/CheckoutAddressForm";
-import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { baht, shopButtonPrimary, shopCard, shopInput, shopPage } from "@/components/customer/shopStyles";
 import {
   pickupLocationsKey, preorderRoundKey, shopAddressesKey, shopCouponsKey, shopPointsKey, shopPreordersKey,
@@ -39,6 +38,8 @@ import {
 import { preorderPickupDates, thaiDate } from "../lib/preorderDates";
 import { isRoundOpen, useNow } from "../lib/useNow";
 import FlowSteps from "@/components/customer/FlowSteps";
+import { useRecipientContact } from "../../hooks/useRecipientContact";
+import ShopImage from "@/components/customer/ShopImage";
 
 const PHONE_RE = /^0\d{8,9}$/;
 
@@ -60,7 +61,6 @@ function PreorderCheckoutContent() {
   const locale = useLocale();
   const router = useRouter();
   const qc = useQueryClient();
-  const { user } = useCustomerSession();
   const basket = usePreorderBasket();
 
   const roundQ = useQuery({
@@ -75,8 +75,7 @@ function PreorderCheckoutContent() {
 
   const [orderType, setOrderType] = useState<OrderType>("takeaway");
   const [pickedAddressId, setPickedAddressId] = useState<string | null>(null);
-  const [recipientName, setRecipientName] = useState(user?.fullname ?? "");
-  const [recipientPhone, setRecipientPhone] = useState("");
+  const { recipientName, setRecipientName, recipientPhone, setRecipientPhone } = useRecipientContact();
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [couponId, setCouponId] = useState<string | null>(null);
   const [pointsInput, setPointsInput] = useState(0);
@@ -190,7 +189,7 @@ function PreorderCheckoutContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb
           items={[{ label: t("crumb"), href: "/customer/preorder" }, { label: basket.round_name, href: `/customer/preorder/${basket.round_id}` }, { label: t("confirm") }]}
           className="!mb-0"
@@ -219,8 +218,7 @@ function PreorderCheckoutContent() {
                 return (
                   <div key={key} className="flex gap-3 border-t border-[#8C5A3C]/10 pt-3 first:border-0 first:pt-0">
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-stone-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {img ? <img src={img} alt="" className="h-full w-full object-cover" /> : null}
+                      {img ? <ShopImage src={img} alt={""} width={128} height={128} sizes="64px" className="h-full w-full object-cover" /> : null}
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-start justify-between gap-2">
@@ -231,7 +229,7 @@ function PreorderCheckoutContent() {
                       </div>
                       {it.option_text && <p className="m-0 text-xs text-gray-500">{it.option_text}</p>}
                       <input
-                        className="w-full rounded-lg border border-[#8C5A3C]/15 px-2 py-1 text-xs"
+                        className="h-[44px] w-full rounded-lg border border-[#8C5A3C]/15 px-2 text-xs"
                         maxLength={500}
                         placeholder={t("notePlaceholder")}
                         aria-label={t("noteAria", { name: localName(it.product_name_th, it.product_name_eng) })}

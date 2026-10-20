@@ -1,15 +1,15 @@
 "use client";
-// แถบกรองของหน้ารีวิว — ค้นข้อความ · หมวด · สินค้า · ดาว · หัวข้อ (+ ชม/ติ) · ตอบกลับ · อ่าน · รูป/วิดีโอ · ประเภทออเดอร์ · สถานะ · เรียง
+// แถบกรองของหน้ารีวิว — ค้นข้อความ · หมวด · สินค้า · ดาว · หัวข้อ (+ ชม/ติ) · รูป/วิดีโอ · ประเภทออเดอร์ · เรียง
+// (ตัดตัวกรองสถานะการแสดง/การตอบกลับ/การอ่านออก — เหลือเฉพาะตัวที่ใช้จริง · "ยังไม่ตอบ" จากทางลัดในแถบสรุปแสดงเป็นป้ายปิดได้)
 import { useTranslations } from "next-intl";
 import { Button, Card, Select, Tag } from "@/components/base";
 import { SearchInput } from "@/components/shared/data";
-import type { ReviewSort, ReviewStatus } from "@/types/review";
+import type { ReviewSort } from "@/types/review";
 import type { ReviewFilters, Tri } from "../useReviewsViewModel";
 import { actionIcon } from "@/components/shared/actions";
 import { NOTICE_TAG } from "@/constants/enumConfig";
 
 const SORTS: ReviewSort[] = ["newest", "needs_reply", "lowest", "highest", "oldest"];
-const STATUSES: ReviewStatus[] = ["approved", "hidden", "pending"];
 
 type Opt = { value: string; label: string };
 
@@ -41,6 +41,7 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
         <div className="ml-auto flex items-center gap-2">
           <span className="text-xs text-gray-500">{t("reviews.sortLabel")}</span>
           <Select
+            aria-label={t("reviews.sortLabel")}
             size="small"
             style={{ width: 150 }}
             value={filters.sort}
@@ -78,14 +79,6 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
               ]}
               onChange={(v: ReviewFilters["aspectSentiment"]) => setFilter("aspectSentiment", v)} />
           ))}
-        {field(t("reviews.filter.replied"), (
-          <Select size="small" value={filters.replied} options={tri(t("reviews.replied"), t("reviews.notReplied"))}
-            onChange={(v: Tri) => setFilter("replied", v)} />
-        ))}
-        {field(t("reviews.filter.read"), (
-          <Select size="small" value={filters.read} options={tri(t("reviews.read"), t("reviews.unread"))}
-            onChange={(v: Tri) => setFilter("read", v)} />
-        ))}
         {field(t("reviews.filter.media"), (
           <Select size="small" value={filters.media} options={tri(t("reviews.filter.hasMedia"), t("reviews.filter.noMedia"))}
             onChange={(v: Tri) => setFilter("media", v)} />
@@ -95,11 +88,6 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
             options={[all(t("common.all")), { value: "order", label: t("reviews.filter.order") }, { value: "preorder", label: t("reviews.preorder") }]}
             onChange={(v: ReviewFilters["orderKind"]) => setFilter("orderKind", v)} />
         ))}
-        {field(t("reviews.statusLabel"), (
-          <Select size="small" value={filters.status}
-            options={[all(t("reviews.filter.allStatuses")), ...STATUSES.map((s) => ({ value: s, label: t(`reviews.status.${s}`) }))]}
-            onChange={(v: ReviewFilters["status"]) => setFilter("status", v)} />
-        ))}
         <div className="flex items-end">
           <Button size="small" icon={actionIcon("reset", "small")} onClick={onReset}>
             {t("reviews.filter.reset")}
@@ -107,11 +95,18 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
         </div>
       </div>
 
-      {filters.negativeOnly && (
+      {(filters.negativeOnly || filters.replied !== "all") && (
         <div className="flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-3">
-          <Tag closable color={NOTICE_TAG.negativeFilter} onClose={() => setFilter("negativeOnly", false)} className="!m-0">
-            {t("reviews.filter.negativeOnly")}
-          </Tag>
+          {filters.negativeOnly && (
+            <Tag closable color={NOTICE_TAG.negativeFilter} onClose={() => setFilter("negativeOnly", false)} className="!m-0">
+              {t("reviews.filter.negativeOnly")}
+            </Tag>
+          )}
+          {filters.replied !== "all" && (
+            <Tag closable color={NOTICE_TAG.negativeFilter} onClose={() => setFilter("replied", "all")} className="!m-0">
+              {filters.replied === "0" ? t("reviews.notReplied") : t("reviews.replied")}
+            </Tag>
+          )}
         </div>
       )}
     </Card>

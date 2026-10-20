@@ -24,6 +24,7 @@ import { shopCartKey } from "../lib/shopQueries";
 import { catalogProductKey } from "../lib/catalogQueries";
 import { cartIssueText, cartIssues, cartProductId, type StockInfo } from "../lib/cartIssues";
 import FlowSteps from "@/components/customer/FlowSteps";
+import ShopImage from "@/components/customer/ShopImage";
 
 export default function CartPage() {
   const t = useTranslations("shop.cart");
@@ -83,10 +84,8 @@ function CartContent() {
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => shopCartService.removeItem(id),
-    onSuccess: () => {
-      alert.success(t("removed"));
-      refresh();
-    },
+    // ไม่แจ้งเตือนเมื่อสำเร็จ — รายการหายจากตะกร้าให้เห็นเอง
+    onSuccess: refresh,
     onError: (e) => alert.error(isApiError(e) ? e.message : t("removeFailed")),
   });
 
@@ -122,7 +121,7 @@ function CartContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("title") }]} className="!mb-0" />
         {cart.items.length > 0 && <FlowSteps kind="order" current={1} />}
 
@@ -158,8 +157,7 @@ function CartContent() {
                       className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#FAF6F0] sm:h-24 sm:w-24"
                     >
                       {img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={img} alt={product?.product_name_th ?? ""} className="h-full w-full object-cover" />
+                        <ShopImage src={img} alt={product?.product_name_th ?? ""} width={192} height={192} sizes="96px" className="h-full w-full object-cover" />
                       ) : (
                         <FaImage className="text-2xl text-[#8C5A3C]/40" />
                       )}

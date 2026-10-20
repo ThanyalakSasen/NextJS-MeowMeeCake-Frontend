@@ -29,7 +29,8 @@ function buildMenuAccess(roleType: string | undefined, perms?: RawMenuPermission
   ) as MenuAccess;
 }
 
-function toCurrentUser(raw: RawAuthUser, perms?: RawMenuPermissions): CurrentUser {
+/** แปลง /auth/me ของ backend → CurrentUser (ใช้ทั้ง browser และ src/lib/serverAuth.ts) */
+export function toCurrentUser(raw: RawAuthUser, perms?: RawMenuPermissions): CurrentUser {
   const role = typeof raw.role_id === "string" ? null : raw.role_id;
   return {
     id: raw._id,

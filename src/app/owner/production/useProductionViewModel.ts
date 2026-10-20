@@ -23,6 +23,7 @@ import { refId } from "@/lib/refId";
 import type { ProductionStatus } from "@/constants/enumConfig";
 import type { CompleteProductionValue } from "./_components/CompleteProductionModal";
 import { thaiCompare } from "@/lib/thaiSort";
+import { PRODUCTION_ORDERS_KEY, PRODUCTION_ORDERS_PARAMS, PRODUCTION_PRODUCTS_KEY, PRODUCTION_PRODUCTS_PARAMS, PRODUCTION_UNITS_KEY, tabFrom, type TabKey } from "./productionQuery";
 import type {
   ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput,
 } from "@/types/productionOrder";
@@ -30,8 +31,6 @@ import {
   isFinalStatus, getNextStatus, durationHours,
 } from "./productionStatus";
 
-export type TabKey = "plan" | "status" | "history";
-const TAB_KEYS: TabKey[] = ["plan", "status", "history"];
 
 /** โหมดดูประวัติการผลิต — ตรงกับ unit ที่ dayjs().isSame() รับ (day/month/year) */
 export type HistoryViewMode = "day" | "month" | "year";
@@ -93,20 +92,29 @@ export function useProductionViewModel() {
   // ?id=<productionOrderId> (ลิงก์จากแจ้งเตือน/LINE — ปิดรอบ · จ่ายช้าหลังเริ่มผลิต · เพิ่ม/หักยอด — BACKLOG2 §8)
   // เปิด drawer ใบนั้น · ไม่ระบุ tab มา = แท็บสถานะ (ดูใบที่กำลังทำอยู่)
   const urlOrderId = searchParams.get("id");
-  const activeTab: TabKey = TAB_KEYS.includes(tabParam as TabKey) ? (tabParam as TabKey) : urlOrderId ? "status" : "plan";
+  const activeTab: TabKey = tabFrom(tabParam, urlOrderId);
   const setActiveTab = (key: string) => router.replace(`/owner/production?tab=${key}`, { scroll: false });
 
   // ── shared data (โหลดครั้งเดียว ใช้ทั้ง 3 แท็บ) ──
-  const ordersQ = useQuery({ queryKey: ["production-orders"], queryFn: () => productionOrdersService.list({ limit: LIST_ALL }) });
-  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: LIST_ALL }) });
-  const unitsQ = useQuery({ queryKey: ["units"], queryFn: () => unitsService.list() });
-  const usersQ = useQuery({ queryKey: ["users"], queryFn: () => usersService.list({ limit: LIST_ALL }) });
-  const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list() });
-  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: LIST_ALL }) });
+  // ใบสั่งผลิต + สินค้า/หน่วย (เติมชื่อ/หน่วยให้รายการในใบ) — page.tsx ดึงไว้ฝั่ง server แล้ว (key ที่ productionQuery.ts)
+  const ordersQ = useQuery({ queryKey: PRODUCTION_ORDERS_KEY, queryFn: () => productionOrdersService.list(PRODUCTION_ORDERS_PARAMS) });
+  const productsQ = useQuery({ queryKey: PRODUCTION_PRODUCTS_KEY, queryFn: () => productsService.list(PRODUCTION_PRODUCTS_PARAMS) });
+  const unitsQ = useQuery({ queryKey: PRODUCTION_UNITS_KEY, queryFn: () => unitsService.list() });
+
+  // ฟอร์มสร้างใบสั่งผลิต — ประกาศก่อน query ด้านล่างที่ใช้เป็นตัวเลือกในฟอร์มเท่านั้น
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createFromRoundOpen, setCreateFromRoundOpen] = useState(false);
+  const formOpen = createOpen || createFromRoundOpen;
+  // พนักงาน/role/สูตร/รอบที่ปิดแล้ว = ตัวเลือกในฟอร์มสร้างเท่านั้น — ดึงเมื่อเปิดฟอร์ม (เดิมดึงตอนเปิดหน้า 4 ก้อน
+  // แต่ละก้อนมาถึงแล้วทั้งหน้าวาดใหม่อีกรอบระหว่างโหลด → TBT)
+  const usersQ = useQuery({ queryKey: ["users"], queryFn: () => usersService.list({ limit: LIST_ALL }), enabled: formOpen });
+  const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list(), enabled: formOpen });
+  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: LIST_ALL }), enabled: createOpen });
   // รอบพรีออเดอร์ที่ "ปิดรับแล้ว" — ตัวเลือกตอนสร้างใบสั่งผลิตจากรอบ (เฉพาะที่ยังไม่มีใบสั่งผลิตอยู่)
   const closedRoundsQ = useQuery({
     queryKey: ["preorder-rounds", "closed"],
     queryFn: () => preorderRoundsService.list({ status: "closed", limit: LIST_ALL }),
+    enabled: createFromRoundOpen,
   });
 
   /** ชื่อ/หน่วยของทุกสินค้า (ไม่กรอง) — ใช้ enrich รายการของใบสั่งผลิตเก่าด้วย แม้สินค้านั้นจะไม่มีสูตรแล้วก็ตาม */
@@ -168,7 +176,8 @@ export function useProductionViewModel() {
     [closedRoundsQ.data, roundsWithProduction],
   );
 
-  const isLoading = ordersQ.isLoading;
+  // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+  const isLoading = ordersQ.isPending;
   const isError = ordersQ.isError;
   const refetch = () => ordersQ.refetch();
 
@@ -177,9 +186,6 @@ export function useProductionViewModel() {
   const [statusFilter, setStatusFilter] = useState<ProductionStatus | "all">("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createFromRoundOpen, setCreateFromRoundOpen] = useState(false);
-
   const planFiltered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return orders.filter((o) => {
@@ -334,6 +340,12 @@ export function useProductionViewModel() {
 
   const onChangeStatus = (order: ProductionOrder, next: ProductionStatus) => {
     if (next === order.production_status) return;
+    // ปิดงานผลิต (หักวัตถุดิบ + เพิ่มสต็อก) = production.approve ที่ backend — ไม่มีสิทธิ์ = บอกก่อน ไม่เปิดหน้าต่างให้กรอกแล้วได้ 403
+    // (ลากการ์ดไปคอลัมน์ "เสร็จ" ก็ผ่านตรงนี้)
+    if (next === "done" && !perm.approve) {
+      alert.warning(t("production.completeNeedsApprove"));
+      return;
+    }
     if (next === "done") {
       setCompleteTarget(order);
       return;

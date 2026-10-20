@@ -11,10 +11,10 @@ import { useQuery } from "@tanstack/react-query";
 import { rolesService } from "@/services/roles";
 import { permissionsService } from "@/services/permissions";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { LIST_ALL } from "@/lib/http";
 import { isUnrestrictedRole, type MenuKey } from "@/constants/menuKeys";
 import type { Permission } from "@/types/permission";
 import { PERM_FIELDS, PERM_MENU_KEYS, type PermField } from "./permissions/permissionGroups";
+import { PERMISSIONS_KEY, PERMISSIONS_PARAMS, ROLES_KEY } from "./employeesQuery";
 
 /** "can_view" → "view" (ชื่อ field ใน MenuAccess ของ /auth/me) */
 const accessField = (f: PermField) => f.slice(4) as "view" | "create" | "update" | "delete" | "approve";
@@ -27,10 +27,10 @@ export function usePermissionCeiling() {
   const isOwner = isUnrestrictedRole(user?.roleType);
 
   // key + queryFn เดียวกับหน้าสิทธิ์/หน้าพนักงาน — ใช้แคชร่วมกัน · owner ไม่ต้องโหลดแถวสิทธิ์
-  const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list(), enabled: !!user && !isOwner });
+  const rolesQ = useQuery({ queryKey: ROLES_KEY, queryFn: () => rolesService.list(), enabled: !!user && !isOwner });
   const permsQ = useQuery({
-    queryKey: ["permissions"],
-    queryFn: () => permissionsService.list({ limit: LIST_ALL }),
+    queryKey: PERMISSIONS_KEY,
+    queryFn: () => permissionsService.list(PERMISSIONS_PARAMS),
     enabled: !!user && !isOwner,
   });
 

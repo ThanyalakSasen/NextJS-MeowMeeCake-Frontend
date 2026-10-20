@@ -15,10 +15,11 @@ export default function CustomerBreadcrumb({ items, className = "" }: { items: C
   const crumbs: Crumb[] = [{ label: t("home"), href: "/customer" }, ...items];
   return (
     <nav aria-label="Breadcrumb" className={`mb-6 ${className}`}>
-      <ol className="flex flex-wrap items-center gap-1.5 text-sm text-stone-500">
+      {/* stone-600 — อยู่บนพื้นหน้า (slate-50) stone-500 ได้คอนทราสต์แค่ 4.39 (ต้อง ≥ 4.5) */}
+      <ol className="flex flex-wrap items-center gap-1.5 text-sm text-stone-600">
         {crumbs.map((c, i) => (
           <li key={`${c.label}-${i}`} className="flex items-center gap-1.5">
-            {i > 0 && <ChevronRightIcon className="h-3.5 w-3.5 text-stone-400" aria-hidden="true" />}
+            {i > 0 && <ChevronRightIcon className="h-3.5 w-3.5 text-stone-500" aria-hidden="true" />}
             {c.href && i < crumbs.length - 1 ? (
               <Link href={c.href} className="hover:text-[#4A342E] hover:underline">
                 {c.label}

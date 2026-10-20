@@ -4,7 +4,7 @@
 // OwnerLayout — เทมเพลตหน้าหลังบ้าน
 // auth gate (useCurrentUser) + idle timeout + PermissionsProvider + Sidebar + Navbar
 // ─────────────────────────────────────────────────────────────
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -19,11 +19,58 @@ import { LoadingSpin } from "@/components/shared/feedback";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
 
+const noopSubscribe = () => () => {};
+
+/**
+ * หน้าที่ render เนื้อหาฝั่ง server ได้ (สถานะโหลดใช้ isPending — ปลอดภัยตอน SSR) → หัวข้อหน้า (LCP) อยู่ใน HTML แรก
+ * หน้าอื่นยังใช้ isLoading ของ react-query (false ตอน SSR = เห็นสถานะว่างแวบ) → render หลัง hydrate
+ * เพิ่มหน้าได้เมื่อแก้สถานะโหลดของหน้านั้นเป็น isPending แล้ว
+ */
+const SSR_PAGES = [
+  "/owner/dashboard",
+  "/owner/reports/sales",
+  "/owner/reports/reviews",
+  "/owner/finance/expenses",
+  "/owner/finance/summary",
+  "/owner/products",
+  "/owner/products/productStock",
+  "/owner/products/search-synonyms",
+  "/owner/orders/manageOrders",
+  "/owner/orders/preOrderRound",
+  "/owner/orders/OrderInStore",
+  "/owner/promotions/pricing",
+  "/owner/promotions/coupons",
+  "/owner/production",
+  "/owner/ingredients",
+  "/owner/ingredients/ingredientStock",
+  "/owner/ingredients/ingredientHistory",
+  "/owner/ingredients/units",
+  "/owner/recipes",
+  "/owner/employees",
+  "/owner/employees/addEmployee",
+  "/owner/employees/editEmployee",
+  "/owner/employees/permissions",
+  "/owner/employees/userLog",
+  "/owner/store-design",
+  "/owner/store-info",
+  "/owner/shipping",
+  "/owner/account",
+  "/owner/notificationsHistory",
+  "/owner/products/addProducts",
+  "/owner/reports/reviews/settings",
+  "/owner/orders/delivery-zones",
+];
+/** หน้าที่ path มี id (dynamic segment) — เทียบด้วย pattern */
+const SSR_PAGE_PATTERNS = [/^\/owner\/products\/[^/]+\/edit$/];
+const isSsrPage = (p: string) => SSR_PAGES.includes(p) || SSR_PAGE_PATTERNS.some((re) => re.test(p));
+
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations();
   const { user, isLoading, isError } = useCurrentUser();
+  // false ตอน render ฝั่ง server + รอบ hydrate (ค่าเดียวกัน) → true หลัง hydrate
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -44,7 +91,9 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   // นี่คือ UX gate — ข้อมูลจริงถูก backend กั้นอยู่แล้วทุก route (403) · สิทธิ์ถูกเพิกถอนระหว่างใช้งาน
   // จะมีผลเมื่อ useCurrentUser refetch (โฟกัสแท็บ / ทุก 60 วินาที)
   const menuKey = resolveMenuKey(pathname);
-  const denied = !!user && !!menuKey && !user.menuAccess[menuKey]?.view;
+  // ลูกค้าไม่นับ — effect ด้านบนส่งกลับหน้าร้านอยู่แล้ว (เดิมสองอันชนกัน: ลูกค้าที่เปิด /login ซ้ำถูก proxy พามา
+  // /owner/dashboard แล้ว access-denied ชนะ → ค้างหน้า "ไม่มีสิทธิ์" ของหลังร้าน)
+  const denied = !!user && !isCustomer && !!menuKey && !user.menuAccess[menuKey]?.view;
   const deniedTarget = denied
     ? (menuKey === "dashboard" && user ? firstPermittedPath(user.menuAccess) : null) ?? ACCESS_DENIED_PATH
     : null;
@@ -110,7 +159,10 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
         <div className="layout-main">
           <Navbar user={user} onLogout={handleLogout} onToggleSidebar={() => setDrawerOpen((p) => !p)} />
-          <main className="layout-content">{children}</main>
+          {/* user มาจาก server แล้ว (src/lib/serverAuth.ts) → โครงหน้า (sidebar/navbar) อยู่ใน HTML แรก
+              เนื้อหาหน้า: SSR_PAGES render ฝั่ง server ด้วย · หน้าอื่น render หลัง hydrate (ระหว่างนั้นว่าง — เดิมใส่วงหมุน
+              แล้วพอหน้าขึ้นวงหมุนถูกดันลง = CLS 0.22 · ว่างไว้ไม่มีอะไรให้ขยับ) */}
+          <main className="layout-content">{hydrated || isSsrPage(pathname) ? children : null}</main>
         </div>
       </div>
     </PermissionsProvider>

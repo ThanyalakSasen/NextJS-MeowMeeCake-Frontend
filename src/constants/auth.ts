@@ -4,6 +4,9 @@
 // ─────────────────────────────────────────────────────────────
 
 /** ชื่อ cookie ที่ backend ตั้งตอน login — frontend เช็คแค่ "มีไหม" ไม่ verify (D18) */
+/** react-query key ของผู้ใช้ปัจจุบัน (useCurrentUser) — อยู่ที่นี่เพื่อให้ server component (owner layout) ใช้ค่าเดียวกันได้ */
+export const CURRENT_USER_KEY = ["auth", "me"] as const;
+
 export const AUTH_COOKIE = process.env.NEXT_PUBLIC_AUTH_COOKIE || "mmc_session";
 
 /**

@@ -1,17 +1,22 @@
 "use client";
 // View ของ User Activity Log — ตาราง audit log + drawer รายละเอียด
+import dynamic from "next/dynamic";
 import { useTranslations, useLocale } from "next-intl";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/solid";
-import { Button, Select, RangePicker } from "@/components/base";
+import { Button, Select, LazyRangePicker } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { LoadFailed } from "@/components/shared/feedback";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
 import { USER_LOG_ACTION_CONFIG, type UserLogAction } from "@/constants/enumConfig";
 import type { LogRow, useUserLogViewModel } from "./useUserLogViewModel";
-import { LogDetailContent } from "./_components/LogDetailContent";
 import { ChangeSummary } from "./_components/ChangeSummary";
+
+// ลิ้นชักรายละเอียดแยก chunk — โหลดเมื่อเปิดครั้งแรก (ลิ้นชักไม่ render ฝั่ง server อยู่แล้ว)
+const DetailDrawer = dynamic(() => import("@/components/shared/feedback/DetailDrawer").then((m) => m.DetailDrawer), { ssr: false });
+const LogDetailContent = dynamic(() => import("./_components/LogDetailContent").then((m) => m.LogDetailContent), { ssr: false });
 
 type VM = ReturnType<typeof useUserLogViewModel>;
 
@@ -19,6 +24,7 @@ const ACTION_TYPES: UserLogAction[] = ["CREATE", "READ", "UPDATE", "DELETE", "LO
 
 export function UserLogView(vm: VM) {
   const t = useTranslations();
+  const drawerUsed = useOpenedOnce(vm.drawerOpen);
   const locale = useLocale();
 
   const columns: Column<LogRow>[] = [
@@ -72,9 +78,8 @@ export function UserLogView(vm: VM) {
   return (
     <ListPageLayout
       title={t("userLog.title")}
-      description={t("userLog.description")}
       actions={
-        <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
+        <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport} loading={vm.exporting}>
           {t("common.export")}
         </Button>
       }
@@ -83,7 +88,7 @@ export function UserLogView(vm: VM) {
           left={
             <>
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("userLog.searchPlaceholder")} />
-              <div style={{ minWidth: 170 }}>
+              <FilterField label={t("filterLabel.employee")} minWidth={170}>
                 <Select
                   value={vm.employeeId}
                   onChange={(v) => vm.setEmployeeId(v as string)}
@@ -92,8 +97,8 @@ export function UserLogView(vm: VM) {
                     ...vm.employeeOptions,
                   ]}
                 />
-              </div>
-              <div style={{ minWidth: 150 }}>
+              </FilterField>
+              <FilterField label={t("filterLabel.actionType")} minWidth={150}>
                 <Select
                   value={vm.actionType}
                   onChange={(v) => vm.setActionType(v as VM["actionType"])}
@@ -102,8 +107,9 @@ export function UserLogView(vm: VM) {
                     ...ACTION_TYPES.map((a) => ({ value: a, label: t(`enums.userLogAction.${a}`) })),
                   ]}
                 />
-              </div>
-              <RangePicker
+              </FilterField>
+              {/* โหลดปฏิทินเมื่อกด — RangePicker ของ antd หนักตอน hydrate (ดู base/LazyDatePicker) */}
+              <LazyRangePicker
                 value={vm.dateRange}
                 onChange={(v) => vm.setDateRange((v as VM["dateRange"]) ?? null)}
               />
@@ -129,13 +135,16 @@ export function UserLogView(vm: VM) {
             loading={vm.isLoading}
             emptyText={t("userLog.empty")}
             onRowClick={vm.onView}
+            pagination={vm.pagination}
           />
         </div>
       )}
 
-      <DetailDrawer open={vm.drawerOpen} title={t("userLog.detailTitle")} onClose={vm.closeDrawer}>
-        {vm.selectedLog && <LogDetailContent log={vm.selectedLog} />}
-      </DetailDrawer>
+      {drawerUsed && (
+        <DetailDrawer open={vm.drawerOpen} title={t("userLog.detailTitle")} onClose={vm.closeDrawer}>
+          {vm.selectedLog && <LogDetailContent log={vm.selectedLog} />}
+        </DetailDrawer>
+      )}
     </ListPageLayout>
   );
 }

@@ -3,11 +3,12 @@
 // /customer/reset-password?token= — ตั้งรหัสผ่านใหม่จากลิงก์ในอีเมล (ใช้ครั้งเดียว · หมดอายุ 1 ชม.)
 // ยกจาก FrontOffice src/app/customer/reset-password/page.tsx · API GET (เช็คลิงก์) + POST /auth/reset-password { token, newPassword }
 // CustomerChrome ซ่อน Navbar/Footer ของหน้านี้อยู่แล้ว (HIDE_CHROME_ROUTES)
+// บันทึกสำเร็จ → พากลับหน้า /login ทันที + แจ้ง "เปลี่ยนรหัสผ่านสำเร็จ" (AlertHost อยู่ที่ providers จึงค้างข้ามหน้าได้)
 // ─────────────────────────────────────────────────────────────
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { CheckCircle2, Eye, EyeOff, Lock, LockOpen, XCircle } from "lucide-react";
+import { Eye, EyeOff, Lock, LockOpen, XCircle } from "lucide-react";
 import { checkResetToken, resetPassword } from "@/lib/authClient";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
@@ -18,7 +19,7 @@ const page = "flex min-h-screen items-center justify-center bg-[#f8f6f3] p-5";
 const card =
   "w-full max-w-[420px] rounded-2xl border border-[#8C5A3C]/10 bg-white p-9 text-center shadow-[0_10px_30px_rgba(74,52,46,0.08)]";
 const outlineButton =
-  "h-[36px] w-full rounded-xl border border-[#8C5A3C]/30 bg-white text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98]";
+  "h-[44px] w-full rounded-xl border border-[#8C5A3C]/30 bg-white text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98]";
 const input =
   "w-full rounded-xl border border-[#e2d9d5] bg-[#fcfcfc] py-3 pl-3.5 pr-11 text-sm text-[#4a342e] outline-none transition placeholder:text-[#b0a5a0] focus:border-[#8C5A3C] focus:bg-white focus:ring-4 focus:ring-[#8C5A3C]/15";
 
@@ -62,7 +63,6 @@ function ResetPasswordContent() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -81,13 +81,15 @@ function ResetPasswordContent() {
     setSubmitting(true);
     try {
       await resetPassword(token, password);
-      setDone(true);
     } catch (e) {
       // ซ้ำรหัสเดิม / ลิงก์ถูกใช้ไปแล้ว — ข้อความของ backend
       alert.error(isApiError(e) ? e.message : t("resetFailed"));
-    } finally {
       setSubmitting(false);
+      return;
     }
+    // ไม่ปลด submitting — กันกดซ้ำระหว่างเปลี่ยนหน้า
+    void alert.success(t("resetDone"), { title: t("changed") });
+    router.replace(LOGIN_PATH);
   };
 
   if (tokenValid === null) {
@@ -118,21 +120,6 @@ function ResetPasswordContent() {
     );
   }
 
-  if (done) {
-    return (
-      <div className={page}>
-        <div className={card}>
-          <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-green-600" />
-          <h1 className="mb-2 text-xl font-bold text-green-700">{t("changed")}</h1>
-          <p className="mb-6 text-sm leading-relaxed text-[#77665e]">{t("resetDone")}</p>
-          <button type="button" className={outlineButton} onClick={() => router.push(LOGIN_PATH)}>
-            {t("goLogin")}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // รหัสทั้งสองช่องตรงกัน → แม่กุญแจปลดล็อก + เปลี่ยนสีพื้นหลัง
   const matched = password.length > 0 && password === confirm;
   const disabled = submitting || !password || !confirm;
@@ -155,7 +142,7 @@ function ResetPasswordContent() {
 
         <button
           type="button"
-          className={`mt-2.5 h-[36px] w-full rounded-xl text-sm font-bold transition-all duration-200 ${
+          className={`mt-2.5 h-[44px] w-full rounded-xl text-sm font-bold transition-all duration-200 ${
             disabled
               ? "cursor-not-allowed border border-[#d1c7c2] bg-[#d1c7c2] text-white shadow-none"
               : "border border-[#8C5A3C]/30 bg-white text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98]"
@@ -173,7 +160,7 @@ function ResetPasswordContent() {
 // useSearchParams() ต้องอยู่ใต้ <Suspense> ให้ prerender ได้
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <ResetPasswordContent />
     </Suspense>
   );

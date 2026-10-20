@@ -1,23 +1,28 @@
 "use client";
 // View ของ Ingredients List — JSX ล้วน รับ props จาก useIngredientsViewModel
+import dynamic from "next/dynamic";
 import { useTranslations, useLocale } from "next-intl";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { Button, ProgressBar, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, StatusFilterSelect, type Column, useStockStatusOptions } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, StatusFilterSelect, type Column, useStockStatusOptions, FilterField } from "@/components/shared/data";
 import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
 import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import { CategoryManagerButton } from "@/components/shared/categories";
 import type { IngredientRow, useIngredientsViewModel } from "./useIngredientsViewModel";
-import { IngredientFormModal } from "./_components/IngredientFormModal";
 import { sortOptionsThai } from "@/lib/thaiSort";
+
+// ฟอร์ม/โมดัลแยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
+const IngredientFormModal = dynamic(() => import("./_components/IngredientFormModal").then((m) => m.IngredientFormModal), { ssr: false });
 
 type VM = ReturnType<typeof useIngredientsViewModel>;
 
 export function IngredientsView(vm: VM) {
   const t = useTranslations();
+  const formUsed = useOpenedOnce(vm.formOpen);
   const locale = useLocale();
 
   const columns: Column<IngredientRow>[] = [
@@ -73,7 +78,6 @@ export function IngredientsView(vm: VM) {
   return (
     <ListPageLayout
       title={t("ingredients.title")}
-      description={t("ingredients.description")}
       actions={
         <div className="flex flex-wrap gap-2">
           <CategoryManagerButton kind="ingredient" />
@@ -93,7 +97,7 @@ export function IngredientsView(vm: VM) {
                 onChange={vm.setSearch}
                 placeholder={t("ingredients.searchPlaceholder")}
               />
-              <div style={{ minWidth: 170 }}>
+              <FilterField label={t("filterLabel.ingredientCategory")} minWidth={170}>
                 <Select
                   value={vm.categoryId}
                   onChange={(v) => vm.setCategoryId(v as string)}
@@ -102,8 +106,8 @@ export function IngredientsView(vm: VM) {
                     ...sortOptionsThai(vm.categories.map((c) => ({ value: c._id, label: c.ingredient_category_name }))),
                   ]}
                 />
-              </div>
-              <StatusFilterSelect value={vm.status} onChange={vm.setStatus} options={useStockStatusOptions()} />
+              </FilterField>
+              <StatusFilterSelect label={t("filterLabel.stockStatus")} value={vm.status} onChange={vm.setStatus} options={useStockStatusOptions()} />
             </>
           }
         />
@@ -148,15 +152,17 @@ export function IngredientsView(vm: VM) {
         </div>
       )}
 
-      <IngredientFormModal
-        open={vm.formOpen}
-        editTarget={vm.editTarget}
-        categories={vm.categories}
-        units={vm.ingredientUnits}
-        saving={vm.saving}
-        onClose={vm.closeForm}
-        onSave={vm.onSave}
-      />
+      {formUsed && (
+        <IngredientFormModal
+          open={vm.formOpen}
+          editTarget={vm.editTarget}
+          categories={vm.categories}
+          units={vm.ingredientUnits}
+          saving={vm.saving}
+          onClose={vm.closeForm}
+          onSave={vm.onSave}
+        />
+      )}
     </ListPageLayout>
   );
 }

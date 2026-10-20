@@ -99,7 +99,8 @@ export type StockStatus = "ok" | "low" | "out";
 export const STOCK_STATUS_CONFIG: Record<StockStatus, StatusStyle & { dotColor: string }> = {
   ok:  { color: "#15803d", antColor: "success", dotColor: "#22c55e", bg: "#dcfce7", text: "#15803d" },
   low: { color: "#b45309", antColor: "warning", dotColor: "#f59e0b", bg: "#fef3c7", text: "#b45309" },
-  out: { color: "#dc2626", antColor: "error",   dotColor: "#ef4444", bg: "#fee2e2", text: "#dc2626" },
+  // ตัวอักษร red-700 — #dc2626 บน #fee2e2 คอนทราสต์ 3.95:1 ไม่ถึง 4.5:1 (ป้าย "หมดสต็อก") · จุด/แถบยังใช้สีสดเดิม
+  out: { color: "#b91c1c", antColor: "error",   dotColor: "#ef4444", bg: "#fee2e2", text: "#b91c1c" },
 };
 
 export function stockProgressColor(status: StockStatus): string {
@@ -249,7 +250,8 @@ export const SENTIMENT_LABEL_CONFIG: Record<SentimentLabel, StatusStyle> = {
 export type RoleTypeKind = "owner" | "staff" | "customer";
 
 export const ROLE_TYPE_CONFIG: Record<RoleTypeKind, StatusStyle> = {
-  owner:    { color: "#a16207", antColor: "gold" },
+  // antColor "purple" — แท็ก gold ของ antd ตัวอักษรบนพื้นได้คอนทราสต์แค่ 2.75:1 (Lighthouse Accessibility ตก) · purple 8.9:1
+  owner:    { color: "#a16207", antColor: "purple" },
   staff:    { color: "#1d4ed8", antColor: "blue" },
   customer: { color: "#475569", antColor: "default" },
 };

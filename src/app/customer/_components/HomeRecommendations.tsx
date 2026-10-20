@@ -47,9 +47,9 @@ export default function HomeRecommendations({ fallbackProducts, fallbackLoading 
   const loading = !settled || (recs.length === 0 && fallbackLoading);
 
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 pt-12 md:pt-2">
+    <section className="w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px] pt-12 md:pt-2">
       <div className="flex flex-col items-center justify-center text-center mb-8 md:mb-12">
-        <h2 className="!text-3xl md:text-4xl font-extrabold text-[#4A342E] tracking-tight relative inline-block after:content-[''] after:block after:w-16 after:h-1 after:bg-[#8C5A3C] after:mx-auto after:mt-3 after:rounded-full">
+        <h2 className="!text-2xl md:!text-3xl xl:!text-4xl font-extrabold text-[#4A342E] tracking-tight relative inline-block after:content-[''] after:block after:w-16 after:h-1 after:bg-[#8C5A3C] after:mx-auto after:mt-3 after:rounded-full">
           {t("recommended")}
         </h2>
         {authed && recs.length > 0 && <p className="m-0 mt-3 text-sm text-stone-500">{t("forYou")}</p>}
@@ -60,8 +60,8 @@ export default function HomeRecommendations({ fallbackProducts, fallbackLoading 
           <p className="text-base sm:text-lg text-[#8C5A3C] font-medium animate-pulse">{t("loadingRecs")}</p>
         </div>
       ) : items.length > 0 ? (
-        // มือถือ 2 · แท็บเล็ต 3 · จอคอม 5 คอลัมน์
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-2">
+        // มือถือ (<640) 2 · 640–1279 3 · จอคอม (≥1280) 5 คอลัมน์
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-2">
           {items.map((r) => (
             <ProductCard key={r.product._id} product={r.product} allergenWarning={r.allergenWarning} reasons={r.reasons} />
           ))}

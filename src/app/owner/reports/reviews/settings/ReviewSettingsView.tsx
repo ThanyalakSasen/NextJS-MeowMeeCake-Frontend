@@ -1,6 +1,7 @@
 "use client";
 // View ของ "ตั้งค่ารีวิว" (BACKLOG4 E4) — แท็บหัวข้อรีวิว · คำสำหรับวิเคราะห์ · ปุ่มกลับไปหน้ารายการรีวิว
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/base";
@@ -8,7 +9,9 @@ import { TabbedPageLayout } from "@/components/shared/layout";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { SettingsTab, useReviewSettingsViewModel } from "./useReviewSettingsViewModel";
 import { AspectsTab } from "./_components/AspectsTab";
-import { TermsTab } from "./_components/TermsTab";
+
+// แท็บคำสำหรับวิเคราะห์แยก chunk — antd Tabs วาดเฉพาะแท็บที่เปิด โหลดเมื่อเปิดแท็บนั้นครั้งแรก
+const TermsTab = dynamic(() => import("./_components/TermsTab").then((m) => m.TermsTab));
 
 type VM = ReturnType<typeof useReviewSettingsViewModel>;
 
@@ -17,7 +20,6 @@ export function ReviewSettingsView(vm: VM) {
   return (
     <TabbedPageLayout
       title={t("reviewSettings.title")}
-      description={t("reviewSettings.description")}
       actions={
         <Link href="/owner/reports/reviews">
           <Button icon={<ArrowLeftIcon className="h-4 w-4" />}>{t("reviewSettings.back")}</Button>

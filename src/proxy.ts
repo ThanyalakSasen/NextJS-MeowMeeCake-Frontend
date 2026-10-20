@@ -19,8 +19,30 @@ function ensureLocaleCookie(req: NextRequest, res: NextResponse): NextResponse {
   return res;
 }
 
+/**
+ * /api/* ที่ส่งต่อไป backend (next.config.ts rewrites → API_PROXY_TARGET) — ลบ header Origin ของคำขอจากหน้าเว็บเราเอง
+ *
+ * ทำไม: backend ตรวจ CSRF ด้วย Origin เทียบกับ ALLOWED_ORIGINS ของมัน — โดเมนของ frontend ที่ไม่อยู่ในลิสต์ (เช่น
+ * http://localhost:3001 ตอน dev ชี้ backend บน Render) โดน 403 CROSS_ORIGIN ทุก POST/PATCH/DELETE (login ไม่ได้)
+ * ส่วนคำขอที่ไม่มี Origin (server-to-server) backend ปล่อยผ่าน · แทนค่าเป็นโดเมนอื่นไม่ได้ — backend ปฏิเสธทุก Origin นอกลิสต์
+ *
+ * ปลอดภัยเพราะ: ลบเฉพาะเมื่อ Origin === origin ของ frontend เอง (เบราว์เซอร์เป็นคนตั้ง Origin สคริปต์ปลอมไม่ได้)
+ * คำขอจากเว็บอื่นที่ยิงเข้า /api ของเรายังคง Origin เดิม → backend ปฏิเสธเหมือนเดิม · cookie session ยัง SameSite ตามที่ backend ตั้ง
+ */
+function stripSameOriginHeader(req: NextRequest): NextResponse {
+  const origin = req.headers.get("origin");
+  if (!origin || origin !== req.nextUrl.origin) return NextResponse.next();
+  const headers = new Headers(req.headers);
+  headers.delete("origin");
+  return NextResponse.next({ request: { headers } });
+}
+
 export function proxy(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
+
+  if (pathname.startsWith("/api/")) {
+    return process.env.API_PROXY_TARGET ? stripSameOriginHeader(req) : NextResponse.next();
+  }
 
   // โหมด "client" (คนละ site กับ backend — ดู constants/auth.ts AUTH_GATE): cookie มองไม่เห็นจากที่นี่ ห้ามเช็ค
   // "/" ไปหน้าแรกเลย (ยังไม่ login → OwnerLayout เด้งไป /login เอง) · /owner/* และ /login ปล่อยผ่าน
@@ -56,5 +78,5 @@ export function proxy(req: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/", "/owner/:path*", "/profile", "/login"],
+  matcher: ["/", "/owner/:path*", "/profile", "/login", "/api/:path*"],
 };

@@ -1,23 +1,28 @@
 "use client";
 // View ของ Employees List — JSX ล้วน (+ ResetPasswordModal สำหรับตั้งรหัสผ่านใหม่)
+import dynamic from "next/dynamic";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { useTranslations, useLocale } from "next-intl";
 import { KeyIcon, LockOpenIcon } from "@heroicons/react/24/outline";
 import { formatDate } from "@/i18n/format";
-import { ResetPasswordModal } from "./_components/ResetPasswordModal";
 import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
-import { DataTable, FilterToolbar, SearchInput, type Column } from "@/components/shared/data";
+import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel";
 import { EMPLOYEE_WORKING_CONFIG, NOTICE_TAG } from "@/constants/enumConfig";
 import { sortOptionsThai } from "@/lib/thaiSort";
 
+// โมดัลตั้งรหัสผ่านใหม่แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
+const ResetPasswordModal = dynamic(() => import("./_components/ResetPasswordModal").then((m) => m.ResetPasswordModal), { ssr: false });
+
 type VM = ReturnType<typeof useEmployeesViewModel>;
 
 export function EmployeesView(vm: VM) {
   const t = useTranslations();
+  const passwordUsed = useOpenedOnce(!!vm.passwordTarget);
   const locale = useLocale();
 
   const columns: Column<EmployeeRow>[] = [
@@ -70,7 +75,6 @@ export function EmployeesView(vm: VM) {
   return (
     <ListPageLayout
       title={t("employees.title")}
-      description={t("employees.description")}
       actions={
         vm.perm.create && (
           <Button type="primary" icon={actionIcon("add")} href="/owner/employees/addEmployee">
@@ -80,10 +84,11 @@ export function EmployeesView(vm: VM) {
       }
       toolbar={
         <FilterToolbar
-          left={
+          left={<SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("employees.searchPlaceholder")} />}
+          // ตัวกรองชิดขวา: ตำแหน่ง → สถานะ
+          right={
             <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("employees.searchPlaceholder")} />
-              <div style={{ minWidth: 160 }}>
+              <FilterField label={t("filterLabel.role")} minWidth={160}>
                 <Select
                   value={vm.roleId}
                   onChange={(v) => vm.setRoleId(v as string)}
@@ -92,8 +97,8 @@ export function EmployeesView(vm: VM) {
                     ...sortOptionsThai(vm.staffRoles.map((r) => ({ value: r._id, label: r.role_name }))),
                   ]}
                 />
-              </div>
-              <div style={{ minWidth: 140 }}>
+              </FilterField>
+              <FilterField label={t("filterLabel.status")} minWidth={140}>
                 <Select
                   value={vm.status}
                   onChange={(v) => vm.setStatus(v as VM["status"])}
@@ -103,7 +108,7 @@ export function EmployeesView(vm: VM) {
                     { value: "left", label: t("employees.statusLeft") },
                   ]}
                 />
-              </div>
+              </FilterField>
             </>
           }
         />
@@ -168,12 +173,14 @@ export function EmployeesView(vm: VM) {
         </div>
       )}
 
-      <ResetPasswordModal
-        target={vm.passwordTarget}
-        saving={vm.savingPassword}
-        onClose={vm.closePassword}
-        onSave={vm.onSavePassword}
-      />
+      {passwordUsed && (
+        <ResetPasswordModal
+          target={vm.passwordTarget}
+          saving={vm.savingPassword}
+          onClose={vm.closePassword}
+          onSave={vm.onSavePassword}
+        />
+      )}
     </ListPageLayout>
   );
 }

@@ -29,7 +29,7 @@ export function RegisterView(vm: VM) {
     return (
       <AuthBackdrop title={t("register.doneTitle")} maxWidth={520}>
         <div className="flex flex-col items-center gap-4 text-center">
-          <MailCheck className="h-12 w-12 text-[#F2AE00] md:text-[#8C5A3C]" aria-hidden="true" />
+          <MailCheck className="h-12 w-12 text-[#8C5A3C]" aria-hidden="true" />
           <p className={`m-0 text-sm leading-relaxed ${authMutedClass}`}>
             {t("register.doneDetail", { email: vm.doneEmail })}
           </p>
@@ -98,7 +98,7 @@ export function RegisterView(vm: VM) {
               value={vm.form.password} placeholder={t("register.passwordPlaceholder")} onChange={(e) => vm.set("password", e.target.value)} />
             <button type="button" onClick={vm.toggleShowPassword}
               aria-label={vm.showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-              className="absolute right-3.5 top-1/2 flex -translate-y-1/2 items-center text-[#a19285] hover:text-[#4e342e]">
+              className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center text-[#a19285] hover:text-[#4e342e]">
               {vm.showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
@@ -114,7 +114,7 @@ export function RegisterView(vm: VM) {
                 className={`h-[27px] rounded-lg text-xs font-semibold transition sm:text-sm ${
                   vm.form.hasAllergy === v
                     ? v ? "bg-[#4A342E] text-white shadow-sm" : "bg-white text-stone-800 shadow-sm"
-                    : "text-stone-200 hover:text-white md:text-stone-500 md:hover:text-stone-800"
+                    : "text-stone-600 hover:text-stone-900 md:text-stone-500 md:hover:text-stone-800"
                 }`}>
                 {v ? t("register.hasAllergy") : t("register.noAllergy")}
               </button>
@@ -131,13 +131,13 @@ export function RegisterView(vm: VM) {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-stone-500">{t("register.allergyCount", { n: vm.form.allergies.length })}</span>
                 {vm.form.allergies.length > 0 && (
-                  <button type="button" onClick={vm.clearAllergies} className="text-[11px] text-stone-400 underline transition hover:text-red-500">
+                  <button type="button" onClick={vm.clearAllergies} className="text-[11px] text-stone-500 underline transition hover:text-red-500">
                     {t("register.allergyClear")}
                   </button>
                 )}
               </div>
               {vm.form.allergies.length === 0 ? (
-                <p className="m-0 rounded-xl border border-dashed border-stone-300 bg-white/50 px-2 py-3 text-center text-xs text-stone-400">
+                <p className="m-0 rounded-xl border border-dashed border-stone-300 bg-white/50 px-2 py-3 text-center text-xs text-stone-500">
                   {t("register.allergyEmpty")}
                 </p>
               ) : (
@@ -146,7 +146,7 @@ export function RegisterView(vm: VM) {
                     <span key={name} className="inline-flex items-center gap-1.5 rounded-xl bg-[#FFF8E7] py-1.5 pl-3.5 pr-2 text-xs font-semibold text-[#5C3A21]">
                       {name}
                       <button type="button" onClick={() => vm.removeAllergy(name)} aria-label={t("register.allergyRemove", { name })}
-                        className="flex h-4 w-4 items-center justify-center rounded-full text-stone-400 transition hover:bg-stone-200/60 hover:text-red-500">
+                        className="flex h-4 w-4 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-200/60 hover:text-red-500">
                         <X size={12} />
                       </button>
                     </span>
@@ -162,7 +162,7 @@ export function RegisterView(vm: VM) {
           disabled={vm.busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
-          className={`mt-3 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-base font-bold text-white shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
+          className={`mt-3 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-sm font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
             vm.busy ? "" : "hover:enabled:-translate-y-px hover:enabled:bg-[#d99c00] hover:enabled:shadow-[0_6px_16px_rgba(242,174,0,0.35)]"
           } ${pressed ? "animate-jelly" : ""}`}
         >

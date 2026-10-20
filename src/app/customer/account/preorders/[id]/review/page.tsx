@@ -42,7 +42,7 @@ function PreorderReviewContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb
           items={[
             { label: to("myAccount"), href: "/customer/account" },

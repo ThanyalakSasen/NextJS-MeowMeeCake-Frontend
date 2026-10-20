@@ -24,7 +24,7 @@ import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ReviewLink from "../../_components/ReviewLink";
 import { shopPointsKey, shopCouponsKey, shopPreorderKey, shopPreorderPaymentPageKey, shopPreordersKey } from "../../../lib/shopQueries";
-import { useOrderLabels } from "../../purchases/orderLabels";
+import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../../purchases/orderLabels";
 import { thaiDate } from "../../../preorder/lib/preorderDates";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
@@ -33,7 +33,8 @@ export default function PreorderDetailPage() {
   const t = useTranslations("shop.preorders");
   return (
     <CustomerAuthGate message={t("loginToViewOne")}>
-      <Suspense fallback={null}>
+      {/* fallback สูงเต็มจอ — เนื้อหาใต้ Suspense (useSearchParams) ส่งมาช้ากว่าส่วนแรกของ HTML · fallback ว่างทำให้ footer ขึ้นมาก่อนแล้วถูกดันลง (Lighthouse CLS ~0.9) */}
+    <Suspense fallback={<div className="min-h-screen" />}>
         <PreorderDetailContent />
       </Suspense>
     </CustomerAuthGate>
@@ -115,7 +116,7 @@ function PreorderDetailContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb
           items={[{ label: to("myAccount"), href: "/customer/account" }, { label: t("history"), href: "/customer/account/preorders" }, { label: p.preorder_no }]}
           className="!mb-0"
@@ -233,11 +234,11 @@ function PreorderDetailContent() {
 
         <div className="flex flex-wrap justify-center gap-2">
           <Link href="/customer/account/preorders" className={shopButton}>{t("viewAll")}</Link>
-          <Link href="/customer/preorder" className={shopButton}>{t("viewRounds")}</Link>
-          <ReviewLink kind="preorder" doc={p} itemIds={p.items.map((it) => it._id)} href={`/customer/account/preorders/${p._id}/review`} className={shopButtonPrimary} />
+          <ReviewLink kind="preorder" doc={p} itemIds={p.items.map((it) => it._id)} href={`/customer/account/preorders/${p._id}/review`}
+            className={REVIEW_PILL.replace("self-start", "self-center")} reviewedClassName={REVIEWED_PILL.replace("self-start", "self-center")} />
           {canCustomerCancelPreorder(p) && (
             <button type="button" onClick={() => void onCancel()} disabled={cancel.isPending}
-              className="h-[36px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
+              className="h-[44px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
               {cancel.isPending ? to("cancelling") : t("cancelPreorder")}
             </button>
           )}

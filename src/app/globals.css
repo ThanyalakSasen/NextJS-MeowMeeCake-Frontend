@@ -20,7 +20,7 @@
        รันตรวจ: npm run lint:theme  (scripts/check-theme.mjs)
    ════════════════════════════════════════════════════════════════════ */
 
-/* ฟอนต์หลัก = Noto Sans Thai (ไทยไม่มีหัว) โหลดใน src/app/layout.tsx ผ่าน next/font
+/* ฟอนต์หลัก = Noto Sans Thai Looped (ไทยมีหัว) โหลดใน src/app/layout.tsx ผ่าน next/font
    --font-noto-thai ถูก set บน <html> — ผูกเข้ากับ font-sans ของ Tailwind ที่นี่
    @theme inline: ให้ utility เก็บ var() ไว้ (ไม่ resolve ตอน build) */
 @theme inline {
@@ -61,6 +61,14 @@
   /* ── อนิเมชันหน้า login (ยกมาจาก FrontOffice) — animate-jelly / animate-lock-pop ── */
   --animate-jelly: jellyPress 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-lock-pop: lockPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── แผงเลื่อนเข้าจากขวา (แผงตัวกรองหน้าสินค้าทั้งหมด จอ <768px) — animate-slide-in-right ── */
+  --animate-slide-in-right: slideInRight 0.25s ease-out;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
 }
 
 /* ปุ่มยุบ-เด้งตอนกด */
@@ -82,7 +90,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .animate-jelly,
-  .animate-lock-pop {
+  .animate-lock-pop,
+  .animate-slide-in-right {
     animation: none !important;
   }
 }
@@ -195,7 +204,7 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  /* Noto Sans Thai ผ่าน --font-sans (ผูกใน @theme inline ด้านบน) */
+  /* Noto Sans Thai Looped ผ่าน --font-sans (ผูกใน @theme inline ด้านบน) */
   font-family: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
   line-height: 1.7;             /* เว้นบรรทัดกว้างขึ้น อ่านง่ายขึ้นสำหรับอักษรไทยที่มีวรรณยุกต์ */
   color: var(--text-strong);
@@ -961,10 +970,6 @@ body {
   @apply text-2xl font-semibold text-brown-800;
 }
 
-.page-description {
-  @apply mt-1 text-base text-gray-600;
-}
-
 /* ── Stat cards ── */
 .stat-card {
   @apply rounded-xl bg-white p-5;
@@ -1070,8 +1075,9 @@ body {
   @apply border-b border-gray-200;
 }
 
+/* หัวตารางไม่ตัดบรรทัด — ภาษาไทยไม่มีเว้นวรรค ตารางแคบจะตัดทีละตัวอักษร ("มูล/ค่า/สต็/อก") · กล่องตารางเลื่อนแนวนอนได้อยู่แล้ว */
 .data-table th {
-  @apply px-5 py-4 text-center text-sm font-semibold text-gray-600;
+  @apply px-5 py-4 text-center text-sm font-semibold text-gray-600 whitespace-nowrap;
 }
 
 .data-table td {
@@ -1183,4 +1189,10 @@ body {
 }
 .ant-segmented .ant-segmented-item + .ant-segmented-item {
   border-inline-start: 1px solid var(--border);
+}
+
+/* ช่องรหัสผ่าน: ซ่อนปุ่มแสดงรหัส/ล้างค่าที่ Edge (และ IE) ใส่ให้เอง — หน้าเว็บมีปุ่มตาของตัวเองแล้ว ไม่งั้นจะขึ้นไอคอนตาซ้ำ 2 อัน */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
 }

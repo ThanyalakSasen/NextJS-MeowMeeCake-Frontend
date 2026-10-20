@@ -18,6 +18,7 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useAddToCart } from "../../hooks/useAddToCart";
+import ShopImage from "@/components/customer/ShopImage";
 
 export default function FavoritesPage() {
   const t = useTranslations("shop.favorites");
@@ -37,7 +38,7 @@ function FavoritesContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: ta("favorites") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <div className="flex min-w-0 flex-1 flex-col gap-5">
@@ -58,7 +59,7 @@ function FavoritesContent() {
                   <Heart className="h-12 w-12 text-[#D6C7BD]" aria-hidden="true" />
                 </div>
                 <p className="m-0 font-medium text-stone-500">{t("empty")}</p>
-                <p className="m-0 text-xs text-stone-400">{t("emptyHint")}</p>
+                <p className="m-0 text-xs text-stone-500">{t("emptyHint")}</p>
                 <Link href="/customer/product" className={shopButton}>{t("shopNow")}</Link>
               </div>
             ) : (
@@ -93,8 +94,13 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
       <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden bg-stone-100">
         <Link href={href} className="block h-full w-full" tabIndex={-1} aria-hidden="true">
           {img && !imgFailed ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" onError={() => setImgFailed(true)} />
+            <ShopImage
+              src={img}
+              alt=""
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              onError={() => setImgFailed(true)}
+            />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-xs text-stone-500">{t("noImage")}</span>
           )}
@@ -108,7 +114,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           title={t("remove")}
           className="absolute right-3 top-3 flex h-[36px] w-[36px] items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-md transition hover:bg-white disabled:opacity-60"
         >
-          {removing ? <FaSpinner className="animate-spin text-xs text-stone-400" /> : <FaHeart className="text-base text-[#E05353]" />}
+          {removing ? <FaSpinner className="animate-spin text-xs text-stone-500" /> : <FaHeart className="text-base text-[#E05353]" />}
         </button>
 
         {!item.inStock && (
@@ -127,7 +133,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           <Link href={href} className="block">
             <h2 className="m-0 line-clamp-1 text-base font-bold leading-snug text-stone-800 hover:text-[#8C5A3C]">{localNames(item.name, item.nameeg).primary}</h2>
           </Link>
-          {localNames(item.name, item.nameeg).secondary && <span className="line-clamp-1 block text-xs text-stone-400">{localNames(item.name, item.nameeg).secondary}</span>}
+          {localNames(item.name, item.nameeg).secondary && <span className="line-clamp-1 block text-xs text-stone-500">{localNames(item.name, item.nameeg).secondary}</span>}
           {item.rating !== "-" && (
             <span className="flex items-center gap-1 pt-1 text-xs font-bold text-amber-500">
               <FaStar /> {Number(item.rating).toFixed(1)}
@@ -138,11 +144,11 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
         <div className="flex items-center justify-between gap-2 border-t border-stone-200/60 pt-2">
           <span className="flex items-baseline gap-1.5">
             <span className={`text-lg font-bold ${item.originalPrice ? "text-red-600" : "text-stone-900"}`}>{baht(item.price)}</span>
-            {item.originalPrice ? <span className="text-xs text-stone-400 line-through">{baht(item.originalPrice)}</span> : null}
+            {item.originalPrice ? <span className="text-xs text-stone-500 line-through">{baht(item.originalPrice)}</span> : null}
           </span>
 
           {item.is_preorder ? (
-            <Link href={href} className="inline-flex h-[36px] items-center rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition hover:bg-[#4A342E] hover:text-white">
+            <Link href={href} className="inline-flex h-[44px] items-center rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition hover:bg-[#4A342E] hover:text-white">
               {t("view")}
             </Link>
           ) : (
@@ -150,7 +156,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
               type="button"
               disabled={!item.inStock || status === "loading" || status === "success"}
               onClick={() => void quickAdd(item.id)}
-              className={`inline-flex h-[36px] items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition-all duration-200 ${
+              className={`inline-flex h-[44px] items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-all duration-200 ${
                 status === "success"
                   ? "border border-emerald-600 bg-emerald-600 text-white"
                   : "border border-[#8C5A3C]/30 bg-white text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white active:scale-[0.98]"

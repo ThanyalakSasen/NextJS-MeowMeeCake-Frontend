@@ -11,8 +11,8 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isUserLocked, type EmploymentType } from "@/types/user";
 import { isApiError } from "@/types/api";
-import { LIST_ALL } from "@/lib/http";
 import { usePermissionCeiling } from "./usePermissionCeiling";
+import { ROLES_KEY, STAFF_KEY, STAFF_PARAMS } from "./employeesQuery";
 
 export interface EmployeeRow {
   _id: string;
@@ -43,11 +43,11 @@ export function useEmployeesViewModel() {
   // หน้าพนักงาน = เจ้าของ + พนักงานเท่านั้น — กรองที่ backend (ไม่ดึงลูกค้ามา และไม่ให้ลูกค้าจำนวนมากดันพนักงานตกหน้า limit)
   // key แยก ["users","staff"] เพราะหน้าอื่นใช้ ["users"] เดิมกับชุดข้อมูล/limit ต่างกัน (แคชจะปนกัน) — invalidate ["users"] ยังครอบถึง
   const usersQ = useQuery({
-    queryKey: ["users", "staff"],
-    queryFn: () => usersService.list({ limit: LIST_ALL, role_type: "owner,staff" }),
+    queryKey: STAFF_KEY,
+    queryFn: () => usersService.list(STAFF_PARAMS),
   });
   const rolesQ = useQuery({
-    queryKey: ["roles"],
+    queryKey: ROLES_KEY,
     queryFn: () => rolesService.list(),
   });
 
@@ -143,7 +143,8 @@ export function useEmployeesViewModel() {
     rows: filtered,
     stats,
     staffRoles,
-    isLoading: usersQ.isLoading || rolesQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: usersQ.isPending || rolesQ.isPending,
     isError: usersQ.isError,
     refetch: () => usersQ.refetch(),
 

@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────
 // สั่งพรีออเดอร์จากหน้าสินค้า (D3) — ยกจาก FrontOffice ProductDetailClient (โหมดรอบพรีออเดอร์)
 // เปิดจากหน้ารอบ (?round=) → ราคา/โควตาของรอบ · เลือกตัวเลือก (ตัวเดียวกับสินค้าปกติ) · จำนวน (ขั้นต่ำ/สูงสุดของรอบ+สินค้า)
-// · หมายเหตุ (special_request — พรีออเดอร์มีช่องนี้ ตะกร้าปกติไม่มี) → เพิ่มลงรายการพรีออเดอร์ (localStorage) หรือไปยืนยันเลย
+// · หมายเหตุ (special_request — พรีออเดอร์มีช่องนี้ ตะกร้าปกติไม่มี) → ใส่รายการพรีออเดอร์ (localStorage) แล้วไปหน้ายืนยัน
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
@@ -22,7 +22,7 @@ import { pickProblemText } from "../../../lib/pickProblemText";
 import CustomizationPicker from "./CustomizationPicker";
 
 const btn =
-  "h-[36px] rounded-xl px-3 text-sm font-bold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 sm:text-base";
+  "h-[44px] rounded-xl px-3 text-sm font-bold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 ";
 
 export default function PreorderOrderBox({
   productId,
@@ -83,7 +83,8 @@ export default function PreorderOrderBox({
   const unit = roundItem.current_price + (selection?.extra ?? 0);
   const disabled = !isOpen || soldOut;
 
-  const add = (goCheckout: boolean) => {
+  // ใส่รายการพรีออเดอร์ (localStorage) แล้วไปหน้ายืนยันทันที — ไม่มีปุ่ม "เพิ่มลงรายการ" แยกแล้ว
+  const add = () => {
     if (status !== "authenticated") {
       alert.warning(t("loginFirst"));
       router.push(`${LOGIN_PATH}?next=${encodeURIComponent(`/customer/product/${productId}?round=${round._id}`)}`);
@@ -115,8 +116,7 @@ export default function PreorderOrderBox({
     const meta = { round_id: round._id, round_name: round.round_name, pickup_date: round.pickup_date };
     const done = () => {
       setShowProblems(false);
-      if (goCheckout) router.push("/customer/preorder/checkout");
-      else alert.success(t("added"));
+      router.push("/customer/preorder/checkout");
     };
     const res = addToPreorderBasket(meta, item);
     if (res.ok) return done();
@@ -177,12 +177,8 @@ export default function PreorderOrderBox({
           <button type="button" onClick={() => setQty(quantity + 1)} disabled={disabled || quantity >= max} aria-label={tcart("increase")}
             className="flex h-[34px] w-10 items-center justify-center text-lg font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">+</button>
         </div>
-        <button type="button" disabled={disabled} onClick={() => add(false)}
-          className={`${btn} flex-1 border border-[#8C5A3C]/30 bg-white text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white`}>
-          {t("addToList")}
-        </button>
-        <button type="button" disabled={disabled} onClick={() => add(true)}
-          className={`${btn} w-full bg-[#4A342E] text-white shadow-md hover:bg-[#8C5A3C] sm:w-auto sm:flex-1`}>
+        <button type="button" disabled={disabled} onClick={add}
+          className={`${btn} min-w-[12rem] flex-1 bg-[#4A342E] text-white shadow-md hover:bg-[#8C5A3C]`}>
           {soldOut ? t("full") : !isOpen ? t("roundNotOpen") : t("orderNow", { amount: baht(unit * quantity) })}
         </button>
       </div>

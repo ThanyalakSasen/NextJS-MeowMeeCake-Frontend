@@ -4,6 +4,8 @@ import { LIST_ALL } from "@/lib/http";
 export const CATALOG_PRODUCT_PARAMS = { is_preorder: false, limit: LIST_ALL } as const;
 export const catalogProductsKey = ["catalog", "products", CATALOG_PRODUCT_PARAMS] as const;
 export const catalogCategoriesKey = ["catalog", "categories"] as const;
+/** แบนเนอร์หน้าแรก — HeroCarousel + prefetch ฝั่ง server (หน้าแรก) */
+export const catalogBannersKey = ["catalog", "banners"] as const;
 /** หน้ารายละเอียดสินค้า (C1) — ตัวเลือก cache ร่วมกับ useAddToCart.quickAdd (บัตรสินค้าเช็คก่อนใส่ตะกร้า) */
 export const catalogProductKey = (id: string) => ["catalog", "product", id] as const;
 export const productCustomizationKey = (id: string) => ["catalog", "product", id, "customization"] as const;
@@ -12,6 +14,8 @@ export const storeInfoKey = ["catalog", "store-info"] as const;
 export const contactTopicsKey = ["catalog", "contact-topics"] as const;
 /** หน้าค่าจัดส่ง (D9) + โลโก้ร้าน (Navbar/Footer) */
 export const shippingZonesKey = ["catalog", "shipping-zones"] as const;
+/** หน้าค่าจัดส่ง — สินค้าที่ร้านตั้งขอบเขตจัดส่งต่างจากหมวด (ยกเว้นรายสินค้า) */
+export const shippingExceptionsKey = ["catalog", "shipping-exceptions"] as const;
 export const storeLogoKey = ["catalog", "store-logo"] as const;
 /** สินค้าแนะนำหน้าแรก (C2) — ต่อท้ายด้วยสถานะ login (ผลต่างกัน) */
 export const homeRecommendationsKey = ["catalog", "recommended"] as const;

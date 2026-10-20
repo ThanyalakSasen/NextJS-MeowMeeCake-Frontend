@@ -1,6 +1,7 @@
 "use client";
 // View ของ "ข้อมูลร้าน" (BACKLOG4 E2) — เจ้าของร้าน: 4 หัวข้อ · พนักงาน: เฉพาะหน้าร้านประจำสัปดาห์ (ตามสิทธิ์ store_info)
 // ปุ่มแก้ไข/ยกเลิก/บันทึกอยู่ที่หัวการ์ดของแต่ละหัวข้อ — แก้ได้ครั้งละหัวข้อ
+import ShopImage from "@/components/customer/ShopImage";
 import { useTranslations } from "next-intl";
 import { Button, Input, Select } from "@/components/base";
 import { FormField } from "@/components/shared/form";
@@ -83,7 +84,7 @@ export function StoreInfoView(vm: VM) {
   );
 
   return (
-    <ListPageLayout title={t("storeInfo.title")} description={vm.isOwner ? t("storeInfo.description") : t("storeInfo.staffDescription")}>
+    <ListPageLayout title={t("storeInfo.title")}>
       {/* โหมดดู: ค่าที่บันทึกแล้วเป็นตัวเข้ม (antd disabled จางเกินจนแยกจาก placeholder ไม่ออก) */}
       <div className="[&_.ant-input-disabled]:!text-gray-800 [&_.ant-select-disabled_.ant-select-content]:!text-gray-800 [&_.ant-select-disabled_.ant-select-selection-item]:!text-gray-800">
       {vm.isError ? (
@@ -112,8 +113,8 @@ export function StoreInfoView(vm: VM) {
                       vm.editing === "general" ? "cursor-pointer border-gray-300 hover:border-gray-400" : "border-gray-200"
                     }`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element -- โลโก้จาก backend (คนละ origin) / object URL ก่อนบันทึก */}
-                    <img src={vm.logoSrc} alt={t("storeInfo.general.logo")} className="h-full w-full object-contain p-2" />
+                    {/* ShopImage — โลโก้จาก R2 ย่อ + WebP (ไฟล์ต้นฉบับอาจใหญ่) · object URL ก่อนบันทึก / โลโก้เริ่มต้นใน /public = ไม่ผ่านตัวย่อ */}
+                    <ShopImage src={vm.logoSrc} alt={t("storeInfo.general.logo")} width={256} height={256} sizes="128px" className="h-full w-full object-contain p-2" />
                     {vm.editing === "general" && (
                       <input
                         type="file"

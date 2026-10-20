@@ -25,6 +25,7 @@ import { baht, shopButton, shopButtonPrimary, shopCard } from "@/components/cust
 import { useReviewedItems } from "../../hooks/useReviewedItems";
 import { catalogProductKey } from "../../lib/catalogQueries";
 import { reviewAspectsKey, shopPointsKey, shopReviewsKey } from "../../lib/shopQueries";
+import ShopImage from "@/components/customer/ShopImage";
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_MB = 5;
@@ -260,8 +261,7 @@ export default function WriteReviewForm({
               <>
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#FAF6F0] text-[#8C5A3C]">
                   {img ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- รูปจาก backend คนละ origin
-                    <img src={img} alt={it.product_name} className="h-full w-full object-cover" />
+                    <ShopImage src={img} alt={it.product_name} width={96} height={96} sizes="48px" className="h-full w-full object-cover" />
                   ) : (
                     <CakeSlice className="h-5 w-5" aria-hidden="true" />
                   )}
@@ -314,14 +314,14 @@ export default function WriteReviewForm({
         {shown > 0 ? (
           <span className="text-sm font-medium text-[#4A342E]">{tw(`rating.${shown as 1 | 2 | 3 | 4 | 5}`)}</span>
         ) : (
-          <span className="text-xs text-stone-400">{tw("tapToRate")}</span>
+          <span className="text-xs text-stone-500">{tw("tapToRate")}</span>
         )}
       </div>
 
       {rating > 0 && aspects.length > 0 && (
         <div className="space-y-3 border-t border-stone-100 pt-5 text-center">
           <h3 className="text-sm font-bold text-stone-800">{sentiment === "positive" ? tw("liked") : tw("improve")}</h3>
-          <p className="text-xs text-stone-400">{tw("multiOptional")}</p>
+          <p className="text-xs text-stone-500">{tw("multiOptional")}</p>
           <div className="flex flex-wrap justify-center gap-2">
             {aspects.map((a) => {
               const selected = aspectIds.includes(a._id);
@@ -332,7 +332,7 @@ export default function WriteReviewForm({
                   title={a.placeholder_text ?? undefined}
                   aria-pressed={selected}
                   onClick={() => toggleAspect(a._id)}
-                  className={`inline-flex h-[36px] items-center gap-1.5 rounded-full border px-4 text-xs font-medium transition ${
+                  className={`inline-flex h-[44px] items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition ${
                     selected ? "border-[#4A342E] bg-[#4A342E] text-white" : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
                   }`}
                 >
@@ -355,7 +355,7 @@ export default function WriteReviewForm({
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
-        <p className="m-0 text-right text-xs text-stone-400">{comment.length}/{MAX_TEXT}</p>
+        <p className="m-0 text-right text-xs text-stone-500">{comment.length}/{MAX_TEXT}</p>
 
         <MediaButton icon={<Upload size={16} />} disabled={images.length >= MAX_IMAGES}
           label={tw("attachImages", { n: images.length, max: MAX_IMAGES })}>
@@ -381,7 +381,7 @@ export default function WriteReviewForm({
             <video src={video.previewUrl} className="h-full w-full object-cover" muted />
           </Preview>
         )}
-        <p className="m-0 text-xs text-stone-400">{tw("pointsHint")}</p>
+        <p className="m-0 text-xs text-stone-500">{tw("pointsHint")}</p>
       </div>
 
       <div className="flex flex-wrap justify-end gap-2 pt-2">
@@ -417,7 +417,7 @@ export function ReviewLoading() {
 function MediaButton({ icon, label, disabled, children }: { icon: React.ReactNode; label: string; disabled: boolean; children: React.ReactNode }) {
   return (
     <label
-      className={`mr-2 inline-flex h-[36px] items-center gap-2 rounded-lg border px-4 text-xs font-medium transition ${
+      className={`mr-2 inline-flex h-[44px] items-center gap-2 rounded-lg border px-4 text-sm font-medium transition ${
         disabled ? "cursor-not-allowed border-stone-200 text-stone-300" : "cursor-pointer border-stone-300 text-stone-600 hover:bg-stone-50"
       }`}
     >

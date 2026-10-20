@@ -17,13 +17,15 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { shopPreorderKey, shopPreordersKey } from "../../lib/shopQueries";
-import { ORDER_STATUSES, ORDER_STATUS_TONE, useOrderLabels } from "../purchases/orderLabels";
+import { ORDER_STATUSES, ORDER_STATUS_TONE, REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../purchases/orderLabels";
 import { thaiDate } from "../../preorder/lib/preorderDates";
 import ReviewLink from "../_components/ReviewLink";
 
 const PAGE_SIZE = 10;
+/** ปุ่มรีวิวแบบเดียวกับประวัติคำสั่งซื้อ — อยู่แถวเดียวกับปุ่มอื่น จึงจัดกึ่งกลางแนวตั้งแทน self-start */
+const REVIEW_PILL_INLINE = REVIEW_PILL.replace("self-start", "self-center");
 const actionLink =
-  "whitespace-nowrap rounded-xl border border-[#8C5A3C]/30 bg-white px-4 py-2 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white";
+  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[#8C5A3C]/30 bg-white px-4 py-2 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white";
 
 export default function PreordersPage() {
   const t = useTranslations("shop.preorders");
@@ -55,7 +57,7 @@ function PreordersContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: t("history") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <AccountSideMenu />
@@ -147,10 +149,10 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
               <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="m-0 truncate text-sm font-semibold text-stone-800">{localName(it.product_name, it.product_name_eng) || to("product")}</p>
-                  {it.variant_name && <p className="m-0 text-xs text-stone-400">{to("option", { name: it.variant_name })}</p>}
+                  {it.variant_name && <p className="m-0 text-xs text-stone-500">{to("option", { name: it.variant_name })}</p>}
                 </div>
                 <div className="flex shrink-0 items-center gap-2 text-right">
-                  <span className="text-xs text-stone-400">×{it.quantity}</span>
+                  <span className="text-xs text-stone-500">×{it.quantity}</span>
                   <span className="text-sm font-semibold text-stone-800">{baht(it.total_price)}</span>
                 </div>
               </div>
@@ -159,7 +161,7 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
         )}
         {extra > 0 && (
           <button type="button" onClick={() => setExpanded((v) => !v)}
-            className="h-[36px] w-full rounded-lg border border-dashed border-stone-200 text-xs text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]">
+            className="h-[44px] w-full rounded-lg border border-dashed border-stone-200 text-sm text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]">
             {expanded ? to("hideItems") : to("moreItems", { n: extra })}
           </button>
         )}
@@ -181,8 +183,7 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
           {p.order_status === "cancelled" && p.payment_status === "paid" && <span className="block text-xs font-medium text-amber-600">{to("awaitRefund")}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {unpaid && <Link href={href} className={actionLink}>{p.has_payment ? to("payReupload") : to("payUpload")}</Link>}
-          <ReviewLink kind="preorder" doc={p} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={actionLink} />
+          <ReviewLink kind="preorder" doc={p} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={REVIEW_PILL_INLINE} reviewedClassName={REVIEWED_PILL} />
           <Link href={href} className={actionLink}>{to("viewDetail")}</Link>
         </div>
       </div>

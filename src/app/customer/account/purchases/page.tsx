@@ -23,7 +23,7 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { shopOrderKey, shopOrdersKey } from "../../lib/shopQueries";
-import { ORDER_STATUSES, ORDER_STATUS_TONE, useOrderLabels } from "./orderLabels";
+import { ORDER_STATUSES, ORDER_STATUS_TONE, REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "./orderLabels";
 import ReviewLink from "../_components/ReviewLink";
 import OrderItemThumb from "../_components/OrderItemThumb";
 import BuyAgainButton from "../_components/BuyAgainButton";
@@ -63,7 +63,7 @@ function PurchasesContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("myAccount"), href: "/customer/account" }, { label: t("history") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <AccountSideMenu />
@@ -142,9 +142,20 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
           <span className="block text-sm font-semibold text-stone-800">{t("orderNo", { no: order.order_no })}</span>
           <span className="block text-xs text-stone-500">{t("orderedAt", { date: formatDate(order.created_at, locale, { withTime: true }) })}</span>
         </div>
-        <span className={`self-start rounded-full px-3 py-1 text-xs font-semibold ${ORDER_STATUS_TONE[order.order_status]}`}>
-          {labels.orderStatus(order.order_status)}
-        </span>
+        {/* สถานะรีวิวแทนสถานะคำสั่งซื้อ — ออเดอร์ที่ยังรีวิวไม่ได้ (ยังไม่สำเร็จ/ยังไม่ชำระ) แสดงสถานะคำสั่งซื้อเหมือนเดิม */}
+        <ReviewLink
+          kind="order"
+          doc={order}
+          itemIds={detail?.items.map((it) => it._id)}
+          href={`${href}/review`}
+          className={REVIEW_PILL}
+          reviewedClassName={REVIEWED_PILL}
+          fallback={
+            <span className={`self-start rounded-full px-3 py-1 text-xs font-semibold ${ORDER_STATUS_TONE[order.order_status]}`}>
+              {labels.orderStatus(order.order_status)}
+            </span>
+          }
+        />
       </div>
 
       <div className="flex flex-col gap-3">
@@ -157,11 +168,11 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
               <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="m-0 truncate text-sm font-semibold text-stone-800">{localNames(it.product_name, it.product_name_eng).primary || t("product")}</p>
-                  {localNames(it.product_name, it.product_name_eng).secondary && <p className="m-0 truncate text-xs text-stone-400">{localNames(it.product_name, it.product_name_eng).secondary}</p>}
-                  {it.variant_name && <p className="m-0 text-xs text-stone-400">{t("option", { name: it.variant_name })}</p>}
+                  {localNames(it.product_name, it.product_name_eng).secondary && <p className="m-0 truncate text-xs text-stone-500">{localNames(it.product_name, it.product_name_eng).secondary}</p>}
+                  {it.variant_name && <p className="m-0 text-xs text-stone-500">{t("option", { name: it.variant_name })}</p>}
                 </div>
                 <div className="flex shrink-0 items-center gap-2 text-right">
-                  <span className="text-xs text-stone-400">×{it.quantity}</span>
+                  <span className="text-xs text-stone-500">×{it.quantity}</span>
                   <span className="text-sm font-semibold text-stone-800">{baht(it.total_price)}</span>
                 </div>
               </div>
@@ -171,7 +182,7 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
         {extra > 0 && (
           <button
             type="button"
-            className="h-[36px] w-full rounded-lg border border-dashed border-stone-200 text-xs text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]"
+            className="h-[44px] w-full rounded-lg border border-dashed border-stone-200 text-sm text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]"
             onClick={() => setExpanded((v) => !v)}
           >
             {expanded ? t("hideItems") : t("moreItems", { n: extra })}
@@ -203,8 +214,6 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {unpaid && <Link href={href} className={actionLink}>{order.has_payment ? t("payReupload") : t("payUpload")}</Link>}
-          <ReviewLink kind="order" doc={order} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={actionLink} />
           {detail && (order.order_status === "completed" || order.order_status === "cancelled") && (
             <BuyAgainButton items={detail.items} className={actionLink} />
           )}
