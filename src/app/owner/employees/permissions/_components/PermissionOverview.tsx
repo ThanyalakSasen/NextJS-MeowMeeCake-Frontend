@@ -83,7 +83,7 @@ export function PermissionOverview({
                     return (
                       <td key={role._id} className={`px-3 py-2 ${colClass(role._id)}`}>
                         {granted.length === 0 ? (
-                          <span className="text-gray-400" aria-label={t("permissions.overviewNone")}>—</span>
+                          <span className="text-gray-500" aria-label={t("permissions.overviewNone")}>—</span>
                         ) : (
                           <span className="flex flex-wrap gap-1">
                             {granted.map((f) => (
