@@ -74,6 +74,7 @@ export function ProductionView(vm: VM) {
             <ProductionOrderDetail
               order={vm.selectedOrder}
               canUpdate={vm.perm.update}
+              canComplete={vm.perm.approve}
               onAdvance={vm.onAdvanceStatus}
               onCancel={vm.onCancelOrder}
             />

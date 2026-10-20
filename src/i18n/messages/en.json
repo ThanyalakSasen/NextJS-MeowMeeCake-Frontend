@@ -1242,7 +1242,8 @@
     "colActual": "Actual",
     "completeNoPending": "All items have already been deducted",
     "actualZeroHint": "Enter 0 if none were produced — the item is cancelled and no ingredients are deducted",
-    "completeSubmit": "Complete"
+    "completeSubmit": "Complete",
+    "completeNeedsApprove": "Completing production requires the \"approve\" permission for Production — contact the owner"
   },
   "pricing": {
     "title": "Product Pricing",
@@ -1491,6 +1492,7 @@
     "deleteRoleFailed": "Could not delete role",
     "createRoleSuccess": "Created role \"{role}\"",
     "createRoleFailed": "Could not create role",
+    "copyPermsFailed": "Role \"{role}\" was created, but some permissions could not be copied. Please review and save them in the table.",
     "renameRole": "Rename",
     "renameRoleTitle": "Rename role",
     "renameRoleHint": "Members and permissions of this role stay the same — the role type cannot be changed",
@@ -1510,7 +1512,21 @@
     "unrestrictedNote": "Owner / admin roles can access every menu without explicit permissions",
     "ownerRoleLocked": "Only the store owner can edit it",
     "grantCeilingNote": "Boxes you can’t switch on are permissions you don’t have yourself, so you can’t grant them — you can switch off (revoke) any box",
-    "paymentsHint": "Approve = confirm/reject slips (incl. POS payments) · Delete = delete payment records and confirm refunds — grant \"Delete\" only to trusted staff"
+    "paymentsHint": "Approve = confirm/reject slips (incl. POS payments) · Delete = delete payment records and confirm refunds — grant \"Delete\" only to trusted staff",
+    "tabOverview": "All roles overview",
+    "tabEdit": "Edit by role",
+    "overviewHint": "Saved permissions of every role · select a role name to edit it",
+    "overviewMenu": "Menu",
+    "overviewAll": "All menus, all permissions",
+    "overviewNone": "No access",
+    "viewMenus": "Can view {n}/{total} menus",
+    "short": {
+      "can_view": "View",
+      "can_create": "Add",
+      "can_update": "Edit",
+      "can_delete": "Delete",
+      "can_approve": "Approve"
+    }
   },
   "userLog": {
     "title": "Employee Activity Log",

@@ -117,17 +117,20 @@ export function usePermissionsViewModel() {
 
   // แถวที่มีอยู่แล้ว: PATCH เฉพาะช่องที่เปลี่ยน — backend ตรวจทุก flag ที่ส่งมาเป็น true กับสิทธิ์ของผู้ทำ
   // ถ้าส่งครบ 5 ช่อง คนที่ไม่ใช่ owner จะแก้แถวที่มีช่องเกินตัวเองไม่ได้เลย แม้แค่จะถอนสิทธิ์ (P4)
+  // id ของแถวอ่านจากข้อมูล server ล่าสุดก่อน (ไม่ใช่จาก overrides) — บันทึกล้มกลางทางแล้วกดบันทึกซ้ำ
+  // แถวที่สร้างไปแล้วรอบก่อนจะถูก PATCH แทนการสร้างซ้ำ (เดิมได้ 409 "มีสิทธิ์ของบทบาท+เมนูนี้แล้ว" ค้างตลอด)
   async function persistRows(roleId: string, rows: RolePerms): Promise<void> {
     for (const key of PERM_MENU_KEYS) {
       const row = rows[key];
+      const server = serverByRole[roleId]?.[key];
+      const id = server?.id ?? row.id;
       const payload = {
         can_view: row.can_view, can_create: row.can_create, can_update: row.can_update,
         can_delete: row.can_delete, can_approve: row.can_approve,
       };
-      if (row.id) {
-        const server = serverByRole[roleId]?.[key];
-        const changed = Object.fromEntries(PERM_FIELDS.filter((f) => !server || server[f] !== row[f]).map((f) => [f, row[f]]));
-        if (Object.keys(changed).length) await updatePerm.mutateAsync({ id: row.id, b: changed });
+      if (id) {
+        const changed = Object.fromEntries(PERM_FIELDS.filter((f) => !server?.id || server[f] !== row[f]).map((f) => [f, row[f]]));
+        if (Object.keys(changed).length) await updatePerm.mutateAsync({ id, b: changed });
       } else if (rowHasAny(row)) {
         await createPerm.mutateAsync({
           role_id: roleId,
@@ -139,6 +142,15 @@ export function usePermissionsViewModel() {
     }
   }
 
+  /**
+   * หลังเขียนสิทธิ์ (สำเร็จหรือล้มกลางทาง) — โหลดแถวสิทธิ์ใหม่ให้ตรงกับที่บันทึกไปจริง
+   * แก้บทบาทของตัวเอง → โหลดผู้ใช้ปัจจุบันใหม่ด้วย ให้เมนู/ปุ่มเปลี่ยนตามสิทธิ์ใหม่ทันที (เดิมรอ refetch ทุก 60 วิ)
+   */
+  const refreshAfterWrite = (roleId: string) => {
+    qc.invalidateQueries({ queryKey: ["permissions"] });
+    if (roleId === user?.roleId) qc.invalidateQueries({ queryKey: CURRENT_USER_KEY });
+  };
+
   const onSave = async () => {
     if (!activeRoleId || !selectedRows || !selectedRole) return;
     setSaving(true);
@@ -149,11 +161,11 @@ export function usePermissionsViewModel() {
         delete next[activeRoleId];
         return next;
       });
-      qc.invalidateQueries({ queryKey: ["permissions"] });
       alert.success(t("permissions.saveSuccess", { role: selectedRole.role_name }));
     } catch (e) {
       alert.error(isApiError(e) ? e.message : t("permissions.saveFailed"));
     } finally {
+      refreshAfterWrite(activeRoleId);
       setSaving(false);
     }
   };
@@ -177,38 +189,51 @@ export function usePermissionsViewModel() {
         delete next[activeRoleId];
         return next;
       });
-      qc.invalidateQueries({ queryKey: ["permissions"] });
       alert.info(t("permissions.resetSuccess"));
     } catch (e) {
       alert.error(isApiError(e) ? e.message : t("permissions.resetFailed"));
     } finally {
+      refreshAfterWrite(activeRoleId);
       setSaving(false);
     }
   };
 
   // ── roles CRUD ──
   const onAddRole = async (values: AddRoleValues) => {
+    let created: Awaited<ReturnType<typeof rolesService.create>>;
     try {
-      const created = await rolesService.create({
+      created = await rolesService.create({
         role_name: values.role_name.trim(),
         role_type: values.role_type,
       } satisfies RoleInput);
-      const newId = created.data._id;
-      if (values.copyFrom) {
-        const src = permsOf(values.copyFrom);
-        const copy = {} as RolePerms;
-        for (const k of PERM_MENU_KEYS) copy[k] = { id: null, ...stripId(src[k]) };
-        await persistRows(newId, copy);
-      }
-      await qc.invalidateQueries({ queryKey: ["roles"] });
-      qc.invalidateQueries({ queryKey: ["permissions"] });
-      setSelectedRoleId(newId);
-      alert.success(t("permissions.createRoleSuccess", { role: created.data.role_name }));
-      return true;
     } catch (e) {
       alert.error(isApiError(e) ? e.message : t("permissions.createRoleFailed"));
       return false;
     }
+    const newId = created.data._id;
+    // สร้างตำแหน่งแล้ว — คัดลอกสิทธิ์ล้มก็ยังต้องโชว์ตำแหน่งใหม่ (เดิมขึ้น "สร้างไม่สำเร็จ" ทั้งที่สร้างไปแล้ว
+    // กดสร้างซ้ำได้ 409 ชื่อซ้ำ) · บอกให้ตรวจ/บันทึกสิทธิ์ที่ขาดต่อในตาราง
+    let copyError: unknown = null;
+    if (values.copyFrom) {
+      const src = permsOf(values.copyFrom);
+      const copy = {} as RolePerms;
+      for (const k of PERM_MENU_KEYS) copy[k] = { id: null, ...stripId(src[k]) };
+      try {
+        await persistRows(newId, copy);
+      } catch (e) {
+        copyError = e;
+      }
+    }
+    await qc.invalidateQueries({ queryKey: ["roles"] });
+    qc.invalidateQueries({ queryKey: ["permissions"] });
+    setSelectedRoleId(newId);
+    if (copyError) {
+      const reason = isApiError(copyError) ? ` — ${copyError.message}` : "";
+      alert.warning(t("permissions.copyPermsFailed", { role: created.data.role_name }) + reason);
+    } else {
+      alert.success(t("permissions.createRoleSuccess", { role: created.data.role_name }));
+    }
+    return true;
   };
 
   // แก้ชื่อตำแหน่ง — ชื่อแสดงในหน้าพนักงาน + เมนูผู้ใช้ด้วย จึงโหลด users / ผู้ใช้ปัจจุบันใหม่
@@ -255,6 +280,9 @@ export function usePermissionsViewModel() {
 
     roles,
     memberCounts,
+    /** สิทธิ์ที่บันทึกแล้วของทุกตำแหน่ง — ตารางภาพรวม */
+    permsByRole: serverByRole,
+    viewMenuCount: (roleId: string) => PERM_MENU_KEYS.filter((k) => serverByRole[roleId]?.[k].can_view).length,
     activeRoleId,
     selectedRole,
     selectedRows,

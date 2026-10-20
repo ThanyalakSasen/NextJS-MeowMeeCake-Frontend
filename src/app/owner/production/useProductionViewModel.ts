@@ -340,6 +340,12 @@ export function useProductionViewModel() {
 
   const onChangeStatus = (order: ProductionOrder, next: ProductionStatus) => {
     if (next === order.production_status) return;
+    // ปิดงานผลิต (หักวัตถุดิบ + เพิ่มสต็อก) = production.approve ที่ backend — ไม่มีสิทธิ์ = บอกก่อน ไม่เปิดหน้าต่างให้กรอกแล้วได้ 403
+    // (ลากการ์ดไปคอลัมน์ "เสร็จ" ก็ผ่านตรงนี้)
+    if (next === "done" && !perm.approve) {
+      alert.warning(t("production.completeNeedsApprove"));
+      return;
+    }
     if (next === "done") {
       setCompleteTarget(order);
       return;
