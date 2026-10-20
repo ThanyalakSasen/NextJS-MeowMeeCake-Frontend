@@ -3,9 +3,9 @@
 // ViewModel ของ POS หน้าร้าน — สแกน/ค้นหา → บิล → โปรโมชัน → ชำระ (เงินสด: รับเงิน+ทอน / QR mock) → POST /admin/orders
 // สร้างออเดอร์ order_type "takeaway" แล้วจ่าย+ปิดงานทันที (ลูกค้าจ่าย+รับของที่เคาน์เตอร์):
 //   1) POST /admin/orders (backend ตัดสต็อก + คิดส่วนลดโปรโมชันเอง — ห้ามตัดซ้ำ/คิดเองฝั่ง client)
-//   2) POST /admin/payments (สร้างรายการชำระเงินผูกกับออเดอร์)
-//   3) POST /admin/payments/[id]/verify {approved:true} (ยืนยันจ่ายทันที)
-//   4) PATCH /admin/orders/[id]/status {order_status:"completed"}
+//   2) POST /admin/pos/orders/[id]/checkout — สร้างรายการชำระ + ยืนยันจ่าย (ผู้ขาย = ผู้ยืนยัน) + ปิดงาน completed
+//      ใช้สิทธิ์ orders.create (ขายที่ POS ได้) — นโยบายร้าน: คนที่ขายหน้าร้านได้ รับเงินแล้วอนุมัติการชำระอัตโนมัติ
+//      ไม่ต้องมี payments.approve (ซึ่งยืนยันสลิปออเดอร์เว็บได้ด้วย)
 // backend บังคับทุกออเดอร์ต้องมี user_id จริง — ไม่มีแนวคิด "ลูกค้าไม่ระบุตัวตน" จึงผูกกับบัญชี
 // "ลูกค้าทั่วไป" ตายตัว (backend scripts/seed.ts สร้างไว้ · หา id ผ่าน GET /admin/pos/guest-customer ใต้ orders.view)
 //
@@ -18,7 +18,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { promotionsService } from "@/services/promotions";
 import { ordersService } from "@/services/orders";
-import { paymentsService } from "@/services/payments";
 import { posService } from "@/services/pos";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert, confirmAlert } from "@/lib/alert";
@@ -259,21 +258,8 @@ export function usePOSViewModel() {
       );
       const order = orderRes.data;
 
-      // 2) สร้างรายการชำระเงิน + 3) ยืนยันจ่ายทันที (เงินสด/QR ที่เคาน์เตอร์ = จ่ายจริงแล้ว)
-      //    ยอดใช้ order.total_amount ของ backend เสมอ (ไม่ใช่ total ที่พรีวิวฝั่ง client)
-      //    verify(paid) ตอน order ยัง pending จะขยับ order_status → "confirmed" ให้อัตโนมัติ
-      const paymentRes = await paymentsService.create({
-        user_id: guestUserId,
-        order_id: order._id,
-        amount: order.total_amount,
-      });
-      await paymentsService.verify(paymentRes.data._id, true);
-
-      // 4) ปิดงานทันที — backend เป็น state machine เดินทีละสถานะเท่านั้น (ห้ามข้าม):
-      //    pending→confirmed (ทำให้แล้วตอน verify)→preparing→ready→completed
-      await ordersService.updateStatus(order._id, "preparing");
-      await ordersService.updateStatus(order._id, "ready");
-      await ordersService.updateStatus(order._id, "completed");
+      // 2) รับเงิน + ปิดงานในคำขอเดียว (เงินสด/QR ที่เคาน์เตอร์ = จ่ายจริงแล้ว) — ยอดใช้ order.total_amount ของ backend
+      await posService.checkout(order._id);
 
       const paid = method === "cash" ? cash : order.total_amount;
       return {
