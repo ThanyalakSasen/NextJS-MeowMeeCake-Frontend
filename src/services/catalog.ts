@@ -9,6 +9,9 @@ import type { Product } from "@/types/product";
 import type { ProductCategory } from "@/types/productCategory";
 import type { Banner } from "@/types/banner";
 import type { ProductCustomization } from "@/types/productCustomization";
+
+/** cache tag ของ GET /catalog/banners ฝั่ง server */
+export const CATALOG_BANNERS_TAG = "catalog-banners";
 import { toProduct } from "@/services/products";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -106,7 +109,11 @@ export const catalogService = {
   categories: async (): Promise<ProductCategory[]> => (await http.getList<ProductCategory>("/catalog/categories")).data,
 
   /** GET /catalog/banners — แบนเนอร์ที่เปิดใช้งาน เรียงตาม sort_order (ช่วงวันที่หน้าร้านกรองเอง) */
-  banners: async (): Promise<Banner[]> => (await http.getList<Banner>("/catalog/banners")).data,
+  // ติด tag ไว้ให้หลังร้านสั่งล้างแคชฝั่ง server ได้ทันทีที่บันทึก (src/app/customer/lib/refreshCatalog.ts)
+  // fetchOptions ของ request แทนที่ของ instance ทั้งก้อน → ต้องใส่ revalidate 60 ซ้ำ
+  banners: async (): Promise<Banner[]> =>
+    (await http.getList<Banner>("/catalog/banners", { fetchOptions: { next: { revalidate: 60, tags: [CATALOG_BANNERS_TAG] } } }))
+      .data,
 
   /** GET /catalog/products/{id}/reviews — รีวิวที่แสดงได้ (?rating= กรองดาว) · backend ห่อ { items, meta } */
   reviews: async (id: string, params: { rating?: number; limit?: number } = {}): Promise<CatalogReview[]> =>
