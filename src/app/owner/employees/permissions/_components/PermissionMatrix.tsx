@@ -42,11 +42,18 @@ export function PermissionMatrix({
           <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
             {sectionLabel(group.sectionKey)}
           </p>
+          {group.menus.map((menu) => (
+          <div key={menu.keys[0]}>
+          {/* เมนูที่มีหน้าย่อย — หัวข้อชื่อเมนู แล้วหน้าย่อยเยื้องเข้าไป (ตั้งสิทธิ์แยกทีละหน้า) */}
+          {menu.groupKey && (
+            <p className="m-0 px-4 pb-0.5 pt-2 text-sm font-semibold text-brown-800">{t(`nav.${menu.groupKey}`)}</p>
+          )}
           <Collapse
             ghost
-            defaultActiveKey={group.keys}
+            defaultActiveKey={menu.keys}
             expandIconPlacement="end"
-            items={group.keys.map((menuKey) => {
+            className={menu.groupKey ? "ml-4 border-l border-gray-100" : undefined}
+            items={menu.keys.map((menuKey) => {
               const row = rows[menuKey];
               const on = countRow(row);
               const turnOn = sectionTurnsOn(menuKey);
@@ -94,6 +101,8 @@ export function PermissionMatrix({
               };
             })}
           />
+          </div>
+          ))}
         </div>
       ))}
     </div>

@@ -40,7 +40,7 @@ export function useIngredientStockViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
   // ingredients ไม่ใช่ stock — API ของหน้านี้ตรวจ ingredients.* (Final-Backlog P2)
-  const perm = usePermission("ingredients");
+  const perm = usePermission("ingredient_stock");
   const { user } = useCurrentUser();
 
   const [search, setSearch] = useState("");

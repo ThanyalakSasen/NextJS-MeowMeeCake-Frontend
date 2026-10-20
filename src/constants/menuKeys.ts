@@ -4,16 +4,29 @@
 // (port จาก lib/menuKeys.ts ของระบบเดิม — ไม่แตะ DB, ไม่มี side effect)
 // ─────────────────────────────────────────────────────────────
 
-// ต้องตรงกับ MENU_KEYS ของ backend (src/services/permissionService.ts) ทุกตัว — backend เช็คสิทธิ์ด้วย key เหล่านี้
+// ต้องตรงกับ MENU_KEYS ของ backend (src/lib/menuKeys.ts) ทุกตัว — backend เช็คสิทธิ์ด้วย key เหล่านี้
+// แยกตามหน้าย่อยใน Sidebar (2026-10-21): 1 หน้า = 1 key · key ที่ API หลายหน้าใช้ร่วม backend ยอมรับได้หลาย key
+// "reports" เลิกใช้แล้ว (แตกเป็น reports_sales / reports_reviews / finance_expenses / finance_summary) — มีไว้ให้ type ของแถวเก่า
 export type MenuKey =
-  | "dashboard" | "products" | "orders" | "preorder" | "payments" | "ingredients"
-  | "stock" | "recipes" | "production" | "employees" | "promotions" | "reports"
-  /** ข้อมูลร้าน (ที่อยู่ · ตลาดนัด · โลโก้ · พร้อมเพย์) — backend MENU_KEYS เพิ่ม 2026-10-05 (customer-backend-merge.md §8.19) */
-  | "store_info";
+  | "dashboard"
+  | "reports_sales" | "reports_reviews" | "finance_expenses" | "finance_summary"
+  | "products" | "stock" | "search_synonyms"
+  | "orders" | "preorder" | "pos" | "payments"
+  | "pricing" | "promotions"
+  | "production" | "ingredients" | "ingredient_stock" | "ingredient_history" | "units" | "recipes"
+  | "employees" | "permissions" | "user_log"
+  | "store_design" | "store_info" | "shipping"
+  | "reports";
 
 export const ALL_MENU_KEYS: MenuKey[] = [
-  "dashboard", "products", "orders", "preorder", "payments", "ingredients",
-  "stock", "recipes", "production", "employees", "promotions", "reports", "store_info",
+  "dashboard",
+  "reports_sales", "reports_reviews", "finance_expenses", "finance_summary",
+  "products", "stock", "search_synonyms",
+  "orders", "preorder", "pos", "payments",
+  "pricing", "promotions",
+  "production", "ingredients", "ingredient_stock", "ingredient_history", "units", "recipes",
+  "employees", "permissions", "user_log",
+  "store_design", "store_info", "shipping",
 ];
 
 /** สิทธิ์ 5 อย่างของ menu_key เดียว — ตรงกับ can_view/create/update/delete/approve ของ backend */
@@ -34,36 +47,36 @@ export const NO_MENU_ACCESS: MenuPermissionSet = {
 
 // map path → menu_key เรียงจาก prefix เจาะจงกว่าไว้ก่อน (longest-prefix match)
 // path ที่ไม่อยู่ในนี้ (notificationsHistory) = login พอ ไม่เช็ค can_view เพิ่ม
+// 1 หน้าใน Sidebar = 1 key (แยกตามหน้าย่อย 2026-10-21) — ต้องตรงกับ menuKey ใน constants/menu.ts
 const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   // แดชบอร์ด = หน้าแรกหลังล็อกอิน — ไม่มี dashboard.view แล้ว OwnerLayout พาไปหน้าแรกที่มีสิทธิ์
-  // (lib/landingPath.ts) แทนหน้า access-denied · เดิม login พอ → widget ยิง /admin/dashboard/* ได้ 403 ทุกตัว (Final-Backlog P11)
+  // (lib/landingPath.ts) แทนหน้า access-denied (Final-Backlog P11)
   { prefix: "/owner/dashboard", menuKey: "dashboard" },
-  // จัดการแบนเนอร์ — /admin/banners ตรวจ products.* (เดิม login พอ → เปิดได้ทุกคนแต่โหลด/บันทึกไม่ได้ · Final-Backlog P13)
-  { prefix: "/owner/store-design", menuKey: "products" },
-  // สต็อก/ประวัติวัตถุดิบ + หน่วยนับ ใช้ "ingredients" ทั้งกลุ่ม — /admin/ingredients · ingredient-transactions ตรวจ
-  // ingredients.* และ backend เปิดให้อ่าน /admin/units ด้วย ingredients.view (Final-Backlog P2)
-  // ไม่ใช่ "stock" — "stock" คือสต็อกสินค้า (/admin/products/:id/stock) เท่านั้น
-  { prefix: "/owner/ingredients", menuKey: "ingredients" },
+  { prefix: "/owner/reports/sales", menuKey: "reports_sales" },
+  // รวมหน้าตั้งค่ารีวิว (/owner/reports/reviews/settings) และลิงก์เก่า /reviews/dashboard
+  { prefix: "/owner/reports/reviews", menuKey: "reports_reviews" },
+  { prefix: "/owner/finance/expenses", menuKey: "finance_expenses" },
+  { prefix: "/owner/finance/summary", menuKey: "finance_summary" },
   { prefix: "/owner/products/productStock", menuKey: "stock" },
+  { prefix: "/owner/products/search-synonyms", menuKey: "search_synonyms" },
   { prefix: "/owner/products", menuKey: "products" },
   { prefix: "/owner/orders/preOrderRound", menuKey: "preorder" },
+  { prefix: "/owner/orders/OrderInStore", menuKey: "pos" },
   { prefix: "/owner/orders", menuKey: "orders" },
-  // ตั้งราคา/ราคาลดยิง /admin/products ตรง ๆ (ไม่มี endpoint "โปรโมชัน" แยก) ต้องผูกกับ "products"
-  // ไม่ใช่ "promotions" ถึงจะตรงกับสิทธิ์จริงที่หน้าเช็ค (usePricingViewModel.ts) — ต้องมาก่อน
-  // /owner/promotions ทั่วไปเพราะ resolveMenuKey() เลือก prefix ที่ยาวที่สุด (docs/BACKLOG.md §1)
-  { prefix: "/owner/promotions/pricing", menuKey: "products" },
+  { prefix: "/owner/promotions/pricing", menuKey: "pricing" },
   { prefix: "/owner/promotions", menuKey: "promotions" },
   { prefix: "/owner/production", menuKey: "production" },
+  { prefix: "/owner/ingredients/ingredientStock", menuKey: "ingredient_stock" },
+  { prefix: "/owner/ingredients/ingredientHistory", menuKey: "ingredient_history" },
+  { prefix: "/owner/ingredients/units", menuKey: "units" },
+  { prefix: "/owner/ingredients", menuKey: "ingredients" },
   { prefix: "/owner/recipes", menuKey: "recipes" },
+  { prefix: "/owner/employees/permissions", menuKey: "permissions" },
+  { prefix: "/owner/employees/userLog", menuKey: "user_log" },
   { prefix: "/owner/employees", menuKey: "employees" },
-  // รีวิวลูกค้า (/owner/reports/reviews) ใช้ "reports" ตาม prefix ด้านล่าง — backend ย้าย /admin/reviews จาก
-  // products.* ไป reports.* แล้ว (customer-backend-merge.md §8.20 · Final-Backlog P1) ตรงกับ sidebar และ useReviewsViewModel
-  { prefix: "/owner/reports", menuKey: "reports" },
-  { prefix: "/owner/finance", menuKey: "reports" },
-  // ข้อมูลร้าน (E2) — /admin/weekly-markets ใช้ store_info · ส่วนอื่น backend ให้ owner เท่านั้น
+  { prefix: "/owner/store-design", menuKey: "store_design" },
   { prefix: "/owner/store-info", menuKey: "store_info" },
-  // ค่าจัดส่งหน้าร้านออนไลน์ (F2) — /admin/shipping-zones ใช้ store_info.view / update
-  { prefix: "/owner/shipping", menuKey: "store_info" },
+  { prefix: "/owner/shipping", menuKey: "shipping" },
 ];
 
 export function resolveMenuKey(pathname: string): MenuKey | null {

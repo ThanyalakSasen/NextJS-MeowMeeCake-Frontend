@@ -32,7 +32,7 @@ export interface AddRoleValues {
 export function usePermissionsViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("employees");
+  const perm = usePermission("permissions");
   const { user } = useCurrentUser();
   const ceiling = usePermissionCeiling();
 

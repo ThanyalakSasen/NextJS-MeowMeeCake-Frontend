@@ -63,9 +63,27 @@ export function PermissionOverview({
                   {sectionLabel(group.sectionKey)}
                 </th>
               </tr>,
-              ...group.keys.map((menuKey) => (
+              ...group.menus.flatMap((menu) => [
+                // เมนูที่มีหน้าย่อย — แถวหัวข้อชื่อเมนู แล้วหน้าย่อยเยื้องเข้าไปทีละแถว
+                ...(menu.groupKey
+                  ? [
+                      <tr key={`g-${menu.groupKey}`} className="border-b border-gray-50">
+                        <th
+                          scope="rowgroup"
+                          colSpan={roles.length + 1}
+                          className="sticky left-0 bg-white px-4 pb-1 pt-2.5 text-left font-semibold text-brown-800"
+                        >
+                          {t(`nav.${menu.groupKey}`)}
+                        </th>
+                      </tr>,
+                    ]
+                  : []),
+                ...menu.keys.map((menuKey) => (
                 <tr key={menuKey} className="border-b border-gray-50">
-                  <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-2 text-left font-medium text-gray-700">
+                  <th
+                    scope="row"
+                    className={`sticky left-0 z-10 bg-white py-2 pr-4 text-left font-medium text-gray-700 ${menu.groupKey ? "pl-8" : "pl-4"}`}
+                  >
                     {t(`enums.menuKey.${menuKey}`)}
                   </th>
                   {roles.map((role) => {
@@ -103,6 +121,7 @@ export function PermissionOverview({
                   })}
                 </tr>
               )),
+              ]),
             ])}
           </tbody>
         </table>
