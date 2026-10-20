@@ -1190,3 +1190,9 @@ body {
 .ant-segmented .ant-segmented-item + .ant-segmented-item {
   border-inline-start: 1px solid var(--border);
 }
+
+/* ช่องรหัสผ่าน: ซ่อนปุ่มแสดงรหัส/ล้างค่าที่ Edge (และ IE) ใส่ให้เอง — หน้าเว็บมีปุ่มตาของตัวเองแล้ว ไม่งั้นจะขึ้นไอคอนตาซ้ำ 2 อัน */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}

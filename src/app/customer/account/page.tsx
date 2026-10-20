@@ -25,7 +25,7 @@ import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { shopButton, shopButtonPrimary, shopInput, shopPage } from "@/components/customer/shopStyles";
-import { shopEmailStatusKey, shopLineStatusKey, shopProfileKey } from "../lib/shopQueries";
+import { shopAllergenWarningsKey, shopEmailStatusKey, shopLineStatusKey, shopProfileKey } from "../lib/shopQueries";
 import { thaiCompare } from "@/lib/thaiSort";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -441,7 +441,10 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
   const ingredientsQ = useQuery({ queryKey: ["catalog", "ingredients"], queryFn: catalogService.ingredients, staleTime: 10 * 60_000 });
   const save = useMutation({
     mutationFn: (list: string[]) => shopProfileService.update({ user_allergies: list }),
-    onSuccess: (p) => qc.setQueryData(shopProfileKey, p),
+    onSuccess: (p) => {
+      qc.setQueryData(shopProfileKey, p);
+      void qc.invalidateQueries({ queryKey: shopAllergenWarningsKey });
+    },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("allergySaveFailed")),
   });
   const list = profile.user_allergies;

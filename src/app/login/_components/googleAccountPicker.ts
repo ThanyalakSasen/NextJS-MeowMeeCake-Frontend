@@ -5,7 +5,9 @@
 // ไม่ได้ใช้ล็อกอิน — แค่รู้ว่าจะส่งลิงก์ตั้งรหัสใหม่ไปอีเมลไหน (backend ส่งลิงก์ไปที่อีเมลนั้นเอง ผู้ใช้ต้องเปิดอีเมลถึงจะใช้ได้)
 // ต้องตั้ง NEXT_PUBLIC_GOOGLE_CLIENT_ID + origin ใน Google Cloud Console (เหมือนปุ่ม Google · GoogleLoginButton.tsx)
 // ─────────────────────────────────────────────────────────────
-export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+const RAW_CLIENT_ID = (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "").trim();
+/** ค่าตัวอย่างใน .env.example (xxxxxxxx.apps…) ถือว่ายังไม่ได้ตั้ง — ไม่งั้นหน้าต่าง Google พังเงียบ ๆ แล้ว "ลืมรหัสผ่าน" ไม่มีอะไรเกิดขึ้น */
+export const GOOGLE_CLIENT_ID = /^x+\./i.test(RAW_CLIENT_ID) ? "" : RAW_CLIENT_ID;
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 
 interface TokenResponse {

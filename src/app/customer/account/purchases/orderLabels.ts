@@ -16,8 +16,9 @@ export const ORDER_STATUS_TONE: Record<OrderStatus, string> = {
 };
 
 /** ป้ายสถานะรีวิว (ReviewLink) — ยังรีวิวไม่ครบ = ป้ายกดได้ไปหน้าเขียนรีวิว · ครบแล้ว = ป้ายเขียว */
+/** ปุ่ม "รีวิวสินค้า" — ทรงปุ่มชัดเจน (มุมมน + เงา + ไอคอนดาว) ไม่ให้ดูเหมือนป้ายสถานะ */
 export const REVIEW_PILL =
-  "self-start whitespace-nowrap rounded-full bg-[#8C5A3C] px-3 py-1 text-xs font-semibold text-white transition hover:bg-[#4A342E]";
+  "inline-flex h-[38px] self-start items-center gap-1.5 whitespace-nowrap rounded-xl bg-[#f2ae00] px-4 text-sm font-bold text-[#4A342E] shadow-md shadow-[#f2ae00]/30 transition-all duration-200 hover:-translate-y-px hover:bg-[#d99c00] hover:shadow-lg active:scale-[0.98]";
 export const REVIEWED_PILL = "self-start whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700";
 
 /**

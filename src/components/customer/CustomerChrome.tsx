@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
-// route ที่ไม่ต้องแสดง Navbar/Footer (หน้า flow ตั้งรหัสผ่านใหม่จากลิงก์อีเมล)
+// route ที่ไม่ต้องแสดง Navbar/Footer (หน้าที่เปิดจากลิงก์ในอีเมล: ตั้งรหัสผ่านใหม่ · ยืนยันอีเมล)
 // usePathname() คืนเฉพาะ path ไม่รวม query string จึงครอบคลุม ?token=... ด้วย
-const HIDE_CHROME_ROUTES = ["/customer/reset-password"];
+const HIDE_CHROME_ROUTES = ["/customer/reset-password", "/customer/verify-email"];
 
 const matches = (pathname: string, routes: string[]) =>
   routes.some((route) => pathname === route || pathname.startsWith(route + "/"));
