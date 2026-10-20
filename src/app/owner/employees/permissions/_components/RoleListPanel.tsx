@@ -4,15 +4,19 @@ import { useTranslations } from "next-intl";
 import { Tag } from "@/components/base";
 import type { Role } from "@/types/role";
 import { ROLE_TYPE_CONFIG } from "@/constants/enumConfig";
+import { PERM_MENU_KEYS } from "../permissionGroups";
 
 export function RoleListPanel({
   roles,
   memberCounts,
+  viewMenuCount,
   activeRoleId,
   onSelect,
 }: {
   roles: Role[];
   memberCounts: Record<string, number>;
+  /** จำนวนเมนูที่ตำแหน่งนี้ "ดูได้" (สิทธิ์ที่บันทึกแล้ว) */
+  viewMenuCount: (roleId: string) => number;
   activeRoleId: string | null;
   onSelect: (id: string) => void;
 }) {
@@ -39,6 +43,10 @@ export function RoleListPanel({
               {/* gray-600 — แถวที่เลือกพื้น brown-50 ทำให้ gray-500 ได้แค่ 4.46:1 */}
               <p className="mt-0.5 text-xs text-gray-600">
                 {t("permissions.members", { n: memberCounts[role._id] ?? 0 })}
+                {" · "}
+                {role.role_type === "owner"
+                  ? t("permissions.overviewAll")
+                  : t("permissions.viewMenus", { n: viewMenuCount(role._id), total: PERM_MENU_KEYS.length })}
               </p>
             </div>
             <Tag color={ROLE_TYPE_CONFIG[role.role_type]?.antColor}>

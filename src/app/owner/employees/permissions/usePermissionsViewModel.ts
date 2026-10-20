@@ -280,6 +280,9 @@ export function usePermissionsViewModel() {
 
     roles,
     memberCounts,
+    /** สิทธิ์ที่บันทึกแล้วของทุกตำแหน่ง — ตารางภาพรวม */
+    permsByRole: serverByRole,
+    viewMenuCount: (roleId: string) => PERM_MENU_KEYS.filter((k) => serverByRole[roleId]?.[k].can_view).length,
     activeRoleId,
     selectedRole,
     selectedRows,

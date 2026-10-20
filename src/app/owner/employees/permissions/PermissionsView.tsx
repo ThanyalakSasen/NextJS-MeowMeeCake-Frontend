@@ -11,6 +11,8 @@ import { DeleteButton, EditButton, SaveButton, actionIcon } from "@/components/s
 import type { usePermissionsViewModel } from "./usePermissionsViewModel";
 import { RoleListPanel } from "./_components/RoleListPanel";
 import { PermissionMatrix } from "./_components/PermissionMatrix";
+import { PermissionOverview } from "./_components/PermissionOverview";
+import { Segmented } from "antd";
 import { ROLE_TYPE_CONFIG } from "@/constants/enumConfig";
 
 // โมดัลเพิ่ม/เปลี่ยนชื่อตำแหน่งแยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
@@ -23,10 +25,14 @@ export function PermissionsView(vm: VM) {
   const t = useTranslations();
   const [modalOpen, setModalOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
+  // เปิดมาเห็นภาพรวมทุกตำแหน่งก่อน — ตอบได้ทันทีว่าใครเข้าถึงอะไร · กดชื่อตำแหน่งเพื่อไปแก้
+  const [view, setView] = useState<"overview" | "edit">("overview");
   const addUsed = useOpenedOnce(modalOpen);
   const renameUsed = useOpenedOnce(renameOpen);
   // ตำแหน่งประเภท owner — คนที่ไม่ใช่ owner แก้ชื่อ / ลบ / แก้สิทธิ์ไม่ได้ (backend ownerProtection · P4)
   const canEdit = vm.perm.update && !vm.roleLocked;
+  // ตำแหน่งประเภท owner ไม่มีตารางสิทธิ์ให้แก้ (ผ่านทุกสิทธิ์) — ไม่โชว์ปุ่มรีเซ็ต/บันทึก แต่ยังแก้ชื่อได้
+  const canEditPerms = canEdit && vm.selectedRole?.role_type !== "owner";
 
   const addRoleBtn = vm.perm.create && (
     <Button type="primary" icon={actionIcon("add")} onClick={() => setModalOpen(true)}>
@@ -47,12 +53,35 @@ export function PermissionsView(vm: VM) {
         </div>
       ) : (
         <>
-          <div className="flex justify-end">{addRoleBtn}</div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Segmented
+              value={view}
+              onChange={(v) => setView(v as "overview" | "edit")}
+              options={[
+                { value: "overview", label: t("permissions.tabOverview") },
+                { value: "edit", label: t("permissions.tabEdit") },
+              ]}
+            />
+            {addRoleBtn}
+          </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_1fr]">
+          {view === "overview" ? (
+            <PermissionOverview
+              roles={vm.roles}
+              permsByRole={vm.permsByRole}
+              memberCounts={vm.memberCounts}
+              activeRoleId={vm.activeRoleId}
+              onSelectRole={(id) => {
+                vm.selectRole(id);
+                setView("edit");
+              }}
+            />
+          ) : (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
             <RoleListPanel
               roles={vm.roles}
               memberCounts={vm.memberCounts}
+              viewMenuCount={vm.viewMenuCount}
               activeRoleId={vm.activeRoleId}
               onSelect={vm.selectRole}
             />
@@ -84,12 +113,12 @@ export function PermissionsView(vm: VM) {
                         <DeleteButton size="small" label={t("permissions.deleteRole")} />
                       </ConfirmDeletePopup>
                     )}
-                    {canEdit && (
+                    {canEditPerms && (
                       <Button size="small" icon={actionIcon("reset", "small")} onClick={vm.onReset} loading={vm.saving}>
                         {t("permissions.reset")}
                       </Button>
                     )}
-                    {canEdit && (
+                    {canEditPerms && (
                       <SaveButton
                         size="small"
                         type="primary"
@@ -102,6 +131,17 @@ export function PermissionsView(vm: VM) {
                   </div>
                 </div>
 
+                {vm.selectedRole.role_type === "owner" ? (
+                  // ตำแหน่งประเภท owner ผ่านทุกสิทธิ์ (backend ไม่อ่านแถวสิทธิ์เลย) — ไม่โชว์ตารางช่องว่างให้เข้าใจผิดว่าไม่มีสิทธิ์
+                  <div className="flex flex-col gap-1 px-4 py-6">
+                    <p className="m-0 font-semibold text-purple-700">{t("permissions.overviewAll")}</p>
+                    <p className="m-0 text-sm text-gray-600">
+                      {t("permissions.unrestrictedNote")}
+                      {vm.roleLocked && ` · ${t("permissions.ownerRoleLocked")}`}
+                    </p>
+                  </div>
+                ) : (
+                <>
                 {/* summary */}
                 <div className="grid grid-cols-3 border-b border-gray-100 bg-gray-50 text-center">
                   {[
@@ -116,12 +156,6 @@ export function PermissionsView(vm: VM) {
                   ))}
                 </div>
 
-                {vm.selectedRole.role_type === "owner" && (
-                  <p className="border-b border-gray-100 bg-amber-50 px-4 py-2 text-xs text-amber-700">
-                    {t("permissions.unrestrictedNote")}
-                    {vm.roleLocked && ` · ${t("permissions.ownerRoleLocked")}`}
-                  </p>
-                )}
                 {canEdit && !vm.isOwnerActor && (
                   <p className="border-b border-gray-100 px-4 py-2 text-xs text-gray-500">
                     {t("permissions.grantCeilingNote")}
@@ -136,6 +170,8 @@ export function PermissionsView(vm: VM) {
                   onField={vm.setField}
                   onToggleSection={vm.toggleSection}
                 />
+                </>
+                )}
               </div>
             ) : (
               <div className="rounded-xl border border-gray-100 bg-white p-10">
@@ -143,6 +179,7 @@ export function PermissionsView(vm: VM) {
               </div>
             )}
           </div>
+          )}
         </>
       )}
 
