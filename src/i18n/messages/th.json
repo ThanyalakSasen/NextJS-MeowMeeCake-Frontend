@@ -145,6 +145,7 @@
     "showPassword": "แสดงรหัสผ่าน",
     "hidePassword": "ซ่อนรหัสผ่าน",
     "forgotPassword": "ลืมรหัสผ่าน?",
+    "forgotOtherEmail": "ใช้อีเมลอื่น",
     "noAccount": "ยังไม่มีบัญชีสมาชิก?",
     "register": "สมัครสมาชิก",
     "loginBackground": "ภาพพื้นหลังร้านขนม",

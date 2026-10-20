@@ -245,8 +245,13 @@ function Form() {
           )}
         </div>
 
-        {/* ลืมรหัสผ่าน? = เปิดหน้าต่างเลือกบัญชี Google ทันที */}
-        <div className="-mt-1 flex items-center justify-end">
+        {/* ลืมรหัสผ่าน? = เปิดหน้าต่างเลือกบัญชี Google ทันที · ใช้อีเมลอื่น (ไม่ใช่บัญชี Google) = หน้ากรอกอีเมล */}
+        <div className="-mt-1 flex items-center justify-end gap-3">
+          {GOOGLE_CLIENT_ID && (
+            <Link href={FORGOT_PASSWORD_PATH} className={`text-xs hover:underline sm:text-sm ${authMutedClass}`}>
+              {t("auth.forgotOtherEmail")}
+            </Link>
+          )}
           <button
             type="button"
             onClick={() => void handleForgotPassword()}

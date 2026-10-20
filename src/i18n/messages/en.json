@@ -145,6 +145,7 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "forgotPassword": "Forgot password?",
+    "forgotOtherEmail": "Use another email",
     "noAccount": "Don't have an account?",
     "register": "Sign up",
     "loginBackground": "Bakery background",
