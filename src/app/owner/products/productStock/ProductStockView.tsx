@@ -118,15 +118,18 @@ export function ProductStockView(vm: VM) {
                 onChange={vm.setSearch}
                 placeholder={t("productStock.searchPlaceholder")}
               />
+            </>
+          }
+          right={
+            <>
               <FilterField label={t("productStock.categoryFilter")} className="min-w-40 flex-1 sm:flex-none">
                 <Select
                   value={vm.categoryId}
                   onChange={(v) => vm.setCategoryId(v as string)}
                   options={[
                     { value: "all", label: t("common.all") },
-                    ...[...vm.categories]
-                      .sort((a, b) => a.product_category_name.localeCompare(b.product_category_name, locale))
-                      .map((c) => ({ value: c._id, label: c.product_category_name })),
+                    // vm.categories เรียง ก-ฮ มาแล้ว (sortByThai)
+                    ...vm.categories.map((c) => ({ value: c._id, label: c.product_category_name })),
                   ]}
                 />
               </FilterField>
