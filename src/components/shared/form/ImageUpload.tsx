@@ -74,7 +74,9 @@ export function ImageUpload({
       options.onSuccess?.({ url });
     } catch (e) {
       // แสดงเหตุผลจาก backend เสมอถ้ามี (ALERTS.md §2) — เดิมมีแค่ ReceiptUpload ที่ทำ
-      alert.error(isApiError(e) ? e.message : t(errorKey as Parameters<typeof t>[0]));
+      // 413 = proxy ของ Vercel ตัดทิ้ง (ไม่มีข้อความจาก backend) — บอกว่ารูปใหญ่เกิน แทน "request failed (413)"
+      if (isApiError(e) && e.status === 413) alert.error(t("products.imageTooLarge"));
+      else alert.error(isApiError(e) ? e.message : t(errorKey as Parameters<typeof t>[0]));
       options.onError?.(e as Error);
     } finally {
       setUploading(false);
