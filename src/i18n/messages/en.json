@@ -1526,7 +1526,7 @@
     "unrestrictedNote": "Owner / admin roles can access every menu without explicit permissions",
     "ownerRoleLocked": "Only the store owner can edit it",
     "grantCeilingNote": "Boxes you can’t switch on are permissions you don’t have yourself, so you can’t grant them — you can switch off (revoke) any box",
-    "paymentsHint": "Approve = confirm/reject slips (incl. POS payments) · Delete = delete payment records and confirm refunds — grant \"Delete\" only to trusted staff",
+    "paymentsHint": "Approve = accept/reject transfer slips for web orders and pre-orders (taking payment at the POS uses the In-store orders permission) · Delete = delete payments and confirm refunds — grant Delete only to trusted staff",
     "tabOverview": "All roles overview",
     "tabEdit": "Edit by role",
     "overviewHint": "Saved permissions of every role · select a role name to edit it",
