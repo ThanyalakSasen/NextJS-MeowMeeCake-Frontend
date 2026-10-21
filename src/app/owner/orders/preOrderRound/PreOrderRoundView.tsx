@@ -1,5 +1,5 @@
 "use client";
-// View ของ Pre-order Round — 3 แท็บ (รอบพรีออเดอร์ / สรุปรอบ / คำสั่งซื้อเค้กวันเกิด) sync กับ ?tab= ผ่าน TabbedPageLayout
+// View ของ Pre-order Round — 3 แท็บ (รอบพรีออเดอร์ / สรุปรอบ / คำสั่งซื้อพรีออเดอร์) sync กับ ?tab= ผ่าน TabbedPageLayout
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useOpenedOnce } from "@/hooks/useOpenedOnce";

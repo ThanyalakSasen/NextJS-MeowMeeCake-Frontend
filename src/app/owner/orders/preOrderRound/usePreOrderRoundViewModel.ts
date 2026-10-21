@@ -1,6 +1,6 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ Pre-order Round — 3 แท็บ (รอบพรีออเดอร์ / สรุปรอบ / คำสั่งซื้อเค้กวันเกิด) sync กับ ?tab=
+// ViewModel ของ Pre-order Round — 3 แท็บ (รอบพรีออเดอร์ / สรุปรอบ / คำสั่งซื้อพรีออเดอร์) sync กับ ?tab=
 // แท็บ "สรุปรอบ" (F4) มี ViewModel ของตัวเอง (useRoundDashboardViewModel) ประกอบเข้ามาเป็น vm.dashboard
 // ผ่าน router (แพทเทิร์นเดียวกับ Production) · โหลดรอบ+พรีออเดอร์ทั้งหมด 1 ครั้งต่อแท็บ แล้วกรอง/
 // แบ่งหน้าฝั่ง client เหมือน Manage Orders/Production
@@ -272,7 +272,7 @@ export function usePreOrderRoundViewModel() {
     else addRoundItem.mutate({ roundId, body });
   };
 
-  // ══════════════════ แท็บ 2: คำสั่งซื้อเค้กวันเกิด (Preorders) ══════════════════
+  // ══════════════════ แท็บ 2: คำสั่งซื้อพรีออเดอร์ (Preorders) ══════════════════
 
   const [orderSearch, setOrderSearchState] = useState("");
   const [orderStatusFilter, setOrderStatusFilterState] = useState<OrderStatus | "all">("all");
@@ -485,7 +485,7 @@ export function usePreOrderRoundViewModel() {
     onSubmitItemForm, savingItem: addRoundItem.isPending || updateRoundItem.isPending,
     onRemoveRoundItem: (itemId: string) => removeRoundItem.mutate(itemId),
 
-    // แท็บ 2: คำสั่งซื้อเค้กวันเกิด
+    // แท็บ 2: คำสั่งซื้อพรีออเดอร์
     orderSearch, setOrderSearch: (v: string) => { setOrderSearchState(v); setOrderPage(1); },
     orderStatusFilter, setOrderStatusFilter: (v: OrderStatus | "all") => { setOrderStatusFilterState(v); setOrderPage(1); },
     orderRoundFilter, setOrderRoundFilter: (v: string) => { setOrderRoundFilterState(v); setOrderPage(1); },

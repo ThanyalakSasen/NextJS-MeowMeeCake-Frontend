@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาใน DetailDrawer ของคำสั่งซื้อเค้กวันเกิด (Preorder) — presentational ล้วน
+// เนื้อหาใน DetailDrawer ของคำสั่งซื้อพรีออเดอร์ (Preorder) — presentational ล้วน
 // payment มาจาก paymentsService.listByPreorder (คนละ resource กับ preorder — สลิป/สถานะตรวจอยู่ในนั้น)
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Button, Divider, Tag } from "@/components/base";
@@ -8,6 +8,7 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import type { Preorder } from "@/types/preorder";
 import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
+import { lineExtras } from "../useRoundDashboardViewModel";
 import { DeliverySection, RefundSection, SlipImage } from "@/components/shared/orders";
 import { isAwaitingRefund } from "@/types/order";
 import { NOTICE_TAG } from "@/constants/enumConfig";
@@ -179,9 +180,14 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
         <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.colItems")}</p>
         <div className="flex flex-col gap-1.5">
           {(order.items ?? []).map((it) => (
-            <div key={it._id} className="flex items-center justify-between text-sm">
-              <span className="text-gray-700">{it.product_name}</span>
-              <span className="text-gray-600">×{it.quantity}</span>
+            <div key={it._id} className="flex justify-between gap-3 text-sm">
+              <span className="text-gray-700">
+                {it.product_name} <span className="text-gray-600">×{it.quantity}</span>
+                {lineExtras(it).map((x) => (
+                  <span key={x} className="block text-gray-600">{x}</span>
+                ))}
+              </span>
+              <span className="shrink-0 text-gray-700">{formatCurrency(it.total_price, locale)}</span>
             </div>
           ))}
         </div>
