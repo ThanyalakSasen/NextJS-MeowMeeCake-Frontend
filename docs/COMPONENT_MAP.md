@@ -33,7 +33,6 @@ PreOrder Round ใช้ร่วมกัน — ย้ายขึ้น `shar
 | Divider | `base/Divider.tsx` | |
 | DatePicker / RangePicker | `base/DatePicker.tsx` | full-width |
 | Avatar | `base/Avatar.tsx` | + `initialsOf()` |
-| DotIndicator | `base/DotIndicator.tsx` | จุดสี |
 | ProgressBar | `base/ProgressBar.tsx` | สีตามค่า |
 | Card | `base/Card.tsx` | กล่องขอบมน |
 | Logo | `base/Logo.tsx` | โลโก้ร้าน · `src` = โลโก้ที่ร้านอัปโหลด (หน้าร้านใช้ผ่าน `customer/StoreLogo`) |
