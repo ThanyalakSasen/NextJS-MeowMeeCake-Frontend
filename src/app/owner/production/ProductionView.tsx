@@ -54,7 +54,15 @@ export function ProductionView(vm: VM) {
       {fromRoundUsed && (
         <CreateFromRoundModal
           open={vm.createFromRoundOpen}
-          rounds={vm.eligibleRounds}
+          rounds={vm.closedRounds}
+          roundsLoading={vm.isClosedRoundsLoading}
+          roundsWithProduction={vm.roundsWithProduction}
+          roundId={vm.fromRoundId}
+          onRoundChange={vm.setFromRoundId}
+          preview={vm.fromRoundPreview}
+          previewLoading={vm.isFromRoundPreviewLoading}
+          previewError={vm.isFromRoundPreviewError}
+          onRetryPreview={vm.refetchFromRoundPreview}
           staff={vm.staff}
           saving={vm.creatingFromRound}
           onClose={vm.closeCreateFromRound}

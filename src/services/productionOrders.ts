@@ -9,6 +9,7 @@ import type {
   RawProductionOrder,
   ProductionOrderCreateInput,
   ProductionOrderFromRoundInput,
+  ProductionFromRoundPreview,
   ProductionOrderUpdateInput,
   ProductionOrderListParams,
 } from "@/types/productionOrder";
@@ -30,6 +31,10 @@ export const productionOrdersService = {
   /** รวมยอดสั่งจริงจากรอบพรีออเดอร์ที่ "ปิดรับแล้ว" ให้อัตโนมัติ — round_id ต้องยังไม่มีใบสั่งผลิตอยู่ */
   createFromRound: (body: ProductionOrderFromRoundInput) =>
     http.post<ItemResponse<RawProductionOrder>>(`${BASE}/from-preorder-round`, body),
+
+  /** ดูล่วงหน้าว่ารอบนี้จะได้ใบสั่งผลิตแบบไหน + เหตุที่สร้างไม่ได้ (ฟอร์มสร้างจากรอบ) */
+  previewFromRound: (roundId: string) =>
+    http.get<ItemResponse<ProductionFromRoundPreview>>(`${BASE}/from-preorder-round`, { params: { round_id: roundId } }),
 
   update: (id: string, body: ProductionOrderUpdateInput) =>
     http.patch<ItemResponse<RawProductionOrder>>(`${BASE}/${id}`, body),
