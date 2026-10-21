@@ -16,7 +16,7 @@ const HistoryTab = dynamic(() => import("./_components/HistoryTab").then((m) => 
 const ProductionOrderFormModal = dynamic(() => import("./_components/ProductionOrderFormModal").then((m) => m.ProductionOrderFormModal), { ssr: false });
 const CreateFromRoundModal = dynamic(() => import("./_components/CreateFromRoundModal").then((m) => m.CreateFromRoundModal), { ssr: false });
 const ProductionOrderDetail = dynamic(() => import("./_components/ProductionOrderDetail").then((m) => m.ProductionOrderDetail), { ssr: false });
-const DetailDrawer = dynamic(() => import("@/components/shared/feedback/DetailDrawer").then((m) => m.DetailDrawer), { ssr: false });
+const DetailModal = dynamic(() => import("@/components/shared/feedback/DetailModal").then((m) => m.DetailModal), { ssr: false });
 const CompleteProductionModal = dynamic(() => import("./_components/CompleteProductionModal").then((m) => m.CompleteProductionModal), { ssr: false });
 
 type VM = ReturnType<typeof useProductionViewModel>;
@@ -71,7 +71,7 @@ export function ProductionView(vm: VM) {
       )}
 
       {drawerUsed && (
-        <DetailDrawer
+        <DetailModal
           open={vm.drawerOpen}
           title={vm.selectedOrder ? t("production.drawerTitle", { no: vm.selectedOrder.production_no }) : ""}
           onClose={vm.closeDrawer}
@@ -87,7 +87,7 @@ export function ProductionView(vm: VM) {
               onCancel={vm.onCancelOrder}
             />
           )}
-        </DetailDrawer>
+        </DetailModal>
       )}
 
       {vm.completeTarget && (

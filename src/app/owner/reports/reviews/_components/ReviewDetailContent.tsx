@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาใน DetailDrawer ของหน้า Reviews — sentiment fetch แยกตอนเปิดดู (ไม่มาใน list ของ review เอง)
+// เนื้อหาใน DetailModal (ป๊อปอัป) ของหน้า Reviews — sentiment fetch แยกตอนเปิดดู (ไม่มาใน list ของ review เอง)
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Divider, Tag } from "@/components/base";

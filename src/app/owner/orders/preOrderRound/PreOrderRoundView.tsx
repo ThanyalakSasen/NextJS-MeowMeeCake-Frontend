@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { TabbedPageLayout } from "@/components/shared/layout";
-import { DetailDrawer } from "@/components/shared/feedback";
+import { DetailModal } from "@/components/shared/feedback";
 import type { usePreOrderRoundViewModel } from "./usePreOrderRoundViewModel";
 import { RoundsTab } from "./_components/RoundsTab";
 
@@ -56,7 +56,7 @@ export function PreOrderRoundView(vm: VM) {
         />
       )}
 
-      <DetailDrawer
+      <DetailModal
         open={vm.roundDrawerOpen}
         title={vm.selectedRound ? vm.selectedRound.round_name : ""}
         onClose={vm.closeRoundDrawer}
@@ -64,7 +64,7 @@ export function PreOrderRoundView(vm: VM) {
       >
         {vm.isRoundDetailLoading && <p className="py-10 text-center text-gray-500">{t("common.loading")}</p>}
         {vm.selectedRound && !vm.isRoundDetailLoading && <RoundDetailContent {...vm} round={vm.selectedRound} />}
-      </DetailDrawer>
+      </DetailModal>
 
       {vm.selectedRound && (
         <>
@@ -100,7 +100,7 @@ export function PreOrderRoundView(vm: VM) {
         </>
       )}
 
-      <DetailDrawer
+      <DetailModal
         open={vm.orderDrawerOpen}
         title={vm.selectedOrder ? t("preorderRound.orderDrawerTitle", { no: vm.selectedOrder.preorder_no }) : ""}
         onClose={vm.closeOrderDrawer}
@@ -108,7 +108,7 @@ export function PreOrderRoundView(vm: VM) {
         {vm.isOrderDetailLoading && <p className="py-10 text-center text-gray-500">{t("common.loading")}</p>}
         {vm.isOrderDetailError && !vm.isOrderDetailLoading && <p className="py-10 text-center text-gray-500">{t("orders.orderNotFound")}</p>}
         {vm.selectedOrder && !vm.isOrderDetailLoading && <PreorderDetailContent {...vm} order={vm.selectedOrder} />}
-      </DetailDrawer>
+      </DetailModal>
     </>
   );
 }

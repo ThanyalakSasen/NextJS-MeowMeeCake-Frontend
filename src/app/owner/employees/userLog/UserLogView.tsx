@@ -15,7 +15,7 @@ import type { LogRow, useUserLogViewModel } from "./useUserLogViewModel";
 import { ChangeSummary } from "./_components/ChangeSummary";
 
 // ลิ้นชักรายละเอียดแยก chunk — โหลดเมื่อเปิดครั้งแรก (ลิ้นชักไม่ render ฝั่ง server อยู่แล้ว)
-const DetailDrawer = dynamic(() => import("@/components/shared/feedback/DetailDrawer").then((m) => m.DetailDrawer), { ssr: false });
+const DetailModal = dynamic(() => import("@/components/shared/feedback/DetailModal").then((m) => m.DetailModal), { ssr: false });
 const LogDetailContent = dynamic(() => import("./_components/LogDetailContent").then((m) => m.LogDetailContent), { ssr: false });
 
 type VM = ReturnType<typeof useUserLogViewModel>;
@@ -142,9 +142,9 @@ export function UserLogView(vm: VM) {
       )}
 
       {drawerUsed && (
-        <DetailDrawer open={vm.drawerOpen} title={t("userLog.detailTitle")} onClose={vm.closeDrawer}>
+        <DetailModal open={vm.drawerOpen} title={t("userLog.detailTitle")} onClose={vm.closeDrawer}>
           {vm.selectedLog && <LogDetailContent log={vm.selectedLog} />}
-        </DetailDrawer>
+        </DetailModal>
       )}
     </ListPageLayout>
   );

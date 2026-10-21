@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { RangePicker, Select } from "@/components/base";
 import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
-import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
+import { DetailModal, LoadFailed } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import { USER_LOG_ACTION_CONFIG, type UserLogAction } from "@/constants/enumConfig";
 import type { LogRow } from "../../employees/userLog/useUserLogViewModel";
@@ -92,9 +92,9 @@ export function LogsTab(vm: VM) {
         />
       )}
 
-      <DetailDrawer open={vm.drawerOpen} title={t("userLog.detailTitle")} onClose={vm.closeDrawer}>
+      <DetailModal open={vm.drawerOpen} title={t("userLog.detailTitle")} onClose={vm.closeDrawer}>
         {vm.selectedLog && <LogDetailContent log={vm.selectedLog} />}
-      </DetailDrawer>
+      </DetailModal>
     </div>
   );
 }
