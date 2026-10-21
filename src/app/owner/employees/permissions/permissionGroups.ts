@@ -11,15 +11,59 @@ export type PermField = (typeof PERM_FIELDS)[number];
 
 export type SectionKey = Extract<NavKey, `section${string}`> | "sectionOther";
 
-export const PERMISSION_GROUPS: { sectionKey: SectionKey; keys: MenuKey[] }[] = [
-  { sectionKey: "sectionOverview", keys: ["reports"] },
-  { sectionKey: "sectionProductsOrders", keys: ["products", "orders", "preorder", "payments", "promotions"] },
-  { sectionKey: "sectionProductionIngredients", keys: ["production", "ingredients", "stock", "recipes"] },
-  { sectionKey: "sectionEmployees", keys: ["employees"] },
-  { sectionKey: "sectionOther", keys: ["dashboard", "store_info"] },
+/**
+ * เมนูหลักใน Sidebar 1 อัน — groupKey = ชื่อเมนูที่มีหน้าย่อย (null = เมนูเดี่ยว ไม่มีหน้าย่อย)
+ * keys = สิทธิ์ของแต่ละหน้าย่อย (1 หน้า = 1 key · แยกตามหน้าย่อย 2026-10-21)
+ */
+export interface PermissionMenu {
+  groupKey: NavKey | null;
+  keys: MenuKey[];
+}
+
+// ลำดับและการจัดกลุ่มเหมือน Sidebar (constants/menu.ts) — "การชำระเงิน" ไม่มีหน้าของตัวเอง
+// (ยืนยันสลิป / คืนเงินอยู่ในหน้าคำสั่งซื้อ และรอบพรีออเดอร์) จึงอยู่ใต้กลุ่มคำสั่งซื้อ
+export const PERMISSION_GROUPS: { sectionKey: SectionKey; menus: PermissionMenu[] }[] = [
+  {
+    sectionKey: "sectionOverview",
+    menus: [
+      { groupKey: null, keys: ["dashboard"] },
+      { groupKey: "reports", keys: ["reports_sales", "reports_reviews"] },
+      { groupKey: "finance", keys: ["finance_expenses", "finance_summary"] },
+    ],
+  },
+  {
+    sectionKey: "sectionProductsOrders",
+    menus: [
+      { groupKey: "products", keys: ["products", "stock", "search_synonyms"] },
+      { groupKey: "ordersManage", keys: ["orders", "preorder", "payments"] },
+      { groupKey: null, keys: ["pos"] },
+      { groupKey: "promotions", keys: ["pricing", "promotions"] },
+    ],
+  },
+  {
+    sectionKey: "sectionProductionIngredients",
+    menus: [
+      { groupKey: null, keys: ["production"] },
+      { groupKey: "ingredients", keys: ["ingredients", "ingredient_stock", "ingredient_history", "units"] },
+      { groupKey: null, keys: ["recipes"] },
+    ],
+  },
+  {
+    sectionKey: "sectionEmployees",
+    menus: [{ groupKey: "employees", keys: ["employees", "permissions", "user_log"] }],
+  },
+  {
+    sectionKey: "sectionStorefront",
+    menus: [
+      { groupKey: null, keys: ["store_design"] },
+      { groupKey: null, keys: ["store_info"] },
+      { groupKey: null, keys: ["shipping"] },
+    ],
+  },
 ];
 
-export const PERM_MENU_KEYS: MenuKey[] = PERMISSION_GROUPS.flatMap((g) => g.keys);
+/** key ทั้งหมดที่ตั้งได้ในหน้าจัดการสิทธิ์ (ไม่รวม "reports" ที่เลิกใช้) */
+export const PERM_MENU_KEYS: MenuKey[] = PERMISSION_GROUPS.flatMap((g) => g.menus.flatMap((m) => m.keys));
 
 /** 1 แถวของ matrix — id=null คือยังไม่เคยบันทึกใน DB (ค่าเริ่มต้นปิดหมด) */
 export interface PermRow {

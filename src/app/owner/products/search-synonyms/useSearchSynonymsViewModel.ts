@@ -24,7 +24,7 @@ const TESTER_DEBOUNCE_MS = 350;
 export function useSearchSynonymsViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("products");
+  const perm = usePermission("search_synonyms");
 
   const q = useQuery({ queryKey: KEY, queryFn: () => searchSynonymsService.list() });
   const groups = useMemo(() => q.data ?? [], [q.data]);

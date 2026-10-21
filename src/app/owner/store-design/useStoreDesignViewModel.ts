@@ -28,7 +28,7 @@ export function useStoreDesignViewModel() {
   // แบนเนอร์อยู่ใต้สิทธิ์ "products" ของ backend (/admin/banners → auth: { menu: "products" })
   // ไม่ใช่เมนูของตัวเอง — ROUTE_MENU_MAP ไม่ได้ผูก /owner/store-design ไว้ OwnerLayout จึงไม่กั้นหน้านี้
   // ปุ่มเพิ่ม/แก้/ลบ/เปิดปิด/ลากเรียง จึงตามสิทธิ์ products ทั้งหมด (Final-Backlog P13)
-  const perm = usePermission("products");
+  const perm = usePermission("store_design");
 
   const [tab, setTab] = useState<TabFilter>("all");
   const [search, setSearch] = useState("");

@@ -65,8 +65,7 @@ export interface PaymentDone {
 export function usePOSViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("orders");
-  const promoPerm = usePermission("promotions");
+  const perm = usePermission("pos");
 
   const [cart, setCart] = useState<CartLine[]>([]);
   // ช่อง "สแกน / ค้นหา" — เก็บ "ข้อความดิบ" ตามปุ่มที่กดจริง แล้วแปลงแป้นไทย→QWERTY รอบเดียวตอนโชว์ (query) —
@@ -87,11 +86,11 @@ export function usePOSViewModel() {
     queryKey: ["products", "pos", CATALOG_PARAMS],
     queryFn: () => posService.listProducts(CATALOG_PARAMS),
   });
-  // backend เช็คสิทธิ์ promotions.view — พนักงานที่ไม่มีสิทธิ์ขายได้ตามปกติ แค่ไม่เห็น/ใช้โปรโมชัน
+  // backend ให้อ่านรายการโปรโมชันด้วยสิทธิ์ pos.view (หรือ promotions.view) — คนที่เปิด POS ได้เห็นโปรเสมอ
   const promotionsQ = useQuery({
     queryKey: ["promotions", PROMO_PARAMS],
     queryFn: () => promotionsService.list(PROMO_PARAMS),
-    enabled: promoPerm.view,
+    enabled: perm.view,
     retry: false,
   });
   // บัญชี "ลูกค้าทั่วไป" ตายตัว — หา id ครั้งเดียวตอนเปิดหน้า (cache ยาว ไม่มีวันเปลี่ยน)
@@ -106,7 +105,7 @@ export function usePOSViewModel() {
 
   const catalog = useMemo<PosProduct[]>(() => catalogQ.data?.data ?? [], [catalogQ.data]);
   const promotions = useMemo(() => posPromotions(promotionsQ.data?.data ?? []), [promotionsQ.data]);
-  const promotionsEnabled = promoPerm.view && !promotionsQ.isError;
+  const promotionsEnabled = perm.view && !promotionsQ.isError;
 
   const promosOf = (productId: string, categoryId: string | null): Promotion[] =>
     promotionEnabledList(promotionsEnabled, promotionsForProduct(promotions, productId, categoryId));

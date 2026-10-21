@@ -30,7 +30,7 @@ type TypeFilter = "all" | IngredientTxnType;
 
 export function useIngredientHistoryViewModel() {
   // ingredients ไม่ใช่ stock — API ของหน้านี้ตรวจ ingredients.* (Final-Backlog P2)
-  const perm = usePermission("ingredients");
+  const perm = usePermission("ingredient_history");
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
