@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาใน DetailDrawer ของใบสั่งผลิต — ใช้ร่วมทั้ง 3 แท็บ (row บนแท็บแผน/ประวัติ, การ์ดบนแท็บสถานะ)
+// เนื้อหาใน DetailModal (ป๊อปอัป) ของใบสั่งผลิต — ใช้ร่วมทั้ง 3 แท็บ (row บนแท็บแผน/ประวัติ, การ์ดบนแท็บสถานะ)
 import { useTranslations, useLocale } from "next-intl";
 import { Button, Tag } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";

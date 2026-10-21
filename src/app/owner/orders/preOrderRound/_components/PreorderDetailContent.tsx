@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาใน DetailDrawer ของคำสั่งซื้อพรีออเดอร์ (Preorder) — presentational ล้วน
+// เนื้อหาใน DetailModal (ป๊อปอัป) ของคำสั่งซื้อพรีออเดอร์ (Preorder) — presentational ล้วน
 // payment มาจาก paymentsService.listByPreorder (คนละ resource กับ preorder — สลิป/สถานะตรวจอยู่ในนั้น)
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Button, Divider, Tag } from "@/components/base";

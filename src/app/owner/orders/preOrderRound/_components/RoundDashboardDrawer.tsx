@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, ProgressBar, Select, Tag } from "@/components/base";
 import { SearchInput, FilterField } from "@/components/shared/data";
-import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
+import { DetailModal, LoadFailed } from "@/components/shared/feedback";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency } from "@/i18n/format";
 import type { OrderType } from "@/types/order";
@@ -29,7 +29,7 @@ export function RoundDashboardDrawer(vm: DVM) {
   const data = vm.customers;
 
   return (
-    <DetailDrawer open={!!r} title={r ? t("preorderRound.dashboard.drawerTitle", { name: r.round_name }) : ""} onClose={vm.closeRound} size={640}>
+    <DetailModal open={!!r} title={r ? t("preorderRound.dashboard.drawerTitle", { name: r.round_name }) : ""} onClose={vm.closeRound} size={640}>
       {r && (
         <div className="flex flex-col gap-5">
           {/* ยอดเงินแยกสถานะชำระเงิน */}
@@ -153,6 +153,6 @@ export function RoundDashboardDrawer(vm: DVM) {
           </section>
         </div>
       )}
-    </DetailDrawer>
+    </DetailModal>
   );
 }
