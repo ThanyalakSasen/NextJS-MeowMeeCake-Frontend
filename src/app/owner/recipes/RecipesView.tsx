@@ -21,7 +21,7 @@ import { sortOptionsThai } from "@/lib/thaiSort";
 // ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัล/ลิ้นชักไม่ render ฝั่ง server อยู่แล้ว — Portal ของ antd คืน null)
 const MainRecipeModal = dynamic(() => import("./_components/MainRecipeModal").then((m) => m.MainRecipeModal), { ssr: false });
 const ComponentFormModal = dynamic(() => import("./_components/ComponentFormModal").then((m) => m.ComponentFormModal), { ssr: false });
-const DetailDrawer = dynamic(() => import("@/components/shared/feedback/DetailDrawer").then((m) => m.DetailDrawer), { ssr: false });
+const DetailModal = dynamic(() => import("@/components/shared/feedback/DetailModal").then((m) => m.DetailModal), { ssr: false });
 const RecipeDetail = dynamic(() => import("./_components/RecipeDetail").then((m) => m.RecipeDetail), { ssr: false });
 
 type VM = ReturnType<typeof useRecipesViewModel>;
@@ -264,13 +264,13 @@ export function RecipesView(vm: VM) {
       )}
 
       {drawerUsed && (
-        <DetailDrawer
+        <DetailModal
           open={vm.drawerOpen}
           title={vm.detailRecipe?.recipe_name ?? ""}
           onClose={vm.closeDrawer}
         >
           {vm.detailRecipe && <RecipeDetail recipe={vm.detailRecipe} />}
-        </DetailDrawer>
+        </DetailModal>
       )}
     </>
   );

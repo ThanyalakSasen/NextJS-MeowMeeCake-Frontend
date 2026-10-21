@@ -8,7 +8,7 @@ import { formatNumber } from "@/i18n/format";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, EmptyState, Select } from "@/components/base";
 import { PaginationBar } from "@/components/shared/data";
-import { DetailDrawer, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { DetailModal, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { useReviewsViewModel } from "./useReviewsViewModel";
 import { ReviewFiltersBar } from "./_components/ReviewFiltersBar";
@@ -125,9 +125,9 @@ export function ReviewsView(vm: VM) {
         <p className="m-0 mt-2 text-xs text-gray-500">{t("reviews.tagsHint")}</p>
       </Modal>
 
-      <DetailDrawer open={!!vm.detail} title={t("reviews.detailTitle")} onClose={vm.closeDetail}>
+      <DetailModal open={!!vm.detail} title={t("reviews.detailTitle")} onClose={vm.closeDetail}>
         {vm.detail && <ReviewDetailContent review={vm.detail} />}
-      </DetailDrawer>
+      </DetailModal>
     </>
   );
 }

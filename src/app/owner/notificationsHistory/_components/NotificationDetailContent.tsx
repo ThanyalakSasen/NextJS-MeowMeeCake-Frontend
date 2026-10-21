@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาใน DetailDrawer ของหน้า Notification History
+// เนื้อหาใน DetailModal (ป๊อปอัป) ของหน้า Notification History
 import { useTranslations, useLocale } from "next-intl";
 import { Divider, Tag } from "@/components/base";
 import { formatDate } from "@/i18n/format";

@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาใน DetailDrawer ของสูตรหลัก — ผูกกับสินค้า, ส่วนประกอบ (สูตรส่วนประกอบ+วัตถุดิบตรง), ขั้นตอนการทำ
+// เนื้อหาใน DetailModal (ป๊อปอัป) ของสูตรหลัก — ผูกกับสินค้า, ส่วนประกอบ (สูตรส่วนประกอบ+วัตถุดิบตรง), ขั้นตอนการทำ
 import { Steps } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { LinkIcon } from "@heroicons/react/24/outline";

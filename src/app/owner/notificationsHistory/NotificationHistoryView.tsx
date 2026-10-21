@@ -16,7 +16,7 @@ import { DeleteButton, actionIcon } from "@/components/shared/actions";
 import type { useNotificationHistoryViewModel } from "./useNotificationHistoryViewModel";
 
 // ลิ้นชักรายละเอียดแยก chunk — โหลดเมื่อเปิดครั้งแรก (ลิ้นชักไม่ render ฝั่ง server อยู่แล้ว)
-const DetailDrawer = dynamic(() => import("@/components/shared/feedback/DetailDrawer").then((m) => m.DetailDrawer), { ssr: false });
+const DetailModal = dynamic(() => import("@/components/shared/feedback/DetailModal").then((m) => m.DetailModal), { ssr: false });
 const NotificationDetailContent = dynamic(() => import("./_components/NotificationDetailContent").then((m) => m.NotificationDetailContent), { ssr: false });
 
 type VM = ReturnType<typeof useNotificationHistoryViewModel>;
@@ -170,7 +170,7 @@ export function NotificationHistoryView(vm: VM) {
       )}
 
       {drawerUsed && (
-        <DetailDrawer
+        <DetailModal
           open={vm.drawerOpen}
           title={t("notifications.detailTitle")}
           onClose={vm.closeDrawer}
@@ -183,7 +183,7 @@ export function NotificationHistoryView(vm: VM) {
           }
         >
           {vm.selected && <NotificationDetailContent notif={vm.selected} />}
-        </DetailDrawer>
+        </DetailModal>
       )}
     </ListPageLayout>
   );
