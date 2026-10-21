@@ -14,6 +14,7 @@ import type { PreorderRound } from "@/types/preorderRound";
 import type { ProductionFromRoundPreview, ProductionOrderFromRoundInput } from "@/types/productionOrder";
 import { modalButtonIcons } from "@/components/shared/actions";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { NOTICE_TAG } from "@/constants/enumConfig";
 
 interface StaffOption { _id: string; user_fullname: string }
 
@@ -255,7 +256,7 @@ function PreviewPanel({
                     {p.recipe ? (
                       <span className="text-gray-700">{p.recipe.recipe_name}</span>
                     ) : p.planned_qty > 0 ? (
-                      <Tag color="error" className="!m-0">{t("noRecipe")}</Tag>
+                      <Tag color={NOTICE_TAG.missingRecipe} className="!m-0">{t("noRecipe")}</Tag>
                     ) : (
                       <span className="text-gray-500">-</span>
                     )}
