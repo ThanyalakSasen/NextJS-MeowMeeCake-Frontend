@@ -840,7 +840,8 @@
     "title": "Pre-order Rounds",
     "tabRounds": "Pre-order Rounds",
     "tabDashboard": "Round Summary",
-    "tabOrders": "Birthday Cake Orders",
+    "tabOrders": "Pre-order Orders",
+    "moreItems": "+ {n} more",
     "dashboard": {
       "statRounds": "All rounds",
       "statOpen": "{n} open now",

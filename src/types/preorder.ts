@@ -22,6 +22,9 @@ export interface PreorderItem {
   round_item_id: string;
   product_id: string;
   product_name: string;
+  variant_name: string | null;
+  selected_variants: { group_name: string; variant_name: string }[];
+  selected_options: { option_name: string; text_value: string | null }[];
   pickup_date: string;
   special_request?: string | null;
   quantity: number;
@@ -51,7 +54,7 @@ export interface Preorder extends DeliveryInfo {
   /** กำหนดชำระ = min(สั่ง + 24 ชม., ปิดรอบ) — เลยแล้วยังไม่จ่าย (และไม่มีสลิปรอตรวจ) backend ยกเลิกอัตโนมัติ
    *  · null = ข้อมูลก่อนมีฟิลด์นี้ (backend #55 — docs/preorder-round-flow.md ประเด็น 3) */
   payment_due_at?: string | null;
-  /** มีเฉพาะตอน preordersService.get(id) — list ไม่มี (อยู่คนละ collection) */
+  /** มีทั้ง list และ get(id) — backend แนบรายการสินค้าของแต่ละใบมาให้ */
   items?: PreorderItem[];
   /** มีค่าเฉพาะ preordersService.get(id) ของพรีออเดอร์ที่รอโอนคืน + ลูกค้าตั้งบัญชีไว้ (Q-BE12) */
   refund_account: RefundAccount | null;

@@ -840,7 +840,8 @@
     "title": "จัดการรอบพรีออเดอร์",
     "tabRounds": "รอบพรีออเดอร์",
     "tabDashboard": "สรุปรอบ",
-    "tabOrders": "คำสั่งซื้อเค้กวันเกิด",
+    "tabOrders": "คำสั่งซื้อพรีออเดอร์",
+    "moreItems": "+ อีก {n} รายการ",
     "dashboard": {
       "statRounds": "รอบทั้งหมด",
       "statOpen": "เปิดรับอยู่ {n} รอบ",
