@@ -109,6 +109,11 @@ export function NotificationHistoryView(vm: VM) {
                 ]}
               />
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("notifications.searchPlaceholder")} />
+            </>
+          }
+          // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+          right={
+            <>
               <FilterField label={t("filterLabel.module")} minWidth={150}>
                 <Select
                   value={vm.moduleFilter}

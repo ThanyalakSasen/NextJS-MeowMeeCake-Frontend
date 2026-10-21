@@ -97,6 +97,11 @@ export function IngredientsView(vm: VM) {
                 onChange={vm.setSearch}
                 placeholder={t("ingredients.searchPlaceholder")}
               />
+            </>
+          }
+          // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+          right={
+            <>
               <FilterField label={t("filterLabel.ingredientCategory")} minWidth={170}>
                 <Select
                   value={vm.categoryId}

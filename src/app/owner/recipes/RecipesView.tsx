@@ -55,9 +55,10 @@ function MainTab(vm: VM) {
       )}
 
       <FilterToolbar
-        left={
+        left={<SearchInput value={vm.mainSearch} onChange={vm.setMainSearch} placeholder={t("recipes.searchRecipePlaceholder")} />}
+        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+        right={
           <>
-            <SearchInput value={vm.mainSearch} onChange={vm.setMainSearch} placeholder={t("recipes.searchRecipePlaceholder")} />
             <FilterField label={t("filterLabel.productCategory")} minWidth={170}>
               <Select
                 value={vm.mainCategoryFilter}
@@ -170,9 +171,10 @@ function ComponentsTab(vm: VM) {
       </StatCardsGrid>
 
       <FilterToolbar
-        left={
+        left={<SearchInput value={vm.subSearch} onChange={vm.setSubSearch} placeholder={t("recipes.searchComponentPlaceholder")} />}
+        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+        right={
           <>
-            <SearchInput value={vm.subSearch} onChange={vm.setSubSearch} placeholder={t("recipes.searchComponentPlaceholder")} />
             <FilterField label={t("filterLabel.componentCategory")} minWidth={170}>
               <Select
                 value={vm.subCategoryFilter}

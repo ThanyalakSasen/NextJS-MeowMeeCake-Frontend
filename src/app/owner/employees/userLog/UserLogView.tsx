@@ -85,9 +85,10 @@ export function UserLogView(vm: VM) {
       }
       toolbar={
         <FilterToolbar
-          left={
+          left={<SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("userLog.searchPlaceholder")} />}
+          // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+          right={
             <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("userLog.searchPlaceholder")} />
               <FilterField label={t("filterLabel.employee")} minWidth={170}>
                 <Select
                   value={vm.employeeId}

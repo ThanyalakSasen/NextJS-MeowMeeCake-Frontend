@@ -45,6 +45,11 @@ export function CouponsView(vm: VM) {
                 ]}
               />
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("coupons.searchPlaceholder")} />
+            </>
+          }
+          // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+          right={
+            <>
               <FilterField label={t("filterLabel.discountType")} minWidth={160}>
                 <Select
                   value={vm.typeFilter}
