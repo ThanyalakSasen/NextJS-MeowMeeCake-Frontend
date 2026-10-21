@@ -208,6 +208,13 @@ export function useProductionViewModel() {
     cancelled: orders.filter((o) => o.production_status === "cancelled").length,
   }), [orders]);
 
+  // ── แท็บ 2: สถานะการผลิต — ดูทีละวันตาม production_date (ค่าเริ่มต้น = วันนี้) ──
+  const [statusDate, setStatusDate] = useState<Dayjs>(() => dayjs());
+  const statusOrders = useMemo(
+    () => orders.filter((o) => dayjs(o.production_date).isSame(statusDate, "day")),
+    [orders, statusDate],
+  );
+
   // ── รายละเอียดใบสั่งผลิต (ใช้ร่วม: row บนแท็บ 1, การ์ดบนแท็บ 2, row บนแท็บ 3) ──
   // drawer ผูกกับ ?id= (แพทเทิร์นเดียวกับ Manage Orders) · หาจาก list ที่โหลดไว้ก่อน (ใหม่สุด 200 ใบ) ถ้าไม่เจอ
   // (ใบเก่ากว่านั้น) ค่อยดึงใบนั้นตรง ๆ ด้วย GET /admin/production-orders/{id} · จำ id ล่าสุดไว้แม้ปิดแล้ว
@@ -390,7 +397,7 @@ export function useProductionViewModel() {
     creatingFromRound: createFromRound.isPending,
 
     // แท็บ 2
-    orders,
+    orders, statusDate, setStatusDate, statusOrders,
 
     // แท็บ 3
     historyViewMode, setHistoryViewMode,
