@@ -55,8 +55,8 @@ export function ReviewDashboardView({ onViewUnreplied, ...vm }: VM & { onViewUnr
   return (
     <div className="flex flex-col gap-5">
       {/* เลือกสินค้า — อยู่ในเนื้อหา ไม่ใช่แถวแท็บ (แถวแท็บยาวเกินจะดันปุ่ม จัดการรีวิว|แดชบอร์ด ลงบรรทัดใหม่)
-          อยู่นอกเงื่อนไข "ไม่มีรีวิว" — ล้างตัวกรองได้เสมอ */}
-      <div className="flex flex-wrap items-center gap-2">
+          อยู่นอกเงื่อนไข "ไม่มีรีวิว" — ล้างตัวกรองได้เสมอ · ชิดขวาเหมือนตัวกรองหน้าอื่น */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Select
           allowClear
           showSearch

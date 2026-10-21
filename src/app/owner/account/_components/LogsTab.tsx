@@ -61,9 +61,10 @@ export function LogsTab(vm: VM) {
     <div className="flex flex-col gap-4">
       <p className="m-0 text-sm text-gray-500">{t("myAccount.logsDescription")}</p>
       <FilterToolbar
-        left={
+        left={<SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("myAccount.logsSearch")} />}
+        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+        right={
           <>
-            <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("myAccount.logsSearch")} />
             <FilterField label={t("filterLabel.actionType")} minWidth={150}>
               <Select
                 value={vm.actionType}

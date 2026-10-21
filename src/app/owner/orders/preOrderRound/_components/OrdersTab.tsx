@@ -102,9 +102,10 @@ export function OrdersTab(vm: VM) {
       </StatCardsGrid>
 
       <FilterToolbar
-        left={
+        left={<SearchInput value={vm.orderSearch} onChange={vm.setOrderSearch} placeholder={t("preorderRound.searchOrderPlaceholder")} />}
+        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+        right={
           <>
-            <SearchInput value={vm.orderSearch} onChange={vm.setOrderSearch} placeholder={t("preorderRound.searchOrderPlaceholder")} />
             <FilterField label={t("filterLabel.round")} minWidth={180}>
               <Select
                 value={vm.orderRoundFilter}
