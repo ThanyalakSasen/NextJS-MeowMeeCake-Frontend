@@ -1,5 +1,5 @@
 "use client";
-// แผงขวา: การ์ดโปรโมชัน (เลือกได้ทีละ 1 — backend รับ promotion_id เดียว) · สรุปยอด · ปุ่มชำระเงินสด/QR · ยกเลิกบิล
+// แผงขวา: การ์ดโปรโมชัน (เลือกได้ทีละ 1 — backend รับ promotion_id เดียว) · สมาชิกสะสมแต้ม · สรุปยอด · ปุ่มชำระเงินสด/QR · ยกเลิกบิล
 import { ConfigProvider } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { BanknotesIcon, CheckIcon, QrCodeIcon } from "@heroicons/react/24/outline";
@@ -26,6 +26,7 @@ export function PaymentAside({
   onPayCash,
   onPayQr,
   onClearBill,
+  memberSlot,
 }: {
   promotionsEnabled: boolean;
   promoEvals: PromoEval[];
@@ -43,6 +44,8 @@ export function PaymentAside({
   onPayCash: () => void;
   onPayQr: () => void;
   onClearBill: () => void;
+  /** ช่องกรอกเบอร์สมาชิก (MemberCard) — คั่นระหว่างโปรโมชันกับสรุปยอด */
+  memberSlot: React.ReactNode;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -120,11 +123,9 @@ export function PaymentAside({
         </div>
       )}
 
-      <div
-        className={`flex flex-col gap-3 rounded-b-[20px] bg-gray-50 px-[18px] pb-[18px] pt-3.5 ${
-          promotionsEnabled ? "border-t border-gray-100" : "rounded-t-[20px]"
-        }`}
-      >
+      <div className={`px-[18px] pb-3 pt-3.5 ${promotionsEnabled ? "border-t border-gray-100" : ""}`}>{memberSlot}</div>
+
+      <div className="flex flex-col gap-3 rounded-b-[20px] border-t border-gray-100 bg-gray-50 px-[18px] pb-[18px] pt-3.5">
         <div className="flex justify-between">
           <span className="text-gray-600">{t("pos.subtotal")}</span>
           <span className="tabular-nums">{formatCurrency(subtotal, locale)}</span>

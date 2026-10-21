@@ -11,6 +11,7 @@ import type { usePOSViewModel } from "./usePOSViewModel";
 import { ScanSearchBox } from "./_components/ScanSearchBox";
 import { BillCard } from "./_components/BillCard";
 import { PaymentAside } from "./_components/PaymentAside";
+import { MemberCard } from "./_components/MemberCard";
 
 // หน้าต่างชำระเงิน/เลือกตัวเลือก (antd Modal · Image · แป้นตัวเลข) แยก chunk — ไม่ต้อง parse/รันตอนเปิดหน้า
 // (Lighthouse TBT) · เริ่มโหลดล่วงหน้าเมื่อบิลมีสินค้าชิ้นแรก → กดชำระแล้วหน้าต่างขึ้นทันทีเหมือนเดิม
@@ -90,6 +91,20 @@ export function POSView(vm: VM) {
           canCreate={vm.perm.create}
           hasItems={vm.cart.length > 0}
           onTogglePromo={vm.togglePromo}
+          memberSlot={
+            <MemberCard
+              phone={vm.memberPhone}
+              searching={vm.memberSearching}
+              lookup={vm.memberLookup}
+              member={vm.member}
+              points={vm.memberPoints}
+              disabled={vm.submitting}
+              onPhoneChange={vm.setMemberPhone}
+              onSubmit={vm.submitMemberPhone}
+              onPick={vm.pickMember}
+              onClear={vm.clearMember}
+            />
+          }
           onPayCash={vm.openCash}
           onPayQr={vm.openQr}
           onClearBill={vm.onClearBill}

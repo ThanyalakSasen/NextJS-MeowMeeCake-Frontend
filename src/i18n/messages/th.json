@@ -1021,7 +1021,7 @@
       "usedUp": "ใช้ครบจำนวนสิทธิ์แล้ว",
       "zero": "ไม่ได้ส่วนลดกับบิลนี้"
     },
-    "promoPerUserNote": "จำกัดสิทธิ์ต่อลูกค้า — ขายหน้าร้านใช้บัญชีลูกค้าทั่วไปบัญชีเดียว อาจใช้ไม่ได้",
+    "promoPerUserNote": "จำกัดสิทธิ์ต่อลูกค้า — ไม่กรอกเบอร์สมาชิก = ใช้บัญชีลูกค้าทั่วไปบัญชีเดียว อาจใช้ไม่ได้",
     "selectedPromoInvalid": "โปรโมชันที่เลือกใช้กับบิลนี้ไม่ได้แล้ว — คิดราคาแบบไม่ใช้โปรโมชัน",
     "promoBackendNote": "ยอดสุดท้ายระบบคำนวณใหม่ตอนยืนยันคำสั่งซื้อ",
     "subtotal": "ยอดสินค้า",
@@ -1062,7 +1062,22 @@
     "pickOptionRequired": "เลือก \"{option}\"",
     "pickTextRequired": "กรอก \"{option}\"",
     "pickTextTooLong": "\"{option}\" ยาวเกิน {n} ตัวอักษร",
-    "customizationLoadFailed": "โหลดตัวเลือกของสินค้าไม่สำเร็จ กรุณาลองใหม่"
+    "customizationLoadFailed": "โหลดตัวเลือกของสินค้าไม่สำเร็จ กรุณาลองใหม่",
+    "memberTitle": "สมาชิกสะสมแต้ม",
+    "memberPhoneLabel": "เบอร์มือถือสมาชิก",
+    "memberPhonePlaceholder": "เบอร์มือถือ 10 หลัก",
+    "memberSearch": "ค้นหา",
+    "memberHint": "ไม่กรอก = ขายแบบลูกค้าทั่วไป (ไม่ได้แต้ม)",
+    "memberPhoneInvalid": "เบอร์มือถือต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0",
+    "memberNotFound": "ไม่พบสมาชิกเบอร์ {phone} — ขายแบบลูกค้าทั่วไปได้",
+    "memberLookupFailed": "ค้นหาสมาชิกไม่สำเร็จ",
+    "memberPickOne": "เบอร์นี้มีหลายบัญชี — เลือกสมาชิก",
+    "memberBalance": "แต้มคงเหลือ {n} แต้ม",
+    "memberEarn": "บิลนี้จะได้ประมาณ +{n} แต้ม",
+    "memberChange": "เปลี่ยน",
+    "memberLabel": "สมาชิก",
+    "memberPointsEarned": "แต้มที่ได้รับ",
+    "memberPointsValue": "+{n} แต้ม"
   },
   "ingredients": {
     "title": "จัดการข้อมูลวัตถุดิบ",

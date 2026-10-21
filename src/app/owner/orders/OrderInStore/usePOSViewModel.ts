@@ -8,6 +8,7 @@
 //      ไม่ต้องมี payments.approve (ซึ่งยืนยันสลิปออเดอร์เว็บได้ด้วย)
 // backend บังคับทุกออเดอร์ต้องมี user_id จริง — ไม่มีแนวคิด "ลูกค้าไม่ระบุตัวตน" จึงผูกกับบัญชี
 // "ลูกค้าทั่วไป" ตายตัว (backend scripts/seed.ts สร้างไว้ · หา id ผ่าน GET /admin/pos/guest-customer ใต้ orders.view)
+// กรอกเบอร์มือถือสมาชิก (GET /admin/pos/member) → ผูกออเดอร์กับสมาชิกแทน → ปิดงาน completed แล้ว backend ให้แต้มสะสมเอง
 //
 // หน้าจอตามดีไซน์ใหม่ (BACKLOG2 §14): ช่อง "สแกน / ค้นหา" ช่องเดียว (บาร์โค้ด + รหัส/ชื่อ) · บิล (ปุ่ม −/+) ·
 // การ์ดโปรโมชัน · ปุ่มชำระเงินสด/QR · หน้าต่างรับเงินสด (คีย์แพด + ทอน) / QR / ชำระสำเร็จ
@@ -26,7 +27,7 @@ import { isApiError } from "@/types/api";
 import type { Product } from "@/types/product";
 import type { Promotion } from "@/types/promotion";
 import type { ProductCustomization } from "@/types/productCustomization";
-import type { PosProduct } from "@/types/pos";
+import type { PosMember, PosProduct } from "@/types/pos";
 import { nextRawInput, thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import {
   addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoLines, type CartLine,
@@ -60,7 +61,20 @@ export interface PaymentDone {
   discount: number;
   received: number;
   change: number;
+  /** สมาชิกที่ได้แต้มจากบิลนี้ (null = ลูกค้าทั่วไป) */
+  member: { name: string; points: number } | null;
 }
+
+/** ผลค้นสมาชิกล่าสุด — idle = ยังไม่ค้น · many = เบอร์ซ้ำหลายบัญชี ให้เลือก */
+export type MemberLookup =
+  | { state: "idle" }
+  | { state: "notFound"; phone: string }
+  | { state: "many"; members: PosMember[] }
+  | { state: "error"; message: string };
+
+/** เบอร์ไทย 10 หลักขึ้นต้น 0 (ตัดขีด/ช่องว่างแล้ว) — ตรงกับที่ backend ตรวจ */
+const MEMBER_PHONE = /^0\d{9}$/;
+const normalizePhone = (v: string) => v.replace(/[\s-]/g, "");
 
 export function usePOSViewModel() {
   const t = useTranslations();
@@ -80,6 +94,12 @@ export function usePOSViewModel() {
   const [picker, setPicker] = useState<{ product: Product; customization: ProductCustomization } | null>(null);
   /** กำลังดึงกลุ่มตัวเลือกของสินค้านี้ก่อนลงบิล */
   const [preparingId, setPreparingId] = useState<string | null>(null);
+  // สมาชิกสะสมแต้ม — ช่องเบอร์ · ผลค้น · สมาชิกที่ผูกกับบิลนี้
+  const [memberPhone, setMemberPhone] = useState("");
+  const [memberLookup, setMemberLookup] = useState<MemberLookup>({ state: "idle" });
+  const [member, setMember] = useState<PosMember | null>(null);
+  /** ซื้อทุกกี่บาทได้ 1 แต้ม — มากับผลค้นสมาชิก (backend เป็นเจ้าของกติกา) */
+  const [bahtPerPoint, setBahtPerPoint] = useState<number | null>(null);
 
   const catalogQ = useQuery({
     // ขึ้นต้นด้วย "products" — ขายเสร็จ invalidate ["products"] แล้วสต็อกในคำแนะนำรีเฟรชตาม
@@ -235,6 +255,38 @@ export function usePOSViewModel() {
   const discount = appliedPromo?.discount ?? 0;
   const total = Math.max(subtotal - discount, 0);
 
+  // ── สมาชิกสะสมแต้ม ──
+  const findMember = useMutation({
+    mutationFn: (phone: string) => posService.findMember(phone),
+    onSuccess: (res, phone) => {
+      setBahtPerPoint(res.baht_per_point);
+      if (res.members.length === 1) {
+        setMember(res.members[0]);
+        setMemberLookup({ state: "idle" });
+      } else if (res.members.length === 0) {
+        setMemberLookup({ state: "notFound", phone });
+      } else {
+        setMemberLookup({ state: "many", members: res.members });
+      }
+    },
+    onError: (e) => setMemberLookup({ state: "error", message: isApiError(e) ? e.message : t("pos.memberLookupFailed") }),
+  });
+  const submitMemberPhone = () => {
+    const phone = normalizePhone(memberPhone);
+    if (!MEMBER_PHONE.test(phone)) {
+      setMemberLookup({ state: "error", message: t("pos.memberPhoneInvalid") });
+      return;
+    }
+    findMember.mutate(phone);
+  };
+  const clearMember = () => {
+    setMember(null);
+    setMemberPhone("");
+    setMemberLookup({ state: "idle" });
+  };
+  /** แต้มโดยประมาณจากบิลนี้ — backend ให้จริงจากยอดหลังหักส่วนลด (ปัดเศษทิ้ง) */
+  const pointsFor = (amount: number) => (bahtPerPoint ? Math.floor(Math.max(amount, 0) / bahtPerPoint) : 0);
+
   const received = Number(receivedDigits || "0");
   const receivedShort = received < total;
 
@@ -244,16 +296,18 @@ export function usePOSViewModel() {
     setReceivedDigits("");
     setQueryRaw("");
     setPicker(null);
+    clearMember();
   };
 
   const checkout = useMutation({
     mutationFn: async ({ method, received: cash }: { method: PaymentMethod; received: number }): Promise<PaymentDone> => {
       // ข้อความนี้ไม่โชว์ผู้ใช้ตรง ๆ (onError ใช้ t("pos.saveFailed") แทน) — ไว้ debug ใน console เท่านั้น
-      if (!guestUserId) throw new Error("Guest customer account not found — run `npm run seed` on the backend");
+      const userId = member?._id ?? guestUserId;
+      if (!userId) throw new Error("Guest customer account not found — run `npm run seed` on the backend");
 
       // 1) สร้างออเดอร์ — backend ตัดสต็อก + คำนวณ subtotal/ส่วนลดโปรโมชัน/total_amount ให้เองทั้งหมด
       const orderRes = await ordersService.create(
-        buildOrderInput({ cart, guestUserId, discount: 0, promotionId: appliedPromo?.promotion._id ?? null }),
+        buildOrderInput({ cart, userId, discount: 0, promotionId: appliedPromo?.promotion._id ?? null }),
       );
       const order = orderRes.data;
 
@@ -268,6 +322,7 @@ export function usePOSViewModel() {
         discount: order.discount_amount ?? 0,
         received: paid,
         change: Math.max(paid - order.total_amount, 0),
+        member: member ? { name: member.user_fullname, points: pointsFor(order.total_amount) } : null,
       };
     },
     onSuccess: (result) => {
@@ -397,6 +452,17 @@ export function usePOSViewModel() {
     appliedPromo,
     selectedPromoInvalid: !!selectedPromoId && !appliedPromo,
     togglePromo: (id: string) => setSelectedPromoId((cur) => (cur === id ? null : id)),
+
+    // สมาชิกสะสมแต้ม
+    memberPhone,
+    setMemberPhone: (v: string) => { setMemberPhone(v); if (memberLookup.state !== "idle") setMemberLookup({ state: "idle" }); },
+    submitMemberPhone,
+    memberSearching: findMember.isPending,
+    memberLookup,
+    member,
+    pickMember: (m: PosMember) => { setMember(m); setMemberLookup({ state: "idle" }); },
+    clearMember,
+    memberPoints: pointsFor(total),
 
     // ชำระเงิน
     canPay,

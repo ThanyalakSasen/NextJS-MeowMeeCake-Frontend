@@ -34,6 +34,22 @@ export interface PosGuestCustomer {
   email: string;
 }
 
+/** 1 สมาชิกจาก GET /admin/pos/member?phone= */
+export interface PosMember {
+  _id: string;
+  user_fullname: string;
+  user_phone: string;
+  /** แต้มคงเหลือ (ไม่นับล็อตที่หมดอายุ) */
+  points_balance: number;
+}
+
+/** GET /admin/pos/member?phone= — เบอร์ซ้ำได้ จึงคืนเป็นรายการ (ว่าง = ไม่พบ) */
+export interface PosMemberLookup {
+  members: PosMember[];
+  /** ซื้อทุกกี่บาทได้ 1 แต้ม (backend POINT_RULES) — ใช้ประมาณแต้มที่จะได้จากบิล */
+  baht_per_point: number;
+}
+
 export interface PosScanResult {
   product: Product;
   current_price: number;
