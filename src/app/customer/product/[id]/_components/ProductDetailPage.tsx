@@ -33,6 +33,7 @@ import CustomizationPicker from "./CustomizationPicker";
 import { pickProblemText } from "../../../lib/pickProblemText";
 import ReviewsSection from "./ReviewsSection";
 import SimilarProducts from "./SimilarProducts";
+import AllergenNotice from "./AllergenNotice";
 import WhenVisible from "@/components/customer/WhenVisible";
 
 const noopSubscribe = () => () => {};
@@ -329,6 +330,8 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
               )}
               {extra > 0 && <span className="w-full text-xs text-gray-500">{t("withOptions", { n: extra.toLocaleString() })}</span>}
             </div>
+
+            <AllergenNotice productId={product._id} />
 
             {isPreorder ? (
               <PreorderOrderBox

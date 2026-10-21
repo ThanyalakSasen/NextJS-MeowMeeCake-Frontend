@@ -20,6 +20,7 @@ import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
 import { STATUS_SELECT_OPTIONS } from "./orderStatus";
 import { OrderStatusFilter } from "./_components/OrderStatusFilter";
 import { OrderDetailContent } from "./_components/OrderDetailContent";
+import { CancelOrderModal } from "./_components/CancelOrderModal";
 
 type VM = ReturnType<typeof useManageOrdersViewModel>;
 
@@ -217,6 +218,14 @@ export function ManageOrdersView(vm: VM) {
           />
         )}
       </DetailModal>
+
+      <CancelOrderModal
+        key={vm.cancelTarget?._id ?? "none"}
+        order={vm.cancelTarget}
+        saving={vm.cancelling}
+        onClose={vm.closeCancel}
+        onConfirm={vm.onConfirmCancel}
+      />
     </ListPageLayout>
   );
 }

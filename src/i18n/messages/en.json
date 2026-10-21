@@ -806,7 +806,7 @@
     "deliveryNotifyHint": "The customer is notified automatically when the delivery status changes",
     "awaitingRefund": "Awaiting refund",
     "awaitingRefundTitle": "Refund owed to customer",
-    "awaitingRefundDetail": "The customer cancelled after paying — transfer {amount} back, then confirm below",
+    "awaitingRefundDetail": "The order was cancelled after payment — transfer {amount} back, then confirm below",
     "cancelReasonLabel": "Cancellation reason: {reason}",
     "confirmRefund": "Confirm refund sent",
     "refundConfirm": "Confirm you have refunded {amount} to the customer of {no}? The payment will be marked \"Refunded\" and this cannot be undone.",
@@ -827,7 +827,13 @@
     "deliveryFee": "Delivery fee",
     "discount": "Discount",
     "pointsUsed": "{n} points used ({amount} off)",
-    "couponUsed": "Personal coupon used ({amount} off)"
+    "couponUsed": "Personal coupon used ({amount} off)",
+    "cancelTitle": "Cancel order {no}",
+    "keepOrder": "Keep order",
+    "cancelReasonField": "Cancellation reason",
+    "cancelReasonPlaceholder": "e.g. Out of ingredients / customer called to cancel",
+    "cancelReasonRequired": "Please enter a cancellation reason",
+    "cancelPaidNotice": "This order is already paid — after cancelling it will be \"awaiting refund\". Transfer {amount} back to the customer, then press \"Confirm refund sent\" in the order details"
   },
   "preorderRound": {
     "paymentDue": "Payment due",
@@ -1415,6 +1421,8 @@
     "itemsCount": "{n} items",
     "fieldYieldQty": "Yield (qty)",
     "fieldCost": "Est. Cost (฿/batch)",
+    "costAuto": "Auto-calculated",
+    "costAutoHint": "Leave blank to calculate from ingredient costs on every save",
     "usedInTitle": "Used In",
     "notUsedYet": "Not used yet",
     "deleteComponentBlocked": "A main recipe uses this sub-recipe — can't delete",
@@ -3299,7 +3307,9 @@
       "tabHeating": "Reheating",
       "descriptionTitle": "Product details",
       "noDescription": "No product details",
-      "noHeating": "No reheating instructions"
+      "noHeating": "No reheating instructions",
+      "allergenNotice": "This product contains ingredients you are allergic to: {names}",
+      "allergenNoticeGeneric": "This product contains ingredients you are allergic to"
     },
     "preorderBox": {
       "notInRound": "This product isn't offered in the selected round",
