@@ -113,23 +113,33 @@ export function useManageOrdersViewModel() {
     onSuccess: invalidate,
   });
 
+  // ยกเลิกต้องยืนยัน + กรอกเหตุผลก่อนเสมอ (CancelOrderModal) — ทั้งปุ่มในตารางและการเลือก "ยกเลิก" จาก dropdown
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
+  const onCancel = (order: Order) => setCancelTarget(order);
+
+  const onConfirmCancel = (reason: string) => {
+    const order = cancelTarget;
+    if (!order) return;
+    statusMutation.mutate(
+      { id: order._id, status: "cancelled", reason },
+      {
+        onSuccess: () => {
+          alert.success(t("orders.cancelled", { no: order.order_no }));
+          setCancelTarget(null);
+        },
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.cancelFailed")),
+      },
+    );
+  };
+
   const onStatusChange = (order: Order, next: OrderStatus) => {
     if (next === order.order_status) return;
+    if (next === "cancelled") return onCancel(order);
     statusMutation.mutate(
       { id: order._id, status: next },
       {
         onSuccess: () => alert.success(t("orders.statusChanged", { no: order.order_no, status: t(`enums.orderStatus.${next}`) })),
         onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.statusChangeFailed")),
-      },
-    );
-  };
-
-  const onCancel = (order: Order) => {
-    statusMutation.mutate(
-      { id: order._id, status: "cancelled" },
-      {
-        onSuccess: () => alert.success(t("orders.cancelled", { no: order.order_no })),
-        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.cancelFailed")),
       },
     );
   };
@@ -272,6 +282,9 @@ export function useManageOrdersViewModel() {
 
     isFinalStatus,
     onStatusChange, onCancel, onVerifyPayment, onRejectPayment, onExport,
+    cancelTarget, onConfirmCancel,
+    closeCancel: () => setCancelTarget(null),
+    cancelling: statusMutation.isPending,
     verifyingPayment: verifyMutation.isPending,
     onRefund,
     refunding: refundMutation.isPending,

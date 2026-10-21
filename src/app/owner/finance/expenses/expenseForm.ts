@@ -11,7 +11,8 @@ export interface ExpenseFormValue {
   date: Dayjs;
   description: string;
   category: ExpenseCategory;
-  amount: number;
+  /** null = ยังไม่กรอก (ฟอร์มใหม่เริ่มว่าง — ค่าเริ่ม 0 เดิมผ่าน required แล้วบันทึกเป็น 0 บาท) */
+  amount: number | null;
   payment_method: ExpensePaymentMethod;
   vendor?: string;
   note?: string;
@@ -23,7 +24,7 @@ export const emptyExpenseForm: ExpenseFormValue = {
   date: dayjs(),
   description: "",
   category: EXPENSE_CATEGORIES[0],
-  amount: 0,
+  amount: null,
   payment_method: EXPENSE_PAYMENT_METHODS[0],
   is_recurring: false,
 };
@@ -49,7 +50,7 @@ export function toExpenseInput(v: ExpenseFormValue): ExpenseInput {
     date: v.date.toISOString(),
     description: v.description.trim(),
     category: v.category,
-    amount: v.amount,
+    amount: v.amount ?? 0, // ฟอร์มบังคับกรอก > 0 แล้ว (ExpenseFormModal rules)
     payment_method: v.payment_method,
     vendor: v.vendor?.trim() || undefined,
     note: v.note?.trim() || undefined,
