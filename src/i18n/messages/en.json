@@ -1021,7 +1021,7 @@
       "usedUp": "Usage limit reached",
       "zero": "No discount for this bill"
     },
-    "promoPerUserNote": "Limited per customer — in-store sales share one walk-in account, so this may be rejected",
+    "promoPerUserNote": "Limited per customer — without a member number, in-store sales share one walk-in account, so this may be rejected",
     "selectedPromoInvalid": "The selected promotion no longer applies — priced without a promotion",
     "promoBackendNote": "The final amount is recalculated when the order is confirmed",
     "subtotal": "Items",
@@ -1062,7 +1062,22 @@
     "pickOptionRequired": "Choose \"{option}\"",
     "pickTextRequired": "Fill in \"{option}\"",
     "pickTextTooLong": "\"{option}\" is longer than {n} characters",
-    "customizationLoadFailed": "Could not load product options. Please try again."
+    "customizationLoadFailed": "Could not load product options. Please try again.",
+    "memberTitle": "Member points",
+    "memberPhoneLabel": "Member mobile number",
+    "memberPhonePlaceholder": "10-digit mobile number",
+    "memberSearch": "Search",
+    "memberHint": "Leave blank to sell as a walk-in customer (no points)",
+    "memberPhoneInvalid": "Mobile number must be 10 digits starting with 0",
+    "memberNotFound": "No member found for {phone} — you can sell as a walk-in customer",
+    "memberLookupFailed": "Couldn't look up the member",
+    "memberPickOne": "Several accounts use this number — pick the member",
+    "memberBalance": "Balance {n} points",
+    "memberEarn": "This bill earns about +{n} points",
+    "memberChange": "Change",
+    "memberLabel": "Member",
+    "memberPointsEarned": "Points earned",
+    "memberPointsValue": "+{n} points"
   },
   "ingredients": {
     "title": "Ingredients",
