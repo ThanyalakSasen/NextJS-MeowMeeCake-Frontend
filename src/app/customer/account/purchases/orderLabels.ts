@@ -1,6 +1,6 @@
-// ป้ายสถานะออเดอร์ของหน้าร้าน (ประวัติการสั่งซื้อ + รายละเอียด + พรีออเดอร์) — ข้อความอยู่ใน i18n shop.orderStatus / paymentStatus / deliveryStatus
+// ป้ายสถานะออเดอร์ของหน้าร้าน (ประวัติการสั่งซื้อ + รายละเอียด + พรีออเดอร์) — ข้อความอยู่ใน i18n shop.orderStatus / paymentStatus / deliveryStatus / shippingCarrier
 import { useLocale, useTranslations } from "next-intl";
-import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
+import { SHIPPING_CARRIERS, type OrderStatus, type PaymentStatus, type ShippingCarrier } from "@/constants/enumConfig";
 
 export const ORDER_STATUSES: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "completed", "cancelled"];
 const DELIVERY_STATUSES = ["pending", "shipping", "delivered", "failed"] as const;
@@ -41,5 +41,7 @@ export function useOrderLabels() {
     /** สถานะที่ไม่รู้จัก = แสดงค่าดิบ */
     deliveryStatus: (s: string) => ((DELIVERY_STATUSES as readonly string[]).includes(s) ? t(`deliveryStatus.${s as (typeof DELIVERY_STATUSES)[number]}`) : s),
     pickupDate: (v: string) => pickupDateText(v, locale),
+    /** รหัสที่ไม่รู้จัก = ไม่แสดง */
+    shippingCarrier: (c: string) => ((SHIPPING_CARRIERS as readonly string[]).includes(c) ? t(`shippingCarrier.${c as ShippingCarrier}`) : ""),
   };
 }

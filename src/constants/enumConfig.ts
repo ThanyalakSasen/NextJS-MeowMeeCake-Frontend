@@ -58,6 +58,14 @@ export const DELIVERY_STATUS_CONFIG: Record<DeliveryStatus, StatusStyle> = {
   failed:    { color: "#dc2626", antColor: "error" },
 };
 
+// ─── บริษัทขนส่ง (orderModel/preorderModel.shipping_carrier — ตรงกับ backend lib/shippingCarrier.ts) ───
+export const SHIPPING_CARRIERS = [
+  "thailand_post", "kerry", "flash", "jt", "ninjavan", "best",
+  "scg", "lalamove", "grab", "lineman", "store", "other",
+] as const;
+
+export type ShippingCarrier = (typeof SHIPPING_CARRIERS)[number];
+
 // ─── การผลิต ─────────────────────────────────────────────────
 export type ProductionStatus = "planned" | "in_progress" | "done" | "cancelled";
 

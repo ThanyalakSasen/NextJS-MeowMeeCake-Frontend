@@ -84,7 +84,23 @@ export function useManageOrdersViewModel() {
     [filtered, page, pageSize],
   );
 
-  const unreviewedCount = typeOrders.filter((o) => o.payment_status === "pending").length;
+  // กล่องแจ้งเตือนเหนือตาราง (แบบหน้าสต็อก) — คิดจากออเดอร์ของแท็บปัจจุบัน ไม่ขึ้นกับตัวกรอง/ค้นหา · ออเดอร์ที่ยกเลิกไม่นับ
+  // payment_status "pending" มีทั้งแนบสลิปแล้วรอตรวจ และยังไม่แนบ — แยกด้วย slip_pending_review (backend listOrders)
+  const alerts = useMemo(() => {
+    const open = typeOrders.filter((o) => o.order_status !== "cancelled");
+    return {
+      // ยังไม่ได้จัดส่ง = จัดส่งถึงบ้าน + ชำระแล้ว + สถานะจัดส่งยัง "รอจัดส่ง" (แท็บรับเองไม่มีการจัดส่ง)
+      notShipped:
+        activeTab === "delivery"
+          ? open.filter((o) => o.payment_status === "paid" && o.order_status !== "completed" && o.delivery_status === "pending")
+          : [],
+      unverified: open.filter((o) => o.payment_status === "pending" && o.slip_pending_review),
+      // ยังไม่แนบสลิป — รวมสลิปที่ถูกปฏิเสธ (failed) เพราะต้องรอลูกค้าแนบใหม่เหมือนกัน
+      noSlip: open.filter(
+        (o) => o.payment_status === "failed" || (o.payment_status === "pending" && !o.slip_pending_review),
+      ),
+    };
+  }, [typeOrders, activeTab]);
   const awaitingRefundCount = typeOrders.filter(isAwaitingRefund).length;
   // E5 ออเดอร์พร้อมส่งมอบ (แทนหน้า readyReders ของ FrontOffice) — delivery = รอจัดส่ง · takeaway = รอลูกค้ามารับ
   const readyCount = typeOrders.filter((o) => o.order_status === "ready").length;
@@ -263,7 +279,8 @@ export function useManageOrdersViewModel() {
     orders: paged,
     ordersForStats: typeOrders,
     total: filtered.length,
-    deliveryCount, takeawayCount, unreviewedCount, awaitingRefundCount, readyCount,
+    deliveryCount, takeawayCount, awaitingRefundCount, readyCount,
+    alerts,
 
     // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
     isLoading: ordersQ.isPending,
