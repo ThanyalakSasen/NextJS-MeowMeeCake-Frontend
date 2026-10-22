@@ -24,6 +24,7 @@ import { unitLabel } from "@/utils/unitContext";
 import type { ProductionStatus } from "@/constants/enumConfig";
 import type { CompleteProductionValue } from "./_components/CompleteProductionModal";
 import { thaiCompare } from "@/lib/thaiSort";
+import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { PRODUCTION_ORDERS_KEY, PRODUCTION_ORDERS_PARAMS, PRODUCTION_PRODUCTS_KEY, PRODUCTION_PRODUCTS_PARAMS, PRODUCTION_UNITS_KEY, tabFrom, type TabKey } from "./productionQuery";
 import type {
   ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput,
@@ -33,8 +34,8 @@ import {
 } from "./productionStatus";
 
 
-/** โหมดดูประวัติการผลิต — ตรงกับ unit ที่ dayjs().isSame() รับ (day/month/year) */
-export type HistoryViewMode = "day" | "month" | "year";
+/** โหมดดูประวัติการผลิต — ชุดเดียวกับหน้ารายงานยอดขาย (วัน/สัปดาห์/เดือน/ไตรมาส/ปี — utils/period) */
+export type HistoryViewMode = PeriodType;
 
 export interface CreateProductionOrderValue {
   production_date: string;
@@ -249,17 +250,20 @@ export function useProductionViewModel() {
     router.replace(`/owner/production?tab=${activeTab}&id=${encodeURIComponent(id)}`, { scroll: false });
   const closeDrawer = () => router.replace(`/owner/production?tab=${activeTab}`, { scroll: false });
 
-  // ── แท็บ 3: ประวัติการผลิต — เลือกดูแบบรายวัน/รายเดือน/รายปี ──
+  // ── แท็บ 3: ประวัติการผลิต — เลือกช่วงแบบเดียวกับหน้ารายงานยอดขาย (วัน/สัปดาห์/เดือน/ไตรมาส/ปี) ──
   const [historyViewMode, setHistoryViewMode] = useState<HistoryViewMode>("month");
   const [historyDate, setHistoryDate] = useState<Dayjs>(() => dayjs());
 
   const doneOrders = useMemo(() => orders.filter((o) => o.production_status === "done"), [orders]);
   const historyRows = useMemo(
-    () =>
-      doneOrders.filter((o) => {
+    () => {
+      const [start, end] = getRangeStartEnd(historyViewMode, historyDate);
+      return doneOrders.filter((o) => {
         if (!o.completed_at) return false;
-        return dayjs(o.completed_at).isSame(historyDate, historyViewMode);
-      }),
+        const at = dayjs(o.completed_at);
+        return !at.isBefore(start) && !at.isAfter(end);
+      });
+    },
     [doneOrders, historyViewMode, historyDate],
   );
 
