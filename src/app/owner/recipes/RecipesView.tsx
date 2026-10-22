@@ -2,16 +2,15 @@
 // View ของ Recipes — JSX ล้วน รับ props จาก useRecipesViewModel
 // 2 แท็บ: สูตรหลัก (การ์ด) · สูตรส่วนประกอบ (ตาราง) — ใช้ TabbedPageLayout ร่วมกับ Production
 import dynamic from "next/dynamic";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { Button, EmptyState, Select, Tag } from "@/components/base";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, PaginationBar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadingSpin } from "@/components/shared/feedback";
-import { formatDate } from "@/i18n/format";
 import type { RecipeComponent } from "@/types/recipeComponent";
-import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, EditButton, ViewButton, actionIcon } from "@/components/shared/actions";
 import { CategoryManagerButton } from "@/components/shared/categories";
 import type { useRecipesViewModel } from "./useRecipesViewModel";
 import { RecipeCard } from "./_components/RecipeCard";
@@ -101,7 +100,6 @@ function MainTab(vm: VM) {
 
 function ComponentsTab(vm: VM) {
   const t = useTranslations();
-  const locale = useLocale();
 
   const columns: Column<ComponentRow>[] = [
     {
@@ -133,20 +131,12 @@ function ComponentsTab(vm: VM) {
     {
       key: "usedIn",
       title: t("recipes.usedInTitle"),
+      // รายชื่อสูตรหลักยาวหลายบรรทัดทำให้ตารางรก — แสดงแค่จำนวนเป็นปุ่ม กดแล้วเปิดรายชื่อในป๊อปอัป
       render: (c) => (
         c.usedIn.length === 0
           ? <span className="text-gray-500">{t("recipes.notUsedYet")}</span>
-          : <div className="flex flex-wrap gap-1">
-              {c.usedIn.map((name) => (
-                <span key={name} className="rounded bg-pink-50 px-1.5 py-0.5 text-sm font-medium text-pink-700">{name}</span>
-              ))}
-            </div>
+          : <ViewButton size="small" label={t("recipes.usedInCount", { n: c.usedIn.length })} onClick={() => vm.openUsedIn(c)} />
       ),
-    },
-    {
-      key: "updated",
-      title: t("common.status"),
-      render: (c) => <span className="text-gray-500">{formatDate(c.updated_at, locale)}</span>,
     },
   ];
 
@@ -221,6 +211,7 @@ export function RecipesView(vm: VM) {
   const recipeFormUsed = useOpenedOnce(vm.recipeFormOpen);
   const componentFormUsed = useOpenedOnce(vm.componentFormOpen);
   const drawerUsed = useOpenedOnce(vm.drawerOpen);
+  const usedInUsed = useOpenedOnce(!!vm.usedInComponent);
 
   return (
     <>
@@ -270,6 +261,21 @@ export function RecipesView(vm: VM) {
           onClose={vm.closeDrawer}
         >
           {vm.detailRecipe && <RecipeDetail recipe={vm.detailRecipe} />}
+        </DetailModal>
+      )}
+
+      {usedInUsed && (
+        <DetailModal
+          open={!!vm.usedInComponent}
+          title={t("recipes.usedInModalTitle", { name: vm.usedInComponent?.component_name ?? "" })}
+          onClose={vm.closeUsedIn}
+          size={480}
+        >
+          <ul className="m-0 flex list-none flex-col gap-2 p-0">
+            {(vm.usedInComponent?.usedIn ?? []).map((name) => (
+              <li key={name} className="rounded-lg border border-gray-200 px-3 py-2 text-brown-900">{name}</li>
+            ))}
+          </ul>
         </DetailModal>
       )}
     </>

@@ -194,6 +194,9 @@ export function useRecipesViewModel() {
     [components, usedInMap],
   );
 
+  /** ป๊อปอัปรายชื่อสูตรหลักที่ใช้สูตรส่วนประกอบนี้ (คอลัมน์ "ใช้ในสูตรหลัก") */
+  const [usedInComponent, setUsedInComponent] = useState<(RecipeComponent & { usedIn: string[] }) | null>(null);
+
   const filteredComponents = useMemo(() => {
     const q = subSearch.trim().toLowerCase();
     return componentRows.filter((c) => {
@@ -327,6 +330,9 @@ export function useRecipesViewModel() {
     subSearch, setSubSearch,
     subCategoryFilter, setSubCategoryFilter: (v: string) => setSubCategoryFilter(v),
     filteredComponents, subStats,
+    usedInComponent,
+    openUsedIn: (c: RecipeComponent & { usedIn: string[] }) => setUsedInComponent(c),
+    closeUsedIn: () => setUsedInComponent(null),
     componentFormOpen, componentEditTarget,
     openAddComponent: () => { setComponentEditTarget(null); setComponentFormOpen(true); },
     openEditComponent: (c: RecipeComponent) => { setComponentEditTarget(c); setComponentFormOpen(true); },

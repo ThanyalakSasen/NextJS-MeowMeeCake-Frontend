@@ -1426,6 +1426,8 @@
     "costAutoHint": "เว้นว่างไว้ ระบบจะคำนวณจากราคาวัตถุดิบในสูตรให้ทุกครั้งที่บันทึก",
     "usedInTitle": "ใช้ในสูตรหลัก",
     "notUsedYet": "ยังไม่ได้ใช้",
+    "usedInCount": "ดู {n} สูตร",
+    "usedInModalTitle": "สูตรหลักที่ใช้ \"{name}\"",
     "deleteComponentBlocked": "มีสูตรหลักใช้สูตรส่วนประกอบนี้อยู่ — ลบไม่ได้",
     "deleteComponentConfirm": "ลบสูตรส่วนประกอบ \"{name}\"?",
     "componentsUsedTitle": "สูตรส่วนประกอบที่ใช้",

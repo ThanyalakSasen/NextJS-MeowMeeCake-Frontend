@@ -1426,6 +1426,8 @@
     "costAutoHint": "Leave blank to calculate from ingredient costs on every save",
     "usedInTitle": "Used In",
     "notUsedYet": "Not used yet",
+    "usedInCount": "View {n} recipes",
+    "usedInModalTitle": "Main recipes using \"{name}\"",
     "deleteComponentBlocked": "A main recipe uses this sub-recipe — can't delete",
     "deleteComponentConfirm": "Delete sub-recipe \"{name}\"?",
     "componentsUsedTitle": "Sub-Recipes Used",
