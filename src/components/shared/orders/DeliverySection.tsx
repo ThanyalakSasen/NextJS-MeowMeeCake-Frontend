@@ -1,6 +1,6 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// DeliverySection — สถานะจัดส่ง/เลขพัสดุ/หมายเหตุ ใน drawer ออเดอร์ (Manage Orders) และพรีออเดอร์ — BACKLOG2 §15.2 ข้อ 3
+// DeliverySection — สถานะจัดส่ง/บริษัทขนส่ง/เลขพัสดุ/หมายเหตุ ใน drawer ออเดอร์ (Manage Orders) และพรีออเดอร์ — BACKLOG2 §15.2 ข้อ 3
 // ใช้เฉพาะ order_type = "delivery" · ไม่มีสิทธิ์ update = แสดงอย่างเดียว
 // state ของฟอร์มเริ่มจาก info — parent ใส่ key={updated_at} ให้รีเซ็ตเองหลังบันทึก/ดึงข้อมูลใหม่
 // ส่งเฉพาะฟิลด์ที่เปลี่ยน · shipped_at/delivered_at backend ตั้งให้เองตามสถานะ (ไม่ต้องกรอก)
@@ -11,7 +11,7 @@ import { Button, Input, TextArea, Select } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { actionIcon } from "@/components/shared/actions";
 import { formatDate } from "@/i18n/format";
-import { DELIVERY_STATUSES, type DeliveryStatus } from "@/constants/enumConfig";
+import { DELIVERY_STATUSES, SHIPPING_CARRIERS, type DeliveryStatus, type ShippingCarrier } from "@/constants/enumConfig";
 import type { DeliveryInfo, DeliveryUpdateInput } from "@/types/order";
 
 /** ตรงกับ backend schemas/order.ts updateDeliveryBody */
@@ -32,14 +32,18 @@ export function DeliverySection({
   const t = useTranslations();
   const locale = useLocale();
   const [status, setStatus] = useState<DeliveryStatus>(info.delivery_status);
+  const [carrier, setCarrier] = useState<ShippingCarrier | null>(info.shipping_carrier);
   const [tracking, setTracking] = useState(info.tracking_no ?? "");
   const [note, setNote] = useState(info.delivered_note ?? "");
 
   const changes: DeliveryUpdateInput = {};
   if (status !== info.delivery_status) changes.delivery_status = status;
+  if (carrier !== info.shipping_carrier) changes.shipping_carrier = carrier;
   if (tracking.trim() !== (info.tracking_no ?? "")) changes.tracking_no = tracking.trim() || null;
   if (note.trim() !== (info.delivered_note ?? "")) changes.delivered_note = note.trim() || null;
   const dirty = Object.keys(changes).length > 0;
+  // ลำดับตามรายการใน SHIPPING_CARRIERS (ขนส่งที่ใช้บ่อยก่อน · "ร้านจัดส่งเอง"/"อื่น ๆ" ท้ายสุด) — ไม่เรียง ก-ฮ
+  const carrierOptions = SHIPPING_CARRIERS.map((c) => ({ value: c, label: t(`enums.shippingCarrier.${c}`) }));
 
   const times = (
     <>
@@ -67,6 +71,10 @@ export function DeliverySection({
           <StatusBadge group="deliveryStatus" value={info.delivery_status} />
         </div>
         <div className="flex items-center justify-between">
+          <span className="text-gray-600">{t("orders.shippingCarrier")}</span>
+          <span className="font-medium text-gray-800">{info.shipping_carrier ? t(`enums.shippingCarrier.${info.shipping_carrier}`) : "—"}</span>
+        </div>
+        <div className="flex items-center justify-between">
           <span className="text-gray-600">{t("orders.trackingNo")}</span>
           <span className="font-medium text-gray-800">{info.tracking_no || "—"}</span>
         </div>
@@ -89,6 +97,16 @@ export function DeliverySection({
           value={status}
           onChange={(v) => setStatus(v as DeliveryStatus)}
           options={DELIVERY_STATUSES.map((s) => ({ value: s, label: t(`enums.deliveryStatus.${s}`) }))}
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-gray-600">{t("orders.shippingCarrier")}</span>
+        <Select
+          value={carrier ?? undefined}
+          onChange={(v) => setCarrier((v as ShippingCarrier | undefined) ?? null)}
+          allowClear
+          placeholder={t("orders.shippingCarrierPlaceholder")}
+          options={carrierOptions}
         />
       </label>
       <label className="flex flex-col gap-1">

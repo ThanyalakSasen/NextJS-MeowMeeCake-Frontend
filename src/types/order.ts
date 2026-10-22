@@ -10,7 +10,7 @@
 // ordersService.get(id) ถึงจะได้ items จริง
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
-import type { DeliveryStatus, OrderStatus, PaymentStatus } from "@/constants/enumConfig";
+import type { DeliveryStatus, OrderStatus, PaymentStatus, ShippingCarrier } from "@/constants/enumConfig";
 
 // ตรงกับ backend จริง (orderModel.order_type) — ไม่ใช่ "ready"/"preorder" (นั่นคือ product_type)
 export type OrderType = "delivery" | "takeaway";
@@ -43,6 +43,8 @@ export interface DeliveryAddress {
 export interface DeliveryInfo {
   delivery_status: DeliveryStatus;
   tracking_no: string | null;
+  /** บริษัทขนส่ง — null = ยังไม่ระบุ */
+  shipping_carrier: ShippingCarrier | null;
   shipped_at: string | null;
   delivered_at: string | null;
   delivered_note: string | null;
@@ -54,6 +56,7 @@ export interface DeliveryInfo {
 export interface DeliveryUpdateInput {
   delivery_status?: DeliveryStatus;
   tracking_no?: string | null;
+  shipping_carrier?: ShippingCarrier | null;
   delivered_note?: string | null;
 }
 
@@ -62,6 +65,7 @@ export interface DeliveryUpdateInput {
 export const toDeliveryInfo = (raw: any): DeliveryInfo => ({
   delivery_status: raw.delivery_status ?? "pending",
   tracking_no: raw.tracking_no ?? null,
+  shipping_carrier: raw.shipping_carrier ?? null,
   shipped_at: raw.shipped_at ?? null,
   delivered_at: raw.delivered_at ?? null,
   delivered_note: raw.delivered_note ?? null,
@@ -97,6 +101,8 @@ export interface Order extends DeliveryInfo {
   total_amount: number;
   order_status: OrderStatus;
   payment_status: PaymentStatus;
+  /** แนบสลิปแล้ว รอแอดมินตรวจ — มีเฉพาะ list (backend listOrders) · แยก "รอยืนยันการชำระเงิน" ออกจาก "ยังไม่แนบสลิป" */
+  slip_pending_review: boolean;
   delivery_address?: DeliveryAddress | null;
   /** ออเดอร์เว็บ: หมดเขตชำระ (สั่ง + 30 นาที) · POS/แอดมินสร้าง/ออเดอร์เก่า = null (backend §8.8) */
   payment_due_at: string | null;

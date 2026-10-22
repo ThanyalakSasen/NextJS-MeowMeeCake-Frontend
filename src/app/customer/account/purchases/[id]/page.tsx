@@ -214,6 +214,7 @@ function OrderContent() {
                   <p className="mb-1 font-semibold">{t("deliveryStatus")}</p>
                   <p className="text-gray-600">
                     {labels.deliveryStatus(order.delivery_status)}
+                    {order.shipping_carrier && labels.shippingCarrier(order.shipping_carrier) ? t("carrier", { name: labels.shippingCarrier(order.shipping_carrier) }) : ""}
                     {order.tracking_no ? t("tracking", { no: order.tracking_no }) : ""}
                   </p>
                 </div>
