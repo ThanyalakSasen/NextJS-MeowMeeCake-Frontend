@@ -7,8 +7,13 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 
+/**
+ * ช่องกรอกของหน้า /login · /register — ความสูงตามจอ:
+ *   มือถือ (<640) 36px = เท่ากรอบปุ่ม "ไม่มี/มีประวัติแพ้อาหาร" · 640–1279 44px · ≥1280 ขนาดเดิม (py-3 ≈ 52px)
+ *   มุม rounded-lg (9px · เดิม rounded-xl 13.5px)
+ */
 export const authInputClass =
-  "w-full px-3.5 py-3 pr-11 rounded-xl text-sm outline-none transition bg-white border-[1.5px] border-[#e1d6cd] text-[#1a1a1a] md:text-inherit focus:ring-4 focus:ring-[#f2ae00]/15 focus:border-[#f2ae00]";
+  "w-full h-[36px] sm:h-[44px] xl:h-auto py-0 xl:py-3 px-3.5 pr-11 rounded-lg text-sm outline-none transition bg-white border-[1.5px] border-[#e1d6cd] text-[#1a1a1a] md:text-inherit focus:ring-4 focus:ring-[#f2ae00]/15 focus:border-[#f2ae00]";
 export const authLabelClass = "text-[14.5px] font-semibold text-[#1a1a1a] md:text-[#4e342e]";
 /** ข้อความรอง — เทา (บนการ์ดขาวทั้งสองขนาดจอ) */
 export const authMutedClass = "text-stone-600 md:text-stone-500";

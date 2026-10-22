@@ -9,16 +9,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
-import { FaCheck, FaHeart, FaSpinner, FaStar } from "react-icons/fa";
-import { Heart, ShoppingCart } from "lucide-react";
+import { FaCheck, FaHeart, FaSpinner, FaStar, FaTruck } from "react-icons/fa";
+import { Heart } from "lucide-react";
 import type { FavoriteItem } from "@/services/shopFavorites";
 import { resolveUploadUrl } from "@/lib/uploads";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
-import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
+import { shopButton, shopPage } from "@/components/customer/shopStyles";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useAddToCart } from "../../hooks/useAddToCart";
+import { useProvinceOnlyShipping } from "../../hooks/useProvinceOnlyShipping";
 import ShopImage from "@/components/customer/ShopImage";
+import { PRODUCT_GRID, PRODUCT_MASONRY_ITEM } from "../../lib/productGrid";
 
 export default function FavoritesPage() {
   const t = useTranslations("shop.favorites");
@@ -63,7 +65,8 @@ function FavoritesContent() {
                 <Link href="/customer/product" className={shopButton}>{t("shopNow")}</Link>
               </div>
             ) : (
-              <ul className="m-0 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3">
+              // คอลัมน์/ระยะห่างแบบเดียวกับการ์ดสินค้าหน้าอื่น (2 / 3 / 5)
+              <ul className={`m-0 list-none p-0 ${PRODUCT_GRID}`}>
                 {items.map((item) => (
                   <FavoriteCard
                     key={item.id}
@@ -81,100 +84,141 @@ function FavoritesContent() {
   );
 }
 
+/** บัตรรายการโปรด — หน้าตาเดียวกับ ProductCard ของหน้าอื่น (รูป · หัวใจ · ชื่อ · ป้ายส่งเฉพาะจังหวัด · ราคา/ดาว · ปุ่มเต็มความกว้าง)
+ *  ต่างกันแค่: แสดงสินค้าที่ปิดขาย (ป้าย "สินค้าหมด") และพรีออเดอร์ (ปุ่ม "ดูสินค้า") ด้วย — ProductCard ซ่อนสองแบบนี้ */
 function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removing: boolean; onRemove: () => void }) {
   const t = useTranslations("shop.favorites");
+  const tc = useTranslations("shop.productCard");
   const { names: localNames } = useLocalName();
   const { quickAdd, status } = useAddToCart();
+  const shipping = useProvinceOnlyShipping();
   const [imgFailed, setImgFailed] = useState(false);
   const href = `/customer/product/${item.id}`;
   const img = resolveUploadUrl(item.image);
+  const names = localNames(item.name, item.nameeg);
+  const provinceOnly = !item.is_preorder && !!item.category_id && shipping.isProvinceOnly({ _id: item.id, category_id: item.category_id });
+  const isLoading = status === "loading";
+  const isSuccess = status === "success";
 
   return (
-    <li className={`group relative flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:border-stone-300 ${item.inStock ? "" : "opacity-75"}`}>
-      <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden bg-stone-100">
-        <Link href={href} className="block h-full w-full" tabIndex={-1} aria-hidden="true">
+    <li className={`m-0 list-none ${PRODUCT_MASONRY_ITEM}`}>
+      <Link
+        href={href}
+        className={`group flex flex-col overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${item.inStock ? "" : "opacity-75"}`}
+      >
+        <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
           {img && !imgFailed ? (
             <ShopImage
               src={img}
-              alt=""
-              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              alt={item.nameeg || item.name}
+              sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               onError={() => setImgFailed(true)}
             />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-xs text-stone-500">{t("noImage")}</span>
+            <div className="flex h-full w-full items-center justify-center text-xs font-medium text-black">{t("noImage")}</div>
           )}
-        </Link>
 
-        <button
-          type="button"
-          onClick={onRemove}
-          disabled={removing}
-          aria-label={t("removeAria", { name: item.name })}
-          title={t("remove")}
-          className="absolute right-3 top-3 flex h-[36px] w-[36px] items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-md transition hover:bg-white disabled:opacity-60"
-        >
-          {removing ? <FaSpinner className="animate-spin text-xs text-stone-500" /> : <FaHeart className="text-base text-[#E05353]" />}
-        </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              // บัตรทั้งใบเป็นลิงก์ — กันไม่ให้กดหัวใจแล้วเปิดหน้าสินค้า
+              e.preventDefault();
+              e.stopPropagation();
+              onRemove();
+            }}
+            disabled={removing}
+            aria-label={t("removeAria", { name: item.name })}
+            title={t("remove")}
+            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-sm transition hover:scale-110 hover:bg-white disabled:opacity-60"
+          >
+            {removing ? <FaSpinner className="animate-spin text-xs text-stone-500" /> : <FaHeart className="text-sm text-red-500" />}
+          </button>
 
-        {!item.inStock && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-            <span className="rounded-full bg-stone-900/80 px-3 py-1.5 text-xs font-bold text-white">{t("outOfStock")}</span>
+          {!item.inStock && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
+              <span className="rounded-full bg-stone-900/80 px-3 py-1 text-xs font-bold text-white">{t("outOfStock")}</span>
+            </div>
+          )}
+          {item.is_preorder && item.inStock && (
+            <span className="pointer-events-none absolute left-1 top-1 rounded-full bg-[#4A342E] px-2 py-0 text-[11px] font-bold leading-5 text-white">{t("preorder")}</span>
+          )}
+        </div>
+
+        <div className="flex flex-col !bg-[#fff] p-2.5 sm:p-3">
+          <div>
+            <h2 className="m-0 line-clamp-1 text-sm font-semibold text-black md:text-[0.9444rem] xl:text-base">{names.primary}</h2>
+            <p className="m-0 mb-2 line-clamp-1 text-sm text-black">{names.secondary || " "}</p>
+            {provinceOnly && (
+              <p
+                className="-mt-1.5 mb-0.5 inline-flex max-w-full items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-1.5 py-0 text-xs font-medium leading-5 text-sky-800"
+                title={tc("provinceOnlyHint")}
+              >
+                <FaTruck className="shrink-0 text-[0.7rem]" />
+                <span className="truncate">{shipping.province ? tc("provinceOnly", { province: shipping.province }) : tc("provinceOnlyGeneric")}</span>
+              </p>
+            )}
           </div>
-        )}
-        {item.is_preorder && item.inStock && (
-          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-[#4A342E] px-2.5 py-1 text-[11px] font-bold text-white">{t("preorder")}</span>
-        )}
-      </div>
 
-      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
-        <div className="space-y-1">
-          {item.category && <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#4A342E]">{item.category}</span>}
-          <Link href={href} className="block">
-            <h2 className="m-0 line-clamp-1 text-base font-bold leading-snug text-stone-800 hover:text-[#8C5A3C]">{localNames(item.name, item.nameeg).primary}</h2>
-          </Link>
-          {localNames(item.name, item.nameeg).secondary && <span className="line-clamp-1 block text-xs text-stone-500">{localNames(item.name, item.nameeg).secondary}</span>}
-          {item.rating !== "-" && (
-            <span className="flex items-center gap-1 pt-1 text-xs font-bold text-amber-500">
-              <FaStar /> {Number(item.rating).toFixed(1)}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between gap-2 border-t border-stone-200/60 pt-2">
-          <span className="flex items-baseline gap-1.5">
-            <span className={`text-lg font-bold ${item.originalPrice ? "text-red-600" : "text-stone-900"}`}>{baht(item.price)}</span>
-            {item.originalPrice ? <span className="text-xs text-stone-500 line-through">{baht(item.originalPrice)}</span> : null}
-          </span>
-
-          {item.is_preorder ? (
-            <Link href={href} className="inline-flex h-[44px] items-center rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition hover:bg-[#4A342E] hover:text-white">
-              {t("view")}
-            </Link>
-          ) : (
-            <button
-              type="button"
-              disabled={!item.inStock || status === "loading" || status === "success"}
-              onClick={() => void quickAdd(item.id)}
-              className={`inline-flex h-[44px] items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-all duration-200 ${
-                status === "success"
-                  ? "border border-emerald-600 bg-emerald-600 text-white"
-                  : "border border-[#8C5A3C]/30 bg-white text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white active:scale-[0.98]"
-              } disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none`}
-            >
-              {!item.inStock ? (
-                t("soldOut")
-              ) : status === "loading" ? (
-                <><FaSpinner className="animate-spin" /> {t("adding")}</>
-              ) : status === "success" ? (
-                <><FaCheck /> {t("added")}</>
+          <div>
+            <div className="my-1 flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
+              {item.originalPrice ? (
+                <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-1 whitespace-nowrap">
+                  <span className="flex items-baseline gap-1">
+                    <span className="text-sm font-bold text-red-600">฿</span>
+                    <span className="text-sm font-extrabold text-red-600 md:text-[0.9444rem] xl:text-base">{item.price.toLocaleString()}</span>
+                  </span>
+                  <span className="text-xs text-stone-500 line-through">฿{item.originalPrice.toLocaleString()}</span>
+                </div>
               ) : (
-                <><ShoppingCart className="h-4 w-4" aria-hidden="true" /> {t("addToCart")}</>
+                <div className="flex min-w-0 items-baseline gap-1 whitespace-nowrap">
+                  <span className="text-sm font-bold text-[#8C5A3C]">฿</span>
+                  <span className="text-sm font-extrabold text-[#8C5A3C] md:text-[0.9444rem] xl:text-base">{item.price.toLocaleString()}</span>
+                </div>
               )}
-            </button>
-          )}
+              <div className="flex shrink-0 items-center gap-2 pb-0.5 text-xs font-medium text-black">
+                <FaStar className="text-base text-amber-400" />
+                <span>{item.rating === "-" ? "0.0" : Number(item.rating).toFixed(1)}</span>
+              </div>
+            </div>
+
+            {item.is_preorder ? (
+              <span className="mt-1 flex h-[44px] w-full items-center justify-center rounded-xl border border-[#8C5A3C]/30 !bg-white px-2 text-sm font-bold !text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 group-hover:!bg-[#4A342E] group-hover:!text-white">
+                {t("view")}
+              </span>
+            ) : (
+              <button
+                type="button"
+                disabled={!item.inStock || isLoading || isSuccess}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void quickAdd(item.id);
+                }}
+                className={`mt-1 flex h-[44px] w-full items-center justify-center gap-1 rounded-xl px-2 text-sm font-bold transition-all duration-200 ${
+                  isSuccess
+                    ? "border border-emerald-600 !bg-emerald-600 !text-white shadow-md"
+                    : "border border-[#8C5A3C]/30 !bg-white !text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:!bg-[#4A342E] hover:!text-white hover:shadow-lg active:scale-[0.98]"
+                } disabled:cursor-not-allowed disabled:opacity-75`}
+              >
+                {!item.inStock ? (
+                  t("soldOut")
+                ) : isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin text-xs" /> <span>{t("adding")}</span>
+                  </>
+                ) : isSuccess ? (
+                  <>
+                    <FaCheck className="text-xs" /> <span>{t("added")}</span>
+                  </>
+                ) : (
+                  t("addToCart")
+                )}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </Link>
     </li>
   );
 }

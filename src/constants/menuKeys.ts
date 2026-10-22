@@ -9,11 +9,13 @@ export type MenuKey =
   | "dashboard" | "products" | "orders" | "preorder" | "payments" | "ingredients"
   | "stock" | "recipes" | "production" | "employees" | "promotions" | "reports"
   /** ข้อมูลร้าน (ที่อยู่ · ตลาดนัด · โลโก้ · พร้อมเพย์) — backend MENU_KEYS เพิ่ม 2026-10-05 (customer-backend-merge.md §8.19) */
-  | "store_info";
+  | "store_info"
+  /** แชทกับลูกค้า (view = ดู/อ่าน · create = ตอบ) — แทนฟอร์ม "ส่งข้อความหาเรา" */
+  | "chat";
 
 export const ALL_MENU_KEYS: MenuKey[] = [
   "dashboard", "products", "orders", "preorder", "payments", "ingredients",
-  "stock", "recipes", "production", "employees", "promotions", "reports", "store_info",
+  "stock", "recipes", "production", "employees", "promotions", "reports", "store_info", "chat",
 ];
 
 /** สิทธิ์ 5 อย่างของ menu_key เดียว — ตรงกับ can_view/create/update/delete/approve ของ backend */
@@ -64,6 +66,8 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/store-info", menuKey: "store_info" },
   // ค่าจัดส่งหน้าร้านออนไลน์ (F2) — /admin/shipping-zones ใช้ store_info.view / update
   { prefix: "/owner/shipping", menuKey: "store_info" },
+  // แชทกับลูกค้า — /admin/chats ใช้ chat.view (ตอบ = chat.create)
+  { prefix: "/owner/chat", menuKey: "chat" },
 ];
 
 export function resolveMenuKey(pathname: string): MenuKey | null {

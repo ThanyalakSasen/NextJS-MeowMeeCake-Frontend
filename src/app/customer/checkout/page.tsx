@@ -207,7 +207,7 @@ function CheckoutContent() {
         <FlowSteps kind="order" current={2} />
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-          <div className="space-y-6 lg:col-span-8">
+          <div className="space-y-6 lg:col-span-7">
             {/* วิธีรับสินค้า */}
             <section className={`${shopCard} space-y-4`}>
               <h2 className="text-lg font-bold">{t("receiveMethod")}</h2>
@@ -291,11 +291,11 @@ function CheckoutContent() {
                 )}
 
                 <div className="grid gap-3 border-t border-[#8C5A3C]/10 pt-4 sm:grid-cols-2">
-                  <label className="space-y-1 text-sm">
+                  <label className="flex flex-col gap-1.5 text-sm">
                     <span className="font-semibold">{t("recipientName")}</span>
                     <input className={shopInput} value={recipientName} maxLength={200} onChange={(e) => setRecipientName(e.target.value)} />
                   </label>
-                  <label className="space-y-1 text-sm">
+                  <label className="flex flex-col gap-1.5 text-sm">
                     <span className="font-semibold">{t("recipientPhone")}</span>
                     <input
                       className={shopInput}
@@ -331,32 +331,34 @@ function CheckoutContent() {
                 )}
               </section>
             )}
-
-            {/* รายการสินค้า */}
-            <section className={`${shopCard} space-y-3`}>
-              <h2 className="text-lg font-bold">{t("items")}</h2>
-              {cart.items.map((it) => {
-                const name = typeof it.product_id === "object" && it.product_id ? localName(it.product_id.product_name_th, it.product_id.product_name_eng) : t("product");
-                const options = cartItemOptionText(it);
-                return (
-                  <div key={it._id} className="flex items-center justify-between gap-3 text-sm">
-                    <span className="min-w-0">
-                      <span className="block truncate">
-                        {name} <span className="text-gray-500">×{it.quantity}</span>
-                      </span>
-                      {options && <span className="block truncate text-xs text-gray-500">{options}</span>}
-                    </span>
-                    <span className="font-semibold">{baht(it.line_total)}</span>
-                  </div>
-                );
-              })}
-            </section>
           </div>
 
           {/* สรุปยอด */}
-          <div className="lg:sticky lg:top-44 lg:col-span-4">
+          <div className="lg:sticky lg:top-44 lg:col-span-5">
             <div className={`${shopCard} space-y-4`}>
               <h2 className="border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">{t("summary")}</h2>
+
+              {/* รายการสินค้า — อยู่ในสรุปคำสั่งซื้อ (ตรวจของ + ยอดในที่เดียว) · แสดงครบทุกรายการ ไม่มีกล่องเลื่อน */}
+              <div className="space-y-2 border-b border-[#8C5A3C]/10 pb-4">
+                <h3 className="m-0 text-sm font-bold text-[#4A342E]">{t("items")}</h3>
+                <ul className="m-0 list-none space-y-2.5 p-0">
+                  {cart.items.map((it) => {
+                    const name = typeof it.product_id === "object" && it.product_id ? localName(it.product_id.product_name_th, it.product_id.product_name_eng) : t("product");
+                    const options = cartItemOptionText(it);
+                    return (
+                      <li key={it._id} className="flex items-start justify-between gap-3 text-sm">
+                        <span className="min-w-0">
+                          <span className="block">
+                            {name} <span className="text-gray-500">×{it.quantity}</span>
+                          </span>
+                          {options && <span className="block text-xs text-gray-500">{options}</span>}
+                        </span>
+                        <span className="shrink-0 font-semibold">{baht(it.line_total)}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
 
               <div className="flex gap-2">
                 <input

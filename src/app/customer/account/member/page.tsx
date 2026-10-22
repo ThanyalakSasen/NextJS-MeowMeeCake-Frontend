@@ -5,11 +5,13 @@
 //      POST /shop/coupons/redeem { promotion_id } (หักแต้ม → ได้คูปอง ใช้ได้ที่หน้า checkout)
 // cache: แต้มใช้ key เดียวกับ checkout (shopPointsKey) · คูปองขึ้นต้นด้วย shopCouponsKey → แลกแล้ว checkout เห็นคูปองใหม่ทันที
 // ไม่ยกมา: แชร์สินค้ารับแต้ม (POST /shop/points/share) อยู่ในหน้ารายละเอียดสินค้า (C1) · ที่นี่แสดงเป็นวิธีสะสมแต้มอย่างเดียว
+// ลำดับบนมือถือ: บัตรสมาชิก → แลกคูปอง → คูปองของฉัน → วิธีสะสม/ใช้แต้ม → ประวัติ (สิ่งที่ทำได้ทันทีขึ้นก่อน)
+// จอ ≥1024: ซ้าย = บัตร + วิธีสะสม/ใช้ · ขวา = คูปอง (คอลัมน์ใช้ display:contents บนมือถือให้ order จัดลำดับข้ามคอลัมน์ได้)
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import {
   AlertTriangle, Award, Camera, CheckCircle2, Clock, Gift, Share2, ShoppingBag, Star, Ticket, UserCheck,
 } from "lucide-react";
@@ -32,6 +34,11 @@ const COUPON_STATE: Record<MyCoupon["state"], { className: string }> = {
   used: { className: "border-stone-200 bg-stone-100 text-stone-500" },
   expired: { className: "border-red-200 bg-red-50 text-red-500" },
 };
+
+/** ประวัติแต้มแสดงก่อนกี่รายการ (กด "ดูเพิ่มเติม" เพื่อดูทั้งหมด) */
+const HISTORY_PREVIEW = 10;
+/** คูปองที่ใช้ได้ขึ้นก่อน */
+const COUPON_ORDER: Record<MyCoupon["state"], number> = { available: 0, used: 1, expired: 2 };
 
 type EarnWay = { icon: ComponentType<{ className?: string }>; title: string; desc: string; points: string; done?: boolean };
 
@@ -66,6 +73,8 @@ function MemberContent() {
   const locale = useLocale();
   const formatDate = (iso: string) => fmtDate(iso, locale);
   const qc = useQueryClient();
+  const [showOldCoupons, setShowOldCoupons] = useState(false);
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const { user } = useCustomerSession();
   // แต้มเปลี่ยนได้ตลอด (สั่งซื้อ · รีวิว) → โหลดใหม่ทุกครั้งที่เปิดหน้า
   const pointsQ = useQuery({ queryKey: shopPointsKey, queryFn: shopLoyaltyService.points, refetchOnMount: "always" });
@@ -91,8 +100,18 @@ function MemberContent() {
   const p = pointsQ.data;
   const balance = p?.balance ?? 0;
   const minToRedeem = p?.rules.MIN_BALANCE_TO_REDEEM ?? 100;
-  const catalog = couponsQ.data?.catalog ?? [];
-  const myCoupons = couponsQ.data?.coupons ?? [];
+  // แลกได้ขึ้นก่อน (แต้มพอ + ยังไม่ครบสิทธิ์) · ที่เหลือเรียงตามแต้มที่ต้องใช้น้อย → มาก
+  const canRedeem = (c: CatalogCoupon) => balance >= c.points_cost && balance >= minToRedeem && !c.limit_reached;
+  const catalog = [...(couponsQ.data?.catalog ?? [])].sort(
+    (a, b) => Number(canRedeem(b)) - Number(canRedeem(a)) || a.points_cost - b.points_cost,
+  );
+  const myCoupons = [...(couponsQ.data?.coupons ?? [])].sort((a, b) => COUPON_ORDER[a.state] - COUPON_ORDER[b.state]);
+  const activeCoupons = myCoupons.filter((c) => c.state === "available");
+  const oldCoupons = myCoupons.filter((c) => c.state !== "available");
+  const shownCoupons = showOldCoupons ? myCoupons : activeCoupons;
+  const history = p?.history ?? [];
+  const shownHistory = showAllHistory ? history : history.slice(0, HISTORY_PREVIEW);
+  const toMin = Math.max(0, minToRedeem - balance);
 
   return (
     <div className={shopPage}>
@@ -101,6 +120,11 @@ function MemberContent() {
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <AccountSideMenu />
           <div className="flex min-w-0 flex-1 flex-col gap-6">
+            <header className="border-b border-stone-200 pb-5">
+              <h1 className="m-0 flex items-center gap-2 text-xl font-bold text-stone-800 sm:text-2xl">
+                <Star className="h-6 w-6 text-[#4A342E]" aria-hidden="true" /> {t("title")}
+              </h1>
+            </header>
             {pointsQ.isLoading ? (
               <p className="rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center text-sm text-stone-500">{t("loading")}</p>
             ) : pointsQ.isError || !p ? (
@@ -109,18 +133,18 @@ function MemberContent() {
               </p>
             ) : (
               <>
-                <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-                  {/* ซ้าย: บัตรสมาชิก · แต้มใกล้หมดอายุ · วิธีสะสม/ใช้แต้ม */}
-                  <div className="space-y-4 lg:col-span-5">
-                    <div className="relative flex flex-col gap-6 overflow-hidden rounded-2xl border border-[#5d423b] bg-gradient-to-br from-[#4a342e] to-[#8C5A3C] p-6 text-white shadow-md">
+                <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6">
+                  {/* ซ้าย: บัตรสมาชิก · แต้มใกล้หมดอายุ · วิธีสะสม/ใช้แต้ม (มือถือ: contents → ลูกจัดลำดับด้วย order) */}
+                  <div className="contents lg:col-span-5 lg:block lg:space-y-4">
+                    <div className="relative order-1 flex flex-col gap-6 overflow-hidden rounded-2xl border border-[#5d423b] bg-gradient-to-br from-[#4a342e] to-[#8C5A3C] p-6 text-white shadow-md">
                       <div className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 rounded-full bg-white/5 blur-2xl" />
                       <div className="relative z-10 flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="m-0 truncate text-lg font-bold tracking-wide text-stone-100">{user?.fullname || "-"}</p>
                           <p className="m-0 mt-0.5 truncate text-xs text-stone-300">{user?.email}</p>
                         </div>
-                        <span className="shrink-0 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest">
-                          Member card
+                        <span className="shrink-0 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-bold tracking-wide">
+                          {t("memberCard")}
                         </span>
                       </div>
 
@@ -133,10 +157,27 @@ function MemberContent() {
                         </div>
                         <span className="text-xs text-stone-300">{t("worth", { amount: baht(pointsToBaht(balance, p.rules)) })}</span>
                       </div>
+
+                      {/* ยังไม่ถึงขั้นต่ำที่ใช้แต้มได้ → บอกว่าขาดอีกกี่แต้ม */}
+                      {toMin > 0 && (
+                        <div className="relative z-10 -mt-2">
+                          <div
+                            className="h-2 overflow-hidden rounded-full bg-white/15"
+                            role="progressbar"
+                            aria-valuemin={0}
+                            aria-valuemax={minToRedeem}
+                            aria-valuenow={balance}
+                            aria-label={t("untilRedeem", { n: toMin.toLocaleString() })}
+                          >
+                            <div className="h-full rounded-full bg-amber-400" style={{ width: `${Math.min(100, (balance / minToRedeem) * 100)}%` }} />
+                          </div>
+                          <p className="m-0 mt-1.5 text-xs text-stone-200">{t("untilRedeem", { n: toMin.toLocaleString() })}</p>
+                        </div>
+                      )}
                     </div>
 
                     {p.expiring_soon.points > 0 && p.expiring_soon.first_date && (
-                      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                      <div className="order-1 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
                         <p className="m-0">
                           {t.rich("expiring", { n: p.expiring_soon.points.toLocaleString(), date: formatDate(p.expiring_soon.first_date), b: (c) => <strong>{c}</strong> })}
@@ -144,7 +185,7 @@ function MemberContent() {
                       </div>
                     )}
 
-                    <div className={`${card} space-y-5`}>
+                    <div className={`${card} order-4 space-y-5`}>
                       <section className="space-y-3">
                         <h2 className="m-0 flex items-center gap-2 text-base font-bold text-stone-800">
                           <Gift className="h-5 w-5 text-[#4A342E]" aria-hidden="true" /> {t("howToEarn")}
@@ -162,7 +203,7 @@ function MemberContent() {
                               <div className="flex shrink-0 flex-col items-end gap-0.5">
                                 <span className="whitespace-nowrap rounded bg-amber-100/70 px-2 py-0.5 text-xs font-semibold text-amber-800">{t("pointsBadge", { points })}</span>
                                 {done !== undefined && (
-                                  <span className={`text-[11px] font-semibold ${done ? "text-emerald-600" : "text-stone-500"}`}>{done ? t("received") : t("notReceived")}</span>
+                                  <span className={`text-xs font-semibold ${done ? "text-emerald-600" : "text-stone-500"}`}>{done ? t("received") : t("notReceived")}</span>
                                 )}
                               </div>
                             </li>
@@ -197,8 +238,8 @@ function MemberContent() {
                   </div>
 
                   {/* ขวา: แลกคูปอง + คูปองของฉัน */}
-                  <div className="space-y-6 lg:col-span-7">
-                    <section className={`${card} space-y-4`}>
+                  <div className="contents lg:col-span-7 lg:block lg:space-y-6">
+                    <section className={`${card} order-2 space-y-4`}>
                       <div className="flex items-center justify-between gap-3 border-b border-stone-100 pb-3">
                         <h2 className="m-0 flex items-center gap-2 text-lg font-bold text-stone-800">
                           <Ticket className="h-5 w-5 text-[#4A342E]" aria-hidden="true" /> {t("redeemCoupons")}
@@ -215,10 +256,11 @@ function MemberContent() {
                         <ul className="m-0 list-none space-y-3 p-0">
                           {catalog.map((c) => {
                             const enough = balance >= c.points_cost && balance >= minToRedeem;
+                            const short = Math.max(c.points_cost, minToRedeem) - balance;
                             const busy = redeem.isPending && redeem.variables?._id === c._id;
                             const disabled = !enough || c.limit_reached || redeem.isPending;
                             return (
-                              <li key={c._id} className="flex items-center gap-4 rounded-xl border border-stone-200 bg-stone-50/70 p-3.5">
+                              <li key={c._id} className={`flex items-center gap-4 rounded-xl border p-3.5 ${enough && !c.limit_reached ? "border-amber-200 bg-amber-50/40" : "border-stone-200 bg-stone-50/70"}`}>
                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-200/60 bg-amber-50">
                                   <Ticket className="h-6 w-6 text-amber-700" aria-hidden="true" />
                                 </div>
@@ -240,7 +282,7 @@ function MemberContent() {
                                       disabled={disabled}
                                       className="h-[44px] rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none"
                                     >
-                                      {busy ? t("redeeming") : c.limit_reached ? t("limitReached") : enough ? t("redeem") : t("notEnough")}
+                                      {busy ? t("redeeming") : c.limit_reached ? t("limitReached") : enough ? t("redeem") : t("needMore", { n: short.toLocaleString() })}
                                     </button>
                                   </div>
                                 </div>
@@ -251,20 +293,20 @@ function MemberContent() {
                       )}
                     </section>
 
-                    <section className={`${card} space-y-4`}>
+                    <section className={`${card} order-3 space-y-4`}>
                       <div className="flex items-center justify-between gap-3 border-b border-stone-100 pb-3">
                         <h2 className="m-0 flex items-center gap-2 text-base font-bold text-stone-800">
                           <Gift className="h-5 w-5 text-[#4A342E]" aria-hidden="true" /> {t("myCoupons")}
                         </h2>
-                        {myCoupons.some((c) => c.state === "available") && (
+                        {activeCoupons.length > 0 && (
                           <Link href="/customer/cart" className="text-xs font-semibold text-[#8C5A3C] hover:text-[#4A342E]">{t("useInCart")}</Link>
                         )}
                       </div>
-                      {myCoupons.length === 0 ? (
+                      {shownCoupons.length === 0 ? (
                         <p className="py-4 text-center text-sm text-stone-500">{couponsQ.isLoading ? tc("loadingDots") : t("noCoupons")}</p>
                       ) : (
                         <ul className="m-0 list-none divide-y divide-stone-100 p-0">
-                          {myCoupons.map((c) => (
+                          {shownCoupons.map((c) => (
                             <li key={c._id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                               <div className="min-w-0 space-y-0.5">
                                 <p className="m-0 truncate text-sm font-semibold text-stone-800">{c.promotion_name}</p>
@@ -274,12 +316,22 @@ function MemberContent() {
                                   {t("validUntil", { date: formatDate(c.expires_at) })}
                                 </p>
                               </div>
-                              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${COUPON_STATE[c.state].className}`}>
+                              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${COUPON_STATE[c.state].className}`}>
                                 {t(`state.${c.state}`)}
                               </span>
                             </li>
                           ))}
                         </ul>
+                      )}
+                      {oldCoupons.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowOldCoupons((v) => !v)}
+                          aria-expanded={showOldCoupons}
+                          className="flex h-[44px] w-full items-center justify-center rounded-xl text-sm font-semibold text-[#8C5A3C] transition hover:bg-[#8C5A3C]/10"
+                        >
+                          {showOldCoupons ? t("hideOldCoupons") : t("showOldCoupons", { n: oldCoupons.length })}
+                        </button>
                       )}
                     </section>
                   </div>
@@ -289,11 +341,11 @@ function MemberContent() {
                   <h2 className="m-0 flex items-center gap-2 border-b border-stone-100 pb-3 text-base font-bold text-stone-800 sm:text-lg">
                     <Clock className="h-5 w-5 text-[#4A342E]" aria-hidden="true" /> {t("history")}
                   </h2>
-                  {p.history.length === 0 ? (
+                  {history.length === 0 ? (
                     <p className="py-6 text-center text-sm text-stone-500">{t("noHistory")}</p>
                   ) : (
                     <ul className="m-0 list-none divide-y divide-stone-100 p-0">
-                      {p.history.map((h) => (
+                      {shownHistory.map((h) => (
                         <li key={h._id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                           <div className="min-w-0 space-y-0.5">
                             <p className="m-0 text-sm font-semibold text-stone-800">{h.description}</p>
@@ -307,7 +359,17 @@ function MemberContent() {
                       ))}
                     </ul>
                   )}
-                  {p.history.length >= 50 && <p className="m-0 text-center text-xs text-stone-500">{t("latest50")}</p>}
+                  {history.length > HISTORY_PREVIEW && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllHistory((v) => !v)}
+                      aria-expanded={showAllHistory}
+                      className="flex h-[44px] w-full items-center justify-center rounded-xl text-sm font-semibold text-[#8C5A3C] transition hover:bg-[#8C5A3C]/10"
+                    >
+                      {showAllHistory ? t("showLessHistory") : t("showMoreHistory", { n: history.length - HISTORY_PREVIEW })}
+                    </button>
+                  )}
+                  {showAllHistory && history.length >= 50 && <p className="m-0 text-center text-xs text-stone-500">{t("latest50")}</p>}
                 </section>
               </>
             )}

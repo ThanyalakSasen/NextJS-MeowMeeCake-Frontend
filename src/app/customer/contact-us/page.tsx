@@ -2,27 +2,18 @@
 // ─────────────────────────────────────────────────────────────
 // /customer/contact-us — ติดต่อร้าน (BACKLOG3-merge D8) · ยกจาก FrontOffice src/app/customer/contact-us/page.tsx
 // ข้อมูลร้านทั้งหมดจาก GET /catalog/store-info (ตั้งค่าที่หลังร้าน "ข้อมูลร้าน" — E2) · ส่วนที่ร้านยังไม่ตั้ง = ไม่แสดง
-// ฟอร์ม "ส่งข้อความหาเรา" ต้อง login — POST /shop/contact { topic, message } (ชื่อ/เบอร์/อีเมล backend ดึงจากบัญชีเอง)
-// ต่างจากต้นแบบ: หัวข้อ + ความยาวสูงสุดโหลดจาก /catalog/contact-topics (ต้นแบบเก็บสำเนาไว้ในหน้าเว็บ) · 429 = แจ้งให้รอ 1 นาที
+// ฟอร์ม "ส่งข้อความหาเรา" เลิกใช้แล้ว → การ์ด "แชทกับร้าน" เปิดกล่องแชทลอย (ChatWidget · /shop/chat)
 // แผนที่ใช้ลิงก์เปิด Google Maps แทน iframe (iframe ตั้งคุกกี้ third-party ทันทีที่เปิดหน้า — ต้องขอความยินยอมตาม PDPA)
 // ─────────────────────────────────────────────────────────────
-import { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Clock, ExternalLink, Mail, MapPin, MessageCircle, Phone, Send } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Clock, ExternalLink, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { FaFacebook, FaGlobe, FaInstagram, FaLine } from "react-icons/fa";
 import { storeInfoService, type SocialKey } from "@/services/storeInfo";
-import { isLinePlaceholderEmail, shopProfileService } from "@/services/shopProfile";
-import { useCustomerSession } from "@/hooks/useCustomerSession";
-import { LOGIN_PATH } from "@/constants/auth";
-import { alert } from "@/lib/alert";
-import { isApiError } from "@/types/api";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
-import { shopButton, shopButtonPrimary, shopCard, shopInput, shopPage } from "@/components/customer/shopStyles";
-import { contactTopicsKey, storeInfoKey } from "../lib/catalogQueries";
-import { shopProfileKey } from "../lib/shopQueries";
+import { shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
+import { storeInfoKey } from "../lib/catalogQueries";
+import { useChatWidgetStore } from "../store/chatWidgetStore";
 import { formatMarketDays, formatStoreAddress, storeMapUrl } from "../lib/storeFormat";
 
 const SOCIAL_BUTTONS: { key: SocialKey; label: string; icon: React.ReactNode; className: string }[] = [
@@ -141,9 +132,9 @@ export default function ContactPage() {
           <section className={`${shopCard} space-y-6 lg:col-span-7`}>
             <h2 className="flex items-center gap-2.5 text-xl font-bold sm:text-2xl">
               <MessageCircle size={24} className="text-[#8C5A3C]" />
-              {t("sendMessage")}
+              {t("chatTitle")}
             </h2>
-            <ContactForm storeName={storeName} />
+            <ChatCard />
           </section>
         </div>
 
@@ -166,101 +157,19 @@ export default function ContactPage() {
   );
 }
 
-function ContactForm({ storeName }: { storeName: string }) {
+/** แชทกับร้าน — แทนฟอร์ม "ส่งข้อความหาเรา" เดิม (เปิดกล่องแชทลอยมุมขวาล่าง) */
+function ChatCard() {
   const t = useTranslations("shop.contact");
-  const tc = useTranslations("shop.common");
-  const { status } = useCustomerSession();
-  const pathname = usePathname() ?? "/customer/contact-us";
-  const authed = status === "authenticated";
-  const topicsQ = useQuery({ queryKey: contactTopicsKey, queryFn: storeInfoService.contactTopics, staleTime: 10 * 60_000 });
-  // ผู้ส่ง = บัญชีที่ login (แสดงให้รู้ว่าร้านจะติดต่อกลับทางไหน) · cache เดียวกับหน้าบัญชีของฉัน
-  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: () => shopProfileService.get(), enabled: authed });
-  const profile = profileQ.data;
-  const email = profile && !isLinePlaceholderEmail(profile.email) ? profile.email : "";
-
-  const topics = topicsQ.data?.topics ?? [];
-  const maxLength = topicsQ.data?.max_length ?? 1000;
-  const [picked, setPicked] = useState<string | null>(null);
-  const topic = picked ?? topics[0] ?? "";
-  const [message, setMessage] = useState("");
-
-  const send = useMutation({
-    mutationFn: () => storeInfoService.sendContact({ topic, message: message.trim() }),
-    onSuccess: () => {
-      setMessage("");
-      void alert.success(t("received", { store: storeName }), {
-        title: profile?.user_fullname ? t("thanksNamed", { name: profile.user_fullname }) : t("thanks"),
-      });
-    },
-    onError: (e) =>
-      alert.error(
-        isApiError(e) && e.status === 429
-          ? t("rateLimited")
-          : isApiError(e) ? e.message : t("sendFailed"),
-      ),
-  });
-
-  // สูงเท่ากล่อง "เข้าสู่ระบบก่อน" ข้างล่าง — ไม่ให้เนื้อหาขยับตอนรู้สถานะ login (CLS)
-  if (status === "loading") return <div className="h-40 animate-pulse rounded-2xl bg-[#FAF6F0]/50" aria-busy="true" aria-label={tc("loadingDots")} />;
-  if (!authed) {
-    return (
-      <div className="space-y-3 rounded-2xl border border-dashed border-[#8C5A3C]/20 bg-[#FAF6F0]/50 py-10 text-center">
-        <p className="m-0 text-sm text-gray-600">{t("loginFirst")}</p>
-        <Link href={`${LOGIN_PATH}?next=${encodeURIComponent(pathname)}`} className={shopButtonPrimary}>{tc("login")}</Link>
-      </div>
-    );
-  }
-
+  const setOpen = useChatWidgetStore((s) => s.setOpen);
   return (
-    <form
-      className="space-y-4"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (message.trim() && topic) send.mutate();
-      }}
-    >
-      <div className="space-y-0.5 rounded-xl border border-[#8C5A3C]/15 bg-[#FAF6F0]/60 px-4 py-3 text-sm">
-        <p className="m-0 text-gray-500">{t("sendAs")}</p>
-        <p className="m-0 font-bold">{profile?.user_fullname || t("yourAccount")}</p>
-        {profile && (
-          <p className="m-0 text-gray-600">{[profile.user_phone, email].filter(Boolean).join(" · ") || t("noPhone")}</p>
-        )}
-        {profile && !profile.user_phone && (
-          <Link href="/customer/account" className="inline-block text-xs font-semibold text-[#8C5A3C] hover:underline">
-            {t("addPhone")}
-          </Link>
-        )}
-      </div>
-
-      <label className="block space-y-1.5">
-        <span className="block text-sm font-bold">{t("topic")}</span>
-        <select value={topic} onChange={(e) => setPicked(e.target.value)} className={`${shopInput} cursor-pointer`} disabled={topics.length === 0}>
-          {topics.map((tp) => (
-            <option key={tp} value={tp}>{tp}</option>
-          ))}
-        </select>
-        {topicsQ.isError && <span className="block text-xs text-red-600">{t("topicsFailed")}</span>}
-      </label>
-
-      <label className="block space-y-1.5">
-        <span className="block text-sm font-bold">{t("message")}</span>
-        <textarea
-          rows={5}
-          required
-          maxLength={maxLength}
-          placeholder={t("messagePlaceholder")}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          className={`${shopInput} h-auto resize-none py-2.5`}
-        />
-        <span className="block text-right text-xs text-gray-500">{message.length}/{maxLength}</span>
-      </label>
-
-      <button type="submit" disabled={send.isPending || !message.trim() || !topic} className={`${shopButton} w-full`}>
-        <Send size={18} />
-        {send.isPending ? t("sending") : t("send")}
+    <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-[#8C5A3C]/20 bg-[#FAF6F0]/50 px-4 py-10 text-center">
+      <MessageCircle size={40} className="text-[#8C5A3C]/60" aria-hidden="true" />
+      <p className="m-0 max-w-sm text-sm text-gray-600">{t("chatHint")}</p>
+      <button type="button" onClick={() => setOpen(true)} className={shopButtonPrimary}>
+        <MessageCircle size={18} aria-hidden="true" />
+        {t("chatOpen")}
       </button>
-    </form>
+    </div>
   );
 }
 

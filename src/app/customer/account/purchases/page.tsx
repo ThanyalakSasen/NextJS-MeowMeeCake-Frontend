@@ -24,6 +24,7 @@ import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { shopOrderKey, shopOrdersKey } from "../../lib/shopQueries";
 import { ORDER_STATUSES, ORDER_STATUS_TONE, REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "./orderLabels";
+import { NextActionLine, nextAction } from "../_components/NextAction";
 import ReviewLink from "../_components/ReviewLink";
 import OrderItemThumb from "../_components/OrderItemThumb";
 import BuyAgainButton from "../_components/BuyAgainButton";
@@ -132,7 +133,6 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
   const items = detail?.items ?? [];
   const shown = expanded ? items : items.slice(0, 1);
   const extra = items.length - 1;
-  const unpaid = order.order_status !== "cancelled" && (order.payment_status === "pending" || order.payment_status === "failed");
   const href = `/customer/account/purchases/${order._id}`;
 
   return (
@@ -200,18 +200,8 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
             </p>
           )}
           <span className="block text-sm font-bold text-stone-800">{t("total", { amount: baht(order.total_amount) })}</span>
-          {unpaid && (
-            <span className={`block text-xs font-medium ${order.has_payment && order.payment_status !== "failed" ? "text-amber-600" : "text-red-500"}`}>
-              {order.payment_status === "failed"
-                ? t("slipRejected")
-                : order.has_payment
-                  ? t("slipSent")
-                  : t("unpaid")}
-            </span>
-          )}
-          {order.order_status === "cancelled" && order.payment_status === "paid" && (
-            <span className="block text-xs font-medium text-amber-600">{t("awaitRefund")}</span>
-          )}
+          {/* ใครต้องทำอะไรต่อ — จบแล้ว (สำเร็จ/ยกเลิก) ไม่ต้องแสดง */}
+          {nextAction(order).who !== "none" && <NextActionLine order={order} />}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {detail && (order.order_status === "completed" || order.order_status === "cancelled") && (

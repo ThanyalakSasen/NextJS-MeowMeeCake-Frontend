@@ -4,7 +4,7 @@
 // รายการจาก localStorage (preorderBasket) · 1 ใบ = 1 รอบ · POST /shop/preorders → /customer/account/preorders/{id}?new=1
 // รับเอง: จุดรับ + วันรับ = วันรับของรอบ + อีก 12 วันตามวันที่จุดเปิด (backend preorderPickupDateOptions)
 // จัดส่ง: สมุดที่อยู่ + ผู้รับ · ค่าส่ง POST /shop/orders/delivery-quote { product_ids } (สินค้าในรายการนี้ ไม่ใช่ตะกร้า)
-// ส่วนลด: คูปองของฉัน + แต้ม (ไม่มีโค้ดส่วนลดสำหรับพรีออเดอร์) — ฐานคิดแต้มเหมือนออเดอร์ปกติ (C3)
+// ส่วนลด: โค้ดส่วนลด (POST /shop/preorders/promotion-preview) **หรือ** คูปองของฉัน + แต้ม — ฐานคิดแต้มเหมือนออเดอร์ปกติ (C3)
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
@@ -18,7 +18,6 @@ import { shopOrdersService } from "@/services/shopOrders";
 import { shopPreordersService, type CreatePreorderInput } from "@/services/shopPreorders";
 import { pickupLocationsService } from "@/services/pickupLocations";
 import { couponDiscount, maxRedeemablePoints, pointsToBaht, shopLoyaltyService } from "@/services/shopLoyalty";
-import { resolveUploadUrl } from "@/lib/uploads";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { OrderType } from "@/types/order";
@@ -28,7 +27,7 @@ import PickupLocationPicker from "@/components/customer/PickupLocationPicker";
 import CouponSelectBox from "@/components/customer/CouponSelectBox";
 import PointsRedeemBox from "@/components/customer/PointsRedeemBox";
 import CheckoutAddressForm from "@/components/customer/CheckoutAddressForm";
-import { baht, shopButtonPrimary, shopCard, shopInput, shopPage } from "@/components/customer/shopStyles";
+import { baht, shopButton, shopButtonPrimary, shopCard, shopInput, shopPage } from "@/components/customer/shopStyles";
 import {
   pickupLocationsKey, preorderRoundKey, shopAddressesKey, shopCouponsKey, shopPointsKey, shopPreordersKey,
 } from "../../lib/shopQueries";
@@ -38,8 +37,9 @@ import {
 import { preorderPickupDates, thaiDate } from "../lib/preorderDates";
 import { isRoundOpen, useNow } from "../lib/useNow";
 import FlowSteps from "@/components/customer/FlowSteps";
-import { useRecipientContact } from "../../hooks/useRecipientContact";
 import ShopImage from "@/components/customer/ShopImage";
+import { resolveUploadUrl } from "@/lib/uploads";
+import { useRecipientContact } from "../../hooks/useRecipientContact";
 
 const PHONE_RE = /^0\d{8,9}$/;
 
@@ -81,6 +81,9 @@ function PreorderCheckoutContent() {
   const [pointsInput, setPointsInput] = useState(0);
   const [pickupLocationId, setPickupLocationId] = useState<string | null>(null);
   const [pickupDate, setPickupDate] = useState<string | null>(null);
+  // โค้ดส่วนลด — forKey = เงื่อนไขตอนเช็ค (วิธีรับ · ค่าส่ง · ยอด) เปลี่ยนแล้วต้องกดใช้ใหม่ (แบบ checkout ปกติ)
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState<{ code: string; discount: number; freeShipping: boolean; forKey: string } | null>(null);
 
   const now = useNow();
   const isDelivery = orderType === "delivery";
@@ -95,6 +98,19 @@ function PreorderCheckoutContent() {
   });
   const deliveryFee = isDelivery ? (quoteQ.data?.fee ?? 0) : 0;
   const undeliverable = isDelivery && quoteQ.data?.deliverable === false;
+
+  const promoMutation = useMutation({
+    mutationFn: ({ body }: { body: CreatePreorderInput & { promotion_code: string }; forKey: string }) => shopPreordersService.previewPromotion(body),
+    onSuccess: (r, { forKey }) => {
+      setPromo({ code: r.promotion_code, discount: r.discount_amount, freeShipping: r.free_shipping, forKey });
+      setCouponId(null); // โค้ดกับคูปองของฉันใช้พร้อมกันไม่ได้
+      alert.success(tk("promoApplied"));
+    },
+    onError: (e) => {
+      setPromo(null);
+      alert.error(isApiError(e) ? e.message : tk("promoFailed"));
+    },
+  });
 
   const createMutation = useMutation({
     mutationFn: (body: CreatePreorderInput) => shopPreordersService.create(body),
@@ -131,22 +147,26 @@ function PreorderCheckoutContent() {
   const missing = round ? basket.items.filter((it) => !activeItemIds.has(it.round_item_id)) : [];
   const subtotal = Math.round(basket.items.reduce((s, it) => s + it.unit_price * it.quantity, 0) * 100) / 100;
 
-  // คูปอง/แต้ม — สูตรเดียวกับ checkout ปกติ (backend preorderService ใช้ฐานเดียวกับ orderService)
+  // โค้ด/คูปอง/แต้ม — สูตรเดียวกับ checkout ปกติ (backend preorderService ใช้ฐานเดียวกับ orderService)
+  const promoKey = `${orderType}|${deliveryFee}|${subtotal}`;
+  const activePromo = promo && promo.forKey === promoKey ? promo : null;
   const coupons = couponsQ.data ?? [];
-  const selectedCoupon = coupons.find((c) => c._id === couponId) ?? null;
+  const selectedCoupon = activePromo ? null : (coupons.find((c) => c._id === couponId) ?? null);
   const couponAmount = selectedCoupon ? (couponDiscount(selectedCoupon, subtotal, deliveryFee).amount ?? 0) : 0;
+  const codeOrCouponDiscount = activePromo ? activePromo.discount : couponAmount;
+  const freeShippingDiscount = activePromo ? activePromo.freeShipping : selectedCoupon?.discount_type === "FreeShipping";
   const points = pointsQ.data ?? null;
   let pointsToRedeem = 0;
   let maxPoints = 0;
   if (points) {
     // ส่วนลดส่งฟรีไม่ลดฐานคิดแต้ม (Q-BE14)
-    const goodsDiscount = selectedCoupon?.discount_type === "FreeShipping" ? 0 : couponAmount;
+    const goodsDiscount = freeShippingDiscount ? 0 : codeOrCouponDiscount;
     maxPoints = maxRedeemablePoints(points.balance, subtotal - Math.min(goodsDiscount, subtotal), points.rules);
     const capped = Math.min(pointsInput, maxPoints);
     pointsToRedeem = capped - (capped % points.rules.REDEEM_STEP);
   }
   const pointsDiscount = points ? pointsToBaht(pointsToRedeem, points.rules) : 0;
-  const total = Math.max(0, subtotal + deliveryFee - couponAmount - pointsDiscount);
+  const total = Math.max(0, subtotal + deliveryFee - codeOrCouponDiscount - pointsDiscount);
 
   // จุดรับ: วันรับของพรีออเดอร์คิดจากวันรับของรอบ (ไม่ใช่ order_pickup_dates ของออเดอร์ปกติ)
   const pickupLocations = (pickupQ.data ?? [])
@@ -160,8 +180,11 @@ function PreorderCheckoutContent() {
     roundOpen && missing.length === 0 && qtyOk &&
     (isDelivery ? !!address && recipientOk && !quoteQ.isLoading && !undeliverable : !pickupQ.isLoading && pickupOk);
 
-  const submit = () => {
-    if (!canSubmit) return;
+  // เช็คโค้ดได้เมื่อข้อมูลจัดส่งครบ (server คิดค่าส่ง/ส่วนลดจากที่อยู่จริง)
+  const canCheckPromo = roundOpen && missing.length === 0 && qtyOk && (isDelivery ? !!address && recipientOk && !quoteQ.isLoading && !undeliverable : true);
+
+  /** body ที่ใช้ทั้งพรีวิวโค้ดและสั่งจริง (รายการ · วิธีรับ · ที่อยู่ · จุดรับ) */
+  const baseBody = (): CreatePreorderInput => {
     const body: CreatePreorderInput = {
       round_id: basket.round_id,
       order_type: orderType,
@@ -182,7 +205,14 @@ function PreorderCheckoutContent() {
       body.pickup_location_id = pickupLocationId;
       body.pickup_date = pickupDate;
     }
-    if (selectedCoupon && couponAmount > 0) body.user_coupon_id = selectedCoupon._id;
+    return body;
+  };
+
+  const submit = () => {
+    if (!canSubmit) return;
+    const body = baseBody();
+    if (activePromo) body.promotion_code = activePromo.code;
+    else if (selectedCoupon && couponAmount > 0) body.user_coupon_id = selectedCoupon._id;
     if (pointsToRedeem > 0) body.points_to_redeem = pointsToRedeem;
     createMutation.mutate(body);
   };
@@ -206,7 +236,8 @@ function PreorderCheckoutContent() {
         )}
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-          <div className="space-y-6 lg:col-span-8">
+          <div className="space-y-6 lg:col-span-7">
+            {/* รายการพรีออเดอร์ (แก้จำนวน/หมายเหตุ/ลบได้ที่นี่ — พรีออเดอร์ไม่มีหน้าตะกร้า) */}
             <section className={`${shopCard} space-y-3`}>
               <div className="flex items-baseline justify-between gap-2">
                 <h2 className="m-0 text-lg font-bold">{t("items")}</h2>
@@ -215,6 +246,7 @@ function PreorderCheckoutContent() {
               {basket.items.map((it) => {
                 const key = basketLineKey(it);
                 const img = resolveUploadUrl(it.product_img);
+                const name = localName(it.product_name_th, it.product_name_eng);
                 return (
                   <div key={key} className="flex gap-3 border-t border-[#8C5A3C]/10 pt-3 first:border-0 first:pt-0">
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-stone-100">
@@ -222,8 +254,8 @@ function PreorderCheckoutContent() {
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="m-0 truncate text-sm font-bold">{localName(it.product_name_th, it.product_name_eng)}</p>
-                        <button type="button" onClick={() => removePreorderBasketItem(key)} aria-label={t("removeItem", { name: localName(it.product_name_th, it.product_name_eng) })} className="text-gray-500 hover:text-red-600">
+                        <p className="m-0 truncate text-sm font-bold">{name}</p>
+                        <button type="button" onClick={() => removePreorderBasketItem(key)} aria-label={t("removeItem", { name })} className="text-gray-500 hover:text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -232,7 +264,7 @@ function PreorderCheckoutContent() {
                         className="h-[44px] w-full rounded-lg border border-[#8C5A3C]/15 px-2 text-xs"
                         maxLength={500}
                         placeholder={t("notePlaceholder")}
-                        aria-label={t("noteAria", { name: localName(it.product_name_th, it.product_name_eng) })}
+                        aria-label={t("noteAria", { name })}
                         value={it.special_request ?? ""}
                         onChange={(e) => updatePreorderBasketItem(key, { special_request: e.target.value || null })}
                       />
@@ -295,11 +327,11 @@ function PreorderCheckoutContent() {
                     <button type="button" onClick={() => setShowAddressForm(true)} className="text-sm font-semibold text-[#8C5A3C] hover:text-[#4A342E]">{tk("addAddress")}</button>
                   )}
                   <div className="grid gap-3 border-t border-[#8C5A3C]/10 pt-4 sm:grid-cols-2">
-                    <label className="space-y-1 text-sm">
+                    <label className="flex flex-col gap-1.5 text-sm">
                       <span className="font-semibold">{tk("recipientName")}</span>
                       <input className={shopInput} value={recipientName} maxLength={200} onChange={(e) => setRecipientName(e.target.value)} />
                     </label>
-                    <label className="space-y-1 text-sm">
+                    <label className="flex flex-col gap-1.5 text-sm">
                       <span className="font-semibold">{tk("recipientPhone")}</span>
                       <input className={shopInput} inputMode="tel" value={recipientPhone} maxLength={10} placeholder="0812345678" onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, ""))} />
                       {recipientPhone && !PHONE_RE.test(recipientPhone) && <span className="text-xs text-red-600">{tk("phoneInvalid")}</span>}
@@ -310,10 +342,39 @@ function PreorderCheckoutContent() {
             </section>
           </div>
 
-          <div className="lg:sticky lg:top-44 lg:col-span-4">
+          <div className="lg:sticky lg:top-44 lg:col-span-5">
             <div className={`${shopCard} space-y-4`}>
-              <h2 className="m-0 border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">{t("summary")}</h2>
-              <CouponSelectBox coupons={coupons} selectedId={couponId} subtotal={subtotal} deliveryFee={deliveryFee} onSelect={setCouponId} />
+              <h2 className="border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">{t("summary")}</h2>
+              {/* โค้ดส่วนลด — แบบเดียวกับหน้ายืนยันคำสั่งซื้อปกติ */}
+              <div className="flex gap-2">
+                <input
+                  className={shopInput}
+                  value={promoInput}
+                  placeholder={tk("promoCode")}
+                  aria-label={tk("promoCode")}
+                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                />
+                <button
+                  type="button"
+                  className={`${shopButton} shrink-0`}
+                  disabled={!promoInput.trim() || promoMutation.isPending || !canCheckPromo}
+                  onClick={() => promoMutation.mutate({ body: { ...baseBody(), promotion_code: promoInput.trim() }, forKey: promoKey })}
+                >
+                  {promoMutation.isPending ? tk("checking") : tk("applyCode")}
+                </button>
+              </div>
+              {promo && !activePromo && <p className="text-xs text-amber-700">{tk("reapplyCode")}</p>}
+              {promoInput.trim() && !canCheckPromo && isDelivery && <p className="m-0 text-xs text-gray-500">{t("promoNeedDelivery")}</p>}
+              <CouponSelectBox
+                coupons={coupons}
+                selectedId={activePromo ? null : couponId}
+                subtotal={subtotal}
+                deliveryFee={deliveryFee}
+                onSelect={(id) => {
+                  setCouponId(id);
+                  if (id) setPromo(null); // คูปองของฉันกับโค้ดใช้พร้อมกันไม่ได้
+                }}
+              />
               {points && <PointsRedeemBox points={points} max={maxPoints} value={pointsInput} onChange={setPointsInput} />}
               <div className="space-y-2 text-sm">
                 <Line label={tk("subtotal")} value={baht(subtotal)} />
@@ -321,6 +382,7 @@ function PreorderCheckoutContent() {
                   label={tk("deliveryFee")}
                   value={!isDelivery ? baht(0) : !address ? tk("pickAddressFirst") : quoteQ.isLoading ? tk("calculating") : undeliverable ? tk("cannotDeliver") : baht(deliveryFee)}
                 />
+                {activePromo && <Line label={tk("discountCode", { code: activePromo.code })} value={`-${baht(activePromo.discount)}`} green />}
                 {couponAmount > 0 && selectedCoupon && <Line label={tk("coupon", { code: selectedCoupon.promotion_code })} value={`-${baht(couponAmount)}`} green />}
                 {pointsDiscount > 0 && <Line label={tk("points", { n: pointsToRedeem.toLocaleString() })} value={`-${baht(pointsDiscount)}`} green />}
               </div>

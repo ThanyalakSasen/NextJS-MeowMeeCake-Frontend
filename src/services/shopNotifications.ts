@@ -15,7 +15,7 @@ export interface CustomerNotification {
   type: CustomerNotificationType;
   /** path ในเว็บ (backend ตั้ง) — ผ่าน notificationHref ก่อนใช้ */
   link: string | null;
-  ref_type: "order" | "preorder" | "coupon" | "bundle" | "preorder_round" | null;
+  ref_type: "order" | "preorder" | "coupon" | "bundle" | "preorder_round" | "review" | "chat" | null;
   ref_id: string | null;
   read_at: string | null;
   created_at: string;

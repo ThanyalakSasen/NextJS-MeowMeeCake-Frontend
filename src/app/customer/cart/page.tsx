@@ -5,10 +5,12 @@
 // ตัดออก (backend ยังไม่รองรับ): แพ็กเกจ/เซ็ตขนม · ตัวเลือกสินค้าหลายตัว · หมายเหตุต่อชิ้น
 // รายการที่ซื้อไม่ได้ (ปิดขาย · หมด · สต็อกไม่พอ — สต็อกจาก /catalog/products/:id) แสดงต่อบรรทัด + ปิดปุ่มสั่งซื้อ (U6 · lib/cartIssues)
 // backend ตรวจซ้ำตอนกดสั่งซื้อเสมอ · ช่องค้นหาอยู่ใน Navbar หน้าร้านแล้ว (FrontOffice ซ่อน Navbar ในตะกร้าเลยมีช่องแยก)
+// พรีออเดอร์ที่ยังไม่ยืนยัน (localStorage · preorderBasket): มีสินค้าปกติ = ไม่แสดงอะไรเกี่ยวกับพรีออเดอร์เลย (สินค้าปกติมาก่อน)
+//   ไม่มีสินค้าปกติ = แสดงส่วนพรีออเดอร์ (ปกติปุ่มตะกร้าบน Navbar พาไปหน้ายืนยันพรีออเดอร์โดยตรงอยู่แล้ว)
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
 import { FaImage, FaTrashAlt } from "react-icons/fa";
 import { cartItemOptionText, shopCartService, type ShopCart, type ShopCartItem } from "@/services/shopCart";
@@ -23,8 +25,13 @@ import { useCartCountStore } from "../store/cartCountStore";
 import { shopCartKey } from "../lib/shopQueries";
 import { catalogProductKey } from "../lib/catalogQueries";
 import { cartIssueText, cartIssues, cartProductId, type StockInfo } from "../lib/cartIssues";
+import { useProvinceOnlyShipping } from "../hooks/useProvinceOnlyShipping";
+import { FaTruck } from "react-icons/fa";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ShopImage from "@/components/customer/ShopImage";
+import { CalendarCheck } from "lucide-react";
+import { usePreorderBasket, type PreorderBasket } from "../preorder/lib/preorderBasket";
+import { thaiDate } from "../preorder/lib/preorderDates";
 
 export default function CartPage() {
   const t = useTranslations("shop.cart");
@@ -43,6 +50,10 @@ function CartContent() {
   const tc = useTranslations("shop.common");
   const qc = useQueryClient();
   const setCount = useCartCountStore((s) => s.setCount);
+  // สินค้าที่ส่งได้เฉพาะในจังหวัดร้าน — แจ้งไว้ก่อนถึงหน้า checkout (ส่งนอกจังหวัดไม่ได้ · รับเองได้)
+  const shipping = useProvinceOnlyShipping();
+  // พรีออเดอร์ที่ยังไม่ยืนยัน — แสดงเป็นอีกส่วน (ชำระคนละบิล)
+  const preorderBasket = usePreorderBasket();
 
   const cartQ = useQuery({
     queryKey: shopCartKey,
@@ -118,14 +129,24 @@ function CartContent() {
 
   const cart: ShopCart = cartQ.data;
   const issues = cartIssues(cart.items, stockOf);
+  const hasCart = cart.items.length > 0;
 
   return (
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("title") }]} className="!mb-0" />
-        {cart.items.length > 0 && <FlowSteps kind="order" current={1} />}
+        {hasCart && <FlowSteps kind="order" current={1} />}
 
-        {cart.items.length === 0 ? (
+        {!hasCart && preorderBasket ? (
+          <>
+            <h1 className="m-0 text-xl font-bold">{t("title")}</h1>
+            <PreorderCartSection basket={preorderBasket} />
+            <p className="m-0 text-center text-sm text-gray-500">
+              {t("emptyNormal")}{" "}
+              <Link href="/customer/product" className="font-semibold text-[#8C5A3C] hover:text-[#4A342E]">{t("browse")}</Link>
+            </p>
+          </>
+        ) : !hasCart ? (
           <div className={`${shopCard} mx-auto w-full max-w-md space-y-4 text-center`}>
             <h2 className="text-lg font-bold">{t("empty")}</h2>
             <Link href="/customer/product" className={`${shopButtonPrimary} w-full`}>
@@ -169,6 +190,18 @@ function CartContent() {
                           <p className="truncate font-bold">{product ? localName(product.product_name_th, product.product_name_eng) : t("product")}</p>
                           {variant && <p className="text-xs text-gray-500">{variant}</p>}
                           <p className="text-sm text-gray-600">{t("perUnit", { price: baht(item.price_snapshot) })}</p>
+                          {product && shipping.isProvinceOnly(product) && (
+                            <p className="mt-1 flex items-start gap-1 text-xs font-medium text-sky-800">
+                              <FaTruck className="mt-0.5 shrink-0" aria-hidden="true" />
+                              {/* จอมือถือ: 2 บรรทัด · จอ ≥640: บรรทัดเดียว */}
+                              <span>
+                                <span className="block sm:inline">
+                                  {shipping.province ? t("provinceOnly", { province: shipping.province }) : t("provinceOnlyGeneric")}
+                                </span>{" "}
+                                <span className="block font-normal text-sky-700 sm:inline">{t("provinceOnlyPickup")}</span>
+                              </span>
+                            </p>
+                          )}
                           {issue && <p className="mt-1 text-xs font-semibold text-red-600">{cartIssueText(issue, t)}</p>}
                         </div>
                         <button
@@ -246,5 +279,49 @@ function CartContent() {
         )}
       </div>
     </div>
+  );
+}
+
+/** ส่วนพรีออเดอร์ที่ยังไม่ยืนยันในหน้าตะกร้า — ดูรายการ/ยอด แล้วไปยืนยันที่หน้ายืนยันพรีออเดอร์ (แก้จำนวนได้ที่นั่น) */
+function PreorderCartSection({ basket }: { basket: PreorderBasket }) {
+  const t = useTranslations("shop.cart");
+  const { name: localName } = useLocalName();
+  const locale = useLocale();
+  const total = basket.items.reduce((s, it) => s + it.unit_price * it.quantity, 0);
+  return (
+    <section className={`${shopCard} flex flex-col gap-4 !border-[#8C5A3C]/30`} aria-labelledby="preorder-cart-title">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2 id="preorder-cart-title" className="m-0 flex items-center gap-2 text-lg font-bold text-[#4A342E]">
+            <CalendarCheck className="h-5 w-5 shrink-0" aria-hidden="true" />
+            {t("preorderTitle", { round: basket.round_name })}
+          </h2>
+          <p className="m-0 mt-1 text-xs text-gray-500">{t("preorderPickup", { date: thaiDate(basket.pickup_date, false, locale) })}</p>
+        </div>
+        <span className="rounded-full bg-[#8C5A3C]/10 px-2.5 py-1 text-xs font-semibold text-[#8C5A3C]">{t("preorderPending")}</span>
+      </div>
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        {basket.items.map((it) => (
+          <li key={`${it.round_item_id}|${it.option_text ?? ""}`} className="flex items-start justify-between gap-3 text-sm">
+            <span className="min-w-0">
+              <span className="block">
+                {localName(it.product_name_th, it.product_name_eng)} <span className="text-gray-500">×{it.quantity}</span>
+              </span>
+              {it.option_text && <span className="block text-xs text-gray-500">{it.option_text}</span>}
+            </span>
+            <span className="shrink-0 font-semibold">{baht(it.unit_price * it.quantity)}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-col gap-3 border-t border-[#8C5A3C]/10 pt-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="m-0 text-sm font-bold">{t("preorderTotal", { amount: baht(total) })}</p>
+          <p className="m-0 text-xs text-gray-500">{t("preorderPayHint")}</p>
+        </div>
+        <Link href="/customer/preorder/checkout" className={`${shopButtonPrimary} sm:w-auto`}>
+          {t("preorderConfirm")}
+        </Link>
+      </div>
+    </section>
   );
 }

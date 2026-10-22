@@ -26,7 +26,7 @@ import { pickupLocationsKey } from "@/app/customer/lib/shopQueries";
 import { storeInfoKey, storeLogoKey } from "@/app/customer/lib/catalogQueries";
 import { thaiCompare } from "@/lib/thaiSort";
 import {
-  DAY_ORDER, EMPTY_PROFILE, EMPTY_SETTINGS, NEW_MARKET, logoError, marketsPayload, profilePayload, profileToForm, sameValue,
+  DAY_ORDER, EMPTY_PROFILE, EMPTY_SETTINGS, NEW_MAIN_MARKET, NEW_MARKET, logoError, marketsPayload, profilePayload, profileToForm, sameValue,
   sectionChanged, validateAddress, validateMarkets, validateProfile,
   type FieldError, type FormErrors, type ProfileForm, type SectionKey,
 } from "./storeInfoForm";
@@ -228,6 +228,9 @@ export function useStoreInfoViewModel() {
     setMarketField(i, "is_active", active);
   };
   const addMarket = () => setMarkets((ms) => [...ms, { ...NEW_MARKET }]);
+  /** เปิดให้รับสินค้าที่หน้าร้านหลัก (ที่อยู่ร้าน) — เพิ่มไว้ต้นรายการ */
+  const addMainMarket = () =>
+    setMarkets((ms) => (ms.some((m) => m.is_main) ? ms : [{ ...NEW_MAIN_MARKET, name: t("storeInfo.markets.mainName") }, ...ms]));
   const removeMarket = async (i: number) => {
     if (isLastActive(i)) return void alert.warning(t("storeInfo.markets.lastActive"));
     const name = markets[i]?.name.trim();
@@ -291,6 +294,7 @@ export function useStoreInfoViewModel() {
     toggleMarketDay,
     toggleMarketActive,
     addMarket,
+    addMainMarket,
     removeMarket,
 
     fieldError: (name: string) => errorText(errors[name]),

@@ -4,7 +4,7 @@
 //   - จังหวัดหนึ่งอยู่ได้โซนเดียว · โซน D = จังหวัดที่เหลือทั้งหมด (ใส่จังหวัดไม่ได้)
 //   - ค่าส่งคิดตามจังหวัดในที่อยู่ลูกค้า: ตรงกับ A/B/C → โซนนั้น · ไม่ตรง = โซน D (backend lib/shipping.ts computeShippingFee)
 // ─────────────────────────────────────────────────────────────
-import type { ShippingZone, ShippingZoneCode, ShippingZoneUpdate } from "@/types/shippingZone";
+import type { ShippingZone, ShippingZoneCode, ShippingZoneCreate, ShippingZoneUpdate } from "@/types/shippingZone";
 
 export interface ShippingZoneForm {
   zone_label: string;
@@ -32,6 +32,16 @@ export function validateShippingZone(f: ShippingZoneForm): ShippingZoneErrors {
   if (!Number.isFinite(f.fee) || f.fee < 0 || Math.round(f.fee * 100) !== f.fee * 100) e.fee = "feeInvalid";
   return e;
 }
+
+/** โซนใหม่ — ฟอร์มว่าง */
+export const EMPTY_ZONE_FORM: ShippingZoneForm = { zone_label: "", fee: 0, provinces: [] };
+
+/** body ของ POST (เพิ่มโซน) */
+export const toShippingZoneCreate = (f: ShippingZoneForm): ShippingZoneCreate => ({
+  zone_label: f.zone_label.trim(),
+  fee: f.fee,
+  provinces: [...new Set(f.provinces)],
+});
 
 /** body ของ PATCH — โซน D ไม่ส่ง provinces · ตัดชื่อซ้ำ */
 export const toShippingZoneUpdate = (code: ShippingZoneCode, f: ShippingZoneForm): ShippingZoneUpdate => ({

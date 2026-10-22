@@ -105,6 +105,14 @@ export interface ShopPreorder {
 export const canCustomerCancelPreorder = (p: Pick<ShopPreorder, "order_status" | "payment_status">) =>
   (p.order_status === "pending" || p.order_status === "confirmed") && p.payment_status !== "paid";
 
+export interface PreorderPromotionCheck {
+  promotion_code: string;
+  discount_amount: number;
+  free_shipping: boolean;
+  subtotal: number;
+  delivery_fee: number;
+}
+
 export interface CreatePreorderInput {
   round_id: string;
   order_type: OrderType;
@@ -112,6 +120,8 @@ export interface CreatePreorderInput {
   recipient_name?: string;
   recipient_phone?: string;
   user_coupon_id?: string;
+  /** โค้ดส่วนลด — ใช้ร่วมกับ user_coupon_id ไม่ได้ */
+  promotion_code?: string;
   points_to_redeem?: number;
   pickup_location_id?: string;
   pickup_date?: string;
@@ -195,6 +205,10 @@ export const shopPreordersService = {
   },
 
   /** POST /shop/preorders — 1 ใบต่อรอบ · ค่าส่ง/ส่วนลด/ราคา backend คิดเอง */
+  /** POST /shop/preorders/promotion-preview — เช็คโค้ดส่วนลดกับรายการพรีออเดอร์นี้ (ราคา/ค่าส่งคิดฝั่ง server · ยังไม่สร้างเอกสาร) */
+  previewPromotion: async (body: CreatePreorderInput & { promotion_code: string }): Promise<PreorderPromotionCheck> =>
+    (await http.post<ItemResponse<PreorderPromotionCheck>>("/shop/preorders/promotion-preview", body)).data,
+
   create: async (body: CreatePreorderInput): Promise<ShopPreorder> =>
     toShopPreorder((await http.post<ItemResponse<any>>("/shop/preorders", body)).data),
 

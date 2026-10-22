@@ -23,6 +23,8 @@ import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/compo
 import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ReviewLink from "../../_components/ReviewLink";
+import { NextActionBanner } from "../../_components/NextAction";
+import AskShopButton from "../../_components/AskShopButton";
 import { shopPointsKey, shopCouponsKey, shopPreorderKey, shopPreorderPaymentPageKey, shopPreordersKey } from "../../../lib/shopQueries";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../../purchases/orderLabels";
 import { thaiDate } from "../../../preorder/lib/preorderDates";
@@ -136,6 +138,10 @@ function PreorderDetailContent() {
           </div>
         )}
 
+        {/* ใครต้องทำอะไรต่อ (ลูกค้า / ร้าน) */}
+        <NextActionBanner order={p} />
+        <AskShopButton chatRef={{ kind: "preorder", id: p._id, no: p.preorder_no }} />
+
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
           <section className={`${shopCard} space-y-4 lg:col-span-3`}>
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -146,7 +152,7 @@ function PreorderDetailContent() {
               </div>
               <div className="flex flex-col items-end gap-1 text-xs font-semibold">
                 <span className="rounded-full bg-[#8C5A3C]/10 px-2.5 py-1 text-[#8C5A3C]">{labels.orderStatus(p.order_status)}</span>
-                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{labels.paymentStatus(p.payment_status)}</span>
+                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{labels.paymentLabel(p)}</span>
               </div>
             </div>
 

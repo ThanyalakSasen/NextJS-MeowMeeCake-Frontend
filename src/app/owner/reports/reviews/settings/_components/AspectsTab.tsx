@@ -1,6 +1,7 @@
 "use client";
-// แท็บ "หัวข้อรีวิว" — ตัวอย่างปุ่มในฟอร์มลูกค้า · เพิ่ม · รายการ (ลำดับ/ไอคอน/ชื่อ/คำแนะนำ/เปิด-ปิด/ลบ) · หัวข้อที่ลบแล้ว (กู้คืน)
-import { Popover, Tooltip } from "antd";
+// แท็บ "หัวข้อรีวิว" — ตัวอย่างปุ่มในฟอร์มลูกค้า · เพิ่ม · รายการ (ลำดับ/ไอคอน/ชื่อ/เปิด-ปิด/ลบ) · หัวข้อที่ลบแล้ว (กู้คืน)
+// แก้ชื่อหัวข้อ = ป๊อปอัป (ชื่อไทย + ชื่ออังกฤษ)
+import { Modal, Popover } from "antd";
 import { useTranslations } from "next-intl";
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Input, Switch } from "@/components/base";
@@ -29,12 +30,10 @@ export function AspectsTab({ vm }: { vm: VM }) {
         {active.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {active.map((a) => (
-              <Tooltip key={a._id} title={a.placeholder_text || undefined}>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-brown-200 bg-brown-50 px-3 py-1 text-xs text-brown-800">
-                  <AspectIcon icon={resolveAspectIcon(a.icon, a.aspect_name_eng)} size={13} />
-                  {a.aspect_name_th}
-                </span>
-              </Tooltip>
+              <span key={a._id} className="inline-flex items-center gap-1.5 rounded-full border border-brown-200 bg-brown-50 px-3 py-1 text-xs text-brown-800">
+                <AspectIcon icon={resolveAspectIcon(a.icon, a.aspect_name_eng)} size={13} />
+                {a.aspect_name_th}
+              </span>
             ))}
           </div>
         ) : (
@@ -55,7 +54,6 @@ export function AspectsTab({ vm }: { vm: VM }) {
 
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {vm.aspects.map((a, i) => {
-          const renaming = vm.renaming?.id === a._id ? vm.renaming : null;
           const iconKey = resolveAspectIcon(a.icon, a.aspect_name_eng);
           return (
             <li key={a._id} className={`flex flex-col gap-2 rounded-xl border bg-white p-3 ${a.is_active ? "border-gray-100" : "border-dashed border-gray-200 opacity-75"}`}>
@@ -88,25 +86,14 @@ export function AspectsTab({ vm }: { vm: VM }) {
                   </span>
                 </Popover>
 
-                {renaming ? (
-                  <span className="flex flex-1 flex-wrap items-center gap-2">
-                    <Input size="small" style={{ maxWidth: 200 }} value={renaming.th} maxLength={50} placeholder={t("reviewSettings.aspects.nameTh")}
-                      onChange={(e) => vm.setRenaming({ ...renaming, th: e.target.value })} onPressEnter={vm.saveRename} />
-                    <Input size="small" style={{ maxWidth: 200 }} value={renaming.eng} maxLength={50} placeholder={t("reviewSettings.aspects.nameEng")}
-                      onChange={(e) => vm.setRenaming({ ...renaming, eng: e.target.value })} onPressEnter={vm.saveRename} />
-                    <Button size="small" type="primary" onClick={vm.saveRename}>{t("common.save")}</Button>
-                    <Button size="small" onClick={() => vm.setRenaming(null)}>{t("common.cancel")}</Button>
-                  </span>
-                ) : (
-                  <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                    <span className="truncate text-sm font-semibold text-brown-800">{a.aspect_name_th}</span>
-                    {a.aspect_name_eng && a.aspect_name_eng !== a.aspect_name_th && <span className="truncate text-xs text-gray-500">· {a.aspect_name_eng}</span>}
-                    {canEdit && (
-                      <Button size="small" type="text" aria-label={t("reviewSettings.aspects.rename")} icon={actionIcon("edit", "small")}
-                        onClick={() => vm.startRename(a)} />
-                    )}
-                  </span>
-                )}
+                <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <span className="truncate text-sm font-semibold text-brown-800">{a.aspect_name_th}</span>
+                  {a.aspect_name_eng && a.aspect_name_eng !== a.aspect_name_th && <span className="truncate text-xs text-gray-500">· {a.aspect_name_eng}</span>}
+                  {canEdit && (
+                    <Button size="small" type="text" aria-label={t("reviewSettings.aspects.rename")} icon={actionIcon("edit", "small")}
+                      onClick={() => vm.startRename(a)} />
+                  )}
+                </span>
 
                 <span className="flex items-center gap-2">
                   <span className="text-xs text-gray-500">{a.is_active ? t("reviewSettings.aspects.shown") : t("reviewSettings.aspects.hidden")}</span>
@@ -118,16 +105,6 @@ export function AspectsTab({ vm }: { vm: VM }) {
                   )}
                 </span>
               </div>
-              <Input
-                key={`${a._id}-${a.placeholder_text ?? ""}`}
-                size="small"
-                defaultValue={a.placeholder_text ?? ""}
-                maxLength={120}
-                disabled={!canEdit}
-                placeholder={t("reviewSettings.aspects.placeholderHint")}
-                onBlur={(e) => vm.onPlaceholder(a, e.target.value)}
-                onPressEnter={(e) => vm.onPlaceholder(a, (e.target as HTMLInputElement).value)}
-              />
             </li>
           );
         })}
@@ -153,6 +130,46 @@ export function AspectsTab({ vm }: { vm: VM }) {
           </ul>
         </Card>
       )}
+      {/* ป๊อปอัปแก้ชื่อหัวข้อ — รีวิวเดิมเปลี่ยนชื่อตามให้ (backend) */}
+      <Modal
+        open={!!vm.renaming}
+        title={t("reviewSettings.aspects.renameTitle")}
+        width={480}
+        onCancel={() => !vm.renameSaving && vm.setRenaming(null)}
+        onOk={vm.saveRename}
+        confirmLoading={vm.renameSaving}
+        okText={t("common.save")}
+        cancelText={t("common.cancel")}
+        mask={{ closable: false }}
+        destroyOnHidden
+      >
+        {vm.renaming && (
+          <div className="flex flex-col gap-3">
+            <label className="flex flex-col gap-1 text-sm text-brown-800">
+              <span>
+                {t("reviewSettings.aspects.nameTh")}
+                <span className="text-red-500"> *</span>
+              </span>
+              <Input
+                autoFocus
+                value={vm.renaming.th}
+                maxLength={50}
+                onChange={(e) => vm.setRenaming({ ...vm.renaming!, th: e.target.value })}
+                onPressEnter={vm.saveRename}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm text-brown-800">
+              {t("reviewSettings.aspects.nameEng")}
+              <Input
+                value={vm.renaming.eng}
+                maxLength={50}
+                onChange={(e) => vm.setRenaming({ ...vm.renaming!, eng: e.target.value })}
+                onPressEnter={vm.saveRename}
+              />
+            </label>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

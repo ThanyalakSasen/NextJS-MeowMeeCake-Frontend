@@ -13,7 +13,7 @@ export type SectionKey = Extract<NavKey, `section${string}`> | "sectionOther";
 
 export const PERMISSION_GROUPS: { sectionKey: SectionKey; keys: MenuKey[] }[] = [
   { sectionKey: "sectionOverview", keys: ["reports"] },
-  { sectionKey: "sectionProductsOrders", keys: ["products", "orders", "preorder", "payments", "promotions"] },
+  { sectionKey: "sectionProductsOrders", keys: ["products", "orders", "preorder", "payments", "promotions", "chat"] },
   { sectionKey: "sectionProductionIngredients", keys: ["production", "ingredients", "stock", "recipes"] },
   { sectionKey: "sectionEmployees", keys: ["employees"] },
   { sectionKey: "sectionOther", keys: ["dashboard", "store_info"] },

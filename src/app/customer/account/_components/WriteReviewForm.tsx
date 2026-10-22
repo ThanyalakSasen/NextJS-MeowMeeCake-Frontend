@@ -329,7 +329,6 @@ export default function WriteReviewForm({
                 <button
                   key={a._id}
                   type="button"
-                  title={a.placeholder_text ?? undefined}
                   aria-pressed={selected}
                   onClick={() => toggleAspect(a._id)}
                   className={`inline-flex h-[44px] items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition ${

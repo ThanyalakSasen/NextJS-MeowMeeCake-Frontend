@@ -31,6 +31,8 @@ import ReviewLink from "../../_components/ReviewLink";
 import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
 import BuyAgainButton from "../../_components/BuyAgainButton";
+import { NextActionBanner } from "../../_components/NextAction";
+import AskShopButton from "../../_components/AskShopButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../orderLabels";
 import { canReview } from "../../../hooks/useReviewedItems";
@@ -141,6 +143,10 @@ function OrderContent() {
           </div>
         )}
 
+        {/* ใครต้องทำอะไรต่อ (ลูกค้า / ร้าน) */}
+        <NextActionBanner order={order} />
+        <AskShopButton chatRef={{ kind: "order", id: order._id, no: order.order_no }} />
+
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
           <section className={`${shopCard} space-y-4 lg:col-span-3`}>
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -151,7 +157,7 @@ function OrderContent() {
               </div>
               <div className="flex flex-col items-end gap-1 text-xs font-semibold">
                 <span className="rounded-full bg-[#8C5A3C]/10 px-2.5 py-1 text-[#8C5A3C]">{labels.orderStatus(order.order_status)}</span>
-                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{labels.paymentStatus(order.payment_status)}</span>
+                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{labels.paymentLabel(order)}</span>
               </div>
             </div>
 

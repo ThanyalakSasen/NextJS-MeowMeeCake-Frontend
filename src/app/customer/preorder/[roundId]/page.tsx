@@ -59,7 +59,11 @@ export default function PreorderRoundPage() {
   return (
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
-        <CustomerBreadcrumb items={[{ label: t("crumb"), href: "/customer/preorder" }, { label: round.round_name }]} className="!mb-0" />
+        {/* แถวบนสุด: breadcrumb ซ้าย · ปุ่มขั้นตอนการสั่งพรีออเดอร์ขวา (กดแล้วเป็นป๊อปอัป) */}
+        <div className="flex items-center justify-between gap-3">
+          <CustomerBreadcrumb items={[{ label: t("crumb"), href: "/customer/preorder" }, { label: round.round_name }]} className="!mb-0 min-w-0" />
+          <PreorderSteps />
+        </div>
 
         <header className="flex flex-col gap-3 rounded-2xl border border-[#8C5A3C]/15 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -76,7 +80,7 @@ export default function PreorderRoundPage() {
 
         <BasketBar />
 
-        <section className="space-y-4" aria-labelledby="round-items">
+        <section className="flex flex-col gap-4" aria-labelledby="round-items">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 id="round-items" className="m-0 text-xl font-bold text-stone-800">{t("roundItems", { n: round.items.length })}</h2>
             {round.items.length > 4 && (
@@ -88,7 +92,8 @@ export default function PreorderRoundPage() {
               {round.items.length ? t("noMatch") : t("noItems")}
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            // masonry — การ์ดสูงตามเนื้อหา · ระยะห่างแนวตั้งเท่ากันทุกใบ (การ์ดใส่ mb-4 break-inside-avoid)
+            <div className="columns-2 gap-4 md:columns-3 lg:columns-4">
               {items.map((it) => (
                 <RoundProductCard key={it._id} item={it} roundId={round._id} />
               ))}
@@ -96,7 +101,6 @@ export default function PreorderRoundPage() {
           )}
         </section>
 
-        <PreorderSteps />
       </div>
     </div>
   );

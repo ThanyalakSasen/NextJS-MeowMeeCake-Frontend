@@ -123,9 +123,11 @@
     "notificationsHistory": "Notification History",
     "logout": "Log out",
     "deliveryZones": "Delivery Zones",
-    "webShipping": "Online Shipping Fees",
+    "webShipping": "Delivery fees (web orders)",
     "storefront": "View storefront",
-    "myAccount": "My account"
+    "myAccount": "My account",
+    "customerChat": "Customer chat",
+    "unreadBadge": "{n} unread"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -619,7 +621,8 @@
       "employees": "Employees",
       "promotions": "Promotions",
       "reports": "Reports & Finance",
-      "store_info": "Store info"
+      "store_info": "Store info",
+      "chat": "Customer chat"
     },
     "deliveryStatus": {
       "pending": "Awaiting shipment",
@@ -1776,7 +1779,8 @@
       "placeholderWithSuggestions": "Type a reply or pick one you used before...",
       "usedTimes": "used {n}× · ★{rating}",
       "save": "Save reply",
-      "remove": "Remove reply"
+      "remove": "Remove reply",
+      "editTitle": "Edit shop reply"
     },
     "templates": {
       "thanks": {
@@ -1811,7 +1815,8 @@
       "add": "Internal note",
       "hint": "Internal note — staff only, customers can't see it",
       "placeholder": "e.g. Sent to the kitchen / checked, Oct 3 batch too sweet",
-      "save": "Save note"
+      "save": "Save note",
+      "editTitle": "Edit internal note"
     },
     "noteSaved": "Internal note saved",
     "noteRemoved": "Internal note removed",
@@ -1935,12 +1940,12 @@
       "moveDown": "Move down",
       "shown": "Shown in form",
       "hidden": "Hidden from form",
-      "placeholderHint": "Hint shown on hover (optional) e.g. \"sweetness, freshness\" — press Enter or click elsewhere to save",
       "deleteConfirm": "Delete topic \"{name}\"? Existing reviews keep it; you can restore it later",
       "deleted": "Deleted topic \"{name}\" — restore it below",
       "deletedTitle": "Deleted topics ({n})",
       "restore": "Restore",
-      "restored": "Restored topic \"{name}\""
+      "restored": "Restored topic \"{name}\"",
+      "renameTitle": "Rename review topic"
     },
     "terms": {
       "intro": "Words or phrases customers often write and which topic they belong to (e.g. \"too sweet\" → Taste) — the text analysis uses them for reviews where the customer didn't pick a topic",
@@ -2088,11 +2093,18 @@
       "closeTime": "Closing time",
       "to": "to",
       "mapUrl": "Google Maps link (optional)",
-      "add": "Add weekly market",
+      "add": "Add a market stall",
       "lastActive": "At least 1 weekly market must stay visible",
       "removeTitle": "Remove weekly market",
       "removeConfirm": "Remove \"{name}\" from the list? (applies when you save)",
-      "thisOne": "this market"
+      "thisOne": "this market",
+      "titleCombined": "Store & pickup points",
+      "descriptionCombined": "Item 1 is the main store (store address), followed by your regular market stalls with days and hours — customers see them on \"Contact us\" and can pick them for in-store pickup (visible ones only) · the store address province limits products that can only be delivered locally",
+      "mainBadge": "Main store (store address)",
+      "mainName": "Main store",
+      "mainHint": "The main store's location and map link come from the store address and coordinates above",
+      "mainNotOpen": "No opening days/hours yet — customers can't pick up at the main store",
+      "enableMain": "Allow pickup at the main store (set days & hours)"
     },
     "days": {
       "mon": "Mon",
@@ -2121,7 +2133,8 @@
       "marketMapUrl": "Market #{n}: invalid map link",
       "logoType": "Only PNG, JPG, WebP or AVIF files are supported",
       "logoSize": "File must be 5MB or smaller"
-    }
+    },
+    "editTitle": "Edit {section}"
   },
   "searchSynonyms": {
     "title": "Search synonyms",
@@ -2320,7 +2333,10 @@
     "allergy": "Food / ingredient allergies",
     "noAllergy": "No allergies",
     "hasAllergy": "I have allergies",
-    "allergyPick": "+ Choose an ingredient",
+    "allergyPick": "Choose an ingredient",
+    "allergySearchPlaceholder": "Search ingredients, e.g. milk, egg, nuts",
+    "allergyLoading": "Loading ingredients…",
+    "allergyNoMatch": "No matching ingredients",
     "allergyCount": "Allergic ingredients ({n})",
     "allergyClear": "Clear all",
     "allergyEmpty": "Choose the ingredients you are allergic to above",
@@ -2401,12 +2417,12 @@
     }
   },
   "shippingZones": {
-    "title": "Online Shipping Fees",
-    "usage": "The customer's delivery province is matched against zones A–C — anything else uses zone D · no free shipping by order total (free shipping only via coupons) · orders created in the back office use \"Delivery Zones\" instead",
-    "scopeNote": "Categories without \"ships nationwide\" can only be delivered within the store province — set this with the \"Out-of-province delivery\" button at the top right, or in \"Manage categories\" on the products page",
-    "fallbackTag": "All other provinces",
-    "fallbackHint": "Zone D automatically covers every province not in zones A–C — only its name and fee can be edited",
-    "noProvinces": "No provinces yet",
+    "title": "Delivery fees (web orders)",
+    "usage": "Fees are based on the province in the customer's address: a province in a zone uses that zone's fee · provinces not in any zone use zone D · add zones with \"Add zone\" · no free delivery by order total (free delivery only via coupons) · these fees apply only to website orders",
+    "scopeNote": "Some categories, such as fresh cakes, can only be delivered within the store's province — use \"Out-of-province delivery\" at the top right to choose which categories or products can be delivered anywhere",
+    "fallbackTag": "Provinces not in another zone",
+    "fallbackHint": "Zone D applies to every province not in another zone — only its name and fee can change (it can't be deleted)",
+    "noProvinces": "No provinces selected",
     "moreProvinces": "+{n} provinces",
     "editTitle": "Edit zone {code}",
     "saved": "Zone {code} saved",
@@ -2426,19 +2442,19 @@
       "feeInvalid": "Fee must be 0 or more with at most 2 decimals"
     },
     "checker": {
-      "title": "Check fee by province",
+      "title": "Check a fee: if the customer is in…",
       "placeholder": "Pick a province",
-      "result": "Zone {code} — fee {fee}"
+      "result": "This province is in zone {code} — fee {fee}"
     },
     "categories": {
       "button": "Out-of-province delivery",
-      "title": "Out-of-province delivery by category",
+      "title": "Products that can be delivered out of province",
       "hint": "On = ships nationwide · Off = store province only (customers can always pick up) · The \"Whole category\" switch sets every product in the category at once · Click a category to set individual products · * = never set, guessed from the category name",
       "empty": "No product categories yet",
-      "nationwide": "Ships nationwide",
+      "nationwide": "Delivers anywhere",
       "provinceOnly": "Store province only",
       "autoHint": "Not set yet — guessed from the name (sourdough = nationwide). Toggle to set it.",
-      "toggleLabel": "Ships nationwide: {name}",
+      "toggleLabel": "Delivers anywhere: {name}",
       "saveFailed": "Could not save the category delivery setting"
     },
     "products": {
@@ -2449,14 +2465,21 @@
       "saveFailed": "Could not save the product delivery setting",
       "groupSummary": "{n} products",
       "noCategory": "No category",
-      "statusAll": "All ship nationwide",
-      "statusSome": "{on}/{n} ship nationwide",
-      "statusNone": "All province only",
+      "statusAll": "All items deliver anywhere",
+      "statusSome": "{on} of {n} items deliver anywhere",
+      "statusNone": "All items store province only",
       "wholeCategory": "Whole category",
-      "custom": "Custom",
-      "scopeFilter": "All delivery scopes",
+      "custom": "Differs from category",
+      "scopeFilter": "All delivery types",
       "noProducts": "No products to set up yet"
-    }
+    },
+    "add": "Add zone",
+    "addTitle": "Add a delivery zone",
+    "added": "Zone {code} added",
+    "removed": "Zone {code} deleted",
+    "removeFailed": "Couldn't delete the zone",
+    "removeTitle": "Delete delivery zone",
+    "removeConfirm": "Delete zone {code} \"{label}\"? Its provinces will use zone D's fee instead"
   },
   "shop": {
     "nav": {
@@ -2478,7 +2501,9 @@
       "login": "Log in",
       "cart": "Cart",
       "cartWithCount": "Cart ({count} items)",
-      "backOffice": "Back office"
+      "backOffice": "Back office",
+      "preorderBasket": "Pre-order",
+      "cartWithPreorder": "Cart — {preorder} pre-order item(s) to confirm"
     },
     "common": {
       "loading": "Loading",
@@ -2504,7 +2529,7 @@
       "favorites": "Favorites",
       "notifications": "Notifications",
       "logout": "Log out",
-      "reviews": "My reviews"
+      "reviews": "Reviews"
     },
     "address": {
       "saved": "Address saved",
@@ -2530,7 +2555,7 @@
       "keep": "Keep",
       "fillAll": "Please fill in every field",
       "zipInvalid": "Postal code must be 5 digits",
-      "title": "My addresses",
+      "title": "Addresses",
       "addNew": "Add new address",
       "loading": "Loading addresses...",
       "loadFailed": "Could not load addresses. Please refresh the page.",
@@ -2621,7 +2646,10 @@
       "reviews": "{n} reviews",
       "adding": "Adding...",
       "added": "Added",
-      "addToCart": "Add to cart"
+      "addToCart": "Add to cart",
+      "provinceOnly": "{province} delivery only",
+      "provinceOnlyGeneric": "Store province delivery only",
+      "provinceOnlyHint": "This item can only be delivered within the store's province (in-store pickup is still available)"
     },
     "pick": {
       "groupRequired": "Please choose {group}",
@@ -2660,7 +2688,17 @@
       "nextStep": "Calculated at the next step",
       "blocked": "{n} items can't be ordered yet — please remove them or lower the quantity",
       "checkout": "Proceed to checkout",
-      "payHint": "Pay with PromptPay, then attach your slip to confirm"
+      "payHint": "Pay with PromptPay, then attach your slip to confirm",
+      "provinceOnly": "Delivery within {province} only",
+      "provinceOnlyGeneric": "Delivery within the store's province only",
+      "provinceOnlyPickup": "(in-store pickup available)",
+      "emptyNormal": "No in-stock items in your cart.",
+      "preorderTitle": "Pre-order · {round}",
+      "preorderPickup": "Pickup from {date}",
+      "preorderPending": "To confirm",
+      "preorderTotal": "Pre-order total {amount}",
+      "preorderPayHint": "Edit quantities/notes, choose delivery and pay separately from in-stock items",
+      "preorderConfirm": "Confirm pre-order"
     },
     "orderStatus": {
       "pending": "Pending",
@@ -2671,10 +2709,13 @@
       "cancelled": "Cancelled"
     },
     "paymentStatus": {
-      "pending": "Awaiting payment / review",
+      "pending": "Awaiting payment",
       "paid": "Paid",
       "failed": "Payment failed",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "awaitingCustomer": "Waiting for your payment",
+      "awaitingShop": "Shop is checking your slip",
+      "failedReupload": "Slip rejected — please upload again"
     },
     "deliveryStatus": {
       "pending": "Awaiting shipment",
@@ -2713,7 +2754,7 @@
       "loginToViewOne": "Please log in to see this order",
       "myAccount": "My account",
       "history": "Order history",
-      "historyTitle": "My order history",
+      "historyTitle": "Order history",
       "filterBy": "Show by status:",
       "loadingList": "Loading your orders...",
       "loadFailed": "Could not load your orders. Please refresh the page.",
@@ -2908,7 +2949,7 @@
       "lineSessionExpired": "Your session expired while connecting LINE — please log in and try again",
       "loginToManage": "Please log in to manage your account",
       "myAccount": "My account",
-      "profileTitle": "My info",
+      "profileTitle": "Personal info",
       "loadFailed": "Could not load your account. Please refresh the page.",
       "emailSaved": "Email saved — please click the verification link in your email",
       "emailSaveFailed": "Could not save the email",
@@ -2954,7 +2995,8 @@
       "allergies": "Allergies",
       "allergyHint": "Used to warn you about products with ingredients you're allergic to, and to skip them in recommendations",
       "addAllergy": "Add an allergy",
-      "addAllergyOption": "+ Add an allergy",
+      "allergySearchPlaceholder": "Search ingredients, e.g. milk, egg, nuts",
+      "allergyNoMatch": "No matching ingredients",
       "noAllergies": "No allergies recorded",
       "removeItem": "Remove {name}",
       "refundTitle": "PromptPay account for refunds",
@@ -3054,7 +3096,14 @@
       "validUntil": " · valid until {date}",
       "history": "Points history",
       "noHistory": "No points history yet",
-      "latest50": "Showing the latest 50"
+      "latest50": "Showing the latest 50",
+      "memberCard": "Member card",
+      "untilRedeem": "Earn {n} more points to start using points as a discount",
+      "needMore": "{n} more points needed",
+      "showOldCoupons": "Show used/expired coupons ({n})",
+      "hideOldCoupons": "Hide used/expired coupons",
+      "showMoreHistory": "Show more ({n})",
+      "showLessHistory": "Show less"
     },
     "checkout": {
       "loginToOrder": "Please log in to place an order",
@@ -3143,7 +3192,9 @@
         "s5": "The store confirms and starts baking",
         "d5": "Track the status in \"Pre-order history\" under My account",
         "s6": "Pick up on your chosen date",
-        "d6": "You can cancel only before paying — after paying, please contact the store"
+        "d6": "You can cancel only before paying — after paying, please contact the store",
+        "show": "How to pre-order",
+        "close": "Close"
       },
       "days": "{n} days ",
       "hoursMins": "{h} hr {m} min",
@@ -3176,7 +3227,8 @@
       "ordering": "Ordering...",
       "qtyOutOfRange": "Some quantities are outside the allowed range",
       "needRecipient": "Fill in the address, recipient name and phone",
-      "needPickup": "Choose a pickup point and date first"
+      "needPickup": "Choose a pickup point and date first",
+      "promoNeedDelivery": "Fill in the address and recipient before applying a code"
     },
     "products": {
       "all": "All",
@@ -3312,25 +3364,11 @@
       "email": "Email",
       "nothingSet": "The store hasn't added contact details yet",
       "online": "Online channels",
-      "sendMessage": "Send us a message",
       "location": "Store location",
       "openMaps": "Open in Google Maps",
-      "received": "{store} has received your message and will get back to you soon",
-      "thanksNamed": "Thank you, {name}",
-      "thanks": "Thank you",
-      "rateLimited": "You can send one message per minute — please wait a moment and try again",
-      "sendFailed": "Could not send your message. Please try again.",
-      "loginFirst": "Please log in before messaging the store",
-      "sendAs": "Sending as",
-      "yourAccount": "Your account",
-      "noPhone": "No phone number yet",
-      "addPhone": "Add a phone number so the store can reach you easily",
-      "topic": "Topic",
-      "topicsFailed": "Could not load topics. Please refresh the page.",
-      "message": "Message",
-      "messagePlaceholder": "Tell us the cake style, the date you need it, or any other questions...",
-      "sending": "Sending...",
-      "send": "Send message"
+      "chatTitle": "Chat with us",
+      "chatHint": "Questions about products, custom cakes or your order? Chat with the shop — we'll reply here and notify you.",
+      "chatOpen": "Start a chat"
     },
     "shipping": {
       "steps": {
@@ -3477,7 +3515,7 @@
     },
     "myReviews": {
       "loginToView": "Log in to see your reviews",
-      "title": "My reviews",
+      "title": "Reviews",
       "count": "{n} reviews",
       "filterLabel": "Filter reviews",
       "filterAll": "All",
@@ -3511,7 +3549,101 @@
       "allStars": "All ratings",
       "starsChip": "{n} ({count})",
       "emptyFiltered": "No reviews match these filters",
-      "clearFilters": "Clear filters"
+      "clearFilters": "Clear filters",
+      "detail": {
+        "show": "▼ View review details",
+        "hide": "▲ Hide details",
+        "status": "Review status",
+        "statusValue": {
+          "approved": "Shown on the product page",
+          "pending": "Waiting for the shop to approve",
+          "hidden": "Hidden by the shop"
+        },
+        "orderNo": "Order no.",
+        "preorderNo": "Pre-order no.",
+        "orderedAt": "Ordered on",
+        "pickupDate": "Pickup date",
+        "choices": "Options",
+        "specialRequest": "Note to shop",
+        "quantity": "Qty / price",
+        "quantityValue": "{n} pcs · {price}",
+        "itemGone": "The order for this review is no longer available"
+      },
+      "reviewedOn": "Reviewed: {date}"
+    },
+    "nextAction": {
+      "who": {
+        "customer": "Your next step",
+        "shop": "Waiting for the shop — nothing for you to do",
+        "none": "All done"
+      },
+      "short": {
+        "customer": "You:",
+        "shop": "Shop:",
+        "none": ""
+      },
+      "title": {
+        "pay": "Pay and upload your slip",
+        "reupload": "Upload a new slip",
+        "verifySlip": "Checking your payment slip",
+        "confirm": "Confirming your order",
+        "prepare": "Preparing your order",
+        "pickup": "Pick up your order on the chosen date and place",
+        "ship": "Shipping your order",
+        "receive": "Delivered by the courier",
+        "refund": "Processing your refund",
+        "done": "This order is complete",
+        "cancelled": "This order was cancelled"
+      },
+      "hint": {
+        "pay": "Scan the PromptPay QR below and upload the slip — the shop starts preparing once the slip is verified",
+        "reupload": "Your latest slip was rejected. Please upload a valid slip below",
+        "verifySlip": "The shop received your slip and is checking it — you'll be notified once payment is confirmed",
+        "confirm": "Payment received. The shop is confirming your order",
+        "prepare": "The shop is preparing your items — you'll be notified when it's ready",
+        "pickup": "Your order is ready. Please pick it up on the date and at the place you chose",
+        "ship": "The shop is shipping your order to your address",
+        "receive": "The courier marked it as delivered — contact the shop if anything is wrong",
+        "refund": "The order was cancelled after payment and the shop is refunding you — contact the shop with any questions",
+        "done": "Thanks for your order — review the items to earn points",
+        "cancelled": "Nothing else to do"
+      }
+    },
+    "chat": {
+      "title": "Chat with us",
+      "subtitle": "Ask the shop anything here",
+      "storeFallback": "MeowMee Cake",
+      "open": "Open chat",
+      "openWithUnread": "Open chat — {n} new message(s)",
+      "close": "Close chat",
+      "loading": "Loading...",
+      "loadFailed": "Couldn't load the chat",
+      "retry": "Try again",
+      "loginFirst": "Log in to chat with the shop",
+      "login": "Log in",
+      "welcome": "Hi! How can we help?",
+      "welcomeHint": "Type your question or pick a topic below",
+      "topics": {
+        "more": "Ask a question",
+        "info": "Request information"
+      },
+      "loadOlder": "Load earlier messages",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "shopLabel": "Shop",
+      "placeholder": "Type a message...",
+      "send": "Send",
+      "sendFailed": "Couldn't send the message",
+      "cardOrder": "Order",
+      "cardPreorder": "Pre-order",
+      "cardMissing": "This order is no longer available",
+      "pickOrder": "Pick an order to attach",
+      "noOrders": "No orders yet",
+      "attaching": "Attaching:",
+      "removeAttach": "Remove attachment",
+      "attachOrder": "Attach an order",
+      "askAboutOrder": "Ask the shop about this order",
+      "askAboutPreorder": "Ask the shop about this pre-order"
     }
   },
   "bulkStock": {
@@ -3545,5 +3677,56 @@
     "colExpiry": "Expires on",
     "expiryPlaceholder": "Optional",
     "expiryBeforeDate": "Expiry date cannot be before the received date"
+  },
+  "chat": {
+    "title": "Customer chat",
+    "search": "Search customer name, phone or email",
+    "filter": {
+      "all": "All",
+      "unanswered": "Unanswered",
+      "unread": "Unread"
+    },
+    "loading": "Loading...",
+    "loadFailed": "Couldn't load",
+    "retry": "Try again",
+    "empty": "No customer chats yet",
+    "emptyFiltered": "No chats match this filter",
+    "you": "Shop",
+    "waiting": "Waiting",
+    "pickConversation": "Pick a chat on the left to see messages",
+    "back": "Back to chats",
+    "recentOrders": "Recent orders:",
+    "loadOlder": "Load earlier messages",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "placeholder": "Reply to the customer... (Enter to send · Shift+Enter for a new line)",
+    "send": "Send",
+    "sendFailed": "Couldn't send the message",
+    "noReplyPermission": "You can view chats but can't reply (needs the \"create\" permission on Customer chat)",
+    "cardOrder": "Order",
+    "cardPreorder": "Pre-order",
+    "cardMissing": "This order is no longer available",
+    "attachThis": "Attach this order card to your message",
+    "attaching": "Attaching:",
+    "removeAttach": "Remove attachment",
+    "close": "Close",
+    "quickButton": "Quick",
+    "quickTitle": "Quick replies",
+    "quickEmpty": "No quick replies yet",
+    "quickManage": "Manage quick replies",
+    "quickManageTitle": "Manage quick replies",
+    "quickSaveFailed": "Couldn't save",
+    "quickAddTitle": "Add a quick reply",
+    "quickEditTitle": "Edit quick reply",
+    "quickTitlePlaceholder": "Short label (optional), e.g. Greeting",
+    "quickTextPlaceholder": "Text to insert into the reply box",
+    "quickDeleteConfirm": "Delete this quick reply?",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "add": "Add"
   }
 }

@@ -171,16 +171,13 @@ export function useReviewSettingsViewModel() {
     startRename: (a: ReviewAspect) =>
       setRenaming({ id: a._id, th: a.aspect_name_th, eng: a.aspect_name_eng === a.aspect_name_th ? "" : a.aspect_name_eng }),
     setRenaming,
+    renameSaving: updateAspect.isPending,
     saveRename: () => {
       if (!renaming?.th.trim()) return void alert.warning(t("reviewSettings.aspects.nameRequired"));
       updateAspect.mutate({ id: renaming.id, body: { aspect_name_th: renaming.th.trim(), aspect_name_eng: renaming.eng.trim() || renaming.th.trim() } });
     },
     onToggleActive: (a: ReviewAspect) => updateAspect.mutate({ id: a._id, body: { is_active: !a.is_active } }),
     onIcon: (a: ReviewAspect, icon: string) => updateAspect.mutate({ id: a._id, body: { icon } }),
-    onPlaceholder: (a: ReviewAspect, text: string) => {
-      const v = text.trim();
-      if (v !== (a.placeholder_text ?? "")) updateAspect.mutate({ id: a._id, body: { placeholder_text: v || null } });
-    },
     onMove: move,
     reordering: reorder.isPending,
     onDeleteAspect: (a: ReviewAspect) => removeAspect.mutate(a),

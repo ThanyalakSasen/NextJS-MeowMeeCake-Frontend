@@ -11,7 +11,6 @@ export const catalogProductKey = (id: string) => ["catalog", "product", id] as c
 export const productCustomizationKey = (id: string) => ["catalog", "product", id, "customization"] as const;
 /** ข้อมูลร้าน (ติดต่อเรา D8 · ค่าส่ง/โลโก้ D9) + หัวข้อฟอร์มติดต่อ */
 export const storeInfoKey = ["catalog", "store-info"] as const;
-export const contactTopicsKey = ["catalog", "contact-topics"] as const;
 /** หน้าค่าจัดส่ง (D9) + โลโก้ร้าน (Navbar/Footer) */
 export const shippingZonesKey = ["catalog", "shipping-zones"] as const;
 /** หน้าค่าจัดส่ง — สินค้าที่ร้านตั้งขอบเขตจัดส่งต่างจากหมวด (ยกเว้นรายสินค้า) */

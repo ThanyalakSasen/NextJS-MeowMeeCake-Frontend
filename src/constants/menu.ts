@@ -6,12 +6,16 @@
 import type { MenuKey } from "@/constants/menuKeys";
 import type { NavKey } from "@/i18n/keys";
 
+/** ตัวเลขที่แสดงท้ายเมนู (useMenuBadges) — chat = ห้องแชทที่ยังไม่อ่าน */
+export type MenuBadge = "chat";
+
 export interface MenuLeaf {
   labelKey: NavKey; // key ใน messages.*.nav (typescript เช็คว่ามีจริง)
   href: string;
   /** heroicon name (solid) ที่สื่อถึงหัวข้อ — resolve ผ่าน MENU_ICONS (shared/layout/menuIcons.ts) */
   icon: string;
   menuKey?: MenuKey;
+  badge?: MenuBadge;
 }
 
 export interface MenuNode {
@@ -20,6 +24,7 @@ export interface MenuNode {
   icon: string;
   href?: string;
   menuKey?: MenuKey;
+  badge?: MenuBadge;
   children?: MenuLeaf[];
 }
 
@@ -64,8 +69,9 @@ export const MENU_SECTIONS: MenuSection[] = [
         children: [
           { labelKey: "products", href: "/owner/products", icon: "ShoppingBagIcon", menuKey: "products" },
           { labelKey: "productStock", href: "/owner/products/productStock", icon: "ArchiveBoxIcon", menuKey: "stock" },
-          // คำพ้องค้นหา (E3) — /admin/search-synonyms ใช้สิทธิ์ products.*
-          { labelKey: "searchSynonyms", href: "/owner/products/search-synonyms", icon: "TagIcon", menuKey: "products" },
+          // คำพ้องค้นหา (E3) — ซ่อนจาก sidebar ตามที่ผู้ใช้ขอ (2026-10-23) · หน้า /owner/products/search-synonyms ยังอยู่
+          // (เข้าทาง URL ได้ · คำพ้องที่ตั้งไว้ยังใช้ค้นหาหน้าร้านตามเดิม) — เปิดเมนูคืนได้ด้วยการเอาคอมเมนต์บรรทัดล่างออก
+          // { labelKey: "searchSynonyms", href: "/owner/products/search-synonyms", icon: "TagIcon", menuKey: "products" },
         ],
       },
       {
@@ -82,6 +88,8 @@ export const MENU_SECTIONS: MenuSection[] = [
         ],
       },
       { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "orders" },
+      // แชทกับลูกค้า — สิทธิ์ chat (พนักงานเห็นเมื่อมี chat.view · ตอบได้เมื่อมี chat.create)
+      { labelKey: "customerChat", icon: "ChatBubbleLeftRightIcon", href: "/owner/chat", menuKey: "chat", badge: "chat" },
       {
         labelKey: "promotions",
         icon: "TagIcon",

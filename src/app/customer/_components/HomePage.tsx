@@ -17,6 +17,7 @@ import HomeRecommendations from "./HomeRecommendations";
 import HomeBestSellers from "./HomeBestSellers";
 import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from "../lib/catalogQueries";
 import { thaiCompare } from "@/lib/thaiSort";
+import { PRODUCT_SECTION } from "../lib/productGrid";
 
 /** หมวดที่แสดงในหน้าแรก — รวมปุ่ม "ทั้งหมด" อีก 1 = 6 ช่อง (ครบ 1 แถวบนจอคอม) */
 const MAX_HOME_CATEGORIES = 5;
@@ -54,7 +55,7 @@ export default function CustomerHomePage() {
     <div className="w-full min-h-screen text-[#4A342E] pt-28 sm:pt-32 md:pt-36">
       <HeroCarousel />
 
-      <section className="w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px] pb-12">
+      <section className={`${PRODUCT_SECTION} pb-12`}>
         <div className="mt-6 pt-6">
           <div className="mb-4">
             {/* h2 — การ์ดหมวดเป็น h3 (Lighthouse heading-order) */}
@@ -104,7 +105,7 @@ export default function CustomerHomePage() {
 
       <HomeBestSellers products={products} loading={loading} />
 
-      <section className="w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px] pb-12">
+      <section className={`${PRODUCT_SECTION} pb-12`}>
         <div className="flex justify-center mt-10 md:mt-12">
           <Link
             href="/customer/product"

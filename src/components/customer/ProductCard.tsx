@@ -6,22 +6,23 @@
 // · ปุ่มหัวใจ (รายการโปรด D5/U3) อ่านจาก cache เดียวของ useFavorites — ไม่ยิงขอรายการต่อใบแบบต้นแบบ
 // · ป้ายแพ้อาหาร: ทุกบัตร — จาก /shop/allergen-warnings (useAllergenWarnings · ล็อกอิน + บันทึกอาหารที่แพ้ไว้)
 //   ผลของระบบแนะนำ (สินค้าคล้าย C1 · แนะนำสำหรับคุณ C2) ส่งมาเป็น props ได้ — ใช้ props ก่อน
-// · เหตุผลที่แนะนำ: ส่งมาเป็น props จากผลของระบบแนะนำเท่านั้น
 // · "เพิ่มลงตะกร้า" = quickAdd: สินค้ามีตัวเลือก → พาไปหน้าสินค้าให้เลือกก่อน
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
-import { FaSpinner, FaCheck, FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaSpinner, FaCheck, FaStar, FaHeart, FaRegHeart, FaTruck } from "react-icons/fa";
 import type { Product } from "@/types/product";
 import { resolveUploadUrl } from "@/lib/uploads";
-import { effectivePrice, hasSalePrice, salePercent } from "@/lib/pricing";
+import { effectivePrice, hasSalePrice } from "@/lib/pricing";
 import { useAddToCart } from "@/app/customer/hooks/useAddToCart";
 import { useFavorites } from "@/app/customer/hooks/useFavorites";
 import { useAllergenWarnings } from "@/app/customer/hooks/useAllergenWarnings";
+import { useProvinceOnlyShipping } from "@/app/customer/hooks/useProvinceOnlyShipping";
 import type { AllergenWarning, AllergenWarningLevel } from "@/services/catalog";
 import ShopImage from "./ShopImage";
+import { PRODUCT_MASONRY_ITEM } from "@/app/customer/lib/productGrid";
 
 /**
  * สินค้านี้จะถูกแสดงเป็นบัตรหรือไม่ — ProductCard จะ return null ถ้าได้ false
@@ -41,7 +42,6 @@ export function categoryNameOf(p: Pick<Product, "category_id">): string | undefi
 const ALLERGEN_TONE: Record<Exclude<AllergenWarningLevel, "none">, string> = {
   caution: "bg-amber-100 text-amber-900 border-amber-300",
   warning: "bg-orange-100 text-orange-900 border-orange-300",
-  danger: "bg-red-600 text-white border-red-700",
 };
 
 /** ป้ายแพ้อาหาร — ชื่อวัตถุดิบที่ตรงกับที่ลูกค้าบันทึกไว้ (2 ชื่อแรก + ที่เหลือ) */
@@ -70,7 +70,6 @@ export default function ProductCard({
   showAddToCart = true,
   showFavorite = true,
   allergenWarning: allergenWarningProp = null,
-  reasons,
   priority = false,
 }: {
   product: Product;
@@ -78,8 +77,6 @@ export default function ProductCard({
   showFavorite?: boolean;
   /** จากระบบแนะนำ (สินค้าคล้าย · แนะนำสำหรับคุณ) — มีเมื่อ login + บันทึกอาหารที่แพ้ไว้ */
   allergenWarning?: AllergenWarning | null;
-  /** เหตุผลที่แนะนำ — แสดงข้อแรก */
-  reasons?: string[];
   /** บัตรแถวแรกของหน้า (เหนือขอบจอ) — โหลดรูปทันทีด้วยความสำคัญสูง (LCP) */
   priority?: boolean;
 }) {
@@ -88,6 +85,7 @@ export default function ProductCard({
   const { quickAdd, status } = useAddToCart();
   const favorites = useFavorites();
   const allergenWarningOf = useAllergenWarnings();
+  const shipping = useProvinceOnlyShipping();
   const isLoading = status === "loading";
   const isSuccess = status === "success";
   const [failedImg, setFailedImg] = useState<string | null>(null);
@@ -99,11 +97,12 @@ export default function ProductCard({
   const rating = Number(product.avg_rating ?? 0);
   const favorite = favorites.isFavorite(product._id);
   const allergenWarning = allergenWarningProp ?? allergenWarningOf(product._id);
+  const provinceOnly = shipping.isProvinceOnly(product);
 
   return (
     <Link
       href={`/customer/product/${product._id}`}
-      className="group block bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+      className={`${PRODUCT_MASONRY_ITEM} group flex flex-col bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
     >
       <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
         {/* รูปที่โหลดไม่ขึ้น (ไฟล์หายจากเซิร์ฟเวอร์) → แสดง "ไม่มีรูปภาพ" แทนรูปแตก */}
@@ -157,7 +156,9 @@ export default function ProductCard({
 
       {/* ฟอนต์อิงฐาน 18px (globals.css html 112.5%) · ขั้นต่ำของแอป 16px = text-sm/text-xs · 17px = text-[0.9444rem] · 18px = text-base
           ชื่อ/ราคา โตตามจอ 16 → 17 (≥768) → 18 (≥1280) · ชื่อรอง/฿/ปุ่ม คงที่ 16 (ขั้นต่ำ — ห้ามใช้ค่า px ที่เล็กกว่านี้) */}
-      <div className="p-5 sm:p-3 flex flex-col justify-between !bg-[#fff]">
+      {/* padding เดิม p-5 (~22px ที่ฐาน 18px) กินพื้นที่การ์ดบนมือถือจนราคาลดล้น → ลดเหลือ p-2.5 ให้เนื้อหากว้างขึ้น */}
+      {/* ความสูงการ์ดตามเนื้อหา (ไม่บังคับให้ทุกใบในแถวสูงเท่ากัน) */}
+      <div className="p-2.5 sm:p-3 flex flex-col !bg-[#fff]">
         <div>
           <h3 className="text-sm md:text-[0.9444rem] xl:text-base font-semibold text-black line-clamp-1">
             {localNames(product.product_name_th, product.product_name_eng).primary}
@@ -165,14 +166,26 @@ export default function ProductCard({
           <p className="text-sm text-black line-clamp-1 mb-2">
             {localNames(product.product_name_th, product.product_name_eng).secondary || " "}
           </p>
-          {reasons?.[0] && <p className="-mt-1 mb-2 line-clamp-1 text-xs text-[#8C5A3C]">{reasons[0]}</p>}
+          {/* ส่งได้เฉพาะจังหวัดร้าน (ออเดอร์เว็บ) — ตามหมวด/ยกเว้นรายสินค้าที่ร้านตั้ง */}
+          {provinceOnly && (
+            <p
+              className="-mt-1.5 mb-0.5 inline-flex max-w-full items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-1.5 py-0 text-xs font-medium leading-5 text-sky-800"
+              title={t("provinceOnlyHint")}
+            >
+              <FaTruck className="shrink-0 text-[0.7rem]" />
+              <span className="truncate">
+                {shipping.province ? t("provinceOnly", { province: shipping.province }) : t("provinceOnlyGeneric")}
+              </span>
+            </p>
+          )}
         </div>
 
         <div>
-          <div className="flex items-end justify-between my-1">
-            {/* ราคา — กำลังลดราคา: ราคาลดสีแดง + ราคาเดิมขีดฆ่า + ป้าย % */}
+          {/* ราคา + ดาว: การ์ดแคบจนไม่พอ → ตัดขึ้นบรรทัดใหม่แทนการล้นออกนอกการ์ด */}
+          <div className="flex flex-wrap items-end justify-between gap-x-2 gap-y-1 my-1">
+            {/* ราคา — กำลังลดราคา: ราคาลดสีแดง + ราคาเดิมขีดฆ่า (แต่ละชิ้นไม่ถูกตัดกลางคำ) */}
             {hasSalePrice(product) ? (
-              <div className="flex items-baseline gap-1.5 flex-wrap">
+              <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-1 whitespace-nowrap">
                 <span className="flex items-baseline gap-1">
                   <span className="text-sm font-bold text-red-600">฿</span>
                   <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-red-600">
@@ -180,12 +193,9 @@ export default function ProductCard({
                   </span>
                 </span>
                 <span className="text-xs text-stone-500 line-through">฿{product.product_price?.toLocaleString()}</span>
-                <span className="text-sm font-bold text-white bg-red-500 rounded px-1 py-0.5 leading-none">
-                  -{salePercent(product)}%
-                </span>
               </div>
             ) : (
-              <div className="flex items-baseline gap-1">
+              <div className="flex min-w-0 items-baseline gap-1 whitespace-nowrap">
                 <span className="text-sm font-bold text-[#8C5A3C]">฿</span>
                 <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-[#8C5A3C]">
                   {product.product_price?.toLocaleString()}
@@ -193,7 +203,7 @@ export default function ProductCard({
               </div>
             )}
 
-            <div className="flex items-center gap-2 text-black text-xs font-medium pb-0.5" title={t("reviews", { n: product.review_count ?? 0 })}>
+            <div className="flex shrink-0 items-center gap-2 text-black text-xs font-medium pb-0.5" title={t("reviews", { n: product.review_count ?? 0 })}>
               <FaStar className="text-amber-400 text-base" />
               <span>{rating.toFixed(1)}</span>
             </div>

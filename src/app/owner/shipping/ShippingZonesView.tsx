@@ -4,19 +4,19 @@
 // แก้ไขตามสิทธิ์ store_info.update · โซนคงที่ 4 โซน (ไม่มีเพิ่ม/ลบ)
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import { Card, Select, Tag } from "@/components/base";
+import { Button, Card, Select, Tag } from "@/components/base";
 import { CategoryShippingButton } from "@/components/shared/categories";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable } from "@/components/shared/data";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
-import { EditButton } from "@/components/shared/actions";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { PROVINCE_OPTIONS } from "@/constants/thaiProvinces";
 import { formatCurrency } from "@/i18n/format";
 import type { ShippingZone } from "@/types/shippingZone";
 import type { useShippingZonesViewModel } from "./useShippingZonesViewModel";
 import { FALLBACK_ZONE } from "./shippingZoneForm";
-import { NOTICE_TAG, SHIPPING_ZONE_CONFIG } from "@/constants/enumConfig";
+import { NOTICE_TAG, shippingZoneStyle } from "@/constants/enumConfig";
 
 // โมดัลแก้ไขโซน (antd Modal + ฟอร์ม) แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
 const ShippingZoneEditModal = dynamic(() => import("./_components/ShippingZoneEditModal").then((m) => m.ShippingZoneEditModal), { ssr: false });
@@ -31,7 +31,19 @@ export function ShippingZonesView(vm: VM) {
   const money = (n: number) => formatCurrency(n, locale);
 
   return (
-    <ListPageLayout title={t("shippingZones.title")} actions={<CategoryShippingButton />}>
+    <ListPageLayout
+      title={t("shippingZones.title")}
+      actions={
+        <>
+          <CategoryShippingButton />
+          {vm.perm.create && (
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openCreate}>
+              {t("shippingZones.add")}
+            </Button>
+          )}
+        </>
+      }
+    >
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (
@@ -76,7 +88,7 @@ export function ShippingZonesView(vm: VM) {
                   title: t("shippingZones.fields.code"),
                   width: 80,
                   align: "center",
-                  render: (z) => <Tag color={SHIPPING_ZONE_CONFIG[z.zone_code].antColor} className="!m-0 font-bold">{z.zone_code}</Tag>,
+                  render: (z) => <Tag color={shippingZoneStyle(z.zone_code).antColor} className="!m-0 font-bold">{z.zone_code}</Tag>,
                 },
                 {
                   key: "label",
@@ -107,7 +119,16 @@ export function ShippingZonesView(vm: VM) {
                 },
                 { key: "fee", title: t("shippingZones.fields.fee"), width: 110, align: "right", render: (z) => money(z.fee) },
               ]}
-              actions={vm.perm.update ? (z) => <EditButton size="small" onClick={() => vm.openEdit(z)} /> : undefined}
+              actions={
+                vm.perm.update || vm.perm.delete
+                  ? (z) => (
+                      <span className="inline-flex items-center gap-1">
+                        {vm.perm.update && <EditButton size="small" onClick={() => vm.openEdit(z)} />}
+                        {vm.canRemove(z) && <DeleteButton size="small" onClick={() => void vm.onRemove(z)} />}
+                      </span>
+                    )
+                  : undefined
+              }
             />
           </Card>
         </div>
