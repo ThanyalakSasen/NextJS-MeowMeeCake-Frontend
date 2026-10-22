@@ -7,6 +7,7 @@
 // (ทั้งคู่เป็น query เดียวฝั่ง backend ไม่ใช่ N+1 — เดิมปล่อยว่างจนคอลัมน์ "รายการ" ว่างทุกแถว TC-ADM-12)
 // ─────────────────────────────────────────────────────────────
 import { http, type HttpReader } from "@/lib/http";
+import { unitLabel } from "@/utils/unitContext";
 import type {
   DashboardSummary,
   DashboardLowStock,
@@ -66,7 +67,7 @@ function bangkokTodayRangeUtc(): { date_from: string; date_to: string } {
 
 function unitAbbrOf(unit: RawLowStockIngredient["unit_id"]): string {
   if (!unit || typeof unit === "string") return "";
-  return unit.unit_abbr || unit.unit_name || "";
+  return unitLabel(unit);
 }
 
 function customerNameOf(user: RawOrder["user_id"]): string {

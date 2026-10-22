@@ -20,6 +20,7 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { refId } from "@/lib/refId";
+import { unitLabel } from "@/utils/unitContext";
 import type { ProductionStatus } from "@/constants/enumConfig";
 import type { CompleteProductionValue } from "./_components/CompleteProductionModal";
 import { thaiCompare } from "@/lib/thaiSort";
@@ -127,7 +128,7 @@ export function useProductionViewModel() {
 
   /** ชื่อ/หน่วยของทุกสินค้า (ไม่กรอง) — ใช้ enrich รายการของใบสั่งผลิตเก่าด้วย แม้สินค้านั้นจะไม่มีสูตรแล้วก็ตาม */
   const productsById = useMemo(() => {
-    const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, unitLabel(u)]));
     const map = new Map<string, { name: string; unit_abbr: string }>();
     (productsQ.data?.data ?? []).forEach((p) => {
       map.set(p._id, { name: p.product_name_th, unit_abbr: (refId(p.unit_id) && unitMap.get(refId(p.unit_id))) || "" });
