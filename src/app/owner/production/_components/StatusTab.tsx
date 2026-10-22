@@ -1,5 +1,6 @@
 "use client";
 // แท็บ 2: สถานะการผลิต — kanban board (ลากการ์ดเปลี่ยนสถานะ) · ดูทีละวันตามวันที่ผลิต เลือกวันจากปฏิทินมุมขวา
+// ใบของวันก่อนที่ยังไม่เสร็จ/ไม่ถูกยกเลิก ค้างอยู่บนบอร์ด (ดู useProductionViewModel.statusOrders)
 import type { Dayjs } from "dayjs";
 import { useTranslations } from "next-intl";
 import { DatePicker } from "@/components/base";
@@ -27,6 +28,7 @@ export function StatusTab(vm: VM) {
       </div>
       <StatusBoard
         orders={vm.statusOrders}
+        boardDate={vm.statusDate}
         canUpdate={vm.perm.update}
         onCardClick={vm.onView}
         onDrop={vm.onChangeStatus}

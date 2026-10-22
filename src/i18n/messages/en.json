@@ -1261,6 +1261,8 @@
     "statusChanged": "Changed \"{no}\" status to \"{status}\"",
     "statusChangeFailed": "Failed to change status, please try again",
     "statusDescription": "Drag a card across columns to change its status",
+    "carriedOver": "Carried over from {date} — not finished",
+    "cancelConfirm": "Cancel production order {no}? This can't be undone, and any ingredients already deducted are returned to stock.",
     "dragHint": "Drag to change status",
     "moreItems": "+{n} more",
     "unassigned": "Not assigned",
