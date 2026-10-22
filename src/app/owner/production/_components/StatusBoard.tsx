@@ -6,6 +6,7 @@
 // ลากได้เฉพาะใบที่ยังไม่ถึงสถานะสุดท้าย (เสร็จแล้ว/ยกเลิก ปิดงานแล้ว)
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
+import dayjs, { type Dayjs } from "dayjs";
 import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/base";
 import { PRODUCTION_STATUS_CONFIG } from "@/constants/enumConfig";
@@ -16,11 +17,14 @@ import { ProductionOrderCard } from "./ProductionOrderCard";
 
 export function StatusBoard({
   orders,
+  boardDate,
   canUpdate,
   onCardClick,
   onDrop,
 }: {
   orders: ProductionOrder[];
+  /** วันที่บอร์ดแสดงอยู่ — การ์ดที่วันผลิตก่อนวันนี้ = ค้างมาจากวันก่อน */
+  boardDate: Dayjs;
   canUpdate: boolean;
   onCardClick: (o: ProductionOrder) => void;
   onDrop: (order: ProductionOrder, next: ProductionStatus) => void;
@@ -72,6 +76,7 @@ export function StatusBoard({
                 <ProductionOrderCard
                   key={o._id}
                   order={o}
+                  carriedOver={dayjs(o.production_date).isBefore(boardDate, "day")}
                   draggable={canUpdate && !isFinalStatus(o.production_status)}
                   dragging={draggingId === o._id}
                   onClick={() => onCardClick(o)}

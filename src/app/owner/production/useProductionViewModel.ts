@@ -17,7 +17,7 @@ import { rolesService } from "@/services/roles";
 import { recipesService } from "@/services/recipes";
 import { preorderRoundsService } from "@/services/preorderRounds";
 import { usePermission } from "@/context/PermissionsContext";
-import { alert } from "@/lib/alert";
+import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { refId } from "@/lib/refId";
 import { unitLabel } from "@/utils/unitContext";
@@ -214,6 +214,21 @@ export function useProductionViewModel() {
     cancelled: orders.filter((o) => o.production_status === "cancelled").length,
   }), [orders]);
 
+  // ── แท็บ 2: สถานะการผลิต — ดูทีละวันตาม production_date (ค่าเริ่มต้น = วันนี้) ──
+  // ใบของวันก่อนที่ยังไม่ปิดงาน (รอดำเนินการ/กำลังผลิต) ค้างอยู่ในคอลัมน์เดิมทุกวันถัดไปจนกว่าจะเสร็จหรือถูกยกเลิก
+  // — กันใบที่ผลิตไม่เสร็จหายจากบอร์ดแล้วถูกลืม · ใบของวันหลังไม่โผล่ล่วงหน้า · เรียงวันผลิตเก่าสุดขึ้นก่อน
+  const [statusDate, setStatusDate] = useState<Dayjs>(() => dayjs());
+  const statusOrders = useMemo(
+    () =>
+      orders
+        .filter((o) => {
+          const d = dayjs(o.production_date);
+          return d.isSame(statusDate, "day") || (!isFinalStatus(o.production_status) && d.isBefore(statusDate, "day"));
+        })
+        .sort((a, b) => dayjs(a.production_date).valueOf() - dayjs(b.production_date).valueOf()),
+    [orders, statusDate],
+  );
+
   // ── รายละเอียดใบสั่งผลิต (ใช้ร่วม: row บนแท็บ 1, การ์ดบนแท็บ 2, row บนแท็บ 3) ──
   // drawer ผูกกับ ?id= (แพทเทิร์นเดียวกับ Manage Orders) · หาจาก list ที่โหลดไว้ก่อน (ใหม่สุด 200 ใบ) ถ้าไม่เจอ
   // (ใบเก่ากว่านั้น) ค่อยดึงใบนั้นตรง ๆ ด้วย GET /admin/production-orders/{id} · จำ id ล่าสุดไว้แม้ปิดแล้ว
@@ -347,8 +362,19 @@ export function useProductionViewModel() {
     );
   };
 
-  const onChangeStatus = (order: ProductionOrder, next: ProductionStatus) => {
+  const onChangeStatus = async (order: ProductionOrder, next: ProductionStatus) => {
     if (next === order.production_status) return;
+    // ยกเลิกย้อนกลับไม่ได้ (คืนสต็อกวัตถุดิบที่หักไปแล้ว) — ถามก่อนทุกครั้ง ทั้งลากการ์ดไปคอลัมน์ "ยกเลิก" และกดปุ่ม
+    // กันลากพลาด/กดพลาดแล้วใบที่ยังผลิตไม่เสร็จถูกยกเลิกไปเอง
+    if (next === "cancelled") {
+      const ok = await confirmAlert(t("production.cancelConfirm", { no: order.production_no }), {
+        title: t("production.cancelOrder"),
+        confirmText: t("production.cancelOrder"),
+        cancelText: t("common.close"),
+        danger: true,
+      });
+      if (!ok) return;
+    }
     // ปิดงานผลิต (หักวัตถุดิบ + เพิ่มสต็อก) = production.approve ที่ backend — ไม่มีสิทธิ์ = บอกก่อน ไม่เปิดหน้าต่างให้กรอกแล้วได้ 403
     // (ลากการ์ดไปคอลัมน์ "เสร็จ" ก็ผ่านตรงนี้)
     if (next === "done" && !perm.approve) {
@@ -405,7 +431,7 @@ export function useProductionViewModel() {
     creatingFromRound: createFromRound.isPending,
 
     // แท็บ 2
-    orders,
+    orders, statusDate, setStatusDate, statusOrders,
 
     // แท็บ 3
     historyViewMode, setHistoryViewMode,
