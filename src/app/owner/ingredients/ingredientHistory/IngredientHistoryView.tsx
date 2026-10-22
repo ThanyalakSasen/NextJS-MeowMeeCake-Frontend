@@ -75,9 +75,10 @@ export function IngredientHistoryView(vm: VM) {
       title={t("ingredientHistory.title")}
       toolbar={
         <FilterToolbar
-          left={
+          left={<SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("ingredientHistory.searchPlaceholder")} />}
+          // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+          right={
             <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("ingredientHistory.searchPlaceholder")} />
               <FilterField label={t("filterLabel.ingredient")} minWidth={170}>
                 <Select
                   value={vm.ingredientId}

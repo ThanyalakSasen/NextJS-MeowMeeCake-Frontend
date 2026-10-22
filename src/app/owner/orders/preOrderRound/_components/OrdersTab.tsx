@@ -1,5 +1,5 @@
 "use client";
-// แท็บ 2: คำสั่งซื้อเค้กวันเกิด (Preorders) — presentational ล้วน รับ props จาก usePreOrderRoundViewModel
+// แท็บ 2: คำสั่งซื้อพรีออเดอร์ (Preorders) — presentational ล้วน รับ props จาก usePreOrderRoundViewModel
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Select, Tag } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
@@ -14,6 +14,9 @@ import { NOTICE_TAG } from "@/constants/enumConfig";
 import { LoadFailed } from "@/components/shared/feedback";
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
+
+// โชว์สินค้าในตารางกี่บรรทัด ที่เหลือย่อเป็น "+ อีก n รายการ" (ดูครบในลิ้นชัก)
+const ITEMS_PREVIEW = 2;
 
 export function OrdersTab(vm: VM) {
   const t = useTranslations();
@@ -52,6 +55,25 @@ export function OrdersTab(vm: VM) {
           {o.round_pickup_date && <p className="text-sm text-gray-600">{t("orders.pickupDate")}: {formatDate(o.round_pickup_date, locale)}</p>}
         </div>
       ),
+    },
+    {
+      key: "items",
+      title: t("orders.colItems"),
+      render: (o) => {
+        const items = o.items ?? [];
+        return (
+          <div className="text-sm">
+            {items.slice(0, ITEMS_PREVIEW).map((it) => (
+              <p key={it._id} className="text-gray-800">
+                {it.product_name} <span className="text-gray-600">×{it.quantity}</span>
+              </p>
+            ))}
+            {items.length > ITEMS_PREVIEW && (
+              <p className="text-gray-600">{t("preorderRound.moreItems", { n: items.length - ITEMS_PREVIEW })}</p>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "total_amount",
@@ -102,9 +124,10 @@ export function OrdersTab(vm: VM) {
       </StatCardsGrid>
 
       <FilterToolbar
-        left={
+        left={<SearchInput value={vm.orderSearch} onChange={vm.setOrderSearch} placeholder={t("preorderRound.searchOrderPlaceholder")} />}
+        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+        right={
           <>
-            <SearchInput value={vm.orderSearch} onChange={vm.setOrderSearch} placeholder={t("preorderRound.searchOrderPlaceholder")} />
             <FilterField label={t("filterLabel.round")} minWidth={180}>
               <Select
                 value={vm.orderRoundFilter}

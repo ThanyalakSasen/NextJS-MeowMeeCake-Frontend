@@ -32,7 +32,7 @@ export interface AddRoleValues {
 export function usePermissionsViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("employees");
+  const perm = usePermission("permissions");
   const { user } = useCurrentUser();
   const ceiling = usePermissionCeiling();
 
@@ -63,7 +63,8 @@ export function usePermissionsViewModel() {
     [roles, permsQ.data],
   );
 
-  const activeRoleId = selectedRoleId ?? roles[0]?._id ?? null;
+  // เริ่มที่ตำแหน่งพนักงานตัวแรก — ตำแหน่งเจ้าของร้านไม่มีอะไรให้ตั้ง (ผ่านทุกสิทธิ์)
+  const activeRoleId = selectedRoleId ?? (roles.find((r) => r.role_type !== "owner") ?? roles[0])?._id ?? null;
   const selectedRole = roles.find((r) => r._id === activeRoleId) ?? null;
 
   const permsOf = (roleId: string): RolePerms =>

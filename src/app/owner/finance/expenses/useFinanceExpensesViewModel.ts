@@ -25,7 +25,7 @@ export function useFinanceExpensesViewModel() {
   const t = useTranslations();
   const locale = useLocale();
   const qc = useQueryClient();
-  const perm = usePermission("reports");
+  const perm = usePermission("finance_expenses");
 
   const expensesQ = useQuery({ queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: LIST_ALL }) });
   const expenses = useMemo(() => expensesQ.data?.data ?? [], [expensesQ.data]);

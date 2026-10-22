@@ -25,7 +25,7 @@ import { SHIPPING_ZONES_KEY as KEY } from "./shippingQuery";
 export function useShippingZonesViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("store_info");
+  const perm = usePermission("shipping");
 
   // page.tsx ดึงไว้ฝั่ง server แล้ว (key ที่ shippingQuery.ts)
   const q = useQuery({ queryKey: KEY, queryFn: () => shippingZonesService.list() });

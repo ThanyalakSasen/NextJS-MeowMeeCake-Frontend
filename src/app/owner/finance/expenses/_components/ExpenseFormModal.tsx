@@ -62,7 +62,14 @@ export function ExpenseFormModal({
         </FormItem>
 
         <div className="grid grid-cols-3 gap-3">
-          <FormItem name="amount" label={t("finance.fieldAmount")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem
+            name="amount"
+            label={t("finance.fieldAmount")}
+            rules={[
+              { required: true, message: t("validation.required") },
+              { type: "number", min: 0.01, message: t("validation.positive") },
+            ]}
+          >
             <InputNumber min={0} step={0.01} />
           </FormItem>
           <FormItem name="payment_method" label={t("finance.fieldPaymentMethod")}>
@@ -81,10 +88,14 @@ export function ExpenseFormModal({
           <ReceiptUpload />
         </FormItem>
 
-        <FormItem name="is_recurring" label={t("finance.fieldRecurring")} valuePropName="checked">
+        {/* FormItem ต้องครอบ Switch ตรง ๆ (valuePropName="checked" ส่ง checked/onChange ให้ลูกตัวเดียว) —
+            เดิมครอบ <div> ทำให้ค่าสวิตช์ไม่ถูกเก็บลงฟอร์ม บันทึกเป็นรายจ่ายไม่ซ้ำเสมอ (TC-ADM-98) */}
+        <FormItem label={t("finance.fieldRecurring")}>
           <div className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
             <p className="text-sm text-gray-500">{t("finance.recurringHint")}</p>
-            <Switch />
+            <FormItem name="is_recurring" valuePropName="checked" noStyle>
+              <Switch />
+            </FormItem>
           </div>
         </FormItem>
       </Form>

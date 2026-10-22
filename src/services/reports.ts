@@ -3,9 +3,8 @@
 // ไม่มี endpoint /reports/dashboard เดียวจบ — backend แยกเป็นหลาย endpoint (dashboard/*, ingredients/
 // low-stock, orders, production-orders) ประกอบ DashboardSummary ที่นี่จุดเดียว (ViewModel ไม่ต้องรู้)
 //
-// ที่ไม่ได้ทำให้ครบ 100% (แลกความง่าย — ไม่เพิ่ม N+1 request ต่อรายการ):
-//   - recent_orders[].items_summary และ production_status[].items_summary ปล่อยว่าง เพราะ items
-//     ของ order/production แยก collection กัน ต้องยิงเพิ่มทีละรายการถึงจะได้ (ยังไม่คุ้มสำหรับ dashboard)
+// items_summary ("บราวนี่ ×2, เค้กอัลมอนด์ ×1"): ออเดอร์ล่าสุดขอ ?with_items=true · ใบสั่งผลิต backend แนบ items[] มาในรายการเสมอ
+// (ทั้งคู่เป็น query เดียวฝั่ง backend ไม่ใช่ N+1 — เดิมปล่อยว่างจนคอลัมน์ "รายการ" ว่างทุกแถว TC-ADM-12)
 // ─────────────────────────────────────────────────────────────
 import { http, type HttpReader } from "@/lib/http";
 import type {
@@ -38,12 +37,19 @@ interface RawOrder {
   total_amount: number;
   order_status: string;
   user_id?: { user_fullname?: string } | string | null;
+  items?: { product_snapshot?: { product_name_th?: string }; quantity: number }[];
 }
 interface RawProductionOrder {
   _id: string;
   production_no: string;
   production_status: string;
   production_date: string;
+  items?: { product_id?: { product_name_th?: string } | string | null; planned_qty: number; item_status?: string }[];
+}
+
+/** "บราวนี่ ×2, เค้กอัลมอนด์ ×1" — ข้ามแถวที่ไม่มีชื่อ */
+function summarize(lines: { name?: string; qty: number }[]): string {
+  return lines.filter((l) => l.name).map((l) => `${l.name} ×${l.qty}`).join(", ");
 }
 
 /** ช่วงเวลา "วันนี้" ตามเวลาไทย (UTC+7 คงที่ ไม่มี DST) แปลงเป็นขอบเขต UTC ให้ query created_at ได้ */
@@ -137,7 +143,7 @@ export const reportsService = {
         h.get<{ data: RawTopProductsResult }>("/admin/dashboard/top-products", {
           params: { limit: 5 },
         }),
-        scope.orders ? h.getList<RawOrder>("/admin/orders", { params: { limit: 5 } }) : { data: [] as RawOrder[] },
+        scope.orders ? h.getList<RawOrder>("/admin/orders", { params: { limit: 5, with_items: true } }) : { data: [] as RawOrder[] },
         scope.production
           ? h.getList<RawProductionOrder>("/admin/production-orders", { params: { limit: 20 } })
           : { data: [] as RawProductionOrder[] },
@@ -165,7 +171,7 @@ export const reportsService = {
       _id: o._id,
       order_no: o.order_no,
       customer_name: customerNameOf(o.user_id),
-      items_summary: "",
+      items_summary: summarize((o.items ?? []).map((it) => ({ name: it.product_snapshot?.product_name_th, qty: it.quantity }))),
       total_amount: o.total_amount,
       order_status: o.order_status as DashboardRecentOrder["order_status"],
     }));
@@ -176,7 +182,11 @@ export const reportsService = {
       .map((p) => ({
         _id: p._id,
         production_no: p.production_no,
-        items_summary: "",
+        items_summary: summarize(
+          (p.items ?? [])
+            .filter((it) => it.item_status !== "cancelled")
+            .map((it) => ({ name: typeof it.product_id === "object" ? it.product_id?.product_name_th : undefined, qty: it.planned_qty })),
+        ),
         production_status: p.production_status as DashboardProduction["production_status"],
         due_date: p.production_date,
       }));

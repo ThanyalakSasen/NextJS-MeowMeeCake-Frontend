@@ -21,7 +21,7 @@ import { sortOptionsThai } from "@/lib/thaiSort";
 // ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัล/ลิ้นชักไม่ render ฝั่ง server อยู่แล้ว — Portal ของ antd คืน null)
 const MainRecipeModal = dynamic(() => import("./_components/MainRecipeModal").then((m) => m.MainRecipeModal), { ssr: false });
 const ComponentFormModal = dynamic(() => import("./_components/ComponentFormModal").then((m) => m.ComponentFormModal), { ssr: false });
-const DetailDrawer = dynamic(() => import("@/components/shared/feedback/DetailDrawer").then((m) => m.DetailDrawer), { ssr: false });
+const DetailModal = dynamic(() => import("@/components/shared/feedback/DetailModal").then((m) => m.DetailModal), { ssr: false });
 const RecipeDetail = dynamic(() => import("./_components/RecipeDetail").then((m) => m.RecipeDetail), { ssr: false });
 
 type VM = ReturnType<typeof useRecipesViewModel>;
@@ -55,9 +55,10 @@ function MainTab(vm: VM) {
       )}
 
       <FilterToolbar
-        left={
+        left={<SearchInput value={vm.mainSearch} onChange={vm.setMainSearch} placeholder={t("recipes.searchRecipePlaceholder")} />}
+        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+        right={
           <>
-            <SearchInput value={vm.mainSearch} onChange={vm.setMainSearch} placeholder={t("recipes.searchRecipePlaceholder")} />
             <FilterField label={t("filterLabel.productCategory")} minWidth={170}>
               <Select
                 value={vm.mainCategoryFilter}
@@ -170,9 +171,10 @@ function ComponentsTab(vm: VM) {
       </StatCardsGrid>
 
       <FilterToolbar
-        left={
+        left={<SearchInput value={vm.subSearch} onChange={vm.setSubSearch} placeholder={t("recipes.searchComponentPlaceholder")} />}
+        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+        right={
           <>
-            <SearchInput value={vm.subSearch} onChange={vm.setSubSearch} placeholder={t("recipes.searchComponentPlaceholder")} />
             <FilterField label={t("filterLabel.componentCategory")} minWidth={170}>
               <Select
                 value={vm.subCategoryFilter}
@@ -262,13 +264,13 @@ export function RecipesView(vm: VM) {
       )}
 
       {drawerUsed && (
-        <DetailDrawer
+        <DetailModal
           open={vm.drawerOpen}
           title={vm.detailRecipe?.recipe_name ?? ""}
           onClose={vm.closeDrawer}
         >
           {vm.detailRecipe && <RecipeDetail recipe={vm.detailRecipe} />}
-        </DetailDrawer>
+        </DetailModal>
       )}
     </>
   );

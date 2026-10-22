@@ -28,7 +28,7 @@ import type {
   ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput,
 } from "@/types/productionOrder";
 import {
-  isFinalStatus, getNextStatus, durationHours,
+  isFinalStatus, getNextStatus, durationHours, producedQty,
 } from "./productionStatus";
 
 
@@ -116,6 +116,14 @@ export function useProductionViewModel() {
     queryFn: () => preorderRoundsService.list({ status: "closed", limit: LIST_ALL }),
     enabled: createFromRoundOpen,
   });
+  // รอบที่เลือกในฟอร์มสร้างจากรอบ → ดูล่วงหน้า (สินค้า/จำนวน/ยอดที่ไม่นับ/เหตุที่สร้างไม่ได้) ก่อนกดสร้าง
+  const [fromRoundId, setFromRoundId] = useState<string | null>(null);
+  // อยู่ใต้ PRODUCTION_ORDERS_KEY — invalidate() หลังสร้าง/ยกเลิกใบ ทำให้ preview สดตามไปด้วย
+  const fromRoundPreviewQ = useQuery({
+    queryKey: [...PRODUCTION_ORDERS_KEY, "from-round-preview", fromRoundId],
+    queryFn: () => productionOrdersService.previewFromRound(fromRoundId as string),
+    enabled: createFromRoundOpen && !!fromRoundId,
+  });
 
   /** ชื่อ/หน่วยของทุกสินค้า (ไม่กรอง) — ใช้ enrich รายการของใบสั่งผลิตเก่าด้วย แม้สินค้านั้นจะไม่มีสูตรแล้วก็ตาม */
   const productsById = useMemo(() => {
@@ -162,8 +170,8 @@ export function useProductionViewModel() {
     return (usersQ.data?.data ?? []).filter((u) => u.emp_status && u.role_id && !customerRoleIds.has(u.role_id));
   }, [usersQ.data, rolesQ.data]);
 
-  /** รอบที่ปิดรับแล้ว "และ" ยังไม่มีใบสั่งผลิต (source_type preorder, ไม่ใช่ cancelled) ผูกอยู่ —
-   *  backend อนุญาตแค่ 1 ใบต่อรอบ (409 ถ้าซ้ำ) กรองไว้ที่นี่กันเลือกแล้วเจอ error ทันที */
+  /** รอบที่มีใบสั่งผลิต (source_type preorder, ไม่ใช่ cancelled) ผูกอยู่แล้ว — backend อนุญาตแค่ 1 ใบต่อรอบ
+   *  ฟอร์มโชว์รอบเหล่านี้ไว้ท้ายรายการแบบเลือกไม่ได้ (บอกว่ารอบหายไปไหน) · preview ยืนยันซ้ำจาก backend อีกชั้น */
   const roundsWithProduction = useMemo(
     () => new Set(
       orders.filter((o) => o.source_type === "preorder" && o.production_status !== "cancelled" && o.round_id)
@@ -171,10 +179,7 @@ export function useProductionViewModel() {
     ),
     [orders],
   );
-  const eligibleRounds = useMemo(
-    () => (closedRoundsQ.data?.data ?? []).filter((r) => !roundsWithProduction.has(r._id)),
-    [closedRoundsQ.data, roundsWithProduction],
-  );
+  const closedRounds = closedRoundsQ.data?.data ?? [];
 
   // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
   const isLoading = ordersQ.isPending;
@@ -250,8 +255,9 @@ export function useProductionViewModel() {
   );
 
   // สถิติ/breakdown อิงตามช่วงที่เลือก (historyRows) ไม่ใช่ all-time — ให้ตรงกับตัวกรองวัน/เดือน/ปี
+  // จำนวนนับจากที่ผลิตได้จริง (producedQty) ไม่ใช่ที่วางแผน
   const historyStats = useMemo(() => {
-    const totalQty = historyRows.reduce((s, o) => s + o.items.reduce((si, it) => si + it.planned_qty, 0), 0);
+    const totalQty = historyRows.reduce((s, o) => s + o.items.reduce((si, it) => si + producedQty(it), 0), 0);
     const durations = historyRows.map(durationHours).filter((d): d is number => d !== null);
     const avgDuration = durations.length > 0 ? durations.reduce((s, d) => s + d, 0) / durations.length : 0;
     return { totalOrders: historyRows.length, totalQty, avgDuration };
@@ -260,7 +266,8 @@ export function useProductionViewModel() {
   const productBreakdown = useMemo(() => {
     const acc: Record<string, number> = {};
     historyRows.forEach((o) => o.items.forEach((it) => {
-      acc[it.product_name] = (acc[it.product_name] ?? 0) + it.planned_qty;
+      const qty = producedQty(it);
+      if (qty > 0) acc[it.product_name] = (acc[it.product_name] ?? 0) + qty;
     }));
     return Object.entries(acc).sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [historyRows]);
@@ -297,6 +304,7 @@ export function useProductionViewModel() {
       invalidate();
       qc.invalidateQueries({ queryKey: ["preorder-rounds"] });
       setCreateFromRoundOpen(false);
+      setFromRoundId(null);
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("production.fromRoundCreateFailed")),
   });
@@ -391,8 +399,14 @@ export function useProductionViewModel() {
     createOpen, openCreate: () => setCreateOpen(true), closeCreate: () => setCreateOpen(false),
     onCreateSubmit, creating: createOrder.isPending,
 
-    eligibleRounds,
-    createFromRoundOpen, openCreateFromRound: () => setCreateFromRoundOpen(true), closeCreateFromRound: () => setCreateFromRoundOpen(false),
+    closedRounds, roundsWithProduction, isClosedRoundsLoading: closedRoundsQ.isLoading,
+    fromRoundId, setFromRoundId,
+    fromRoundPreview: fromRoundPreviewQ.data?.data ?? null,
+    isFromRoundPreviewLoading: fromRoundPreviewQ.isFetching,
+    isFromRoundPreviewError: fromRoundPreviewQ.isError, refetchFromRoundPreview: fromRoundPreviewQ.refetch,
+    createFromRoundOpen,
+    openCreateFromRound: () => { setFromRoundId(null); setCreateFromRoundOpen(true); },
+    closeCreateFromRound: () => setCreateFromRoundOpen(false),
     onCreateFromRoundSubmit: (v: ProductionOrderFromRoundInput) => createFromRound.mutate(v),
     creatingFromRound: createFromRound.isPending,
 

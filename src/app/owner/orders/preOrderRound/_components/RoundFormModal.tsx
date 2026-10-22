@@ -10,6 +10,7 @@ import { formatCurrency } from "@/i18n/format";
 import type { Product } from "@/types/product";
 import type { CreateRoundInput, RoundItemInput } from "@/types/preorderRound";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
+import { roundDatesError, roundDatesPayload } from "./roundDates";
 import { useEditableRows, RemoveRowButton } from "@/components/shared/form";
 import { sortOptionsThai } from "@/lib/thaiSort";
 
@@ -56,12 +57,9 @@ export function RoundFormModal({
 
   const handleOk = async () => {
     const v = await form.validateFields();
-    if (!v.open_date.isBefore(v.close_date)) {
-      alert.warning(t("preorderRound.openBeforeCloseRequired"));
-      return;
-    }
-    if (v.pickup_date.isBefore(v.close_date)) {
-      alert.warning(t("preorderRound.pickupAfterCloseRequired"));
+    const err = roundDatesError(v);
+    if (err) {
+      alert.warning(t(err));
       return;
     }
     const validRows = rows.filter((r) => r.product_id && r.max_qty_total > 0);
@@ -73,9 +71,7 @@ export function RoundFormModal({
     }));
     onSubmit({
       round_name: v.round_name.trim(),
-      open_date: v.open_date.toISOString(),
-      close_date: v.close_date.toISOString(),
-      pickup_date: v.pickup_date.toISOString(),
+      ...roundDatesPayload(v),
       items: items.length ? items : undefined,
     });
   };
@@ -114,6 +110,7 @@ export function RoundFormModal({
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
         </div>
+        <p className="-mt-2 mb-3 text-xs text-gray-500">{t("preorderRound.closeDateHint")}</p>
 
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-gray-500">{t("preorderRound.itemsTitle", { n: rows.length })}</p>

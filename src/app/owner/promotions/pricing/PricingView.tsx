@@ -81,9 +81,10 @@ export function PricingView(vm: VM) {
       }
       toolbar={
         <FilterToolbar
-          left={
+          left={<SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("pricing.searchPlaceholder")} />}
+          // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+          right={
             <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("pricing.searchPlaceholder")} />
               <FilterField label={t("filterLabel.productCategory")} minWidth={160}>
                 <Select
                   value={vm.categoryId}

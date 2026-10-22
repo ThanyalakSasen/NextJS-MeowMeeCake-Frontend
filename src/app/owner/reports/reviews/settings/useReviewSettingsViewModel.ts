@@ -26,7 +26,7 @@ export type SettingsTab = "aspects" | "terms";
 export function useReviewSettingsViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("reports");
+  const perm = usePermission("reports_reviews");
   const [tab, setTab] = useState<SettingsTab>("aspects");
 
   const fail = (e: unknown) => alert.error(isApiError(e) ? e.message : t("reviewSettings.saveFailed"));

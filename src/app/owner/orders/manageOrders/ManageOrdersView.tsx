@@ -9,7 +9,7 @@ import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column, FilterField } from "@/components/shared/data";
-import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
+import { DetailModal, LoadFailed } from "@/components/shared/feedback";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { NOTICE_TAG, PAYMENT_STATUS_CONFIG } from "@/constants/enumConfig";
@@ -20,6 +20,7 @@ import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
 import { STATUS_SELECT_OPTIONS } from "./orderStatus";
 import { OrderStatusFilter } from "./_components/OrderStatusFilter";
 import { OrderDetailContent } from "./_components/OrderDetailContent";
+import { CancelOrderModal } from "./_components/CancelOrderModal";
 
 type VM = ReturnType<typeof useManageOrdersViewModel>;
 
@@ -190,11 +191,11 @@ export function ManageOrdersView(vm: VM) {
         />
       )}
 
-      <DetailDrawer
+      <DetailModal
         open={vm.drawerOpen}
         title={vm.selectedOrder ? t("orders.drawerTitle", { no: vm.selectedOrder.order_no }) : ""}
         onClose={vm.closeDrawer}
-        // กว้างเท่า drawer ของรอบพรีออเดอร์ — 400 เดิมแคบจน Steps 5 ขั้นตัดคำทีละตัวอักษร
+        // ป๊อปอัปกลางจอ (เดิมแผงเลื่อนข้าง) — กว้างพอให้ Steps 5 ขั้นไม่ตัดคำ
         size={640}
       >
         {vm.isDetailLoading && <p className="py-10 text-center text-gray-500">{t("common.loading")}</p>}
@@ -216,7 +217,15 @@ export function ManageOrdersView(vm: VM) {
             onRefund={vm.onRefund}
           />
         )}
-      </DetailDrawer>
+      </DetailModal>
+
+      <CancelOrderModal
+        key={vm.cancelTarget?._id ?? "none"}
+        order={vm.cancelTarget}
+        saving={vm.cancelling}
+        onClose={vm.closeCancel}
+        onConfirm={vm.onConfirmCancel}
+      />
     </ListPageLayout>
   );
 }
