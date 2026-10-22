@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/base";
 import { formatDate } from "@/i18n/format";
 import type { ProductionOrder } from "@/types/productionOrder";
 import type { HistoryViewMode, useProductionViewModel } from "../useProductionViewModel";
-import { durationHours } from "../productionStatus";
+import { durationHours, producedQty } from "../productionStatus";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
@@ -34,7 +34,12 @@ export function HistoryTab(vm: VM) {
     {
       key: "items",
       title: t("production.colItems"),
-      render: (o) => <span className="text-gray-700">{o.items.map((it) => it.product_name).join(", ")}</span>,
+      // ชื่อ × จำนวนที่ผลิตได้จริง · รายการที่ผลิตไม่ได้ (ยกเลิกตอนปิดงาน) ไม่แสดง
+      render: (o) => (
+        <span className="text-gray-700">
+          {o.items.filter((it) => producedQty(it) > 0).map((it) => `${it.product_name} ×${producedQty(it)}`).join(", ") || "—"}
+        </span>
+      ),
     },
     {
       key: "completed_at",
