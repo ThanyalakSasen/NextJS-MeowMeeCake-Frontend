@@ -8,6 +8,7 @@ import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { RecipeComponent, RecipeComponentInput, RecipeComponentListParams } from "@/types/recipeComponent";
 import type { RecipeStep } from "@/types/recipeShared";
 import { refId } from "@/lib/refId";
+import { unitLabel } from "@/utils/unitContext";
 
 const BASE = "/admin/components";
 
@@ -41,7 +42,7 @@ function toComponent(raw: any): RecipeComponent {
     steps: parseSteps(raw.steps_content),
     yield_qty: raw.yield_qty,
     yield_unit_id: refId(raw.yield_unit_id),
-    yield_unit_abbr: yieldUnit?.unit_abbr ?? "",
+    yield_unit_abbr: unitLabel(yieldUnit),
     estimated_cost_per_batch: raw.estimated_cost_per_batch,
     note: raw.note ?? null,
     created_at: raw.created_at,

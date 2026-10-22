@@ -12,7 +12,7 @@ import { ingredientCategoriesService } from "@/services/ingredientCategories";
 import { unitsService } from "@/services/units";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import { isIngredientUnit } from "@/utils/unitContext";
+import { isIngredientUnit, unitLabel } from "@/utils/unitContext";
 import type { StockStatus } from "@/constants/enumConfig";
 import type { IngredientInput } from "@/types/ingredient";
 import { getIngredientStatus, stockPercent } from "./ingredientStatus";
@@ -74,7 +74,7 @@ export function useIngredientsViewModel() {
 
   const rows = useMemo<IngredientRow[]>(() => {
     const catMap = new Map((categoriesQ.data?.data ?? []).map((c) => [c._id, c.ingredient_category_name]));
-    const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const unitMap = new Map((unitsQ.data?.data ?? []).map((u) => [u._id, unitLabel(u)]));
     return (ingredientsQ.data?.data ?? []).map((i) => {
       const categoryId = refId(i.ingredient_category_id);
       const unitId = refId(i.unit_id);
