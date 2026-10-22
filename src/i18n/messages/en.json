@@ -912,6 +912,7 @@
     "roundNamePlaceholder": "e.g. October Birthday Cake Round",
     "fieldOpenDate": "Open Date",
     "fieldCloseDate": "Close Date",
+    "closeDateHint": "Orders close at 23:59 on the close date — the round then closes automatically (unpaid orders are cancelled and a production order is created)",
     "fieldPickupDate": "Pickup Date",
     "openBeforeCloseRequired": "Open date must be before close date",
     "pickupAfterCloseRequired": "Pickup date must not be before close date",
