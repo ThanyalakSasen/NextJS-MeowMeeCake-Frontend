@@ -912,6 +912,7 @@
     "roundNamePlaceholder": "เช่น เค้กวันเกิดรอบเดือนตุลาคม",
     "fieldOpenDate": "วันเปิดรับ",
     "fieldCloseDate": "วันปิดรับ",
+    "closeDateHint": "ปิดรับถึง 23:59 น. ของวันปิดรับ — เลยเวลานี้รอบจะปิดเองอัตโนมัติ (ยกเลิกรายการที่ยังไม่ชำระ + สร้างใบสั่งผลิต)",
     "fieldPickupDate": "วันนัดรับ",
     "openBeforeCloseRequired": "วันเปิดรับต้องมาก่อนวันปิดรับ",
     "pickupAfterCloseRequired": "วันนัดรับต้องไม่มาก่อนวันปิดรับ",

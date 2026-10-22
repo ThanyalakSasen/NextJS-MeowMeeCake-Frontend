@@ -9,7 +9,7 @@
 // และ /admin/preorders (constants/menuKeys.ts มี "preorder" ครบ และหน้าจัดการสิทธิ์ให้สิทธิ์นี้ได้แล้ว)
 // path หน้านี้ map เป็น "preorder" ใน ROUTE_MENU_MAP ส่วน "/owner/orders" ที่เหลือยังเป็น "orders"
 // ─────────────────────────────────────────────────────────────
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
@@ -32,6 +32,8 @@ import { PREORDERS_KEY, ROUNDS_KEY, tabFrom, type TabKey } from "./preorderQuery
 import { useRoundDashboardViewModel } from "./useRoundDashboardViewModel";
 
 export type { TabKey };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function usePreOrderRoundViewModel() {
   const t = useTranslations();
@@ -56,6 +58,25 @@ export function usePreOrderRoundViewModel() {
   // ══════════════════ แท็บ 1: รอบพรีออเดอร์ ══════════════════
   const roundsQ = useQuery({ queryKey: ROUNDS_KEY, queryFn: () => preorderRoundsService.list({ limit: LIST_ALL }) });
   const rounds = useMemo(() => roundsQ.data?.data ?? [], [roundsQ.data]);
+
+  // รอบเปิด/ปิดเองตามเวลา (backend syncRoundSchedule ตอนอ่านรอบ) — เปิดหน้าค้างไว้จนถึงเวลาปิดรับ/เปิดรับของรอบใด
+  // → โหลดรอบ + พรีออเดอร์ (คนไม่จ่ายถูกยกเลิก) + ใบผลิต (สร้างตอนปิดรอบ) ใหม่ ให้สถานะบนจอตรงกับจริงโดยไม่ต้องรีเฟรช
+  useEffect(() => {
+    const now = Date.now();
+    const next = Math.min(
+      ...rounds.flatMap((r) => [
+        r.round_status === "scheduled" ? new Date(r.open_date).getTime() : Infinity,
+        r.round_status === "open" || r.round_status === "scheduled" ? new Date(r.close_date).getTime() : Infinity,
+      ]).filter((ts) => ts > now),
+    );
+    if (!Number.isFinite(next) || next - now > DAY_MS) return; // เกิน 1 วัน — ไม่ตั้ง (setTimeout รับได้ไม่ถึงเดือน)
+    const timer = setTimeout(() => {
+      qc.invalidateQueries({ queryKey: ["preorder-rounds"] });
+      qc.invalidateQueries({ queryKey: ["preorders"] });
+      qc.invalidateQueries({ queryKey: ["production-orders"] });
+    }, next - now + 2000);
+    return () => clearTimeout(timer);
+  }, [rounds, qc]);
 
   const [roundSearch, setRoundSearchState] = useState("");
   const [roundStatusFilter, setRoundStatusFilterState] = useState<RoundStatus | "all">("all");

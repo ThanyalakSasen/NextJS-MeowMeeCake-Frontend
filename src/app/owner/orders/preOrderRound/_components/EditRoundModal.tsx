@@ -9,6 +9,7 @@ import { Form, FormItem, useAntForm, Input, DatePicker } from "@/components/base
 import { alert } from "@/lib/alert";
 import type { PreorderRound, UpdateRoundInput } from "@/types/preorderRound";
 import { modalButtonIcons } from "@/components/shared/actions";
+import { roundDatesError, roundDatesPayload } from "./roundDates";
 
 interface FormValues {
   round_name: string;
@@ -46,20 +47,12 @@ export function EditRoundModal({
 
   const handleOk = async () => {
     const v = await form.validateFields();
-    if (!v.open_date.isBefore(v.close_date)) {
-      alert.warning(t("preorderRound.openBeforeCloseRequired"));
+    const err = roundDatesError(v);
+    if (err) {
+      alert.warning(t(err));
       return;
     }
-    if (v.pickup_date.isBefore(v.close_date)) {
-      alert.warning(t("preorderRound.pickupAfterCloseRequired"));
-      return;
-    }
-    onSubmit({
-      round_name: v.round_name.trim(),
-      open_date: v.open_date.toISOString(),
-      close_date: v.close_date.toISOString(),
-      pickup_date: v.pickup_date.toISOString(),
-    });
+    onSubmit({ round_name: v.round_name.trim(), ...roundDatesPayload(v) });
   };
 
   return (
@@ -94,6 +87,7 @@ export function EditRoundModal({
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
         </div>
+        <p className="-mt-2 text-xs text-gray-500">{t("preorderRound.closeDateHint")}</p>
       </Form>
     </Modal>
   );
