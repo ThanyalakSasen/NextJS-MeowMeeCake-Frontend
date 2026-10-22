@@ -1026,9 +1026,10 @@
       "minAmount": "Participating items must reach {min}",
       "minQty": "Needs at least {min} participating items (now {current})",
       "usedUp": "Usage limit reached",
+      "memberOnly": "Enter a member phone number",
       "zero": "No discount for this bill"
     },
-    "promoPerUserNote": "Limited per customer — without a member number, in-store sales share one walk-in account, so this may be rejected",
+    "promoMemberOnly": "Members only",
     "selectedPromoInvalid": "The selected promotion no longer applies — priced without a promotion",
     "promoBackendNote": "The final amount is recalculated when the order is confirmed",
     "subtotal": "Items",

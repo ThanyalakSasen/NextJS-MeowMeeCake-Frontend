@@ -245,8 +245,8 @@ export function usePOSViewModel() {
   const subtotal = cartSubtotal(cart);
   const itemCount = cart.reduce((s, c) => s + c.qty, 0);
   const promoEvals = useMemo(
-    () => (promotionsEnabled ? evaluateAll(promotions, toPromoLines(cart)) : []),
-    [promotionsEnabled, promotions, cart],
+    () => (promotionsEnabled ? evaluateAll(promotions, toPromoLines(cart), member != null) : []),
+    [promotionsEnabled, promotions, cart, member],
   );
   const selectedEval = promoEvals.find((e) => e.promotion._id === selectedPromoId) ?? null;
   // เลือกไว้แต่บิลเปลี่ยนจนใช้ไม่ได้แล้ว (ลบสินค้า/ลดจำนวน) → ไม่ใช้โปร + แจ้งในการ์ด

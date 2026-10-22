@@ -7,7 +7,7 @@ import { Button } from "@/components/base";
 import { color } from "@/theme";
 import { formatCurrency } from "@/i18n/format";
 import type { Promotion } from "@/types/promotion";
-import type { PromoBlock, PromoEval } from "../posPromotion";
+import { isMemberOnly, type PromoBlock, type PromoEval } from "../posPromotion";
 
 export function PaymentAside({
   promotionsEnabled,
@@ -108,10 +108,15 @@ export function PaymentAside({
                       <span className="rounded bg-green-100 px-1.5 text-[11px] font-semibold text-green-800">{t("pos.bestPromo")}</span>
                     )}
                   </span>
-                  <span className={`text-xs ${ev.eligible ? "text-gray-600" : "text-amber-800"}`}>
+                  {/* โปรสำหรับสมาชิก (จำกัดสิทธิ์ต่อลูกค้า) — ป้ายแดงเสมอ · ยังไม่กรอกเบอร์ = เลือกไม่ได้ + บอกให้กรอก */}
+                  {isMemberOnly(p) && <span className="text-xs font-semibold text-danger">{t("pos.promoMemberOnly")}</span>}
+                  <span
+                    className={`text-xs ${
+                      ev.eligible ? "text-gray-600" : ev.block?.key === "memberOnly" ? "text-danger" : "text-amber-800"
+                    }`}
+                  >
                     {ev.eligible ? valueLabel(p) : ev.block && blockText(ev.block)}
                   </span>
-                  {p.max_user_per_user != null && <span className="text-xs text-amber-700">{t("pos.promoPerUserNote")}</span>}
                 </span>
                 <span className="text-sm font-semibold text-success tabular-nums">
                   {ev.eligible ? `−${formatCurrency(ev.discount, locale)}` : ""}
