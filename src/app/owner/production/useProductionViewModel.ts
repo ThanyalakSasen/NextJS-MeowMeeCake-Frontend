@@ -28,7 +28,7 @@ import type {
   ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput,
 } from "@/types/productionOrder";
 import {
-  isFinalStatus, getNextStatus, durationHours,
+  isFinalStatus, getNextStatus, durationHours, producedQty,
 } from "./productionStatus";
 
 
@@ -248,8 +248,9 @@ export function useProductionViewModel() {
   );
 
   // สถิติ/breakdown อิงตามช่วงที่เลือก (historyRows) ไม่ใช่ all-time — ให้ตรงกับตัวกรองวัน/เดือน/ปี
+  // จำนวนนับจากที่ผลิตได้จริง (producedQty) ไม่ใช่ที่วางแผน
   const historyStats = useMemo(() => {
-    const totalQty = historyRows.reduce((s, o) => s + o.items.reduce((si, it) => si + it.planned_qty, 0), 0);
+    const totalQty = historyRows.reduce((s, o) => s + o.items.reduce((si, it) => si + producedQty(it), 0), 0);
     const durations = historyRows.map(durationHours).filter((d): d is number => d !== null);
     const avgDuration = durations.length > 0 ? durations.reduce((s, d) => s + d, 0) / durations.length : 0;
     return { totalOrders: historyRows.length, totalQty, avgDuration };
@@ -258,7 +259,8 @@ export function useProductionViewModel() {
   const productBreakdown = useMemo(() => {
     const acc: Record<string, number> = {};
     historyRows.forEach((o) => o.items.forEach((it) => {
-      acc[it.product_name] = (acc[it.product_name] ?? 0) + it.planned_qty;
+      const qty = producedQty(it);
+      if (qty > 0) acc[it.product_name] = (acc[it.product_name] ?? 0) + qty;
     }));
     return Object.entries(acc).sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [historyRows]);
