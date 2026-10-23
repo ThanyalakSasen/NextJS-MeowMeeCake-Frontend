@@ -772,6 +772,8 @@
     "leadTimeDays": "{n} วัน",
     "cancel": "ยกเลิกออเดอร์",
     "export": "Export",
+    "tabDelivery": "รายการที่ต้องจัดส่ง ({n} รายการ)",
+    "tabTakeaway": "รายการที่ต้องรับที่ร้าน ({n} รายการ)",
     "exportEmpty": "ไม่มีออเดอร์ให้ Export ในตัวกรองนี้",
     "exportSuccess": "Export คำสั่งซื้อ {n} รายการเรียบร้อยแล้ว",
     "statusChanged": "เปลี่ยนสถานะ {no} เป็น \"{status}\" แล้ว",
