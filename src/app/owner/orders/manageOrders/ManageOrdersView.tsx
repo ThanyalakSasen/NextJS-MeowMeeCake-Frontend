@@ -18,7 +18,7 @@ import { isAwaitingRefund, type Order } from "@/types/order";
 import { ViewButton, actionIcon } from "@/components/shared/actions";
 import { StockAlertSection } from "@/components/shared/stock";
 import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
-import { STATUS_SELECT_OPTIONS } from "./orderStatus";
+import { statusSelectOptions } from "./orderStatus";
 import { OrderStatusFilter } from "./_components/OrderStatusFilter";
 import { OrderDetailContent } from "./_components/OrderDetailContent";
 import { CancelOrderModal } from "./_components/CancelOrderModal";
@@ -73,7 +73,7 @@ export function ManageOrdersView(vm: VM) {
             value={o.order_status}
             disabled={!paymentVerified || !vm.perm.update}
             style={{ width: 140 }}
-            options={STATUS_SELECT_OPTIONS.map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
+            options={statusSelectOptions(o.order_status).map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
             onChange={(next) => vm.onStatusChange(o, next as OrderStatus)}
           />
         );
