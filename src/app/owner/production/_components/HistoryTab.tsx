@@ -1,5 +1,6 @@
 "use client";
 // แท็บ 3: ประวัติการผลิต — อ่านอย่างเดียว (สร้าง/แก้ที่แท็บแผน+สถานะ)
+// รายการสินค้าของแต่ละใบไม่อยู่ในตาราง — กด "ดู" เปิดป๊อปอัปรายละเอียด (ProductionOrderDetail) ที่ลิสต์ครบทุกรายการ
 import type { Dayjs } from "dayjs";
 import { useTranslations, useLocale } from "next-intl";
 import { DatePicker } from "@/components/base";
@@ -7,10 +8,10 @@ import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stat
 import { DataTable, TypeTabBar, type Column } from "@/components/shared/data";
 import { EmptyState } from "@/components/base";
 import { formatDate } from "@/i18n/format";
+import { ViewButton } from "@/components/shared/actions";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import type { ProductionOrder } from "@/types/productionOrder";
 import type { useProductionViewModel } from "../useProductionViewModel";
-import { durationHours, producedQty } from "../productionStatus";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
@@ -46,27 +47,9 @@ export function HistoryTab(vm: VM) {
       render: (o) => <span className="font-medium text-brown-900 font-mono">{o.production_no}</span>,
     },
     {
-      key: "items",
-      title: t("production.colItems"),
-      // ชื่อ × จำนวนที่ผลิตได้จริง · รายการที่ผลิตไม่ได้ (ยกเลิกตอนปิดงาน) ไม่แสดง
-      render: (o) => (
-        <span className="text-gray-700">
-          {o.items.filter((it) => producedQty(it) > 0).map((it) => `${it.product_name} ×${producedQty(it)}`).join(", ") || "—"}
-        </span>
-      ),
-    },
-    {
       key: "completed_at",
       title: t("production.colCompletedAt"),
       render: (o) => <span className="text-gray-600">{o.completed_at ? formatDate(o.completed_at, locale, { withTime: true }) : "—"}</span>,
-    },
-    {
-      key: "duration",
-      title: t("production.colDuration"),
-      render: (o) => {
-        const d = durationHours(o);
-        return <span className="text-gray-600">{d !== null ? t("production.hours", { n: d }) : "—"}</span>;
-      },
     },
     {
       key: "assignee",
@@ -124,7 +107,13 @@ export function HistoryTab(vm: VM) {
           {vm.historyRows.length === 0 ? (
             <EmptyState description={t("production.historyEmpty")} />
           ) : (
-            <DataTable columns={columns} rows={vm.historyRows} emptyText={t("production.historyEmpty")} />
+            <DataTable
+              columns={columns}
+              rows={vm.historyRows}
+              emptyText={t("production.historyEmpty")}
+              onRowClick={vm.onView}
+              actions={(o) => <ViewButton size="small" onClick={() => vm.onView(o)} />}
+            />
           )}
         </div>
 

@@ -7,16 +7,19 @@ import { formatDate } from "@/i18n/format";
 import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
 import { actionIcon } from "@/components/shared/actions";
-import { getNextStatus, isFinalStatus } from "../productionStatus";
+import { getNextStatus, isFinalStatus, producedQty } from "../productionStatus";
 
 export function ProductionOrderDetail({
   order,
+  roundQuota,
   canUpdate,
   canComplete,
   onAdvance,
   onCancel,
 }: {
   order: ProductionOrder;
+  /** ใบจากรอบพรีออเดอร์: product_id → โควตาที่เปิดรับต่อรอบ · null = ไม่ใช่ใบจากรอบ / ยังโหลดไม่เสร็จ */
+  roundQuota?: Map<string, number> | null;
   canUpdate: boolean;
   /** ปิดงานผลิต (ไปสถานะ "เสร็จ") — production.approve */
   canComplete: boolean;
@@ -28,6 +31,20 @@ export function ProductionOrderDetail({
   const srcCfg = SOURCE_TYPE_CONFIG[order.source_type];
   const final = isFinalStatus(order.production_status);
   const next = getNextStatus(order.production_status);
+  const done = order.production_status === "done";
+  // ใบจากรอบ: planned_qty = ผลรวมที่ลูกค้าสั่งในรอบ (backend รวมให้) — บอกที่มา + โควตาที่เปิดรับต่อรอบ
+  const fromRound = order.source_type === "preorder";
+  const orderedLine = (it: ProductionOrder["items"][number]) => {
+    if (!fromRound) return null;
+    const quota = roundQuota?.get(it.product_id);
+    return (
+      <p className="text-xs text-gray-500">
+        {quota != null
+          ? t("production.orderedOfQuota", { ordered: it.planned_qty, quota, unit: it.unit_abbr })
+          : t("production.orderedQty", { ordered: it.planned_qty, unit: it.unit_abbr })}
+      </p>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -56,6 +73,12 @@ export function ProductionOrderDetail({
           <p className="text-gray-500">{t("production.colStarted")}</p>
           <p className="text-gray-800">{order.started_at ? formatDate(order.started_at, locale, { withTime: true }) : "—"}</p>
         </div>
+        {order.completed_at && (
+          <div>
+            <p className="text-gray-500">{t("production.colCompletedAt")}</p>
+            <p className="text-gray-800">{formatDate(order.completed_at, locale, { withTime: true })}</p>
+          </div>
+        )}
       </div>
 
       {order.production_note && (
@@ -74,7 +97,23 @@ export function ProductionOrderDetail({
                 <p className="text-sm text-gray-800">{it.product_name}</p>
                 {it.notes && <p className="text-sm text-gray-500">{it.notes}</p>}
               </div>
-              <p className="text-sm font-medium text-brown-900">{it.planned_qty} {it.unit_abbr}</p>
+              {/* ใบที่ปิดงานแล้ว: จำนวนที่ผลิตได้จริง (ต่างจากแผน = บอกแผนไว้ใต้) · รายการที่ผลิตไม่ได้ = ป้ายยกเลิก */}
+              {done && it.item_status === "cancelled" ? (
+                <StatusBadge group="productionItemStatus" value="cancelled" />
+              ) : done ? (
+                <div className="text-right">
+                  <p className="text-sm font-medium text-brown-900">{producedQty(it)} {it.unit_abbr}</p>
+                  {producedQty(it) !== it.planned_qty && !fromRound && (
+                    <p className="text-xs text-gray-500">{t("production.colPlanned")} {it.planned_qty} {it.unit_abbr}</p>
+                  )}
+                  {orderedLine(it)}
+                </div>
+              ) : (
+                <div className="text-right">
+                  <p className="text-sm font-medium text-brown-900">{it.planned_qty} {it.unit_abbr}</p>
+                  {orderedLine(it)}
+                </div>
+              )}
             </div>
           ))}
         </div>
