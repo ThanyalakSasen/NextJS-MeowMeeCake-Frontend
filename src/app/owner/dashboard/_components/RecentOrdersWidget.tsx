@@ -38,7 +38,7 @@ export function RecentOrdersWidget({ orders }: { orders: DashboardRecentOrder[] 
                 <tr key={o._id}>
                   <td className="font-medium">{o.order_no}</td>
                   <td>{o.customer_name}</td>
-                  <td className="max-w-[220px] truncate">{o.items_summary}</td>
+                  <td className="max-w-[220px] truncate" title={o.items_summary}>{o.items_summary}</td>
                   <td>{formatCurrency(o.total_amount, locale)}</td>
                   <td>
                     <StatusBadge group="orderStatus" value={o.order_status} />

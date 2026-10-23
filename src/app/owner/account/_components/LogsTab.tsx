@@ -22,12 +22,12 @@ export function LogsTab(vm: VM) {
   const columns: Column<LogRow>[] = [
     {
       key: "time",
-      title: t("userLog.colTime"),
+      title: t("systemLog.colTime"),
       render: (r) => formatDate(r.created_at, locale, { withTime: true }),
     },
     {
       key: "type",
-      title: t("userLog.colType"),
+      title: t("systemLog.colType"),
       render: (r) => {
         const cfg = USER_LOG_ACTION_CONFIG[r.action_type];
         return (
@@ -35,14 +35,14 @@ export function LogsTab(vm: VM) {
             className="inline-flex items-center rounded-full px-2.5 py-1 text-sm font-medium"
             style={{ backgroundColor: cfg.bg, color: cfg.color }}
           >
-            {t(`enums.userLogAction.${r.action_type}`)}
+            {t(`enums.systemLogAction.${r.action_type}`)}
           </span>
         );
       },
     },
     {
       key: "detail",
-      title: t("userLog.colDetail"),
+      title: t("systemLog.colDetail"),
       render: (r) => (
         <div>
           <p className="text-gray-700">{r.action}</p>
@@ -52,7 +52,7 @@ export function LogsTab(vm: VM) {
     },
     {
       key: "ip",
-      title: t("userLog.colIp"),
+      title: t("systemLog.colIp"),
       render: (r) => <span className="font-mono text-sm text-gray-500">{r.ip_address ?? "—"}</span>,
     },
   ];
@@ -70,8 +70,8 @@ export function LogsTab(vm: VM) {
                 value={vm.actionType}
                 onChange={(v) => vm.setActionType(v as VM["actionType"])}
                 options={[
-                  { value: "all", label: t("userLog.allTypes") },
-                  ...ACTION_TYPES.map((a) => ({ value: a, label: t(`enums.userLogAction.${a}`) })),
+                  { value: "all", label: t("systemLog.allTypes") },
+                  ...ACTION_TYPES.map((a) => ({ value: a, label: t(`enums.systemLogAction.${a}`) })),
                 ]}
               />
             </FilterField>
@@ -87,12 +87,12 @@ export function LogsTab(vm: VM) {
           columns={columns}
           rows={vm.logs}
           loading={vm.logsLoading}
-          emptyText={t("userLog.empty")}
+          emptyText={t("systemLog.empty")}
           onRowClick={vm.onViewLog}
         />
       )}
 
-      <DetailModal open={vm.drawerOpen} title={t("userLog.detailTitle")} onClose={vm.closeDrawer}>
+      <DetailModal open={vm.drawerOpen} title={t("systemLog.detailTitle")} onClose={vm.closeDrawer}>
         {vm.selectedLog && <LogDetailContent log={vm.selectedLog} />}
       </DetailModal>
     </div>

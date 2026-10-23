@@ -180,14 +180,14 @@ export function FinanceExpensesView(vm: VM) {
               <p className="mb-2.5 text-sm font-semibold text-brown-900">{t("finance.monthSummaryTitle")}</p>
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-gray-500">
-                    <span className="h-2 w-2 rounded-full bg-green-500" /> {t("finance.totalIncome")}
+                  <span className="text-gray-500">
+                    {t("finance.totalIncome")}
                   </span>
                   <span className="font-semibold text-green-600">{formatCurrency(vm.monthIncome, locale)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-gray-500">
-                    <span className="h-2 w-2 rounded-full bg-red-400" /> {t("finance.totalExpense")}
+                  <span className="text-gray-500">
+                    {t("finance.totalExpense")}
                   </span>
                   <span className="font-semibold text-red-500">{formatCurrency(vm.monthTotal, locale)}</span>
                 </div>

@@ -117,7 +117,7 @@
     "employeesAdd": "Add Employee",
     "employeesEdit": "Edit Employee",
     "permissions": "Permissions",
-    "userLog": "Activity Log",
+    "systemLog": "System Activity Log",
     "storeDesign": "Banners",
     "storeInfo": "Store info",
     "notificationsHistory": "Notification History",
@@ -575,7 +575,7 @@
       "local": "Email / password",
       "google": "Google"
     },
-    "userLogAction": {
+    "systemLogAction": {
       "CREATE": "Created",
       "READ": "Viewed",
       "UPDATE": "Updated",
@@ -772,6 +772,8 @@
     "leadTimeDays": "{n} days",
     "cancel": "Cancel order",
     "export": "Export",
+    "tabDelivery": "To deliver ({n} orders)",
+    "tabTakeaway": "To pick up in store ({n} orders)",
     "exportEmpty": "No orders to export with this filter",
     "exportSuccess": "Exported {n} orders",
     "statusChanged": "Changed {no} status to \"{status}\"",
@@ -833,10 +835,10 @@
     "refundAccountName": "Account name: {name}",
     "refundAccountMissing": "The customer hasn't set a PromptPay account for refunds — contact them for one",
     "awaitingRefundAlert": "{n} cancelled orders were already paid — refunds are owed",
-    "readyDeliveryAlert": "{n} orders ready — waiting to be shipped (add the tracking number in the order details)",
-    "readyTakeawayAlert": "{n} orders ready — waiting for customer pickup",
     "alertNotShippedTitle": "Not shipped yet ({n})",
-    "alertNotShippedDesc": "Paid but not shipped — click \"View\" to pick a carrier, enter the tracking number and update the delivery status",
+    "alertNotShippedDesc": "Paid but not shipped, or the delivery failed — click \"View\" to pick a carrier, enter the tracking number and update the delivery status",
+    "alertInProgressTitle": "In progress ({n})",
+    "alertInProgressDesc": "Paid and being prepared or handed over — click \"View\" to follow up and mark it completed once delivered",
     "alertUnverifiedTitle": "Payment not verified ({n})",
     "alertUnverifiedDesc": "The customer attached a slip — click \"View\" to check it and verify the payment",
     "alertNoSlipTitle": "No slip attached ({n})",
@@ -1613,10 +1615,10 @@
       "can_approve": "Approve"
     }
   },
-  "userLog": {
-    "title": "Employee Activity Log",
-    "searchPlaceholder": "Search employee or action...",
-    "allEmployees": "All employees",
+  "systemLog": {
+    "title": "System Activity Log",
+    "searchPlaceholder": "Search user or action...",
+    "allUsers": "All users",
     "allTypes": "All types",
     "colTime": "Time",
     "colEmployee": "Employee",

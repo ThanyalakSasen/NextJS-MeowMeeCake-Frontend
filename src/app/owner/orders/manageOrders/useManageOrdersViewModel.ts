@@ -62,8 +62,10 @@ export function useManageOrdersViewModel() {
   });
 
   const all = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);
-  const deliveryCount = all.filter((o) => o.order_type === "delivery").length;
-  const takeawayCount = all.filter((o) => o.order_type === "takeaway").length;
+  // ตัวเลขบนแท็บ = ออเดอร์ที่ยังต้องจัดการ (ไม่นับยกเลิก/สำเร็จ) · ยอดรวมทุกสถานะดูได้จาก "ทั้งหมด" ในตัวกรองสถานะ
+  const isOpen = (o: Order) => o.order_status !== "cancelled" && o.order_status !== "completed";
+  const deliveryCount = all.filter((o) => o.order_type === "delivery" && isOpen(o)).length;
+  const takeawayCount = all.filter((o) => o.order_type === "takeaway" && isOpen(o)).length;
   const typeOrders = useMemo(
     () => all.filter((o) => o.order_type === activeTab),
     [all, activeTab],
@@ -88,12 +90,17 @@ export function useManageOrdersViewModel() {
   // payment_status "pending" มีทั้งแนบสลิปแล้วรอตรวจ และยังไม่แนบ — แยกด้วย slip_pending_review (backend listOrders)
   const alerts = useMemo(() => {
     const open = typeOrders.filter((o) => o.order_status !== "cancelled");
+    // ยังไม่ได้จัดส่ง = จัดส่งถึงบ้าน + ชำระแล้ว + สถานะจัดส่ง "รอจัดส่ง" หรือ "จัดส่งไม่สำเร็จ" (ต้องส่งใหม่ — ไม่ใช่งานปกติ
+    // ที่ควรไปอยู่กล่องกำลังดำเนินการ) · แท็บรับเองไม่มีการจัดส่ง
+    const isNotShipped = (o: Order) =>
+      activeTab === "delivery" && o.payment_status === "paid" && o.order_status !== "completed" &&
+      (o.delivery_status === "pending" || o.delivery_status === "failed");
     return {
-      // ยังไม่ได้จัดส่ง = จัดส่งถึงบ้าน + ชำระแล้ว + สถานะจัดส่งยัง "รอจัดส่ง" (แท็บรับเองไม่มีการจัดส่ง)
-      notShipped:
-        activeTab === "delivery"
-          ? open.filter((o) => o.payment_status === "paid" && o.order_status !== "completed" && o.delivery_status === "pending")
-          : [],
+      notShipped: open.filter(isNotShipped),
+      // กำลังดำเนินการ = ชำระแล้ว ยังไม่สำเร็จ และไม่อยู่ในกล่องยังไม่ได้จัดส่ง (เช่น รอลูกค้ามารับ / ส่งแล้วรอปิดงาน)
+      // · กล่องนี้ + ยังไม่ได้จัดส่ง = ออเดอร์ชำระแล้วที่ยังไม่สำเร็จทั้งหมด (แบ่งกันไม่ซ้ำ) · กล่องสลิปนับออเดอร์ที่ยังไม่ชำระ
+      //   รวมถึงที่สำเร็จแล้ว จึงไม่ได้รวมเท่ากับตัวเลขบนแท็บพอดี
+      inProgress: open.filter((o) => o.payment_status === "paid" && o.order_status !== "completed" && !isNotShipped(o)),
       unverified: open.filter((o) => o.payment_status === "pending" && o.slip_pending_review),
       // ยังไม่แนบสลิป — รวมสลิปที่ถูกปฏิเสธ (failed) เพราะต้องรอลูกค้าแนบใหม่เหมือนกัน
       noSlip: open.filter(
@@ -102,8 +109,8 @@ export function useManageOrdersViewModel() {
     };
   }, [typeOrders, activeTab]);
   const awaitingRefundCount = typeOrders.filter(isAwaitingRefund).length;
-  // E5 ออเดอร์พร้อมส่งมอบ (แทนหน้า readyReders ของ FrontOffice) — delivery = รอจัดส่ง · takeaway = รอลูกค้ามารับ
-  const readyCount = typeOrders.filter((o) => o.order_status === "ready").length;
+  // E5 ออเดอร์พร้อมส่งมอบ — เดิมมีแถบ "พร้อมส่งมอบ" แยก แต่ซ้ำกับกล่อง (delivery = ยังไม่ได้จัดส่ง / กำลังดำเนินการ ·
+  // takeaway = กำลังดำเนินการ) จึงเอาออก · ลิงก์ ?status=ready ยังกรองได้เหมือนเดิม
 
   // รายละเอียดเต็ม (มี items จริง) + รายการชำระเงินที่ผูกไว้ — ดึงเฉพาะตอนเปิด drawer (กัน N+1 ในตาราง)
   const detailQ = useQuery({
@@ -279,7 +286,7 @@ export function useManageOrdersViewModel() {
     orders: paged,
     ordersForStats: typeOrders,
     total: filtered.length,
-    deliveryCount, takeawayCount, awaitingRefundCount, readyCount,
+    deliveryCount, takeawayCount, awaitingRefundCount,
     alerts,
 
     // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false

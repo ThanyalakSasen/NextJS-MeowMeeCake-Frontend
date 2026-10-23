@@ -18,7 +18,7 @@ import { isAwaitingRefund, type Order } from "@/types/order";
 import { ViewButton, actionIcon } from "@/components/shared/actions";
 import { StockAlertSection } from "@/components/shared/stock";
 import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
-import { STATUS_SELECT_OPTIONS } from "./orderStatus";
+import { statusSelectOptions } from "./orderStatus";
 import { OrderStatusFilter } from "./_components/OrderStatusFilter";
 import { OrderDetailContent } from "./_components/OrderDetailContent";
 import { CancelOrderModal } from "./_components/CancelOrderModal";
@@ -73,7 +73,7 @@ export function ManageOrdersView(vm: VM) {
             value={o.order_status}
             disabled={!paymentVerified || !vm.perm.update}
             style={{ width: 140 }}
-            options={STATUS_SELECT_OPTIONS.map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
+            options={statusSelectOptions(o.order_status).map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
             onChange={(next) => vm.onStatusChange(o, next as OrderStatus)}
           />
         );
@@ -102,12 +102,14 @@ export function ManageOrdersView(vm: VM) {
     </div>
   );
 
-  // ลำดับ: ยังไม่ได้จัดส่ง → ยังไม่ได้ยืนยันการชำระเงิน → ยังไม่ได้แนบสลิป
+  // ลำดับ: ยังไม่ได้จัดส่ง → ยังไม่ได้ยืนยันการชำระเงิน → ยังไม่ได้แนบสลิป → กำลังดำเนินการ
+  // (กล่องกำลังดำเนินการมักมีออเดอร์มากที่สุดและไม่เร่ง — ไว้ล่างสุด ไม่ดันกล่องตรวจสลิปลงไปใต้จอ)
   const alertSections = (
     [
       { key: "notShipped", tone: "info", rows: vm.alerts.notShipped, title: "orders.alertNotShippedTitle", description: "orders.alertNotShippedDesc" },
       { key: "unverified", tone: "danger", rows: vm.alerts.unverified, title: "orders.alertUnverifiedTitle", description: "orders.alertUnverifiedDesc" },
       { key: "noSlip", tone: "warn", rows: vm.alerts.noSlip, title: "orders.alertNoSlipTitle", description: "orders.alertNoSlipDesc" },
+      { key: "inProgress", tone: "info", rows: vm.alerts.inProgress, title: "orders.alertInProgressTitle", description: "orders.alertInProgressDesc" },
     ] as const
   )
     .filter((s) => s.rows.length > 0)
@@ -130,8 +132,8 @@ export function ManageOrdersView(vm: VM) {
                   value={vm.activeTab}
                   onChange={vm.setActiveTab}
                   options={[
-                    { value: "delivery", label: `${t("enums.orderType.delivery")} (${vm.deliveryCount})` },
-                    { value: "takeaway", label: `${t("enums.orderType.takeaway")} (${vm.takeawayCount})` },
+                    { value: "delivery", label: t("orders.tabDelivery", { n: vm.deliveryCount }) },
+                    { value: "takeaway", label: t("orders.tabTakeaway", { n: vm.takeawayCount }) },
                   ]}
                 />
                 <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("orders.searchPlaceholder")} />
@@ -171,15 +173,6 @@ export function ManageOrdersView(vm: VM) {
               >
                 {t("orders.showList")}
               </Button>
-            </div>
-          )}
-
-          {vm.readyCount > 0 && vm.statusFilter !== "ready" && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3">
-              <span className="text-sm text-sky-800">
-                {t(vm.activeTab === "delivery" ? "orders.readyDeliveryAlert" : "orders.readyTakeawayAlert", { n: vm.readyCount })}
-              </span>
-              <Button size="small" icon={actionIcon("filter", "small")} onClick={() => vm.setStatusFilter("ready")}>{t("orders.showList")}</Button>
             </div>
           )}
 
