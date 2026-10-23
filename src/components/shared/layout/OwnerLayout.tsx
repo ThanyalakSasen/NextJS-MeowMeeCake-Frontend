@@ -26,7 +26,43 @@ const noopSubscribe = () => () => {};
  * หน้าอื่นยังใช้ isLoading ของ react-query (false ตอน SSR = เห็นสถานะว่างแวบ) → render หลัง hydrate
  * เพิ่มหน้าได้เมื่อแก้สถานะโหลดของหน้านั้นเป็น isPending แล้ว
  */
-const SSR_PAGES = ["/owner/dashboard", "/owner/reports/sales", "/owner/reports/reviews"];
+const SSR_PAGES = [
+  "/owner/dashboard",
+  "/owner/reports/sales",
+  "/owner/reports/reviews",
+  "/owner/finance/expenses",
+  "/owner/finance/summary",
+  "/owner/products",
+  "/owner/products/productStock",
+  "/owner/products/search-synonyms",
+  "/owner/orders/manageOrders",
+  "/owner/orders/preOrderRound",
+  "/owner/orders/OrderInStore",
+  "/owner/promotions/pricing",
+  "/owner/promotions/coupons",
+  "/owner/production",
+  "/owner/ingredients",
+  "/owner/ingredients/ingredientStock",
+  "/owner/ingredients/ingredientHistory",
+  "/owner/ingredients/units",
+  "/owner/recipes",
+  "/owner/employees",
+  "/owner/employees/addEmployee",
+  "/owner/employees/editEmployee",
+  "/owner/employees/permissions",
+  "/owner/employees/userLog",
+  "/owner/store-design",
+  "/owner/store-info",
+  "/owner/shipping",
+  "/owner/account",
+  "/owner/notificationsHistory",
+  "/owner/products/addProducts",
+  "/owner/reports/reviews/settings",
+  "/owner/orders/delivery-zones",
+];
+/** หน้าที่ path มี id (dynamic segment) — เทียบด้วย pattern */
+const SSR_PAGE_PATTERNS = [/^\/owner\/products\/[^/]+\/edit$/];
+const isSsrPage = (p: string) => SSR_PAGES.includes(p) || SSR_PAGE_PATTERNS.some((re) => re.test(p));
 
 export default function OwnerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -126,7 +162,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
           {/* user มาจาก server แล้ว (src/lib/serverAuth.ts) → โครงหน้า (sidebar/navbar) อยู่ใน HTML แรก
               เนื้อหาหน้า: SSR_PAGES render ฝั่ง server ด้วย · หน้าอื่น render หลัง hydrate (ระหว่างนั้นว่าง — เดิมใส่วงหมุน
               แล้วพอหน้าขึ้นวงหมุนถูกดันลง = CLS 0.22 · ว่างไว้ไม่มีอะไรให้ขยับ) */}
-          <main className="layout-content">{hydrated || SSR_PAGES.includes(pathname) ? children : null}</main>
+          <main className="layout-content">{hydrated || isSsrPage(pathname) ? children : null}</main>
         </div>
       </div>
     </PermissionsProvider>

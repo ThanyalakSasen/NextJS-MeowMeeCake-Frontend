@@ -13,7 +13,7 @@
 //     ถ้า response ยังเป็นรุ่นเก่า (backend ยังไม่ deploy / เอกสารที่ยังไม่ migrate) derive จากฟิลด์เดิมให้
 //     ที่นี่จุดเดียว — ที่เหลือของแอปอ่านแค่ is_preorder
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { Product, ProductInput, ProductListParams } from "@/types/product";
 
@@ -49,8 +49,8 @@ export function toProduct(raw: any): Product {
 }
 
 export const productsService = {
-  list: async (params: ProductListParams = {}) => {
-    const res = await http.getList<any>(BASE, { params });
+  list: async (params: ProductListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<any>(BASE, { params });
     return { ...res, data: res.data.map(toProduct) };
   },
 
@@ -58,13 +58,13 @@ export const productsService = {
    * GET /admin/products/stock-list — รายการสำหรับหน้าสต็อกสินค้า ใต้สิทธิ์ stock.view (ไม่ต้องมี products.view)
    * สินค้าปกติที่ไม่ถูกลบ · ไม่มี purchase_cost · populate category_id / unit_id มาแล้ว (Final-Backlog P12)
    */
-  stockList: async (params: { search?: string; page?: number; limit?: number } = {}) => {
-    const res = await http.getList<any>(`${BASE}/stock-list`, { params });
+  stockList: async (params: { search?: string; page?: number; limit?: number } = {}, h: HttpReader = http) => {
+    const res = await h.getList<any>(`${BASE}/stock-list`, { params });
     return { ...res, data: res.data.map(toProduct) };
   },
 
-  get: async (id: string) => {
-    const res = await http.get<ItemResponse<any>>(`${BASE}/${id}`);
+  get: async (id: string, h: HttpReader = http) => {
+    const res = await h.get<ItemResponse<any>>(`${BASE}/${id}`);
     return { data: toProduct(res.data) };
   },
 

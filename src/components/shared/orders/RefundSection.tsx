@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────
 // ส่วน "รอโอนคืน" ใน drawer ออเดอร์/พรีออเดอร์ — ยกเลิกแล้วแต่ยังชำระแล้ว (isAwaitingRefund)
 // ลูกค้ายกเลิกออเดอร์ที่ชำระแล้วเอง → backend ไม่คืนเงินอัตโนมัติ (customer-backend-merge.md §8.8)
-// ร้านโอนเงินคืนนอกระบบ แล้วกดยืนยันที่นี่ → POST /admin/payments/:id/refund (paid → refunded) · สิทธิ์ payments.approve
+// ร้านโอนเงินคืนนอกระบบ แล้วกดยืนยันที่นี่ → POST /admin/payments/:id/refund (paid → refunded) · สิทธิ์ payments.delete (ไม่ใช่ approve — P7)
 // บัญชีพร้อมเพย์ที่ลูกค้าตั้งไว้ (refund_account จาก GET รายละเอียด · Q-BE12) แสดงให้โอนได้เลย · ไม่มี = ให้ติดต่อลูกค้า
 // presentational ล้วน — ViewModel ส่ง payment ที่ชำระแล้ว + handler มา
 // ─────────────────────────────────────────────────────────────

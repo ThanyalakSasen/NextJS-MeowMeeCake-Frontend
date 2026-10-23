@@ -51,7 +51,8 @@ export interface RecipeInput {
   steps: RecipeStep[];
   yield_qty: number;
   yield_unit_id: string;
-  estimated_cost_per_batch: number;
+  /** ไม่ส่ง = backend คำนวณจากต้นทุนวัตถุดิบ + ส่วนประกอบในสูตรให้ (services/recipeService) */
+  estimated_cost_per_batch?: number;
   duration_minutes: number;
   /** backend schemas/bom.ts รับ string เท่านั้น — null = 400 (ส่ง "" แทนเมื่อว่าง) */
   note?: string;

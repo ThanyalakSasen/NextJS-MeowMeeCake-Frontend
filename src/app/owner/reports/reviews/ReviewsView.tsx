@@ -3,11 +3,12 @@
 // การ์ดรีวิว · แบ่งหน้า · modal แท็กภายใน · drawer รายละเอียด (ผลวิเคราะห์ความรู้สึก)
 // หัวหน้า/แท็บ/ปุ่มตั้งค่าอยู่ที่ ReviewsReportView
 import { Checkbox, Modal } from "antd";
-import { useTranslations } from "next-intl";
-import { ArrowDownTrayIcon, CheckIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { useLocale, useTranslations } from "next-intl";
+import { formatNumber } from "@/i18n/format";
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, EmptyState, Select } from "@/components/base";
 import { PaginationBar } from "@/components/shared/data";
-import { DetailDrawer, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { DetailModal, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { useReviewsViewModel } from "./useReviewsViewModel";
 import { ReviewFiltersBar } from "./_components/ReviewFiltersBar";
@@ -18,6 +19,7 @@ type VM = ReturnType<typeof useReviewsViewModel>;
 
 export function ReviewsView(vm: VM) {
   const t = useTranslations();
+  const locale = useLocale();
   const s = vm.summary;
   const allSelected = vm.rows.length > 0 && vm.rows.every((r) => vm.selected.has(r._id));
 
@@ -37,13 +39,13 @@ export function ReviewsView(vm: VM) {
 
         {/* สรุปของชุดที่กรอง (ทุกหน้า ไม่ใช่แค่หน้านี้) */}
         <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brown-100 bg-brown-50 px-4 py-2.5 text-sm text-brown-800">
-          <span>{t("reviews.summary.count", { n: (s?.count ?? 0).toLocaleString() })}</span>
+          <span>{t("reviews.summary.count", { n: formatNumber(s?.count ?? 0, locale) })}</span>
           <span>{t("reviews.summary.avg", { v: s?.avg_rating != null ? s.avg_rating.toFixed(2) : "—" })}</span>
           <span className={(s?.negative_rate ?? 0) >= 0.25 ? "text-rose-700" : ""}>
             {t("reviews.summary.negative", { v: s?.negative_rate != null ? `${Math.round(s.negative_rate * 100)}%` : "—" })}
           </span>
           {(s?.unreplied_negative ?? 0) > 0 && (
-            <button type="button" onClick={vm.showUnrepliedNegative} className="font-semibold text-rose-700 hover:underline">
+            <button type="button" onClick={() => vm.showUnrepliedNegative()} className="font-semibold text-rose-700 hover:underline">
               {t("reviews.summary.unrepliedNegative", { n: s!.unreplied_negative })}
             </button>
           )}
@@ -61,16 +63,6 @@ export function ReviewsView(vm: VM) {
           {vm.selected.size > 0 && (
             <>
               <span className="text-xs font-semibold text-brown-800">{t("reviews.selectedCount", { n: vm.selected.size })}</span>
-              {vm.perm.update && (
-                <>
-                  <Button size="small" icon={<CheckIcon className="h-4 w-4" />} loading={vm.bulkBusy} onClick={() => vm.onBulkRead(true)}>
-                    {t("reviews.markRead")}
-                  </Button>
-                  <Button size="small" icon={<EyeSlashIcon className="h-4 w-4" />} disabled={vm.bulkBusy} onClick={() => vm.onBulkRead(false)}>
-                    {t("reviews.markUnread")}
-                  </Button>
-                </>
-              )}
               <Button size="small" icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
                 {t("reviews.exportCsv")}
               </Button>
@@ -97,7 +89,6 @@ export function ReviewsView(vm: VM) {
                 onSelect={() => vm.toggleSelect(r._id)}
                 onStatus={(st) => vm.onStatus(r, st)}
                 onTogglePin={() => vm.onTogglePin(r)}
-                onToggleRead={() => vm.onToggleRead(r)}
                 onSaveReply={(text) => vm.onSaveReply(r, text)}
                 onSaveNote={(text) => vm.onSaveNote(r, text)}
                 onTags={() => vm.openTags(r)}
@@ -134,9 +125,9 @@ export function ReviewsView(vm: VM) {
         <p className="m-0 mt-2 text-xs text-gray-500">{t("reviews.tagsHint")}</p>
       </Modal>
 
-      <DetailDrawer open={!!vm.detail} title={t("reviews.detailTitle")} onClose={vm.closeDetail}>
+      <DetailModal open={!!vm.detail} title={t("reviews.detailTitle")} onClose={vm.closeDetail}>
         {vm.detail && <ReviewDetailContent review={vm.detail} />}
-      </DetailDrawer>
+      </DetailModal>
     </>
   );
 }

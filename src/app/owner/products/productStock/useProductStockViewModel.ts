@@ -15,7 +15,7 @@ import { getStockStatus } from "./stockStatus";
 import { refId } from "@/lib/refId";
 import { unitLabel } from "@/utils/unitContext";
 import { isApiError } from "@/types/api";
-import { LIST_ALL } from "@/lib/http";
+import { STOCK_LIST_KEY, STOCK_PARAMS } from "./stockQuery";
 import type { BulkStockItem, BulkStockLine, BulkStockMode } from "@/components/shared/stock";
 import { sortByThai } from "@/lib/thaiSort";
 
@@ -36,8 +36,6 @@ export type StatusFilter = "all" | StockStatus;
 /** ปุ่มต่อแถว แบบหน้าสต็อกวัตถุดิบ — รับเข้า (+) · เบิกใช้ (−) · ปรับยอด (ตั้งยอดใหม่) */
 export type StockActionMode = "receive" | "use" | "adjust";
 
-// backend ส่งเฉพาะสินค้าปกติ (ไม่ใช่พรีออเดอร์ · ไม่ถูกลบ) อยู่แล้ว
-const STOCK_PARAMS = { limit: LIST_ALL } as const;
 
 export function useProductStockViewModel() {
   const t = useTranslations();
@@ -51,7 +49,7 @@ export function useProductStockViewModel() {
   const [mode, setMode] = useState<StockActionMode>("adjust");
 
   const productsQ = useQuery({
-    queryKey: ["products", "stock-list", STOCK_PARAMS],
+    queryKey: STOCK_LIST_KEY,
     queryFn: () => productsService.stockList(STOCK_PARAMS),
   });
 
@@ -163,7 +161,8 @@ export function useProductStockViewModel() {
     alertRows,
     stats,
     categories,
-    isLoading: productsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+    isLoading: productsQ.isPending,
     isError: productsQ.isError,
     refetch: () => productsQ.refetch(),
 

@@ -1,6 +1,8 @@
 "use client";
 // View ของ Coupons — กริดการ์ดคูปอง + modal เพิ่ม/แก้ไข
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { Button, EmptyState, Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
@@ -9,12 +11,14 @@ import { FilterToolbar, SearchInput, TypeTabBar, FilterField } from "@/component
 import { actionIcon } from "@/components/shared/actions";
 import type { useCouponsViewModel } from "./useCouponsViewModel";
 import { CouponCard } from "./_components/CouponCard";
-import { CouponFormModal } from "./_components/CouponFormModal";
+// ฟอร์มคูปอง (Form/DatePicker/Select หลายตัว) แยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า
+const CouponFormModal = dynamic(() => import("./_components/CouponFormModal").then((m) => m.CouponFormModal), { ssr: false });
 
 type VM = ReturnType<typeof useCouponsViewModel>;
 
 export function CouponsView(vm: VM) {
   const t = useTranslations();
+  const formUsed = useOpenedOnce(vm.modalOpen);
 
   return (
     <ListPageLayout
@@ -41,6 +45,11 @@ export function CouponsView(vm: VM) {
                 ]}
               />
               <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("coupons.searchPlaceholder")} />
+            </>
+          }
+          // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+          right={
+            <>
               <FilterField label={t("filterLabel.discountType")} minWidth={160}>
                 <Select
                   value={vm.typeFilter}
@@ -101,16 +110,18 @@ export function CouponsView(vm: VM) {
         </div>
       )}
 
-      <CouponFormModal
-        key={vm.editTarget?._id ?? "new"}
-        open={vm.modalOpen}
-        editTarget={vm.editTarget}
-        productOptions={vm.productOptions}
-        categoryOptions={vm.categoryOptions}
-        saving={vm.saving}
-        onClose={vm.closeModal}
-        onSubmit={vm.onSubmit}
-      />
+      {formUsed && (
+        <CouponFormModal
+          key={vm.editTarget?._id ?? "new"}
+          open={vm.modalOpen}
+          editTarget={vm.editTarget}
+          productOptions={vm.productOptions}
+          categoryOptions={vm.categoryOptions}
+          saving={vm.saving}
+          onClose={vm.closeModal}
+          onSubmit={vm.onSubmit}
+        />
+      )}
     </ListPageLayout>
   );
 }

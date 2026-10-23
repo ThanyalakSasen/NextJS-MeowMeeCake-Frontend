@@ -5,9 +5,7 @@
 import { useState } from "react";
 import { Checkbox, Image, Tooltip } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-// EyeIcon/EyeSlashIcon ที่นี่เป็น "สลับอ่านแล้ว/ยังไม่อ่าน" เป็นคู่ ไม่ใช่ปุ่ม "ดู" ของ actionIcon("view")
-// — EyeSlashIcon ไม่มีในตาราง §1.1 ถ้าดึงมาแค่ตัวเดียวจะกลายเป็นคนละแหล่งกัน จึง import เองทั้งคู่
-import { EyeIcon, EyeSlashIcon, PhotoIcon, TagIcon } from "@heroicons/react/24/outline";
+import { PhotoIcon, TagIcon } from "@heroicons/react/24/outline";
 import { MapPinIcon as PinSolid } from "@heroicons/react/24/solid";
 import { MapPinIcon as PinOutline } from "@heroicons/react/24/outline";
 import { Button, Select } from "@/components/base";
@@ -37,7 +35,7 @@ const SOURCE_CLASS = {
 
 export function ReviewCard({
   review: r, selected, canUpdate, canDelete, suggestions,
-  onSelect, onStatus, onTogglePin, onToggleRead, onSaveReply, onSaveNote, onTags, onDetail, onDelete,
+  onSelect, onStatus, onTogglePin, onSaveReply, onSaveNote, onTags, onDetail, onDelete,
 }: {
   review: ReviewRow;
   selected: boolean;
@@ -47,7 +45,6 @@ export function ReviewCard({
   onSelect: () => void;
   onStatus: (s: ReviewStatus) => void;
   onTogglePin: () => void;
-  onToggleRead: () => void;
   onSaveReply: (text: string) => Promise<boolean>;
   onSaveNote: (text: string) => Promise<boolean>;
   onTags: () => void;
@@ -78,7 +75,6 @@ export function ReviewCard({
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="m-0 flex items-center gap-1.5 text-sm font-semibold text-brown-800">
-              {!r.isRead && <span className="h-2 w-2 shrink-0 rounded-full bg-sky-500" title={t("reviews.unread")} />}
               <span className="truncate">{r.productName || t("reviews.unknownProduct")}</span>
               {r.is_pinned && <PinSolid className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-label={t("reviews.pinned")} />}
             </p>
@@ -120,13 +116,7 @@ export function ReviewCard({
                   <Button size="small" type="text" onClick={onTogglePin}
                     aria-label={r.is_pinned ? t("reviews.unpin") : t("reviews.pin")}
                     icon={r.is_pinned ? <PinSolid className="h-4 w-4 text-amber-500" /> : <PinOutline className="h-4 w-4" />} />
-                </Tooltip>
-                <Tooltip title={r.isRead ? t("reviews.markUnread") : t("reviews.markRead")}>
-                  <Button size="small" type="text" onClick={onToggleRead}
-                    aria-label={r.isRead ? t("reviews.markUnread") : t("reviews.markRead")}
-                    icon={r.isRead ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4 text-sky-600" />} />
-                </Tooltip>
-              </>
+                </Tooltip>              </>
             )}
           </div>
         </div>

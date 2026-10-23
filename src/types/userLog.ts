@@ -46,6 +46,8 @@ export interface RawUserLog {
 export interface UserLog {
   _id: string;
   user_id: string;
+  /** ชื่อผู้ทำรายการ (backend populate มาให้แล้ว) — ไม่ต้องดึงผู้ใช้ทั้งระบบมา join */
+  user_name: string | null;
   action: string;
   action_type: UserLogAction;
   entity: UserLogEntity | null;
@@ -63,4 +65,7 @@ export interface UserLog {
 export interface UserLogListParams extends ListParams {
   user_id?: string;
   action_type?: UserLogAction;
+  /** ISO — created_at ตั้งแต่ / ถึง (backend: ?date_from= ?date_to=) */
+  date_from?: string;
+  date_to?: string;
 }

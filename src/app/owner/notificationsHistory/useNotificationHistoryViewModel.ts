@@ -12,7 +12,7 @@ import { alert, confirmAlert } from "@/lib/alert";
 import type { NotificationDTO, NotificationModule } from "@/types/notification";
 import type { NotificationType } from "@/types";
 import { isApiError } from "@/types/api";
-import { LIST_ALL } from "@/lib/http";
+import { NOTIFICATION_HISTORY_KEY, NOTIFICATION_HISTORY_PARAMS } from "./notificationsQuery";
 
 type TabFilter = "all" | "unread" | "read";
 type ModuleFilter = "all" | NotificationModule;
@@ -35,8 +35,8 @@ export function useNotificationHistoryViewModel() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const q = useQuery({
-    queryKey: ["notifications", { history: true }],
-    queryFn: () => notificationsService.list({ limit: LIST_ALL, sort: "-created_at" }),
+    queryKey: NOTIFICATION_HISTORY_KEY,
+    queryFn: () => notificationsService.list(NOTIFICATION_HISTORY_PARAMS),
   });
 
   const all = useMemo(() => q.data?.data ?? [], [q.data]);
@@ -123,7 +123,8 @@ export function useNotificationHistoryViewModel() {
     canDelete,
     rows: filtered,
     stats,
-    isLoading: q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
 

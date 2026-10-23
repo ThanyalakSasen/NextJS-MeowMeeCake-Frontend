@@ -3,7 +3,7 @@
 // ViewModel ของ /register — ลูกค้าสมัครสมาชิกเอง (BACKLOG3-merge B1 · ยกจาก FrontOffice src/app/register/page.jsx)
 // POST /auth/register → backend สร้างบัญชี "ยังไม่ยืนยัน" + ส่งลิงก์ยืนยันทางอีเมล (24 ชม.) · **ไม่ล็อกอินให้**
 // สำเร็จ = แสดง "ตรวจอีเมล" + ปุ่มส่งลิงก์อีกครั้ง (ลิงก์ในอีเมลชี้มาที่ /customer/verify-email)
-// กติกาตรวจตรงกับ backend schemas/auth.ts registerBody (ชื่อ ≤ 120 · รหัส 8–72 · เบอร์ 0 + 8–9 หลัก)
+// กติกาตรวจตรงกับ backend schemas/auth.ts registerBody (ชื่อ ≤ 120 · รหัส 8–72 · เบอร์ 10 หลักขึ้นต้น 0)
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -16,7 +16,7 @@ import { MIN_PASSWORD_LENGTH } from "@/constants/auth";
 import { thaiCompare } from "@/lib/thaiSort";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_RE = /^0\d{8,9}$/;
+const PHONE_RE = /^0\d{9}$/; // เบอร์มือถือ 10 หลัก (ตรงกับ backend registerBody)
 const MAX_PASSWORD = 72; // bcrypt ตัดส่วนเกิน — backend ปฏิเสธ
 const MAX_NAME = 120;
 
@@ -75,9 +75,8 @@ export function useRegisterViewModel() {
     if (!EMAIL_RE.test(f.email.trim())) return t("register.errEmail");
     if (!birthdateOf(f)) return t("register.errBirthdate");
     if (!PHONE_RE.test(f.phone.trim())) return t("register.errPhone");
-    if (f.password.length < MIN_PASSWORD_LENGTH || f.password.length > MAX_PASSWORD) {
-      return t("register.errPassword", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD });
-    }
+    if (f.password.length < MIN_PASSWORD_LENGTH) return t("register.errPasswordShort", { min: MIN_PASSWORD_LENGTH });
+    if (f.password.length > MAX_PASSWORD) return t("register.errPassword", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD });
     if (f.hasAllergy && f.allergies.length === 0) return t("register.errAllergy");
     return null;
   }

@@ -25,6 +25,12 @@ export function PaymentDoneModal({
     [t("pos.payable"), formatCurrency(done.total, locale)],
     [t("pos.cashReceived"), formatCurrency(done.received, locale)],
     [t("pos.promoDiscount"), done.discount > 0 ? `−${formatCurrency(done.discount, locale)}` : formatCurrency(0, locale), "text-success"],
+    ...(done.member
+      ? ([
+          [t("pos.memberLabel"), done.member.name],
+          [t("pos.memberPointsEarned"), t("pos.memberPointsValue", { n: done.member.points }), "text-success"],
+        ] as [string, string, string?][])
+      : []),
   ];
 
   return (

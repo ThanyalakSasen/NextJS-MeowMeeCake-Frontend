@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาใน DetailDrawer ของหน้า User Log — แสดงรายละเอียด log 1 รายการ
+// เนื้อหาใน DetailModal (ป๊อปอัป) ของหน้า User Log — แสดงรายละเอียด log 1 รายการ
 // มี before/after (log ใหม่) → ตาราง "ฟิลด์ · ก่อน → หลัง" (useLogChanges)
 // ไม่มี (log เก่า/route ที่ยังไม่ส่ง) → โชว์ `details` รูปแบบไม่คงที่แบบ key/value ทั่วไปเหมือนเดิม
 import { useTranslations, useLocale, useMessages } from "next-intl";
@@ -25,7 +25,7 @@ export function LogDetailContent({ log }: { log: LogRow }) {
   const { changesOf, contextOf, entityOf } = useLogChanges();
   const changes = changesOf(log);
   const context = contextOf(log);
-  const changesTitle = !log.before ? t("userLog.createdTitle") : !log.after ? t("userLog.deletedTitle") : t("userLog.changesTitle");
+  const changesTitle = !log.before ? t("systemLog.createdTitle") : !log.after ? t("systemLog.deletedTitle") : t("systemLog.changesTitle");
 
   // details: array ของชื่อ field ที่แก้ (ไม่มีค่าเก่า/ใหม่) หรือ object เก็บบาง field ของ body
   // แล้วแต่ route — สร้างเป็นคู่ [label, value] ให้ render ได้แบบเดียวกันทั้งสองแบบ
@@ -34,28 +34,28 @@ export function LogDetailContent({ log }: { log: LogRow }) {
     if (details == null || changes.length > 0) return [];
     if (Array.isArray(details)) {
       if (details.length === 0) return [];
-      return [[t("userLog.changedFields"), details.map((f) => fieldLabel(String(f))).join(", ")]];
+      return [[t("systemLog.changedFields"), details.map((f) => fieldLabel(String(f))).join(", ")]];
     }
     if (typeof details === "object") {
       return Object.entries(details as Record<string, unknown>).map(([k, v]) => [fieldLabel(k), formatDetailValue(v)]);
     }
-    return [[t("userLog.colDetail"), String(details)]];
+    return [[t("systemLog.colDetail"), String(details)]];
   })();
 
   const meta: [string, React.ReactNode][] = [
-    [t("userLog.colDetail"), log.action],
+    [t("systemLog.colDetail"), log.action],
     [
-      t("userLog.colType"),
+      t("systemLog.colType"),
       <span
         key="type"
         className="inline-flex items-center rounded-full px-2.5 py-1 text-sm font-medium"
         style={{ backgroundColor: cfg.bg, color: cfg.color }}
       >
-        {t(`enums.userLogAction.${log.action_type}`)}
+        {t(`enums.systemLogAction.${log.action_type}`)}
       </span>,
     ],
     [
-      t("userLog.colEntity"),
+      t("systemLog.colEntity"),
       log.entity ? (
         <span>
           {entityOf(log.entity)}
@@ -65,8 +65,8 @@ export function LogDetailContent({ log }: { log: LogRow }) {
         "—"
       ),
     ],
-    [t("userLog.colIp"), <span key="ip" className="font-mono text-sm text-gray-500">{log.ip_address ?? "—"}</span>],
-    [t("userLog.colTime"), formatDate(log.created_at, locale, { withTime: true })],
+    [t("systemLog.colIp"), <span key="ip" className="font-mono text-sm text-gray-500">{log.ip_address ?? "—"}</span>],
+    [t("systemLog.colTime"), formatDate(log.created_at, locale, { withTime: true })],
   ];
 
   return (
@@ -98,9 +98,9 @@ export function LogDetailContent({ log }: { log: LogRow }) {
                   <p className="mb-1 text-xs text-gray-500">{c.label}</p>
                   {c.before !== null && c.after !== null ? (
                     <div className="grid grid-cols-[auto_1fr] items-baseline gap-x-2 gap-y-0.5 text-sm">
-                      <span className="text-xs text-gray-400">{t("userLog.before")}</span>
+                      <span className="text-xs text-gray-500">{t("systemLog.before")}</span>
                       <span className="break-all text-gray-500 line-through decoration-gray-300">{c.before}</span>
-                      <span className="text-xs text-gray-400">{t("userLog.after")}</span>
+                      <span className="text-xs text-gray-500">{t("systemLog.after")}</span>
                       <span className="break-all font-medium text-brown-800">{c.after}</span>
                     </div>
                   ) : (
@@ -117,7 +117,7 @@ export function LogDetailContent({ log }: { log: LogRow }) {
         <>
           <Divider className="!my-0" />
           <div>
-            <p className="mb-2 text-sm font-semibold text-gray-700">{t("userLog.changesTitle")}</p>
+            <p className="mb-2 text-sm font-semibold text-gray-700">{t("systemLog.changesTitle")}</p>
             <div className="flex flex-col gap-2">
               {detailEntries.map(([label, value]) => (
                 <div key={label} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">

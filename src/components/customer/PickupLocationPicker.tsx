@@ -3,15 +3,13 @@
 // เลือกจุดรับสินค้า + วันรับ (takeaway) — แทน FrontOffice PickupLocationPicker
 // วันที่ให้เลือก = order_pickup_dates ของแต่ละจุด — ออเดอร์ปกติ: จาก backend (ภายใน 14 วัน) · พรีออเดอร์: หน้า checkout
 // พรีออเดอร์แทนค่าด้วยวันในช่วงรอบ (preorderPickupDates) — server ตรวจซ้ำตอนสร้างเสมอ
+// วันรับเลือกจากปฏิทินรายเดือน (PickupDateCalendar) — ทั้งหน้า checkout ปกติและพรีออเดอร์
 // ─────────────────────────────────────────────────────────────
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import type { PickupLocation } from "@/services/pickupLocations";
+import PickupDateCalendar, { pickupDateLabel } from "./PickupDateCalendar";
 
-/** "2026-10-09" → "ศ. 9 ต.ค." (แปลงเป็นวันที่ท้องถิ่น ไม่ผ่าน UTC — กันวันเลื่อน) */
-export function pickupDateLabel(dateKey: string, locale: string = "th"): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(locale === "en" ? "en-US" : "th-TH", { weekday: "short", day: "numeric", month: "short" });
-}
+export { pickupDateLabel };
 
 export default function PickupLocationPicker({
   locations,
@@ -25,7 +23,6 @@ export default function PickupLocationPicker({
   onChange: (locationId: string, date: string | null) => void;
 }) {
   const t = useTranslations("shop.pickup");
-  const locale = useLocale();
   const selected = locations.find((l) => l._id === locationId) ?? null;
 
   return (
@@ -64,22 +61,8 @@ export default function PickupLocationPicker({
       {selected && (
         <div className="space-y-2 border-t border-[#8C5A3C]/10 pt-4">
           <p className="text-sm font-semibold">{t("date")}</p>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("date")}>
-            {selected.order_pickup_dates.map((d) => (
-              <button
-                key={d}
-                type="button"
-                role="radio"
-                aria-checked={d === date}
-                onClick={() => onChange(selected._id, d)}
-                className={`inline-flex h-[44px] items-center rounded-lg border-2 px-3 text-sm transition ${
-                  d === date ? "border-[#8C5A3C] bg-[#FAF6F0] font-bold" : "border-gray-200 hover:border-[#8C5A3C]/40"
-                }`}
-              >
-                {pickupDateLabel(d, locale)}
-              </button>
-            ))}
-          </div>
+          {/* key = จุดรับ — เปลี่ยนจุดแล้วปฏิทินเริ่มที่เดือนแรกของจุดใหม่ */}
+          <PickupDateCalendar key={selected._id} dates={selected.order_pickup_dates} value={date} onChange={(d) => onChange(selected._id, d)} />
         </div>
       )}
     </div>

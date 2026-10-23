@@ -58,16 +58,46 @@ export function ProductStockView(vm: VM) {
   // wrapper ของหน้านี้มี label กำกับ (ต่างจากหน้าวัตถุดิบ/สต็อกวัตถุดิบ) จึงไม่ใช้ StatusFilterSelect
   const statusOptions = useStockStatusOptions();
 
-  // ปุ่มต่อแถว — ใช้ทั้งตารางใกล้หมด/หมดสต็อกและตารางหลัก
+  // ปุ่มต่อแถว — ใช้ทั้งตารางใกล้หมด/หมดสต็อกและตารางหลัก (และในการ์ดจอแคบ)
+  const actionButtons = (r: StockProductRow) => (
+    <>
+      <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("productStock.ok_receive")}</Button>
+      <Button size="small" icon={actionIcon("use", "small")} disabled={r.stock <= 0} onClick={() => vm.openAction(r, "use")}>{t("productStock.ok_use")}</Button>
+      <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("productStock.ok_adjust")}</Button>
+    </>
+  );
   const rowActions = vm.perm.update
-    ? (r: StockProductRow) => (
-        <div className="flex justify-end gap-2">
-          <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("productStock.ok_receive")}</Button>
-          <Button size="small" icon={actionIcon("use", "small")} disabled={r.stock <= 0} onClick={() => vm.openAction(r, "use")}>{t("productStock.ok_use")}</Button>
-          <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("productStock.ok_adjust")}</Button>
-        </div>
-      )
+    ? (r: StockProductRow) => <div className="flex justify-end gap-2">{actionButtons(r)}</div>
     : undefined;
+
+  // จอ <1280px: การ์ดต่อแถวแทนตาราง (DataTable renderCard) — ข้อมูลชุดเดียวกับคอลัมน์ข้างบน
+  const renderCard = (r: StockProductRow) => (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="m-0 font-medium text-brown-800 break-words">{r.name}</p>
+          {r.category && <p className="m-0 text-sm text-gray-600">{r.category}</p>}
+        </div>
+        <div className="shrink-0">
+          <StatusBadge group="stockStatus" value={r.status} />
+        </div>
+      </div>
+      <StockProgressRow qty={r.stock} unit={r.unit} />
+      <dl className="m-0 grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <dt className="text-gray-600">{t("productStock.colPrice")}</dt>
+          <dd className="m-0 font-medium text-brown-800">{formatCurrency(r.price, locale)}</dd>
+        </div>
+        <div>
+          <dt className="text-gray-600">{t("productStock.colValue")}</dt>
+          <dd className="m-0 font-medium text-brown-800">{formatCurrency(r.value, locale)}</dd>
+        </div>
+      </dl>
+      {vm.perm.update && (
+        <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">{actionButtons(r)}</div>
+      )}
+    </div>
+  );
 
   return (
     <ListPageLayout
@@ -88,19 +118,22 @@ export function ProductStockView(vm: VM) {
                 onChange={vm.setSearch}
                 placeholder={t("productStock.searchPlaceholder")}
               />
-              <FilterField label={t("productStock.categoryFilter")} className="min-w-40">
+            </>
+          }
+          right={
+            <>
+              <FilterField label={t("productStock.categoryFilter")} className="min-w-40 flex-1 sm:flex-none">
                 <Select
                   value={vm.categoryId}
                   onChange={(v) => vm.setCategoryId(v as string)}
                   options={[
                     { value: "all", label: t("common.all") },
-                    ...[...vm.categories]
-                      .sort((a, b) => a.product_category_name.localeCompare(b.product_category_name, locale))
-                      .map((c) => ({ value: c._id, label: c.product_category_name })),
+                    // vm.categories เรียง ก-ฮ มาแล้ว (sortByThai)
+                    ...vm.categories.map((c) => ({ value: c._id, label: c.product_category_name })),
                   ]}
                 />
               </FilterField>
-              <FilterField label={t("productStock.statusFilter")} className="min-w-40">
+              <FilterField label={t("productStock.statusFilter")} className="min-w-40 flex-1 sm:flex-none">
                 <Select
                   value={vm.status}
                   onChange={(v) => vm.setStatus(v as VM["status"])}
@@ -146,7 +179,7 @@ export function ProductStockView(vm: VM) {
               title={t("productStock.alertTitle", { n: vm.alertRows.length })}
               description={t("productStock.alertDescription")}
             >
-              <DataTable columns={columns} rows={vm.alertRows} inCard actions={rowActions} />
+              <DataTable columns={columns} rows={vm.alertRows} inCard actions={rowActions} renderCard={renderCard} />
             </StockAlertSection>
           )}
 
@@ -157,6 +190,7 @@ export function ProductStockView(vm: VM) {
             loading={vm.isLoading}
             emptyText={t("productStock.empty")}
             actions={rowActions}
+            renderCard={renderCard}
           />
         </div>
       )}

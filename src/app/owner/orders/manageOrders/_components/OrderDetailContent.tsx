@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาข้างใน DetailDrawer ของ Manage Orders — presentational ล้วน
+// เนื้อหาข้างใน DetailModal (ป๊อปอัป) ของ Manage Orders — presentational ล้วน
 // order มาจาก ordersService.get(id) เสมอ (มี items จริง) · payment มาจาก paymentsService.listByOrder
 // (คนละ resource กับ order — สลิป/verified_at อยู่ในนี้ ไม่ใช่ field บน order)
 import { useTranslations, useLocale } from "next-intl";
@@ -17,6 +17,7 @@ export function OrderDetailContent({
   order,
   payment,
   canApprovePayment,
+  canRefundPayment,
   verifyingPayment,
   onVerifyPayment,
   onRejectPayment,
@@ -30,6 +31,8 @@ export function OrderDetailContent({
   order: Order;
   payment: Payment | null;
   canApprovePayment: boolean;
+  /** payments.delete — ปุ่มยืนยันคืนเงิน */
+  canRefundPayment: boolean;
   verifyingPayment: boolean;
   onVerifyPayment: (paymentId: string) => void;
   onRejectPayment: (paymentId: string) => void;
@@ -75,7 +78,7 @@ export function OrderDetailContent({
           reason={order.cancelled_reason}
           account={order.refund_account}
           paidPaymentId={paidPaymentId}
-          canRefund={canApprovePayment}
+          canRefund={canRefundPayment}
           refunding={refunding}
           onRefund={onRefund}
         />

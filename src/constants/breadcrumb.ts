@@ -32,7 +32,7 @@ const ROUTE_NAV_KEY: Record<string, NavKey> = {
   "/owner/employees/addEmployee": "employeesAdd",
   "/owner/employees/editEmployee": "employeesEdit",
   "/owner/employees/permissions": "permissions",
-  "/owner/employees/userLog": "userLog",
+  "/owner/employees/userLog": "systemLog",
   "/owner/store-design": "storeDesign",
   "/owner/store-info": "storeInfo",
   "/owner/shipping": "webShipping",

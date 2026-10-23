@@ -15,9 +15,9 @@ import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { useLocale, useTranslations } from "next-intl";
 import { FcGoogle } from "react-icons/fc";
-import type { GoogleOAuth2 } from "./googleAccountPicker";
+import { GOOGLE_CLIENT_ID, type GoogleOAuth2 } from "./googleAccountPicker";
 
-const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+const CLIENT_ID = GOOGLE_CLIENT_ID;
 
 interface GoogleId {
   initialize(opts: { client_id: string; callback: (r: { credential?: string }) => void; ux_mode?: "popup" }): void;

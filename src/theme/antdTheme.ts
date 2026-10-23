@@ -45,6 +45,9 @@ export const antdTheme: ThemeConfig = {
     colorText: color.text,
     colorTextSecondary: color.textMuted,
     colorTextTertiary: color.textSubtle,
+    // placeholder ของ antd ค่าเริ่มต้น = ดำโปร่ง 25% (~1.9:1 บนพื้นขาว) — Select วาด placeholder เป็นข้อความจริง
+    // Lighthouse "color-contrast" จึงตก · ใช้สีเดียวกับข้อความรอง (#64748B ~4.8:1)
+    colorTextPlaceholder: color.textSubtle,
     colorBorder: color.border,
     colorBorderSecondary: color.borderSubtle,
     colorBgContainer: color.surface,
@@ -63,6 +66,12 @@ export const antdTheme: ThemeConfig = {
       headerBg: color.borderSubtle,
       rowHoverBg: color.bgApp,
     },
+    // Select คำนวณ padding จาก fontHeight ซึ่ง antd ไม่ได้คิดจาก lineHeight ที่เราตั้ง (ได้ 26 · บรรทัดจริง 30.6)
+    // → padding เกินจน Select สูง ~40.6px ไม่เท่า Input/DatePicker (36) · ตั้งให้ตรงกับบรรทัดจริง = สูง 36 เท่ากัน
+    // fontHeight เป็น MapToken — type ของ components ไม่รวมไว้ แต่ตอนรัน antd เอา token ของ component ทับ token ทั้งหมด (วัดแล้วได้ 36)
+    Select: {
+      fontHeight: typography.size.base * typography.lineHeight,
+    } as NonNullable<ThemeConfig["components"]>["Select"],
     // ปุ่มตัวอักษรหนาขึ้นนิดเพื่อการอ่าน
     Button: {
       fontWeight: 500,

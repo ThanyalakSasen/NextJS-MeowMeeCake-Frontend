@@ -25,7 +25,8 @@ function isBannerVisible(b: Banner, now: number = Date.now()): boolean {
 
 export default function HeroCarousel() {
   const t = useTranslations("shop");
-  const bannersQ = useQuery({ queryKey: catalogBannersKey, queryFn: catalogService.banners, staleTime: 5 * 60_000 });
+  // staleTime 30 วิ (เดิม 5 นาที) — แท็บที่เปิดค้างไว้ กลับมาโฟกัสแล้วดึงแบนเนอร์ใหม่ได้เร็ว (หลังร้านแก้แล้วเห็นไว)
+  const bannersQ = useQuery({ queryKey: catalogBannersKey, queryFn: catalogService.banners, staleTime: 30_000 });
   const [bannerIndex, setBannerIndex] = useState(0);
   // รูปที่โหลดไม่ขึ้น → ใช้รูปสำรอง (next/image คุม src/srcset เอง สลับ el.src ตรง ๆ แบบเดิมไม่ได้)
   const [failed, setFailed] = useState<Set<string>>(() => new Set());
@@ -46,13 +47,14 @@ export default function HeroCarousel() {
   const heroImage = resolveUploadUrl(current?.banner_img) ?? DEFAULT_BANNER_IMAGE;
   const src = bannersQ.isPending || !current || failed.has(heroImage) ? DEFAULT_BANNER_IMAGE : heroImage;
 
-  // ข้อความบนแบนเนอร์ = "ข้อความเพิ่มเติม" (banner_description) ของแบนเนอร์ที่กำลังแสดง
-  // บรรทัดแรก = หัวข้อใหญ่ · บรรทัดที่เหลือ = ประโยคใต้หัวข้อ · ไม่มีข้อความ = แสดงแค่รูป + ปุ่ม
-  const [title, ...restLines] = (current?.banner_description ?? "")
+  // ข้อความบนแบนเนอร์ที่กำลังแสดง: ชื่อแบนเนอร์ (banner_name) = หัวข้อใหญ่ · "ข้อความเพิ่มเติม"
+  // (banner_description) = รายละเอียดตัวเล็กใต้หัวข้อ (คงการขึ้นบรรทัดใหม่ · ตัดบรรทัดว่าง)
+  const title = current?.banner_name?.trim() ?? "";
+  const subtitle = (current?.banner_description ?? "")
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter(Boolean);
-  const subtitle = restLines.join("\n");
+    .filter(Boolean)
+    .join("\n");
 
   // รูปใหญ่สุดเหนือขอบจอของหน้าแรก (LCP) → priority
   const image = (
@@ -86,7 +88,7 @@ export default function HeroCarousel() {
       </div>
 
       <div className="relative z-10 w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px] flex flex-col justify-end pb-12 sm:pb-14 pt-16 pointer-events-none">
-        {/* h1 ของหน้าแรกเสมอ (Lighthouse heading-order) — แบนเนอร์ไม่มีข้อความ = ชื่อร้านแบบซ่อน (screen reader อ่านได้) */}
+        {/* h1 ของหน้าแรกเสมอ (Lighthouse heading-order) — ยังไม่มีแบนเนอร์ = ชื่อร้านแบบซ่อน (screen reader อ่านได้) */}
         {title ? (
           <h1 className="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-extrabold text-white tracking-tight mb-2 sm:mb-3 drop-shadow-lg line-clamp-2">
             {title}

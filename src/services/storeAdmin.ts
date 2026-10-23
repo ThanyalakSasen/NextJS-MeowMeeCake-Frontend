@@ -3,7 +3,7 @@
 //   store-profile / store-settings / map-link = เจ้าของร้านเท่านั้น (403 สำหรับพนักงาน)
 //   weekly-markets = สิทธิ์ store_info (backend ตรวจตามสิ่งที่เปลี่ยน: ใหม่ = create · แก้ = update · หาย = delete · ชนกัน = 409)
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
 import type { AdminStoreProfile, AdminWeeklyMarket, PhoneContact, StoreProfileInput, StoreSettings } from "@/types/storeAdmin";
 
@@ -58,7 +58,9 @@ function toSettings(raw: any): StoreSettings {
 }
 
 export const storeAdminService = {
-  profile: async (): Promise<AdminStoreProfile> => toProfile((await http.get<ItemResponse<any>>("/admin/store-profile")).data),
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (store-info/page.tsx)
+   *  ส่ง function นี้เป็น queryFn ตรง ๆ ไม่ได้แล้ว (react-query จะส่ง context มาเป็น h) — ห่อ () => เสมอ */
+  profile: async (h: HttpReader = http): Promise<AdminStoreProfile> => toProfile((await h.get<ItemResponse<any>>("/admin/store-profile")).data),
 
   /** มีโลโก้ = multipart { payload, logo } (backend อัปโหลด + ลบโลโก้เก่าเอง) · ไม่มี = JSON */
   updateProfile: async (body: StoreProfileInput, logo?: File | null): Promise<AdminStoreProfile> => {
@@ -71,13 +73,13 @@ export const storeAdminService = {
     return toProfile((await http.put<ItemResponse<any>>("/admin/store-profile", body)).data);
   },
 
-  settings: async (): Promise<StoreSettings> => toSettings((await http.get<ItemResponse<any>>("/admin/store-settings")).data),
+  settings: async (h: HttpReader = http): Promise<StoreSettings> => toSettings((await h.get<ItemResponse<any>>("/admin/store-settings")).data),
 
   updateSettings: async (body: StoreSettings): Promise<StoreSettings> =>
     toSettings((await http.put<ItemResponse<any>>("/admin/store-settings", body)).data),
 
-  weeklyMarkets: async (): Promise<AdminWeeklyMarket[]> =>
-    ((await http.get<ItemResponse<{ weekly_markets?: any[] }>>("/admin/weekly-markets")).data?.weekly_markets ?? []).map(toWeeklyMarket),
+  weeklyMarkets: async (h: HttpReader = http): Promise<AdminWeeklyMarket[]> =>
+    ((await h.get<ItemResponse<{ weekly_markets?: any[] }>>("/admin/weekly-markets")).data?.weekly_markets ?? []).map(toWeeklyMarket),
 
   /** แทนที่ทั้งรายการ — ส่ง _id ของรายการเดิมกลับเสมอ */
   updateWeeklyMarkets: async (markets: AdminWeeklyMarket[]): Promise<AdminWeeklyMarket[]> =>

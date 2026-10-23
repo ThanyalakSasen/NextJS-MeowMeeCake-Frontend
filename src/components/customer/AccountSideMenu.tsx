@@ -1,7 +1,7 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // เมนูบัญชีของลูกค้า (ด้านซ้ายบนจอใหญ่ · ลิ้นชักจากปุ่มแฮมเบอร์เกอร์บน Navbar เมื่อจอเล็กกว่า md) — ย่อจาก FrontOffice SideBarMenu.tsx
-// 6 เมนู: ข้อมูลของฉัน · ที่อยู่ · เปลี่ยนรหัสผ่าน · สมาชิกของฉัน · ประวัติการสั่งซื้อ · ประวัติพรีออเดอร์
+// 7 เมนู: ข้อมูลของฉัน · ที่อยู่ · เปลี่ยนรหัสผ่าน · สมาชิกของฉัน · ประวัติการสั่งซื้อ · ประวัติพรีออเดอร์ · รีวิวของฉัน
 // (รายการโปรด อยู่ในเมนูผู้ใช้บน Navbar · การแจ้งเตือนเข้าจากกระดิ่ง)
 // แบ่ง 2 หัวข้อแบบต้นแบบ: "บัญชีของฉัน" / "คำสั่งซื้อของฉัน" (BACKLOG4 U2)
 // มือถือ: register กับ sidebarMenuStore → Navbar โชว์ปุ่มแฮมเบอร์เกอร์แทนโลโก้ · กดแล้วเปิดลิ้นชักนี้
@@ -10,7 +10,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, CalendarDaysIcon, StarIcon } from "@heroicons/react/24/solid";
+import { UserIcon, KeyIcon, ShoppingBagIcon, MapPinIcon, CalendarDaysIcon, StarIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useSidebarMenuStore } from "@/app/customer/store/sidebarMenuStore";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
@@ -32,6 +32,7 @@ const GROUPS = [
     items: [
       { href: "/customer/account/purchases", labelKey: "purchases", icon: ShoppingBagIcon },
       { href: "/customer/account/preorders", labelKey: "preorders", icon: CalendarDaysIcon },
+      { href: "/customer/account/reviews", labelKey: "reviews", icon: ChatBubbleLeftRightIcon },
     ],
   },
 ] as const;

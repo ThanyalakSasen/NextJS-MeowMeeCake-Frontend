@@ -801,19 +801,6 @@ body {
   background-color: var(--color-brown-50);
 }
 
-.notif-type-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 0.3125rem;
-}
-
-.notif-type-dot.warning { background-color: #f59e0b; }
-.notif-type-dot.info    { background-color: #3b82f6; }
-.notif-type-dot.success { background-color: #22c55e; }
-.notif-type-dot.error   { background-color: #ef4444; }
-
 .notif-item-body {
   flex: 1;
   min-width: 0;
@@ -1075,8 +1062,9 @@ body {
   @apply border-b border-gray-200;
 }
 
+/* หัวตารางไม่ตัดบรรทัด — ภาษาไทยไม่มีเว้นวรรค ตารางแคบจะตัดทีละตัวอักษร ("มูล/ค่า/สต็/อก") · กล่องตารางเลื่อนแนวนอนได้อยู่แล้ว */
 .data-table th {
-  @apply px-5 py-4 text-center text-sm font-semibold text-gray-600;
+  @apply px-5 py-4 text-center text-sm font-semibold text-gray-600 whitespace-nowrap;
 }
 
 .data-table td {
@@ -1188,4 +1176,10 @@ body {
 }
 .ant-segmented .ant-segmented-item + .ant-segmented-item {
   border-inline-start: 1px solid var(--border);
+}
+
+/* ช่องรหัสผ่าน: ซ่อนปุ่มแสดงรหัส/ล้างค่าที่ Edge (และ IE) ใส่ให้เอง — หน้าเว็บมีปุ่มตาของตัวเองแล้ว ไม่งั้นจะขึ้นไอคอนตาซ้ำ 2 อัน */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
 }

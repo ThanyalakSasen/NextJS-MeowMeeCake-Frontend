@@ -10,7 +10,8 @@ export interface ComponentFormValue {
   componentcategory_id: string;
   yield_qty: number;
   yield_unit_id: string;
-  estimated_cost_per_batch: number;
+  /** null = ว่าง → ไม่ส่งไป ให้ backend คำนวณจากวัตถุดิบ (ค่าเริ่ม 0 เดิมทำให้ต้นทุนเป็น ฿0 เสมอ — TC-ADM-84) */
+  estimated_cost_per_batch: number | null;
   note?: string;
 }
 
@@ -19,7 +20,7 @@ export const emptyComponentForm: ComponentFormValue = {
   componentcategory_id: "",
   yield_qty: 1,
   yield_unit_id: "",
-  estimated_cost_per_batch: 0,
+  estimated_cost_per_batch: null,
 };
 
 /** RecipeComponent (จาก API) → ค่าเริ่มต้นของฟอร์มตอนแก้ไข */
