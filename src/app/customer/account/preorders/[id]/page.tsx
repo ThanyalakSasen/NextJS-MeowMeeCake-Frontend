@@ -24,7 +24,7 @@ import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ReviewLink from "../../_components/ReviewLink";
 import { shopPointsKey, shopCouponsKey, shopPreorderKey, shopPreorderPaymentPageKey, shopPreordersKey } from "../../../lib/shopQueries";
-import { useOrderLabels } from "../../purchases/orderLabels";
+import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../../purchases/orderLabels";
 import { thaiDate } from "../../../preorder/lib/preorderDates";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
@@ -206,6 +206,7 @@ function PreorderDetailContent() {
                 <p className="mb-1 font-semibold">{to("deliveryStatus")}</p>
                 <p className="text-gray-600">
                   {labels.deliveryStatus(p.delivery_status)}
+                  {p.shipping_carrier && labels.shippingCarrier(p.shipping_carrier) ? to("carrier", { name: labels.shippingCarrier(p.shipping_carrier) }) : ""}
                   {p.tracking_no ? to("tracking", { no: p.tracking_no }) : ""}
                 </p>
               </div>
@@ -234,7 +235,8 @@ function PreorderDetailContent() {
 
         <div className="flex flex-wrap justify-center gap-2">
           <Link href="/customer/account/preorders" className={shopButton}>{t("viewAll")}</Link>
-          <ReviewLink kind="preorder" doc={p} itemIds={p.items.map((it) => it._id)} href={`/customer/account/preorders/${p._id}/review`} className={shopButtonPrimary} />
+          <ReviewLink kind="preorder" doc={p} itemIds={p.items.map((it) => it._id)} href={`/customer/account/preorders/${p._id}/review`}
+            className={REVIEW_PILL.replace("self-start", "self-center")} reviewedClassName={REVIEWED_PILL.replace("self-start", "self-center")} />
           {canCustomerCancelPreorder(p) && (
             <button type="button" onClick={() => void onCancel()} disabled={cancel.isPending}
               className="h-[44px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">

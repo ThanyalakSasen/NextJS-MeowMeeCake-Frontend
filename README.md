@@ -26,6 +26,7 @@ Backend เป็นคนละโปรเจกต์ คุยกันผ�
 9. [เอกสารใน `docs/` — เส้นทางการอ่าน + อันไหนไว้ทำอะไร](#9-เอกสารใน-docs)
 10. [กติกาการเขียนโค้ด (cheat sheet)](#10-กติกาการเขียนโค้ด)
 11. [คำสั่ง npm](#11-คำสั่ง-npm)
+12. [บันทึกการเปลี่ยนแปลง](#12-บันทึกการเปลี่ยนแปลง)
 
 ---
 
@@ -57,7 +58,15 @@ npm run dev                     # http://localhost:3001 (backend รันที
 |---|---|---|
 | `NEXT_PUBLIC_API_BASE_URL` | URL ของ backend **ต่อท้าย `/api`** เช่น `http://localhost:3000/api` | request ยิงไม่ถึง backend |
 | `NEXT_PUBLIC_AUTH_COOKIE` | ชื่อ cookie session ของ backend (ตอนนี้ `session`) | proxy.ts มองไม่เห็นว่า login แล้ว |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | client ID ของปุ่ม Google login | ปุ่ม Google กดไม่ได้ |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | client ID ของ Google — **ค่าเดียวกับ `GOOGLE_CLIENT_ID` ของ backend** · ใช้กับปุ่ม Google login และปุ่ม "ลืมรหัสผ่าน?" (เลือกบัญชี Google) | ปุ่ม Google กดไม่ได้ · "ลืมรหัสผ่าน?" ไปหน้ากรอกอีเมลแทน |
+| `API_PROXY_TARGET` | URL ของ backend (ไม่มี `/api`) เช่น `http://localhost:3000` — ใช้คู่กับ `NEXT_PUBLIC_API_BASE_URL=/api` ให้ส่งต่อ `/api/*` ผ่านโดเมนเดียวกัน | ต้องตั้ง `NEXT_PUBLIC_API_BASE_URL` เป็น URL เต็มแทน |
+
+**Google Cloud Console** (OAuth client ตัวเดียวกับ backend) → Authorized JavaScript origins ต้องมี `http://localhost:3001`
+(+ URL จริงของ frontend ตอน deploy) — ไม่มี = หน้าต่างเลือกบัญชี Google ไม่ขึ้น / ขึ้น error origin ไม่ถูกต้อง
+· frontend ใช้แบบ popup จึง**ไม่ต้อง**ลงทะเบียน redirect URI ให้ frontend
+
+**backend ต้องตั้ง `STOREFRONT_URL=http://localhost:3001`** (URL ของ frontend นี้) — ลิงก์ในอีเมล (ยืนยันอีเมล · ตั้งรหัสผ่านใหม่) ประกอบจากค่านี้
+· ไม่ตั้ง = ใช้ `NEXTAUTH_URL` (= backend `:3000`) แล้วลิงก์เปิดไม่เจอหน้า
 
 **ทำงานครั้งแรกทำอะไร:** รัน backend ที่ :3000 → ตั้ง `.env.local` ตามตาราง → `npm run dev` → หน้าร้านที่ `http://localhost:3001/` · หลังร้าน login ที่ `/login` ด้วยบัญชีเจ้าของร้าน/พนักงานของ backend
 
@@ -298,6 +307,13 @@ export default function ProductsPage() {
                         เจ้าของร้าน/พนักงาน → ?next= ใต้ /owner หรือ /profile · ไม่งั้น /owner/dashboard
 ```
 
+**Flow ลืมรหัสผ่าน** (รายละเอียด §12):
+```
+หน้า /login กด "ลืมรหัสผ่าน?" → หน้าต่างเลือกบัญชี Google (popup) → POST /auth/forgot-password { email }
+                             → ป๊อปอัป "ส่งลิงก์เรียบร้อยแล้ว" (อยู่หน้า login ต่อ)
+ลิงก์ในอีเมล → /customer/reset-password?token= → ตั้งรหัสใหม่ → กลับ /login + ป๊อปอัป "เปลี่ยนรหัสผ่านสำเร็จ"
+```
+
 **สิทธิ์ = แค่ UX:** frontend ซ่อนปุ่ม/เมนูตาม `menuAccess` เพื่อความสวยงาม — **ตัวบังคับจริงอยู่ที่ backend** (ต่อให้ผู้ใช้เรียก API ตรง ๆ ก็โดน backend ปฏิเสธ)
 
 **ทำไมสำคัญ:** ถ้าเข้าใจผิดว่า "ซ่อนปุ่ม = ปลอดภัย" จะเกิดช่องโหว่ · จำไว้ว่า frontend เชื่อถือไม่ได้เสมอ
@@ -458,3 +474,66 @@ export const productsService = {
 | `npm run lint:i18n` | เช็ค key th/en ตรงกัน + ไม่มีข้อความ hard-code นอกไฟล์คำแปล |
 | `npm run lint:theme` | เทียบสีใน `theme/palette.ts` ↔ `globals.css` |
 | **`npm run check`** | `lint:i18n` + `lint:theme` + `tsc --noEmit` + `eslint` รวดเดียว — ต้องเขียวก่อน commit |
+
+---
+
+## 12. บันทึกการเปลี่ยนแปลง
+
+### 2026-10-19 — ลืมรหัสผ่านด้วย Google · ตัวกรองรีวิว · ปฏิทินวันรับ · เอาแจ้งเตือนที่ไม่จำเป็นออก
+
+ทุกข้อผ่าน `tsc --noEmit` · `eslint` · `lint:i18n` · `lint:ui` (ไฟล์ที่แก้) แล้ว · **ยังไม่ได้ทดสอบในเบราว์เซอร์ด้วยบัญชีลูกค้าจริง**
+(ข้อ 1 ต้องเลือกบัญชี Google + ส่งอีเมลจริง · ข้อ 3–5 ต้องล็อกอินเป็นลูกค้า) · ยังไม่ได้ commit
+
+#### 1. ลืมรหัสผ่าน — เลือกบัญชี Google แล้วส่งลิงก์ไปที่ Gmail
+| ขั้น | เดิม | ตอนนี้ |
+|---|---|---|
+| กด "ลืมรหัสผ่าน?" ในหน้า `/login` | popup เลือกบัญชี → กล่องยืนยันอีกชั้น · มีลิงก์ "ใช้อีเมลอื่น" | เปิดหน้าต่างเลือกบัญชี Google **ทันที** (ไม่มีกล่องยืนยัน · เอาลิงก์ "ใช้อีเมลอื่น" ออก) |
+| เลือกบัญชีแล้ว | ส่งลิงก์ + ป๊อปอัป | ส่งลิงก์ไปที่อีเมลนั้น + ป๊อปอัป "ส่งลิงก์เรียบร้อยแล้ว" (อีเมล · ลิงก์ใช้ได้ 1 ชม. · เช็คสแปม) — อยู่หน้า login ต่อ |
+| ตั้งรหัสใหม่ (`/customer/reset-password`) | สำเร็จ → การ์ด "สำเร็จ" + ปุ่มไปหน้า login | บันทึกสำเร็จ → **ไปหน้า `/login` ทันที** + ป๊อปอัป "เปลี่ยนรหัสผ่านสำเร็จ" |
+| ผิดพลาด | — | ปิดหน้าต่าง Google = ไม่ทำอะไร · เลือกบัญชีไม่ได้ / backend ปฏิเสธ (บัญชี Google/LINE ไม่มีรหัสผ่าน · ขอถี่เกิน) = ป๊อปอัปข้อผิดพลาด |
+
+- ไฟล์: `app/login/_components/LoginForm.tsx` · `app/login/_components/forgotPasswordFlow.ts` (ใหม่ — เลือกบัญชี + ส่งลิงก์ ใช้ร่วมกับหน้า forgot-password)
+  · `app/customer/reset-password/page.tsx` · `app/customer/forgot-password/page.tsx`
+- หน้า `/customer/forgot-password` (ฟอร์มกรอกอีเมล + ปุ่ม "เลือกบัญชี Google แทน" → หน้า "ส่งลิงก์แล้ว" + ปุ่มเปิด Gmail) ยังอยู่ —
+  ใช้เมื่อ: ลิงก์ "ลืมรหัสผ่านปัจจุบัน?" ในหน้าเปลี่ยนรหัสผ่าน · ปุ่ม "ขอลิงก์ใหม่" ตอนลิงก์หมดอายุ · ไม่ได้ตั้ง `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+- ต้องตั้งค่า: `NEXT_PUBLIC_GOOGLE_CLIENT_ID` · origin ใน Google Cloud Console · `STOREFRONT_URL` ของ backend (§2)
+
+#### 2. หน้าสมาชิก (`/customer/account/member`)
+- บัตรสมาชิก: เอาข้อความ "พร้อมใช้แต้มเป็นส่วนลดแล้ว" / "สะสมอีก N แต้ม…" + ตัวเลข % + แถบคะแนนออก — เหลือชื่อ · อีเมล · แต้มคงเหลือ · มูลค่าเป็นบาท
+  (ขั้นต่ำการใช้แต้มยังบอกในหัวข้อ "วิธีใช้แต้ม" · ปุ่มแลกคูปองยังขึ้น "แต้มไม่พอ")
+
+#### 3. รีวิวของฉัน (`/customer/account/reviews`) — เพิ่มตัวกรอง
+- **ค้นหา** ชื่อสินค้า/ข้อความรีวิว (แสดงตลอดทุกขนาดจอ)
+- **สถานะ:** ทั้งหมด · ร้านตอบกลับแล้ว · มีรูป/วิดีโอ · พรีออเดอร์ (มีจำนวนในวงเล็บ)
+- **คะแนน:** ทุกคะแนน · ★5 – ★1 (มีจำนวน) · **เรียงลำดับ:** ล่าสุด · เก่าสุด · คะแนนสูงสุด · คะแนนต่ำสุด
+- ใช้พร้อมกันได้ · กำลังกรองแสดง "แสดง X จาก Y รีวิว" · ไม่พบ = ปุ่ม "ล้างตัวกรอง" · กรองฝั่งหน้าเว็บ (โหลดรีวิวของตัวเองมาครบแล้ว — ไม่แตะ backend)
+- **จอ <768px แบบหน้าสินค้าทั้งหมด:** ปุ่มไอคอนตัวกรองข้างหัวข้อ (จุดแดงเมื่อกำลังกรอง) + ปุ่ม "ล้างตัวกรอง" · แผงเลื่อนเข้าจากขวา
+  (สถานะ · คะแนน · เรียงตาม — เลือกแล้วกรองทันทีและปิดแผง · Esc / แตะพื้นหลัง = ปิด) · ใต้หัวข้อบอกตัวเลือกที่ใช้อยู่ ·
+  ข้อความในแผงใช้ชุด `shop.products.*` ร่วมกับหน้าสินค้า
+
+#### 4. ปฏิทินเลือกวันรับสินค้า (`/customer/checkout` + `/customer/preorder/checkout`)
+- เลือกจุดรับแล้วขึ้น**ปฏิทินรายเดือน** แทนปุ่มวันเรียงกัน — วันที่จุดรับเปิด = ช่องสีเข้มกดได้ · วันอื่นสีจางกดไม่ได้ · วันนี้ขีดเส้นใต้
+- ปุ่ม ‹ › เลื่อนเดือน (เฉพาะเดือนที่มีวันให้เลือก) · ใต้ปฏิทินแสดง "วันที่เลือก: ศ. 24 ต.ค." · กว้างเต็มเท่าการ์ดจุดรับ · ช่องวันสูง 44px
+- พรีออเดอร์: วันที่กดได้ = วันในช่วงรับของรอบ · รอบที่กำหนดให้รับที่ร้านวันเดียวยังแสดงเป็นข้อความเหมือนเดิม
+- ไฟล์: `components/customer/PickupDateCalendar.tsx` (ใหม่ — ย้าย `pickupDateLabel` มาไว้ที่นี่ · `PickupLocationPicker` re-export ให้)
+  · `components/customer/PickupLocationPicker.tsx` (เอาแบบปุ่มวันเดิมออก)
+
+#### 5. เอาแจ้งเตือนตอน "สำเร็จ" ออก (แจ้งเตือนตอนผิดพลาดยังอยู่)
+| การกระทำ | เห็นผลจาก | ไฟล์ |
+|---|---|---|
+| เพิ่มสินค้าลงตะกร้า | ปุ่มขึ้นสถานะสำเร็จ + จำนวนบนไอคอนตะกร้า | `app/customer/hooks/useAddToCart.ts` |
+| ลบสินค้าออกจากตะกร้า | รายการหายจากตะกร้า | `app/customer/cart/page.tsx` |
+| เพิ่ม/นำออกจากรายการโปรด | ไอคอนหัวใจเปลี่ยน | `app/customer/hooks/useFavorites.ts` |
+
+#### i18n (`th.json` / `en.json` — key ตรงกันทั้งสองไฟล์)
+- เพิ่ม: `auth.forgotSent` · `shop.password.{pickGoogleFailed, useGoogle, openGmail}` · `shop.pickup.{prevMonth, nextMonth, selectedDate, pickDateHint}`
+  · `shop.myReviews.{countFiltered, searchLabel, searchPlaceholder, sortLabel, sortNewest, sortOldest, sortHighest, sortLowest, filterMedia, filterPreorder, filterStarsLabel, allStars, starsChip, emptyFiltered, clearFilters}`
+- ลบ (ไม่ได้ใช้แล้ว): `auth.{forgotConfirmTitle, forgotConfirm, forgotSend, forgotFailed, forgotPickFailed, forgotOtherEmail}` · `shop.password.goLogin`
+  · `shop.member.{readyToRedeem, collectMore}` · `shop.myReviews.emptyReplied` · `shop.cart.removed` · `shop.cartActions.{added, favoriteAdded, favoriteRemoved}`
+
+#### สิ่งที่ยังต้องทำ / ข้อควรรู้
+- เพิ่ม `http://localhost:3001` ใน Authorized JavaScript origins ของ Google Cloud Console แล้วลอง flow ลืมรหัสผ่านจนจบด้วยบัญชีที่สมัครด้วยอีเมล+รหัสผ่าน
+- รีสตาร์ท backend 1 ครั้งให้อ่าน `STOREFRONT_URL`
+- `npm run lint:ui` ยังไม่ผ่านจาก `text-gray-400` ในไฟล์หลังร้าน 3 ไฟล์เดิม (`owner/account/_components/ProfileTab.tsx` · `owner/employees/userLog/_components/LogDetailContent.tsx`
+  · `owner/production/_components/CompleteProductionModal.tsx`) — ไม่เกี่ยวกับงานรอบนี้
+- ใน working tree มีงานอื่นที่ยังไม่ commit ค้างอยู่ก่อนรอบนี้ (จัดส่งนอกจังหวัดตามหมวด/สินค้า ฯลฯ) — ไม่อยู่ในบันทึกนี้

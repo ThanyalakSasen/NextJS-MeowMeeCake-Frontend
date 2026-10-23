@@ -3,7 +3,7 @@
 // ViewModel ของ "รีวิวลูกค้า" (BACKLOG4 E4) — ยกจาก FrontOffice reports/reviews/ReviewTable (MVVM + i18n)
 // กรอง/ค้นหา/เรียง/แบ่งหน้าที่ server + สรุปของชุดที่กรอง (summary=1 — I9) · เดิมโหลดทั้งหมดมากรองในหน้า
 // จัดการต่อรีวิว (PATCH): สถานะ · ปักหมุด · อ่านแล้ว · ตอบกลับ (คำตอบสำเร็จรูป + คำตอบเก่าที่เคยใช้) · โน้ต/แท็กภายใน
-// เลือกหลายรายการ: อ่านแล้ว/ยังไม่อ่าน (/bulk) · ส่งออก CSV (ต้นแบบ xlsx — แอปนี้ใช้ CSV ทุกหน้า)
+// เลือกหลายรายการ: ส่งออก CSV (ต้นแบบ xlsx — แอปนี้ใช้ CSV ทุกหน้า)
 // แก้แล้วอัปเดต cache ของหน้าปัจจุบันทันที แล้วโหลดชุดใหม่ (summary/ลำดับอาจเปลี่ยน) · สิทธิ์เมนู reports
 // แดชบอร์ดสรุป = หน้า ./dashboard (คำนวณฝั่ง client จากรายการเดียวกัน — backend ไม่มี endpoint สรุป)
 // ─────────────────────────────────────────────────────────────
@@ -18,11 +18,12 @@ import { formatDate } from "@/i18n/format";
 import { isApiError } from "@/types/api";
 import type { Review, ReviewListParams, ReviewModeration, ReviewSort, ReviewStatus } from "@/types/review";
 import { toReviewRow, type ReviewRow } from "./reviewRow";
+import { REVIEWS_LIST_KEY, REVIEW_ASPECTS_KEY, REVIEW_FILTER_OPTIONS_KEY, REVIEWS_PAGE_SIZE, REVIEWS_DEFAULT_SORT } from "./reviewsQuery";
 import { sortByThai, sortOptionsThai, thaiCompare } from "@/lib/thaiSort";
 
 export type { ReviewRow };
 
-const LIST_KEY = ["reviews", "admin"] as const;
+const LIST_KEY = REVIEWS_LIST_KEY;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export type Tri = "all" | "1" | "0";
@@ -51,7 +52,7 @@ const DEFAULT_FILTERS: ReviewFilters = {
   replied: "all",
   media: "all",
   orderKind: "all",
-  sort: "newest",
+  sort: REVIEWS_DEFAULT_SORT,
 };
 
 function toParams(f: ReviewFilters, q: string, page: number, limit: number): ReviewListParams {
@@ -75,14 +76,14 @@ export function useReviewsViewModel() {
   const t = useTranslations();
   const locale = useLocale();
   const qc = useQueryClient();
-  const perm = usePermission("reports");
+  const perm = usePermission("reports_reviews");
 
   // ── ตัวกรอง ──
   const [filters, setFilters] = useState<ReviewFilters>(DEFAULT_FILTERS);
   const [search, setSearchRaw] = useState("");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(REVIEWS_PAGE_SIZE);
   useEffect(() => {
     const id = setTimeout(() => setQ(search.trim()), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(id);
@@ -96,8 +97,8 @@ export function useReviewsViewModel() {
   const params = toParams(filters, q, page, pageSize);
   const listKey = [...LIST_KEY, params] as const;
   const listQ = useQuery({ queryKey: listKey, queryFn: () => reviewsService.list(params), placeholderData: keepPreviousData });
-  const optionsQ = useQuery({ queryKey: ["reviews", "filter-options"], queryFn: reviewsService.filterOptions, staleTime: 60_000 });
-  const aspectsQ = useQuery({ queryKey: ["review-aspects"], queryFn: reviewAspectsService.list });
+  const optionsQ = useQuery({ queryKey: REVIEW_FILTER_OPTIONS_KEY, queryFn: () => reviewsService.filterOptions(), staleTime: 60_000 });
+  const aspectsQ = useQuery({ queryKey: REVIEW_ASPECTS_KEY, queryFn: () => reviewAspectsService.list() });
 
   const rows = useMemo(() => (listQ.data?.data ?? []).map(toReviewRow), [listQ.data]);
   const tagSuggestions = useMemo(() => [...new Set(rows.flatMap((r) => r.internalTags))].sort(thaiCompare), [rows]);
@@ -118,7 +119,7 @@ export function useReviewsViewModel() {
     );
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: LIST_KEY });
-    void qc.invalidateQueries({ queryKey: ["reviews", "filter-options"] });
+    void qc.invalidateQueries({ queryKey: REVIEW_FILTER_OPTIONS_KEY });
   };
 
   const moderate = useMutation({
@@ -156,16 +157,6 @@ export function useReviewsViewModel() {
       refresh();
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("reviews.deleteFailed")),
-  });
-
-  const bulk = useMutation({
-    mutationFn: (read: boolean) => reviewsService.bulkRead([...selected], read),
-    onSuccess: (_, read) => {
-      alert.success(t(read ? "reviews.bulkReadDone" : "reviews.bulkUnreadDone", { n: selected.size }));
-      setSelected(new Set());
-      refresh();
-    },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("reviews.updateFailed")),
   });
 
   const exportSelected = () => {
@@ -232,9 +223,12 @@ export function useReviewsViewModel() {
       setQ("");
       setPage(1);
     },
-    /** ทางลัดจากแถบสรุป: รีวิวลบที่ยังไม่ตอบ เรียงที่ควรตอบก่อน */
-    showUnrepliedNegative: () => {
-      setFilters({ ...DEFAULT_FILTERS, negativeOnly: true, replied: "0", sort: "needs_reply" });
+    /**
+     * ทางลัดจากแถบสรุป/แดชบอร์ด: รีวิวลบที่ยังไม่ตอบ เรียงที่ควรตอบก่อน
+     * productId = แดชบอร์ดกำลังดูสินค้านี้อยู่ → กรองสินค้าเดียวกัน (ตัวเลขตรงกับที่เพิ่งเห็น)
+     */
+    showUnrepliedNegative: (productId?: string) => {
+      setFilters({ ...DEFAULT_FILTERS, productId: productId ?? "all", negativeOnly: true, replied: "0", sort: "needs_reply" });
       setPage(1);
     },
     categoryOptions: sortByThai((options?.categories ?? []), (c) => c.category_name).map((c) => ({ value: c.category_id, label: `${c.category_name} (${c.review_count})` })),
@@ -251,13 +245,10 @@ export function useReviewsViewModel() {
         return next;
       }),
     selectAllOnPage: (on: boolean) => setSelected(on ? new Set(rows.map((r) => r._id)) : new Set()),
-    bulkBusy: bulk.isPending,
-    onBulkRead: (read: boolean) => bulk.mutate(read),
     onExport: exportSelected,
 
     onStatus: (r: ReviewRow, status: ReviewStatus) => void run(r._id, { status }, `reviews.statusChanged.${status}`),
     onTogglePin: (r: ReviewRow) => void run(r._id, { is_pinned: !r.is_pinned }),
-    onToggleRead: (r: ReviewRow) => void run(r._id, { read: !r.isRead }),
     onSaveReply: (r: ReviewRow, text: string) => run(r._id, { shop_reply_text: text }, text.trim() ? "reviews.replySaved" : "reviews.replyRemoved"),
     onSaveNote: (r: ReviewRow, text: string) => run(r._id, { internal_note_text: text }, text.trim() ? "reviews.noteSaved" : "reviews.noteRemoved"),
     onDelete: (id: string) => remove.mutate(id),

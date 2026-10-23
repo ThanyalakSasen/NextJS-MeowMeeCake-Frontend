@@ -12,6 +12,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { preorderRoundsService } from "@/services/preorderRounds";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
 import { LIST_ALL } from "@/lib/http";
+import { ROUND_DASHBOARD_KEY } from "./preorderQuery";
 import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { OrderType } from "@/types/order";
@@ -19,8 +20,10 @@ import type { PaymentGroup, RoundCustomerLine, RoundCustomerOrder, RoundDashboar
 
 const PAGE_SIZE = 10;
 
-/** ตัวเลือก + ข้อความพิเศษของรายการ เป็นบรรทัดสั้น ๆ */
-export function lineExtras(l: RoundCustomerLine): string[] {
+/** ตัวเลือก + ข้อความพิเศษของรายการ เป็นบรรทัดสั้น ๆ — ใช้ทั้งลิ้นชักสรุปรอบและลิ้นชักคำสั่งซื้อ (PreorderItem) */
+export function lineExtras(
+  l: Pick<RoundCustomerLine, "variant_name" | "selected_variants" | "selected_options"> & { special_request?: string | null }
+): string[] {
   const variants = l.selected_variants.length
     ? l.selected_variants.map((v) => (v.group_name ? `${v.group_name}: ${v.variant_name}` : v.variant_name))
     : l.variant_name
@@ -41,7 +44,7 @@ export function useRoundDashboardViewModel(enabled: boolean) {
   const locale = useLocale();
 
   const q = useQuery({
-    queryKey: ["preorder-rounds", "dashboard"],
+    queryKey: ROUND_DASHBOARD_KEY,
     queryFn: () => preorderRoundsService.dashboard({ limit: LIST_ALL }),
     enabled,
   });
@@ -125,7 +128,8 @@ export function useRoundDashboardViewModel(enabled: boolean) {
   };
 
   return {
-    isLoading: q.isLoading,
+    // isPending — แท็บนี้ render ฝั่ง server ได้ (?tab=dashboard) · query ปิดอยู่ตอนไม่ได้เปิดแท็บ แต่ตอนนั้นไม่ได้แสดงผล
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => void q.refetch(),
     stats,

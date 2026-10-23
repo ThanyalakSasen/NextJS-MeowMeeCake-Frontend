@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { BANNERS_KEY, BANNERS_PARAMS } from "./bannersQuery";
 import { useTranslations } from "next-intl";
 import { bannersService } from "@/services/banners";
 import { usePermission } from "@/context/PermissionsContext";
@@ -13,7 +14,7 @@ import { isApiError } from "@/types/api";
 import type { Banner } from "@/types/banner";
 import type { BannerStatus } from "@/constants/enumConfig";
 import { getBannerStatus, toInput, type BannerFormValue } from "./bannerForm";
-import { LIST_ALL } from "@/lib/http";
+import { refreshStorefrontBanners } from "@/app/customer/lib/refreshCatalog";
 
 export interface BannerRow extends Banner {
   status: BannerStatus;
@@ -27,7 +28,7 @@ export function useStoreDesignViewModel() {
   // แบนเนอร์อยู่ใต้สิทธิ์ "products" ของ backend (/admin/banners → auth: { menu: "products" })
   // ไม่ใช่เมนูของตัวเอง — ROUTE_MENU_MAP ไม่ได้ผูก /owner/store-design ไว้ OwnerLayout จึงไม่กั้นหน้านี้
   // ปุ่มเพิ่ม/แก้/ลบ/เปิดปิด/ลากเรียง จึงตามสิทธิ์ products ทั้งหมด (Final-Backlog P13)
-  const perm = usePermission("products");
+  const perm = usePermission("store_design");
 
   const [tab, setTab] = useState<TabFilter>("all");
   const [search, setSearch] = useState("");
@@ -35,8 +36,8 @@ export function useStoreDesignViewModel() {
   const [editTarget, setEditTarget] = useState<Banner | null>(null);
 
   const q = useQuery({
-    queryKey: ["banners"],
-    queryFn: () => bannersService.list({ limit: LIST_ALL, sort: "sort_order" }),
+    queryKey: BANNERS_KEY,
+    queryFn: () => bannersService.list(BANNERS_PARAMS),
   });
 
   const rows = useMemo<BannerRow[]>(
@@ -67,7 +68,12 @@ export function useStoreDesignViewModel() {
     });
   }, [rows, tab, search]);
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["banners"] });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["banners"] });
+    // หน้าร้านแคชแบนเนอร์ฝั่ง server 60 วิ — ล้างทันทีให้ลูกค้าที่เปิดหน้าแรกหลังจากนี้เห็นของใหม่เลย
+    // ล้มเหลวก็ไม่เป็นไร (แคชหมดอายุเองใน 60 วิ) — ไม่ต้องเตือนผู้ใช้
+    refreshStorefrontBanners().catch(() => {});
+  };
 
   const save = useMutation({
     mutationFn: (v: BannerFormValue) =>
@@ -131,7 +137,8 @@ export function useStoreDesignViewModel() {
     perm,
     rows: filtered,
     counts,
-    isLoading: q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
 

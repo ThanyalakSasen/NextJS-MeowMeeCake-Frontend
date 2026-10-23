@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse, ListResponse } from "@/types/api";
-import type { PosGuestCustomer, PosProduct, PosProductListParams, PosPromptPayQr, PosScanResult } from "@/types/pos";
+import type { PosGuestCustomer, PosMemberLookup, PosProduct, PosProductListParams, PosPromptPayQr, PosScanResult } from "@/types/pos";
 import { toProduct } from "@/services/products";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -26,8 +26,23 @@ export const posService = {
    * GET /admin/pos/guest-customer — บัญชี "ลูกค้าทั่วไป" ที่ผูกกับออเดอร์หน้าร้าน ใต้สิทธิ์ orders.view
    * (เดิมค้นผ่าน /admin/users ที่ต้อง employees.view — Final-Backlog P3) · ยังไม่ได้ seed = 404
    */
+  /**
+   * POST /admin/pos/orders/:id/checkout — รับเงินที่เคาน์เตอร์: สร้างรายการชำระ + ยืนยันจ่าย (ผู้ขาย = ผู้ยืนยัน) + ปิดงาน
+   * ใต้สิทธิ์ orders.create — คนที่ขายหน้าร้านได้ไม่ต้องมีสิทธิ์อนุมัติการชำระเงิน · ใช้ได้เฉพาะออเดอร์เลข POS-
+   */
+  checkout: (orderId: string) => http.post<ItemResponse<unknown>>(`/admin/pos/orders/${encodeURIComponent(orderId)}/checkout`),
+
   guestCustomer: async (): Promise<PosGuestCustomer> => {
     const res = await http.get<ItemResponse<PosGuestCustomer>>("/admin/pos/guest-customer");
+    return res.data;
+  },
+
+  /**
+   * GET /admin/pos/member?phone= — หาสมาชิกด้วยเบอร์มือถือ (pos.view) · ไม่พบ = members ว่าง · เบอร์ผิดรูปแบบ = 400
+   * ผูกออเดอร์กับ _id ที่ได้แทนบัญชีลูกค้าทั่วไป → ปิดงาน completed แล้ว backend ให้แต้มสะสมเอง
+   */
+  findMember: async (phone: string): Promise<PosMemberLookup> => {
+    const res = await http.get<ItemResponse<PosMemberLookup>>("/admin/pos/member", { params: { phone } });
     return res.data;
   },
 

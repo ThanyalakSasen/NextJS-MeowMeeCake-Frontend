@@ -25,6 +25,7 @@ export function SearchTester({ query, onQuery, result }: {
         prefix={<MagnifyingGlassIcon className="h-4 w-4 text-gray-500" />}
         value={query}
         placeholder={t("searchSynonyms.tester.placeholder")}
+        aria-label={t("searchSynonyms.tester.title")}
         onChange={(e) => onQuery(e.target.value)}
       />
       {result && (

@@ -3,12 +3,11 @@
 // ไม่มี endpoint /reports/dashboard เดียวจบ — backend แยกเป็นหลาย endpoint (dashboard/*, ingredients/
 // low-stock, orders, production-orders) ประกอบ DashboardSummary ที่นี่จุดเดียว (ViewModel ไม่ต้องรู้)
 //
-// recent_orders[].items_summary — items ของออเดอร์อยู่คนละ collection จึงยิง /admin/orders/:id/items
-// เพิ่มทีละออเดอร์ (แค่ 5 ออเดอร์ล่าสุด ยิงพร้อมกัน) · โหลดไม่ได้ = ปล่อยว่าง ไม่ทำให้ทั้งหน้าล้ม
-//
-// ที่ยังไม่ได้ทำ: production_status[].items_summary ยังว่าง (items ของใบสั่งผลิตแยก collection เหมือนกัน)
+// items_summary ("บราวนี่ ×2, เค้กอัลมอนด์ ×1"): ออเดอร์ล่าสุดขอ ?with_items=true · ใบสั่งผลิต backend แนบ items[] มาในรายการเสมอ
+// (ทั้งคู่เป็น query เดียวฝั่ง backend ไม่ใช่ N+1 — เดิมปล่อยว่างจนคอลัมน์ "รายการ" ว่างทุกแถว TC-ADM-12)
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
+import { unitLabel } from "@/utils/unitContext";
 import type {
   DashboardSummary,
   DashboardLowStock,
@@ -39,16 +38,19 @@ interface RawOrder {
   total_amount: number;
   order_status: string;
   user_id?: { user_fullname?: string } | string | null;
-}
-interface RawOrderItem {
-  product_snapshot?: { product_name_th?: string } | null;
-  quantity: number;
+  items?: { product_snapshot?: { product_name_th?: string }; quantity: number }[];
 }
 interface RawProductionOrder {
   _id: string;
   production_no: string;
   production_status: string;
   production_date: string;
+  items?: { product_id?: { product_name_th?: string } | string | null; planned_qty: number; item_status?: string }[];
+}
+
+/** "บราวนี่ ×2, เค้กอัลมอนด์ ×1" — ข้ามแถวที่ไม่มีชื่อ */
+function summarize(lines: { name?: string; qty: number }[]): string {
+  return lines.filter((l) => l.name).map((l) => `${l.name} ×${l.qty}`).join(", ");
 }
 
 /** ช่วงเวลา "วันนี้" ตามเวลาไทย (UTC+7 คงที่ ไม่มี DST) แปลงเป็นขอบเขต UTC ให้ query created_at ได้ */
@@ -65,22 +67,12 @@ function bangkokTodayRangeUtc(): { date_from: string; date_to: string } {
 
 function unitAbbrOf(unit: RawLowStockIngredient["unit_id"]): string {
   if (!unit || typeof unit === "string") return "";
-  return unit.unit_abbr || unit.unit_name || "";
+  return unitLabel(unit);
 }
 
 function customerNameOf(user: RawOrder["user_id"]): string {
   if (!user || typeof user === "string") return "-";
   return user.user_fullname || "-";
-}
-
-/** "คัพเค้ก × 6, เค้กลาวา × 1" — โหลดรายการไม่ได้ = "" (ช่องว่าง ไม่ล้มทั้ง dashboard) */
-async function orderItemsSummary(orderId: string): Promise<string> {
-  try {
-    const res = await http.get<{ data: RawOrderItem[] }>(`/admin/orders/${orderId}/items`);
-    return res.data.map((it) => `${it.product_snapshot?.product_name_th || "-"} × ${it.quantity}`).join(", ");
-  } catch {
-    return "";
-  }
 }
 
 export interface TopProductRow {
@@ -104,15 +96,21 @@ export interface RevenueByChannel extends Record<RevenueChannel, number> {
 }
 
 export const reportsService = {
-  revenueByChannel: async (params: { date_from?: string; date_to?: string } = {}): Promise<RevenueByChannel> => {
-    const res = await http.get<{ data: RevenueByChannel }>("/admin/dashboard/revenue-by-channel", { params });
+  revenueByChannel: async (
+    params: { date_from?: string; date_to?: string } = {},
+    h: HttpReader = http,
+  ): Promise<RevenueByChannel> => {
+    const res = await h.get<{ data: RevenueByChannel }>("/admin/dashboard/revenue-by-channel", { params });
     return res.data;
   },
 
   /** GET /admin/dashboard/top-products — จัดอันดับตาม quantity_sold เสมอ (backend เรียงให้แบบนี้
    *  เท่านั้น ไม่มีพารามิเตอร์ sort อื่น) จำกัดสูงสุด 50 รายการ (backend clamp) */
-  topProducts: async (params: { limit?: number; date_from?: string; date_to?: string } = {}): Promise<TopProductRow[]> => {
-    const res = await http.get<{ data: RawTopProductsResult }>("/admin/dashboard/top-products", { params });
+  topProducts: async (
+    params: { limit?: number; date_from?: string; date_to?: string } = {},
+    h: HttpReader = http,
+  ): Promise<TopProductRow[]> => {
+    const res = await h.get<{ data: RawTopProductsResult }>("/admin/dashboard/top-products", { params });
     return res.data.items.map((p) => ({
       product_id: p.product_id,
       product_name: p.product_name_th,
@@ -126,25 +124,29 @@ export const reportsService = {
    * overview / top-products ใช้ dashboard.view (หน้านี้กั้นไว้แล้ว) · ออเดอร์ล่าสุด = orders · วัตถุดิบใกล้หมด = ingredients ·
    * สถานะการผลิต = production (Final-Backlog P11)
    */
-  dashboard: async (scope: { orders: boolean; ingredients: boolean; production: boolean }): Promise<{ data: DashboardSummary }> => {
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (dashboard/page.tsx) */
+  dashboard: async (
+    scope: { orders: boolean; ingredients: boolean; production: boolean },
+    h: HttpReader = http,
+  ): Promise<{ data: DashboardSummary }> => {
     const today = bangkokTodayRangeUtc();
 
     const [overviewToday, overviewAllTime, lowStockRes, topProductsRes, recentOrdersRes, productionRes] =
       await Promise.all([
-        http.get<{ data: RawOverview }>("/admin/dashboard/overview", { params: today }),
-        http.get<{ data: RawOverview }>("/admin/dashboard/overview"),
+        h.get<{ data: RawOverview }>("/admin/dashboard/overview", { params: today }),
+        h.get<{ data: RawOverview }>("/admin/dashboard/overview"),
         scope.ingredients
-          ? http.get<{ data: { count: number; items: RawLowStockIngredient[] } }>(
+          ? h.get<{ data: { count: number; items: RawLowStockIngredient[] } }>(
               "/admin/ingredients/low-stock",
               { params: { limit: 10 } }
             )
           : { data: { count: 0, items: [] as RawLowStockIngredient[] } },
-        http.get<{ data: RawTopProductsResult }>("/admin/dashboard/top-products", {
+        h.get<{ data: RawTopProductsResult }>("/admin/dashboard/top-products", {
           params: { limit: 5 },
         }),
-        scope.orders ? http.getList<RawOrder>("/admin/orders", { params: { limit: 5 } }) : { data: [] as RawOrder[] },
+        scope.orders ? h.getList<RawOrder>("/admin/orders", { params: { limit: 5, with_items: true } }) : { data: [] as RawOrder[] },
         scope.production
-          ? http.getList<RawProductionOrder>("/admin/production-orders", { params: { limit: 20 } })
+          ? h.getList<RawProductionOrder>("/admin/production-orders", { params: { limit: 20 } })
           : { data: [] as RawProductionOrder[] },
       ]);
 
@@ -166,12 +168,11 @@ export const reportsService = {
       percent: Math.round((p.quantity_sold / maxQty) * 100),
     }));
 
-    const itemSummaries = await Promise.all(recentOrdersRes.data.map((o) => orderItemsSummary(o._id)));
-    const recentOrders: DashboardRecentOrder[] = recentOrdersRes.data.map((o, i) => ({
+    const recentOrders: DashboardRecentOrder[] = recentOrdersRes.data.map((o) => ({
       _id: o._id,
       order_no: o.order_no,
       customer_name: customerNameOf(o.user_id),
-      items_summary: itemSummaries[i],
+      items_summary: summarize((o.items ?? []).map((it) => ({ name: it.product_snapshot?.product_name_th, qty: it.quantity }))),
       total_amount: o.total_amount,
       order_status: o.order_status as DashboardRecentOrder["order_status"],
     }));
@@ -182,7 +183,11 @@ export const reportsService = {
       .map((p) => ({
         _id: p._id,
         production_no: p.production_no,
-        items_summary: "",
+        items_summary: summarize(
+          (p.items ?? [])
+            .filter((it) => it.item_status !== "cancelled")
+            .map((it) => ({ name: typeof it.product_id === "object" ? it.product_id?.product_name_th : undefined, qty: it.planned_qty })),
+        ),
         production_status: p.production_status as DashboardProduction["production_status"],
         due_date: p.production_date,
       }));

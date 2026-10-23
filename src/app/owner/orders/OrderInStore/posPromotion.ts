@@ -6,7 +6,9 @@
 // backend คิดใหม่เองเสมอตอนสร้างออเดอร์ (ส่ง promotion_id ไป ไม่ส่ง discount_amount) ที่นี่แค่ให้พนักงานเห็นก่อน
 //
 // ไม่ตรวจ is_active / ช่วงวันที่ — โหลดด้วย activeNow=true แล้ว (backend กรองให้) · usage_limit เช็คจาก used_count
-// ที่โหลดมา · max_user_per_user เช็คฝั่ง client ไม่ได้ (POS ผูกบัญชี "ลูกค้าทั่วไป" บัญชีเดียว — ดู noteKeys)
+// ที่โหลดมา · โปรที่จำกัดสิทธิ์ต่อลูกค้า (max_user_per_user) = โปรสำหรับสมาชิก: ไม่กรอกเบอร์สมาชิก → เลือกไม่ได้
+// (ไม่งั้นทุกบิลนับสิทธิ์ที่บัญชี "ลูกค้าทั่วไป" บัญชีเดียว ใช้ไปครั้งเดียวก็เต็ม → backend ตอบ 422 ตอนกดชำระ)
+// จำนวนที่สมาชิกใช้ไปแล้วเช็คฝั่ง client ไม่ได้ — backend ตรวจตอนสร้างออเดอร์
 // FreeShipping ตัดทิ้ง: ขายหน้าร้าน = takeaway ไม่มีค่าส่ง backend ปฏิเสธเสมอ
 // ─────────────────────────────────────────────────────────────
 import type { Promotion } from "@/types/promotion";
@@ -23,6 +25,7 @@ export type PromoBlock =
   | { key: "minAmount"; min: number; current: number }
   | { key: "minQty"; min: number; current: number }
   | { key: "usedUp" }
+  | { key: "memberOnly" }
   | { key: "zero" };
 
 export interface PromoEval {
@@ -57,11 +60,18 @@ export function promotionsForProduct(promos: Promotion[], productId: string, cat
   return promos.filter((p) => isScoped(p) && appliesToProduct(p, productId, categoryId));
 }
 
-/** คิดโปรโมชัน 1 ตัวกับบิลปัจจุบัน — กติกาเดียวกับ discountEngine.computeDiscount() (ยกเว้นช่องทาง/ส่งฟรีที่กรองไปแล้ว) */
-export function evaluatePromotion(p: Promotion, lines: PromoLine[]): PromoEval {
+/** โปรสำหรับสมาชิก = จำกัดสิทธิ์ต่อลูกค้า — ต้องรู้ว่าเป็นลูกค้าคนไหน (กรอกเบอร์สมาชิก) ถึงนับสิทธิ์ได้ */
+export function isMemberOnly(p: Promotion): boolean {
+  return p.max_user_per_user != null;
+}
+
+/** คิดโปรโมชัน 1 ตัวกับบิลปัจจุบัน — กติกาเดียวกับ discountEngine.computeDiscount() (ยกเว้นช่องทาง/ส่งฟรีที่กรองไปแล้ว)
+ *  hasMember = กรอกเบอร์สมาชิกแล้ว (โปรสำหรับสมาชิกใช้ได้เฉพาะตอนนั้น) */
+export function evaluatePromotion(p: Promotion, lines: PromoLine[], hasMember = false): PromoEval {
   const fail = (block: PromoBlock): PromoEval => ({ promotion: p, eligible: false, discount: 0, block });
 
   if (p.usage_limit != null && p.used_count >= p.usage_limit) return fail({ key: "usedUp" });
+  if (isMemberOnly(p) && !hasMember) return fail({ key: "memberOnly" });
 
   const eligibleLines = isScoped(p) ? lines.filter((l) => appliesToProduct(p, l.productId, l.categoryId)) : lines;
   if (isScoped(p) && eligibleLines.length === 0) return fail({ key: "noEligibleItems" });
@@ -90,9 +100,9 @@ export function evaluatePromotion(p: Promotion, lines: PromoLine[]): PromoEval {
 }
 
 /** คิดทุกโปรกับบิลนี้ — เรียงที่ใช้ได้ก่อน ส่วนลดมากก่อน */
-export function evaluateAll(promos: Promotion[], lines: PromoLine[]): PromoEval[] {
+export function evaluateAll(promos: Promotion[], lines: PromoLine[], hasMember = false): PromoEval[] {
   if (lines.length === 0) return [];
   return promos
-    .map((p) => evaluatePromotion(p, lines))
+    .map((p) => evaluatePromotion(p, lines, hasMember))
     .sort((a, b) => Number(b.eligible) - Number(a.eligible) || b.discount - a.discount);
 }

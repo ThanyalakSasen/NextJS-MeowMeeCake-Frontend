@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { RECIPES_PAGE_SIZE, RECIPES_QUERIES as Q } from "./recipesQuery";
 import { useTranslations } from "next-intl";
 import { recipesService } from "@/services/recipes";
 import { recipeComponentsService } from "@/services/recipeComponents";
@@ -16,7 +17,7 @@ import { unitsService } from "@/services/units";
 import { ingredientsService } from "@/services/ingredients";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import { isProductUnit } from "@/utils/unitContext";
+import { isProductUnit, unitLabel } from "@/utils/unitContext";
 import { refId } from "@/lib/refId";
 import type { Recipe, RecipeInput } from "@/types/recipe";
 import type { RecipeComponent, RecipeComponentInput } from "@/types/recipeComponent";
@@ -24,7 +25,6 @@ import { isApiError } from "@/types/api";
 import { productKindOf } from "@/types/product";
 import type { RecipeSubmitValue } from "./_components/MainRecipeModal";
 import type { ComponentSubmitValue } from "./_components/ComponentFormModal";
-import { LIST_ALL } from "@/lib/http";
 import { sortByThai, sortOptionsThai } from "@/lib/thaiSort";
 
 export type RecipeTab = "main" | "components";
@@ -36,13 +36,15 @@ export function useRecipesViewModel() {
 
   const [activeTab, setActiveTab] = useState<RecipeTab>("main");
 
-  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: LIST_ALL }) });
-  const componentsQ = useQuery({ queryKey: ["components"], queryFn: () => recipeComponentsService.list({ limit: LIST_ALL }) });
-  const componentCategoriesQ = useQuery({ queryKey: ["component-categories"], queryFn: () => componentCategoriesService.list() });
-  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: LIST_ALL }) });
-  const productCategoriesQ = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
-  const unitsQ = useQuery({ queryKey: ["units"], queryFn: () => unitsService.list() });
-  const ingredientsQ = useQuery({ queryKey: ["ingredients"], queryFn: () => ingredientsService.list({ limit: LIST_ALL }) });
+  // ทั้ง 7 ก้อนใช้ประกอบสิ่งที่เห็นบนหน้า (ชื่อวัตถุดิบ/ส่วนประกอบ/หน่วยในการ์ด · สถิติ · กล่องสินค้าที่ยังไม่มีสูตร · ตัวกรอง)
+  // page.tsx ดึงไว้ฝั่ง server แล้ว (key/params ที่ recipesQuery.ts)
+  const recipesQ = useQuery({ queryKey: Q.recipes.key, queryFn: () => recipesService.list(Q.recipes.params) });
+  const componentsQ = useQuery({ queryKey: Q.components.key, queryFn: () => recipeComponentsService.list(Q.components.params) });
+  const componentCategoriesQ = useQuery({ queryKey: Q.componentCategories.key, queryFn: () => componentCategoriesService.list() });
+  const productsQ = useQuery({ queryKey: Q.products.key, queryFn: () => productsService.list(Q.products.params) });
+  const productCategoriesQ = useQuery({ queryKey: Q.productCategories.key, queryFn: () => productCategoriesService.list() });
+  const unitsQ = useQuery({ queryKey: Q.units.key, queryFn: () => unitsService.list() });
+  const ingredientsQ = useQuery({ queryKey: Q.ingredients.key, queryFn: () => ingredientsService.list(Q.ingredients.params) });
 
   const rawRecipes = useMemo(() => recipesQ.data?.data ?? [], [recipesQ.data]);
   const rawComponents = useMemo(() => componentsQ.data?.data ?? [], [componentsQ.data]);
@@ -55,7 +57,7 @@ export function useRecipesViewModel() {
   // recipeComponentsService.list() ไม่ populate ชื่อวัตถุดิบ/หมวดหมู่ (มีแค่ id) — join ที่นี่จุดเดียว
   const components = useMemo(() => {
     const ingNameMap = new Map(ingredients.map((i) => [i._id, i.ingredient_name]));
-    const unitAbbrMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const unitAbbrMap = new Map(units.map((u) => [u._id, unitLabel(u)]));
     const catNameMap = new Map(componentCategories.map((c) => [c._id, c.component_category_name]));
     return rawComponents.map((c) => ({
       ...c,
@@ -72,7 +74,7 @@ export function useRecipesViewModel() {
   // แยกอยู่แล้วด้านบนตรงนี้จุดเดียว (ไม่ยิง request เพิ่ม) ก่อนส่งต่อให้ทุกจุดข้างล่างใช้
   const recipes = useMemo(() => {
     const ingNameMap = new Map(ingredients.map((i) => [i._id, i.ingredient_name]));
-    const unitAbbrMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const unitAbbrMap = new Map(units.map((u) => [u._id, unitLabel(u)]));
     const compNameMap = new Map(components.map((c) => [c._id, c.component_name]));
     return rawRecipes.map((r) => ({
       ...r,
@@ -88,13 +90,15 @@ export function useRecipesViewModel() {
     }));
   }, [rawRecipes, ingredients, units, components]);
 
-  const isLoading = recipesQ.isLoading || componentsQ.isLoading;
+  // รอครบทุกก้อนที่มีผลกับสิ่งที่เห็น แล้ววาดทีเดียว — เดิมรอแค่สูตร+ส่วนประกอบ ที่เหลือทยอยมาทีละก้อน หน้าวาดใหม่หลายรอบ
+  // (TBT) และกล่อง "สินค้าที่ยังไม่มีสูตร" โผล่ทีหลังดันเนื้อหาลง (CLS 0.118) · isPending (ไม่ใช่ isLoading) = ตรงกับ SSR
+  const isLoading = [recipesQ, componentsQ, componentCategoriesQ, productsQ, productCategoriesQ, unitsQ, ingredientsQ].some((q) => q.isPending);
   const isError = recipesQ.isError || componentsQ.isError;
   const refetch = () => { recipesQ.refetch(); componentsQ.refetch(); };
 
   // ── ตัวเลือกฟอร์ม (join ไว้ล่วงหน้า — modal/View ไม่ join เอง) ──
   const ingredientOptions = useMemo(() => {
-    const unitMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const unitMap = new Map(units.map((u) => [u._id, unitLabel(u)]));
     return sortByThai(ingredients.map((i) => {
       const unitId = refId(i.unit_id);
       return {
@@ -130,8 +134,14 @@ export function useRecipesViewModel() {
   }, [recipes]);
 
   // ── แท็บ 1: สูตรหลัก ──
-  const [mainSearch, setMainSearch] = useState("");
-  const [mainCategoryFilter, setMainCategoryFilter] = useState("all");
+  const [mainSearch, setMainSearchState] = useState("");
+  const [mainCategoryFilter, setMainCategoryFilterState] = useState("all");
+  // การ์ดสูตรแบ่งหน้า — เดิมวาดทุกสูตรพร้อมกัน (การ์ดละหลายปุ่ม + Popconfirm ของ antd) งาน hydrate ก้อนใหญ่สุดของหน้า
+  // (Lighthouse TBT 410ms) · เปลี่ยนตัวกรอง/ค้นหา → กลับหน้าแรก
+  const [mainPage, setMainPage] = useState(1);
+  const [mainPageSize, setMainPageSize] = useState(RECIPES_PAGE_SIZE);
+  const setMainSearch = (v: string) => { setMainSearchState(v); setMainPage(1); };
+  const setMainCategoryFilter = (v: string) => { setMainCategoryFilterState(v); setMainPage(1); };
   const [recipeFormOpen, setRecipeFormOpen] = useState(false);
   const [recipeEditTarget, setRecipeEditTarget] = useState<Recipe | null>(null);
   const [detailRecipe, setDetailRecipe] = useState<Recipe | null>(null);
@@ -156,6 +166,11 @@ export function useRecipesViewModel() {
     });
   }, [recipes, products, mainSearch, mainCategoryFilter]);
 
+  const pagedRecipes = useMemo(
+    () => filteredRecipes.slice((mainPage - 1) * mainPageSize, mainPage * mainPageSize),
+    [filteredRecipes, mainPage, mainPageSize],
+  );
+
   const mainStats = useMemo(() => ({
     total: recipes.length,
     withComponents: recipes.filter((r) => r.components.length > 0).length,
@@ -178,6 +193,9 @@ export function useRecipesViewModel() {
     () => components.map((c) => ({ ...c, usedIn: usedInMap.get(c._id) ?? [] })),
     [components, usedInMap],
   );
+
+  /** ป๊อปอัปรายชื่อสูตรหลักที่ใช้สูตรส่วนประกอบนี้ (คอลัมน์ "ใช้ในสูตรหลัก") */
+  const [usedInComponent, setUsedInComponent] = useState<(RecipeComponent & { usedIn: string[] }) | null>(null);
 
   const filteredComponents = useMemo(() => {
     const q = subSearch.trim().toLowerCase();
@@ -236,7 +254,7 @@ export function useRecipesViewModel() {
         steps: v.steps,
         yield_qty: v.yield_qty,
         yield_unit_id: v.yield_unit_id,
-        estimated_cost_per_batch: v.estimated_cost_per_batch,
+        estimated_cost_per_batch: v.estimated_cost_per_batch ?? undefined,
         duration_minutes: v.duration_minutes,
         // backend schemas/bom.ts รับ note เป็น string เท่านั้น (null = 400) — "" ล้างหมายเหตุเดิมตอนแก้ไขได้ด้วย
         note: v.note ?? "",
@@ -279,7 +297,7 @@ export function useRecipesViewModel() {
         steps: v.steps,
         yield_qty: v.yield_qty,
         yield_unit_id: v.yield_unit_id,
-        estimated_cost_per_batch: v.estimated_cost_per_batch,
+        estimated_cost_per_batch: v.estimated_cost_per_batch ?? undefined,
         note: v.note ?? "", // ดูเหตุผลที่ onSaveRecipe — null = 400
       },
     });
@@ -295,7 +313,8 @@ export function useRecipesViewModel() {
     // แท็บ 1: สูตรหลัก
     mainSearch, setMainSearch,
     mainCategoryFilter, setMainCategoryFilter,
-    filteredRecipes, mainStats, productsWithoutRecipe, eligibleProductOptions,
+    filteredRecipes, pagedRecipes, mainStats,
+    mainPage, mainPageSize, setMainPagination: (p: number, ps: number) => { setMainPage(ps === mainPageSize ? p : 1); setMainPageSize(ps); }, productsWithoutRecipe, eligibleProductOptions,
     recipeFormOpen, recipeEditTarget,
     openAddRecipe: () => { setRecipeEditTarget(null); setRecipeFormOpen(true); },
     openEditRecipe: (r: Recipe) => { setRecipeEditTarget(r); setRecipeFormOpen(true); },
@@ -311,6 +330,9 @@ export function useRecipesViewModel() {
     subSearch, setSubSearch,
     subCategoryFilter, setSubCategoryFilter: (v: string) => setSubCategoryFilter(v),
     filteredComponents, subStats,
+    usedInComponent,
+    openUsedIn: (c: RecipeComponent & { usedIn: string[] }) => setUsedInComponent(c),
+    closeUsedIn: () => setUsedInComponent(null),
     componentFormOpen, componentEditTarget,
     openAddComponent: () => { setComponentEditTarget(null); setComponentFormOpen(true); },
     openEditComponent: (c: RecipeComponent) => { setComponentEditTarget(c); setComponentFormOpen(true); },

@@ -5,6 +5,7 @@ import { Card, Switch } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { formatCurrency } from "@/i18n/format";
 import { resolveUploadUrl } from "@/lib/uploads";
+import ShopImage from "@/components/customer/ShopImage";
 import { PRODUCT_TYPE_CONFIG } from "@/constants/enumConfig";
 import { productKindOf, type Product } from "@/types/product";
 import { EditButton, DeleteButton } from "@/components/shared/actions";
@@ -16,8 +17,11 @@ export function ProductCard({
   canDelete,
   onToggleVisible,
   onDelete,
+  priority = false,
 }: {
   product: Product;
+  /** การ์ดแถวแรก (เหนือขอบจอ) — รูปโหลดทันที (LCP) */
+  priority?: boolean;
   canUpdate: boolean;
   canDelete: boolean;
   onToggleVisible: () => void;
@@ -34,9 +38,17 @@ export function ProductCard({
     // h-full + flex-col: การ์ดยืดเต็มแถวของ grid แล้วปุ่มแก้ไข/ลบชิดล่างเสมอ
     <Card className="flex h-full flex-col overflow-hidden">
       <div className="relative aspect-[4/3] overflow-hidden bg-brown-50 flex items-center justify-center text-3xl">
-        {product.product_img?.[0] ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={resolveUploadUrl(product.product_img[0])} alt={product.product_name_th} className="h-full w-full object-cover" />
+        {/* ShopImage (next/image) — ย่อ + WebP ตามขนาดการ์ด แทน <img> ต้นฉบับจาก R2 (หลายร้อย KB ต่อรูป) */}
+        {resolveUploadUrl(product.product_img) ? (
+          <ShopImage
+            src={resolveUploadUrl(product.product_img)!}
+            alt={product.product_name_th}
+            width={400}
+            height={300}
+            sizes="(min-width: 1280px) 20vw, (min-width: 640px) 30vw, 50vw"
+            priority={priority}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <CakeIcon className="h-10 w-10 text-gray-500" aria-hidden="true" />
         )}
@@ -63,7 +75,8 @@ export function ProductCard({
           </span>
           <span className="inline-flex items-center gap-1.5">
             {t("products.visible")}
-            <Switch checked={product.is_visible} disabled={!canUpdate} onChange={onToggleVisible} />
+            <Switch checked={product.is_visible} disabled={!canUpdate} onChange={onToggleVisible}
+              aria-label={t("products.visibleFor", { name: product.product_name_th })} />
           </span>
         </div>
         <div className="mt-auto flex gap-2">

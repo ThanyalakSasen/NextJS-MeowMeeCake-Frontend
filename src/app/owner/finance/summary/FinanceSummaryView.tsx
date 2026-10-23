@@ -52,6 +52,7 @@ export function FinanceSummaryView(vm: VM) {
           value={vm.selectedDate}
           onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
           style={{ width: 180 }}
+          aria-label={t("filterLabel.period")}
         />
       </div>
 
@@ -91,7 +92,7 @@ export function FinanceSummaryView(vm: VM) {
               <div className="border-b border-gray-100 px-4 py-3">
                 <p className="text-sm font-semibold text-brown-900">{t(`finance.trendTitle_${vm.period}`)}</p>
               </div>
-              <DataTable inCard columns={trendColumns} rows={vm.monthlyTrend} />
+              <DataTable inCard columns={trendColumns} rows={vm.monthlyTrend} pagination={false} />
             </div>
 
             <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white">

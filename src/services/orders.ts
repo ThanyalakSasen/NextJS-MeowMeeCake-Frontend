@@ -3,7 +3,7 @@
 // backend populate user_id เป็น object เต็ม — แปลงเป็น customer_name/customer_phone ที่นี่จุดเดียว
 // (ดู types/order.ts หัวไฟล์สำหรับข้อจำกัด: ไม่มีพรีออเดอร์, items ไม่มาใน list)
 // ─────────────────────────────────────────────────────────────
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import { toDeliveryInfo, toRefundAccount, type DeliveryUpdateInput, type Order, type OrderInput, type OrderLineItem, type OrderListParams } from "@/types/order";
 import { refId } from "@/lib/refId";
@@ -48,6 +48,7 @@ function toOrder(raw: any): Order {
     total_amount: raw.total_amount,
     order_status: raw.order_status,
     payment_status: raw.payment_status,
+    slip_pending_review: !!raw.slip_pending_review,
     delivery_address: raw.delivery_address ?? null,
     payment_due_at: raw.payment_due_at ?? null,
     cancelled_reason: raw.cancelled_reason ?? null,
@@ -73,8 +74,8 @@ function toOrder(raw: any): Order {
 }
 
 export const ordersService = {
-  list: async (params: OrderListParams = {}) => {
-    const res = await http.getList<any>(BASE, { params });
+  list: async (params: OrderListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<any>(BASE, { params });
     return { ...res, data: res.data.map(toOrder) };
   },
 

@@ -52,8 +52,9 @@ export function CouponCard({
   const minLabel = minParts.length > 0 ? minParts.join(" + ") : t("coupons.noMinimum");
 
   return (
+    // หมดอายุ = พื้นเทา + มูลค่าส่วนลดสีเทา (เดิม opacity-60 ทั้งใบ → ตัวอักษรทุกตัวคอนทราสต์ไม่ถึง 4.5:1 · Lighthouse Accessibility ตก)
     // h-full + flex-col: การ์ดยืดเต็มความสูงแถวของ grid แล้วแถบสถานะด้านล่างชิดล่างเสมอ (การ์ดในแถวเดียวกันสูงเท่ากัน)
-    <div className={`flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all hover:border-gray-200 hover:shadow-md ${isExpired ? "opacity-60" : ""}`}>
+    <div className={`flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 transition-all hover:border-gray-200 hover:shadow-md ${isExpired ? "bg-gray-50" : "bg-white"}`}>
       <div className="flex flex-1">
         <div className="w-1 shrink-0" style={{ background: statusCfg.color }} />
 
@@ -80,7 +81,7 @@ export function CouponCard({
           </div>
 
           <div className="mb-1">
-            <p className="text-2xl font-bold" style={{ color: typeCfg.color }}>{discountLabel}</p>
+            <p className="text-2xl font-bold" style={{ color: isExpired ? "#4b5563" : typeCfg.color }}>{discountLabel}</p>
             <p className="text-xs text-gray-500">{t(`enums.discountType.${coupon.discount_type}`)}</p>
           </div>
 
@@ -90,7 +91,7 @@ export function CouponCard({
                 <span>{t("coupons.usageOf", { used: coupon.used_count, limit: coupon.usage_limit })}</span>
                 <span>{pct}%</span>
               </div>
-              <ProgressBar percent={pct} color={typeCfg.color} />
+              <ProgressBar percent={pct} color={typeCfg.color} ariaLabel={t("coupons.usageOf", { used: coupon.used_count, limit: coupon.usage_limit })} />
             </div>
           ) : (
             <p className="mb-2 text-xs text-gray-500">{t("coupons.usageUnlimited", { used: coupon.used_count })}</p>

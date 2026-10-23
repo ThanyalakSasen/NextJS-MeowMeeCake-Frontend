@@ -17,6 +17,7 @@ import type { Promotion } from "@/types/promotion";
 import type { CouponStatus, DiscountType } from "@/constants/enumConfig";
 import { deriveCouponStatus, toInput, type CouponFormValue } from "./couponForm";
 import { LIST_ALL } from "@/lib/http";
+import { COUPONS_KEY, COUPONS_PARAMS } from "./couponsQuery";
 import { sortOptionsThai } from "@/lib/thaiSort";
 
 export interface CouponRow extends Promotion {
@@ -37,9 +38,11 @@ export function useCouponsViewModel() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Promotion | null>(null);
 
-  const q = useQuery({ queryKey: ["promotions"], queryFn: () => promotionsService.list({ limit: LIST_ALL }) });
-  const productsQ = useQuery({ queryKey: ["products", { limit: LIST_ALL }], queryFn: () => productsService.list({ limit: LIST_ALL }) });
-  const categoriesQ = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list() });
+  const q = useQuery({ queryKey: COUPONS_KEY, queryFn: () => promotionsService.list(COUPONS_PARAMS) });
+  // สินค้า/หมวดหมู่ใช้แค่เป็นตัวเลือกในฟอร์มคูปอง — ดึงเมื่อเปิดฟอร์มเท่านั้น (เดิมดึงตอนเปิดหน้า สินค้าทั้งร้าน
+  // ทุกหน้า แล้วหน้าค้างวงหมุนรอทั้ง 3 ก้อน ทั้งที่การ์ดคูปองใช้แค่รายการโปรโมชัน)
+  const productsQ = useQuery({ queryKey: ["products", { limit: LIST_ALL }], queryFn: () => productsService.list({ limit: LIST_ALL }), enabled: modalOpen });
+  const categoriesQ = useQuery({ queryKey: ["product-categories"], queryFn: () => productCategoriesService.list(), enabled: modalOpen });
 
   const rows = useMemo<CouponRow[]>(
     () => (q.data?.data ?? []).map((p) => ({ ...p, status: deriveCouponStatus(p) })),
@@ -112,7 +115,8 @@ export function useCouponsViewModel() {
     rows: filtered,
     counts,
     totalUsed,
-    isLoading: q.isLoading || productsQ.isLoading || categoriesQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
 

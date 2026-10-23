@@ -78,7 +78,7 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 | P4 | 🟠 | FE | **หน้าพนักงาน/สิทธิ์แสดงตัวเลือกที่ backend จะปฏิเสธ** (หลัง #80/#82) — คนที่ไม่ใช่ owner ยังเห็นบทบาท/บัญชี owner และพนักงานที่สิทธิ์สูงกว่า กดแล้วได้ 403 (ข้อความจาก backend แสดงผ่าน alert แล้ว — ทำงานถูก แต่สับสน) | ซ่อน/ปิดปุ่มเมื่อ `roleType !== "owner"` และเป้าหมายเป็น owner · ในตารางสิทธิ์ ปิดช่อง flag ที่ผู้ใช้เองไม่มี (`menuAccess` จาก `/auth/me` มีครบแล้ว) |
 | P5 | 🟠 | BE | **`expires_at` ยังไม่อยู่ในกติกา #82** — ผู้ที่มีสิทธิ์ชั่วคราวให้สิทธิ์เดียวกันแบบไม่หมดอายุกับบทบาทอื่น (หรือย้ายตัวเองเข้าบทบาทนั้น) ได้ | `permissionCeiling.assertMayGrant`: ถ้าสิทธิ์ของผู้ทำมี `expires_at` ให้ `expires_at` ที่ให้ต้องไม่เกินนั้น · ติดตามใน issue #81 (ปิดแล้ว — เปิด issue ใหม่) |
 | P6 | 🔴 | FE + ทีม | **ยังไม่มีตำแหน่งเริ่มต้น** — ตอนนี้สร้างตำแหน่งได้แค่แบบว่าง หรือคัดลอกจากตำแหน่งเดิม | ทำ "เริ่มจากแม่แบบ" ใน `RoleFormModal` ตาม §1.3 (P1–P3 เสร็จแล้ว — แม่แบบไม่ต้องใส่สิทธิ์เกินจำเป็น) · ทีมตรวจตารางสิทธิ์ §1.3 ก่อน |
-| P7 | 🟠 | BE + FE | **ยืนยันสลิปกับคืนเงินใช้ `payments.approve` ตัวเดียวกัน** — ให้พนักงานเคาน์เตอร์ยืนยันการชำระใน POS ได้ = กดคืนเงินได้ด้วย | BE: แยก `POST /admin/payments/:id/refund` ไปใช้ flag/เมนูอื่น (เช่น `payments.delete` หรือ owner-only) · FE: `RefundSection` เช็คสิทธิ์ใหม่ |
+| P7 | ✅ | BE + FE | ~~ยืนยันสลิปกับคืนเงินใช้ `payments.approve` ตัวเดียวกัน~~ | ✅ 2026-10-19 — backend `POST /admin/payments/:id/refund` ใช้ **`payments.delete`** (เทส `refundPermission.test.ts`: มีแค่ approve = 403) · frontend ปุ่มคืนเงิน (ออเดอร์ + พรีออเดอร์) เช็ค `payments.delete` · หน้าจัดการสิทธิ์มีคำอธิบายใต้เมนูการชำระเงิน · ⚠️ **ตอน deploy: คนที่เคยคืนเงินได้ด้วย approve ต้องได้ `payments.delete` เพิ่ม** · ยังไม่ได้ทดสอบหน้าจริง |
 | P8 | 🟢 | BE | ถอนสิทธิ์ / ปิดบทบาท / ลบบทบาท ของบทบาทที่สิทธิ์สูงกว่าได้ (ไม่ใช่การยกระดับ แต่กระทบคนอื่น) | ถ้าต้องการ: ใช้ `permissionCeiling` กับ `PATCH`/`DELETE /admin/roles/:id` และการถอนสิทธิ์ด้วย |
 | P9 | 🔴 | ทีม | **ตอน deploy: สิทธิ์รีวิวย้ายจาก `products` → `reports`** (backend DEPLOY ⑦) — พนักงานที่เคยดูแลรีวิวต้องได้ `reports` ใหม่ | เจ้าของร้านให้ `reports` ในหน้าจัดการสิทธิ์ (P1 แก้แล้ว — มี `reports` ก็เข้าหน้ารีวิวได้) |
 | P10 | 🟢 | BE | cache สิทธิ์ 30 วินาที + rate limit เก็บในหน่วยความจำ → **ต้องรัน backend instance เดียว** (DEPLOY Y8) · ถอนสิทธิ์แล้ว instance อื่นยังเห็นของเก่าได้ | ตอนนี้ไม่ต้องทำ (ร้านขนาดนี้ instance เดียวพอ) · ถ้าขยาย ย้ายไป Redis |
@@ -176,7 +176,7 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 
 | รหัส | ระดับ | ฝั่ง | เรื่อง | ที่มา / หมายเหตุ |
 |---|---|---|---|---|
-| N1 | 🟠 | FE | **CI ของ frontend** — ยังไม่มี `.github/workflows` · merge ทุกครั้งตรวจด้วยมือ | ใช้ backend `ci.yml` เป็นต้นแบบ: `npm ci` → `npm run check` → `npm run build` |
+| N1 | ✅ | FE | ~~CI ของ frontend~~ | ✅ 2026-10-19 — `.github/workflows/ci.yml` (ทุก PR + push เข้า main): `npm ci` → `npm run check` → `npm run build` · แก้ `text-gray-400` 4 ไฟล์ที่ทำให้ `lint:ui` (= `npm run check`) ตก · รันในเครื่องผ่านทั้ง check + build แล้ว · ยังไม่ได้เห็นรันบน GitHub จริง (ต้อง push ก่อน) |
 | N2 | 🟢 | FE | dashboard แยกยอดตามช่องทาง + รวมพรีออเดอร์ | API `revenue-by-channel` มีแล้ว (หน้าสรุปการเงินใช้อยู่) — BACKLOG2 §12 ข้อ 11 |
 | N3 | 🟢 | BE | ตะกร้า / checkout ยังแสดง `price_snapshot` (ราคาตอนหยิบใส่) ไม่ใช่ราคาปัจจุบัน — ยอดจริงคิดใหม่ตอนสั่ง | backend `reprice.md` แถว 1, 3 (ยังไม่ได้ตรวจกับโค้ดรอบนี้) |
 | N4 | 🟢 | BE | ผูกโปรโมชัน / `discountEngine` กับพรีออเดอร์ (ตอนนี้มีแค่ส่วนลดกรอกมือ) | backend `preorder.md` §9 |

@@ -20,6 +20,7 @@ import { isAwaitingRefund, type DeliveryUpdateInput, type Order, type OrderType 
 import { isApiError } from "@/types/api";
 import { STATUS_SELECT_OPTIONS, isFinalStatus } from "./orderStatus";
 import { LIST_ALL } from "@/lib/http";
+import { ORDERS_KEY } from "./ordersQuery";
 
 export function useManageOrdersViewModel() {
   const t = useTranslations();
@@ -56,13 +57,15 @@ export function useManageOrdersViewModel() {
   const closeDrawer = () => router.replace(pathname, { scroll: false });
 
   const ordersQ = useQuery({
-    queryKey: ["orders"],
+    queryKey: ORDERS_KEY,
     queryFn: () => ordersService.list({ limit: LIST_ALL }),
   });
 
   const all = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);
-  const deliveryCount = all.filter((o) => o.order_type === "delivery").length;
-  const takeawayCount = all.filter((o) => o.order_type === "takeaway").length;
+  // ตัวเลขบนแท็บ = ออเดอร์ที่ยังต้องจัดการ (ไม่นับยกเลิก/สำเร็จ) · ยอดรวมทุกสถานะดูได้จาก "ทั้งหมด" ในตัวกรองสถานะ
+  const isOpen = (o: Order) => o.order_status !== "cancelled" && o.order_status !== "completed";
+  const deliveryCount = all.filter((o) => o.order_type === "delivery" && isOpen(o)).length;
+  const takeawayCount = all.filter((o) => o.order_type === "takeaway" && isOpen(o)).length;
   const typeOrders = useMemo(
     () => all.filter((o) => o.order_type === activeTab),
     [all, activeTab],
@@ -83,7 +86,23 @@ export function useManageOrdersViewModel() {
     [filtered, page, pageSize],
   );
 
-  const unreviewedCount = typeOrders.filter((o) => o.payment_status === "pending").length;
+  // กล่องแจ้งเตือนเหนือตาราง (แบบหน้าสต็อก) — คิดจากออเดอร์ของแท็บปัจจุบัน ไม่ขึ้นกับตัวกรอง/ค้นหา · ออเดอร์ที่ยกเลิกไม่นับ
+  // payment_status "pending" มีทั้งแนบสลิปแล้วรอตรวจ และยังไม่แนบ — แยกด้วย slip_pending_review (backend listOrders)
+  const alerts = useMemo(() => {
+    const open = typeOrders.filter((o) => o.order_status !== "cancelled");
+    return {
+      // ยังไม่ได้จัดส่ง = จัดส่งถึงบ้าน + ชำระแล้ว + สถานะจัดส่งยัง "รอจัดส่ง" (แท็บรับเองไม่มีการจัดส่ง)
+      notShipped:
+        activeTab === "delivery"
+          ? open.filter((o) => o.payment_status === "paid" && o.order_status !== "completed" && o.delivery_status === "pending")
+          : [],
+      unverified: open.filter((o) => o.payment_status === "pending" && o.slip_pending_review),
+      // ยังไม่แนบสลิป — รวมสลิปที่ถูกปฏิเสธ (failed) เพราะต้องรอลูกค้าแนบใหม่เหมือนกัน
+      noSlip: open.filter(
+        (o) => o.payment_status === "failed" || (o.payment_status === "pending" && !o.slip_pending_review),
+      ),
+    };
+  }, [typeOrders, activeTab]);
   const awaitingRefundCount = typeOrders.filter(isAwaitingRefund).length;
   // E5 ออเดอร์พร้อมส่งมอบ (แทนหน้า readyReders ของ FrontOffice) — delivery = รอจัดส่ง · takeaway = รอลูกค้ามารับ
   const readyCount = typeOrders.filter((o) => o.order_status === "ready").length;
@@ -112,23 +131,33 @@ export function useManageOrdersViewModel() {
     onSuccess: invalidate,
   });
 
+  // ยกเลิกต้องยืนยัน + กรอกเหตุผลก่อนเสมอ (CancelOrderModal) — ทั้งปุ่มในตารางและการเลือก "ยกเลิก" จาก dropdown
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
+  const onCancel = (order: Order) => setCancelTarget(order);
+
+  const onConfirmCancel = (reason: string) => {
+    const order = cancelTarget;
+    if (!order) return;
+    statusMutation.mutate(
+      { id: order._id, status: "cancelled", reason },
+      {
+        onSuccess: () => {
+          alert.success(t("orders.cancelled", { no: order.order_no }));
+          setCancelTarget(null);
+        },
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.cancelFailed")),
+      },
+    );
+  };
+
   const onStatusChange = (order: Order, next: OrderStatus) => {
     if (next === order.order_status) return;
+    if (next === "cancelled") return onCancel(order);
     statusMutation.mutate(
       { id: order._id, status: next },
       {
         onSuccess: () => alert.success(t("orders.statusChanged", { no: order.order_no, status: t(`enums.orderStatus.${next}`) })),
         onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.statusChangeFailed")),
-      },
-    );
-  };
-
-  const onCancel = (order: Order) => {
-    statusMutation.mutate(
-      { id: order._id, status: "cancelled" },
-      {
-        onSuccess: () => alert.success(t("orders.cancelled", { no: order.order_no })),
-        onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.cancelFailed")),
       },
     );
   };
@@ -238,6 +267,8 @@ export function useManageOrdersViewModel() {
   return {
     perm,
     canApprovePayment: paymentPerm.approve,
+    /** คืนเงิน = payments.delete (ไม่ใช่ approve — คนยืนยันสลิปได้จะไม่ได้คืนเงินไปด้วย · Final-Backlog P7) */
+    canRefundPayment: paymentPerm.delete,
 
     activeTab,
     setActiveTab: (v: OrderType) => { setActiveTabState(v); setPage(1); setStatusFilterState("all"); },
@@ -250,9 +281,11 @@ export function useManageOrdersViewModel() {
     orders: paged,
     ordersForStats: typeOrders,
     total: filtered.length,
-    deliveryCount, takeawayCount, unreviewedCount, awaitingRefundCount, readyCount,
+    deliveryCount, takeawayCount, awaitingRefundCount, readyCount,
+    alerts,
 
-    isLoading: ordersQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+    isLoading: ordersQ.isPending,
     isError: ordersQ.isError,
     refetch: () => ordersQ.refetch(),
 
@@ -268,6 +301,9 @@ export function useManageOrdersViewModel() {
 
     isFinalStatus,
     onStatusChange, onCancel, onVerifyPayment, onRejectPayment, onExport,
+    cancelTarget, onConfirmCancel,
+    closeCancel: () => setCancelTarget(null),
+    cancelling: statusMutation.isPending,
     verifyingPayment: verifyMutation.isPending,
     onRefund,
     refunding: refundMutation.isPending,

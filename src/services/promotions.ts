@@ -4,7 +4,7 @@
 // [String] ที่มี default: [] ใน schema ก็จริง แต่ default ใช้เฉพาะตอน insert ผ่าน Mongoose เท่านั้น —
 // เอกสารเก่าที่เคยถูกสร้างก่อน field พวกนี้เพิ่มเข้ามา (หรือ insert ทางอื่นที่ข้าม Mongoose) จะไม่มี
 // field นี้เลย อ่านออกมาเป็น undefined ตรง ๆ (บั๊กคลาสเดียวกับ product_type: "ready" ที่ค้างจากข้อมูลเก่า)
-import { http } from "@/lib/http";
+import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { Promotion, PromotionInput, PromotionListParams } from "@/types/promotion";
 
@@ -22,8 +22,9 @@ function toPromotion(raw: any): Promotion {
 }
 
 export const promotionsService = {
-  list: async (params: PromotionListParams = {}) => {
-    const res = await http.getList<any>(BASE, { params });
+  /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (coupons/page.tsx) */
+  list: async (params: PromotionListParams = {}, h: HttpReader = http) => {
+    const res = await h.getList<any>(BASE, { params });
     return { ...res, data: res.data.map(toPromotion) };
   },
 

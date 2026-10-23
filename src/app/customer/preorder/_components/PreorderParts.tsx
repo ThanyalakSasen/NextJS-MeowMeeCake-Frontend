@@ -15,6 +15,8 @@ import { resolveUploadUrl } from "@/lib/uploads";
 import { baht } from "@/components/customer/shopStyles";
 import { usePreorderBasket } from "../lib/preorderBasket";
 import ShopImage from "@/components/customer/ShopImage";
+import { AllergenBadge } from "@/components/customer/ProductCard";
+import { useAllergenWarnings } from "@/app/customer/hooks/useAllergenWarnings";
 
 const STEPS = [
   { title: "s1", detail: "d1" },
@@ -72,6 +74,7 @@ export function CountdownText({ target, prefix }: { target: string; prefix: stri
 export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem; roundId: string }) {
   const t = useTranslations("shop.preorderShop");
   const { names: localNames } = useLocalName();
+  const allergenWarningOf = useAllergenWarnings();
   const p = item.product;
   const { min, max } = roundItemLimits(item);
   const soldOut = item.remaining_qty <= 0 || max < min;
@@ -91,6 +94,7 @@ export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem;
           ) : (
             <div className="flex h-full w-full items-center justify-center text-xs text-stone-500">{t("noImage")}</div>
           )}
+          <AllergenBadge warning={allergenWarningOf(p._id)} />
           <span
             className={`absolute right-2 top-2 rounded border px-2 py-0.5 text-[10px] font-semibold ${
               soldOut ? "border-red-200 bg-red-50 text-red-600" : item.remaining_qty <= Math.max(3, item.max_qty_total * 0.2) ? "border-amber-200 bg-amber-50 text-amber-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"

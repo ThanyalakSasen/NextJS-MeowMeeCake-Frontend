@@ -48,8 +48,8 @@ export function useFavorites() {
     );
     setPending(productId);
     try {
+      // ไม่แจ้งเตือนเมื่อสำเร็จ — ไอคอนหัวใจเปลี่ยนให้เห็นเอง
       await (next ? shopFavoritesService.add(productId) : shopFavoritesService.remove(productId));
-      alert.success(next ? t("favoriteAdded") : t("favoriteRemoved"));
     } catch (e) {
       qc.setQueryData(shopFavoritesKey, before);
       alert.error(isApiError(e) ? e.message : t("favoriteFailed"));

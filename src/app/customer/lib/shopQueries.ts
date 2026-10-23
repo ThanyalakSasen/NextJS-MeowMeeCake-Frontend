@@ -5,6 +5,8 @@ export const shopOrderKey = (id: string) => ["shop", "orders", id] as const;
 export const shopOrderPaymentPageKey = (id: string) => ["shop", "orders", id, "payment-page"] as const;
 export const shopProfileKey = ["shop", "me"] as const;
 export const shopEmailStatusKey = ["shop", "me", "email"] as const;
+/** คำเตือนแพ้อาหารของทุกสินค้า (บัตรสินค้าทุกใบใช้ cache เดียว) — แก้อาหารที่แพ้แล้ว invalidate */
+export const shopAllergenWarningsKey = ["shop", "me", "allergen-warnings"] as const;
 /** ต้องตรงกับ LINE_STATUS_KEY ของ /profile (useProfileViewModel) — ใช้ cache เดียวกัน */
 export const shopLineStatusKey = ["shop", "me", "line"] as const;
 /** ประวัติการสั่งซื้อ (ทุกหน้า/ตัวกรอง) — ขึ้นต้นเหมือนกันให้ invalidate ชุดเดียวได้ */
@@ -28,4 +30,6 @@ export const preorderRoundKey = (id: string) => ["catalog", "preorder-rounds", i
 export const shopNotificationsKey = ["shop", "notifications"] as const;
 /** รีวิวของฉัน (D7) — ใช้ดูว่ารายการไหนรีวิวแล้ว · ส่งรีวิวแล้ว invalidate */
 export const shopReviewsKey = ["shop", "reviews"] as const;
+/** หน้า "รีวิวของฉัน" — ขึ้นต้นด้วย shopReviewsKey: เขียนรีวิวใหม่ (invalidate shopReviewsKey) แล้วหน้านี้โหลดใหม่ด้วย */
+export const shopReviewHistoryKey = [...shopReviewsKey, "history"] as const;
 export const reviewAspectsKey = ["catalog", "review-aspects"] as const;

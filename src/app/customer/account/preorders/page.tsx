@@ -17,13 +17,15 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { shopPreorderKey, shopPreordersKey } from "../../lib/shopQueries";
-import { ORDER_STATUSES, ORDER_STATUS_TONE, useOrderLabels } from "../purchases/orderLabels";
+import { ORDER_STATUSES, ORDER_STATUS_TONE, REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../purchases/orderLabels";
 import { thaiDate } from "../../preorder/lib/preorderDates";
 import ReviewLink from "../_components/ReviewLink";
 
 const PAGE_SIZE = 10;
+/** ปุ่มรีวิวแบบเดียวกับประวัติคำสั่งซื้อ — อยู่แถวเดียวกับปุ่มอื่น จึงจัดกึ่งกลางแนวตั้งแทน self-start */
+const REVIEW_PILL_INLINE = REVIEW_PILL.replace("self-start", "self-center");
 const actionLink =
-  "whitespace-nowrap rounded-xl border border-[#8C5A3C]/30 bg-white px-4 py-2 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white";
+  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[#8C5A3C]/30 bg-white px-4 py-2 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white";
 
 export default function PreordersPage() {
   const t = useTranslations("shop.preorders");
@@ -181,7 +183,7 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
           {p.order_status === "cancelled" && p.payment_status === "paid" && <span className="block text-xs font-medium text-amber-600">{to("awaitRefund")}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <ReviewLink kind="preorder" doc={p} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={actionLink} />
+          <ReviewLink kind="preorder" doc={p} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={REVIEW_PILL_INLINE} reviewedClassName={REVIEWED_PILL} />
           <Link href={href} className={actionLink}>{to("viewDetail")}</Link>
         </div>
       </div>

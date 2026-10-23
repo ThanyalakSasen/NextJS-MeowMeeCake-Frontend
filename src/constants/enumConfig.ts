@@ -58,6 +58,14 @@ export const DELIVERY_STATUS_CONFIG: Record<DeliveryStatus, StatusStyle> = {
   failed:    { color: "#dc2626", antColor: "error" },
 };
 
+// ─── บริษัทขนส่ง (orderModel/preorderModel.shipping_carrier — ตรงกับ backend lib/shippingCarrier.ts) ───
+export const SHIPPING_CARRIERS = [
+  "thailand_post", "kerry", "flash", "jt", "ninjavan", "best",
+  "scg", "lalamove", "grab", "lineman", "store", "other",
+] as const;
+
+export type ShippingCarrier = (typeof SHIPPING_CARRIERS)[number];
+
 // ─── การผลิต ─────────────────────────────────────────────────
 export type ProductionStatus = "planned" | "in_progress" | "done" | "cancelled";
 
@@ -99,7 +107,8 @@ export type StockStatus = "ok" | "low" | "out";
 export const STOCK_STATUS_CONFIG: Record<StockStatus, StatusStyle & { dotColor: string }> = {
   ok:  { color: "#15803d", antColor: "success", dotColor: "#22c55e", bg: "#dcfce7", text: "#15803d" },
   low: { color: "#b45309", antColor: "warning", dotColor: "#f59e0b", bg: "#fef3c7", text: "#b45309" },
-  out: { color: "#dc2626", antColor: "error",   dotColor: "#ef4444", bg: "#fee2e2", text: "#dc2626" },
+  // ตัวอักษร red-700 — #dc2626 บน #fee2e2 คอนทราสต์ 3.95:1 ไม่ถึง 4.5:1 (ป้าย "หมดสต็อก") · จุด/แถบยังใช้สีสดเดิม
+  out: { color: "#b91c1c", antColor: "error",   dotColor: "#ef4444", bg: "#fee2e2", text: "#b91c1c" },
 };
 
 export function stockProgressColor(status: StockStatus): string {
@@ -249,7 +258,8 @@ export const SENTIMENT_LABEL_CONFIG: Record<SentimentLabel, StatusStyle> = {
 export type RoleTypeKind = "owner" | "staff" | "customer";
 
 export const ROLE_TYPE_CONFIG: Record<RoleTypeKind, StatusStyle> = {
-  owner:    { color: "#a16207", antColor: "gold" },
+  // antColor "purple" — แท็ก gold ของ antd ตัวอักษรบนพื้นได้คอนทราสต์แค่ 2.75:1 (Lighthouse Accessibility ตก) · purple 8.9:1
+  owner:    { color: "#a16207", antColor: "purple" },
   staff:    { color: "#1d4ed8", antColor: "blue" },
   customer: { color: "#475569", antColor: "default" },
 };
@@ -300,7 +310,7 @@ export const SHIPPING_ZONE_CONFIG: Record<ShippingZoneCode, StatusStyle> = {
 // ─── ป้ายที่ไม่ใช่ enum แต่ใช้ซ้ำหลายหน้า ────────────────────
 // อยู่ที่นี่เพราะความหมายเดียวกันต้องได้สีเดียวกันทุกหน้า — เดิมพิมพ์ชื่อสีซ้ำกันคนละไฟล์
 export const NOTICE_TAG: Record<
-  "awaitingRefund" | "cancelled" | "catchAllZone" | "inactive" | "roleName" | "negativeFilter",
+  "awaitingRefund" | "cancelled" | "catchAllZone" | "inactive" | "roleName" | "negativeFilter" | "missingRecipe",
   AntColor
 > = {
   /** "รอคืนเงิน" — ตารางจัดการออเดอร์ · แท็บออเดอร์ของรอบพรีออเดอร์ */
@@ -315,6 +325,8 @@ export const NOTICE_TAG: Record<
   roleName: "blue",
   /** ชิปตัวกรอง "เฉพาะรีวิวแง่ลบ" ที่กดปิดได้ — หน้ารีวิวลูกค้า */
   negativeFilter: "red",
+  /** สินค้าที่ยังไม่มีสูตร — ตารางดูล่วงหน้าในฟอร์มสร้างใบสั่งผลิตจากรอบ (สร้างไม่ได้จนกว่าจะผูกสูตร) */
+  missingRecipe: "error",
 };
 
 // ─── สถานะการเชื่อมบัญชี LINE (หน้าโปรไฟล์) ──────────────────

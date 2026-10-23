@@ -16,8 +16,9 @@ import { isApiError } from "@/types/api";
 import type { ReviewAspect, ReviewAspectInput, SemanticTerm, SemanticTermInput } from "@/types/review";
 import { reviewAspectsKey } from "@/app/customer/lib/shopQueries";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { REVIEW_ASPECTS_KEY } from "../reviewsQuery";
 
-const ASPECTS_KEY = ["review-aspects"] as const;
+const ASPECTS_KEY = REVIEW_ASPECTS_KEY;
 const TERMS_KEY = ["semantic-terms"] as const;
 export const MAX_ASPECTS = 20;
 export type SettingsTab = "aspects" | "terms";
@@ -25,13 +26,13 @@ export type SettingsTab = "aspects" | "terms";
 export function useReviewSettingsViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("reports");
+  const perm = usePermission("reports_reviews");
   const [tab, setTab] = useState<SettingsTab>("aspects");
 
   const fail = (e: unknown) => alert.error(isApiError(e) ? e.message : t("reviewSettings.saveFailed"));
 
   // ── หัวข้อ ──
-  const aspectsQ = useQuery({ queryKey: ASPECTS_KEY, queryFn: reviewAspectsService.list });
+  const aspectsQ = useQuery({ queryKey: ASPECTS_KEY, queryFn: () => reviewAspectsService.list() });
   const all = useMemo(() => aspectsQ.data ?? [], [aspectsQ.data]);
   const aspects = all.filter((a) => !a.deleted_at);
   const deletedAspects = all.filter((a) => a.deleted_at);
@@ -150,7 +151,8 @@ export function useReviewSettingsViewModel() {
     tab,
     setTab,
 
-    aspectsLoading: aspectsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    aspectsLoading: aspectsQ.isPending,
     aspectsError: aspectsQ.isError,
     refetchAspects: () => aspectsQ.refetch(),
     aspects,

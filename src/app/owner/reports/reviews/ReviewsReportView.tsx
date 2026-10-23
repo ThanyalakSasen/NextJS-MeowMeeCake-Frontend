@@ -47,7 +47,7 @@ export function ReviewsReportView({
             <ReviewDashboardView
               {...dashboard}
               onViewUnreplied={() => {
-                manage.showUnrepliedNegative();
+                manage.showUnrepliedNegative(dashboard.productId);
                 onTab("manage");
               }}
             />

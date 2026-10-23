@@ -174,7 +174,7 @@ function ContactForm({ storeName }: { storeName: string }) {
   const authed = status === "authenticated";
   const topicsQ = useQuery({ queryKey: contactTopicsKey, queryFn: storeInfoService.contactTopics, staleTime: 10 * 60_000 });
   // ผู้ส่ง = บัญชีที่ login (แสดงให้รู้ว่าร้านจะติดต่อกลับทางไหน) · cache เดียวกับหน้าบัญชีของฉัน
-  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: shopProfileService.get, enabled: authed });
+  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: () => shopProfileService.get(), enabled: authed });
   const profile = profileQ.data;
   const email = profile && !isLinePlaceholderEmail(profile.email) ? profile.email : "";
 

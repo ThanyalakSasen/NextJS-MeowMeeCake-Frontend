@@ -18,6 +18,16 @@ export function getNextStatus(status: ProductionStatus): ProductionStatus | null
   return PRODUCTION_STATUS_FLOW[idx + 1];
 }
 
+/**
+ * จำนวนที่ผลิตได้จริงของรายการ (ใช้กับใบที่ปิดงานแล้ว) — รายการที่ยกเลิก (ปิดงานด้วย 0) = 0 ·
+ * มี actual_qty = ตามนั้น · ปิดงานแบบ "จำนวนที่วางแผน" ไม่มี actual_qty = ใช้ planned_qty
+ * (เดิมประวัติการผลิตรวม planned_qty ตรง ๆ จึงไม่ตรงกับที่ผลิตได้จริง — TC-ADM-94)
+ */
+export function producedQty(item: { planned_qty: number; actual_qty?: number | null; item_status: string }): number {
+  if (item.item_status === "cancelled") return 0;
+  return item.actual_qty ?? item.planned_qty;
+}
+
 /** ระยะเวลาที่ใช้ผลิตจริง (ชม., ปัดทศนิยม 1 ตำแหน่ง) — null ถ้ายังไม่เริ่ม/ยังไม่เสร็จ */
 export function durationHours(order: { started_at?: string | null; completed_at?: string | null }): number | null {
   if (!order.started_at || !order.completed_at) return null;

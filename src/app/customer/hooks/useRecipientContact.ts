@@ -18,7 +18,7 @@ function toLocalPhone(raw: string | null | undefined): string {
 
 export function useRecipientContact() {
   const { user } = useCustomerSession();
-  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: shopProfileService.get });
+  const profileQ = useQuery({ queryKey: shopProfileKey, queryFn: () => shopProfileService.get() });
   const [recipientName, setRecipientName] = useState(user?.fullname ?? "");
   const [recipientPhone, setRecipientPhone] = useState("");
   const [prefilled, setPrefilled] = useState(false);

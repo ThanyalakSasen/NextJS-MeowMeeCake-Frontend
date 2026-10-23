@@ -24,7 +24,9 @@ export function discountFromSalePrice(base: number, salePrice: number | null): D
 }
 
 // แท็กหมวดหมู่ — สุ่มสีจาก preset ของ antd ให้คงที่ต่อ category เดิมเสมอ (hash ชื่อ/id)
-const TAG_COLORS = ["blue", "purple", "green", "gold", "volcano", "cyan", "magenta", "geekblue"];
+// เฉพาะสี preset ของ antd ที่ตัวอักษรบนพื้น tag ผ่านคอนทราสต์ 4.5:1 (blue 5.5 · purple 8.9 · magenta 5.0 · geekblue 7.9)
+// green/gold/volcano/cyan ได้แค่ 2.8–4.4 → Lighthouse Accessibility ตก
+const TAG_COLORS = ["blue", "purple", "magenta", "geekblue"];
 
 export function tagColorFor(seed: string): string {
   if (!seed) return "default";

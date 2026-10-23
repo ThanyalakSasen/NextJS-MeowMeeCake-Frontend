@@ -3,7 +3,8 @@
 // ViewModel ของ "ค่าจัดส่งหน้าร้านออนไลน์" (BACKLOG4 F2 · ต้นแบบ FrontOffice owner/shipping) — MVVM + i18n
 // แก้โซน A–D ผ่าน /admin/shipping-zones (สิทธิ์ store_info.view / update · backend Q-BE2)
 // ใช้คิดค่าส่งออเดอร์/พรีออเดอร์ที่ลูกค้าสั่งจากหน้าเว็บ · ค่าส่งของออเดอร์ที่สร้างจากหลังร้านอยู่ที่ "โซนค่าจัดส่ง" (delivery-zones)
-// ขอบเขตจัดส่งรายหมวด (ส่งทั่วประเทศ/เฉพาะจังหวัดร้าน) ตั้งที่ตัวจัดการหมวดหมู่สินค้า — หน้านี้ไม่ยกมา
+// ขอบเขตจัดส่งรายหมวด (ส่งทั่วประเทศ/เฉพาะจังหวัดร้าน) อยู่ที่ปุ่ม <CategoryShippingButton> มุมขวาบน
+// (ปุ่มเดียวกันในหน้าจัดการข้อมูลสินค้า · ข้อมูลจาก hooks/useCategoryShipping — ไม่ผ่าน ViewModel นี้)
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,15 +19,16 @@ import {
   provinceOwners, resolveShippingZone, toShippingZoneForm, toShippingZoneUpdate, validateShippingZone,
   type ShippingZoneErrors, type ShippingZoneForm,
 } from "./shippingZoneForm";
+import { SHIPPING_ZONES_KEY as KEY } from "./shippingQuery";
 
-const KEY = ["admin", "shipping-zones"] as const;
 
 export function useShippingZonesViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("store_info");
+  const perm = usePermission("shipping");
 
-  const q = useQuery({ queryKey: KEY, queryFn: shippingZonesService.list });
+  // page.tsx ดึงไว้ฝั่ง server แล้ว (key ที่ shippingQuery.ts)
+  const q = useQuery({ queryKey: KEY, queryFn: () => shippingZonesService.list() });
   const zones = useMemo(() => q.data ?? [], [q.data]);
 
   // ── แก้ไข (modal) ──
@@ -57,7 +59,8 @@ export function useShippingZonesViewModel() {
 
   return {
     perm,
-    isLoading: q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
     zones,

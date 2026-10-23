@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { INGREDIENTS_KEY, INGREDIENTS_PARAMS } from "../ingredientsQuery";
 import { useTranslations } from "next-intl";
 import { ingredientsService } from "@/services/ingredients";
 import { ingredientTransactionsService } from "@/services/ingredientTransactions";
@@ -16,7 +17,6 @@ import type { StockStatus, IngredientTxnType } from "@/constants/enumConfig";
 import { getIngredientStatus, stockPercent } from "../ingredientStatus";
 import { unitLabel } from "@/utils/unitContext";
 import { isApiError } from "@/types/api";
-import { LIST_ALL } from "@/lib/http";
 import type { BulkStockItem, BulkStockLine, BulkStockMode } from "@/components/shared/stock";
 
 export interface StockRow {
@@ -40,7 +40,7 @@ export function useIngredientStockViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
   // ingredients ไม่ใช่ stock — API ของหน้านี้ตรวจ ingredients.* (Final-Backlog P2)
-  const perm = usePermission("ingredients");
+  const perm = usePermission("ingredient_stock");
   const { user } = useCurrentUser();
 
   const [search, setSearch] = useState("");
@@ -49,8 +49,8 @@ export function useIngredientStockViewModel() {
   const [mode, setMode] = useState<ActionMode>("receive");
 
   const ingredientsQ = useQuery({
-    queryKey: ["ingredients"],
-    queryFn: () => ingredientsService.list({ limit: LIST_ALL }),
+    queryKey: INGREDIENTS_KEY,
+    queryFn: () => ingredientsService.list(INGREDIENTS_PARAMS),
   });
 
   const rows = useMemo<StockRow[]>(() => {
@@ -158,7 +158,8 @@ export function useIngredientStockViewModel() {
     rows: filtered,
     alertRows,
     stats,
-    isLoading: ingredientsQ.isLoading,
+    // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
+    isLoading: ingredientsQ.isPending,
     isError: ingredientsQ.isError,
     refetch: () => ingredientsQ.refetch(),
 

@@ -32,7 +32,8 @@ import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
 import BuyAgainButton from "../../_components/BuyAgainButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
-import { useOrderLabels } from "../orderLabels";
+import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../orderLabels";
+import { canReview } from "../../../hooks/useReviewedItems";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -99,6 +100,20 @@ function OrderContent() {
       </div>
     );
   }
+
+  // สถานะรีวิว — อยู่บรรทัดเดียวกับสถานะจัดส่ง (ออเดอร์รับเองอยู่บรรทัดนัดรับ) · ยังรีวิวไม่ได้ = ไม่แสดง
+  const showPickupRow = order.order_type === "takeaway" && !!(order.pickup_point_name || order.pickup_date);
+  const showDeliveryRow = order.order_type === "delivery" && !!order.delivery_status && order.order_status !== "cancelled";
+  const reviewStatus = (
+    <ReviewLink
+      kind="order"
+      doc={order}
+      itemIds={order.items.map((it) => it._id)}
+      href={`/customer/account/purchases/${order._id}/review`}
+      className={REVIEW_PILL}
+      reviewedClassName={REVIEWED_PILL}
+    />
+  );
 
   return (
     <div className={shopPage}>
@@ -180,23 +195,38 @@ function OrderContent() {
               </div>
             </div>
 
-            {order.order_type === "takeaway" && (order.pickup_point_name || order.pickup_date) && (
-              <div className="border-t border-[#8C5A3C]/10 pt-4 text-sm">
-                <p className="mb-1 font-semibold">{t("pickupAppointment")}</p>
-                <p className="text-gray-600">
-                  {order.pickup_date ? labels.pickupDate(order.pickup_date) : ""}
-                  {order.pickup_point_name ? ` · ${order.pickup_point_name}` : ""}
-                </p>
+            {showPickupRow && (
+              <div className="flex items-center justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">
+                <div className="min-w-0">
+                  <p className="mb-1 font-semibold">{t("pickupAppointment")}</p>
+                  <p className="text-gray-600">
+                    {order.pickup_date ? labels.pickupDate(order.pickup_date) : ""}
+                    {order.pickup_point_name ? ` · ${order.pickup_point_name}` : ""}
+                  </p>
+                </div>
+                {reviewStatus}
               </div>
             )}
 
-            {order.order_type === "delivery" && order.delivery_status && order.order_status !== "cancelled" && (
-              <div className="border-t border-[#8C5A3C]/10 pt-4 text-sm">
-                <p className="mb-1 font-semibold">{t("deliveryStatus")}</p>
-                <p className="text-gray-600">
-                  {labels.deliveryStatus(order.delivery_status)}
-                  {order.tracking_no ? t("tracking", { no: order.tracking_no }) : ""}
-                </p>
+            {showDeliveryRow && order.delivery_status && (
+              <div className="flex items-center justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">
+                <div className="min-w-0">
+                  <p className="mb-1 font-semibold">{t("deliveryStatus")}</p>
+                  <p className="text-gray-600">
+                    {labels.deliveryStatus(order.delivery_status)}
+                    {order.shipping_carrier && labels.shippingCarrier(order.shipping_carrier) ? t("carrier", { name: labels.shippingCarrier(order.shipping_carrier) }) : ""}
+                    {order.tracking_no ? t("tracking", { no: order.tracking_no }) : ""}
+                  </p>
+                </div>
+                {reviewStatus}
+              </div>
+            )}
+
+            {/* ไม่มีแถวสถานะจัดส่ง/นัดรับ (เช่น ออเดอร์จัดส่งที่ร้านยังไม่ตั้งสถานะ) — แสดงสถานะรีวิวเป็นแถวของตัวเอง */}
+            {!showPickupRow && !showDeliveryRow && canReview(order) && (
+              <div className="flex items-center justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">
+                <p className="font-semibold">{t("reviewStatus")}</p>
+                {reviewStatus}
               </div>
             )}
 
@@ -229,7 +259,6 @@ function OrderContent() {
           <Link href="/customer/account/purchases" className={shopButton}>
             {t("viewAll")}
           </Link>
-          <ReviewLink kind="order" doc={order} itemIds={order.items.map((it) => it._id)} href={`/customer/account/purchases/${order._id}/review`} className={shopButtonPrimary} />
           {(order.order_status === "completed" || order.order_status === "cancelled") && <BuyAgainButton items={order.items} className={shopButton} />}
           {canCustomerCancel(order) && <CancelOrderButton orderId={order._id} orderNo={order.order_no} paid={order.payment_status === "paid"} />}
         </div>

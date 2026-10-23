@@ -16,16 +16,17 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { SearchSynonym, SearchSynonymInput } from "@/types/searchSynonym";
 import { EMPTY_SYNONYM_FORM, cleanSynonymInput, filterGroups, findClashes, validateSynonym, type SynonymError } from "./synonymForm";
+import { SYNONYMS_KEY } from "./synonymsQuery";
 
-const KEY = ["search-synonyms"] as const;
+const KEY = SYNONYMS_KEY;
 const TESTER_DEBOUNCE_MS = 350;
 
 export function useSearchSynonymsViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("products");
+  const perm = usePermission("search_synonyms");
 
-  const q = useQuery({ queryKey: KEY, queryFn: searchSynonymsService.list });
+  const q = useQuery({ queryKey: KEY, queryFn: () => searchSynonymsService.list() });
   const groups = useMemo(() => q.data ?? [], [q.data]);
 
   const [search, setSearch] = useState("");
@@ -99,7 +100,8 @@ export function useSearchSynonymsViewModel() {
 
   return {
     perm,
-    isLoading: q.isLoading,
+    // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+    isLoading: q.isPending,
     isError: q.isError,
     refetch: () => q.refetch(),
     total: groups.length,

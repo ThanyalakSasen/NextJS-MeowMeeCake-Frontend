@@ -15,6 +15,7 @@ import { Upload } from "antd";
 import type { UploadFile, UploadProps } from "antd";
 import { useTranslations } from "next-intl";
 import { resolveUploadUrl } from "@/lib/uploads";
+import { compressImage, UPLOAD_SAFE_BYTES } from "@/lib/compressImage";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { actionIcon } from "@/components/shared/actions";
@@ -57,20 +58,25 @@ export function ImageUpload({
   }));
 
   const customRequest: UploadProps["customRequest"] = async (options) => {
-    const file = options.file as File;
-    if (maxBytes && file.size > maxBytes) {
-      alert.error(t(tooLargeKey as Parameters<typeof t>[0]));
+    setUploading(true);
+    // ย่อก่อนส่ง — Vercel ตัด request เกิน 4.5 MB ด้วย 413 ก่อนถึง backend (ดู lib/compressImage.ts)
+    const file = await compressImage(options.file as File);
+    const tooLarge = maxBytes && file.size > maxBytes ? tooLargeKey : file.size > UPLOAD_SAFE_BYTES ? "products.imageTooLarge" : null;
+    if (tooLarge) {
+      alert.error(t(tooLarge as Parameters<typeof t>[0]));
       options.onError?.(new Error("file too large"));
+      setUploading(false);
       return;
     }
-    setUploading(true);
     try {
       const url = await upload(file);
       onUrlsChange([...urls, url]);
       options.onSuccess?.({ url });
     } catch (e) {
       // แสดงเหตุผลจาก backend เสมอถ้ามี (ALERTS.md §2) — เดิมมีแค่ ReceiptUpload ที่ทำ
-      alert.error(isApiError(e) ? e.message : t(errorKey as Parameters<typeof t>[0]));
+      // 413 = proxy ของ Vercel ตัดทิ้ง (ไม่มีข้อความจาก backend) — บอกว่ารูปใหญ่เกิน แทน "request failed (413)"
+      if (isApiError(e) && e.status === 413) alert.error(t("products.imageTooLarge"));
+      else alert.error(isApiError(e) ? e.message : t(errorKey as Parameters<typeof t>[0]));
       options.onError?.(e as Error);
     } finally {
       setUploading(false);
