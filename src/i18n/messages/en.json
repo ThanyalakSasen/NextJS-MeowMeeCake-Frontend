@@ -832,6 +832,7 @@
     "refundAccount": "Customer's PromptPay: {id}",
     "refundAccountName": "Account name: {name}",
     "refundAccountMissing": "The customer hasn't set a PromptPay account for refunds — contact them for one",
+    "openCountNote": "({n} unfinished orders in total)",
     "awaitingRefundAlert": "{n} cancelled orders were already paid — refunds are owed",
     "readyDeliveryAlert": "{n} orders ready — waiting to be shipped (add the tracking number in the order details)",
     "readyTakeawayAlert": "{n} orders ready — waiting for customer pickup",

@@ -62,8 +62,10 @@ export function useManageOrdersViewModel() {
   });
 
   const all = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);
-  const deliveryCount = all.filter((o) => o.order_type === "delivery").length;
-  const takeawayCount = all.filter((o) => o.order_type === "takeaway").length;
+  // ตัวเลขบนแท็บ = ออเดอร์ที่ยังต้องจัดการ (ไม่นับยกเลิก/สำเร็จ) · ยอดรวมทุกสถานะดูได้จาก "ทั้งหมด" ในตัวกรองสถานะ
+  const isOpen = (o: Order) => o.order_status !== "cancelled" && o.order_status !== "completed";
+  const deliveryCount = all.filter((o) => o.order_type === "delivery" && isOpen(o)).length;
+  const takeawayCount = all.filter((o) => o.order_type === "takeaway" && isOpen(o)).length;
   const typeOrders = useMemo(
     () => all.filter((o) => o.order_type === activeTab),
     [all, activeTab],
