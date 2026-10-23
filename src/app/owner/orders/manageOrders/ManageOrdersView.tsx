@@ -130,8 +130,8 @@ export function ManageOrdersView(vm: VM) {
                   value={vm.activeTab}
                   onChange={vm.setActiveTab}
                   options={[
-                    { value: "delivery", label: `${t("enums.orderType.delivery")} (${vm.deliveryCount})` },
-                    { value: "takeaway", label: `${t("enums.orderType.takeaway")} (${vm.takeawayCount})` },
+                    { value: "delivery", label: t("orders.tabDelivery", { n: vm.deliveryCount }) },
+                    { value: "takeaway", label: t("orders.tabTakeaway", { n: vm.takeawayCount }) },
                   ]}
                 />
                 <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("orders.searchPlaceholder")} />
