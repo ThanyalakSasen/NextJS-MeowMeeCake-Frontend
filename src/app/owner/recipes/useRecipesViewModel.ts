@@ -17,7 +17,7 @@ import { unitsService } from "@/services/units";
 import { ingredientsService } from "@/services/ingredients";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import { isProductUnit } from "@/utils/unitContext";
+import { isProductUnit, unitLabel } from "@/utils/unitContext";
 import { refId } from "@/lib/refId";
 import type { Recipe, RecipeInput } from "@/types/recipe";
 import type { RecipeComponent, RecipeComponentInput } from "@/types/recipeComponent";
@@ -57,7 +57,7 @@ export function useRecipesViewModel() {
   // recipeComponentsService.list() ไม่ populate ชื่อวัตถุดิบ/หมวดหมู่ (มีแค่ id) — join ที่นี่จุดเดียว
   const components = useMemo(() => {
     const ingNameMap = new Map(ingredients.map((i) => [i._id, i.ingredient_name]));
-    const unitAbbrMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const unitAbbrMap = new Map(units.map((u) => [u._id, unitLabel(u)]));
     const catNameMap = new Map(componentCategories.map((c) => [c._id, c.component_category_name]));
     return rawComponents.map((c) => ({
       ...c,
@@ -74,7 +74,7 @@ export function useRecipesViewModel() {
   // แยกอยู่แล้วด้านบนตรงนี้จุดเดียว (ไม่ยิง request เพิ่ม) ก่อนส่งต่อให้ทุกจุดข้างล่างใช้
   const recipes = useMemo(() => {
     const ingNameMap = new Map(ingredients.map((i) => [i._id, i.ingredient_name]));
-    const unitAbbrMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const unitAbbrMap = new Map(units.map((u) => [u._id, unitLabel(u)]));
     const compNameMap = new Map(components.map((c) => [c._id, c.component_name]));
     return rawRecipes.map((r) => ({
       ...r,
@@ -98,7 +98,7 @@ export function useRecipesViewModel() {
 
   // ── ตัวเลือกฟอร์ม (join ไว้ล่วงหน้า — modal/View ไม่ join เอง) ──
   const ingredientOptions = useMemo(() => {
-    const unitMap = new Map(units.map((u) => [u._id, u.unit_abbr || u.unit_name]));
+    const unitMap = new Map(units.map((u) => [u._id, unitLabel(u)]));
     return sortByThai(ingredients.map((i) => {
       const unitId = refId(i.unit_id);
       return {
@@ -194,6 +194,9 @@ export function useRecipesViewModel() {
     [components, usedInMap],
   );
 
+  /** ป๊อปอัปรายชื่อสูตรหลักที่ใช้สูตรส่วนประกอบนี้ (คอลัมน์ "ใช้ในสูตรหลัก") */
+  const [usedInComponent, setUsedInComponent] = useState<(RecipeComponent & { usedIn: string[] }) | null>(null);
+
   const filteredComponents = useMemo(() => {
     const q = subSearch.trim().toLowerCase();
     return componentRows.filter((c) => {
@@ -251,7 +254,7 @@ export function useRecipesViewModel() {
         steps: v.steps,
         yield_qty: v.yield_qty,
         yield_unit_id: v.yield_unit_id,
-        estimated_cost_per_batch: v.estimated_cost_per_batch,
+        estimated_cost_per_batch: v.estimated_cost_per_batch ?? undefined,
         duration_minutes: v.duration_minutes,
         // backend schemas/bom.ts รับ note เป็น string เท่านั้น (null = 400) — "" ล้างหมายเหตุเดิมตอนแก้ไขได้ด้วย
         note: v.note ?? "",
@@ -294,7 +297,7 @@ export function useRecipesViewModel() {
         steps: v.steps,
         yield_qty: v.yield_qty,
         yield_unit_id: v.yield_unit_id,
-        estimated_cost_per_batch: v.estimated_cost_per_batch,
+        estimated_cost_per_batch: v.estimated_cost_per_batch ?? undefined,
         note: v.note ?? "", // ดูเหตุผลที่ onSaveRecipe — null = 400
       },
     });
@@ -327,6 +330,9 @@ export function useRecipesViewModel() {
     subSearch, setSubSearch,
     subCategoryFilter, setSubCategoryFilter: (v: string) => setSubCategoryFilter(v),
     filteredComponents, subStats,
+    usedInComponent,
+    openUsedIn: (c: RecipeComponent & { usedIn: string[] }) => setUsedInComponent(c),
+    closeUsedIn: () => setUsedInComponent(null),
     componentFormOpen, componentEditTarget,
     openAddComponent: () => { setComponentEditTarget(null); setComponentFormOpen(true); },
     openEditComponent: (c: RecipeComponent) => { setComponentEditTarget(c); setComponentFormOpen(true); },

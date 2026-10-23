@@ -69,9 +69,10 @@ export function RoundsTab(vm: VM) {
       </StatCardsGrid>
 
       <FilterToolbar
-        left={
+        left={<SearchInput value={vm.roundSearch} onChange={vm.setRoundSearch} placeholder={t("preorderRound.searchRoundPlaceholder")} />}
+        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+        right={
           <>
-            <SearchInput value={vm.roundSearch} onChange={vm.setRoundSearch} placeholder={t("preorderRound.searchRoundPlaceholder")} />
             <FilterField label={t("filterLabel.roundStatus")} minWidth={160}>
               <Select
                 value={vm.roundStatusFilter}

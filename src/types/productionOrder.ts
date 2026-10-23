@@ -111,6 +111,28 @@ export interface ProductionOrderFromRoundInput {
   production_note?: string | null;
 }
 
+/** เหตุที่สร้างใบสั่งผลิตจากรอบไม่ได้ (backend productionOrderService.previewProductionFromRound) */
+export type FromRoundBlocker = "round_not_closed" | "already_has_production" | "no_paid_orders" | "missing_recipe";
+
+/** GET /admin/production-orders/from-preorder-round?round_id= — ใช้ตัวรวมยอดชุดเดียวกับตอนสร้างจริง */
+export interface ProductionFromRoundPreview {
+  round: { _id: string; round_name: string; pickup_date: string; round_status: string };
+  existing_production: { _id: string; production_no: string; production_status: ProductionStatus } | null;
+  products: {
+    product_id: string;
+    product_name_th: string;
+    /** ยอดที่จะผลิต — เฉพาะพรีออเดอร์ที่ชำระแล้ว */
+    planned_qty: number;
+    /** ยอดของพรีออเดอร์ที่ยังไม่ชำระ — ไม่นับ (จ่ายทีหลังระบบบวกเข้าใบให้เอง) */
+    unpaid_qty: number;
+    recipe: { _id: string; recipe_name: string } | null;
+  }[];
+  paid_order_count: number;
+  unpaid_order_count: number;
+  /** ว่าง = สร้างได้ */
+  blockers: FromRoundBlocker[];
+}
+
 /** body ตอน PATCH /admin/production-orders/[id] — แก้ได้แค่ 3 field นี้ (ดูหมายเหตุด้านบน) */
 export interface ProductionOrderUpdateInput {
   production_date?: string;

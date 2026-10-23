@@ -22,7 +22,7 @@ const KEY = CATEGORY_SHIPPING_KEY;
 export function useCategoryShipping({ enabled = true }: { enabled?: boolean } = {}) {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("store_info");
+  const perm = usePermission("shipping");
 
   const q = useQuery({ queryKey: KEY, queryFn: shippingZonesService.listCategories, enabled: enabled && perm.view });
 

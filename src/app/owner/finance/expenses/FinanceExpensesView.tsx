@@ -93,8 +93,10 @@ export function FinanceExpensesView(vm: VM) {
       }
       toolbar={
         <FilterToolbar
-          left={
-            <FilterField label={t("filterLabel.expenseCategory")} minWidth={160}>
+          // ตัวกรองชิดขวาแถวเดียวกัน: หมวด → เดือน (แบบเดียวกับหน้าพนักงาน)
+          right={
+            <>
+              <FilterField label={t("filterLabel.expenseCategory")} minWidth={160}>
                 <Select
                   value={vm.categoryFilter}
                   onChange={(v) => vm.setCategoryFilter(v as ExpenseCategory | "all")}
@@ -104,17 +106,16 @@ export function FinanceExpensesView(vm: VM) {
                   ]}
                 />
               </FilterField>
-          }
-          right={
-            <FilterField label={t("filterLabel.month")} minWidth={170}>
-              <DatePicker
-                picker="month"
-                value={vm.selectedMonthDate}
-                allowClear={false}
-                onChange={(d) => { if (d && !Array.isArray(d)) vm.setSelectedMonthDate(d); }}
-                style={{ width: 180 }}
-              />
-            </FilterField>
+              <FilterField label={t("filterLabel.month")} minWidth={170}>
+                <DatePicker
+                  picker="month"
+                  value={vm.selectedMonthDate}
+                  allowClear={false}
+                  onChange={(d) => { if (d && !Array.isArray(d)) vm.setSelectedMonthDate(d); }}
+                  style={{ width: 180 }}
+                />
+              </FilterField>
+            </>
           }
         />
       }

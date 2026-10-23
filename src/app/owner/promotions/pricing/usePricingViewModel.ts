@@ -41,7 +41,7 @@ type DraftPatch = Partial<Pick<PricingRow, "basePrice" | "salePrice" | "isVisibl
 export function usePricingViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("products");
+  const perm = usePermission("pricing");
 
   const productsQ = useQuery({ queryKey: PRICING_PRODUCTS_KEY, queryFn: () => productsService.list(PRICING_PRODUCTS_PARAMS) });
   const catsQ = useQuery({ queryKey: PRICING_CATEGORIES_KEY, queryFn: () => productCategoriesService.list() });

@@ -58,6 +58,14 @@ export const DELIVERY_STATUS_CONFIG: Record<DeliveryStatus, StatusStyle> = {
   failed:    { color: "#dc2626", antColor: "error" },
 };
 
+// ─── บริษัทขนส่ง (orderModel/preorderModel.shipping_carrier — ตรงกับ backend lib/shippingCarrier.ts) ───
+export const SHIPPING_CARRIERS = [
+  "thailand_post", "kerry", "flash", "jt", "ninjavan", "best",
+  "scg", "lalamove", "grab", "lineman", "store", "other",
+] as const;
+
+export type ShippingCarrier = (typeof SHIPPING_CARRIERS)[number];
+
 // ─── การผลิต ─────────────────────────────────────────────────
 export type ProductionStatus = "planned" | "in_progress" | "done" | "cancelled";
 
@@ -302,7 +310,7 @@ export const SHIPPING_ZONE_CONFIG: Record<ShippingZoneCode, StatusStyle> = {
 // ─── ป้ายที่ไม่ใช่ enum แต่ใช้ซ้ำหลายหน้า ────────────────────
 // อยู่ที่นี่เพราะความหมายเดียวกันต้องได้สีเดียวกันทุกหน้า — เดิมพิมพ์ชื่อสีซ้ำกันคนละไฟล์
 export const NOTICE_TAG: Record<
-  "awaitingRefund" | "cancelled" | "catchAllZone" | "inactive" | "roleName" | "negativeFilter",
+  "awaitingRefund" | "cancelled" | "catchAllZone" | "inactive" | "roleName" | "negativeFilter" | "missingRecipe",
   AntColor
 > = {
   /** "รอคืนเงิน" — ตารางจัดการออเดอร์ · แท็บออเดอร์ของรอบพรีออเดอร์ */
@@ -317,6 +325,8 @@ export const NOTICE_TAG: Record<
   roleName: "blue",
   /** ชิปตัวกรอง "เฉพาะรีวิวแง่ลบ" ที่กดปิดได้ — หน้ารีวิวลูกค้า */
   negativeFilter: "red",
+  /** สินค้าที่ยังไม่มีสูตร — ตารางดูล่วงหน้าในฟอร์มสร้างใบสั่งผลิตจากรอบ (สร้างไม่ได้จนกว่าจะผูกสูตร) */
+  missingRecipe: "error",
 };
 
 // ─── สถานะการเชื่อมบัญชี LINE (หน้าโปรไฟล์) ──────────────────

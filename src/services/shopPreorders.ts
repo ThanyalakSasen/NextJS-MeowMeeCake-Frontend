@@ -99,6 +99,7 @@ export interface ShopPreorder {
   pickup_date: string | null;
   delivery_status: string | null;
   tracking_no: string | null;
+  shipping_carrier: string | null;
 }
 
 /** ลูกค้ายกเลิกเองได้ — pending/confirmed ที่ยังไม่ชำระ (backend CUSTOMER_CANCELABLE_STATUSES + ห้ามชำระแล้ว) */
@@ -180,6 +181,7 @@ function toShopPreorder(raw: any): ShopPreorder {
     pickup_date: raw.pickup_date ?? null,
     delivery_status: raw.delivery_status ?? null,
     tracking_no: raw.tracking_no ?? null,
+    shipping_carrier: raw.shipping_carrier ?? null,
   };
 }
 

@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาข้างใน DetailDrawer ของ Manage Orders — presentational ล้วน
+// เนื้อหาข้างใน DetailModal (ป๊อปอัป) ของ Manage Orders — presentational ล้วน
 // order มาจาก ordersService.get(id) เสมอ (มี items จริง) · payment มาจาก paymentsService.listByOrder
 // (คนละ resource กับ order — สลิป/verified_at อยู่ในนี้ ไม่ใช่ field บน order)
 import { useTranslations, useLocale } from "next-intl";

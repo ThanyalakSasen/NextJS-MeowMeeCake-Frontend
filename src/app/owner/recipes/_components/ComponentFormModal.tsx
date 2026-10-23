@@ -52,7 +52,10 @@ export function ComponentFormModal({
       alert.warning(t("recipes.ingredientRequired"));
       return;
     }
-    onSubmit({ ...v, note: v.note?.trim() || undefined, ingredients, steps });
+    // ต้นทุนส่งไปเฉพาะเมื่อผู้ใช้กรอกเอง — ไม่แตะช่องนี้ = ให้ backend คำนวณจากวัตถุดิบใหม่ทุกครั้งที่บันทึก
+    // (ตอนแก้ไขสูตรช่องนี้มีค่าเดิมอยู่ ถ้าส่งค่าเดิมกลับไป ต้นทุนจะไม่ตามวัตถุดิบที่เปลี่ยน)
+    const cost = form.isFieldTouched("estimated_cost_per_batch") ? v.estimated_cost_per_batch : null;
+    onSubmit({ ...v, estimated_cost_per_batch: cost, note: v.note?.trim() || undefined, ingredients, steps });
   };
 
   return (
@@ -85,8 +88,8 @@ export function ComponentFormModal({
           <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, message: t("validation.required") }]}>
             <Select options={yieldUnitOptions} placeholder={t("recipes.selectUnit")} />
           </FormItem>
-          <FormItem name="estimated_cost_per_batch" label={t("recipes.fieldCost")}>
-            <InputNumber min={0} step={0.01} />
+          <FormItem name="estimated_cost_per_batch" label={t("recipes.fieldCost")} extra={t("recipes.costAutoHint")}>
+            <InputNumber min={0} step={0.01} placeholder={t("recipes.costAuto")} />
           </FormItem>
         </div>
 

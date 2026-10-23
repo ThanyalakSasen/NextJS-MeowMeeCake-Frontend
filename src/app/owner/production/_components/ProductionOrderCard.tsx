@@ -1,12 +1,14 @@
 "use client";
 // การ์ดใบสั่งผลิต 1 ใบ — ใช้บน kanban (StatusBoard) — presentational ล้วน รับ drag handler จาก parent
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { formatDate } from "@/i18n/format";
 import { Tag } from "@/components/base";
 import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
 
 export function ProductionOrderCard({
   order,
+  carriedOver = false,
   draggable,
   dragging,
   onClick,
@@ -14,6 +16,8 @@ export function ProductionOrderCard({
   onDragEnd,
 }: {
   order: ProductionOrder;
+  /** วันผลิตก่อนวันที่บอร์ดแสดง แต่ยังไม่ปิดงาน — ค้างมาจากวันก่อน */
+  carriedOver?: boolean;
   draggable: boolean;
   dragging: boolean;
   onClick: () => void;
@@ -21,6 +25,7 @@ export function ProductionOrderCard({
   onDragEnd: () => void;
 }) {
   const t = useTranslations();
+  const locale = useLocale();
   const srcCfg = SOURCE_TYPE_CONFIG[order.source_type];
   const items = order.items;
 
@@ -57,6 +62,11 @@ export function ProductionOrderCard({
         )}
       </div>
       <p className="text-sm text-gray-500">{order.assignee_name ?? t("production.unassigned")}</p>
+      {carriedOver && (
+        <p className="mt-1.5 mb-0 rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
+          {t("production.carriedOver", { date: formatDate(order.production_date, locale) })}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาใน DetailDrawer ของหน้า Notification History
+// เนื้อหาใน DetailModal (ป๊อปอัป) ของหน้า Notification History
 import { useTranslations, useLocale } from "next-intl";
 import { Divider, Tag } from "@/components/base";
 import { formatDate } from "@/i18n/format";
@@ -20,7 +20,7 @@ export function NotificationDetailContent({ notif }: { notif: NotificationDTO })
         {notif.is_read ? t("notifications.statusRead") : t("notifications.statusUnread")}
       </Tag>,
     ],
-    [t("userLog.colTime"), formatDate(notif.created_at, locale, { withTime: true })],
+    [t("systemLog.colTime"), formatDate(notif.created_at, locale, { withTime: true })],
   ];
 
   return (

@@ -1,5 +1,5 @@
 "use client";
-// แผงขวา: การ์ดโปรโมชัน (เลือกได้ทีละ 1 — backend รับ promotion_id เดียว) · สรุปยอด · ปุ่มชำระเงินสด/QR · ยกเลิกบิล
+// แผงขวา: การ์ดโปรโมชัน (เลือกได้ทีละ 1 — backend รับ promotion_id เดียว) · สมาชิกสะสมแต้ม · สรุปยอด · ปุ่มชำระเงินสด/QR · ยกเลิกบิล
 import { ConfigProvider } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { BanknotesIcon, CheckIcon, QrCodeIcon } from "@heroicons/react/24/outline";
@@ -7,7 +7,7 @@ import { Button } from "@/components/base";
 import { color } from "@/theme";
 import { formatCurrency } from "@/i18n/format";
 import type { Promotion } from "@/types/promotion";
-import type { PromoBlock, PromoEval } from "../posPromotion";
+import { isMemberOnly, type PromoBlock, type PromoEval } from "../posPromotion";
 
 export function PaymentAside({
   promotionsEnabled,
@@ -26,6 +26,7 @@ export function PaymentAside({
   onPayCash,
   onPayQr,
   onClearBill,
+  memberSlot,
 }: {
   promotionsEnabled: boolean;
   promoEvals: PromoEval[];
@@ -43,6 +44,8 @@ export function PaymentAside({
   onPayCash: () => void;
   onPayQr: () => void;
   onClearBill: () => void;
+  /** ช่องกรอกเบอร์สมาชิก (MemberCard) — คั่นระหว่างโปรโมชันกับสรุปยอด */
+  memberSlot: React.ReactNode;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -105,10 +108,15 @@ export function PaymentAside({
                       <span className="rounded bg-green-100 px-1.5 text-[11px] font-semibold text-green-800">{t("pos.bestPromo")}</span>
                     )}
                   </span>
-                  <span className={`text-xs ${ev.eligible ? "text-gray-600" : "text-amber-800"}`}>
+                  {/* โปรสำหรับสมาชิก (จำกัดสิทธิ์ต่อลูกค้า) — ป้ายแดงเสมอ · ยังไม่กรอกเบอร์ = เลือกไม่ได้ + บอกให้กรอก */}
+                  {isMemberOnly(p) && <span className="text-xs font-semibold text-danger">{t("pos.promoMemberOnly")}</span>}
+                  <span
+                    className={`text-xs ${
+                      ev.eligible ? "text-gray-600" : ev.block?.key === "memberOnly" ? "text-danger" : "text-amber-800"
+                    }`}
+                  >
                     {ev.eligible ? valueLabel(p) : ev.block && blockText(ev.block)}
                   </span>
-                  {p.max_user_per_user != null && <span className="text-xs text-amber-700">{t("pos.promoPerUserNote")}</span>}
                 </span>
                 <span className="text-sm font-semibold text-success tabular-nums">
                   {ev.eligible ? `−${formatCurrency(ev.discount, locale)}` : ""}
@@ -120,11 +128,9 @@ export function PaymentAside({
         </div>
       )}
 
-      <div
-        className={`flex flex-col gap-3 rounded-b-[20px] bg-gray-50 px-[18px] pb-[18px] pt-3.5 ${
-          promotionsEnabled ? "border-t border-gray-100" : "rounded-t-[20px]"
-        }`}
-      >
+      <div className={`px-[18px] pb-3 pt-3.5 ${promotionsEnabled ? "border-t border-gray-100" : ""}`}>{memberSlot}</div>
+
+      <div className="flex flex-col gap-3 rounded-b-[20px] border-t border-gray-100 bg-gray-50 px-[18px] pb-[18px] pt-3.5">
         <div className="flex justify-between">
           <span className="text-gray-600">{t("pos.subtotal")}</span>
           <span className="tabular-nums">{formatCurrency(subtotal, locale)}</span>

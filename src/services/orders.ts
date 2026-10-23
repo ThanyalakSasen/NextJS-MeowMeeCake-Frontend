@@ -48,6 +48,7 @@ function toOrder(raw: any): Order {
     total_amount: raw.total_amount,
     order_status: raw.order_status,
     payment_status: raw.payment_status,
+    slip_pending_review: !!raw.slip_pending_review,
     delivery_address: raw.delivery_address ?? null,
     payment_due_at: raw.payment_due_at ?? null,
     cancelled_reason: raw.cancelled_reason ?? null,

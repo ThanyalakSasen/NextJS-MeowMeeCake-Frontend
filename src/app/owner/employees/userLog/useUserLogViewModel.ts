@@ -39,7 +39,7 @@ type DateRange = [Dayjs, Dayjs] | null;
 export function useUserLogViewModel() {
   const t = useTranslations();
   const locale = useLocale();
-  const perm = usePermission("employees");
+  const perm = usePermission("user_log");
 
   const [search, setSearch] = useState("");
   const [employeeId, setEmployeeId] = useState<string>("all");
@@ -120,24 +120,24 @@ export function useUserLogViewModel() {
     try {
       const all = searching ? searchRows : (await userLogsService.list(allParams)).data.map(toRow);
       if (all.length === 0) {
-        alert.info(t("userLog.exportEmpty"));
+        alert.info(t("systemLog.exportEmpty"));
         return;
       }
       const headers = [
-        t("userLog.colTime"), t("userLog.colEmployee"), t("employees.colRole"),
-        t("userLog.colType"), t("userLog.colDetail"), t("fields.type"), t("userLog.colIp"),
+        t("systemLog.colTime"), t("systemLog.colEmployee"), t("employees.colRole"),
+        t("systemLog.colType"), t("systemLog.colDetail"), t("fields.type"), t("systemLog.colIp"),
       ];
       const body = all.map((r) => [
         forceText(formatDate(r.created_at, locale, { withTime: true })),
         r.userName,
         r.roleName,
-        t(`enums.userLogAction.${r.action_type}`),
+        t(`enums.systemLogAction.${r.action_type}`),
         r.action,
         r.entity ? (t.has(`entities.${r.entity}`) ? t(`entities.${r.entity}`) : t("entities.fallback")) : "",
         r.ip_address ?? "",
       ]);
       exportToCsv(`user-logs_${new Date().toISOString().slice(0, 10)}`, headers, body);
-      alert.success(t("userLog.exportSuccess", { n: all.length }));
+      alert.success(t("systemLog.exportSuccess", { n: all.length }));
     } catch {
       alert.error(t("common.loadFailed"));
     } finally {
