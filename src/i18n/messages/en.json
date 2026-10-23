@@ -835,8 +835,6 @@
     "refundAccountName": "Account name: {name}",
     "refundAccountMissing": "The customer hasn't set a PromptPay account for refunds — contact them for one",
     "awaitingRefundAlert": "{n} cancelled orders were already paid — refunds are owed",
-    "readyDeliveryAlert": "{n} orders ready — waiting to be shipped (add the tracking number in the order details)",
-    "readyTakeawayAlert": "{n} orders ready — waiting for customer pickup",
     "alertNotShippedTitle": "Not shipped yet ({n})",
     "alertNotShippedDesc": "Paid but not shipped, or the delivery failed — click \"View\" to pick a carrier, enter the tracking number and update the delivery status",
     "alertInProgressTitle": "In progress ({n})",
