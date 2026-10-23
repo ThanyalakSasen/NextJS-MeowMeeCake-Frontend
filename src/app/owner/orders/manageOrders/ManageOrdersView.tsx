@@ -176,15 +176,6 @@ export function ManageOrdersView(vm: VM) {
             </div>
           )}
 
-          {vm.readyCount > 0 && vm.statusFilter !== "ready" && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3">
-              <span className="text-sm text-sky-800">
-                {t(vm.activeTab === "delivery" ? "orders.readyDeliveryAlert" : "orders.readyTakeawayAlert", { n: vm.readyCount })}
-              </span>
-              <Button size="small" icon={actionIcon("filter", "small")} onClick={() => vm.setStatusFilter("ready")}>{t("orders.showList")}</Button>
-            </div>
-          )}
-
         </div>
       }
     >
