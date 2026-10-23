@@ -90,12 +90,16 @@ export function useManageOrdersViewModel() {
   // payment_status "pending" มีทั้งแนบสลิปแล้วรอตรวจ และยังไม่แนบ — แยกด้วย slip_pending_review (backend listOrders)
   const alerts = useMemo(() => {
     const open = typeOrders.filter((o) => o.order_status !== "cancelled");
+    // ยังไม่ได้จัดส่ง = จัดส่งถึงบ้าน + ชำระแล้ว + สถานะจัดส่ง "รอจัดส่ง" หรือ "จัดส่งไม่สำเร็จ" (ต้องส่งใหม่ — ไม่ใช่งานปกติ
+    // ที่ควรไปอยู่กล่องกำลังดำเนินการ) · แท็บรับเองไม่มีการจัดส่ง
+    const isNotShipped = (o: Order) =>
+      activeTab === "delivery" && o.payment_status === "paid" && o.order_status !== "completed" &&
+      (o.delivery_status === "pending" || o.delivery_status === "failed");
     return {
-      // ยังไม่ได้จัดส่ง = จัดส่งถึงบ้าน + ชำระแล้ว + สถานะจัดส่งยัง "รอจัดส่ง" (แท็บรับเองไม่มีการจัดส่ง)
-      notShipped:
-        activeTab === "delivery"
-          ? open.filter((o) => o.payment_status === "paid" && o.order_status !== "completed" && o.delivery_status === "pending")
-          : [],
+      notShipped: open.filter(isNotShipped),
+      // กำลังดำเนินการ = ชำระแล้ว ยังไม่สำเร็จ และไม่อยู่ในกล่องยังไม่ได้จัดส่ง (เช่น รอลูกค้ามารับ / ส่งแล้วรอปิดงาน)
+      // · ทุกกล่องรวมกัน = ออเดอร์ที่ยังไม่เสร็จสิ้น ตรงกับตัวเลขบนแท็บ
+      inProgress: open.filter((o) => o.payment_status === "paid" && o.order_status !== "completed" && !isNotShipped(o)),
       unverified: open.filter((o) => o.payment_status === "pending" && o.slip_pending_review),
       // ยังไม่แนบสลิป — รวมสลิปที่ถูกปฏิเสธ (failed) เพราะต้องรอลูกค้าแนบใหม่เหมือนกัน
       noSlip: open.filter(
