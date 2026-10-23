@@ -30,12 +30,12 @@ export function UserLogView(vm: VM) {
   const columns: Column<LogRow>[] = [
     {
       key: "time",
-      title: t("userLog.colTime"),
+      title: t("systemLog.colTime"),
       render: (r) => formatDate(r.created_at, locale, { withTime: true }),
     },
     {
       key: "employee",
-      title: t("userLog.colEmployee"),
+      title: t("systemLog.colEmployee"),
       render: (r) => (
         <div>
           <p className="font-medium text-brown-800">{r.userName}</p>
@@ -45,7 +45,7 @@ export function UserLogView(vm: VM) {
     },
     {
       key: "type",
-      title: t("userLog.colType"),
+      title: t("systemLog.colType"),
       render: (r) => {
         const cfg = USER_LOG_ACTION_CONFIG[r.action_type];
         return (
@@ -53,14 +53,14 @@ export function UserLogView(vm: VM) {
             className="inline-flex items-center rounded-full px-2.5 py-1 text-sm font-medium"
             style={{ backgroundColor: cfg.bg, color: cfg.color }}
           >
-            {t(`enums.userLogAction.${r.action_type}`)}
+            {t(`enums.systemLogAction.${r.action_type}`)}
           </span>
         );
       },
     },
     {
       key: "detail",
-      title: t("userLog.colDetail"),
+      title: t("systemLog.colDetail"),
       render: (r) => (
         <div>
           <p className="text-gray-700">{r.action}</p>
@@ -70,14 +70,14 @@ export function UserLogView(vm: VM) {
     },
     {
       key: "ip",
-      title: t("userLog.colIp"),
+      title: t("systemLog.colIp"),
       render: (r) => <span className="font-mono text-sm text-gray-500">{r.ip_address ?? "—"}</span>,
     },
   ];
 
   return (
     <ListPageLayout
-      title={t("userLog.title")}
+      title={t("systemLog.title")}
       actions={
         <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport} loading={vm.exporting}>
           {t("common.export")}
@@ -87,13 +87,13 @@ export function UserLogView(vm: VM) {
         <FilterToolbar
           left={
             <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("userLog.searchPlaceholder")} />
+              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("systemLog.searchPlaceholder")} />
               <FilterField label={t("filterLabel.employee")} minWidth={170}>
                 <Select
                   value={vm.employeeId}
                   onChange={(v) => vm.setEmployeeId(v as string)}
                   options={[
-                    { value: "all", label: t("userLog.allEmployees") },
+                    { value: "all", label: t("systemLog.allUsers") },
                     ...vm.employeeOptions,
                   ]}
                 />
@@ -103,8 +103,8 @@ export function UserLogView(vm: VM) {
                   value={vm.actionType}
                   onChange={(v) => vm.setActionType(v as VM["actionType"])}
                   options={[
-                    { value: "all", label: t("userLog.allTypes") },
-                    ...ACTION_TYPES.map((a) => ({ value: a, label: t(`enums.userLogAction.${a}`) })),
+                    { value: "all", label: t("systemLog.allTypes") },
+                    ...ACTION_TYPES.map((a) => ({ value: a, label: t(`enums.systemLogAction.${a}`) })),
                   ]}
                 />
               </FilterField>
@@ -123,17 +123,17 @@ export function UserLogView(vm: VM) {
       ) : (
         <div className="flex flex-col gap-5">
           <StatCardsGrid>
-            <StatCard label={t("userLog.statTotal")} value={vm.stats.total} sub={t("userLog.statTotalSub")} />
-            <StatCard label={t("userLog.statToday")} value={vm.stats.today} sub={t("userLog.statTodaySub")} />
-            <StatCard label={t("enums.userLogAction.UPDATE")} value={vm.stats.update} sub={t("userLog.statUpdateSub")} tone="warn" />
-            <StatCard label={t("enums.userLogAction.DELETE")} value={vm.stats.remove} sub={t("userLog.statDeleteSub")} tone="muted" />
+            <StatCard label={t("systemLog.statTotal")} value={vm.stats.total} sub={t("systemLog.statTotalSub")} />
+            <StatCard label={t("systemLog.statToday")} value={vm.stats.today} sub={t("systemLog.statTodaySub")} />
+            <StatCard label={t("enums.systemLogAction.UPDATE")} value={vm.stats.update} sub={t("systemLog.statUpdateSub")} tone="warn" />
+            <StatCard label={t("enums.systemLogAction.DELETE")} value={vm.stats.remove} sub={t("systemLog.statDeleteSub")} tone="muted" />
           </StatCardsGrid>
 
           <DataTable
             columns={columns}
             rows={vm.rows}
             loading={vm.isLoading}
-            emptyText={t("userLog.empty")}
+            emptyText={t("systemLog.empty")}
             onRowClick={vm.onView}
             pagination={vm.pagination}
           />
@@ -141,7 +141,7 @@ export function UserLogView(vm: VM) {
       )}
 
       {drawerUsed && (
-        <DetailDrawer open={vm.drawerOpen} title={t("userLog.detailTitle")} onClose={vm.closeDrawer}>
+        <DetailDrawer open={vm.drawerOpen} title={t("systemLog.detailTitle")} onClose={vm.closeDrawer}>
           {vm.selectedLog && <LogDetailContent log={vm.selectedLog} />}
         </DetailDrawer>
       )}

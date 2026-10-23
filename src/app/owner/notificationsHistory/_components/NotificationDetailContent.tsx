@@ -20,7 +20,7 @@ export function NotificationDetailContent({ notif }: { notif: NotificationDTO })
         {notif.is_read ? t("notifications.statusRead") : t("notifications.statusUnread")}
       </Tag>,
     ],
-    [t("userLog.colTime"), formatDate(notif.created_at, locale, { withTime: true })],
+    [t("systemLog.colTime"), formatDate(notif.created_at, locale, { withTime: true })],
   ];
 
   return (
