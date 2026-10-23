@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { RangePicker, Select } from "@/components/base";
 import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
-import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
+import { DetailModal, LoadFailed } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import { USER_LOG_ACTION_CONFIG, type UserLogAction } from "@/constants/enumConfig";
 import type { LogRow } from "../../employees/userLog/useUserLogViewModel";
@@ -61,9 +61,10 @@ export function LogsTab(vm: VM) {
     <div className="flex flex-col gap-4">
       <p className="m-0 text-sm text-gray-500">{t("myAccount.logsDescription")}</p>
       <FilterToolbar
-        left={
+        left={<SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("myAccount.logsSearch")} />}
+        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+        right={
           <>
-            <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("myAccount.logsSearch")} />
             <FilterField label={t("filterLabel.actionType")} minWidth={150}>
               <Select
                 value={vm.actionType}
@@ -91,9 +92,9 @@ export function LogsTab(vm: VM) {
         />
       )}
 
-      <DetailDrawer open={vm.drawerOpen} title={t("systemLog.detailTitle")} onClose={vm.closeDrawer}>
+      <DetailModal open={vm.drawerOpen} title={t("systemLog.detailTitle")} onClose={vm.closeDrawer}>
         {vm.selectedLog && <LogDetailContent log={vm.selectedLog} />}
-      </DetailDrawer>
+      </DetailModal>
     </div>
   );
 }

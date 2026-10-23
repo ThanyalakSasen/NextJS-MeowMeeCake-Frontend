@@ -39,7 +39,7 @@ type DateRange = [Dayjs, Dayjs] | null;
 export function useUserLogViewModel() {
   const t = useTranslations();
   const locale = useLocale();
-  const perm = usePermission("employees");
+  const perm = usePermission("user_log");
 
   const [search, setSearch] = useState("");
   const [employeeId, setEmployeeId] = useState<string>("all");

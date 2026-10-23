@@ -9,17 +9,19 @@ import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column, FilterField } from "@/components/shared/data";
-import { DetailDrawer, LoadFailed } from "@/components/shared/feedback";
+import { DetailModal, LoadFailed } from "@/components/shared/feedback";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { NOTICE_TAG, PAYMENT_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import { isAwaitingRefund, type Order } from "@/types/order";
 import { ViewButton, actionIcon } from "@/components/shared/actions";
+import { StockAlertSection } from "@/components/shared/stock";
 import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
 import { STATUS_SELECT_OPTIONS } from "./orderStatus";
 import { OrderStatusFilter } from "./_components/OrderStatusFilter";
 import { OrderDetailContent } from "./_components/OrderDetailContent";
+import { CancelOrderModal } from "./_components/CancelOrderModal";
 
 type VM = ReturnType<typeof useManageOrdersViewModel>;
 
@@ -91,6 +93,26 @@ export function ManageOrdersView(vm: VM) {
     },
   ];
 
+  const rowActions = (o: Order) => (
+    <div className="flex justify-end gap-2">
+      <ViewButton size="small" onClick={() => vm.onView(o)} />
+      {vm.perm.update && !vm.isFinalStatus(o.order_status) && (
+        <Button size="small" danger icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancel(o)}>{t("orders.cancel")}</Button>
+      )}
+    </div>
+  );
+
+  // ลำดับ: ยังไม่ได้จัดส่ง → ยังไม่ได้ยืนยันการชำระเงิน → ยังไม่ได้แนบสลิป
+  const alertSections = (
+    [
+      { key: "notShipped", tone: "info", rows: vm.alerts.notShipped, title: "orders.alertNotShippedTitle", description: "orders.alertNotShippedDesc" },
+      { key: "unverified", tone: "danger", rows: vm.alerts.unverified, title: "orders.alertUnverifiedTitle", description: "orders.alertUnverifiedDesc" },
+      { key: "noSlip", tone: "warn", rows: vm.alerts.noSlip, title: "orders.alertNoSlipTitle", description: "orders.alertNoSlipDesc" },
+    ] as const
+  )
+    .filter((s) => s.rows.length > 0)
+    .map((s) => ({ ...s, title: t(s.title, { n: s.rows.length }), description: t(s.description) }));
+
   return (
     <ListPageLayout
       title={t("orders.title")}
@@ -161,40 +183,37 @@ export function ManageOrdersView(vm: VM) {
             </div>
           )}
 
-          {vm.unreviewedCount > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-              <span className="text-sm text-amber-800">{t("orders.unreviewedPaymentAlert", { n: vm.unreviewedCount })}</span>
-              <Button size="small" icon={actionIcon("filter", "small")} onClick={() => vm.setPaymentFilter("pending")}>{t("orders.showList")}</Button>
-            </div>
-          )}
         </div>
       }
     >
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
       ) : (
-        <DataTable
-          columns={columns}
-          rows={vm.orders}
-          loading={vm.isLoading}
-          emptyText={t("orders.empty")}
-          actions={(o) => (
-            <div className="flex justify-end gap-2">
-              <ViewButton size="small" onClick={() => vm.onView(o)} />
-              {vm.perm.update && !vm.isFinalStatus(o.order_status) && (
-                <Button size="small" danger icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancel(o)}>{t("orders.cancel")}</Button>
-              )}
-            </div>
-          )}
-          pagination={{ page: vm.page, pageSize: vm.pageSize, total: vm.total, onChange: vm.setPagination }}
-        />
+        <div className="flex flex-col gap-5">
+          {/* แบบหน้าสต็อก: รายการที่ต้องจัดการแยกเป็นกล่องเหนือตารางหลัก (ไม่มีรายการ = ไม่แสดงกล่อง) */}
+          {alertSections.map((s) => (
+            <StockAlertSection key={s.key} tone={s.tone} title={s.title} description={s.description}>
+              <DataTable columns={columns} rows={s.rows} inCard actions={rowActions} />
+            </StockAlertSection>
+          ))}
+
+          {alertSections.length > 0 && <h2 className="m-0 -mb-2 text-base font-semibold text-brown-900">{t("orders.allOrdersTitle")}</h2>}
+          <DataTable
+            columns={columns}
+            rows={vm.orders}
+            loading={vm.isLoading}
+            emptyText={t("orders.empty")}
+            actions={rowActions}
+            pagination={{ page: vm.page, pageSize: vm.pageSize, total: vm.total, onChange: vm.setPagination }}
+          />
+        </div>
       )}
 
-      <DetailDrawer
+      <DetailModal
         open={vm.drawerOpen}
         title={vm.selectedOrder ? t("orders.drawerTitle", { no: vm.selectedOrder.order_no }) : ""}
         onClose={vm.closeDrawer}
-        // กว้างเท่า drawer ของรอบพรีออเดอร์ — 400 เดิมแคบจน Steps 5 ขั้นตัดคำทีละตัวอักษร
+        // ป๊อปอัปกลางจอ (เดิมแผงเลื่อนข้าง) — กว้างพอให้ Steps 5 ขั้นไม่ตัดคำ
         size={640}
       >
         {vm.isDetailLoading && <p className="py-10 text-center text-gray-500">{t("common.loading")}</p>}
@@ -216,7 +235,15 @@ export function ManageOrdersView(vm: VM) {
             onRefund={vm.onRefund}
           />
         )}
-      </DetailDrawer>
+      </DetailModal>
+
+      <CancelOrderModal
+        key={vm.cancelTarget?._id ?? "none"}
+        order={vm.cancelTarget}
+        saving={vm.cancelling}
+        onClose={vm.closeCancel}
+        onConfirm={vm.onConfirmCancel}
+      />
     </ListPageLayout>
   );
 }

@@ -76,7 +76,7 @@ export function useReviewsViewModel() {
   const t = useTranslations();
   const locale = useLocale();
   const qc = useQueryClient();
-  const perm = usePermission("reports");
+  const perm = usePermission("reports_reviews");
 
   // ── ตัวกรอง ──
   const [filters, setFilters] = useState<ReviewFilters>(DEFAULT_FILTERS);

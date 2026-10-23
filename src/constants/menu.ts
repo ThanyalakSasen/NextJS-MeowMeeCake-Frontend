@@ -2,6 +2,7 @@
 // src/constants/menu.ts
 // โครงเมนู Sidebar — label เป็น key ของ i18n namespace "nav" (ไม่ใช่ข้อความตรง ๆ)
 // menuKey ไม่ระบุ = แสดงเสมอ (ตราบใด login) · ระบุ = กรองด้วย usePermission(menuKey).view
+// 1 หน้า = 1 menuKey ของตัวเอง (แยกสิทธิ์ตามหน้าย่อย 2026-10-21) — ต้องตรงกับ ROUTE_MENU_MAP (menuKeys.ts)
 // ─────────────────────────────────────────────────────────────
 import type { MenuKey } from "@/constants/menuKeys";
 import type { NavKey } from "@/i18n/keys";
@@ -38,18 +39,16 @@ export const MENU_SECTIONS: MenuSection[] = [
         labelKey: "reports",
         icon: "PresentationChartBarIcon",
         children: [
-          { labelKey: "reportsSales", href: "/owner/reports/sales", icon: "ArrowTrendingUpIcon", menuKey: "reports" },
-          // menuKey ต้องตรงกับสิทธิ์ที่ /admin/reviews ตรวจจริง — backend ย้ายจาก products.* เป็น reports.*
-          // (customer-backend-merge.md §8.20) · เดิม "products" ตาม docs/BACKLOG.md §1
-          { labelKey: "reportsReviews", href: "/owner/reports/reviews", icon: "ChatBubbleLeftRightIcon", menuKey: "reports" },
+          { labelKey: "reportsSales", href: "/owner/reports/sales", icon: "ArrowTrendingUpIcon", menuKey: "reports_sales" },
+          { labelKey: "reportsReviews", href: "/owner/reports/reviews", icon: "ChatBubbleLeftRightIcon", menuKey: "reports_reviews" },
         ],
       },
       {
         labelKey: "finance",
         icon: "CurrencyDollarIcon",
         children: [
-          { labelKey: "financeExpenses", href: "/owner/finance/expenses", icon: "ReceiptPercentIcon", menuKey: "reports" },
-          { labelKey: "financeSummary", href: "/owner/finance/summary", icon: "ChartPieIcon", menuKey: "reports" },
+          { labelKey: "financeExpenses", href: "/owner/finance/expenses", icon: "ReceiptPercentIcon", menuKey: "finance_expenses" },
+          { labelKey: "financeSummary", href: "/owner/finance/summary", icon: "ChartPieIcon", menuKey: "finance_summary" },
         ],
       },
     ],
@@ -64,8 +63,8 @@ export const MENU_SECTIONS: MenuSection[] = [
         children: [
           { labelKey: "products", href: "/owner/products", icon: "ShoppingBagIcon", menuKey: "products" },
           { labelKey: "productStock", href: "/owner/products/productStock", icon: "ArchiveBoxIcon", menuKey: "stock" },
-          // คำพ้องค้นหา (E3) — /admin/search-synonyms ใช้สิทธิ์ products.*
-          { labelKey: "searchSynonyms", href: "/owner/products/search-synonyms", icon: "TagIcon", menuKey: "products" },
+          // คำพ้องค้นหา (E3) — /admin/search-synonyms ใช้สิทธิ์ search_synonyms.*
+          { labelKey: "searchSynonyms", href: "/owner/products/search-synonyms", icon: "TagIcon", menuKey: "search_synonyms" },
         ],
       },
       {
@@ -81,15 +80,13 @@ export const MENU_SECTIONS: MenuSection[] = [
           // { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
         ],
       },
-      { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "orders" },
+      { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "pos" },
       {
         labelKey: "promotions",
         icon: "TagIcon",
         children: [
-          // menuKey: "products" ไม่ใช่ "promotions" — endpoint จริงที่หน้านี้ยิงคือ /admin/products
-          // (ตั้งราคา/ราคาลดของสินค้าตรง ๆ ไม่มี endpoint "โปรโมชัน" แยก ดู usePricingViewModel.ts)
-          // ต้องตรงกับสิทธิ์จริง ไม่ใช่แค่หมวดที่โชว์ใน sidebar (docs/BACKLOG.md §1)
-          { labelKey: "promotionsPricing", href: "/owner/promotions/pricing", icon: "CurrencyDollarIcon", menuKey: "products" },
+          // ตั้งราคาแก้ราคาผ่าน PATCH /admin/products — backend ยอมรับ pricing.update (หรือ products.update)
+          { labelKey: "promotionsPricing", href: "/owner/promotions/pricing", icon: "CurrencyDollarIcon", menuKey: "pricing" },
           { labelKey: "promotionsCoupons", href: "/owner/promotions/coupons", icon: "TicketIcon", menuKey: "promotions" },
         ],
       },
@@ -104,9 +101,9 @@ export const MENU_SECTIONS: MenuSection[] = [
         icon: "BeakerIcon",
         children: [
           { labelKey: "ingredients", href: "/owner/ingredients", icon: "CubeIcon", menuKey: "ingredients" },
-          { labelKey: "ingredientStock", href: "/owner/ingredients/ingredientStock", icon: "ArchiveBoxIcon", menuKey: "ingredients" },
-          { labelKey: "ingredientHistory", href: "/owner/ingredients/ingredientHistory", icon: "ArrowsRightLeftIcon", menuKey: "ingredients" },
-          { labelKey: "units", href: "/owner/ingredients/units", icon: "ScaleIcon", menuKey: "ingredients" },
+          { labelKey: "ingredientStock", href: "/owner/ingredients/ingredientStock", icon: "ArchiveBoxIcon", menuKey: "ingredient_stock" },
+          { labelKey: "ingredientHistory", href: "/owner/ingredients/ingredientHistory", icon: "ArrowsRightLeftIcon", menuKey: "ingredient_history" },
+          { labelKey: "units", href: "/owner/ingredients/units", icon: "ScaleIcon", menuKey: "units" },
         ],
       },
       { labelKey: "recipes", icon: "BookOpenIcon", href: "/owner/recipes", menuKey: "recipes" },
@@ -116,21 +113,20 @@ export const MENU_SECTIONS: MenuSection[] = [
     labelKey: "sectionEmployees",
     items: [
       { labelKey: "employees", href: "/owner/employees", icon: "UsersIcon", menuKey: "employees" },
-      { labelKey: "permissions", href: "/owner/employees/permissions", icon: "ShieldCheckIcon", menuKey: "employees" },
-      { labelKey: "systemLog", href: "/owner/employees/userLog", icon: "ClipboardDocumentListIcon", menuKey: "employees" },
+      { labelKey: "permissions", href: "/owner/employees/permissions", icon: "ShieldCheckIcon", menuKey: "permissions" },
+      { labelKey: "systemLog", href: "/owner/employees/userLog", icon: "ClipboardDocumentListIcon", menuKey: "user_log" },
     ],
   },
   {
     // menuKey: "store_info" — backend MENU_KEYS เพิ่ม 2026-10-05 (customer-backend-merge.md §8.19)
     labelKey: "sectionStorefront",
     items: [
-      // แบนเนอร์อยู่ใต้สิทธิ์ products ของ backend (/admin/banners → menu: "products")
-      // ห้ามถอด menuKey ออก — พนักงานที่ไม่มีสิทธิ์ products จะเห็นเมนูนี้ (Final-Backlog P13)
-      { labelKey: "storeDesign", icon: "PaintBrushIcon", href: "/owner/store-design", menuKey: "products" },
+      // แบนเนอร์ — /admin/banners ใช้สิทธิ์ store_design.* · ห้ามถอด menuKey ออก (Final-Backlog P13)
+      { labelKey: "storeDesign", icon: "PaintBrushIcon", href: "/owner/store-design", menuKey: "store_design" },
       // พนักงานเห็นเมื่อมี store_info.view (แก้ได้เฉพาะหน้าร้านประจำสัปดาห์) · owner เห็นทุกหัวข้อ
       { labelKey: "storeInfo", icon: "BuildingStorefrontIcon", href: "/owner/store-info", menuKey: "store_info" },
-      // ค่าจัดส่งหน้าร้านออนไลน์ (F2) — /admin/shipping-zones ใช้ store_info.* · คนละชุดกับ "โซนค่าจัดส่ง" ของหลังร้าน
-      { labelKey: "webShipping", icon: "TruckIcon", href: "/owner/shipping", menuKey: "store_info" },
+      // ค่าจัดส่งหน้าร้านออนไลน์ (F2) — /admin/shipping-zones ใช้ shipping.* · คนละชุดกับ "โซนค่าจัดส่ง" ของหลังร้าน
+      { labelKey: "webShipping", icon: "TruckIcon", href: "/owner/shipping", menuKey: "shipping" },
     ],
   },
 ];

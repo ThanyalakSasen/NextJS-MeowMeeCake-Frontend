@@ -65,7 +65,8 @@ export function CashPaymentModal({
 
         <div
           className={`flex items-center justify-between rounded-[14px] px-4 py-3 ${
-            short ? "bg-red-50 text-danger" : "bg-green-50 text-success"
+            // ขาด = แดง · ต้องทอน = เทา · พอดี = เขียว
+            short ? "bg-red-50 text-danger" : received > total ? "bg-gray-100 text-brown-900" : "bg-green-50 text-success"
           }`}
         >
           <span className="font-semibold">{short ? t("pos.cashShort") : t("pos.cashChange")}</span>

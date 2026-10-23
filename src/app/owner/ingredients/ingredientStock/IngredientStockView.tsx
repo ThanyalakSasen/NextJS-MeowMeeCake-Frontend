@@ -86,9 +86,10 @@ export function IngredientStockView(vm: VM) {
       }
       toolbar={
         <FilterToolbar
-          left={
+          left={<SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("ingredientStock.searchPlaceholder")} />}
+          // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
+          right={
             <>
-              <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("ingredientStock.searchPlaceholder")} />
               <StatusFilterSelect label={t("filterLabel.stockStatus")} value={vm.status} onChange={vm.setStatus} options={useStockStatusOptions()} />
             </>
           }

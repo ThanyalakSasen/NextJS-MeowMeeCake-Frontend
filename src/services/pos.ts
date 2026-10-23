@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse, ListResponse } from "@/types/api";
-import type { PosGuestCustomer, PosProduct, PosProductListParams, PosPromptPayQr, PosScanResult } from "@/types/pos";
+import type { PosGuestCustomer, PosMemberLookup, PosProduct, PosProductListParams, PosPromptPayQr, PosScanResult } from "@/types/pos";
 import { toProduct } from "@/services/products";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -34,6 +34,15 @@ export const posService = {
 
   guestCustomer: async (): Promise<PosGuestCustomer> => {
     const res = await http.get<ItemResponse<PosGuestCustomer>>("/admin/pos/guest-customer");
+    return res.data;
+  },
+
+  /**
+   * GET /admin/pos/member?phone= — หาสมาชิกด้วยเบอร์มือถือ (pos.view) · ไม่พบ = members ว่าง · เบอร์ผิดรูปแบบ = 400
+   * ผูกออเดอร์กับ _id ที่ได้แทนบัญชีลูกค้าทั่วไป → ปิดงาน completed แล้ว backend ให้แต้มสะสมเอง
+   */
+  findMember: async (phone: string): Promise<PosMemberLookup> => {
+    const res = await http.get<ItemResponse<PosMemberLookup>>("/admin/pos/member", { params: { phone } });
     return res.data;
   },
 

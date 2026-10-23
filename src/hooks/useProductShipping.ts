@@ -25,7 +25,7 @@ export type ShippingScopeFilter = "nationwide" | "province";
 export function useProductShipping({ enabled = true }: { enabled?: boolean } = {}) {
   const t = useTranslations();
   const qc = useQueryClient();
-  const perm = usePermission("store_info");
+  const perm = usePermission("shipping");
 
   const q = useQuery({
     queryKey: PRODUCT_SHIPPING_KEY,

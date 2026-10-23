@@ -206,6 +206,7 @@ function PreorderDetailContent() {
                 <p className="mb-1 font-semibold">{to("deliveryStatus")}</p>
                 <p className="text-gray-600">
                   {labels.deliveryStatus(p.delivery_status)}
+                  {p.shipping_carrier && labels.shippingCarrier(p.shipping_carrier) ? to("carrier", { name: labels.shippingCarrier(p.shipping_carrier) }) : ""}
                   {p.tracking_no ? to("tracking", { no: p.tracking_no }) : ""}
                 </p>
               </div>

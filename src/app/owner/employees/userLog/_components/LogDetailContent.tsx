@@ -1,5 +1,5 @@
 "use client";
-// เนื้อหาใน DetailDrawer ของหน้า User Log — แสดงรายละเอียด log 1 รายการ
+// เนื้อหาใน DetailModal (ป๊อปอัป) ของหน้า User Log — แสดงรายละเอียด log 1 รายการ
 // มี before/after (log ใหม่) → ตาราง "ฟิลด์ · ก่อน → หลัง" (useLogChanges)
 // ไม่มี (log เก่า/route ที่ยังไม่ส่ง) → โชว์ `details` รูปแบบไม่คงที่แบบ key/value ทั่วไปเหมือนเดิม
 import { useTranslations, useLocale, useMessages } from "next-intl";

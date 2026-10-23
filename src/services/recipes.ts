@@ -9,6 +9,7 @@ import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { Recipe, RecipeInput, RecipeListParams } from "@/types/recipe";
 import type { RecipeStep } from "@/types/recipeShared";
 import { refId } from "@/lib/refId";
+import { unitLabel } from "@/utils/unitContext";
 
 const BASE = "/admin/recipes";
 
@@ -48,7 +49,7 @@ function toRecipe(raw: any): Recipe {
     steps: parseSteps(raw.steps_content),
     yield_qty: raw.yield_qty,
     yield_unit_id: refId(raw.yield_unit_id),
-    yield_unit_abbr: yieldUnit?.unit_abbr ?? "",
+    yield_unit_abbr: unitLabel(yieldUnit),
     estimated_cost_per_batch: raw.estimated_cost_per_batch,
     duration_minutes: raw.duration_minutes ?? 0,
     note: raw.note ?? null,

@@ -98,13 +98,14 @@ export function cartSubtotal(cart: CartLine[]): number {
  */
 export function buildOrderInput(args: {
   cart: CartLine[];
-  guestUserId: string;
+  /** สมาชิกที่กรอกเบอร์ไว้ (ได้แต้มสะสม) หรือบัญชี "ลูกค้าทั่วไป" */
+  userId: string;
   discount: number;
   /** เลือกโปรโมชัน → ส่ง promotion_id แทน discount_amount (backend คิดส่วนลดเอง · ใช้คู่กับส่วนลดกรอกมือไม่ได้) */
   promotionId?: string | null;
 }): OrderInput {
   return {
-    user_id: args.guestUserId,
+    user_id: args.userId,
     source: "items",
     order_type: "takeaway",
     channel: "instore",

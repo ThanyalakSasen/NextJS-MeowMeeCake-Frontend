@@ -25,7 +25,7 @@ function Body() {
 export function CategoryShippingButton() {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
-  const perm = usePermission("store_info");
+  const perm = usePermission("shipping");
 
   if (!perm.view) return null;
 

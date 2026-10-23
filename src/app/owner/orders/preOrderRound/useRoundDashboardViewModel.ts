@@ -20,8 +20,10 @@ import type { PaymentGroup, RoundCustomerLine, RoundCustomerOrder, RoundDashboar
 
 const PAGE_SIZE = 10;
 
-/** ตัวเลือก + ข้อความพิเศษของรายการ เป็นบรรทัดสั้น ๆ */
-export function lineExtras(l: RoundCustomerLine): string[] {
+/** ตัวเลือก + ข้อความพิเศษของรายการ เป็นบรรทัดสั้น ๆ — ใช้ทั้งลิ้นชักสรุปรอบและลิ้นชักคำสั่งซื้อ (PreorderItem) */
+export function lineExtras(
+  l: Pick<RoundCustomerLine, "variant_name" | "selected_variants" | "selected_options"> & { special_request?: string | null }
+): string[] {
   const variants = l.selected_variants.length
     ? l.selected_variants.map((v) => (v.group_name ? `${v.group_name}: ${v.variant_name}` : v.variant_name))
     : l.variant_name
