@@ -23,6 +23,9 @@ import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { LIST_ALL } from "@/lib/http";
 import { revenueKey, trendBuckets as buildTrendBuckets } from "./summaryRanges";
 
+/** ปีค่าใช้จ่ายที่เก่ากว่านี้ถือว่าพิมพ์ผิด — ไม่นับเป็นปีแรกของตารางรายปี */
+const MIN_EXPENSE_YEAR = 2000;
+
 export interface PnLRow {
   key: string;
   label: string;
@@ -108,8 +111,13 @@ export function useFinanceSummaryViewModel() {
   // ── ตารางเปรียบเทียบ — ตามช่วงเวลาที่เลือก (ช่วงของแต่ละแบบดู summaryRanges.trendBuckets) ──
   // รายรับต่อช่วงจาก revenue-by-channel ช่วงละ 1 request (นับพรีออเดอร์ด้วย ตัวเลขชุดเดียวกับตาราง P&L)
   // · รายจ่ายรวมจากรายการค่าใช้จ่ายที่วันที่อยู่ในช่วง
+  // ข้ามวันที่ที่อ่านไม่ได้ / ปีที่พิมพ์ผิด (เช่น 0202) — ไม่งั้นปีเป็น NaN (ตารางว่าง) หรือสร้างช่วงรายปีนับพันช่วง
   const firstExpenseYear = useMemo(
-    () => expenses.reduce((y, e) => Math.min(y, dayjs(e.date).year()), Infinity),
+    () =>
+      expenses.reduce((y, e) => {
+        const d = dayjs(e.date);
+        return d.isValid() && d.year() >= MIN_EXPENSE_YEAR ? Math.min(y, d.year()) : y;
+      }, Infinity),
     [expenses],
   );
   const trendBuckets = useMemo(

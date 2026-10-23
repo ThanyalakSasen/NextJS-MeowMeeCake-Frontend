@@ -19,19 +19,26 @@ export interface TrendBucket {
 /**
  * ช่วงในตารางเปรียบเทียบ (ช่วงเก่าอยู่บน ใหม่อยู่ล่าง)
  * รายวัน = 7 วันย้อนจากวันที่เลือก · รายสัปดาห์ = 6 สัปดาห์ย้อนจากสัปดาห์ที่เลือก
- * รายเดือน = ม.ค.–ธ.ค. ของปีที่เลือก · รายไตรมาส = Q1–Q4 ของปีที่เลือก (ผลรวมทีละ 3 เดือน)
- * รายปี = ทุกปี ตั้งแต่ปีแรกที่มีค่าใช้จ่ายบันทึก (firstExpenseYear) ถึงปีปัจจุบัน (หรือปีที่เลือก ถ้าเลือกไกลกว่า)
+ * รายเดือน = ม.ค. ถึงเดือนปัจจุบันของปีที่เลือก (ปีที่ผ่านไปแล้ว = ครบ ธ.ค.) · รายไตรมาส = Q1 ถึงไตรมาสปัจจุบัน แบบเดียวกัน
+ *   — ไม่สร้างเดือน/ไตรมาสที่ยังไม่ถึง (เดิมได้แถวศูนย์ที่ดูเหมือนข้อมูลจริง + ยิง request เปล่า)
+ * รายปี = ทุกปี ตั้งแต่ปีแรกที่มีค่าใช้จ่ายบันทึก (firstExpenseYear) หรือปีที่เลือก ถ้าเก่ากว่า ถึงปีปัจจุบัน (หรือปีที่เลือก ถ้าเลือกไกลกว่า)
  */
 export function trendBuckets(period: PeriodType, selectedDate: Dayjs, firstExpenseYear = Infinity): TrendBucket[] {
+  const now = dayjs();
   const yearStart = selectedDate.startOf("year");
+  // เดือนสุดท้าย (0–11) ของรายเดือน/รายไตรมาส — รวมเดือนที่เลือกเสมอ แม้เลือกล่วงหน้า
+  const lastMonth =
+    selectedDate.year() < now.year() ? 11
+    : selectedDate.year() === now.year() ? Math.max(now.month(), selectedDate.month())
+    : selectedDate.month();
   let anchors: Dayjs[];
   if (period === "day") anchors = Array.from({ length: 7 }, (_, i) => selectedDate.subtract(6 - i, "day"));
   else if (period === "week") anchors = Array.from({ length: 6 }, (_, i) => selectedDate.subtract(5 - i, "week"));
-  else if (period === "month") anchors = Array.from({ length: 12 }, (_, i) => yearStart.add(i, "month"));
-  else if (period === "quarter") anchors = Array.from({ length: 4 }, (_, i) => yearStart.add(i * 3, "month"));
+  else if (period === "month") anchors = Array.from({ length: lastMonth + 1 }, (_, i) => yearStart.add(i, "month"));
+  else if (period === "quarter") anchors = Array.from({ length: Math.floor(lastMonth / 3) + 1 }, (_, i) => yearStart.add(i * 3, "month"));
   else {
-    const last = Math.max(dayjs().year(), selectedDate.year());
-    const first = Math.min(firstExpenseYear, last);
+    const last = Math.max(now.year(), selectedDate.year());
+    const first = Math.min(firstExpenseYear, selectedDate.year(), last);
     anchors = Array.from({ length: last - first + 1 }, (_, i) => yearStart.year(first + i));
   }
   return anchors.map((anchor) => {

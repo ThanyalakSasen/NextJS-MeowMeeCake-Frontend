@@ -9,7 +9,7 @@ import FinanceSummaryPage from "./FinanceSummaryPageClient";
 import { revenueKey, trendBuckets } from "./summaryRanges";
 
 // สรุปกำไร-ขาดทุน — ดึงข้อมูลค่าเริ่มต้น (รายเดือน · เดือนนี้) ฝั่ง server ด้วย cookie ของผู้ใช้ (no-store) ก่อนส่ง HTML:
-// รายการค่าใช้จ่าย + รายรับของ 12 เดือน (ม.ค.–ธ.ค. ปีนี้) ในตารางเปรียบเทียบ (เดือนนี้ใช้ key เดียวกับการ์ด/ตาราง P&L)
+// รายการค่าใช้จ่าย + รายรับตั้งแต่ ม.ค. ถึงเดือนนี้ ในตารางเปรียบเทียบ (เดือนนี้ใช้ key เดียวกับการ์ด/ตาราง P&L)
 // เดิมเนื้อหาขึ้นหลัง JS ทำงาน + ยิง API (Lighthouse มือถือ LCP 3.8 วิ) · ช่วงเวลาคำนวณด้วยโค้ดเดียวกับ ViewModel
 // (summaryRanges.ts · server ตั้งเวลาไทยใน instrumentation.ts) · backend ช้า/ไม่มี user → browser ดึงเอง (รอไม่เกิน 2.5 วิ)
 export default async function FinanceSummaryRoute() {
