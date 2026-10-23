@@ -466,8 +466,8 @@
       "refunded": "คืนเงินแล้ว"
     },
     "orderType": {
-      "delivery": "จัดส่ง",
-      "takeaway": "รับที่ร้าน"
+      "delivery": "รายการที่ต้องจัดส่ง",
+      "takeaway": "รายการที่ต้องรับที่ร้าน"
     },
     "productType": {
       "normal": "สินค้าปกติ",
