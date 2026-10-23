@@ -246,6 +246,17 @@ export function useProductionViewModel() {
   });
   const selectedOrder =
     selectedInList ?? (detailQ.data ? toProductionOrder(detailQ.data.data, productsById) : null);
+  // ใบจากรอบพรีออเดอร์: จำนวนต่อรายการ = ผลรวมที่ลูกค้าสั่ง (ชำระแล้ว) ในรอบ — ดึงรอบมาเทียบกับโควตาที่เปิดรับต่อรอบ (max_qty_total)
+  const selectedRoundId = selectedOrder?.source_type === "preorder" ? selectedOrder.round_id ?? null : null;
+  const roundQ = useQuery({
+    queryKey: ["preorder-rounds", "detail", selectedRoundId],
+    queryFn: () => preorderRoundsService.get(selectedRoundId as string),
+    enabled: drawerOpen && !!selectedRoundId,
+  });
+  const selectedRoundQuota = useMemo(
+    () => (roundQ.data ? new Map((roundQ.data.data.items ?? []).map((it) => [it.product_id, it.max_qty_total])) : null),
+    [roundQ.data],
+  );
   const openDetail = (id: string) =>
     router.replace(`/owner/production?tab=${activeTab}&id=${encodeURIComponent(id)}`, { scroll: false });
   const closeDrawer = () => router.replace(`/owner/production?tab=${activeTab}`, { scroll: false });
@@ -443,7 +454,7 @@ export function useProductionViewModel() {
     historyRows, historyStats, productBreakdown, teamBreakdown,
 
     // รายละเอียด (ใช้ร่วม)
-    selectedOrder, drawerOpen,
+    selectedOrder, drawerOpen, selectedRoundQuota,
     onView: (o: ProductionOrder) => openDetail(o._id),
     closeDrawer,
     // id ใน URL ไม่มีใน list (ผิด/ถูกลบ/เก่ากว่า 200 ใบ) — drawer ต้องบอก ไม่ใช่ว่างเปล่า

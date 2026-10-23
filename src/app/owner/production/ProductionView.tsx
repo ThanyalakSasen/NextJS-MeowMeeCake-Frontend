@@ -81,6 +81,7 @@ export function ProductionView(vm: VM) {
           {vm.selectedOrder && (
             <ProductionOrderDetail
               order={vm.selectedOrder}
+              roundQuota={vm.selectedRoundQuota}
               canUpdate={vm.perm.update}
               canComplete={vm.perm.approve}
               onAdvance={vm.onAdvanceStatus}
