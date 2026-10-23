@@ -2,8 +2,9 @@
 // ─────────────────────────────────────────────────────────────
 // ฟอร์มเขียนรีวิว (BACKLOG3-merge D7) — ใช้ร่วมกันระหว่างออเดอร์ (purchases/[id]/review) กับพรีออเดอร์ (preorders/[id]/review)
 // ยกจาก FrontOffice account/pendingreview/[id] — ต่างจากต้นแบบ:
-//   - ต้นแบบมี 2 โหมด (ทีละชิ้นผ่าน ?next= · รีวิวรวม ?mode=combined) · ที่นี่หน้าเดียว: ติ๊กรายการที่จะใช้รีวิวนี้
-//     (ติ๊ก 1 ชิ้น = ทีละชิ้น) ส่งแล้วรายการที่เหลือยังรีวิวต่อได้ในหน้าเดิม
+//   - หลายชิ้นที่ยังไม่รีวิว → ถามก่อนว่า "รีวิวทั้งหมดพร้อมกัน" หรือ "รีวิวทีละชิ้น" (ReviewModeChoice)
+//     · ทั้งหมด = รีวิวชุดเดียวใช้กับทุกชิ้นที่ติ๊ก (เอาบางชิ้นออกได้) · ทีละชิ้น = เลือกชิ้น → ส่ง → ไปชิ้นถัดไปเอง
+//     ส่งแล้วรายการที่เหลือยังรีวิวต่อได้ในหน้าเดิม · เปลี่ยนวิธีรีวิวได้ที่หัวฟอร์ม
 //   - ส่งแบบ …_ids เสมอ (backend สร้างรีวิวแยกของแต่ละชิ้นด้วยเนื้อหาเดียวกัน) · ผ่านบางชิ้น = แสดงชิ้นที่ไม่ผ่านพร้อมเหตุผล
 // แบบ Grab: ให้ดาวก่อน แล้วถามต่อ — 4-5 ดาว "ประทับใจสิ่งใด?" · 1-3 ดาว "ควรปรับปรุงตรงไหน?" (แง่มุมเป็นคำชม/คำติตามดาว)
 // ไฟล์อัปโหลดก่อนส่ง · ส่งไม่ผ่านเลยสักชิ้น → ลบไฟล์ที่อัปไปแล้ว (DELETE /shop/reviews/upload)
@@ -14,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CakeSlice, Send, Star, Upload, Video, X } from "lucide-react";
+import { CakeSlice, Layers, ListChecks, Send, Star, Upload, Video, X } from "lucide-react";
 import { catalogService } from "@/services/catalog";
 import { shopReviewsService, type ReviewKind } from "@/services/shopReviews";
 import { resolveUploadUrl } from "@/lib/uploads";
@@ -81,9 +82,17 @@ export default function WriteReviewForm({
   });
   const imageOf = (productId: string) => resolveUploadUrl(productQs[productIds.indexOf(productId)]?.data?.product_img?.[0]);
 
-  // ติ๊กไว้ = ใช้รีวิวนี้ · ค่าเริ่มต้นทุกรายการที่ยังไม่รีวิว (unchecked เก็บแทน checked → รายการที่โหลดทีหลังติ๊กให้เอง)
+  // วิธีรีวิว — ถามเมื่อมีหลายชิ้นที่ยังไม่รีวิว (null = ยังไม่เลือก) · ชิ้นเดียว = ไม่ต้องถาม
+  const [mode, setMode] = useState<"all" | "each" | null>(null);
+  const multi = pending.length > 1;
+  const eachMode = multi && mode === "each";
+
+  // ทั้งหมด: ติ๊กไว้ = ใช้รีวิวนี้ · ค่าเริ่มต้นทุกรายการที่ยังไม่รีวิว (unchecked เก็บแทน checked → รายการที่โหลดทีหลังติ๊กให้เอง)
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set());
-  const targets = pending.filter((it) => !unchecked.has(it._id));
+  // ทีละชิ้น: ชิ้นที่กำลังรีวิว (null / รีวิวไปแล้ว = ชิ้นแรกที่เหลือ)
+  const [currentId, setCurrentId] = useState<string | null>(null);
+  const current = pending.find((it) => it._id === currentId) ?? pending[0];
+  const targets = eachMode ? (current ? [current] : []) : pending.filter((it) => !unchecked.has(it._id));
 
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -224,7 +233,8 @@ export default function WriteReviewForm({
       if (remaining > 0) {
         resetForm();
         setUnchecked(new Set());
-        alert.success(tw("thanksRemaining", { n: remaining }));
+        setCurrentId(null); // ทีละชิ้น → ไปชิ้นถัดไปที่ยังไม่รีวิว
+        alert.success(tw(eachMode ? "thanksNext" : "thanksRemaining", { n: remaining }));
         return;
       }
       alert.success(tw("thanks"));
@@ -242,6 +252,9 @@ export default function WriteReviewForm({
   if (pending.length === 0) {
     return <ReviewNotice text={tw("allDone")} href={backHref} link={to("backToDetail")} />;
   }
+  if (multi && mode === null) {
+    return <ReviewModeChoice count={pending.length} onPick={setMode} backHref={backHref} />;
+  }
 
   return (
     <form onSubmit={submit} className={`${shopCard} space-y-6`}>
@@ -250,12 +263,17 @@ export default function WriteReviewForm({
           <h1 className="text-lg font-bold sm:text-xl">{tw("title")}</h1>
           <p className="text-sm text-stone-500">
             {kind === "preorder" ? tw("preorderNo", { no: docNo }) : tw("orderNo", { no: docNo })}
-            {pending.length > 1 && tw("pickHint")}
+            {multi && (eachMode ? tw("pickOneHint", { n: pending.length }) : tw("pickHint"))}
           </p>
+          {multi && (
+            <button type="button" onClick={() => setMode(null)} className="mt-1 text-xs font-semibold text-[#8C5A3C] hover:underline">
+              {tw("changeMode")}
+            </button>
+          )}
         </div>
         <div className="space-y-2">
           {pending.map((it) => {
-            const checked = !unchecked.has(it._id);
+            const checked = eachMode ? it._id === current?._id : !unchecked.has(it._id);
             const img = imageOf(it.product_id);
             const body = (
               <>
@@ -274,7 +292,26 @@ export default function WriteReviewForm({
                 </div>
               </>
             );
-            return pending.length > 1 ? (
+            if (eachMode) {
+              // ทีละชิ้น — กดเลือกชิ้นที่จะรีวิว (เลือกได้ทีละชิ้น)
+              return (
+                <button
+                  key={it._id}
+                  type="button"
+                  aria-pressed={checked}
+                  onClick={() => setCurrentId(it._id)}
+                  className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition ${
+                    checked ? "border-[#4A342E] bg-[#4A342E]/5" : "border-stone-200 opacity-70 hover:bg-stone-50 hover:opacity-100"
+                  }`}
+                >
+                  <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${checked ? "border-[#4A342E]" : "border-stone-300"}`}>
+                    {checked && <span className="h-2 w-2 rounded-full bg-[#4A342E]" />}
+                  </span>
+                  {body}
+                </button>
+              );
+            }
+            return multi ? (
               <label
                 key={it._id}
                 className={`flex cursor-pointer items-center gap-3 rounded-xl border p-2.5 transition ${
@@ -391,6 +428,41 @@ export default function WriteReviewForm({
         </button>
       </div>
     </form>
+  );
+}
+
+/** ถามวิธีรีวิวเมื่อมีหลายชิ้นที่ยังไม่รีวิว — รีวิวทั้งหมดพร้อมกัน หรือ ทีละชิ้น */
+function ReviewModeChoice({ count, onPick, backHref }: { count: number; onPick: (m: "all" | "each") => void; backHref: string }) {
+  const tw = useTranslations("shop.review");
+  const tc = useTranslations("shop.common");
+  const options = [
+    { mode: "all" as const, icon: <Layers size={22} aria-hidden="true" />, title: tw("modeAll"), hint: tw("modeAllHint") },
+    { mode: "each" as const, icon: <ListChecks size={22} aria-hidden="true" />, title: tw("modeEach"), hint: tw("modeEachHint") },
+  ];
+  return (
+    <div className={`${shopCard} space-y-5`}>
+      <div className="text-center">
+        <h1 className="text-lg font-bold sm:text-xl">{tw("modeTitle", { n: count })}</h1>
+        <p className="m-0 mt-1 text-sm text-stone-500">{tw("modeQuestion")}</p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {options.map((o) => (
+          <button
+            key={o.mode}
+            type="button"
+            onClick={() => onPick(o.mode)}
+            className="flex flex-col items-center gap-2 rounded-2xl border border-[#8C5A3C]/25 bg-white p-5 text-center transition hover:border-[#4A342E] hover:bg-[#4A342E]/5 active:scale-[0.99]"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FAF6F0] text-[#8C5A3C]">{o.icon}</span>
+            <span className="text-base font-bold text-[#4A342E]">{o.title}</span>
+            <span className="text-sm text-stone-500">{o.hint}</span>
+          </button>
+        ))}
+      </div>
+      <div className="flex justify-center">
+        <Link href={backHref} className={shopButton}>{tc("cancel")}</Link>
+      </div>
+    </div>
   );
 }
 

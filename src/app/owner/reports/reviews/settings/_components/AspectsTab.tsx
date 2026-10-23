@@ -1,9 +1,11 @@
 "use client";
-// แท็บ "หัวข้อรีวิว" — ตัวอย่างปุ่มในฟอร์มลูกค้า · เพิ่ม · รายการ (ลำดับ/ไอคอน/ชื่อ/เปิด-ปิด/ลบ) · หัวข้อที่ลบแล้ว (กู้คืน)
+// แท็บ "หัวข้อรีวิว" — ตัวอย่างปุ่มในฟอร์มลูกค้า · เพิ่ม · รายการ (ลากจัดลำดับ/ไอคอน/ชื่อ/เปิด-ปิด/ลบ)
+// ลากการ์ด = HTML5 drag-and-drop เนทีฟ (แพทเทิร์นเดียวกับหน้าแบนเนอร์) · state การลากอยู่ที่นี่ · ยิง API ที่ vm.onReorder · หัวข้อที่ลบแล้ว (กู้คืน)
 // แก้ชื่อหัวข้อ = ป๊อปอัป (ชื่อไทย + ชื่ออังกฤษ)
+import { useState } from "react";
 import { Modal, Popover } from "antd";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
-import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
 import { Button, Card, Input, Switch } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DeleteButton, actionIcon } from "@/components/shared/actions";
@@ -16,6 +18,13 @@ export function AspectsTab({ vm }: { vm: VM }) {
   const t = useTranslations();
   const canEdit = vm.perm.update;
   const active = vm.aspects.filter((a) => a.is_active);
+  const draggable = canEdit && vm.aspects.length > 1;
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const endDrag = () => {
+    setDraggingId(null);
+    setDragOverId(null);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -52,20 +61,41 @@ export function AspectsTab({ vm }: { vm: VM }) {
         )}
       </Card>
 
-      <ul className="m-0 flex list-none flex-col gap-2 p-0">
-        {vm.aspects.map((a, i) => {
+      {draggable && <p className="m-0 -mb-2 text-xs text-gray-500">{t("reviewSettings.aspects.reorderHint")}</p>}
+      <ul className={`m-0 flex list-none flex-col gap-2 p-0 ${vm.reordering ? "opacity-60" : ""}`}>
+        {vm.aspects.map((a) => {
           const iconKey = resolveAspectIcon(a.icon, a.aspect_name_eng);
           return (
-            <li key={a._id} className={`flex flex-col gap-2 rounded-xl border bg-white p-3 ${a.is_active ? "border-gray-100" : "border-dashed border-gray-200 opacity-75"}`}>
+            <li
+              key={a._id}
+              draggable={draggable}
+              onDragStart={(e) => {
+                e.dataTransfer.setData("text/plain", a._id);
+                e.dataTransfer.effectAllowed = "move";
+                setDraggingId(a._id);
+              }}
+              onDragOver={(e) => {
+                if (!draggable) return;
+                e.preventDefault();
+                setDragOverId(a._id);
+              }}
+              onDragLeave={() => setDragOverId((prev) => (prev === a._id ? null : prev))}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggingId) vm.onReorder(draggingId, a._id);
+                endDrag();
+              }}
+              onDragEnd={endDrag}
+              className={`flex flex-col gap-2 rounded-xl border bg-white p-3 transition-all ${
+                dragOverId === a._id && draggingId !== a._id
+                  ? "border-brown-400 shadow-md"
+                  : a.is_active
+                    ? "border-gray-100"
+                    : "border-dashed border-gray-200"
+              } ${a.is_active ? "" : "opacity-75"} ${draggingId === a._id ? "opacity-40" : ""} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+            >
               <div className="flex flex-wrap items-center gap-2">
-                {canEdit && (
-                  <span className="flex flex-col">
-                    <Button size="small" type="text" disabled={i === 0 || vm.reordering} aria-label={t("reviewSettings.aspects.moveUp")}
-                      icon={<ArrowUpIcon className="h-3.5 w-3.5" />} onClick={() => vm.onMove(i, -1)} />
-                    <Button size="small" type="text" disabled={i === vm.aspects.length - 1 || vm.reordering} aria-label={t("reviewSettings.aspects.moveDown")}
-                      icon={<ArrowDownIcon className="h-3.5 w-3.5" />} onClick={() => vm.onMove(i, 1)} />
-                  </span>
-                )}
+                {draggable && <Bars3Icon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />}
                 <Popover
                   trigger={canEdit ? "click" : []}
                   title={t("reviewSettings.aspects.pickIcon")}

@@ -1,6 +1,6 @@
 "use client";
 // Footer ของหน้าร้าน — ย้ายมาจาก FrontOffice (components/customer/Footer.tsx)
-// Facebook + ที่อยู่ร้านจาก /catalog/store-info (BACKLOG4 U5 · ตั้งค่าที่หลังร้าน "ข้อมูลร้าน" — E2)
+// Facebook + ที่อยู่ร้าน (= หน้าร้าน/จุดรับสินค้าไม่เกิน 2 แห่ง) จาก /catalog/store-info (BACKLOG4 U5 · ตั้งค่าที่หลังร้าน "ข้อมูลร้าน" — E2)
 // ร้านยังไม่ตั้ง/โหลดไม่ได้ = ค่าเดิมของต้นแบบ · ลิงก์ "การจัดส่ง" (D9) · "ติดต่อเรา" (D8)
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { FaFacebook } from "react-icons/fa";
 import { storeInfoService } from "@/services/storeInfo";
 import { storeInfoKey } from "@/app/customer/lib/catalogQueries";
 import { formatStoreAddress } from "@/app/customer/lib/storeFormat";
+import StorePickupList from "./StorePickupList";
 
 const FALLBACK_FACEBOOK =
   "https://www.facebook.com/people/%E0%B9%80%E0%B8%AB%E0%B8%A1%E0%B8%B5%E0%B8%A2%E0%B8%A2%E0%B8%A1%E0%B8%B5%E0%B9%80%E0%B8%84%E0%B9%89%E0%B8%81/61554367860480/?locale=th_TH";
@@ -41,7 +42,13 @@ export default function Footer() {
 
           <div className="flex flex-col gap-3">
             <h4 className="text-lg font-bold text-gray-900">{t("address")}</h4>
-            <p className="text-gray-700 leading-relaxed">{address}</p>
+            <StorePickupList
+              markets={info?.weekly_markets ?? []}
+              fallbackAddress={address}
+              nameClassName="font-semibold text-gray-900"
+              textClassName="text-gray-700 leading-relaxed"
+              showMap={false}
+            />
           </div>
 
           <div className="flex flex-col gap-3">

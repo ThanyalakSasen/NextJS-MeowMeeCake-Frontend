@@ -158,7 +158,8 @@ export default function ProductCard({
           ชื่อ/ราคา โตตามจอ 16 → 17 (≥768) → 18 (≥1280) · ชื่อรอง/฿/ปุ่ม คงที่ 16 (ขั้นต่ำ — ห้ามใช้ค่า px ที่เล็กกว่านี้) */}
       {/* padding เดิม p-5 (~22px ที่ฐาน 18px) กินพื้นที่การ์ดบนมือถือจนราคาลดล้น → ลดเหลือ p-2.5 ให้เนื้อหากว้างขึ้น */}
       {/* ความสูงการ์ดตามเนื้อหา (ไม่บังคับให้ทุกใบในแถวสูงเท่ากัน) */}
-      <div className="p-2.5 sm:p-3 flex flex-col !bg-[#fff]">
+      {/* flex-1 + mt-auto: ใน grid (หน้าสินค้าทั้งหมด) การ์ดยืดเท่าใบที่สูงสุดในแถว → ราคา/ปุ่มชิดล่างเท่ากันทุกใบ */}
+      <div className="p-2.5 sm:p-3 flex flex-1 flex-col !bg-[#fff]">
         <div>
           <h3 className="text-sm md:text-[0.9444rem] xl:text-base font-semibold text-black line-clamp-1">
             {localNames(product.product_name_th, product.product_name_eng).primary}
@@ -180,7 +181,7 @@ export default function ProductCard({
           )}
         </div>
 
-        <div>
+        <div className="mt-auto">
           {/* ราคา + ดาว: การ์ดแคบจนไม่พอ → ตัดขึ้นบรรทัดใหม่แทนการล้นออกนอกการ์ด */}
           <div className="flex flex-wrap items-end justify-between gap-x-2 gap-y-1 my-1">
             {/* ราคา — กำลังลดราคา: ราคาลดสีแดง + ราคาเดิมขีดฆ่า (แต่ละชิ้นไม่ถูกตัดกลางคำ) */}

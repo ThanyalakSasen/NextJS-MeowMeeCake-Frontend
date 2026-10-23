@@ -278,6 +278,8 @@ export function useStoreInfoViewModel() {
     setProfileField,
     setSocial,
     logoSrc: (editing === "general" && logoPreview) || savedLogoSrc,
+    /** ตั้งโลโก้ของร้านเองแล้ว (ไม่ใช่โลโก้เริ่มต้น) — ใช้ใน "ความพร้อมของร้าน" */
+    hasCustomLogo: !!logoUrl && logoUrl !== DEFAULT_LOGO,
     pickLogo,
 
     address: editing === "markets" ? address : savedSettings,

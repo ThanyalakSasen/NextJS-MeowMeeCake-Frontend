@@ -1704,8 +1704,6 @@
       "oldest": "Oldest first"
     },
     "filter": {
-      "category": "Category",
-      "allCategories": "All categories",
       "product": "Product",
       "allProducts": "All products",
       "rating": "Rating",
@@ -1713,19 +1711,15 @@
       "stars": "{n} stars",
       "aspect": "Topic mentioned",
       "allAspects": "All topics",
-      "aspectSentiment": "Praise / complaint",
-      "improve": "Needs improvement",
-      "liked": "Liked",
-      "both": "Both",
       "replied": "Reply",
+      "reset": "Clear filters",
+      "negativeOnly": "Negative reviews only (1-2 stars)",
       "media": "Photo / video",
-      "hasMedia": "Has media",
-      "noMedia": "None",
+      "hasMedia": "Has photo/video",
+      "noMedia": "No photo/video",
       "orderKind": "Order type",
       "order": "Regular order",
-      "allStatuses": "All statuses",
-      "reset": "Clear filters",
-      "negativeOnly": "Negative reviews only (1-2 stars)"
+      "read": "Read status"
     },
     "summary": {
       "count": "{n} reviews match",
@@ -1733,11 +1727,7 @@
       "negative": "Negative (1-2 stars) {v}",
       "unrepliedNegative": "{n} negative reviews not replied — show"
     },
-    "selectPage": "Select page",
-    "selectOne": "Select this review",
-    "selectedCount": "{n} selected",
     "exportCsv": "Export CSV",
-    "exported": "Exported {n} reviews",
     "empty": "No reviews match the filters",
     "replied": "Replied",
     "notReplied": "Not replied",
@@ -1837,43 +1827,28 @@
     "sentimentTitle": "Sentiment analysis",
     "sentimentNotAnalyzed": "Not analyzed yet",
     "sentimentEmpty": "No analysis results",
-    "csv": {
-      "date": "Date",
-      "product": "Product",
-      "customer": "Customer",
-      "order": "Order no.",
-      "rating": "Rating",
-      "text": "Text",
-      "topics": "Topics (+liked / -disliked)",
-      "status": "Status",
-      "reply": "Shop reply",
-      "tags": "Internal tags",
-      "note": "Internal note"
-    },
-    "photoAlt": "Review photo {n}"
+    "photoAlt": "Review photo {n}",
+    "unread": "Unread",
+    "read": "Read",
+    "newBadge": "New",
+    "markRead": "Mark as read",
+    "markPageRead": "Mark this page as read ({n})",
+    "markedRead": "Marked {n} reviews as read"
   },
   "reviewsDashboard": {
     "total": "Total reviews",
     "avgRating": "Average rating",
     "ofFive": "out of 5",
-    "negativeRate": "Negative reviews (1–2★)",
+    "negativeRate": "Negative reviews",
     "negativeCount": "{n} reviews",
-    "replyRate": "Replied",
-    "unrepliedNegative": "{n} negative reviews unanswered",
-    "allReplied": "All answered",
     "withMedia": "{n} with photo/video",
     "ratingDist": "Rating distribution",
     "starsLabel": "{n} stars",
     "countPct": "{n} ({pct})",
-    "trend": "Reviews over time",
-    "trendTip": "{label}: {n} reviews · avg {avg}★",
     "aspects": "Topics customers mention",
     "liked": "Liked",
     "improve": "Needs improvement",
     "aspectTip": "{name}: liked {pos} · needs improvement {neg}",
-    "topProducts": "Most-reviewed products",
-    "lowProducts": "Lowest-rated products",
-    "lowProductsHint": "Products with at least {n} reviews",
     "productStat": "{n} reviews · ★ {avg}",
     "needsReply": "Negative reviews awaiting reply",
     "viewAll": "View all",
@@ -1886,23 +1861,16 @@
     "vsPrevNone": "No reviews in the previous period",
     "points": "{n} pts",
     "categories": "By product category",
-    "categoriesHint": "Red tags = the category's most criticized topics (times mentioned)",
+    "categoriesHint": "Reviews · average rating · negative reviews (1–2★) per product category · red tags = topics criticized in that category (times)",
     "categoryNegative": "{n} negative",
     "issueChip": "{name} {n}",
     "noIssues": "No criticized topics",
     "unknownCategory": "(Unknown category)",
-    "aspectTrend": "Criticized topics vs previous period",
-    "aspectTrendHint": "Times customers chose \"needs improvement\" · biggest increase first",
-    "aspectTrendTopic": "Topic",
-    "aspectTrendNow": "This period",
-    "aspectTrendPrev": "Previous",
-    "aspectTrendChange": "Change",
     "aspectTrendSame": "No change",
-    "aspectTrendEmpty": "No criticized topics in either period",
     "productFilter": "All products",
     "viewAllProducts": "Show all products",
     "productTable": "Product analysis",
-    "productTableHint": "Click a column header to sort · Click a product to see its dashboard",
+    "productTableHint": "Every product reviewed in this period: reviews · average rating and change from the previous period · % negative · top complaint · click a column header to sort · click a product to see only that product",
     "colProduct": "Product",
     "colReviews": "Reviews",
     "colAvg": "★ Avg",
@@ -1913,7 +1881,45 @@
     "csvAvg": "Average rating",
     "csvPrevAvg": "Previous average",
     "csvAvgDelta": "Change",
-    "csvNegative": "Negative reviews (1–2★)"
+    "csvNegative": "Negative reviews (1–2★)",
+    "ratingDistHint": "How many reviews gave each star rating · red bars = 1–2 stars (negative)",
+    "aspectsHint": "Topics customers ticked when reviewing · left (red) = complaints · right (green) = praise · most-complained first",
+    "aspectsHintPrev": "Topics customers ticked when reviewing · left (red) = complaints · right (green) = praise · last column = complaints up▲/down▼ vs previous period",
+    "aspectDeltaTip": "Complaints: this period {now} · previous {prev}",
+    "needsReplyHint": "{n} unanswered 1–2★ reviews in total (latest 5 shown) · aim to reply within 1–2 days",
+    "totalInfo": "Reviews customers wrote in the selected period (including ones hidden from the storefront) · bottom line = reviews with photos or videos",
+    "avgRatingInfo": "Average star rating of all reviews in this period (out of 5) · badge: Good ≥ 4.0 · Watch 3.5–3.9 · Poor < 3.5",
+    "negativeRateInfo": "Share of reviews rated 1–2 stars · badge: Good < 10% · Watch 10–24% · Poor ≥ 25% · compared with the previous period in \"points\", e.g. 10% → 15% = up 5 points",
+    "dropped": "Products with falling ratings",
+    "droppedHint": "Average rating dropped by {stars}★ or more vs the previous period (only products with at least {min} reviews in both periods) · often a recipe, ingredient or staff change · click a product for details",
+    "droppedAvg": "★ {prev} → {now}",
+    "droppedCount": "{n} reviews this period",
+    "unread": "Unread",
+    "unreadInfo": "Reviews in this period the team has not looked at yet · a review counts as read after \"Mark as read\" on its card or once the shop replies",
+    "allRead": "All read",
+    "viewUnread": "View list →",
+    "zoneOverview": "Overview",
+    "zoneOverviewQ": "How satisfied are customers this period?",
+    "zoneTodo": "To do now",
+    "zoneTodoQ": "What to handle first",
+    "zoneDeep": "Find the cause",
+    "zoneDeepQ": "What customers like or criticize, and on which products",
+    "todoNone": "Nothing pending — every negative review is answered and no product ratings are falling",
+    "todoNoneProduct": "Nothing pending — every negative review of this product is answered",
+    "level": {
+      "good": "Good",
+      "watch": "Watch",
+      "bad": "Poor"
+    },
+    "ratingVerdict": "Most reviews give {n}★ ({pct} of reviews)",
+    "aspectsTopNeg": "Most criticized: {name} ({n} times)",
+    "aspectsTopPos": "Most praised: {name} ({n} times)",
+    "aspectsNoNeg": "No criticized topics yet",
+    "categoriesVerdict": "Lowest-rated category: {name} (★ {avg})",
+    "productTableVerdict": "{n} products reviewed this period",
+    "droppedVerdict": "{n} products dropped {stars}★ or more on average",
+    "needsReplyVerdict": "{n} reviews awaiting reply",
+    "negativeRateRange": "(1–2★)"
   },
   "reviewSettings": {
     "title": "Review topic settings",
@@ -1936,8 +1942,6 @@
       "nameRequired": "Please enter a topic name",
       "pickIcon": "Choose an icon",
       "changeIcon": "Click to change the icon",
-      "moveUp": "Move up",
-      "moveDown": "Move down",
       "shown": "Shown in form",
       "hidden": "Hidden from form",
       "deleteConfirm": "Delete topic \"{name}\"? Existing reviews keep it; you can restore it later",
@@ -1945,7 +1949,8 @@
       "deletedTitle": "Deleted topics ({n})",
       "restore": "Restore",
       "restored": "Restored topic \"{name}\"",
-      "renameTitle": "Rename review topic"
+      "renameTitle": "Rename review topic",
+      "reorderHint": "Drag cards to reorder — this is the button order in the customer review form"
     },
     "terms": {
       "intro": "Words or phrases customers often write and which topic they belong to (e.g. \"too sweet\" → Taste) — the text analysis uses them for reviews where the customer didn't pick a topic",
@@ -2019,7 +2024,8 @@
       "storeName": "Store name",
       "logo": "Store logo",
       "logoPick": "Click the image to choose a new file —",
-      "logoHint": "PNG, JPG, WebP or AVIF up to 5MB · a square (1:1) image works best"
+      "logoHint": "PNG, JPG, WebP or AVIF up to 5MB · a square (1:1) image works best",
+      "logoDefault": "Still using the default logo"
     },
     "contact": {
       "title": "Contact",
@@ -2045,7 +2051,8 @@
       "id": "PromptPay ID",
       "idHint": "10-digit mobile number or 13-digit ID / tax number",
       "accountName": "Account name",
-      "note": "Double-check the PromptPay ID and account name before saving — customers pay to this QR immediately"
+      "note": "Double-check the PromptPay ID and account name before saving — customers pay to this QR immediately",
+      "missing": "No PromptPay number yet — the customer payment page will have no QR to scan"
     },
     "address": {
       "title": "Store address",
@@ -2074,9 +2081,6 @@
       "notSet": "Store coordinates not set"
     },
     "markets": {
-      "title": "Weekly markets",
-      "titleWithAddress": "Store address & weekly markets",
-      "description": "The main shop and regular market stalls with opening days and hours — customers see them on \"Contact us\" and pick one as a pickup point (visible ones only)",
       "empty": "No weekly markets yet — at least 1 is needed for customer pickup",
       "noneActive": "No visible weekly market — at least 1 is needed for customer pickup",
       "editHint": "(click \"Edit\" on this section to add one)",
@@ -2104,7 +2108,13 @@
       "mainName": "Main store",
       "mainHint": "The main store's location and map link come from the store address and coordinates above",
       "mainNotOpen": "No opening days/hours yet — customers can't pick up at the main store",
-      "enableMain": "Allow pickup at the main store (set days & hours)"
+      "enableMain": "Allow pickup at the main store (set days & hours)",
+      "descriptionShort": "Places where customers can pick up orders, with opening days and hours · shown on the \"Contact us\" page",
+      "everyday": "Every day",
+      "mainBadgeShort": "Main shop",
+      "activeShort": "Open for pickup",
+      "hiddenShort": "Hidden",
+      "daysTime": "{days} · {open}–{close}"
     },
     "days": {
       "mon": "Mon",
@@ -2134,7 +2144,9 @@
       "logoType": "Only PNG, JPG, WebP or AVIF files are supported",
       "logoSize": "File must be 5MB or smaller"
     },
-    "editTitle": "Edit {section}"
+    "editTitle": "Edit {section}",
+    "notSetShort": "Not set",
+    "openMap": "Open map"
   },
   "searchSynonyms": {
     "title": "Search synonyms",
@@ -2418,7 +2430,6 @@
   },
   "shippingZones": {
     "title": "Delivery fees (web orders)",
-    "usage": "Fees are based on the province in the customer's address: a province in a zone uses that zone's fee · provinces not in any zone use zone D · add zones with \"Add zone\" · no free delivery by order total (free delivery only via coupons) · these fees apply only to website orders",
     "scopeNote": "Some categories, such as fresh cakes, can only be delivered within the store's province — use \"Out-of-province delivery\" at the top right to choose which categories or products can be delivered anywhere",
     "fallbackTag": "Provinces not in another zone",
     "fallbackHint": "Zone D applies to every province not in another zone — only its name and fee can change (it can't be deleted)",
@@ -2428,7 +2439,6 @@
     "saved": "Zone {code} saved",
     "saveFailed": "Could not save the zone",
     "fields": {
-      "code": "Zone",
       "label": "Zone name",
       "fee": "Fee",
       "provinces": "Provinces",
@@ -2442,9 +2452,10 @@
       "feeInvalid": "Fee must be 0 or more with at most 2 decimals"
     },
     "checker": {
-      "title": "Check a fee: if the customer is in…",
+      "title": "Try a shipping fee",
       "placeholder": "Pick a province",
-      "result": "This province is in zone {code} — fee {fee}"
+      "hint": "Pick a customer's province to see the fee",
+      "empty": "No province selected"
     },
     "categories": {
       "button": "Out-of-province delivery",
@@ -2479,7 +2490,20 @@
     "removed": "Zone {code} deleted",
     "removeFailed": "Couldn't delete the zone",
     "removeTitle": "Delete delivery zone",
-    "removeConfirm": "Delete zone {code} \"{label}\"? Its provinces will use zone D's fee instead"
+    "removeConfirm": "Delete zone {code} \"{label}\"? Its provinces will use zone D's fee instead",
+    "how": {
+      "title": "How shipping is charged",
+      "step1": "The system reads the province from the customer's delivery address",
+      "step2": "The province's zone sets the fee · provinces not in any zone use {zone}",
+      "step3": "No free shipping by order total (free shipping only via coupons) · applies to web orders only"
+    },
+    "zoneBadge": "Zone {code}",
+    "zonesTitle": "Shipping zones ({n})",
+    "zonesHint": "A province can belong to one zone only · click Edit to change the fee or provinces",
+    "perOrder": "per order",
+    "fallbackShort": "Covers all remaining provinces",
+    "provinceCount": "{n} provinces",
+    "zoneNamed": "zone {code} \"{name}\""
   },
   "shop": {
     "nav": {
@@ -2940,7 +2964,16 @@
       "pointsHint": "Each review earns reward points (more with photos)",
       "sending": "Sending review...",
       "sendMany": "Send {n} reviews",
-      "send": "Send review"
+      "send": "Send review",
+      "modeTitle": "This order has {n} items to review",
+      "modeQuestion": "How would you like to review them?",
+      "modeAll": "Review all at once",
+      "modeAllHint": "One rating, text and photos for every item (you can leave some out)",
+      "modeEach": "Review one by one",
+      "modeEachHint": "Write a separate review for each item — the next one opens after you send",
+      "changeMode": "Change review method",
+      "pickOneHint": " · One by one — pick the item to review ({n} left)",
+      "thanksNext": "Thanks for your review! On to the next item ({n} left)"
     },
     "account": {
       "lineLinked": "LINE connected",
@@ -3168,14 +3201,14 @@
       "closesIn": "Closes in",
       "opensIn": "Opens in",
       "viewItems": "View items",
-      "viewItemsCount": "View items ({n})",
+      "viewItemsCount": "View items ({n} items)",
       "viewUpcoming": "Preview items",
       "roundNotFound": "Pre-order round not found",
       "allRounds": "See all rounds",
       "roundFailed": "Could not load the round. Please refresh.",
       "notOpenYet": "Not open yet — you can preview the items",
       "closed": "Closed",
-      "roundItems": "Items in this round ({n})",
+      "roundItems": "Items in this round ({n} items)",
       "searchRound": "Search this round",
       "noMatch": "No matching items",
       "noItems": "No items in this round yet",
@@ -3356,9 +3389,7 @@
       "storeInfoNamed": "About {name}",
       "loading": "Loading store details...",
       "loadFailed": "Could not load store details. Please refresh the page.",
-      "address": "Store address",
       "phone": "Phone",
-      "markets": "Weekly markets & opening hours",
       "hours": "{days} · {open} - {close}",
       "viewMap": "View map",
       "email": "Email",
@@ -3447,7 +3478,7 @@
       "checkingLink": "Checking link...",
       "linkInvalid": "This link is invalid or has expired",
       "linkRule": "Reset links can be used once and expire after 1 hour",
-      "requestNew": "Request a new link",
+      "requestNew": "Get a new link (choose Google account)",
       "resetDone": "You can now log in with your new password",
       "setNew": "Set a new password",
       "atLeast": "At least {n} characters",
@@ -3455,7 +3486,8 @@
       "saveNew": "Save new password",
       "pickGoogleFailed": "Could not choose a Google account. Please try again.",
       "useGoogle": "Choose a Google account instead",
-      "openGmail": "Open Gmail"
+      "openGmail": "Open Gmail",
+      "newLinkSent": "A new link was sent to {email} — open it within 1 hour"
     },
     "verify": {
       "verifying": "Verifying your email...",

@@ -1,17 +1,17 @@
 "use client";
-// แท็บ "จัดการรีวิว" ของหน้ารายงานความคิดเห็น (BACKLOG4 E4) — แถบกรอง · แถบสรุปของชุดที่กรอง · เลือกหลายรายการ ·
+// แท็บ "จัดการรีวิว" ของหน้ารายงานความคิดเห็น (BACKLOG4 E4) — แถบกรอง · แถบสรุปของชุดที่กรอง ·
 // การ์ดรีวิว · แบ่งหน้า · modal แท็กภายใน · drawer รายละเอียด (ผลวิเคราะห์ความรู้สึก)
 // หัวหน้า/แท็บ/ปุ่มตั้งค่าอยู่ที่ ReviewsReportView
-import { Checkbox, Modal } from "antd";
+import { Modal } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import { formatNumber } from "@/i18n/format";
-import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import { CheckIcon } from "@heroicons/react/24/outline";
 import { Button, EmptyState, Select } from "@/components/base";
 import { PaginationBar } from "@/components/shared/data";
 import { DetailDrawer, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { useReviewsViewModel } from "./useReviewsViewModel";
-import { ReviewFiltersBar } from "./_components/ReviewFiltersBar";
+import { ReviewFiltersBar, ReviewSortSelect } from "./_components/ReviewFiltersBar";
 import { ReviewCard } from "./_components/ReviewCard";
 import { ReviewDetailContent } from "./_components/ReviewDetailContent";
 
@@ -21,7 +21,6 @@ export function ReviewsView(vm: VM) {
   const t = useTranslations();
   const locale = useLocale();
   const s = vm.summary;
-  const allSelected = vm.rows.length > 0 && vm.rows.every((r) => vm.selected.has(r._id));
 
   return (
     <>
@@ -32,42 +31,30 @@ export function ReviewsView(vm: VM) {
           search={vm.search}
           setSearch={vm.setSearch}
           onReset={vm.resetFilters}
-          categoryOptions={vm.categoryOptions}
           productOptions={vm.productOptions}
           aspectOptions={vm.aspectOptions}
         />
 
-        {/* สรุปของชุดที่กรอง (ทุกหน้า ไม่ใช่แค่หน้านี้) */}
-        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brown-100 bg-brown-50 px-4 py-2.5 text-sm text-brown-800">
-          <span>{t("reviews.summary.count", { n: formatNumber(s?.count ?? 0, locale) })}</span>
-          <span>{t("reviews.summary.avg", { v: s?.avg_rating != null ? s.avg_rating.toFixed(2) : "—" })}</span>
-          <span className={(s?.negative_rate ?? 0) >= 0.25 ? "text-rose-700" : ""}>
-            {t("reviews.summary.negative", { v: s?.negative_rate != null ? `${Math.round(s.negative_rate * 100)}%` : "—" })}
-          </span>
-          {(s?.unreplied_negative ?? 0) > 0 && (
-            <button type="button" onClick={() => vm.showUnrepliedNegative()} className="font-semibold text-rose-700 hover:underline">
-              {t("reviews.summary.unrepliedNegative", { n: s!.unreplied_negative })}
-            </button>
+        {/* สรุปของชุดที่กรอง (ทุกหน้า ไม่ใช่แค่หน้านี้) · การเรียงชิดขวา (แยกจากการ์ดตัวกรอง) */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-4 rounded-xl border border-brown-100 bg-brown-50 px-4 py-2.5 text-sm text-brown-800">
+            <span>{t("reviews.summary.count", { n: formatNumber(s?.count ?? 0, locale) })}</span>
+            <span>{t("reviews.summary.avg", { v: s?.avg_rating != null ? s.avg_rating.toFixed(2) : "—" })}</span>
+            <span className={(s?.negative_rate ?? 0) >= 0.25 ? "text-rose-700" : ""}>
+              {t("reviews.summary.negative", { v: s?.negative_rate != null ? `${Math.round(s.negative_rate * 100)}%` : "—" })}
+            </span>
+            {(s?.unreplied_negative ?? 0) > 0 && (
+              <button type="button" onClick={() => vm.showUnrepliedNegative()} className="font-semibold text-rose-700 hover:underline">
+                {t("reviews.summary.unrepliedNegative", { n: s!.unreplied_negative })}
+              </button>
+            )}
+          </div>
+          {vm.perm.update && vm.unreadOnPage > 0 && (
+            <Button size="small" icon={<CheckIcon className="h-4 w-4" />} loading={vm.markingRead} onClick={vm.onMarkPageRead}>
+              {t("reviews.markPageRead", { n: vm.unreadOnPage })}
+            </Button>
           )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 px-1">
-          <Checkbox
-            checked={allSelected}
-            indeterminate={vm.selected.size > 0 && !allSelected}
-            disabled={vm.rows.length === 0}
-            onChange={(e) => vm.selectAllOnPage(e.target.checked)}
-          >
-            <span className="text-xs text-gray-500">{t("reviews.selectPage")}</span>
-          </Checkbox>
-          {vm.selected.size > 0 && (
-            <>
-              <span className="text-xs font-semibold text-brown-800">{t("reviews.selectedCount", { n: vm.selected.size })}</span>
-              <Button size="small" icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
-                {t("reviews.exportCsv")}
-              </Button>
-            </>
-          )}
+          <ReviewSortSelect value={vm.filters.sort} onChange={(v) => vm.setFilter("sort", v)} />
         </div>
 
         {vm.isError ? (
@@ -82,13 +69,12 @@ export function ReviewsView(vm: VM) {
               <ReviewCard
                 key={r._id}
                 review={r}
-                selected={vm.selected.has(r._id)}
                 canUpdate={vm.perm.update}
                 canDelete={vm.perm.delete}
                 suggestions={vm.replySuggestions}
-                onSelect={() => vm.toggleSelect(r._id)}
                 onStatus={(st) => vm.onStatus(r, st)}
                 onTogglePin={() => vm.onTogglePin(r)}
+                onMarkRead={() => vm.onMarkRead(r)}
                 onSaveReply={(text) => vm.onSaveReply(r, text)}
                 onSaveNote={(text) => vm.onSaveNote(r, text)}
                 onTags={() => vm.openTags(r)}

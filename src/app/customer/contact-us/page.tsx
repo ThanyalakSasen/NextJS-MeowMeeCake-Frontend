@@ -3,18 +3,20 @@
 // /customer/contact-us — ติดต่อร้าน (BACKLOG3-merge D8) · ยกจาก FrontOffice src/app/customer/contact-us/page.tsx
 // ข้อมูลร้านทั้งหมดจาก GET /catalog/store-info (ตั้งค่าที่หลังร้าน "ข้อมูลร้าน" — E2) · ส่วนที่ร้านยังไม่ตั้ง = ไม่แสดง
 // ฟอร์ม "ส่งข้อความหาเรา" เลิกใช้แล้ว → การ์ด "แชทกับร้าน" เปิดกล่องแชทลอย (ChatWidget · /shop/chat)
+// ซ้าย: เบอร์ · อีเมล · โซเชียล · ขวา: แชทกับร้าน → ที่ตั้งร้าน (หน้าร้าน/จุดรับสินค้าไม่เกิน 2 แห่ง · ปุ่มเปิด Google Maps ของที่อยู่ร้าน)
 // แผนที่ใช้ลิงก์เปิด Google Maps แทน iframe (iframe ตั้งคุกกี้ third-party ทันทีที่เปิดหน้า — ต้องขอความยินยอมตาม PDPA)
 // ─────────────────────────────────────────────────────────────
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, ExternalLink, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { FaFacebook, FaGlobe, FaInstagram, FaLine } from "react-icons/fa";
 import { storeInfoService, type SocialKey } from "@/services/storeInfo";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
 import { storeInfoKey } from "../lib/catalogQueries";
 import { useChatWidgetStore } from "../store/chatWidgetStore";
-import { formatMarketDays, formatStoreAddress, storeMapUrl } from "../lib/storeFormat";
+import { formatStoreAddress, storeMapUrl } from "../lib/storeFormat";
+import StorePickupList from "@/components/customer/StorePickupList";
 
 const SOCIAL_BUTTONS: { key: SocialKey; label: string; icon: React.ReactNode; className: string }[] = [
   { key: "facebook", label: "Facebook", icon: <FaFacebook size={20} />, className: "bg-[#1464d2] hover:bg-[#1259bd]" },
@@ -27,7 +29,6 @@ const SOCIAL_BUTTONS: { key: SocialKey; label: string; icon: React.ReactNode; cl
 export default function ContactPage() {
   const t = useTranslations("shop.contact");
   const tf = useTranslations("shop.footer");
-  const ts = useTranslations("shop.store");
   const infoQ = useQuery({ queryKey: storeInfoKey, queryFn: storeInfoService.get, staleTime: 5 * 60_000 });
   const info = infoQ.data;
   const storeName = info?.store_name || t("fallbackStoreName");
@@ -67,11 +68,6 @@ export default function ContactPage() {
               <p className="text-sm text-red-600">{t("loadFailed")}</p>
             ) : (
               <div className="space-y-5">
-                {address && (
-                  <InfoItem icon={<MapPin size={22} />} title={t("address")}>
-                    <p className="m-0 text-sm leading-relaxed text-gray-600">{address}</p>
-                  </InfoItem>
-                )}
                 {info.phones.length > 0 && (
                   <InfoItem icon={<Phone size={22} />} title={t("phone")}>
                     {info.phones.map((phone) => (
@@ -79,24 +75,6 @@ export default function ContactPage() {
                         {phone}
                       </a>
                     ))}
-                  </InfoItem>
-                )}
-                {info.weekly_markets.length > 0 && (
-                  <InfoItem icon={<Clock size={22} />} title={t("markets")}>
-                    <ul className="m-0 list-none space-y-2.5 p-0">
-                      {info.weekly_markets.map((m, i) => (
-                        <li key={`${m.name}-${i}`} className="text-sm leading-relaxed text-gray-600">
-                          <span className="block font-semibold text-[#4A342E]">{m.name}</span>
-                          {m.location && <span className="block">{m.location}</span>}
-                          <span className="block">{t("hours", { days: formatMarketDays(m.days, ts), open: m.open_time, close: m.close_time })}</span>
-                          {m.map_url && (
-                            <a href={m.map_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-[#8C5A3C] hover:underline">
-                              {t("viewMap")} <ExternalLink size={12} />
-                            </a>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
                   </InfoItem>
                 )}
                 {info.contact_email && (
@@ -129,29 +107,29 @@ export default function ContactPage() {
             )}
           </section>
 
-          <section className={`${shopCard} space-y-6 lg:col-span-7`}>
-            <h2 className="flex items-center gap-2.5 text-xl font-bold sm:text-2xl">
-              <MessageCircle size={24} className="text-[#8C5A3C]" />
-              {t("chatTitle")}
-            </h2>
-            <ChatCard />
-          </section>
+          {/* คอลัมน์ขวา: แชทกับร้าน → ที่ตั้งร้าน (ใต้แชท) */}
+          <div className="flex flex-col gap-8 lg:col-span-7">
+            <section className={`${shopCard} space-y-6`}>
+              <h2 className="flex items-center gap-2.5 text-xl font-bold sm:text-2xl">
+                <MessageCircle size={24} className="text-[#8C5A3C]" />
+                {t("chatTitle")}
+              </h2>
+              <ChatCard />
+            </section>
+            {/* ที่ตั้งร้าน = หน้าร้าน/จุดรับสินค้าไม่เกิน 2 แห่ง · ปุ่ม "เปิด Google Maps" ใต้ข้อมูลของแต่ละแห่ง (แห่งที่ไม่มีลิงก์แผนที่ = ไม่มีปุ่ม) */}
+            {info && (address || info.weekly_markets.length > 0) && (
+              <section className={shopCard}>
+                <div className="flex min-w-0 items-start gap-3">
+                  <MapPin size={22} className="mt-0.5 shrink-0 text-[#8C5A3C]" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <h3 className="text-lg font-bold">{t("location")}</h3>
+                    <StorePickupList markets={info.weekly_markets} fallbackAddress={address} fallbackMapUrl={mapUrl} mapButtonClassName={shopButton} />
+                  </div>
+                </div>
+              </section>
+            )}
+          </div>
         </div>
-
-        {mapUrl && (
-          <section className={`${shopCard} flex flex-col justify-between gap-4 sm:flex-row sm:items-center`}>
-            <div className="flex min-w-0 items-start gap-3">
-              <MapPin size={22} className="mt-0.5 shrink-0 text-[#8C5A3C]" />
-              <div className="min-w-0">
-                <h3 className="text-lg font-bold">{t("location")}</h3>
-                {address && <p className="m-0 mt-1 break-words text-sm text-gray-600">{address}</p>}
-              </div>
-            </div>
-            <a href={mapUrl} target="_blank" rel="noopener noreferrer" className={`${shopButton} shrink-0`}>
-              {t("openMaps")} <ExternalLink size={16} />
-            </a>
-          </section>
-        )}
       </div>
     </div>
   );

@@ -30,6 +30,11 @@ declare global {
   }
 }
 
+/** google.accounts.id ตั้งค่าแล้วหรือยัง (ทั้งหน้า ไม่ใช่ต่อปุ่ม) */
+let gisInitialized = false;
+/** ตัวรับ credential ของปุ่มที่แสดงอยู่ — GIS เก็บ callback ตัวแรกที่ initialize ไว้ จึงส่งต่อผ่านตัวแปรนี้ */
+let activeCredentialHandler: ((credential: string) => void) | null = null;
+
 export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolean; onCredential: (credential: string) => void }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -58,11 +63,17 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
   useEffect(() => {
     const gid = window.google?.accounts.id;
     if (!ready || !gid || !slot.current) return;
-    gid.initialize({
-      client_id: CLIENT_ID,
-      ux_mode: "popup",
-      callback: (r) => r.credential && callbackRef.current(r.credential),
-    });
+    // ปุ่มที่แสดงอยู่ตอนนี้เป็นคนรับผล (ปุ่มเดิมที่ unmount ไปแล้วไม่รับ)
+    activeCredentialHandler = (credential) => callbackRef.current(credential);
+    // initialize ครั้งเดียวต่อหน้า — เรียกซ้ำ GIS เตือน "initialize() is called multiple times" (mount ใหม่ · เปลี่ยนภาษา · dev รัน effect 2 รอบ)
+    if (!gisInitialized) {
+      gid.initialize({
+        client_id: CLIENT_ID,
+        ux_mode: "popup",
+        callback: (r) => r.credential && activeCredentialHandler?.(r.credential),
+      });
+      gisInitialized = true;
+    }
     gid.renderButton(slot.current, {
       type: "standard",
       theme: "outline",

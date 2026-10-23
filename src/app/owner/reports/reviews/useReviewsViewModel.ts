@@ -3,18 +3,15 @@
 // ViewModel ของ "รีวิวลูกค้า" (BACKLOG4 E4) — ยกจาก FrontOffice reports/reviews/ReviewTable (MVVM + i18n)
 // กรอง/ค้นหา/เรียง/แบ่งหน้าที่ server + สรุปของชุดที่กรอง (summary=1 — I9) · เดิมโหลดทั้งหมดมากรองในหน้า
 // จัดการต่อรีวิว (PATCH): สถานะ · ปักหมุด · อ่านแล้ว · ตอบกลับ (คำตอบสำเร็จรูป + คำตอบเก่าที่เคยใช้) · โน้ต/แท็กภายใน
-// เลือกหลายรายการ: ส่งออก CSV (ต้นแบบ xlsx — แอปนี้ใช้ CSV ทุกหน้า)
 // แก้แล้วอัปเดต cache ของหน้าปัจจุบันทันที แล้วโหลดชุดใหม่ (summary/ลำดับอาจเปลี่ยน) · สิทธิ์เมนู reports
 // แดชบอร์ดสรุป = หน้า ./dashboard (คำนวณฝั่ง client จากรายการเดียวกัน — backend ไม่มี endpoint สรุป)
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { reviewAspectsService, reviewsService } from "@/services/reviews";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import { exportToCsv } from "@/lib/exportCsv";
-import { formatDate } from "@/i18n/format";
 import { isApiError } from "@/types/api";
 import type { Review, ReviewListParams, ReviewModeration, ReviewSort, ReviewStatus } from "@/types/review";
 import { toReviewRow, type ReviewRow } from "./reviewRow";
@@ -28,28 +25,29 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 export type Tri = "all" | "1" | "0";
 
+/** คะแนน: ทั้งหมด · ดาวเดียว · รีวิวลบ (1–2 ดาว) */
+export type RatingFilter = "all" | "5" | "4" | "3" | "2" | "1" | "negative";
+
+/** ตัวกรอง (ไม่มีหมวด — ซ้ำกับสินค้า) · sort อยู่นอกการ์ดตัวกรอง (เหนือรายการ) แต่เก็บรวมที่นี่ */
 export interface ReviewFilters {
-  categoryId: string;
   productId: string;
-  rating: number | null;
-  negativeOnly: boolean;
+  rating: RatingFilter;
+  /** หัวข้อที่รีวิวพูดถึง (ทั้งชมและติ) · "all" = ไม่กรอง */
   aspectId: string;
-  aspectSentiment: "all" | "positive" | "negative";
-  /** ไม่มี dropdown แล้ว — ตั้งจากทางลัด "รีวิวลบที่ยังไม่ตอบ" เท่านั้น (แสดงเป็นป้ายปิดได้) */
   replied: Tri;
+  /** "0" = ยังไม่อ่าน (read_at = null) · ตอบกลับ = อ่านแล้วอัตโนมัติ (backend) */
+  read: Tri;
   media: Tri;
   orderKind: "all" | "order" | "preorder";
   sort: ReviewSort;
 }
 
 const DEFAULT_FILTERS: ReviewFilters = {
-  categoryId: "all",
   productId: "all",
-  rating: null,
-  negativeOnly: false,
+  rating: "all",
   aspectId: "all",
-  aspectSentiment: "negative",
   replied: "all",
+  read: "all",
   media: "all",
   orderKind: "all",
   sort: REVIEWS_DEFAULT_SORT,
@@ -58,15 +56,12 @@ const DEFAULT_FILTERS: ReviewFilters = {
 function toParams(f: ReviewFilters, q: string, page: number, limit: number): ReviewListParams {
   const p: ReviewListParams = { page, limit, sort: f.sort };
   if (q) p.q = q;
-  if (f.categoryId !== "all") p.category_id = f.categoryId;
   if (f.productId !== "all") p.product_id = f.productId;
-  if (f.rating) p.rating = f.rating;
-  if (f.negativeOnly) p.sentiment_group = "negative";
-  if (f.aspectId !== "all") {
-    p.aspect_id = f.aspectId;
-    if (f.aspectSentiment !== "all") p.sentiment = f.aspectSentiment;
-  }
+  if (f.rating === "negative") p.sentiment_group = "negative";
+  else if (f.rating !== "all") p.rating = Number(f.rating);
+  if (f.aspectId !== "all") p.aspect_id = f.aspectId;
   if (f.replied !== "all") p.replied = Number(f.replied) as 0 | 1;
+  if (f.read !== "all") p.read = Number(f.read) as 0 | 1;
   if (f.media !== "all") p.has_media = Number(f.media) as 0 | 1;
   if (f.orderKind !== "all") p.order_kind = f.orderKind;
   return p;
@@ -74,7 +69,6 @@ function toParams(f: ReviewFilters, q: string, page: number, limit: number): Rev
 
 export function useReviewsViewModel() {
   const t = useTranslations();
-  const locale = useLocale();
   const qc = useQueryClient();
   const perm = usePermission("reports");
 
@@ -102,15 +96,6 @@ export function useReviewsViewModel() {
 
   const rows = useMemo(() => (listQ.data?.data ?? []).map(toReviewRow), [listQ.data]);
   const tagSuggestions = useMemo(() => [...new Set(rows.flatMap((r) => r.internalTags))].sort(thaiCompare), [rows]);
-
-  // ── เลือกหลายรายการ (ล้างเมื่อเปลี่ยนชุดข้อมูล) ──
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [selectionKey, setSelectionKey] = useState("");
-  const currentKey = JSON.stringify(params);
-  if (selectionKey !== currentKey) {
-    setSelectionKey(currentKey);
-    if (selected.size) setSelected(new Set());
-  }
 
   // ── จัดการรีวิว ──
   const patchCache = (id: string, patch: Partial<Review>) =>
@@ -150,6 +135,15 @@ export function useReviewsViewModel() {
     }
   };
 
+  const markRead = useMutation({
+    mutationFn: (ids: string[]) => reviewsService.markRead(ids),
+    onSuccess: (res) => {
+      alert.success(t("reviews.markedRead", { n: res.modified }));
+      refresh();
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("reviews.updateFailed")),
+  });
+
   const remove = useMutation({
     mutationFn: (id: string) => reviewsService.remove(id),
     onSuccess: () => {
@@ -158,29 +152,6 @@ export function useReviewsViewModel() {
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("reviews.deleteFailed")),
   });
-
-  const exportSelected = () => {
-    const chosen = rows.filter((r) => selected.has(r._id));
-    exportToCsv(
-      `reviews_${new Date().toISOString().slice(0, 10)}.csv`,
-      [t("reviews.csv.date"), t("reviews.csv.product"), t("reviews.csv.customer"), t("reviews.csv.order"), t("reviews.csv.rating"),
-        t("reviews.csv.text"), t("reviews.csv.topics"), t("reviews.csv.status"), t("reviews.csv.reply"), t("reviews.csv.tags"), t("reviews.csv.note")],
-      chosen.map((r) => [
-        formatDate(r.created_at, locale, { withTime: true }),
-        r.productName,
-        r.userName,
-        r.orderNo,
-        r.rating,
-        r.review_text ?? "",
-        r.topics.map((x) => `${x.sentiment === "positive" ? "+" : x.sentiment === "negative" ? "-" : ""}${x.label}`).join(", "),
-        t(`reviews.status.${r.status}`),
-        r.shop_reply?.text ?? "",
-        r.internalTags.join(", "),
-        r.internal_note?.text ?? "",
-      ]),
-    );
-    alert.success(t("reviews.exported", { n: chosen.length }));
-  };
 
   // ── แท็กภายใน (modal) ──
   const [tagTarget, setTagTarget] = useState<ReviewRow | null>(null);
@@ -228,30 +199,29 @@ export function useReviewsViewModel() {
      * productId = แดชบอร์ดกำลังดูสินค้านี้อยู่ → กรองสินค้าเดียวกัน (ตัวเลขตรงกับที่เพิ่งเห็น)
      */
     showUnrepliedNegative: (productId?: string) => {
-      setFilters({ ...DEFAULT_FILTERS, productId: productId ?? "all", negativeOnly: true, replied: "0", sort: "needs_reply" });
+      setFilters({ ...DEFAULT_FILTERS, productId: productId ?? "all", rating: "negative", replied: "0", sort: "needs_reply" });
       setPage(1);
     },
-    categoryOptions: sortByThai((options?.categories ?? []), (c) => c.category_name).map((c) => ({ value: c.category_id, label: `${c.category_name} (${c.review_count})` })),
     productOptions: sortByThai((options?.products ?? []), (p) => p.product_name_th).map((p) => ({ value: p.product_id, label: `${p.product_name_th} (${p.review_count})` })),
     aspectOptions: sortOptionsThai(activeAspects.map((a) => ({ value: a._id, label: a.aspect_name_th }))),
     replySuggestions: options?.reply_suggestions ?? [],
 
-    selected,
-    toggleSelect: (id: string) =>
-      setSelected((s) => {
-        const next = new Set(s);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        return next;
-      }),
-    selectAllOnPage: (on: boolean) => setSelected(on ? new Set(rows.map((r) => r._id)) : new Set()),
-    onExport: exportSelected,
 
     onStatus: (r: ReviewRow, status: ReviewStatus) => void run(r._id, { status }, `reviews.statusChanged.${status}`),
     onTogglePin: (r: ReviewRow) => void run(r._id, { is_pinned: !r.is_pinned }),
     onSaveReply: (r: ReviewRow, text: string) => run(r._id, { shop_reply_text: text }, text.trim() ? "reviews.replySaved" : "reviews.replyRemoved"),
     onSaveNote: (r: ReviewRow, text: string) => run(r._id, { internal_note_text: text }, text.trim() ? "reviews.noteSaved" : "reviews.noteRemoved"),
     onDelete: (id: string) => remove.mutate(id),
+    onMarkRead: (r: ReviewRow) => void run(r._id, { read: true }),
+    /** รีวิวที่ยังไม่อ่านในหน้านี้ — ปุ่ม "อ่านแล้วทั้งหน้านี้" */
+    unreadOnPage: rows.filter((r) => !r.read_at).length,
+    onMarkPageRead: () => markRead.mutate(rows.filter((r) => !r.read_at).map((r) => r._id)),
+    markingRead: markRead.isPending,
+    /** ทางลัดจากแดชบอร์ด: รีวิวที่ยังไม่อ่าน ใหม่สุดก่อน · productId = สินค้าที่แดชบอร์ดดูอยู่ */
+    showUnread: (productId?: string) => {
+      setFilters({ ...DEFAULT_FILTERS, productId: productId ?? "all", read: "0", sort: "newest" });
+      setPage(1);
+    },
 
     tagTarget,
     tagDraft,

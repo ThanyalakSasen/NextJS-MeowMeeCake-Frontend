@@ -34,7 +34,9 @@ export const PRODUCT_MASONRY_ITEM = "mb-3 break-inside-avoid";
  */
 export const PRODUCT_LIST_LAYOUT = `flex flex-col gap-6 lg:grid lg:grid-cols-3 xl:grid-cols-5 lg:gap-3 items-start`; // lg:gap-3 = PRODUCT_GRID_GAP (เขียนตรง ๆ ให้ Tailwind สแกนเจอ)
 export const PRODUCT_LIST_MAIN = "w-full lg:col-span-2 xl:col-span-4";
-export const PRODUCT_LIST_GRID = `columns-2 sm:columns-3 lg:columns-2 xl:columns-4 ${PRODUCT_GRID_GAP}`; // masonry — ดู PRODUCT_GRID
+// หน้าสินค้าทั้งหมด = grid ปกติ (ไม่ใช่ masonry) — การ์ดในแถวเดียวกันสูงเท่ากัน ปุ่ม "เพิ่มลงตะกร้า" อยู่ระดับเดียวกัน
+// (masonry ทำให้การ์ดเหลื่อมกันจนดูไม่เป็นแถว) · [&>*]:mb-0 = ยกเลิก mb-3 ของ PRODUCT_MASONRY_ITEM (grid มี gap แล้ว)
+export const PRODUCT_LIST_GRID = `grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-4 ${PRODUCT_GRID_GAP} [&>*]:mb-0`;
 
 /**
  * ดึงส่วนสินค้าคล้ายกันออกจากขอบของหน้ารายละเอียดสินค้า (20/32/40/64) ให้ชนขอบเดียวกับ PRODUCT_SECTION_PX
