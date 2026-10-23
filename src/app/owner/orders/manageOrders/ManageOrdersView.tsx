@@ -158,10 +158,6 @@ export function ManageOrdersView(vm: VM) {
             }
           />
 
-          <p className="text-sm text-gray-600">
-            {t("orders.openCountNote", { n: vm.activeTab === "delivery" ? vm.deliveryCount : vm.takeawayCount })}
-          </p>
-
           {vm.awaitingRefundCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
               <span className="text-sm text-amber-800">{t("orders.awaitingRefundAlert", { n: vm.awaitingRefundCount })}</span>
