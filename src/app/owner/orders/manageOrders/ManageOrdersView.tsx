@@ -102,10 +102,11 @@ export function ManageOrdersView(vm: VM) {
     </div>
   );
 
-  // ลำดับ: ยังไม่ได้จัดส่ง → ยังไม่ได้ยืนยันการชำระเงิน → ยังไม่ได้แนบสลิป
+  // ลำดับ: ยังไม่ได้จัดส่ง → กำลังดำเนินการ → ยังไม่ได้ยืนยันการชำระเงิน → ยังไม่ได้แนบสลิป
   const alertSections = (
     [
       { key: "notShipped", tone: "info", rows: vm.alerts.notShipped, title: "orders.alertNotShippedTitle", description: "orders.alertNotShippedDesc" },
+      { key: "inProgress", tone: "info", rows: vm.alerts.inProgress, title: "orders.alertInProgressTitle", description: "orders.alertInProgressDesc" },
       { key: "unverified", tone: "danger", rows: vm.alerts.unverified, title: "orders.alertUnverifiedTitle", description: "orders.alertUnverifiedDesc" },
       { key: "noSlip", tone: "warn", rows: vm.alerts.noSlip, title: "orders.alertNoSlipTitle", description: "orders.alertNoSlipDesc" },
     ] as const

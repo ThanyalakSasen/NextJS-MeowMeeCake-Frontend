@@ -839,6 +839,8 @@
     "readyTakeawayAlert": "{n} orders ready — waiting for customer pickup",
     "alertNotShippedTitle": "Not shipped yet ({n})",
     "alertNotShippedDesc": "Paid but not shipped — click \"View\" to pick a carrier, enter the tracking number and update the delivery status",
+    "alertInProgressTitle": "In progress ({n})",
+    "alertInProgressDesc": "Paid and being prepared or handed over — click \"View\" to follow up and mark it completed once delivered",
     "alertUnverifiedTitle": "Payment not verified ({n})",
     "alertUnverifiedDesc": "The customer attached a slip — click \"View\" to check it and verify the payment",
     "alertNoSlipTitle": "No slip attached ({n})",
