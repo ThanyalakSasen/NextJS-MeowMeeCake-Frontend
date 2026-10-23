@@ -117,7 +117,7 @@
     "employeesAdd": "เพิ่มพนักงาน",
     "employeesEdit": "แก้ไขข้อมูลพนักงาน",
     "permissions": "จัดการสิทธิ์การเข้าถึง",
-    "userLog": "บันทึกการทำงานของพนักงาน",
+    "systemLog": "บันทึกการทำงานของระบบ",
     "storeDesign": "จัดการแบนเนอร์",
     "storeInfo": "ข้อมูลร้าน",
     "notificationsHistory": "ประวัติการแจ้งเตือน",
@@ -575,7 +575,7 @@
       "local": "อีเมล/รหัสผ่าน",
       "google": "Google"
     },
-    "userLogAction": {
+    "systemLogAction": {
       "CREATE": "สร้างข้อมูล",
       "READ": "เข้าดูข้อมูล",
       "UPDATE": "แก้ไขข้อมูล",
@@ -1612,10 +1612,10 @@
       "can_approve": "อนุมัติ"
     }
   },
-  "userLog": {
-    "title": "บันทึกการทำงานของพนักงาน",
-    "searchPlaceholder": "ค้นหาพนักงานหรือการกระทำ...",
-    "allEmployees": "พนักงานทั้งหมด",
+  "systemLog": {
+    "title": "บันทึกการทำงานของระบบ",
+    "searchPlaceholder": "ค้นหาผู้ใช้หรือการกระทำ...",
+    "allUsers": "ผู้ใช้ทั้งหมด",
     "allTypes": "ทุกประเภท",
     "colTime": "เวลา",
     "colEmployee": "พนักงาน",

@@ -117,7 +117,7 @@
     "employeesAdd": "Add Employee",
     "employeesEdit": "Edit Employee",
     "permissions": "Permissions",
-    "userLog": "Activity Log",
+    "systemLog": "System Activity Log",
     "storeDesign": "Banners",
     "storeInfo": "Store info",
     "notificationsHistory": "Notification History",
@@ -575,7 +575,7 @@
       "local": "Email / password",
       "google": "Google"
     },
-    "userLogAction": {
+    "systemLogAction": {
       "CREATE": "Created",
       "READ": "Viewed",
       "UPDATE": "Updated",
@@ -1612,10 +1612,10 @@
       "can_approve": "Approve"
     }
   },
-  "userLog": {
-    "title": "Employee Activity Log",
-    "searchPlaceholder": "Search employee or action...",
-    "allEmployees": "All employees",
+  "systemLog": {
+    "title": "System Activity Log",
+    "searchPlaceholder": "Search user or action...",
+    "allUsers": "All users",
     "allTypes": "All types",
     "colTime": "Time",
     "colEmployee": "Employee",
