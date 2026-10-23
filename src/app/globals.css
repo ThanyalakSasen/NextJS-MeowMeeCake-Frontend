@@ -801,19 +801,6 @@ body {
   background-color: var(--color-brown-50);
 }
 
-.notif-type-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 0.3125rem;
-}
-
-.notif-type-dot.warning { background-color: #f59e0b; }
-.notif-type-dot.info    { background-color: #3b82f6; }
-.notif-type-dot.success { background-color: #22c55e; }
-.notif-type-dot.error   { background-color: #ef4444; }
-
 .notif-item-body {
   flex: 1;
   min-width: 0;

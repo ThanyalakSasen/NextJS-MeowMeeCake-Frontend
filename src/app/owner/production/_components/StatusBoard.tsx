@@ -9,7 +9,6 @@ import { useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
 import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/base";
-import { PRODUCTION_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { ProductionStatus } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
 import { BOARD_COLUMNS, isFinalStatus } from "../productionStatus";
@@ -46,7 +45,6 @@ export function StatusBoard({
   return (
     <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${BOARD_COLUMNS.length}, minmax(0,1fr))` }}>
       {BOARD_COLUMNS.map((status) => {
-        const cfg = PRODUCTION_STATUS_CONFIG[status];
         const columnOrders = orders.filter((o) => o.production_status === status);
         const isDragOver = dragOverStatus === status;
         return (
@@ -65,7 +63,6 @@ export function StatusBoard({
             }`}
           >
             <div className="flex items-center gap-1.5 mb-3">
-              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
               <p className="text-sm font-semibold text-gray-700">{t(`enums.productionStatus.${status}`)}</p>
               <span className="text-sm text-gray-500">({columnOrders.length})</span>
             </div>
