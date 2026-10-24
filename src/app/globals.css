@@ -162,7 +162,6 @@
   --avatar-color: var(--color-brown-800);
 
   /* ── Notification dot (แดงสว่างสำหรับจุดเล็ก — ตั้งใจให้ต่างจาก --color-danger) ── */
-  --notif-dot-color: #EF4444;
 
   /* ── ปุ่ม submit / cancel ของฟอร์ม ── */
   --btn-submit-bg:     var(--color-brown-800);
@@ -693,43 +692,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Icon button (bell, etc.) */
-.navbar-icon-btn {
-  position: relative;
-  width: var(--touch-target);
-  height: var(--touch-target);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px solid var(--color-brown-300);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  color: #475569;
-  transition: background-color var(--transition-fast);
-}
-
-.navbar-icon-btn:hover {
-  background-color: var(--color-brown-50);
-}
-
-.navbar-icon-btn svg {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-/* Notification unread dot */
-.notif-dot {
-  position: absolute;
-  top: 0.375rem;
-  right: 0.375rem;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background-color: var(--notif-dot-color);
-  border: 2px solid #ffffff;
-}
-
 /* --- Notification dropdown --- */
 .notif-dropdown {
   position: absolute;
@@ -750,35 +712,6 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.notif-dropdown-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.notif-dropdown-title {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--color-brown-800);
-}
-
-.notif-unread-badge {
-  font-size: 1rem;
-  font-weight: 500;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.notif-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
 .notif-item {
   display: flex;
   align-items: flex-start;
@@ -797,10 +730,6 @@ body {
   background-color: #f8fafc;
 }
 
-.notif-item.unread {
-  background-color: var(--color-brown-50);
-}
-
 .notif-item-body {
   flex: 1;
   min-width: 0;
@@ -816,13 +745,6 @@ body {
   font-size: 0.8889rem; /* 16px */
   color: var(--text-muted);
   margin-top: 0.125rem;
-}
-
-.notif-empty {
-  padding: 1.5rem 1rem;
-  text-align: center;
-  font-size: 1rem;
-  color: var(--text-muted);
 }
 
 .notif-dropdown-footer {
