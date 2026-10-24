@@ -115,3 +115,49 @@ export function countAll(rows: RolePerms): { on: number; total: number } {
 export function rowHasAny(row: PermRow): boolean {
   return countRow(row) > 0;
 }
+
+// ── แม่แบบตำแหน่ง (Final-Backlog P6 · §1.3) ──
+// ตาราง §1.3 เขียนตอนยังมี 13 key — แปลงเป็น key รายหน้าย่อย (2026-10-21) ตามหน้าที่ key เดิมเคยคุม:
+// reports → reports_* + finance_* · products → products + search_synonyms + pricing + store_design (+ units ฝั่งเขียน)
+// · orders → orders + pos · ingredients → ingredients + ingredient_stock + ingredient_history (+ units ฝั่งอ่าน)
+// · employees → employees + permissions + user_log · store_info → store_info + shipping
+// ตัวย่อ: v ดู · c สร้าง · u แก้ · d ลบ · a อนุมัติ — ปรับในตารางได้หลังสร้างตำแหน่งเสมอ
+
+export const ROLE_TEMPLATE_KEYS = ["manager", "counter", "production"] as const;
+export type RoleTemplateKey = (typeof ROLE_TEMPLATE_KEYS)[number];
+
+const ROLE_TEMPLATES: Record<RoleTemplateKey, Partial<Record<MenuKey, string>>> = {
+  // งานประจำวันครบ · เก็บไว้ให้เจ้าของร้าน: ลบพนักงาน · ลบค่าใช้จ่าย · คืนเงิน (payments.delete — P7) · แก้ข้อมูลร้านและค่าส่ง
+  manager: {
+    dashboard: "v",
+    reports_sales: "v", reports_reviews: "vcu", finance_expenses: "vcu", finance_summary: "v",
+    products: "vcud", stock: "vu", search_synonyms: "vcud",
+    orders: "vcud", preorder: "vcud", pos: "vcud", payments: "vca",
+    pricing: "vcud", promotions: "vcud",
+    production: "vcuda", ingredients: "vcud", ingredient_stock: "vcud", ingredient_history: "vcud", units: "vcud", recipes: "vcud",
+    employees: "vcu", permissions: "vcu", user_log: "v",
+    store_design: "vcud", store_info: "v", shipping: "v",
+  },
+  // เท่าที่ POS ใช้: ขาย · ยืนยันการชำระ · เปลี่ยนสถานะ · ส่งมอบพรีออเดอร์ · คิดส่วนลด — ไม่เห็นตัวเลขการเงิน
+  counter: {
+    products: "v", stock: "v", pricing: "v",
+    orders: "vcu", preorder: "vu", pos: "vcu", payments: "vca",
+    promotions: "v",
+  },
+  // เปิด/เริ่ม/ปิดงานผลิต (production.approve = ตัดสต็อกวัตถุดิบ) · รับเข้า/เบิกวัตถุดิบ · ปรับสต็อกหลังอบ · ดูสูตร · ดูยอดพรีออเดอร์
+  production: {
+    stock: "vu", preorder: "v",
+    production: "vcua", ingredients: "vu", ingredient_stock: "vu", ingredient_history: "vu", units: "v", recipes: "v",
+  },
+};
+
+const FLAG_FIELD: Record<string, PermField> = { v: "can_view", c: "can_create", u: "can_update", d: "can_delete", a: "can_approve" };
+
+/** สิทธิ์ทั้งชุดของแม่แบบ (แถวยังไม่บันทึก — id=null) */
+export function templatePerms(key: RoleTemplateKey): RolePerms {
+  const out = emptyRolePerms();
+  for (const [menuKey, flags] of Object.entries(ROLE_TEMPLATES[key]) as [MenuKey, string][]) {
+    for (const ch of flags) out[menuKey][FLAG_FIELD[ch]] = true;
+  }
+  return out;
+}
