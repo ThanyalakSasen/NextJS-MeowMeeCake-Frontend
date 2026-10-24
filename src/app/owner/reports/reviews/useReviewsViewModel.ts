@@ -18,7 +18,7 @@ import { formatDate } from "@/i18n/format";
 import { isApiError } from "@/types/api";
 import type { Review, ReviewListParams, ReviewModeration, ReviewSort, ReviewStatus } from "@/types/review";
 import { toReviewRow, type ReviewRow } from "./reviewRow";
-import { REVIEWS_LIST_KEY, REVIEW_ASPECTS_KEY, REVIEW_FILTER_OPTIONS_KEY, REVIEWS_PAGE_SIZE, REVIEWS_DEFAULT_SORT } from "./reviewsQuery";
+import { REVIEWS_LIST_KEY, REVIEW_ASPECTS_KEY, REVIEW_FILTER_OPTIONS_KEY, REVIEWS_PAGE_SIZE, REVIEWS_DEFAULT_SORT, type ReviewsLinkView } from "./reviewsQuery";
 import { sortByThai, sortOptionsThai, thaiCompare } from "@/lib/thaiSort";
 
 export type { ReviewRow };
@@ -55,6 +55,10 @@ const DEFAULT_FILTERS: ReviewFilters = {
   sort: REVIEWS_DEFAULT_SORT,
 };
 
+/** ทางลัด "รีวิวลบที่ยังไม่ตอบ" — ปุ่มในหน้า · ปุ่มจากแดชบอร์ด · ลิงก์แจ้งเตือน ?view=negative_unreplied */
+const unrepliedNegativeFilters = (productId?: string): ReviewFilters =>
+  ({ ...DEFAULT_FILTERS, productId: productId ?? "all", negativeOnly: true, replied: "0", sort: "needs_reply" });
+
 function toParams(f: ReviewFilters, q: string, page: number, limit: number): ReviewListParams {
   const p: ReviewListParams = { page, limit, sort: f.sort };
   if (q) p.q = q;
@@ -72,14 +76,17 @@ function toParams(f: ReviewFilters, q: string, page: number, limit: number): Rev
   return p;
 }
 
-export function useReviewsViewModel() {
+/** enabled = แท็บจัดการรีวิวเปิดอยู่ — ไม่โหลดตอนอยู่แท็บแดชบอร์ด · initialView = ?view= จากลิงก์แจ้งเตือน */
+export function useReviewsViewModel({ enabled = true, initialView }: { enabled?: boolean; initialView?: ReviewsLinkView } = {}) {
   const t = useTranslations();
   const locale = useLocale();
   const qc = useQueryClient();
   const perm = usePermission("reports_reviews");
 
   // ── ตัวกรอง ──
-  const [filters, setFilters] = useState<ReviewFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<ReviewFilters>(() =>
+    initialView === "negative_unreplied" ? unrepliedNegativeFilters() : DEFAULT_FILTERS,
+  );
   const [search, setSearchRaw] = useState("");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
@@ -96,9 +103,9 @@ export function useReviewsViewModel() {
 
   const params = toParams(filters, q, page, pageSize);
   const listKey = [...LIST_KEY, params] as const;
-  const listQ = useQuery({ queryKey: listKey, queryFn: () => reviewsService.list(params), placeholderData: keepPreviousData });
-  const optionsQ = useQuery({ queryKey: REVIEW_FILTER_OPTIONS_KEY, queryFn: () => reviewsService.filterOptions(), staleTime: 60_000 });
-  const aspectsQ = useQuery({ queryKey: REVIEW_ASPECTS_KEY, queryFn: () => reviewAspectsService.list() });
+  const listQ = useQuery({ queryKey: listKey, queryFn: () => reviewsService.list(params), placeholderData: keepPreviousData, enabled });
+  const optionsQ = useQuery({ queryKey: REVIEW_FILTER_OPTIONS_KEY, queryFn: () => reviewsService.filterOptions(), staleTime: 60_000, enabled });
+  const aspectsQ = useQuery({ queryKey: REVIEW_ASPECTS_KEY, queryFn: () => reviewAspectsService.list(), enabled });
 
   const rows = useMemo(() => (listQ.data?.data ?? []).map(toReviewRow), [listQ.data]);
   const tagSuggestions = useMemo(() => [...new Set(rows.flatMap((r) => r.internalTags))].sort(thaiCompare), [rows]);
@@ -228,7 +235,7 @@ export function useReviewsViewModel() {
      * productId = แดชบอร์ดกำลังดูสินค้านี้อยู่ → กรองสินค้าเดียวกัน (ตัวเลขตรงกับที่เพิ่งเห็น)
      */
     showUnrepliedNegative: (productId?: string) => {
-      setFilters({ ...DEFAULT_FILTERS, productId: productId ?? "all", negativeOnly: true, replied: "0", sort: "needs_reply" });
+      setFilters(unrepliedNegativeFilters(productId));
       setPage(1);
     },
     categoryOptions: sortByThai((options?.categories ?? []), (c) => c.category_name).map((c) => ({ value: c.category_id, label: `${c.category_name} (${c.review_count})` })),

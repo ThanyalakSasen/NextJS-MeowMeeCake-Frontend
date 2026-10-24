@@ -6,11 +6,11 @@ import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { DetailModal } from "@/components/shared/feedback";
 import type { usePreOrderRoundViewModel } from "./usePreOrderRoundViewModel";
-import { DashboardTab } from "./_components/DashboardTab";
 
-// โหลดเฉพาะส่วนที่เห็นตอนเปิดหน้า (แท็บสรุปรอบ) — แท็บอื่น/โมดัล/ลิ้นชัก (Form, DatePicker, Steps …) แยก chunk
-// โหลดเมื่อใช้ครั้งแรก · เดิม import ทั้งหมดตั้งแต่แรก → JS ที่ต้อง parse/รันตอนโหลดหน้าเยอะ (TBT 420ms)
+// ทุกแท็บ/โมดัล/ลิ้นชัก (Form, DatePicker, Steps …) แยก chunk โหลดเมื่อใช้ครั้งแรก — แบบเดียวกับ Production
+// (เปิดจากลิงก์แจ้งเตือน ?tab=orders ไม่ต้องโหลดตาราง/การ์ดของแท็บสรุปรอบ) · เดิม import ทั้งหมดตั้งแต่แรก → JS ที่ต้อง parse/รันตอนโหลดหน้าเยอะ (TBT 420ms)
 // แท็บ: antd Tabs วาดเฉพาะแท็บที่เปิด → chunk แท็บอื่นยังไม่โหลด · SSR ยังทำงาน (เปิดด้วย ?tab= ได้ HTML ครบ)
+const DashboardTab = dynamic(() => import("./_components/DashboardTab").then((m) => m.DashboardTab));
 const RoundsTab = dynamic(() => import("./_components/RoundsTab").then((m) => m.RoundsTab));
 const OrdersTab = dynamic(() => import("./_components/OrdersTab").then((m) => m.OrdersTab));
 const RoundDashboardDrawer = dynamic(() => import("./_components/RoundDashboardDrawer").then((m) => m.RoundDashboardDrawer), { ssr: false });
