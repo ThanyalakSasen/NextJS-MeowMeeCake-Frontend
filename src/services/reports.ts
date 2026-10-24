@@ -93,6 +93,8 @@ export interface RevenueByChannel extends Record<RevenueChannel, number> {
   counts: Record<RevenueChannel, number>;
   /** จำนวนออเดอร์ + พรีออเดอร์ที่ชำระแล้วในช่วงนี้ */
   orders: number;
+  /** ต้นทุนตามสูตรของสินค้าที่ขายได้ (Σ cost_per_unit × จำนวน) — backend รุ่นเก่ายังไม่ส่ง */
+  recipe_cogs?: number;
 }
 
 export const reportsService = {

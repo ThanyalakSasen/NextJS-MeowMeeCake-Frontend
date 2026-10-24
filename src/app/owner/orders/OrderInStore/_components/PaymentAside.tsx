@@ -1,5 +1,6 @@
 "use client";
-// แผงขวา: การ์ดโปรโมชัน (เลือกได้ทีละ 1 — backend รับ promotion_id เดียว) · สมาชิกสะสมแต้ม · สรุปยอด · ปุ่มชำระเงินสด/QR · ยกเลิกบิล
+// แผงขวา: การ์ดโปรโมชัน (ซ้อนได้เมื่อทุกโปรที่เลือกตั้ง "ใช้ร่วมกับโปรอื่นได้") · สมาชิกสะสมแต้ม · สรุปยอด ·
+// ปุ่มชำระเงินสด/QR · พักบิล / บิลที่พักไว้ · ยกเลิกบิล
 import { ConfigProvider } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { BanknotesIcon, CheckIcon, QrCodeIcon } from "@heroicons/react/24/outline";
@@ -14,8 +15,9 @@ export function PaymentAside({
   promoEvals,
   billPromotions,
   bestPromoId,
-  selectedPromoId,
+  selectedPromoIds,
   selectedPromoInvalid,
+  discountExceeds,
   subtotal,
   discount,
   total,
@@ -26,14 +28,19 @@ export function PaymentAside({
   onPayCash,
   onPayQr,
   onClearBill,
+  onHoldBill,
+  onOpenHeld,
+  heldCount,
   memberSlot,
 }: {
   promotionsEnabled: boolean;
   promoEvals: PromoEval[];
   billPromotions: Promotion[];
   bestPromoId: string | null;
-  selectedPromoId: string | null;
+  selectedPromoIds: string[];
   selectedPromoInvalid: boolean;
+  /** ส่วนลดรวมของโปรที่ซ้อนเกินยอดบิล — ชำระไม่ได้ */
+  discountExceeds: boolean;
   subtotal: number;
   discount: number;
   total: number;
@@ -44,6 +51,10 @@ export function PaymentAside({
   onPayCash: () => void;
   onPayQr: () => void;
   onClearBill: () => void;
+  onHoldBill: () => void;
+  onOpenHeld: () => void;
+  /** จำนวนบิลที่พักไว้ในเครื่องนี้ */
+  heldCount: number;
   /** ช่องกรอกเบอร์สมาชิก (MemberCard) — คั่นระหว่างโปรโมชันกับสรุปยอด */
   memberSlot: React.ReactNode;
 }) {
@@ -78,10 +89,11 @@ export function PaymentAside({
             </p>
           )}
           {!hasItems && billPromotions.length === 0 && <p className="m-0 text-sm text-gray-500">{t("pos.promoHint")}</p>}
+          {hasItems && promoEvals.length > 0 && <p className="m-0 text-xs text-gray-500">{t("pos.promoStackHint")}</p>}
 
           {promoEvals.map((ev) => {
             const p = ev.promotion;
-            const on = p._id === selectedPromoId && ev.eligible;
+            const on = selectedPromoIds.includes(p._id) && ev.eligible;
             return (
               <button
                 key={p._id}
@@ -110,6 +122,7 @@ export function PaymentAside({
                   </span>
                   {/* โปรสำหรับสมาชิก (จำกัดสิทธิ์ต่อลูกค้า) — ป้ายแดงเสมอ · ยังไม่กรอกเบอร์ = เลือกไม่ได้ + บอกให้กรอก */}
                   {isMemberOnly(p) && <span className="text-xs font-semibold text-danger">{t("pos.promoMemberOnly")}</span>}
+                  {p.stackable && <span className="text-xs text-gray-500">{t("pos.promoStackable")}</span>}
                   <span
                     className={`text-xs ${
                       ev.eligible ? "text-gray-600" : ev.block?.key === "memberOnly" ? "text-danger" : "text-amber-800"
@@ -125,6 +138,7 @@ export function PaymentAside({
             );
           })}
           {selectedPromoInvalid && <p className="m-0 text-xs text-danger">{t("pos.selectedPromoInvalid")}</p>}
+          {discountExceeds && <p className="m-0 text-xs text-danger">{t("pos.promoDiscountExceeds")}</p>}
         </div>
       )}
 
@@ -160,14 +174,32 @@ export function PaymentAside({
           <p className="m-0 text-center text-sm text-gray-600">{t("pos.noPermission")}</p>
         )}
 
-        <button
-          type="button"
-          onClick={onClearBill}
-          disabled={!hasItems}
-          className="h-[36px] cursor-pointer border-none bg-transparent font-medium text-danger underline disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {t("pos.clearBill")}
-        </button>
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={onHoldBill}
+            disabled={!hasItems}
+            className="h-[36px] cursor-pointer border-none bg-transparent font-medium text-brown-800 underline disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t("pos.holdBill")}
+          </button>
+          <button
+            type="button"
+            onClick={onOpenHeld}
+            disabled={heldCount === 0}
+            className="h-[36px] cursor-pointer border-none bg-transparent font-medium text-brown-800 underline disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t("pos.heldBills", { n: heldCount })}
+          </button>
+          <button
+            type="button"
+            onClick={onClearBill}
+            disabled={!hasItems}
+            className="h-[36px] cursor-pointer border-none bg-transparent font-medium text-danger underline disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {t("pos.clearBill")}
+          </button>
+        </div>
       </div>
     </aside>
   );
