@@ -6,66 +6,25 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
-import { AlertTriangle, Bell, CheckCircle2, Info, XCircle, type LucideIcon } from "lucide-react";
-import { notificationHref, type CustomerNotification, type CustomerNotificationType } from "@/services/shopNotifications";
+import { useTranslations } from "next-intl";
+import { Bell } from "lucide-react";
+import { notificationHref, type CustomerNotification } from "@/services/shopNotifications";
 import { useCustomerNotifications } from "@/app/customer/hooks/useCustomerNotifications";
-import { formatDate } from "@/i18n/format";
+import { NotificationRow, useNow } from "@/components/shared/notifications";
 
-const TYPE_ICON: Record<CustomerNotificationType, { Icon: LucideIcon; cls: string }> = {
-  info: { Icon: Info, cls: "bg-sky-50 text-sky-600" },
-  success: { Icon: CheckCircle2, cls: "bg-emerald-50 text-emerald-600" },
-  warning: { Icon: AlertTriangle, cls: "bg-amber-50 text-amber-600" },
-  error: { Icon: XCircle, cls: "bg-red-50 text-red-600" },
-};
-
-/** "เมื่อสักครู่" · "5 นาทีที่แล้ว" · "3 ชม.ที่แล้ว" · เกิน 7 วัน = วันที่ */
-type NotifT = ReturnType<typeof useTranslations<"shop.notifications">>;
-
-function timeAgo(iso: string | null, now: number, t: NotifT, locale: string): string {
-  if (!iso) return "";
-  const diff = Math.max(0, now - new Date(iso).getTime());
-  const min = Math.floor(diff / 60_000);
-  if (min < 1) return t("justNow");
-  if (min < 60) return t("minutesAgo", { n: min });
-  const h = Math.floor(min / 60);
-  if (h < 24) return t("hoursAgo", { n: h });
-  const d = Math.floor(h / 24);
-  if (d <= 7) return t("daysAgo", { n: d });
-  return formatDate(iso, locale);
-}
-
-function useNow(): number {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(t);
-  }, []);
-  return now;
-}
-
-function NotificationRow({ n, onOpen, compact, now }: { n: CustomerNotification; onOpen: (n: CustomerNotification) => void; compact?: boolean; now: number }) {
-  const t = useTranslations("shop.notifications");
-  const locale = useLocale();
-  const { Icon, cls } = TYPE_ICON[n.type] ?? TYPE_ICON.info;
+/** แถวเดียวกับกระดิ่งหลังร้าน (shared/notifications) — แปลงฟิลด์ของแจ้งเตือนลูกค้า (read_at · visible_at) */
+function CustomerRow({ n, onOpen, compact, now }: { n: CustomerNotification; onOpen: (n: CustomerNotification) => void; compact?: boolean; now: number }) {
   return (
-    <button
-      type="button"
+    <NotificationRow
+      type={n.type}
+      title={n.title}
+      message={n.message}
+      unread={!n.read_at}
+      at={n.visible_at ?? n.created_at}
+      now={now}
+      compact={compact}
       onClick={() => onOpen(n)}
-      className={`flex w-full gap-3 px-4 py-3 text-left transition hover:bg-[#e2d7c7]/30 ${n.read_at ? "" : "bg-[#FAF6F0]"}`}
-    >
-      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${cls}`}>
-        <Icon size={16} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center justify-between gap-2">
-          <span className={`truncate text-sm ${n.read_at ? "font-medium text-stone-700" : "font-bold text-[#4A342E]"}`}>{n.title}</span>
-          {!n.read_at && <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" aria-label={t("unreadDot")} />}
-        </span>
-        <span className={`block whitespace-pre-line text-xs text-stone-600 ${compact ? "line-clamp-2" : ""}`}>{n.message}</span>
-        <span className="mt-0.5 block text-[11px] text-stone-500">{timeAgo(n.visible_at ?? n.created_at, now, t, locale)}</span>
-      </span>
-    </button>
+    />
   );
 }
 
@@ -135,7 +94,7 @@ export function NotificationBell({ size = 24 }: { size?: number }) {
             {items.length === 0 ? (
               <p className="px-4 py-8 text-center text-sm text-stone-500">{t("empty")}</p>
             ) : (
-              items.map((n) => <NotificationRow key={n._id} n={n} onOpen={openItem} compact now={now} />)
+              items.map((n) => <CustomerRow key={n._id} n={n} onOpen={openItem} compact now={now} />)
             )}
           </div>
           <Link
@@ -183,7 +142,7 @@ export function NotificationList() {
         ) : items.length === 0 ? (
           <p className="px-5 py-10 text-center text-sm text-stone-500">{t("emptyLong")}</p>
         ) : (
-          items.map((n) => <NotificationRow key={n._id} n={n} onOpen={openItem} now={now} />)
+          items.map((n) => <CustomerRow key={n._id} n={n} onOpen={openItem} now={now} />)
         )}
       </div>
       {items.length >= 100 && <p className="m-0 border-t border-stone-100 py-2 text-center text-xs text-stone-500">{t("latest100")}</p>}
