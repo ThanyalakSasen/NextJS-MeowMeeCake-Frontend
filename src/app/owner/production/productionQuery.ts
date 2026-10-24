@@ -6,10 +6,11 @@ import { LIST_ALL } from "@/lib/http";
 
 export type TabKey = "plan" | "status" | "history";
 const TAB_KEYS: TabKey[] = ["status", "plan", "history"];
+const DEFAULT_TAB: TabKey = "status";
 
-/** แท็บที่เปิดจาก ?tab= · ไม่ระบุ (รวมลิงก์แจ้งเตือน ?id=) = แท็บสถานะ */
-export function tabFrom(tab: string | null | undefined): TabKey {
-  return TAB_KEYS.includes(tab as TabKey) ? (tab as TabKey) : "status";
+/** แท็บที่เปิดจาก ?tab= / ?id= — ลิงก์แจ้งเตือน (?id=) ไปแท็บสถานะเสมอ แม้วันหลังเปลี่ยนแท็บเริ่มต้น */
+export function tabFrom(tab: string | null | undefined, id: string | null | undefined): TabKey {
+  return TAB_KEYS.includes(tab as TabKey) ? (tab as TabKey) : id ? "status" : DEFAULT_TAB;
 }
 
 export const PRODUCTION_ORDERS_PARAMS = { limit: LIST_ALL };
