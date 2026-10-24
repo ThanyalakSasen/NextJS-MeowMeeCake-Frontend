@@ -11,7 +11,7 @@
 > อัปเดต: 2026-10-10 หลัง merge frontend #69 (`47bcaec`) — ปิด P11 · เพิ่ม P12 (หน้าสต็อกสินค้า) · P13 (หน้าแบนเนอร์)
 > อัปเดต: 2026-10-11 หลัง merge backend #84 (`0352b7c`) + frontend #71 (`ec08544`) — ปิด P12 · P13
 > อัปเดต: 2026-10-24 ตรวจทุกข้อกับโค้ด frontend `main` `623e8e3` · backend `main` `927596f` — ปิด P4 · P8 · E1/Q2 · E6 · E7 ·
-> เพิ่มคำเตือน E2 (cron บน Render) · ดูผลรวมที่ [§0](#0-ผลตรวจ-2026-10-24)
+> E2 (cron) ตั้งผ่าน cron-job.org ตาม backend `docs/DEPLOY-RENDER.md` §4 — รอยืนยันจาก dashboard · ดูผลรวมที่ [§0](#0-ผลตรวจ-2026-10-24)
 > ที่มาเดิม: [`BACKLOG4-merge.md`](BACKLOG4-merge.md) §7–§10 · [`BACKLOG2.md`](BACKLOG2.md) §11, §16 · [`fix-backend.md`](fix-backend.md) ·
 > backend `docs/DEPLOY.md` · `docs/BACKLOG5.md` · `docs/LINE.md` §8 · `docs/preorder.md` §9 · `docs/reprice.md`
 > เช็กลิสต์ให้ทีมติ๊ก: https://claude.ai/artifact/PmrzmXNWwpwi1wUuTMUmFT (หัวข้อ §2–§4 ของไฟล์นี้)
@@ -40,8 +40,8 @@ backend มีเทส 126 ไฟล์ · ไม่มี PR / issue เปิ
 
 งานโค้ดที่แก้ใน repo ได้ (§1 + §5 ไม่รวมงานทีม): ปิด 10 จาก 23 ≈ 43%
 
-ต้องดูก่อน: **E2** — ไม่พบการตั้ง cron ทั้งใน `render.yaml` และที่อื่นในโค้ด (DEPLOY ⑧ เขียนสำหรับ crontab บน VPS ซึ่ง Render free ไม่มี) ·
-**Q1** ยังไม่ตัดสินใจ · **P6** ยังไม่มีแม่แบบตำแหน่ง
+ต้องดูก่อน: **Q1** ยังไม่ตัดสินใจ · **P6** ยังไม่มีแม่แบบตำแหน่ง · **E2** เปิด dashboard cron-job.org ยืนยันว่า 6 job รันได้ 200
+(จากภายนอกบ่งชี้ว่าทำงานอยู่ — ดูแถว E2)
 
 ---
 
@@ -157,7 +157,7 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 | รหัส | ระดับ | ฝั่ง | เรื่อง | รายละเอียด |
 |---|---|---|---|---|
 | E1 | ✅ | ทีม | ~~**เลือกโครงสร้างโดเมน**~~ ✅ (อนุมาน 2026-10-24 — frontend บน Vercel · backend บน Render ใช้งานได้ · ยังไม่ได้เปิดดูค่า `COOKIE_DOMAIN` / `NEXT_PUBLIC_AUTH_GATE` จริง) | subdomain เดียวกัน (`app.` + `api.`) → backend `COOKIE_DOMAIN` + `ALLOWED_ORIGINS` · คนละ site → frontend `NEXT_PUBLIC_AUTH_GATE=client` (ไม่งั้นล็อกอินแล้ววนกลับ `/login`) — backend `docs/security-hardening.md` §3 |
-| E2 | 🔴 | BE | `CRON_SECRET` + crontab 6 ตัว (DEPLOY ⑧) | ไม่ตั้ง = ออเดอร์ไม่หมดเวลาเอง · รอบพรีออเดอร์ไม่เปิด/ปิดเอง · ไม่มีเตือนก่อนวันรับ · ไม่มีสรุปรายเดือน · ⚠️ 2026-10-24: backend อยู่บน Render free — `render.yaml` มีแค่ `CRON_SECRET` ไม่มี cron job และไม่มีที่อื่นในโค้ดเรียก `/api/cron/*` (data-integrity · monthly-summary · order-expiry · preorder-reminders · preorder-rounds · storage-cleanup) → ต้องยืนยันว่ามีบริการภายนอกเรียกอยู่ ไม่งั้นงานอัตโนมัติไม่ทำงาน (ยกเลิกออเดอร์หมดเวลามีทางสำรองแบบ lazy ตอนลูกค้าเปิดหน้า) |
+| E2 | ⏸ | BE + ทีม | `CRON_SECRET` + cron 6 ตัว — บน Render ใช้ **cron-job.org** แทน crontab (backend `docs/DEPLOY-RENDER.md` §4 · DEPLOY ⑧ = ทาง VPS) | ไม่ตั้ง = ออเดอร์ไม่หมดเวลาเอง · รอบพรีออเดอร์ไม่เปิด/ปิดเอง · ไม่มีเตือนก่อนวันรับ · ไม่มีสรุปรายเดือน · ตรวจ 2026-10-24 จากภายนอก: `/api/cron/order-expiry` และ `/preorder-rounds` แบบไม่ใส่รหัสตอบ 401 "CRON_SECRET ไม่ถูกต้อง" = **ตั้ง `CRON_SECRET` บน Render แล้ว** · `/api/health` ตอบใน 0.57 วินาทีตอนตี 3 ครึ่ง (Render free หลับหลังว่าง 15 นาที) = **บ่งชี้ว่า `order-expiry` ทุก 5 นาทีทำงานอยู่** · รอยืนยัน: dashboard cron-job.org มีครบ 6 job (order-expiry · preorder-rounds · preorder-reminders · data-integrity · monthly-summary · storage-cleanup) และรันได้ 200 |
 | E3 | 🔴 | BE | `STOREFRONT_URL` = โดเมนหน้าร้านจริง (Q-BE3) | ลิงก์ในอีเมลยืนยัน/ตั้งรหัสใหม่ + ลิงก์ท้ายข้อความ LINE |
 | E4 | 🔴 | BE | `EMAIL_USER` · `EMAIL_PASS` (+ `EMAIL_SERVICE` หรือ `EMAIL_HOST`/`PORT`) | ไม่ตั้ง = สมัครสมาชิกไม่ได้ (502) |
 | E5 | 🔴 | BE + ทีม | LINE: `LINE_CHANNEL_ACCESS_TOKEN` · `LINE_AUTH_CALLBACK_URL` · `LINE_AUTH_RETURN_URL` + Callback URL ใน LINE Console | แจ้งเตือน LINE · ปุ่มเข้าสู่ระบบด้วย LINE · ผูก LINE |
@@ -225,5 +225,5 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 5. deploy ตาม backend DEPLOY.md → **E9** งานข้อมูล + **P9** ให้สิทธิ์ `reports` → **T6**
 6. หลัง deploy: ~~**N1** CI · **P4 · P7**~~ ✅ · ที่เหลือตามลำดับความจำเป็น
 
-**ลำดับใหม่ (2026-10-24 — ระบบ deploy แล้ว):** **E2** ยืนยันว่ามีตัวเรียก cron บน Render → **Q1** COGS → **P6** แม่แบบตำแหน่ง → **T4** →
+**ลำดับใหม่ (2026-10-24 — ระบบ deploy แล้ว):** **E2** ดู dashboard cron-job.org ว่าครบ 6 job → **Q1** COGS → **P6** แม่แบบตำแหน่ง → **T4** →
 **T1 · T5** ทดสอบหน้าจริง → ติ๊กข้อใน §2–§4 ที่ทีมทำไปแล้ว → **N10** เอกสาร deploy frontend
