@@ -103,7 +103,7 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 | P3 | ✅ | BE + FE | ~~POS ต้องมี `employees.view` เพื่อหาบัญชีลูกค้าทั่วไป~~ | ✅ backend #83 — `GET /admin/pos/guest-customer` (`orders.view` · ไม่ seed = 404) · ✅ frontend #68 — `posService.guestCustomer()` แทน `usersService.list` · ทดสอบหน้าจริง: พนักงานเคาน์เตอร์ที่ไม่มี `employees` เปิด POS ได้ ไม่เรียก `/admin/users` · ยังไม่ได้ทดสอบขายจริงจนจบ (T1) |
 | P4 | ✅ | FE | ~~หน้าพนักงาน/สิทธิ์แสดงตัวเลือกที่ backend จะปฏิเสธ~~ | ✅ (ตรวจ 2026-10-24) — `employees/usePermissionCeiling.ts` สำเนากติกา backend: `roleWithin` · `mayGrant` · ปิดเมื่อยังโหลดไม่เสร็จ · ใช้ในหน้าพนักงาน (`canManage`) และหน้าสิทธิ์ (ล็อกบทบาท owner · ปิดช่อง flag ที่ให้ไม่ได้ · คัดลอกได้เฉพาะบทบาทที่ไม่เกินตัวเอง) · ยังไม่ได้ทดสอบหน้าจริง (T7) |
 | P5 | 🟠 | BE | **`expires_at` ยังไม่อยู่ในกติกา #82** — ผู้ที่มีสิทธิ์ชั่วคราวให้สิทธิ์เดียวกันแบบไม่หมดอายุกับบทบาทอื่น (หรือย้ายตัวเองเข้าบทบาทนั้น) ได้ | `permissionCeiling.assertMayGrant`: ถ้าสิทธิ์ของผู้ทำมี `expires_at` ให้ `expires_at` ที่ให้ต้องไม่เกินนั้น · ติดตามใน issue #81 (ปิดแล้ว — เปิด issue ใหม่) · ยังเปิด (2026-10-24: หัวไฟล์ `permissionCeiling.ts` ยังเขียนว่า "ยังไม่ครอบคลุม: expires_at") |
-| P6 | 🔴 | FE + ทีม | **ยังไม่มีตำแหน่งเริ่มต้น** — ตอนนี้สร้างตำแหน่งได้แค่แบบว่าง หรือคัดลอกจากตำแหน่งเดิม | ทำ "เริ่มจากแม่แบบ" ใน `RoleFormModal` ตาม §1.3 (P1–P3 เสร็จแล้ว — แม่แบบไม่ต้องใส่สิทธิ์เกินจำเป็น) · ทีมตรวจตารางสิทธิ์ §1.3 ก่อน |
+| P6 | ⏸ | FE + ทีม | ~~**ยังไม่มีตำแหน่งเริ่มต้น**~~ — โค้ดเสร็จ 2026-10-24 · รอเจ้าของร้านยืนยันตาราง §1.3 + ทดสอบ T4 | "เริ่มจากแม่แบบตำแหน่ง" ใน `RoleFormModal` (เลือกได้อย่างเดียวกับ "คัดลอกสิทธิ์จาก") · ข้อมูลแม่แบบ `ROLE_TEMPLATES` ใน `permissionGroups.ts` แปลงตาราง §1.3 เป็น key รายหน้าย่อย (2026-10-21) — ดูหมายเหตุใต้ตาราง §1.3 · คนที่ไม่ใช่ owner: ตัด flag ที่ตัวเองไม่มีออกก่อนส่ง แล้วแจ้งชื่อเมนูที่ไม่ได้ใส่ (`permissions.templatePartial`) |
 | P7 | ✅ | BE + FE | ~~ยืนยันสลิปกับคืนเงินใช้ `payments.approve` ตัวเดียวกัน~~ | ✅ 2026-10-19 — backend `POST /admin/payments/:id/refund` ใช้ **`payments.delete`** (เทส `refundPermission.test.ts`: มีแค่ approve = 403) · frontend ปุ่มคืนเงิน (ออเดอร์ + พรีออเดอร์) เช็ค `payments.delete` · หน้าจัดการสิทธิ์มีคำอธิบายใต้เมนูการชำระเงิน · ⚠️ **ตอน deploy: คนที่เคยคืนเงินได้ด้วย approve ต้องได้ `payments.delete` เพิ่ม** · ยังไม่ได้ทดสอบหน้าจริง |
 | P8 | ✅ | BE | ~~ถอนสิทธิ์ / ปิดบทบาท / ลบบทบาท ของบทบาทที่สิทธิ์สูงกว่าได้~~ | ✅ (ตรวจ 2026-10-24) — `/admin/roles/[id]` และ `/restore` ตรวจ `assertMayManageRole` (`services/ownerProtection.ts`) · การถอนสิทธิ์รายแถวยังไม่จำกัด (ตั้งใจ — ตามกติกา #82) |
 | P9 | 🔴 | ทีม | **ตอน deploy: สิทธิ์รีวิวย้ายจาก `products` → `reports`** (backend DEPLOY ⑦) — พนักงานที่เคยดูแลรีวิวต้องได้ `reports` ใหม่ | เจ้าของร้านให้ `reports` ในหน้าจัดการสิทธิ์ (P1 แก้แล้ว — มี `reports` ก็เข้าหน้ารีวิวได้) |
@@ -132,6 +132,12 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 | `recipes` | ด ส ก ล | — | ด |
 | `employees` | ด ส ก | — (P3 แก้แล้ว — POS ไม่ต้องใช้) | — |
 | `store_info` | ด | — | — |
+
+**แปลงเป็น key รายหน้าย่อย (2026-10-24 · ใช้จริงใน `ROLE_TEMPLATES`):** แต่ละแถวด้านบนใส่ให้ทุก key ที่ key เดิมเคยคุม —
+`reports` → `reports_sales` (ด) · `reports_reviews` · `finance_expenses` · `finance_summary` (ด) ·
+`products` → `products` · `search_synonyms` · `pricing` · `store_design` · `units` (ฝั่งเขียน) ·
+`orders` → `orders` · `pos` · `ingredients` → `ingredients` · `ingredient_stock` · `ingredient_history` · `units` (ฝั่งอ่าน — ฝ่ายผลิตได้ ด) ·
+`employees` → `employees` · `permissions` · `user_log` (ด) · `store_info` → `store_info` · `shipping`
 
 เหตุผล:
 - **ผู้จัดการร้าน** — งานประจำวันครบ · เก็บไว้ให้เจ้าของร้าน: ลบพนักงาน · ลบรายการการเงิน/ชำระเงิน · แก้ข้อมูลร้านและค่าส่ง ·

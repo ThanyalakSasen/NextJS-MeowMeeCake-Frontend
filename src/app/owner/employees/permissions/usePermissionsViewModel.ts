@@ -17,8 +17,8 @@ import type { PermissionInput } from "@/types/permission";
 import type { RoleInput, RoleType } from "@/types/role";
 import { isApiError } from "@/types/api";
 import {
-  PERM_FIELDS, PERM_MENU_KEYS, emptyRolePerms, groupPermissions, countAll, rowHasAny,
-  type RolePerms, type PermField, type PermRow,
+  PERM_FIELDS, PERM_MENU_KEYS, emptyRolePerms, groupPermissions, countAll, rowHasAny, templatePerms,
+  type RolePerms, type PermField, type PermRow, type RoleTemplateKey,
 } from "./permissionGroups";
 import { usePermissionCeiling } from "../usePermissionCeiling";
 import { PERMISSIONS_KEY, PERMISSIONS_PARAMS, ROLES_KEY, STAFF_KEY, STAFF_PARAMS } from "../employeesQuery";
@@ -26,7 +26,9 @@ import { PERMISSIONS_KEY, PERMISSIONS_PARAMS, ROLES_KEY, STAFF_KEY, STAFF_PARAMS
 export interface AddRoleValues {
   role_name: string;
   role_type: RoleType;
+  /** เลือกได้อย่างใดอย่างหนึ่งกับ template (RoleFormModal ล้างอีกช่องให้) */
   copyFrom?: string;
+  template?: RoleTemplateKey;
 }
 
 export function usePermissionsViewModel() {
@@ -215,12 +217,25 @@ export function usePermissionsViewModel() {
     // สร้างตำแหน่งแล้ว — คัดลอกสิทธิ์ล้มก็ยังต้องโชว์ตำแหน่งใหม่ (เดิมขึ้น "สร้างไม่สำเร็จ" ทั้งที่สร้างไปแล้ว
     // กดสร้างซ้ำได้ 409 ชื่อซ้ำ) · บอกให้ตรวจ/บันทึกสิทธิ์ที่ขาดต่อในตาราง
     let copyError: unknown = null;
+    let rows: RolePerms | null = null;
+    // แม่แบบ: คนที่ไม่ใช่ owner ใส่ได้เฉพาะ flag ที่ตัวเองมี — ตัดส่วนที่เกินออกก่อนส่ง (ไม่งั้น backend ตอบ 403 กลางทาง)
+    // แล้วบอกว่าเมนูไหนไม่ได้ใส่ให้
+    const skipped: MenuKey[] = [];
     if (values.copyFrom) {
       const src = permsOf(values.copyFrom);
-      const copy = {} as RolePerms;
-      for (const k of PERM_MENU_KEYS) copy[k] = { id: null, ...stripId(src[k]) };
+      rows = {} as RolePerms;
+      for (const k of PERM_MENU_KEYS) rows[k] = { id: null, ...stripId(src[k]) };
+    } else if (values.template) {
+      rows = templatePerms(values.template);
+      for (const k of PERM_MENU_KEYS) {
+        const cut = PERM_FIELDS.filter((f) => rows![k][f] && !ceiling.mayGrant(k, f));
+        for (const f of cut) rows[k][f] = false;
+        if (cut.length) skipped.push(k);
+      }
+    }
+    if (rows) {
       try {
-        await persistRows(newId, copy);
+        await persistRows(newId, rows);
       } catch (e) {
         copyError = e;
       }
@@ -231,6 +246,11 @@ export function usePermissionsViewModel() {
     if (copyError) {
       const reason = isApiError(copyError) ? ` — ${copyError.message}` : "";
       alert.warning(t("permissions.copyPermsFailed", { role: created.data.role_name }) + reason);
+    } else if (skipped.length) {
+      alert.warning(t("permissions.templatePartial", {
+        role: created.data.role_name,
+        menus: skipped.map((k) => t(`enums.menuKey.${k}`)).join(", "),
+      }));
     } else {
       alert.success(t("permissions.createRoleSuccess", { role: created.data.role_name }));
     }

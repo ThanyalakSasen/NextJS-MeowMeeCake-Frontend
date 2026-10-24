@@ -1566,6 +1566,15 @@
     "roleTypeStaff": "Staff",
     "copyFrom": "Copy permissions from role",
     "copyFromPlaceholder": "Start from scratch (no permissions)",
+    "template": "Start from a role template",
+    "templatePlaceholder": "No template",
+    "templateHint": "Fills in starting permissions for the job — adjust them in the table after creating · choose a template or copy from a role, not both",
+    "templateName": {
+      "manager": "Store manager",
+      "counter": "Counter staff",
+      "production": "Production"
+    },
+    "templatePartial": "Created role \"{role}\" from the template, but left out permissions beyond your own in: {menus} — ask the owner to add them",
     "save": "Save permissions",
     "saveSuccess": "Saved permissions for {role}",
     "saveFailed": "Could not save permissions",
