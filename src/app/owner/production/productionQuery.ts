@@ -5,11 +5,11 @@
 import { LIST_ALL } from "@/lib/http";
 
 export type TabKey = "plan" | "status" | "history";
-const TAB_KEYS: TabKey[] = ["plan", "status", "history"];
+const TAB_KEYS: TabKey[] = ["status", "plan", "history"];
 
-/** แท็บที่เปิดจาก ?tab= / ?id= (ลิงก์แจ้งเตือน → แท็บสถานะ) */
-export function tabFrom(tab: string | null | undefined, id: string | null | undefined): TabKey {
-  return TAB_KEYS.includes(tab as TabKey) ? (tab as TabKey) : id ? "status" : "plan";
+/** แท็บที่เปิดจาก ?tab= · ไม่ระบุ (รวมลิงก์แจ้งเตือน ?id=) = แท็บสถานะ */
+export function tabFrom(tab: string | null | undefined): TabKey {
+  return TAB_KEYS.includes(tab as TabKey) ? (tab as TabKey) : "status";
 }
 
 export const PRODUCTION_ORDERS_PARAMS = { limit: LIST_ALL };

@@ -94,7 +94,7 @@ export function useProductionViewModel() {
   // ?id=<productionOrderId> (ลิงก์จากแจ้งเตือน/LINE — ปิดรอบ · จ่ายช้าหลังเริ่มผลิต · เพิ่ม/หักยอด — BACKLOG2 §8)
   // เปิด drawer ใบนั้น · ไม่ระบุ tab มา = แท็บสถานะ (ดูใบที่กำลังทำอยู่)
   const urlOrderId = searchParams.get("id");
-  const activeTab: TabKey = tabFrom(tabParam, urlOrderId);
+  const activeTab: TabKey = tabFrom(tabParam);
   const setActiveTab = (key: string) => router.replace(`/owner/production?tab=${key}`, { scroll: false });
 
   // ── shared data (โหลดครั้งเดียว ใช้ทั้ง 3 แท็บ) ──

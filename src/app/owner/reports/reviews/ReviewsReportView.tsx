@@ -1,5 +1,5 @@
 "use client";
-// หน้า "รายงานความคิดเห็น" — หน้าเดียว 2 แท็บ (?tab= sync กับ URL): จัดการรีวิว (รายรีวิว · ค่าเริ่มต้น) · แดชบอร์ด (สรุป)
+// หน้า "รายงานความคิดเห็น" — หน้าเดียว 2 แท็บ (?tab= sync กับ URL): แดชบอร์ด (สรุป · ค่าเริ่มต้น) · จัดการรีวิว (รายรีวิว)
 // เดิมแยกเป็น 2 เมนู/2 หน้า · ปุ่มตั้งค่าหัวข้อรีวิวอยู่มุมขวาบนร่วมกันทั้ง 2 แท็บ
 // แท็บชิดขวา · ช่วงเวลาของแท็บแดชบอร์ดอยู่ซ้ายในแถวเดียวกัน (แบบหน้ารายงานยอดขาย)
 import Link from "next/link";
@@ -38,7 +38,6 @@ export function ReviewsReportView({
       activeKey={tab}
       onChange={(k) => onTab(k as ReviewsTab)}
       items={[
-        { key: "manage", label: t("reviews.tabManage"), children: <ReviewsView {...manage} /> },
         {
           key: "dashboard",
           label: t("reviews.tabDashboard"),
@@ -53,6 +52,7 @@ export function ReviewsReportView({
             />
           ),
         },
+        { key: "manage", label: t("reviews.tabManage"), children: <ReviewsView {...manage} /> },
       ]}
     />
   );
