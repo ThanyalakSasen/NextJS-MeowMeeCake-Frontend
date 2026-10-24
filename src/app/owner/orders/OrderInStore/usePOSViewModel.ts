@@ -468,10 +468,8 @@ export function usePOSViewModel() {
       alert.warning(t("pos.holdLimit", { n: MAX_HELD_BILLS }));
       return;
     }
-    if (persistHeld([snapshotBill(), ...heldBills])) {
-      resetBill();
-      alert.success(t("pos.holdDone"));
-    }
+    // ไม่เด้งแจ้งสำเร็จ — บิลว่างลง + ตัวนับ "บิลที่พักไว้" เพิ่มให้เห็นอยู่แล้ว (ไม่ต้องกดปิด popup ระหว่างคิวลูกค้า)
+    if (persistHeld([snapshotBill(), ...heldBills])) resetBill();
   };
   const resumeBill = async (bill: HeldBill) => {
     const rest = heldBills.filter((b) => b.id !== bill.id);

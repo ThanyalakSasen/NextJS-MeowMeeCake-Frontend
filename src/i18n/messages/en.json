@@ -1115,7 +1115,6 @@
     "promoDiscountExceeds": "Total discount exceeds the bill — remove a promotion before paying",
     "holdBill": "Hold bill",
     "heldBills": "Held bills ({n})",
-    "holdDone": "Bill held — resume it from \"Held bills\"",
     "holdLimit": "Up to {n} held bills — resume an older one first",
     "holdSaveFailed": "Couldn't hold the bill — this browser doesn't allow saving data on this device",
     "resumeBill": "Resume",
