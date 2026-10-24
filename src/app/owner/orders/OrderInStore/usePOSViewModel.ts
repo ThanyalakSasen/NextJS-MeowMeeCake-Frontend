@@ -12,12 +12,15 @@
 //
 // หน้าจอตามดีไซน์ใหม่ (BACKLOG2 §14): ช่อง "สแกน / ค้นหา" ช่องเดียว (บาร์โค้ด + รหัส/ชื่อ) · บิล (ปุ่ม −/+) ·
 // การ์ดโปรโมชัน · ปุ่มชำระเงินสด/QR · หน้าต่างรับเงินสด (คีย์แพด + ทอน) / QR / ชำระสำเร็จ
-// โปรโมชัน: พรีวิวด้วย posPromotion.ts แต่ตัวเลขจริง backend คิดเองจาก promotion_id · ใช้ได้ทีละ 1 โปร
+// โปรโมชัน: พรีวิวด้วย posPromotion.ts แต่ตัวเลขจริง backend คิดเองจาก promotion_id(s) · ซ้อนได้เมื่อทุกโปรตั้ง stackable
+// พักบิล (posHeldBills.ts — เก็บในเครื่อง) · พิมพ์ใบเสร็จหลังชำระ (PaymentDone มีรายการ + ยอดครบสำหรับใบเสร็จ)
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { promotionsService } from "@/services/promotions";
+import { storeInfoService } from "@/services/storeInfo";
+import { storeInfoKey } from "@/app/customer/lib/catalogQueries";
 import { ordersService } from "@/services/orders";
 import { posService } from "@/services/pos";
 import { usePermission } from "@/context/PermissionsContext";
@@ -32,7 +35,10 @@ import { nextRawInput, thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import {
   addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoLines, type CartLine,
 } from "./posCart";
-import { posPromotions, promotionsForProduct, evaluateAll, isScoped } from "./posPromotion";
+import { posPromotions, promotionsForProduct, evaluateAll, isScoped, togglePromoSelection } from "./posPromotion";
+import {
+  useHeldBills, saveHeldBills, newHeldBillId, MAX_HELD_BILLS, type HeldBill,
+} from "./posHeldBills";
 import { EMPTY_SELECTION, hasCustomization, toSelection, type CartSelection, type Picked } from "@/lib/customizationSelection";
 import { LIST_ALL } from "@/lib/http";
 
@@ -53,8 +59,23 @@ const CUSTOMIZATION_STALE_MS = 5 * 60_000;
 export type PaymentMethod = "cash" | "qr";
 export type PayDialog = null | PaymentMethod | "done";
 
+/** 1 บรรทัดบนใบเสร็จ */
+export interface ReceiptLine {
+  name: string;
+  detail: string | null;
+  qty: number;
+  price: number;
+}
+
 export interface PaymentDone {
   orderNo: string;
+  /** ISO time ตอนชำระสำเร็จ */
+  paidAt: string;
+  lines: ReceiptLine[];
+  /** ยอดก่อนส่วนลดจาก backend (order.subtotal) */
+  subtotal: number;
+  /** ชื่อโปรที่ใช้ในบิลนี้ */
+  promotions: string[];
   method: PaymentMethod;
   /** ยอดจริงจาก backend (order.total_amount) */
   total: number;
@@ -85,7 +106,11 @@ export function usePOSViewModel() {
   // ช่อง "สแกน / ค้นหา" — เก็บ "ข้อความดิบ" ตามปุ่มที่กดจริง แล้วแปลงแป้นไทย→QWERTY รอบเดียวตอนโชว์ (query) —
   // ห้ามเก็บค่าที่แปลงแล้วแล้วแปลงซ้ำ: "-"/"/" จะถูกตีความเป็นปุ่ม 3/2 ของแป้นไทยอีกรอบ (ดู nextRawInput)
   const [queryRaw, setQueryRaw] = useState("");
-  const [selectedPromoId, setSelectedPromoId] = useState<string | null>(null);
+  /** โปรที่เลือก — หลายตัวได้เมื่อทุกตัว stackable (togglePromoSelection) */
+  const [selectedPromoIds, setSelectedPromoIds] = useState<string[]>([]);
+  /** บิลที่พักไว้ในเครื่องนี้ (localStorage — ฝั่ง server ว่าง) */
+  const heldBills = useHeldBills();
+  const [heldOpen, setHeldOpen] = useState(false);
   const [payDialog, setPayDialog] = useState<PayDialog>(null);
   /** "รับเงินมา" (เงินสด) — เก็บเป็นตัวเลขหลักแบบคีย์แพด */
   const [receivedDigits, setReceivedDigits] = useState("");
@@ -122,6 +147,8 @@ export function usePOSViewModel() {
     retry: false,
   });
   const guestUserId = guestQ.data?._id ?? null;
+  // หัวใบเสร็จ (ชื่อร้าน/ที่อยู่/เบอร์) — endpoint สาธารณะ ไม่ต้องมีสิทธิ์ store_info · โหลดไม่ได้ = ใบเสร็จไม่มีหัวร้าน
+  const storeQ = useQuery({ queryKey: storeInfoKey, queryFn: storeInfoService.get, staleTime: 5 * 60_000, retry: false });
 
   const catalog = useMemo<PosProduct[]>(() => catalogQ.data?.data ?? [], [catalogQ.data]);
   const promotions = useMemo(() => posPromotions(promotionsQ.data?.data ?? []), [promotionsQ.data]);
@@ -248,11 +275,16 @@ export function usePOSViewModel() {
     () => (promotionsEnabled ? evaluateAll(promotions, toPromoLines(cart), member != null) : []),
     [promotionsEnabled, promotions, cart, member],
   );
-  const selectedEval = promoEvals.find((e) => e.promotion._id === selectedPromoId) ?? null;
-  // เลือกไว้แต่บิลเปลี่ยนจนใช้ไม่ได้แล้ว (ลบสินค้า/ลดจำนวน) → ไม่ใช้โปร + แจ้งในการ์ด
-  const appliedPromo = selectedEval?.eligible ? selectedEval : null;
+  const selectedEvals = selectedPromoIds
+    .map((id) => promoEvals.find((e) => e.promotion._id === id))
+    .filter((e): e is NonNullable<typeof e> => !!e);
+  // เลือกไว้แต่บิลเปลี่ยนจนใช้ไม่ได้แล้ว (ลบสินค้า/ลดจำนวน/ถอดสมาชิก) → ไม่ใช้โปรนั้น + แจ้งในการ์ด
+  const appliedPromos = selectedEvals.filter((e) => e.eligible);
   const bestPromo = promoEvals.find((e) => e.eligible) ?? null;
-  const discount = appliedPromo?.discount ?? 0;
+  const promoDiscount = Math.round(appliedPromos.reduce((s, e) => s + e.discount, 0) * 100) / 100;
+  // ซ้อนโปรจนส่วนลดรวมเกินยอดบิล — backend ปฏิเสธ (400) จึงไม่ให้กดชำระ
+  const discountExceeds = promoDiscount > subtotal;
+  const discount = Math.min(promoDiscount, subtotal);
   const total = Math.max(subtotal - discount, 0);
 
   // ── สมาชิกสะสมแต้ม ──
@@ -292,7 +324,7 @@ export function usePOSViewModel() {
 
   const resetBill = () => {
     setCart([]);
-    setSelectedPromoId(null);
+    setSelectedPromoIds([]);
     setReceivedDigits("");
     setQueryRaw("");
     setPicker(null);
@@ -307,7 +339,7 @@ export function usePOSViewModel() {
 
       // 1) สร้างออเดอร์ — backend ตัดสต็อก + คำนวณ subtotal/ส่วนลดโปรโมชัน/total_amount ให้เองทั้งหมด
       const orderRes = await ordersService.create(
-        buildOrderInput({ cart, userId, discount: 0, promotionId: appliedPromo?.promotion._id ?? null }),
+        buildOrderInput({ cart, userId, discount: 0, promotionIds: appliedPromos.map((e) => e.promotion._id) }),
       );
       const order = orderRes.data;
 
@@ -317,6 +349,18 @@ export function usePOSViewModel() {
       const paid = method === "cash" ? cash : order.total_amount;
       return {
         orderNo: order.order_no,
+        paidAt: new Date().toISOString(),
+        lines: cart.map((c) => ({
+          name: c.name,
+          detail:
+            [c.variantLabel, ...c.options.map((o) => (o.text_value ? `${o.option_name}: ${o.text_value}` : o.option_name))]
+              .filter(Boolean)
+              .join(" · ") || null,
+          qty: c.qty,
+          price: c.price,
+        })),
+        subtotal: order.subtotal,
+        promotions: appliedPromos.map((e) => e.promotion.promotion_name),
         method,
         total: order.total_amount,
         discount: order.discount_amount ?? 0,
@@ -402,7 +446,52 @@ export function usePOSViewModel() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []); // ตั้งใจว่างเปล่า — mount ครั้งเดียวเท่านั้น (ดูคำอธิบายเต็มด้านบน)
 
-  const canPay = perm.create && cart.length > 0 && !checkout.isPending;
+  const canPay = perm.create && cart.length > 0 && !checkout.isPending && !discountExceeds;
+
+  // ── พักบิล ──
+  const persistHeld = (bills: HeldBill[]) => {
+    if (saveHeldBills(bills)) return true;
+    alert.error(t("pos.holdSaveFailed"));
+    return false;
+  };
+  const snapshotBill = (): HeldBill => ({
+    id: newHeldBillId(),
+    heldAt: new Date().toISOString(),
+    cart,
+    member,
+    bahtPerPoint,
+    promoIds: selectedPromoIds,
+  });
+  const holdBill = () => {
+    if (cart.length === 0) return;
+    if (heldBills.length >= MAX_HELD_BILLS) {
+      alert.warning(t("pos.holdLimit", { n: MAX_HELD_BILLS }));
+      return;
+    }
+    // ไม่เด้งแจ้งสำเร็จ — บิลว่างลง + ตัวนับ "บิลที่พักไว้" เพิ่มให้เห็นอยู่แล้ว (ไม่ต้องกดปิด popup ระหว่างคิวลูกค้า)
+    if (persistHeld([snapshotBill(), ...heldBills])) resetBill();
+  };
+  const resumeBill = async (bill: HeldBill) => {
+    const rest = heldBills.filter((b) => b.id !== bill.id);
+    // บิลปัจจุบันมีของอยู่ → ถามก่อน แล้วพักบิลปัจจุบันแทนที่ (สลับกัน ไม่ทิ้งของในบิลไหน)
+    if (cart.length > 0) {
+      const ok = await confirmAlert(t("pos.resumeSwapConfirm"), { title: t("pos.resumeBill") });
+      if (!ok) return;
+      if (!persistHeld([snapshotBill(), ...rest])) return;
+    } else if (!persistHeld(rest)) {
+      return;
+    }
+    resetBill();
+    setCart(bill.cart);
+    setMember(bill.member);
+    setBahtPerPoint(bill.bahtPerPoint);
+    setSelectedPromoIds(bill.promoIds);
+    setHeldOpen(false);
+  };
+  const deleteHeldBill = async (bill: HeldBill) => {
+    const ok = await confirmAlert(t("pos.deleteHeldConfirm"), { title: t("pos.deleteHeld"), danger: true });
+    if (ok) persistHeld(heldBills.filter((b) => b.id !== bill.id));
+  };
 
   return {
     perm,
@@ -443,15 +532,27 @@ export function usePOSViewModel() {
       if (ok) resetBill();
     },
 
-    // โปรโมชัน (ใช้ได้ทีละ 1 — backend รับ promotion_id เดียว)
+    // โปรโมชัน — ซ้อนได้เมื่อทุกตัวตั้ง stackable (backend รับ promotion_ids)
     promotionsEnabled,
     promoEvals,
     billPromotions: promotions.filter((p) => !isScoped(p)),
     bestPromoId: bestPromo?.promotion._id ?? null,
-    selectedPromoId,
-    appliedPromo,
-    selectedPromoInvalid: !!selectedPromoId && !appliedPromo,
-    togglePromo: (id: string) => setSelectedPromoId((cur) => (cur === id ? null : id)),
+    selectedPromoIds,
+    selectedPromoInvalid: selectedEvals.length < selectedPromoIds.length || selectedEvals.some((e) => !e.eligible),
+    discountExceeds,
+    togglePromo: (id: string) => {
+      const promo = promotions.find((p) => p._id === id);
+      if (promo) setSelectedPromoIds((cur) => togglePromoSelection(cur, promo, promotions));
+    },
+
+    // พักบิล
+    heldBills,
+    heldOpen,
+    openHeld: () => setHeldOpen(true),
+    closeHeld: () => setHeldOpen(false),
+    holdBill,
+    resumeBill,
+    deleteHeldBill,
 
     // สมาชิกสะสมแต้ม
     memberPhone,
@@ -477,6 +578,7 @@ export function usePOSViewModel() {
     confirmQr: () => checkout.mutate({ method: "qr", received: total }),
     submitting: checkout.isPending,
     done,
+    store: storeQ.data ?? null,
   };
 }
 

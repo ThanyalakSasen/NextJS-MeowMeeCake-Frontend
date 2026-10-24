@@ -155,6 +155,8 @@ export interface OrderInput {
   discount_amount?: number;
   /** ใช้โปรโมชัน — backend คิดส่วนลดเอง (ไม่สนใจ discount_amount) · ส่ง promotion_code หรือ promotion_id อย่างใดอย่างหนึ่ง */
   promotion_id?: string;
+  /** ซ้อนโปร (POS) — ทุกตัวต้องตั้ง stackable · ใช้แทน promotion_id */
+  promotion_ids?: string[];
   channel?: "online" | "instore";
 }
 

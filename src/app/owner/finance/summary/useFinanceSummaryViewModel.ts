@@ -5,10 +5,10 @@
 // เดิมรวมรายรับเองจาก /admin/orders (limit 200, ไม่นับพรีออเดอร์ = 0 ตายตัว) และแยกยอดออนไลน์ด้วย
 // revenue-by-type ที่ backend #52 เปลี่ยน shape ไปแล้ว (ไม่มี .online → NaN ทั้งตาราง) — BACKLOG2 §3
 //
-// **ตัดจากต้นทาง:** ไม่ประมาณต้นทุนวัตถุดิบจากสูตร (recipe cost) เพราะ `Order.items` (types/order.ts)
-// เก็บแค่ `product_name` ไม่มี `product_id` ผูกกลับ — join ไปยัง Recipe ไม่ได้แม่นยำ (ต้อง refactor
-// Order vertical ก่อน — บันทึกเป็น follow-up เดียวกับที่ Production ยังไม่ผูก recipe_id)
-// COGS ที่นี่ = เฉพาะค่าใช้จ่ายหมวด "วัตถุดิบ"/"บรรจุภัณฑ์" ที่บันทึกจริงใน Expenses เท่านั้น
+// ต้นทุนขาย (COGS) แสดง 2 วิธีคู่กัน (Final-Backlog Q1 — เจ้าของร้านเลือกดูทั้งสองแบบ):
+//   ตามค่าใช้จ่าย = ค่าใช้จ่ายหมวด "วัตถุดิบ"/"บรรจุภัณฑ์" ที่บันทึกจริง (งบกำไร-ขาดทุนหลักใช้แบบนี้)
+//   ตามสูตร      = recipe_cogs จาก revenue-by-channel (Σ cost_per_unit × จำนวนของสินค้าที่ขายได้)
+// ค่าใช้จ่ายดำเนินงาน (หมวดอื่น) เท่ากันทั้งสองแบบ — แบบตามสูตรไม่หักค่าวัตถุดิบที่ซื้อเข้าซ้ำ
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -84,6 +84,17 @@ export function useFinanceSummaryViewModel() {
   const opexEntries = Array.from(expenseByCategory.entries()).filter(([cat]) => !COGS_EXPENSE_CATEGORIES.includes(cat));
   const totalOpex = opexEntries.reduce((s, [, v]) => s + v, 0);
   const netProfit = grossProfit - totalOpex;
+
+  // วิธีตามสูตร — null = backend ยังไม่ส่ง recipe_cogs (แสดง "—" แทนตัวเลขผิด)
+  const recipeCogs = revenue?.recipe_cogs ?? null;
+  const cogsMethods = [
+    { key: "expense", label: t("finance.cogsMethodExpense"), cogs: totalCogs as number | null },
+    { key: "recipe", label: t("finance.cogsMethodRecipe"), cogs: recipeCogs },
+  ].map((m) => ({
+    ...m,
+    gross: m.cogs == null ? null : totalIncome - m.cogs,
+    net: m.cogs == null ? null : totalIncome - m.cogs - totalOpex,
+  }));
 
   const pnlRows: PnLRow[] = useMemo(() => {
     const rows: PnLRow[] = [
@@ -179,7 +190,7 @@ export function useFinanceSummaryViewModel() {
     selectedDate, setSelectedDate,
     rangeStart, rangeEnd, periodLabel,
 
-    totalIncome, totalCogs, totalOpex, netProfit, orderCount,
+    totalIncome, totalCogs, totalOpex, netProfit, orderCount, cogsMethods,
     hasData: totalIncome > 0 || expensesInRange.length > 0,
 
     pnlRows, monthlyTrend, kpis,

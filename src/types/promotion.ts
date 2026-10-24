@@ -7,6 +7,8 @@ import type { ListParams } from "@/types/api";
 import type { DiscountType } from "@/constants/enumConfig";
 
 export type PromotionChannel = "online" | "instore";
+/** all = ทุกคน (รวมลูกค้าทั่วไปที่ POS) · members = เฉพาะสมาชิก (บัญชีลูกค้าทั่วไปใช้ไม่ได้) */
+export type PromotionAudience = "all" | "members";
 
 export interface Promotion {
   _id: string;
@@ -18,6 +20,10 @@ export interface Promotion {
   discount_value: number;
   is_active: boolean;
   applicable_channels: PromotionChannel[];
+  /** backend รุ่นเก่าไม่ส่ง = "all" */
+  audience?: PromotionAudience;
+  /** ใช้ร่วมกับโปรอื่นในบิลเดียวได้ (POS ซ้อนโปร) — backend รุ่นเก่าไม่ส่ง = false */
+  stackable?: boolean;
   min_order_amount?: number | null;
   applicable_products: string[];
   applicable_categories: string[];
@@ -43,6 +49,8 @@ export interface PromotionInput {
   discount_value: number;
   is_active?: boolean;
   applicable_channels?: PromotionChannel[];
+  audience?: PromotionAudience;
+  stackable?: boolean;
   min_order_amount?: number;
   applicable_products?: string[];
   applicable_categories?: string[];

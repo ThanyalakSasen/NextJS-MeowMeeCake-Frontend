@@ -108,6 +108,48 @@ export function FinanceSummaryView(vm: VM) {
             </div>
           </div>
 
+          {/* กำไรตาม 2 วิธีคิดต้นทุนขาย — คอลัมน์ละวิธี · รายรับ/ค่าใช้จ่ายดำเนินงานเท่ากันทั้งสองคอลัมน์ */}
+          <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
+            <div className="border-b border-gray-100 px-4 py-3">
+              <p className="text-sm font-semibold text-brown-900">{t("finance.cogsCompareTitle")}</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500">
+                    <th className="px-4 py-2 text-left font-medium">{t("finance.cogsCompareItem")}</th>
+                    {vm.cogsMethods.map((m) => (
+                      <th key={m.key} className="px-4 py-2 text-right font-medium">{m.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {([
+                    { key: "income", label: t("finance.cogsCompareRowIncome"), value: () => vm.totalIncome as number | null },
+                    { key: "cogs", label: t("finance.cogsCompareRowCogs"), value: (m: VM["cogsMethods"][number]) => m.cogs },
+                    { key: "gross", label: t("finance.cogsCompareRowGross"), value: (m: VM["cogsMethods"][number]) => m.gross },
+                    { key: "opex", label: t("finance.cogsCompareRowOpex"), value: () => vm.totalOpex as number | null },
+                    { key: "net", label: t("finance.cogsCompareRowNet"), value: (m: VM["cogsMethods"][number]) => m.net },
+                  ] as const).map((row) => (
+                    <tr key={row.key} className={`border-t border-gray-100 ${row.key === "net" ? "font-semibold" : ""}`}>
+                      <td className="px-4 py-2 text-gray-700">{row.label}</td>
+                      {vm.cogsMethods.map((m) => {
+                        const v = row.value(m);
+                        const tone = row.key === "net" && v != null ? (v >= 0 ? "text-green-600" : "text-red-500") : "text-gray-700";
+                        return (
+                          <td key={m.key} className={`px-4 py-2 text-right ${tone}`}>
+                            {v == null ? "—" : formatCurrency(v, locale)}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mx-4 my-3 text-sm text-gray-500">{t("finance.cogsCompareNote")}</p>
+          </div>
+
           {/* แถว 3: KPI กว้างเต็มแถว — 4 ค่าเรียงแนวนอน (จอเล็ก 2×2) */}
           <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
             <div className="border-b border-gray-100 px-4 py-3">
