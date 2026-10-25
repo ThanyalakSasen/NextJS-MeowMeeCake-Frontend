@@ -2395,6 +2395,17 @@
     "inUse": "Cannot delete \"{name}\": {n} products still use this category",
     "shippingHint": "Ships nationwide = web orders can be delivered to any province · store province only = delivery within the store province (pickup is always allowed) · * = not set yet, guessed from the name"
   },
+  "trash": {
+    "open": "Deleted items",
+    "title": "Deleted items",
+    "hint": "Restore an item to bring it back as it was — its data is kept",
+    "empty": "No deleted items",
+    "group": "{name} ({n})",
+    "deletedAt": "Deleted {date}",
+    "restore": "Restore",
+    "restored": "Restored \"{name}\"",
+    "restoreFailed": "Could not restore"
+  },
   "customization": {
     "title": "Product options",
     "description": "For products with choices such as cake size, flavour or a message on the cake — option prices are added to the product price · no separate stock (stock is counted on the product)",

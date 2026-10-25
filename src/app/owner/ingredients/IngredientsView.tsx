@@ -14,6 +14,7 @@ import { DeleteButton, EditButton, actionIcon } from "@/components/shared/action
 import { CategoryManagerButton } from "@/components/shared/categories";
 import type { IngredientRow, useIngredientsViewModel } from "./useIngredientsViewModel";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 // ฟอร์ม/โมดัลแยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
 const IngredientFormModal = dynamic(() => import("./_components/IngredientFormModal").then((m) => m.IngredientFormModal), { ssr: false });
@@ -81,6 +82,7 @@ export function IngredientsView(vm: VM) {
       actions={
         <div className="flex flex-wrap gap-2">
           <CategoryManagerButton kind="ingredient" />
+          <RestoreDeletedButton menu="ingredients" resources={["ingredients", "ingredientCategories"]} />
           {vm.perm.create && (
             <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
               {t("ingredients.addIngredient")}

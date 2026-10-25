@@ -14,6 +14,7 @@ import { DeleteButton, EditButton, actionIcon } from "@/components/shared/action
 import type { EmployeeRow, useEmployeesViewModel } from "./useEmployeesViewModel";
 import { EMPLOYEE_WORKING_CONFIG, NOTICE_TAG } from "@/constants/enumConfig";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 // โมดัลตั้งรหัสผ่านใหม่แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
 const ResetPasswordModal = dynamic(() => import("./_components/ResetPasswordModal").then((m) => m.ResetPasswordModal), { ssr: false });
@@ -76,11 +77,14 @@ export function EmployeesView(vm: VM) {
     <ListPageLayout
       title={t("employees.title")}
       actions={
-        vm.perm.create && (
-          <Button type="primary" icon={actionIcon("add")} href="/owner/employees/addEmployee">
-            {t("employees.addEmployee")}
-          </Button>
-        )
+        <>
+          <RestoreDeletedButton menu="employees" resources={["staff"]} />
+          {vm.perm.create && (
+            <Button type="primary" icon={actionIcon("add")} href="/owner/employees/addEmployee">
+              {t("employees.addEmployee")}
+            </Button>
+          )}
+        </>
       }
       toolbar={
         <FilterToolbar

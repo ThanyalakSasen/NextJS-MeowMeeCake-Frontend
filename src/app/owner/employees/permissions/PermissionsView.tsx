@@ -14,6 +14,7 @@ import { PermissionMatrix } from "./_components/PermissionMatrix";
 import { PermissionOverview } from "./_components/PermissionOverview";
 import { Segmented } from "antd";
 import { ROLE_TYPE_CONFIG } from "@/constants/enumConfig";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 // โมดัลเพิ่ม/เปลี่ยนชื่อตำแหน่งแยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
 const RoleFormModal = dynamic(() => import("./_components/RoleFormModal").then((m) => m.RoleFormModal), { ssr: false });
@@ -41,7 +42,7 @@ export function PermissionsView(vm: VM) {
   );
 
   return (
-    <DashboardPageLayout title={t("permissions.title")}>
+    <DashboardPageLayout title={t("permissions.title")} actions={<RestoreDeletedButton menu="permissions" resources={["roles"]} />}>
       {vm.isError ? (
         <div className="py-10 text-center text-gray-600">{t("permissions.loadFailed")}</div>
       ) : vm.isLoading ? (
