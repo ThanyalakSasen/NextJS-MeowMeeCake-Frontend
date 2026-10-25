@@ -685,7 +685,23 @@
     "soldUnit": "{n} pcs",
     "productionStatus": "Production status",
     "productionNone": "No production orders pending",
-    "productionDue": "Due {date}"
+    "productionDue": "Due {date}",
+    "salesTitle": "Daily sales",
+    "salesSub": "Total {total} · avg {avg}/day",
+    "salesRange": "{n} days",
+    "salesChartLabel": "Daily sales chart",
+    "salesBarLabel": "{date} sales {amount} · {n} orders",
+    "salesOrders": "{n} orders",
+    "salesEmpty": "No sales in this period yet",
+    "channelsTitle": "By channel",
+    "channelsSub": "Last {n} days",
+    "channel": {
+      "preorder": "Pre-orders",
+      "pos": "In store (POS)",
+      "web": "Website",
+      "other": "Other (old order numbers)"
+    },
+    "viewFinance": "View finance summary"
   },
   "products": {
     "title": "Products",

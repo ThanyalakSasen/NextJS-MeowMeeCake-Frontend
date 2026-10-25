@@ -11,6 +11,7 @@ import { RecentOrdersWidget } from "./_components/RecentOrdersWidget";
 import { LowStockWidget } from "./_components/LowStockWidget";
 import { TopProductsWidget } from "./_components/TopProductsWidget";
 import { ProductionStatusWidget } from "./_components/ProductionStatusWidget";
+import { SalesTrendSection } from "./_components/SalesTrendSection";
 
 type VM = ReturnType<typeof useDashboardViewModel>;
 
@@ -51,6 +52,8 @@ export function DashboardView(vm: VM) {
               tone="down"
             />
           </StatCardsGrid>
+
+          <SalesTrendSection {...vm.sales} />
 
           {/* grid 2 แถวจริง ซ้าย (กว้างกว่า) : ขวา = 2:1 บน lg — การ์ดที่อยู่แถวเดียวกันจึงสูงเท่ากัน
               (เดิมเป็น flex 2 คอลัมน์แยกกัน การ์ดคู่กันสูงไม่เท่ากัน) ความสูงเท่ากันทุกใบมาจาก .dashboard-widget

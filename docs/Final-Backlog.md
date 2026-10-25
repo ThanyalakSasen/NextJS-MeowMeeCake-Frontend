@@ -209,7 +209,7 @@ frontend: ROUTE_MENU_MAP (constants/menuKeys.ts) กั้นหน้า · use
 | รหัส | ระดับ | ฝั่ง | เรื่อง | ที่มา / หมายเหตุ |
 |---|---|---|---|---|
 | N1 | ✅ | FE | ~~CI ของ frontend~~ | ✅ 2026-10-19 — `.github/workflows/ci.yml` (ทุก PR + push เข้า main): `npm ci` → `npm run check` → `npm run build` · แก้ `text-gray-400` 4 ไฟล์ที่ทำให้ `lint:ui` (= `npm run check`) ตก · รันในเครื่องผ่านทั้ง check + build แล้ว · ✅ 2026-10-24 รันบน GitHub จริงแล้ว (ทุก PR #175–#181 + push เข้า main ผ่าน) |
-| N2 | 🟢 | FE | dashboard แยกยอดตามช่องทาง + รวมพรีออเดอร์ | API `revenue-by-channel` มีแล้ว (หน้าสรุปการเงินใช้อยู่) — BACKLOG2 §12 ข้อ 11 |
+| N2 | ✅ | FE | ~~dashboard แยกยอดตามช่องทาง + รวมพรีออเดอร์~~ | ✅ 2026-10-25 — แดชบอร์ดใต้การ์ดสถิติ: กราฟแท่งยอดขายรายวัน (`sales-by-day` · 7 / 30 / 90 วัน · ชี้/โฟกัสแท่ง = ยอด + จำนวนออเดอร์ของวันนั้น) + กล่องแยกตามช่องทาง (`revenue-by-channel` ช่วงเดียวกัน · พรีออเดอร์ · หน้าร้าน · หน้าเว็บ — ต้องมี `finance_summary` หรือ `finance_expenses` ไม่มี = กราฟเต็มแถว) · `dashboard/salesTrend.ts` · ยังไม่ได้ทดสอบหน้าจริง |
 | N3 | 🟢 | BE | ตะกร้า / checkout ยังแสดง `price_snapshot` (ราคาตอนหยิบใส่) ไม่ใช่ราคาปัจจุบัน — ยอดจริงคิดใหม่ตอนสั่ง | backend `reprice.md` แถว 1, 3 (ยังไม่ได้ตรวจกับโค้ดรอบนี้) |
 | N4 | 🟢 | BE | ผูกโปรโมชัน / `discountEngine` กับพรีออเดอร์ (ตอนนี้มีแค่ส่วนลดกรอกมือ) | backend `preorder.md` §9 |
 | N5 | 🟢 | BE | LINE: รับ webhook `unfollow` (ลูกค้าบล็อก OA แล้วระบบยังคิดว่าผูกอยู่) · ข้อความถึงลูกค้าไม่บันทึกลง DB | backend `LINE.md` §8 ข้อ 9–10 |
