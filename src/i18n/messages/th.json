@@ -685,7 +685,23 @@
     "soldUnit": "{n} ชิ้น",
     "productionStatus": "สถานะการผลิต",
     "productionNone": "ไม่มีใบสั่งผลิตที่รอดำเนินการ",
-    "productionDue": "กำหนด {date}"
+    "productionDue": "กำหนด {date}",
+    "salesTitle": "ยอดขายรายวัน",
+    "salesSub": "รวม {total} · เฉลี่ย {avg}/วัน",
+    "salesRange": "{n} วัน",
+    "salesChartLabel": "กราฟยอดขายรายวัน",
+    "salesBarLabel": "{date} ยอดขาย {amount} · {n} ออเดอร์",
+    "salesOrders": "{n} ออเดอร์",
+    "salesEmpty": "ยังไม่มียอดขายในช่วงนี้",
+    "channelsTitle": "แยกตามช่องทาง",
+    "channelsSub": "{n} วันล่าสุด",
+    "channel": {
+      "preorder": "พรีออเดอร์",
+      "pos": "หน้าร้าน (POS)",
+      "web": "หน้าเว็บ",
+      "other": "อื่น ๆ (เลขออเดอร์รุ่นเก่า)"
+    },
+    "viewFinance": "ดูสรุปการเงิน"
   },
   "products": {
     "title": "จัดการข้อมูลสินค้า",
