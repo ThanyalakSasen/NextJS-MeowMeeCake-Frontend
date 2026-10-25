@@ -6,7 +6,7 @@ import { currentUserOnServer } from "@/lib/serverAuth";
 import OwnerLayout from "@/components/shared/layout/OwnerLayout";
 import { AntdProviders } from "@/components/providers/AntdProviders";
 
-// หลังร้าน — ข้อความทุก namespace ยกเว้น shop.* (ของหน้าร้าน ~73 KB · หลังร้านไม่ใช้) + antd
+// หลังร้าน — ข้อความทุก namespace ยกเว้น shop.* (ของหน้าร้าน ~73 KB · หลังร้านใช้แค่ shop.notifications) + antd
 // root layout ส่งข้อความแค่ alert/common และไม่มี antd (หน้าร้านสาธารณะไม่ต้องโหลด)
 // ข้อความถูก serialize ไปกับ HTML ทุกหน้า — ยิ่งเล็ก browser ยิ่ง parse เร็ว (Lighthouse TBT)
 export default async function Layout({ children }: { children: React.ReactNode }) {
@@ -14,8 +14,9 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const [user, all] = await Promise.all([currentUserOnServer(), getMessages()]);
   const qc = new QueryClient();
   if (user) qc.setQueryData(CURRENT_USER_KEY, user);
-  const { shop: _shop, ...messages } = all;
-  void _shop;
+  // ยกเว้น shop.notifications — กระดิ่งหลังร้านใช้ชุดเดียวกับหน้าร้าน (NotificationDropdown · shared/notifications/NotificationRow)
+  const { shop, ...rest } = all;
+  const messages = { ...rest, shop: { notifications: shop.notifications } };
   return (
     <NextIntlClientProvider messages={messages}>
       <HydrationBoundary state={dehydrate(qc)}>
