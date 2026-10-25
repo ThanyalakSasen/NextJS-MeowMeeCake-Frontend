@@ -2,13 +2,12 @@
 // แท็บ "แดชบอร์ด" ของหน้ารายงานความคิดเห็น — ตัวเลขสรุป (+ เทียบช่วงก่อนหน้า) · การกระจายคะแนน · แนวโน้มตามเวลา ·
 // หัวข้อที่ชม/ควรปรับปรุง · หัวข้อที่ถูกติเทียบช่วงก่อนหน้า · สรุปรายหมวดสินค้า · สินค้ารีวิวมาก/คะแนนต่ำ · รีวิวลบที่รอตอบ
 // (กราฟเป็นแถบ HTML แบบเดียวกับรายงานยอดขาย — ไม่มีไลบรารีกราฟ) · ข้อมูลจาก GET /admin/reviews/stats
-import { Tooltip } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import type { Dayjs } from "dayjs";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import { Button, Card, DatePicker, EmptyState, Select } from "@/components/base";
+import { Button, Card, DatePicker, EmptyState, LazyDatePicker, Select, type DatePickerProps } from "@/components/base";
 import { TypeTabBar } from "@/components/shared/data";
-import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { LazyTooltip, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { formatDate, formatNumber, formatPercent } from "@/i18n/format";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
@@ -26,6 +25,9 @@ const PERIOD_LABEL_KEY: Record<PeriodType, "finance.periodDay" | "finance.period
   year: "finance.periodYear",
 };
 
+const PeriodPicker = (props: DatePickerProps) =>
+  props.picker === "week" ? <DatePicker {...props} /> : <LazyDatePicker {...props} />;
+
 /** ตัวเลือกช่วงเวลา (รายวัน…รายปี + วันที่) — วางแถวเดียวกับแท็บของหน้า ผ่าน toolbar ของ TabbedPageLayout */
 export function ReviewDashboardToolbar(vm: VM) {
   const t = useTranslations();
@@ -36,7 +38,8 @@ export function ReviewDashboardToolbar(vm: VM) {
         onChange={vm.setPeriod}
         options={PERIOD_TYPES.map((p) => ({ value: p, label: t(PERIOD_LABEL_KEY[p]) }))}
       />
-      <DatePicker
+      {/* ปฏิทินโหลดเมื่อกด (base/LazyDatePicker — DatePicker ของ antd หนักตอน hydrate) · รายสัปดาห์ใช้ตัวจริง (รูปแบบ wo ต้องใช้ plugin ของ picker) */}
+      <PeriodPicker
         picker={pickerTypeFor(vm.period)}
         value={vm.selectedDate}
         onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
@@ -252,14 +255,14 @@ function RatingDistribution({ s }: { s: ReviewStats }) {
           return (
             <li key={star} className="grid items-center gap-3" style={{ gridTemplateColumns: "64px 1fr 96px" }}>
               <span className="text-sm text-gray-600">{t("reviewsDashboard.starsLabel", { n: star })}</span>
-              <Tooltip title={`${t("reviewsDashboard.starsLabel", { n: star })}: ${label}`}>
+              <LazyTooltip title={`${t("reviewsDashboard.starsLabel", { n: star })}: ${label}`}>
                 <div className="h-3.5 rounded bg-gray-100">
                   <div
                     className={`h-full rounded ${star <= 2 ? "bg-danger" : "bg-brown-500"}`}
                     style={{ width: n ? `${Math.max((n / max) * 100, 2)}%` : 0 }}
                   />
                 </div>
-              </Tooltip>
+              </LazyTooltip>
               <span className="text-right text-sm font-medium text-gray-800">{label}</span>
             </li>
           );
@@ -281,7 +284,7 @@ function Trend({ s }: { s: ReviewStats }) {
     <Section title={t("reviewsDashboard.trend")}>
       <div className="flex h-40 items-end gap-[2px]">
         {s.buckets.map((b) => (
-          <Tooltip
+          <LazyTooltip
             key={b.key}
             title={t("reviewsDashboard.trendTip", { label: labelOf(b.start), n: b.count, avg: b.avg != null ? b.avg.toFixed(1) : "—" })}
           >
@@ -289,7 +292,7 @@ function Trend({ s }: { s: ReviewStats }) {
             <div className="flex h-full min-w-0 flex-1 items-end hover:bg-brown-50">
               <div className="w-full rounded-t bg-brown-500" style={{ height: b.count ? `${Math.max((b.count / max) * 100, 3)}%` : 0 }} />
             </div>
-          </Tooltip>
+          </LazyTooltip>
         ))}
       </div>
       <div className="mt-1.5 flex gap-[2px] border-t border-gray-200 pt-1.5">
@@ -327,7 +330,7 @@ function Aspects({ s }: { s: ReviewStats }) {
       ) : (
         <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
           {s.aspects.map((a) => (
-            <Tooltip key={a.name} title={t("reviewsDashboard.aspectTip", { name: a.name, pos: a.positive, neg: a.negative })}>
+            <LazyTooltip key={a.name} title={t("reviewsDashboard.aspectTip", { name: a.name, pos: a.positive, neg: a.negative })}>
               {/* แถบสองข้างจากกลาง: ซ้าย = ควรปรับปรุง · ขวา = ชอบ */}
               <li className="grid items-center gap-2" style={{ gridTemplateColumns: "minmax(0,120px) 28px 1fr 1fr 28px" }}>
                 <span className="truncate text-sm text-gray-700">{a.name}</span>
@@ -340,7 +343,7 @@ function Aspects({ s }: { s: ReviewStats }) {
                 </div>
                 <span className="text-sm font-medium text-gray-800">{a.positive}</span>
               </li>
-            </Tooltip>
+            </LazyTooltip>
           ))}
         </ul>
       )}
@@ -552,9 +555,9 @@ function ProductTable({ vm }: { vm: VM }) {
                 <td className={`py-2 text-right font-medium ${p.avg < 3 ? "text-danger" : "text-gray-800"}`}>★ {p.avg.toFixed(1)}</td>
                 <td className="py-2 text-right">
                   {p.avgDelta == null ? (
-                    <Tooltip title={t("reviewsDashboard.vsPrevNone")}>
+                    <LazyTooltip title={t("reviewsDashboard.vsPrevNone")}>
                       <span className="text-gray-500">—</span>
-                    </Tooltip>
+                    </LazyTooltip>
                   ) : Math.abs(p.avgDelta) < 0.05 ? (
                     <span className="text-gray-500">{t("reviewsDashboard.aspectTrendSame")}</span>
                   ) : (
