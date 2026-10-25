@@ -1,7 +1,7 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // TabbedPageLayout — เทมเพลตหน้าที่แบ่งเนื้อหาเป็นแท็บใต้หัวข้อเดียว
-// ใช้กับ Production (แผนการผลิต/สถานะ/ประวัติ — ?tab= sync กับ URL ที่ ViewModel ของ consumer)
+// ใช้กับ Production (สถานะ/แผนการผลิต/ประวัติ — ?tab= sync กับ URL ที่ ViewModel ของ consumer)
 // เทมเพลตนี้ไม่รู้เรื่อง query string เอง — consumer ส่ง activeKey/onChange มาจาก ViewModel
 //
 // ── ทำไมเลิกใช้ antd <Tabs> ──────────────────────────────────

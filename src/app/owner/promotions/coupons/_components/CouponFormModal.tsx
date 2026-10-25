@@ -164,6 +164,24 @@ export function CouponFormModal({
           </div>
         </FormItem>
 
+        <FormItem name="audience" label={t("coupons.fieldAudience")} extra={t("coupons.audienceHint")}>
+          <Select
+            options={[
+              { value: "all", label: t("coupons.audienceAll") },
+              { value: "members", label: t("coupons.audienceMembers") },
+            ]}
+          />
+        </FormItem>
+
+        <FormItem label={t("coupons.fieldStackable")} extra={t("coupons.stackableHint")}>
+          <div className="flex items-center gap-3">
+            <FormItem name="stackable" valuePropName="checked" noStyle>
+              <Switch />
+            </FormItem>
+            <span className="text-sm text-gray-600">{t("coupons.stackableLabel")}</span>
+          </div>
+        </FormItem>
+
         <FormItem name="dateRange" label={t("coupons.fieldDateRange")} extra={t("coupons.dateRangeHint")}>
           <RangePicker style={{ width: "100%" }} />
         </FormItem>

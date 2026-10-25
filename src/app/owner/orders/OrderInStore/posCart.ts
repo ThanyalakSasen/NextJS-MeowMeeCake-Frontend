@@ -101,9 +101,11 @@ export function buildOrderInput(args: {
   /** สมาชิกที่กรอกเบอร์ไว้ (ได้แต้มสะสม) หรือบัญชี "ลูกค้าทั่วไป" */
   userId: string;
   discount: number;
-  /** เลือกโปรโมชัน → ส่ง promotion_id แทน discount_amount (backend คิดส่วนลดเอง · ใช้คู่กับส่วนลดกรอกมือไม่ได้) */
-  promotionId?: string | null;
+  /** โปรที่เลือก → ส่ง promotion_id (1 ตัว) / promotion_ids (ซ้อนโปร) แทน discount_amount
+   *  (backend คิดส่วนลดเอง · ใช้คู่กับส่วนลดกรอกมือไม่ได้) */
+  promotionIds?: string[];
 }): OrderInput {
+  const promos = args.promotionIds ?? [];
   return {
     user_id: args.userId,
     source: "items",
@@ -117,8 +119,10 @@ export function buildOrderInput(args: {
         ? { selected_options: c.options.map((o) => ({ option_id: o.option_id, ...(o.text_value ? { text_value: o.text_value } : {}) })) }
         : {}),
     })),
-    ...(args.promotionId
-      ? { promotion_id: args.promotionId }
-      : { discount_amount: args.discount || undefined }),
+    ...(promos.length > 1
+      ? { promotion_ids: promos }
+      : promos.length === 1
+        ? { promotion_id: promos[0] }
+        : { discount_amount: args.discount || undefined }),
   };
 }

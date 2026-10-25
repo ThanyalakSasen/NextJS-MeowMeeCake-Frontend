@@ -1,6 +1,6 @@
 "use client";
 // View ของ Production — JSX ล้วน รับ props จาก useProductionViewModel
-// 3 แท็บ (แผนการผลิต/สถานะ/ประวัติ) sync กับ ?tab= ผ่าน TabbedPageLayout
+// 3 แท็บ (สถานะ · ค่าเริ่มต้น/แผนการผลิต/ประวัติ) sync กับ ?tab= ผ่าน TabbedPageLayout
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useOpenedOnce } from "@/hooks/useOpenedOnce";
@@ -34,8 +34,8 @@ export function ProductionView(vm: VM) {
         activeKey={vm.activeTab}
         onChange={vm.setActiveTab}
         items={[
-          { key: "plan", label: t("production.tabPlan"), children: <PlanTab {...vm} /> },
           { key: "status", label: t("production.tabStatus"), children: <StatusTab {...vm} /> },
+          { key: "plan", label: t("production.tabPlan"), children: <PlanTab {...vm} /> },
           { key: "history", label: t("production.tabHistory"), children: <HistoryTab {...vm} /> },
         ]}
       />

@@ -93,9 +93,23 @@ export interface RevenueByChannel extends Record<RevenueChannel, number> {
   counts: Record<RevenueChannel, number>;
   /** จำนวนออเดอร์ + พรีออเดอร์ที่ชำระแล้วในช่วงนี้ */
   orders: number;
+  /** ต้นทุนตามสูตรของสินค้าที่ขายได้ (Σ cost_per_unit × จำนวน) — backend รุ่นเก่ายังไม่ส่ง */
+  recipe_cogs?: number;
+}
+
+/** GET /admin/dashboard/sales-by-day — ยอดขายรายวัน (ชำระแล้ว · ไม่นับที่ยกเลิก · ออเดอร์ + พรีออเดอร์ รวมกัน)
+ *  วันที่ตามเวลาไทย · วันที่ไม่มียอด backend ไม่ส่งมา (เติม 0 เอง — dashboard/salesTrend.ts) */
+export interface SalesByDay {
+  from: string;
+  to: string;
+  series: { date: string; revenue: number; orders: number }[];
 }
 
 export const reportsService = {
+  /** days = ย้อนหลังกี่วันนับจากตอนนี้ (backend clamp 1–180 · ตัดเป็นช่วง now − days×24 ชม.) — สิทธิ์ dashboard.view */
+  salesByDay: async (days: number, h: HttpReader = http): Promise<SalesByDay> =>
+    (await h.get<{ data: SalesByDay }>("/admin/dashboard/sales-by-day", { params: { days } })).data,
+
   revenueByChannel: async (
     params: { date_from?: string; date_to?: string } = {},
     h: HttpReader = http,

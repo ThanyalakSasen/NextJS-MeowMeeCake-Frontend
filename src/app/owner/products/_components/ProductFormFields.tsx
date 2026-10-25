@@ -9,6 +9,7 @@ import { Input, TextArea, InputNumber, Select, Switch, Form, FormItem } from "@/
 import { productCategoriesService } from "@/services/productCategories";
 import { unitsService } from "@/services/units";
 import { ProductImageUpload } from "./ProductImageUpload";
+import { useCategoryShipping } from "@/hooks/useCategoryShipping";
 import { sortOptionsThai } from "@/lib/thaiSort";
 import { PRODUCT_CATEGORIES_KEY, PRODUCT_UNITS_KEY, PRODUCT_UNITS_PARAMS } from "../productFormQuery";
 
@@ -21,6 +22,11 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
   // ซ่อน/โชว์ field ตามประเภทที่เลือกอยู่ (พรีออเดอร์ต้องการ preorder_config แทน stock)
   const form = Form.useFormInstance();
   const isPreorder = Form.useWatch("is_preorder", form) === true;
+  // ขอบเขตจัดส่งออเดอร์เว็บ — สิทธิ์ shipping (คนละเมนูกับสินค้า) · ไม่มี view = ไม่แสดงช่อง · ไม่มี update = ดูได้อย่างเดียว
+  // "ตามหมวดหมู่" บอกค่าปัจจุบันของหมวดที่เลือก (useCategoryShipping — ชุดเดียวกับหน้าค่าจัดส่ง)
+  const shipping = useCategoryShipping();
+  const categoryId = Form.useWatch("category_id", form) as string | undefined;
+  const catShipping = shipping.items.find((c) => c._id === categoryId);
 
   const required: Rule[] = [{ required: true, message: t("validation.required") }];
   const price: Rule[] = [
@@ -54,6 +60,26 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
       <FormItem name="unit_id" label={t("fields.unit_id")} rules={required}>
         <Select loading={units.isLoading} options={sortOptionsThai((units.data?.data ?? []).map((u) => ({ value: u._id, label: u.unit_name })))} />
       </FormItem>
+
+      {shipping.perm.view && (
+        <FormItem name="shipping_scope" label={t("products.shippingScope")} className="md:col-span-2" extra={t("products.shippingScopeHint")}>
+          <Radio.Group
+            disabled={!shipping.perm.update}
+            options={[
+              {
+                value: "category",
+                label: catShipping
+                  ? t("products.shippingScopeCategoryIs", {
+                      scope: t(catShipping.ships_nationwide ? "shippingZones.categories.nationwide" : "shippingZones.categories.provinceOnly"),
+                    })
+                  : t("products.shippingScopeCategory"),
+              },
+              { value: "nationwide", label: t("products.shippingScopeNationwide") },
+              { value: "province", label: t("products.shippingScopeProvince") },
+            ]}
+          />
+        </FormItem>
+      )}
 
       {/* ช่องทางขาย (เว็บ/หน้าร้าน) ไม่ได้ผูกกับสินค้าแล้ว — เลือกแค่ปกติ/พรีออเดอร์ (ซ่อนจากเว็บใช้ "แสดงผล") */}
       <FormItem name="is_preorder" label={t("fields.product_type")}>

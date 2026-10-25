@@ -24,7 +24,20 @@ export interface ProductFormValue {
   product_img?: string[];
   preorder_config?: Partial<PreorderConfig>;
   is_visible: boolean;
+  /** ขอบเขตจัดส่งของออเดอร์เว็บ — ไม่อยู่ใน body ของสินค้า (toInput ไม่ส่ง) · บันทึกแยกด้วย
+   *  shippingZonesService.setProductShipping หลังบันทึกสินค้า (saveShippingScope) */
+  shipping_scope?: ShippingScope;
 }
+
+/** category = ตามหมวดหมู่ (ไม่ตั้งยกเว้น) · nationwide = ส่งทั่วประเทศ · province = เฉพาะจังหวัดร้าน */
+export type ShippingScope = "category" | "nationwide" | "province";
+
+export const scopeFromValue = (v: boolean | null | undefined): ShippingScope =>
+  v === true ? "nationwide" : v === false ? "province" : "category";
+
+/** ค่าที่ส่งให้ PATCH /admin/shipping-zones/products — null = กลับไปตามหมวด */
+export const scopeToValue = (s: ShippingScope): boolean | null =>
+  s === "nationwide" ? true : s === "province" ? false : null;
 
 /** ค่าเริ่มต้นตอนเพิ่มสินค้าใหม่ (antd Form initialValues)
  *
@@ -44,6 +57,7 @@ export const emptyProductForm: Partial<ProductFormValue> = {
   product_stock_quantity: 0, // 0 ถูกตาม rule (min 0) และมีความหมายจริง = ยังไม่มีของ
   product_img: [],
   is_visible: true,
+  shipping_scope: "category",
 };
 
 /** Product (จาก API) → ค่าเริ่มต้นของฟอร์มตอนแก้ไข */
@@ -62,6 +76,7 @@ export function fromProduct(p: Product): ProductFormValue {
     product_img: p.product_img ?? [],
     preorder_config: p.preorder_config ?? undefined,
     is_visible: p.is_visible,
+    shipping_scope: scopeFromValue(p.ships_nationwide),
   };
 }
 
