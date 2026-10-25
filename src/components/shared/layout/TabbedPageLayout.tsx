@@ -57,15 +57,20 @@ export function TabbedPageLayout({
 
       {/* ครอบด้วย flex row — ถ้าวาง Segmented เป็นลูกของ flex-col ตรง ๆ มันจะถูกยืดเต็มความกว้าง
           (align-items ของ flex column คือ stretch) ผิดจากหน้าอื่นที่แท็บหดตามเนื้อหา */}
-      <div className="flex flex-wrap items-center gap-3">
-        {active?.toolbar}
-        {tabsAlign === "end" && <div className="flex-1" />}
-        <TypeTabBar
-          value={activeKey}
-          onChange={onChange}
-          options={items.map((i) => ({ value: i.key, label: i.label }))}
-        />
-      </div>
+      {/* แท็บเดียว = ไม่ต้องมีแถบสลับ (เช่น ตั้งค่ารีวิวตอนซ่อนแท็บคำวิเคราะห์) — แสดงแค่ toolbar ถ้ามี */}
+      {(items.length > 1 || active?.toolbar) && (
+        <div className="flex flex-wrap items-center gap-3">
+          {active?.toolbar}
+          {tabsAlign === "end" && <div className="flex-1" />}
+          {items.length > 1 && (
+            <TypeTabBar
+              value={activeKey}
+              onChange={onChange}
+              options={items.map((i) => ({ value: i.key, label: i.label }))}
+            />
+          )}
+        </div>
+      )}
 
       {active?.children}
     </div>

@@ -27,7 +27,11 @@ export default function PreorderRoundsPage() {
   return (
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
-        <CustomerBreadcrumb items={[{ label: t("crumb") }]} className="!mb-0" />
+        {/* แถวบนสุด: breadcrumb ซ้าย · ปุ่มขั้นตอนการสั่งพรีออเดอร์ขวา (กดแล้วเป็นป๊อปอัป) */}
+        <div className="flex items-center justify-between gap-3">
+          <CustomerBreadcrumb items={[{ label: t("crumb") }]} className="!mb-0 min-w-0" />
+          <PreorderSteps />
+        </div>
         <header>
           <h1 className="m-0 text-2xl font-bold text-stone-800 sm:text-3xl">{t("title")}</h1>
           <p className="m-0 mt-1 text-sm text-stone-500">{t("subtitle")}</p>
@@ -38,7 +42,7 @@ export default function PreorderRoundsPage() {
         {/* isPending — ตอน render ฝั่ง server isLoading = false ทำให้ HTML แรกเป็น "ไม่มีรอบ" แล้วหน้ากระโดด (CLS) */}
         {q.isPending ? (
           // โครงการ์ดขนาดใกล้ของจริง — เดิมเป็นข้อความบรรทัดเดียว พอรอบโหลดเสร็จ กล่องขั้นตอนข้างล่างถูกดันลง (Lighthouse CLS 0.29)
-          <section className="space-y-4" aria-busy="true" aria-label={t("loadingRounds")}>
+          <section className="flex flex-col gap-4" aria-busy="true" aria-label={t("loadingRounds")}>
             <div className="h-7 w-48 animate-pulse rounded-lg bg-stone-200/70" />
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {[0, 1].map((i) => (
@@ -50,7 +54,8 @@ export default function PreorderRoundsPage() {
           <p className="rounded-2xl bg-red-50 p-6 text-center text-sm text-red-700">{t("roundsFailed")}</p>
         ) : (
           <>
-            <section className="space-y-4" aria-labelledby="open-rounds">
+            {/* flex + gap (ไม่ใช่ space-y — h2 มี m-0 ซึ่งทับ margin ของ space-y ใน Tailwind v4 ทำให้การ์ดชนหัวข้อ) */}
+            <section className="flex flex-col gap-5 pb-6 sm:pb-8" aria-labelledby="open-rounds">
               <h2 id="open-rounds" className="m-0 text-xl font-bold text-stone-800">{t("openRounds")}</h2>
               {open.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-stone-200 bg-white p-10 text-center">
@@ -68,7 +73,7 @@ export default function PreorderRoundsPage() {
             </section>
 
             {upcoming.length > 0 && (
-              <section className="space-y-4" aria-labelledby="upcoming-rounds">
+              <section className="flex flex-col gap-5" aria-labelledby="upcoming-rounds">
                 <h2 id="upcoming-rounds" className="m-0 text-xl font-bold text-stone-800">{t("upcoming")}</h2>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {upcoming.map((r) => (
@@ -80,7 +85,6 @@ export default function PreorderRoundsPage() {
           </>
         )}
 
-        <PreorderSteps />
       </div>
     </div>
   );

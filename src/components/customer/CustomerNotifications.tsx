@@ -11,10 +11,14 @@ import { Bell } from "lucide-react";
 import { notificationHref, type CustomerNotification } from "@/services/shopNotifications";
 import { useCustomerNotifications } from "@/app/customer/hooks/useCustomerNotifications";
 import { NotificationRow, useNow } from "@/components/shared/notifications";
+import CouponCodeTicket from "./CouponCodeTicket";
 
-/** แถวเดียวกับกระดิ่งหลังร้าน (shared/notifications) — แปลงฟิลด์ของแจ้งเตือนลูกค้า (read_at · visible_at) */
+/**
+ * แถวเดียวกับกระดิ่งหลังร้าน (shared/notifications) — แปลงฟิลด์ของแจ้งเตือนลูกค้า (read_at · visible_at)
+ * แจ้งเตือนคูปอง: ป้ายรหัส + ปุ่มคัดลอกใต้แถว — อยู่นอกปุ่มของแถว (ห้ามซ้อน <button>) · เยื้องตรงกับข้อความ (px-4 + ไอคอน 32px + gap 12px)
+ */
 function CustomerRow({ n, onOpen, compact, now }: { n: CustomerNotification; onOpen: (n: CustomerNotification) => void; compact?: boolean; now: number }) {
-  return (
+  const row = (
     <NotificationRow
       type={n.type}
       title={n.title}
@@ -25,6 +29,13 @@ function CustomerRow({ n, onOpen, compact, now }: { n: CustomerNotification; onO
       compact={compact}
       onClick={() => onOpen(n)}
     />
+  );
+  if (!(n.ref_type === "coupon" && n.coupon_code)) return row;
+  return (
+    <div className={n.read_at ? "" : "bg-[#FAF6F0]"}>
+      {row}
+      <CouponCodeTicket code={n.coupon_code} className="-mt-1 pb-3 pl-[60px] pr-4" />
+    </div>
   );
 }
 

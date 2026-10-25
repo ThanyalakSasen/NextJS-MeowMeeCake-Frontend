@@ -37,6 +37,8 @@ export const PERMISSION_GROUPS: { sectionKey: SectionKey; menus: PermissionMenu[
       { groupKey: "products", keys: ["products", "stock", "search_synonyms"] },
       { groupKey: "ordersManage", keys: ["orders", "preorder", "payments"] },
       { groupKey: null, keys: ["pos"] },
+      // แชทกับลูกค้า (เมนูเดี่ยว ใต้คำสั่งซื้อใน Sidebar)
+      { groupKey: null, keys: ["chat"] },
       { groupKey: "promotions", keys: ["pricing", "promotions"] },
     ],
   },

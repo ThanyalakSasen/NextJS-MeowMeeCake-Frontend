@@ -15,6 +15,7 @@ import { useMenuAccess } from "@/context/PermissionsContext";
 import { Logo } from "@/components/base";
 import { MenuGroupItem } from "./MenuGroupItem";
 import { MENU_ICONS } from "./menuIcons";
+import { useMenuBadges } from "@/hooks/useMenuBadges";
 
 /** จอที่ sidebar ตัว desktop แสดง — ตรงกับ `hidden lg:block` ใน OwnerLayout (Tailwind lg = 64rem) */
 const DESKTOP_QUERY = "(min-width: 64rem)";
@@ -24,6 +25,8 @@ export function Sidebar({ onLogout, inDrawer = false }: { onLogout?: () => void;
   const tc = useTranslations("common");
   const pathname = usePathname();
   const access = useMenuAccess();
+  // ตัวเลขท้ายเมนู (เช่น แชทลูกค้าที่ยังไม่อ่าน)
+  const badges = useMenuBadges();
   const navRef = useRef<HTMLElement>(null);
 
   const activeHref = useMemo(() => findActiveHref(pathname), [pathname]);
@@ -89,11 +92,13 @@ export function Sidebar({ onLogout, inDrawer = false }: { onLogout?: () => void;
                       items={item.children}
                       open={openKey === key}
                       activeHref={activeHref}
+                      badges={badges}
                       onToggle={() => setOpenKey((p) => (p === key ? null : key))}
                     />
                   );
                 }
                 const isActive = item.href != null && item.href === activeHref;
+                const badgeCount = item.badge ? badges[item.badge] : 0;
                 return (
                   <li key={item.href}>
                     <Link
@@ -103,6 +108,11 @@ export function Sidebar({ onLogout, inDrawer = false }: { onLogout?: () => void;
                     >
                       <Icon className="menu-icon" aria-hidden="true" />
                       <span className="menu-item-label">{t(item.labelKey)}</span>
+                      {badgeCount > 0 && (
+                        <span className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold leading-none text-white" aria-label={t("unreadBadge", { n: badgeCount })}>
+                          {badgeCount > 99 ? "99+" : badgeCount}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );

@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import ChatWidget from "./ChatWidget";
 
 // route ที่ไม่ต้องแสดง Navbar/Footer (หน้าที่เปิดจากลิงก์ในอีเมล: ตั้งรหัสผ่านใหม่ · ยืนยันอีเมล)
 // usePathname() คืนเฉพาะ path ไม่รวม query string จึงครอบคลุม ?token=... ด้วย
@@ -28,6 +29,10 @@ export default function CustomerChrome({ children }: { children: React.ReactNode
       {/* flex-1 ดัน Footer ให้อยู่ล่างสุดเสมอแม้เนื้อหาน้อย */}
       <main className="flex-1">{children}</main>
       <Footer />
+      {/* แชทกับร้าน (ปุ่มลอยขวาล่าง) — อ่าน ?chat=1 ด้วย useSearchParams จึงต้องอยู่ใน Suspense */}
+      <Suspense fallback={null}>
+        <ChatWidget />
+      </Suspense>
     </div>
   );
 }

@@ -42,7 +42,24 @@ export interface MyReviewDetail {
   from_preorder: boolean;
   /** null = ร้านยังไม่ตอบ */
   shop_reply: { text: string; replied_at: string | null } | null;
+  /** รายการที่รีวิว (ออเดอร์/พรีออเดอร์) — null = รายการถูกลบไปแล้ว */
+  item: ReviewedItem | null;
+  /** สถานะรีวิว: แสดงบนหน้าสินค้า · รอร้านตรวจ · ร้านซ่อน */
+  status: "approved" | "pending" | "hidden";
   created_at: string;
+}
+
+export interface ReviewedItem {
+  /** _id ของออเดอร์/พรีออเดอร์ (ลิงก์ไปหน้ารายละเอียด) */
+  order_id: string | null;
+  order_no: string;
+  ordered_at: string | null;
+  /** พรีออเดอร์เท่านั้น */
+  pickup_date: string | null;
+  choices: string[];
+  special_request: string | null;
+  quantity: number;
+  total_price: number;
 }
 
 export interface CreateReviewsInput {
@@ -59,6 +76,30 @@ export interface CreateReviewsResult {
   /** id ของรายการที่ส่งรีวิวไม่ผ่าน + เหตุผลจาก backend */
   failed: { item_id: string; message: string }[];
 }
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function reviewedItemOf(raw: any, kind: ReviewKind): ReviewedItem | null {
+  if (!raw || typeof raw !== "object") return null;
+  const parent = kind === "preorder" ? raw.preorder_id : raw.order_id;
+  const p = parent && typeof parent === "object" ? parent : null;
+  const variants: string[] = (Array.isArray(raw.selected_variants) ? raw.selected_variants : [])
+    .map((v: any) => [v.group_name, v.variant_name].filter(Boolean).join(": "))
+    .filter(Boolean);
+  const options: string[] = (Array.isArray(raw.selected_options) ? raw.selected_options : [])
+    .map((o: any) => `${o.option_name ?? ""}${o.text_value ? `: "${o.text_value}"` : ""}`)
+    .filter(Boolean);
+  return {
+    order_id: idOf(parent),
+    order_no: String((kind === "preorder" ? p?.preorder_no : p?.order_no) ?? ""),
+    ordered_at: p?.created_at ? String(p.created_at) : null,
+    pickup_date: raw.pickup_date ? String(raw.pickup_date) : null,
+    choices: [...variants, ...options],
+    special_request: raw.special_request ? String(raw.special_request) : null,
+    quantity: Number(raw.quantity ?? 0),
+    total_price: Number(raw.total_price ?? 0),
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 const idOf = (v: unknown): string | null => (v == null ? null : String((v as { _id?: unknown })._id ?? v));
 
@@ -102,6 +143,8 @@ export const shopReviewsService = {
         hidden: r.is_visible === false || r.status === "hidden" || r.status === "pending",
         from_preorder: !!r.preorder_order_item_id,
         shop_reply: reply ? { text: String(reply.text), replied_at: reply.replied_at ? String(reply.replied_at) : null } : null,
+        item: r.preorder_order_item_id ? reviewedItemOf(r.preorder_order_item_id, "preorder") : reviewedItemOf(r.order_item_id, "order"),
+        status: r.status === "pending" || r.status === "hidden" ? r.status : r.is_visible === false ? "hidden" : "approved",
         created_at: String(r.created_at ?? ""),
       };
     });

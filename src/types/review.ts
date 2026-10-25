@@ -135,7 +135,8 @@ export interface AdminReviewStats {
 export interface ReviewStatsParams {
   since: string;
   until: string;
-  bucket: "day" | "month";
+  /** ไม่ใช้แล้ว (แดชบอร์ดไม่มีกราฟแนวโน้ม) — backend ตั้งค่าเริ่มต้นให้ */
+  bucket?: "day" | "month";
   prev_since?: string;
   prev_until?: string;
   /** เฉพาะสินค้านี้ */

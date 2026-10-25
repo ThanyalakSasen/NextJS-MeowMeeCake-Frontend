@@ -8,6 +8,7 @@ import {
   AuthBackdrop, authInputClass, authLabelClass, authLinkClass, authMutedClass,
 } from "@/components/shared/layout/AuthBackdrop";
 import { LOGIN_PATH } from "@/constants/auth";
+import AllergyPicker from "@/components/shared/form/AllergyPicker";
 import type { useRegisterViewModel } from "./useRegisterViewModel";
 
 type VM = ReturnType<typeof useRegisterViewModel>;
@@ -38,7 +39,7 @@ export function RegisterView(vm: VM) {
             type="button"
             onClick={() => void vm.resend()}
             disabled={vm.resending}
-            className="h-[40px] w-full rounded-xl border-[1.5px] border-[#e1d6cd] bg-white text-sm font-semibold text-[#4e342e] transition hover:enabled:border-[#bfaea2] disabled:cursor-wait disabled:opacity-60"
+            className="h-[40px] w-full rounded-lg border-[1.5px] border-[#e1d6cd] bg-white text-sm font-semibold text-[#4e342e] transition hover:enabled:border-[#bfaea2] disabled:cursor-wait disabled:opacity-60"
           >
             {vm.resending ? t("register.resending") : t("auth.resendVerification")}
           </button>
@@ -107,11 +108,11 @@ export function RegisterView(vm: VM) {
         {/* ประวัติแพ้อาหาร — ใช้เตือนตอนดูสินค้า (แนะนำสินค้า · ตรวจสารก่อภูมิแพ้) */}
         <div className="pt-1">
           <span className={authLabelClass}>{t("register.allergy")}</span>
-          <div className="mb-3 mt-1 grid grid-cols-2 gap-2 rounded-xl bg-stone-100/50 p-1 md:bg-stone-100" role="radiogroup" aria-label={t("register.allergy")}>
+          <div className="mb-3 mt-1 grid grid-cols-2 gap-2 rounded-lg bg-stone-100/50 p-1 md:bg-stone-100" role="radiogroup" aria-label={t("register.allergy")}>
             {([false, true] as const).map((v) => (
               <button key={String(v)} type="button" role="radio" aria-checked={vm.form.hasAllergy === v}
                 onClick={() => vm.set("hasAllergy", v)}
-                className={`h-[27px] rounded-lg text-xs font-semibold transition sm:text-sm ${
+                className={`h-[27px] rounded-md text-xs font-semibold transition sm:text-sm ${
                   vm.form.hasAllergy === v
                     ? v ? "bg-[#4A342E] text-white shadow-sm" : "bg-white text-stone-800 shadow-sm"
                     : "text-stone-600 hover:text-stone-900 md:text-stone-500 md:hover:text-stone-800"
@@ -123,11 +124,17 @@ export function RegisterView(vm: VM) {
 
           {vm.form.hasAllergy && (
             <div className="flex flex-col gap-3 rounded-2xl border border-stone-200/80 bg-stone-50/90 p-4 md:bg-stone-50/80">
-              <select className={fieldClass} value="" aria-label={t("register.allergyPick")}
-                onChange={(e) => vm.addAllergy(e.target.value)}>
-                <option value="" disabled>{t("register.allergyPick")}</option>
-                {vm.allergyOptions.map((name) => <option key={name} value={name}>{name}</option>)}
-              </select>
+              <AllergyPicker
+                options={vm.allergyOptions}
+                onPick={vm.addAllergy}
+                loading={vm.allergyOptionsLoading}
+                label={t("register.allergyPick")}
+                placeholder={t("register.allergySearchPlaceholder")}
+                loadingText={t("register.allergyLoading")}
+                noMatchText={t("register.allergyNoMatch")}
+                inputClassName={fieldClass}
+                className=""
+              />
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-stone-500">{t("register.allergyCount", { n: vm.form.allergies.length })}</span>
                 {vm.form.allergies.length > 0 && (
@@ -162,7 +169,7 @@ export function RegisterView(vm: VM) {
           disabled={vm.busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
-          className={`mt-3 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-sm font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
+          className={`mt-3 h-[40px] cursor-pointer rounded-lg border-none bg-[#f2ae00] text-sm font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait disabled:opacity-70 ${
             vm.busy ? "" : "hover:enabled:-translate-y-px hover:enabled:bg-[#d99c00] hover:enabled:shadow-[0_6px_16px_rgba(242,174,0,0.35)]"
           } ${pressed ? "animate-jelly" : ""}`}
         >

@@ -16,6 +16,7 @@ import { useLocalName } from "@/app/customer/lib/localName";
 import { FaHeart, FaRegHeart, FaShareAlt, FaSpinner } from "react-icons/fa";
 import { catalogService } from "@/services/catalog";
 import { shopLoyaltyService } from "@/services/shopLoyalty";
+import { shopInteractionsService } from "@/services/shopInteractions";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { effectivePrice, hasSalePrice } from "@/lib/pricing";
 import { checkPicked, hasCustomization, initialPicked, toSelection, type Picked } from "@/lib/customizationSelection";
@@ -100,6 +101,12 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
     () => (product?.product_img ?? []).map((u) => resolveUploadUrl(u)).filter((u): u is string => !!u),
     [product],
   );
+
+  // บันทึกการเปิดดูสินค้าให้ระบบแนะนำสินค้า (เฉพาะ login · backend ไม่นับซ้ำภายใน 30 นาที)
+  const viewedProductId = productQ.isSuccess ? product?._id : undefined;
+  useEffect(() => {
+    if (authStatus === "authenticated" && viewedProductId) void shopInteractionsService.trackView(viewedProductId);
+  }, [authStatus, viewedProductId]);
 
   // สไลด์รูปอัตโนมัติทุก 4 วินาที (หยุดตอนเอาเมาส์ชี้)
   useEffect(() => {

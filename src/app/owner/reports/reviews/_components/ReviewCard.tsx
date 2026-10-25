@@ -3,9 +3,9 @@
 // สถานะ (แสดง/ซ่อน/รออนุมัติ) · ปักหมุด · อ่านแล้ว · ข้อความ (ย่อ/อ่านเพิ่ม) · หัวข้อชอบ/ติ · แท็กภายใน · รูป/วิดีโอ ·
 // โน้ตภายใน · ตอบกลับ · ปุ่มแท็ก/รายละเอียด/ลบ — ปุ่มแก้ไขตามสิทธิ์ reports.update / delete
 import { useState } from "react";
-import { Checkbox, Image, Tooltip } from "antd";
+import { Image, Tooltip } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-import { PhotoIcon, TagIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, PhotoIcon, TagIcon } from "@heroicons/react/24/outline";
 import { MapPinIcon as PinSolid } from "@heroicons/react/24/solid";
 import { MapPinIcon as PinOutline } from "@heroicons/react/24/outline";
 import { Button, Select } from "@/components/base";
@@ -34,17 +34,16 @@ const SOURCE_CLASS = {
 } as const;
 
 export function ReviewCard({
-  review: r, selected, canUpdate, canDelete, suggestions,
-  onSelect, onStatus, onTogglePin, onSaveReply, onSaveNote, onTags, onDetail, onDelete,
+  review: r, canUpdate, canDelete, suggestions,
+  onStatus, onTogglePin, onMarkRead, onSaveReply, onSaveNote, onTags, onDetail, onDelete,
 }: {
   review: ReviewRow;
-  selected: boolean;
   canUpdate: boolean;
   canDelete: boolean;
   suggestions: ReplySuggestion[];
-  onSelect: () => void;
   onStatus: (s: ReviewStatus) => void;
   onTogglePin: () => void;
+  onMarkRead: () => void;
   onSaveReply: (text: string) => Promise<boolean>;
   onSaveNote: (text: string) => Promise<boolean>;
   onTags: () => void;
@@ -55,12 +54,21 @@ export function ReviewCard({
   const locale = useLocale();
   const [expanded, setExpanded] = useState(false);
   const text = r.review_text ?? "";
+  // รีวิวของลูกค้า — แสดงบนสุดของป๊อปอัปตอบกลับ/โน้ต
+  const reviewContext = (
+    <>
+      <p className="m-0 text-xs font-semibold text-gray-600">
+        {r.userName || t("reviews.customer")} · {"★".repeat(Math.round(r.rating))}
+        <span className="text-gray-300">{"★".repeat(5 - Math.round(r.rating))}</span> · {r.productName || t("reviews.unknownProduct")}
+      </p>
+      <p className="m-0 mt-1 whitespace-pre-line">{text || t("reviews.noComment")}</p>
+    </>
+  );
   const long = text.length > TEXT_PREVIEW;
   const replied = !!r.shop_reply?.text;
 
   return (
-    <li className={`flex gap-3 rounded-xl border bg-white p-3 ${selected ? "border-brown-300 ring-1 ring-brown-200" : "border-gray-100"}`}>
-      <Checkbox checked={selected} onChange={onSelect} className="mt-1 self-start" aria-label={t("reviews.selectOne")} />
+    <li className="flex gap-3 rounded-xl border border-gray-100 bg-white p-3">
       {/* รูปสินค้า — ซ่อนบนจอแคบ ให้เนื้อหารีวิวได้ความกว้างเต็ม */}
       <div className="hidden h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100 sm:flex">
         {r.productImage ? (
@@ -76,6 +84,7 @@ export function ReviewCard({
           <div className="min-w-0">
             <p className="m-0 flex items-center gap-1.5 text-sm font-semibold text-brown-800">
               <span className="truncate">{r.productName || t("reviews.unknownProduct")}</span>
+              {!r.read_at && <span className="shrink-0 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">{t("reviews.newBadge")}</span>}
               {r.is_pinned && <PinSolid className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-label={t("reviews.pinned")} />}
             </p>
             <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-gray-500">
@@ -171,13 +180,26 @@ export function ReviewCard({
           </div>
         )}
 
-        {/* ปุ่ม "บันทึกภายใน" กับ "ตอบกลับ" ตอนยังว่างอยู่แถวเดียวกัน — ห่อด้วย flex ให้มีระยะห่าง · เปิดแก้แล้วขยายเต็มแถว */}
+        {/* ปุ่ม "บันทึกภายใน" กับ "ตอบกลับ" ตอนยังว่างอยู่แถวเดียวกัน — กดแล้วเขียน/แก้ในป๊อปอัป (มีรีวิวของลูกค้าให้ดูประกอบ) */}
         <div className="flex flex-wrap items-start gap-x-4 [&>*]:max-w-full [&>div]:basis-full">
-          <NoteBox key={`n-${r.internal_note?.updated_at ?? ""}`} note={r.internal_note} canEdit={canUpdate} onSave={onSaveNote} />
-          <ReplyBox key={`r-${r.shop_reply?.replied_at ?? ""}`} rating={r.rating} reply={r.shop_reply} suggestions={suggestions} canEdit={canUpdate} onSave={onSaveReply} />
+          <NoteBox key={`n-${r.internal_note?.updated_at ?? ""}`} note={r.internal_note} canEdit={canUpdate} onSave={onSaveNote} context={reviewContext} />
+          <ReplyBox
+            key={`r-${r.shop_reply?.replied_at ?? ""}`}
+            rating={r.rating}
+            reply={r.shop_reply}
+            suggestions={suggestions}
+            canEdit={canUpdate}
+            onSave={onSaveReply}
+            context={reviewContext}
+          />
         </div>
 
         <div className="mt-2 flex flex-wrap items-center justify-end gap-1">
+          {canUpdate && !r.read_at && (
+            <Button size="small" type="text" icon={<CheckIcon className="h-4 w-4" />} onClick={onMarkRead}>
+              {t("reviews.markRead")}
+            </Button>
+          )}
           {canUpdate && (
             <Button size="small" type="text" icon={<TagIcon className="h-4 w-4" />} onClick={onTags}>
               {t("reviews.internalTags")}

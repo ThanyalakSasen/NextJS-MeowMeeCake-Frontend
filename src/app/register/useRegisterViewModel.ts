@@ -127,6 +127,7 @@ export function useRegisterViewModel() {
     showPassword,
     toggleShowPassword: () => setShowPassword((v) => !v),
     allergyOptions,
+    allergyOptionsLoading: ingredientsQ.isLoading,
     addAllergy: (name: string) => {
       if (name && !form.allergies.includes(name)) set("allergies", [...form.allergies, name]);
     },

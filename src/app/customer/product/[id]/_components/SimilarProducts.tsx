@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { catalogService } from "@/services/catalog";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import ProductCard, { isProductCardVisible } from "@/components/customer/ProductCard";
+import { PRODUCT_GRID, PRODUCT_GRID_BLEED } from "../../../lib/productGrid";
 
 export default function SimilarProducts({ productId }: { productId: string }) {
   const t = useTranslations("shop.similar");
@@ -32,9 +33,9 @@ export default function SimilarProducts({ productId }: { productId: string }) {
       {!q.isSuccess ? (
         <p className="animate-pulse py-8 text-center text-xs text-[#8C5A3C] sm:text-sm">{t("loading")}</p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 xl:grid-cols-5">
+        <div className={`${PRODUCT_GRID} ${PRODUCT_GRID_BLEED}`}>
           {items.map((r) => (
-            <ProductCard key={r.product._id} product={r.product} showAddToCart={false} allergenWarning={r.allergenWarning} reasons={r.reasons} />
+            <ProductCard key={r.product._id} product={r.product} allergenWarning={r.allergenWarning} />
           ))}
         </div>
       )}

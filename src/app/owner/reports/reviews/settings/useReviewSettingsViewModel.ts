@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────
 // ViewModel ของ "ตั้งค่ารีวิว" (BACKLOG4 E4) — ยกจาก FrontOffice reports/reviews/settings (+ SemanticTermsTab) · สิทธิ์เมนู reports
 // แท็บหัวข้อ (/admin/aspects): ปุ่มชอบ/ควรปรับปรุงในฟอร์มรีวิวของลูกค้า — เพิ่ม (≤ 20) · แก้ชื่อ · ไอคอน · คำแนะนำ ·
-//   เปิด/ปิด · เลื่อนลำดับ (/reorder ทั้งชุด) · ลบ (soft) / กู้คืน
+//   เปิด/ปิด · ลากการ์ดจัดลำดับ (/reorder ทั้งชุด) · ลบ (soft) / กู้คืน
 // แท็บคำวิเคราะห์ (/admin/semantic-terms): คำ/วลีในข้อความรีวิว → หัวข้อ (ให้ระบบวิเคราะห์ข้อความจัดหมวดได้)
 // ไม่ยกมา: สถิติการถูกเลือกต่อหัวข้อ (มาจาก analytics — F3)
 // ─────────────────────────────────────────────────────────────
@@ -92,6 +92,7 @@ export function useReviewSettingsViewModel() {
     onError: fail,
   });
 
+  // ลากการ์ดจัดลำดับ — ส่งลำดับใหม่ทั้งชุด · อัปเดต cache ก่อน (การ์ดย้ายทันที) แล้วโหลดจริงตามมา
   const reorder = useMutation({
     mutationFn: (ids: string[]) => reviewAspectsService.reorder(ids),
     onMutate: (ids) =>
@@ -103,11 +104,13 @@ export function useReviewSettingsViewModel() {
     onError: fail,
   });
 
-  const move = (index: number, dir: -1 | 1) => {
-    const j = index + dir;
-    if (j < 0 || j >= aspects.length) return;
+  const onReorder = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId || reorder.isPending) return;
     const ids = aspects.map((a) => a._id);
-    [ids[index], ids[j]] = [ids[j], ids[index]];
+    const from = ids.indexOf(draggedId);
+    const to = ids.indexOf(targetId);
+    if (from === -1 || to === -1) return;
+    ids.splice(to, 0, ids.splice(from, 1)[0]);
     reorder.mutate(ids);
   };
 
@@ -171,17 +174,14 @@ export function useReviewSettingsViewModel() {
     startRename: (a: ReviewAspect) =>
       setRenaming({ id: a._id, th: a.aspect_name_th, eng: a.aspect_name_eng === a.aspect_name_th ? "" : a.aspect_name_eng }),
     setRenaming,
+    renameSaving: updateAspect.isPending,
     saveRename: () => {
       if (!renaming?.th.trim()) return void alert.warning(t("reviewSettings.aspects.nameRequired"));
       updateAspect.mutate({ id: renaming.id, body: { aspect_name_th: renaming.th.trim(), aspect_name_eng: renaming.eng.trim() || renaming.th.trim() } });
     },
     onToggleActive: (a: ReviewAspect) => updateAspect.mutate({ id: a._id, body: { is_active: !a.is_active } }),
     onIcon: (a: ReviewAspect, icon: string) => updateAspect.mutate({ id: a._id, body: { icon } }),
-    onPlaceholder: (a: ReviewAspect, text: string) => {
-      const v = text.trim();
-      if (v !== (a.placeholder_text ?? "")) updateAspect.mutate({ id: a._id, body: { placeholder_text: v || null } });
-    },
-    onMove: move,
+    onReorder,
     reordering: reorder.isPending,
     onDeleteAspect: (a: ReviewAspect) => removeAspect.mutate(a),
     onRestoreAspect: (a: ReviewAspect) => restoreAspect.mutate(a),

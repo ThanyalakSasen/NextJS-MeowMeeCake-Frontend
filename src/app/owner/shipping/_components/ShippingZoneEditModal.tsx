@@ -13,7 +13,7 @@ export function ShippingZoneEditModal(vm: VM) {
   return (
     <Modal
       open={!!vm.editing}
-      title={vm.editing ? t("shippingZones.editTitle", { code: vm.editing.code }) : ""}
+      title={!vm.editing ? "" : vm.editing.code ? t("shippingZones.editTitle", { code: vm.editing.code }) : t("shippingZones.addTitle")}
       width={640}
       onCancel={vm.closeEdit}
       onOk={vm.onSave}

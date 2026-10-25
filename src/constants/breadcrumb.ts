@@ -36,6 +36,7 @@ const ROUTE_NAV_KEY: Record<string, NavKey> = {
   "/owner/store-design": "storeDesign",
   "/owner/store-info": "storeInfo",
   "/owner/shipping": "webShipping",
+  "/owner/chat": "customerChat",
   "/owner/notificationsHistory": "notificationsHistory",
   "/owner/account": "myAccount",
 };

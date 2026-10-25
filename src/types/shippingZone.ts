@@ -3,7 +3,8 @@
 // คนละชุดกับ DeliveryZone (/admin/delivery-zones — ค่าส่งออเดอร์ที่สร้างจากหลังร้าน)
 // ─────────────────────────────────────────────────────────────
 
-export type ShippingZoneCode = "A" | "B" | "C" | "D";
+/** ตัวอักษร A–Z — เริ่มต้น A–D · โซนที่เพิ่มใหม่ได้รหัสถัดไป (E, F, …) · D = จังหวัดที่ไม่อยู่ในโซนอื่น */
+export type ShippingZoneCode = string;
 
 export interface ShippingZone {
   _id: string;
@@ -14,6 +15,13 @@ export interface ShippingZone {
   provinces: string[];
   /** บาท */
   fee: number;
+}
+
+/** POST /admin/shipping-zones — เพิ่มโซน (รหัสโซนระบบตั้งให้) */
+export interface ShippingZoneCreate {
+  zone_label: string;
+  fee: number;
+  provinces: string[];
 }
 
 /** PATCH /admin/shipping-zones/:zone_code — อย่างน้อย 1 ฟิลด์ */

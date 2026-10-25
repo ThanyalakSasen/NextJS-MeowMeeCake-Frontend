@@ -4,11 +4,11 @@
 // ข้อความกติกาตาม backend หลัก (preorderService): ชำระภายใน 24 ชม. (ไม่เกินปิดรอบ) · ยกเลิกเองได้ก่อนชำระ
 // (ต้นแบบเขียน 30 นาที + ยกเลิกหลังชำระได้ — เป็นกติกาของ backend พอร์ต 4000 เดิม)
 // ─────────────────────────────────────────────────────────────
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
 import Link from "next/link";
-import { CheckCircle2, ShoppingBag } from "lucide-react";
+import { CheckCircle2, ListOrdered, ShoppingBag, X } from "lucide-react";
 import type { StorefrontRoundItem } from "@/services/shopPreorders";
 import { roundItemLimits } from "@/services/shopPreorders";
 import { resolveUploadUrl } from "@/lib/uploads";
@@ -27,23 +27,74 @@ const STEPS = [
   { title: "s6", detail: "d6" },
 ] as const;
 
+/** ขั้นตอนการสั่งพรีออเดอร์ — ปุ่มมุมขวาบนของหน้า · กดแล้วเปิดเป็นป๊อปอัป (Esc / แตะพื้นหลัง / ปุ่ม X = ปิด) */
 export function PreorderSteps() {
   const t = useTranslations("shop.preorderShop.steps");
+  const [open, setOpen] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    // ล็อกการเลื่อนหน้าข้างหลังระหว่างเปิดป๊อปอัป
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   return (
-    <section className="rounded-2xl border border-[#8C5A3C]/10 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="preorder-steps">
-      <h2 id="preorder-steps" className="m-0 mb-4 text-lg font-bold text-[#4A342E]">{t("title")}</h2>
-      <ol className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-        {STEPS.map((s, i) => (
-          <li key={s.title} className={`flex gap-3 rounded-xl border p-3 ${"important" in s ? "border-amber-200 bg-amber-50/60" : "border-stone-100 bg-stone-50/60"}`}>
-            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${"important" in s ? "bg-amber-600" : "bg-[#8C5A3C]"}`}>{i + 1}</span>
-            <div>
-              <p className="m-0 text-sm font-bold text-[#4A342E]">{t(s.title)}</p>
-              <p className="m-0 text-xs text-stone-600">{t(s.detail)}</p>
+    <>
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+        className="inline-flex h-[40px] shrink-0 items-center gap-2 rounded-full border border-[#8C5A3C]/30 !bg-white px-4 text-sm font-bold !text-[#4A342E] shadow-sm transition hover:!bg-[#4A342E] hover:!text-white"
+      >
+        <ListOrdered className="h-4 w-4" aria-hidden="true" />
+        {t("show")}
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} aria-hidden="true" />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="preorder-steps-title"
+            className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6"
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <h2 id="preorder-steps-title" className="m-0 text-lg font-bold text-[#4A342E]">{t("title")}</h2>
+              <button
+                ref={closeRef}
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label={t("close")}
+                className="flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-xl text-stone-500 transition hover:bg-stone-100"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
             </div>
-          </li>
-        ))}
-      </ol>
-    </section>
+            <ol className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2">
+              {STEPS.map((s, i) => (
+                <li key={s.title} className={`flex gap-3 rounded-xl border p-3 ${"important" in s ? "border-amber-200 bg-amber-50/60" : "border-stone-100 bg-stone-50/60"}`}>
+                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${"important" in s ? "bg-amber-600" : "bg-[#8C5A3C]"}`}>{i + 1}</span>
+                  <div>
+                    <p className="m-0 text-sm font-bold text-[#4A342E]">{t(s.title)}</p>
+                    <p className="m-0 text-xs text-stone-600">{t(s.detail)}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -81,8 +132,8 @@ export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem;
   const img = resolveUploadUrl(p.product_img[0]);
   const regular = p.sale_price != null && p.sale_price < p.product_price ? p.sale_price : p.product_price;
   return (
-    <Link href={`/customer/product/${p._id}?round=${roundId}`} className="group block h-full">
-      <div className={`flex h-full flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition hover:shadow-md ${soldOut ? "opacity-75" : ""}`}>
+    <Link href={`/customer/product/${p._id}?round=${roundId}`} className="group mb-4 block break-inside-avoid">
+      <div className={`flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition hover:shadow-md ${soldOut ? "opacity-75" : ""}`}>
         <div className="relative aspect-square overflow-hidden bg-stone-100">
           {img ? (
             <ShopImage
@@ -103,7 +154,7 @@ export function RoundProductCard({ item, roundId }: { item: StorefrontRoundItem;
             {soldOut ? t("full") : item.remaining_qty <= Math.max(3, item.max_qty_total * 0.2) ? t("almostFull") : t("open")}
           </span>
         </div>
-        <div className="flex flex-grow flex-col justify-between p-4">
+        <div className="flex flex-col p-4">
           <div>
             <h3 className="m-0 line-clamp-1 text-sm font-bold text-stone-800 group-hover:text-[#4A342E]">{localNames(p.product_name_th, p.product_name_eng).primary}</h3>
             <p className="m-0 mb-3 line-clamp-1 text-xs text-stone-500">{localNames(p.product_name_th, p.product_name_eng).secondary}</p>

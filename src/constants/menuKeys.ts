@@ -16,6 +16,8 @@ export type MenuKey =
   | "production" | "ingredients" | "ingredient_stock" | "ingredient_history" | "units" | "recipes"
   | "employees" | "permissions" | "user_log"
   | "store_design" | "store_info" | "shipping"
+  /** แชทกับลูกค้า (view = ดู/อ่าน · create = ตอบ) */
+  | "chat"
   | "reports";
 
 export const ALL_MENU_KEYS: MenuKey[] = [
@@ -27,6 +29,7 @@ export const ALL_MENU_KEYS: MenuKey[] = [
   "production", "ingredients", "ingredient_stock", "ingredient_history", "units", "recipes",
   "employees", "permissions", "user_log",
   "store_design", "store_info", "shipping",
+  "chat",
 ];
 
 /** สิทธิ์ 5 อย่างของ menu_key เดียว — ตรงกับ can_view/create/update/delete/approve ของ backend */
@@ -77,6 +80,8 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/store-design", menuKey: "store_design" },
   { prefix: "/owner/store-info", menuKey: "store_info" },
   { prefix: "/owner/shipping", menuKey: "shipping" },
+  // แชทกับลูกค้า — /admin/chats ใช้ chat.view (ตอบ = chat.create)
+  { prefix: "/owner/chat", menuKey: "chat" },
 ];
 
 export function resolveMenuKey(pathname: string): MenuKey | null {

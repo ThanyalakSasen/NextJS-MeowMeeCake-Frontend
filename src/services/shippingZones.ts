@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────
 import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
-import type { CategoryShipping, ProductShipping, ShippingZone, ShippingZoneCode, ShippingZoneUpdate } from "@/types/shippingZone";
+import type { CategoryShipping, ProductShipping, ShippingZone, ShippingZoneCode, ShippingZoneUpdate, ShippingZoneCreate } from "@/types/shippingZone";
 
 const BASE = "/admin/shipping-zones";
 
@@ -30,6 +30,14 @@ export const shippingZonesService = {
 
   update: async (code: ShippingZoneCode, body: ShippingZoneUpdate): Promise<ShippingZone> =>
     toZone((await http.patch<ItemResponse<any>>(`${BASE}/${code}`, body)).data),
+
+  /** เพิ่มโซน (store_info.create) — รหัสโซนระบบตั้งให้ */
+  create: async (body: ShippingZoneCreate): Promise<ShippingZone> => toZone((await http.post<ItemResponse<any>>(BASE, body)).data),
+
+  /** ลบโซน (store_info.delete) — โซน D ลบไม่ได้ */
+  remove: async (code: ShippingZoneCode): Promise<void> => {
+    await http.delete(`${BASE}/${code}`);
+  },
 
   listCategories: async (): Promise<CategoryShipping[]> =>
     (await http.getList<CategoryShipping>(`${BASE}/categories`)).data,

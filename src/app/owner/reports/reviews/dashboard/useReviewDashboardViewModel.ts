@@ -13,7 +13,7 @@ import { reviewsService } from "@/services/reviews";
 import { sortByThai } from "@/lib/thaiSort";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { REVIEW_FILTER_OPTIONS_KEY, REVIEW_STATS_KEY } from "../reviewsQuery";
-import { bucketUnitFor, previousRange, sortProductRows, toReviewStats, type ProductSort, type ProductSortKey } from "./reviewStats";
+import { droppedProducts, previousRange, sortProductRows, toReviewStats, type ProductSort, type ProductSortKey } from "./reviewStats";
 
 /** until ของ backend เป็น $lt → ส่งต้นช่วงถัดไป (ครอบมิลลิวินาทีสุดท้ายของ endOf) */
 const untilOf = (end: Dayjs) => end.add(1, "millisecond").toISOString();
@@ -31,7 +31,6 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
   const params = {
     since: range[0].toISOString(),
     until: untilOf(range[1]),
-    bucket: bucketUnitFor(period),
     prev_since: prev[0].toISOString(),
     prev_until: untilOf(prev[1]),
     ...(productId ? { product_id: productId } : {}),
@@ -50,8 +49,9 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
   });
   const products = optionsQ.data?.products ?? [];
 
-  const stats = useMemo(() => (q.data ? toReviewStats(q.data, range, period) : null), [q.data, range, period]);
+  const stats = useMemo(() => (q.data ? toReviewStats(q.data) : null), [q.data]);
   const productRows = useMemo(() => (stats ? sortProductRows(stats.products, sort) : []), [stats, sort]);
+  const dropped = useMemo(() => (stats ? droppedProducts(stats.products) : []), [stats]);
 
   /** ส่งออกตาราง "วิเคราะห์รายสินค้า" ตามลำดับที่เรียงอยู่ · ชื่อไฟล์บอกช่วงเวลา */
   const exportProducts = () => {
@@ -90,6 +90,8 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
     setProductId,
     productOptions: sortByThai(products, (p) => p.product_name_th).map((p) => ({ value: p.product_id, label: p.product_name_th })),
 
+    /** สินค้าที่คะแนนเฉลี่ยตกแรงจากช่วงก่อนหน้า (แจ้งเตือน) */
+    droppedProducts: dropped,
     /** ตาราง "วิเคราะห์รายสินค้า" (เรียงแล้ว) */
     productRows,
     onExportProducts: exportProducts,

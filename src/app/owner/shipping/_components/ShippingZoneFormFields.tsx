@@ -1,6 +1,6 @@
 "use client";
 // ฟอร์มโซนค่าส่งเว็บ (ใน modal แก้ไข) — ชื่อโซน · ค่าส่ง · จังหวัด (เลือกจาก 77 จังหวัดเท่านั้น · จังหวัดที่อยู่โซนอื่นเลือกไม่ได้)
-// โซน D ไม่มีช่องจังหวัด — ใช้กับจังหวัดที่ไม่อยู่ในโซน A–C ทั้งหมด
+// โซน D ไม่มีช่องจังหวัด — ใช้กับจังหวัดที่ไม่อยู่ในโซนอื่นทั้งหมด · code null = โซนใหม่
 import { useTranslations } from "next-intl";
 import { Input, InputNumber, Select } from "@/components/base";
 import { FormField } from "@/components/shared/form";
@@ -11,7 +11,7 @@ import { FALLBACK_ZONE, type ShippingZoneForm } from "../shippingZoneForm";
 export function ShippingZoneFormFields({
   code, form, errors, taken, onChange,
 }: {
-  code: ShippingZoneCode;
+  code: ShippingZoneCode | null;
   form: ShippingZoneForm;
   errors: Partial<Record<"zone_label" | "fee", string>>;
   /** จังหวัด → โซนอื่นที่ใช้อยู่ */

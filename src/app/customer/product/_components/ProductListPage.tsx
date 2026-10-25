@@ -19,6 +19,7 @@ import ProductCard, { categoryNameOf, isProductCardVisible } from "@/components/
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from "../../lib/catalogQueries";
 import { thaiCompare } from "@/lib/thaiSort";
+import { PRODUCT_LIST_GRID, PRODUCT_LIST_LAYOUT, PRODUCT_LIST_MAIN, PRODUCT_SECTION } from "../../lib/productGrid";
 
 /** หมวด "ทั้งหมด" — ค่าภายใน (ชื่อที่แสดงมาจาก i18n) */
 const ALL = "__all__";
@@ -126,7 +127,7 @@ export default function ProductListPage({ query }: { query: string }) {
 
   return (
     <div className="w-full min-h-screen text-[#4A342E] pt-54 sm:pt-52 md:pt-50 pb-36">
-      <div className="w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
+      <div className={PRODUCT_SECTION}>
         <CustomerBreadcrumb items={[{ label: t("allProducts") }]} />
 
         {/* หัวข้อ · จอ <768px: ปุ่มล้าง (เมื่อกำลังกรอง) + ปุ่มไอคอนตัวกรอง ชิดขวาแถวเดียวกัน · หมวด/การเรียงที่เลือกอยู่ใต้หัวข้อ */}
@@ -252,8 +253,8 @@ export default function ProductListPage({ query }: { query: string }) {
         )}
 
         {/* ซ้าย = หมวดหมู่ / ขวา = รายการสินค้า · จอ <768px ซ่อน (ใช้แผ่นตัวกรองแทน) */}
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <aside className="hidden md:block w-full lg:w-64 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#8C5A3C]/10 shrink-0 lg:sticky lg:top-56">
+        <div className={PRODUCT_LIST_LAYOUT}>
+          <aside className="hidden md:block w-full bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#8C5A3C]/10 shrink-0 lg:sticky lg:top-56">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-100 font-bold text-[#4A342E]">
               <FaFilter className="text-[#8C5A3C] text-sm" />
               {/* h2 — การ์ดสินค้าเป็น h3 ต้องมี h2 คั่นจาก h1 (Lighthouse heading-order) */}
@@ -289,7 +290,7 @@ export default function ProductListPage({ query }: { query: string }) {
             )}
           </aside>
 
-          <section className="flex-1 w-full">
+          <section className={PRODUCT_LIST_MAIN}>
             {/* เรียงตาม — จอ <768px อยู่ในแผ่นตัวกรอง */}
             <div className="hidden md:flex bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-[#8C5A3C]/10 mb-6 flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#4A342E]">
@@ -329,7 +330,7 @@ export default function ProductListPage({ query }: { query: string }) {
                 </button>
               </div>
             ) : visible.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <div className={PRODUCT_LIST_GRID}>
                 {/* h2 ซ่อน (absolute — ไม่กินช่อง grid) (สำหรับ screen reader) — จอมือถือแผงหมวดหมู่ที่มี h2 ถูกซ่อน การ์ดสินค้า (h3) จะต่อจาก h1 ตรง ๆ (Lighthouse heading-order) */}
                 <h2 className="sr-only">{t("listHeading")}</h2>
                 {/* 2 ใบแรก = แถวแรกบนมือถือ (รูปใหญ่สุดเหนือขอบจอ — LCP) → โหลดก่อน */}

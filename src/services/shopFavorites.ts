@@ -12,6 +12,8 @@ export interface FavoriteItem {
   name: string;
   nameeg: string;
   category: string;
+  /** _id หมวด (ป้าย "ส่งเฉพาะในจังหวัด") — ข้อมูลเก่า/ยังไม่โหลด = ไม่มี */
+  category_id?: string | null;
   /** ราคาขายจริง (ราคาลดถ้ามี) */
   price: number;
   /** ราคาปกติไว้ขีดฆ่า — null ถ้าไม่ลดราคา */

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
-import type { MenuLeaf } from "@/constants/menu";
+import type { MenuBadge, MenuLeaf } from "@/constants/menu";
 import type { NavKey } from "@/i18n/keys";
 import { MENU_ICONS } from "./menuIcons";
 
@@ -13,6 +13,7 @@ export function MenuGroupItem({
   items,
   open,
   activeHref,
+  badges,
   onToggle,
 }: {
   labelKey: NavKey;
@@ -21,6 +22,8 @@ export function MenuGroupItem({
   open: boolean;
   /** href ของ leaf ที่ตรงกับหน้าปัจจุบัน (longest-prefix) หรือ null */
   activeHref: string | null;
+  /** ตัวเลขท้ายเมนูย่อย (useMenuBadges) */
+  badges?: Record<MenuBadge, number>;
   onToggle: () => void;
 }) {
   const t = useTranslations("nav");
@@ -44,6 +47,7 @@ export function MenuGroupItem({
           {items.map((s) => {
             const isActive = s.href === activeHref;
             const LeafIcon = MENU_ICONS[s.icon] ?? ChevronRightIcon;
+            const badgeCount = s.badge && badges ? badges[s.badge] : 0;
             return (
               <li key={s.href}>
                 <Link
@@ -53,6 +57,11 @@ export function MenuGroupItem({
                 >
                   <LeafIcon className="submenu-icon" aria-hidden="true" />
                   {t(s.labelKey)}
+                  {badgeCount > 0 && (
+                    <span className="ml-auto flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold leading-none text-white" aria-label={t("unreadBadge", { n: badgeCount })}>
+                      {badgeCount > 99 ? "99+" : badgeCount}
+                    </span>
+                  )}
                 </Link>
               </li>
             );

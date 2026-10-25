@@ -55,9 +55,9 @@ export default function OrderSuccess({ kind, id }: { kind: "order" | "preorder";
 
   const shell = (content: React.ReactNode) => (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-4">
         <FlowSteps kind={kind} current={4} />
-        <div className={`${shopCard} space-y-5 text-center`}>{content}</div>
+        <div className={`${shopCard} w-full max-w-lg space-y-5 text-center`}>{content}</div>
       </div>
     </div>
   );

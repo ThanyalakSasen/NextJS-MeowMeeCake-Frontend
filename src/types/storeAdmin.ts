@@ -16,6 +16,8 @@ export interface AdminWeeklyMarket {
   map_url: string;
   /** false = ซ่อน (งดออกร้านชั่วคราว) · ต้องเปิดอย่างน้อย 1 แห่ง */
   is_active: boolean;
+  /** หน้าร้านหลัก (ที่อยู่ร้าน) — มีได้รายการเดียว · location/map_url backend เติมจากที่อยู่ร้าน */
+  is_main?: boolean;
 }
 
 export interface PhoneContact {

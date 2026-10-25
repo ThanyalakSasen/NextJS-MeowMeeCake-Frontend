@@ -64,13 +64,14 @@ export interface AspectSentiment {
   neutral: number;
 }
 
-export type AllergenWarningLevel = "none" | "caution" | "warning" | "danger";
+/** caution = มีในส่วนผสมย่อย · warning = เป็นวัตถุดิบหลัก (ลูกค้าบันทึกแค่ชื่อวัตถุดิบ ไม่มีระดับความรุนแรง) */
+export type AllergenWarningLevel = "none" | "caution" | "warning";
 
-/** คำเตือนแพ้อาหารของระบบแนะนำ (backend types/recommendation.ts) — มีเมื่อ login + บันทึกอาหารที่แพ้ไว้ */
+/** คำเตือนแพ้อาหาร (backend types/recommendation.ts) — มีเมื่อ login + บันทึกอาหารที่แพ้ไว้ · ใช้กับป้ายบนการ์ดสินค้า */
 export interface AllergenWarning {
   level: AllergenWarningLevel;
   message: string | null;
-  matchedAllergens: { name: string; severity: "moderate" | "severe"; isMainIngredient: boolean }[];
+  matchedAllergens: { name: string; isMainIngredient: boolean }[];
 }
 
 export interface SimilarProduct {
@@ -145,7 +146,7 @@ export const catalogService = {
     return res.data?.aspects ?? [];
   },
 
-  /** GET /catalog/products/{id}/similar — สินค้าคล้ายกัน · login แล้ว = ปรับตามผู้ใช้ + คำเตือนแพ้อาหาร (ส่ง cookie อยู่แล้ว) */
+  /** GET /catalog/products/{id}/similar — สินค้าคล้ายกัน · login แล้ว = ตัดสินค้าที่มีวัตถุดิบที่แพ้ออก (ส่ง cookie อยู่แล้ว) */
   similar: async (id: string, limit = 10): Promise<SimilarProduct[]> => {
     const res = await http.get<ItemResponse<{ recommendations?: any[] }>>(`/catalog/products/${encodeURIComponent(id)}/similar`, {
       params: { limit },
@@ -166,12 +167,12 @@ export const catalogService = {
 
   /**
    * GET /shop/recommendations — แนะนำเฉพาะตัว (ต้อง login · C2) · hybrid คำนวณเกิน 4.5 วิ backend ถอยเป็น popular เอง
-   * ได้เหตุผล + คำเตือนแพ้อาหารจากที่ลูกค้าบันทึกไว้ (ไม่ตัดสินค้าที่แพ้ทิ้ง — แสดงป้ายแทน)
+   * ได้เหตุผล · สินค้าที่มีวัตถุดิบที่ลูกค้าแพ้ backend ตัดออกให้แล้ว
    * skipAuthRedirect: session หมดอายุบนหน้าแรก (สาธารณะ) ไม่ต้องเด้งไป login — ผู้เรียกถอยไปรายการสาธารณะเอง
    */
   recommendedForMe: async (limit = 10): Promise<SimilarProduct[]> => {
     const res = await http.get<ItemResponse<{ recommendations?: any[] }>>("/shop/recommendations", {
-      params: { limit, strategy: "hybrid", excludeAllergens: false },
+      params: { limit, strategy: "hybrid" },
       skipAuthRedirect: true,
     });
     return (res.data?.recommendations ?? [])

@@ -20,7 +20,7 @@ import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import ShopImage from "@/components/customer/ShopImage";
-import { shopButton, shopInput, shopPage } from "@/components/customer/shopStyles";
+import { baht, shopButton, shopInput, shopPage } from "@/components/customer/shopStyles";
 import { shopReviewHistoryKey } from "../../lib/shopQueries";
 
 type StatusFilter = "all" | "replied" | "media" | "preorder";
@@ -356,6 +356,7 @@ function ReviewCard({ review: r }: { review: MyReviewDetail }) {
   const photos = r.image.map((u) => resolveUploadUrl(u)).filter((u): u is string => !!u);
   const video = resolveUploadUrl(r.video);
   const productName = r.product.name || t("productRemoved");
+  const [showDetail, setShowDetail] = useState(false);
 
   const productHeader = (
     <span className="flex min-w-0 items-center gap-3">
@@ -385,7 +386,7 @@ function ReviewCard({ review: r }: { review: MyReviewDetail }) {
               <EyeOff className="h-3 w-3" aria-hidden="true" /> {t("hidden")}
             </span>
           )}
-          {r.created_at ? formatDate(r.created_at, locale) : ""}
+          {r.created_at && <span>{t("reviewedOn", { date: formatDate(r.created_at, locale) })}</span>}
         </span>
       </div>
 
@@ -423,6 +424,70 @@ function ReviewCard({ review: r }: { review: MyReviewDetail }) {
           )}
         </div>
       )}
+
+      {/* รายละเอียดของรีวิว — กดแล้วค่อยแสดง: สถานะรีวิว + รายการที่รีวิว (เลขออเดอร์ · ตัวเลือก · จำนวน · ราคา) */}
+      {/* ปุ่มหน้าตาเดียวกับ "ดูเพิ่มเติม" ในประวัติการสั่งซื้อ (เส้นประ · ▼/▲) */}
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          aria-expanded={showDetail}
+          onClick={() => setShowDetail((v) => !v)}
+          className="h-[44px] w-full rounded-lg border border-dashed border-stone-200 text-sm text-stone-500 transition hover:bg-stone-50 hover:text-[#4A342E]"
+        >
+          {showDetail ? t("detail.hide") : t("detail.show")}
+        </button>
+        {showDetail && (
+          <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-lg bg-stone-50/70 px-3 py-3 text-sm">
+            <dt className="text-stone-500">{t("detail.status")}</dt>
+            <dd className="m-0 font-medium text-stone-800">{t(`detail.statusValue.${r.status}`)}</dd>
+            {r.item ? (
+              <>
+                <dt className="text-stone-500">{r.from_preorder ? t("detail.preorderNo") : t("detail.orderNo")}</dt>
+                <dd className="m-0 text-stone-800">
+                  {r.item.order_id && r.item.order_no ? (
+                    <Link
+                      href={`/customer/account/${r.from_preorder ? "preorders" : "purchases"}/${r.item.order_id}`}
+                      className="font-semibold text-[#8C5A3C] underline-offset-2 hover:underline"
+                    >
+                      {r.item.order_no}
+                    </Link>
+                  ) : (
+                    r.item.order_no || "-"
+                  )}
+                </dd>
+                {r.item.ordered_at && (
+                  <>
+                    <dt className="text-stone-500">{t("detail.orderedAt")}</dt>
+                    <dd className="m-0 text-stone-800">{formatDate(r.item.ordered_at, locale)}</dd>
+                  </>
+                )}
+                {r.item.pickup_date && (
+                  <>
+                    <dt className="text-stone-500">{t("detail.pickupDate")}</dt>
+                    <dd className="m-0 text-stone-800">{formatDate(r.item.pickup_date, locale)}</dd>
+                  </>
+                )}
+                {r.item.choices.length > 0 && (
+                  <>
+                    <dt className="text-stone-500">{t("detail.choices")}</dt>
+                    <dd className="m-0 text-stone-800">{r.item.choices.join(" · ")}</dd>
+                  </>
+                )}
+                {r.item.special_request && (
+                  <>
+                    <dt className="text-stone-500">{t("detail.specialRequest")}</dt>
+                    <dd className="m-0 whitespace-pre-line text-stone-800">{r.item.special_request}</dd>
+                  </>
+                )}
+                <dt className="text-stone-500">{t("detail.quantity")}</dt>
+                <dd className="m-0 text-stone-800">{t("detail.quantityValue", { n: r.item.quantity, price: baht(r.item.total_price) })}</dd>
+              </>
+            ) : (
+              <dd className="col-span-2 m-0 text-xs text-stone-500">{t("detail.itemGone")}</dd>
+            )}
+          </dl>
+        )}
+      </div>
 
       {r.shop_reply ? (
         <div className="rounded-xl border-l-4 border-[#8C5A3C] bg-[#8C5A3C]/5 p-3 sm:p-4">

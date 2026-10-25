@@ -46,20 +46,8 @@ export interface StoreInfo {
   location: { latitude: number; longitude: number } | null;
 }
 
-export interface ContactTopics {
-  topics: string[];
-  max_length: number;
-}
-
 export const storeInfoService = {
   get: async (): Promise<StoreInfo> => (await http.get<ItemResponse<StoreInfo>>("/catalog/store-info")).data,
-
-  contactTopics: async (): Promise<ContactTopics> =>
-    (await http.get<ItemResponse<ContactTopics>>("/catalog/contact-topics")).data,
-
-  sendContact: async (body: { topic: string; message: string }): Promise<void> => {
-    await http.post("/shop/contact", body);
-  },
 
   shippingZones: async (): Promise<ShippingZone[]> => (await http.getList<ShippingZone>("/catalog/shipping-zones")).data,
 

@@ -38,6 +38,13 @@ export function useOrderLabels() {
   return {
     orderStatus: (s: OrderStatus) => t(`orderStatus.${s}`),
     paymentStatus: (s: PaymentStatus) => t(`paymentStatus.${s}`),
+    /** ป้ายการชำระเงินที่บอกว่ารอใคร — ยังไม่แนบสลิป = รอลูกค้า · แนบแล้ว = รอร้านตรวจ · ไม่ผ่าน = รอลูกค้าแนบใหม่ */
+    paymentLabel: (o: { payment_status: PaymentStatus; has_payment: boolean }) =>
+      o.payment_status === "pending"
+        ? t(o.has_payment ? "paymentStatus.awaitingShop" : "paymentStatus.awaitingCustomer")
+        : o.payment_status === "failed"
+          ? t("paymentStatus.failedReupload")
+          : t(`paymentStatus.${o.payment_status}`),
     /** สถานะที่ไม่รู้จัก = แสดงค่าดิบ */
     deliveryStatus: (s: string) => ((DELIVERY_STATUSES as readonly string[]).includes(s) ? t(`deliveryStatus.${s as (typeof DELIVERY_STATUSES)[number]}`) : s),
     pickupDate: (v: string) => pickupDateText(v, locale),

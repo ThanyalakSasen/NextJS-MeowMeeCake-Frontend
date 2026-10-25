@@ -1,7 +1,8 @@
 "use client";
-// View ของ "ตั้งค่ารีวิว" (BACKLOG4 E4) — แท็บหัวข้อรีวิว · คำสำหรับวิเคราะห์ · ปุ่มกลับไปหน้ารายการรีวิว
+// View ของ "ตั้งค่ารีวิว" (BACKLOG4 E4) — แท็บหัวข้อรีวิว · ปุ่มกลับไปหน้ารายการรีวิว
+// แท็บ "คำสำหรับวิเคราะห์" (./_components/TermsTab) ซ่อนไว้ก่อน — ยังไม่มีระบบวิเคราะห์ข้อความที่อ่านคำเหล่านี้ไปใช้
+//   (backend เก็บอย่างเดียว) · จะเปิดกลับ: ใส่ { key: "terms", ... } คืนใน items
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Button } from "@/components/base";
@@ -10,9 +11,6 @@ import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { SettingsTab, useReviewSettingsViewModel } from "./useReviewSettingsViewModel";
 import { AspectsTab } from "./_components/AspectsTab";
 import { RestoreDeletedButton } from "@/components/shared/restore";
-
-// แท็บคำสำหรับวิเคราะห์แยก chunk — antd Tabs วาดเฉพาะแท็บที่เปิด โหลดเมื่อเปิดแท็บนั้นครั้งแรก
-const TermsTab = dynamic(() => import("./_components/TermsTab").then((m) => m.TermsTab));
 
 type VM = ReturnType<typeof useReviewSettingsViewModel>;
 
@@ -43,7 +41,6 @@ export function ReviewSettingsView(vm: VM) {
             <AspectsTab vm={vm} />
           ),
         },
-        { key: "terms", label: t("reviewSettings.tabTerms"), children: <TermsTab vm={vm} /> },
       ]}
     />
   );

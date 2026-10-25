@@ -9,7 +9,6 @@ import { useAllergenWarnings } from "../../../hooks/useAllergenWarnings";
 const TONE: Record<Exclude<AllergenWarningLevel, "none">, string> = {
   caution: "bg-amber-50 text-amber-900 border-amber-300",
   warning: "bg-orange-50 text-orange-900 border-orange-300",
-  danger: "bg-red-50 text-red-800 border-red-300",
 };
 
 export default function AllergenNotice({ productId }: { productId: string }) {

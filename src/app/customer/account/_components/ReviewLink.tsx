@@ -2,6 +2,7 @@
 // สถานะรีวิว / ปุ่ม "รีวิวสินค้า" ในประวัติ/รายละเอียดออเดอร์และพรีออเดอร์ (BACKLOG3-merge D7)
 // แสดงเฉพาะ completed + ชำระแล้ว · รีวิวครบทุกรายการ = ป้าย "รีวิวแล้ว" แทนปุ่ม
 // ยังรีวิวไม่ได้ / กำลังโหลด = แสดง fallback (เช่น ป้ายสถานะคำสั่งซื้อในหน้าประวัติ) · ไม่ส่ง = ไม่แสดงอะไร
+// notEligibleText = ข้อความแทนปุ่มเมื่อยังรีวิวไม่ได้ (หน้ารายละเอียด — "รีวิวได้เมื่อคำสั่งซื้อเสร็จสิ้นและชำระเงินแล้ว")
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -17,6 +18,7 @@ export default function ReviewLink({
   className,
   reviewedClassName = "whitespace-nowrap px-2 text-xs font-semibold text-green-700",
   fallback = null,
+  notEligibleText,
 }: {
   kind: ReviewKind;
   doc: { order_status: string; payment_status: string };
@@ -28,10 +30,13 @@ export default function ReviewLink({
   reviewedClassName?: string;
   /** แสดงแทนเมื่อยังรีวิวไม่ได้ หรือข้อมูลยังโหลดไม่เสร็จ */
   fallback?: ReactNode;
+  /** ข้อความแทนปุ่มเมื่อยังรีวิวไม่ได้ (มาก่อน fallback) */
+  notEligibleText?: string;
 }) {
   const t = useTranslations("shop.orders");
   const eligible = canReview(doc);
   const { reviewed, loaded } = useReviewedItems(kind, eligible);
+  if (!eligible && notEligibleText) return <span className="self-center text-xs text-stone-500">{notEligibleText}</span>;
   if (!eligible || !loaded || !itemIds?.length) return <>{fallback}</>;
 
   const left = itemIds.filter((id) => !reviewed.has(id)).length;

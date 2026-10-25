@@ -47,6 +47,11 @@ export const NEW_MARKET: AdminWeeklyMarket = {
   name: "", location: "", days: [], open_time: "17:00", close_time: "22:00", map_url: "", is_active: true,
 };
 
+/** หน้าร้านหลัก (ที่อยู่ร้าน) — เปิดให้รับสินค้าที่ร้าน · สถานที่/แผนที่ backend เติมจากที่อยู่ร้าน */
+export const NEW_MAIN_MARKET: AdminWeeklyMarket = {
+  name: "", location: "", days: [], open_time: "09:00", close_time: "18:00", map_url: "", is_active: true, is_main: true,
+};
+
 export function profileToForm(p: AdminStoreProfile): ProfileForm {
   return {
     store_name: p.store_name,
@@ -144,6 +149,7 @@ export function marketsPayload(markets: AdminWeeklyMarket[]): AdminWeeklyMarket[
     close_time: m.close_time,
     map_url: m.map_url.trim(),
     is_active: m.is_active,
+    is_main: !!m.is_main,
   }));
 }
 

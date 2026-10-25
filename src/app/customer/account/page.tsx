@@ -26,7 +26,9 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { shopButton, shopButtonPrimary, shopInput, shopPage } from "@/components/customer/shopStyles";
 import { shopAllergenWarningsKey, shopEmailStatusKey, shopLineStatusKey, shopProfileKey } from "../lib/shopQueries";
+import { homeRecommendationsKey } from "../lib/catalogQueries";
 import { thaiCompare } from "@/lib/thaiSort";
+import AllergyPicker from "@/components/shared/form/AllergyPicker";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^0\d{8,9}$/;
@@ -444,6 +446,8 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
     onSuccess: (p) => {
       qc.setQueryData(shopProfileKey, p);
       void qc.invalidateQueries({ queryKey: shopAllergenWarningsKey });
+      // สินค้าแนะนำตัดสินค้าที่มีวัตถุดิบที่แพ้ออก → แก้รายการแพ้แล้วต้องคำนวณใหม่
+      void qc.invalidateQueries({ queryKey: homeRecommendationsKey });
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("allergySaveFailed")),
   });
@@ -454,11 +458,16 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
     <section className={section}>
       <h2 className="m-0 text-base font-bold text-stone-900">{t("allergies")}</h2>
       <p className="m-0 mb-4 mt-1 text-xs text-stone-500">{t("allergyHint")}</p>
-      <select className={`${shopInput} mb-3 max-w-sm`} value="" disabled={save.isPending} aria-label={t("addAllergy")}
-        onChange={(e) => e.target.value && save.mutate([...list, e.target.value])}>
-        <option value="" disabled>{ingredientsQ.isLoading ? tc("loadingDots") : t("addAllergyOption")}</option>
-        {options.map((n) => <option key={n} value={n}>{n}</option>)}
-      </select>
+      <AllergyPicker
+        options={options}
+        onPick={(name) => save.mutate([...list, name])}
+        disabled={save.isPending}
+        loading={ingredientsQ.isLoading}
+        label={t("addAllergy")}
+        placeholder={t("allergySearchPlaceholder")}
+        loadingText={tc("loadingDots")}
+        noMatchText={t("allergyNoMatch")}
+      />
       {list.length === 0 ? (
         <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-500">{t("noAllergies")}</p>
       ) : (

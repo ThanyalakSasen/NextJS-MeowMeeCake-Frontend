@@ -10,6 +10,7 @@ import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { Product } from "@/types/product";
 import ProductCard from "@/components/customer/ProductCard";
+import { PRODUCT_GRID, PRODUCT_SECTION } from "../lib/productGrid";
 
 const MAX_ITEMS = 10;
 
@@ -31,7 +32,7 @@ export default function HomeBestSellers({ products, loading }: {
   if (loading || items.length === 0) return null;
 
   return (
-    <section className="w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px] pt-12 md:pt-16">
+    <section className={`${PRODUCT_SECTION} pt-12 md:pt-16`}>
       <div className="flex flex-col items-center justify-center text-center mb-8 md:mb-12">
         <h2 className="!text-2xl md:!text-3xl xl:!text-4xl font-extrabold text-[#4A342E] tracking-tight relative inline-block after:content-[''] after:block after:w-16 after:h-1 after:bg-[#8C5A3C] after:mx-auto after:mt-3 after:rounded-full">
           {t("bestSellers")}
@@ -39,7 +40,7 @@ export default function HomeBestSellers({ products, loading }: {
       </div>
 
       {/* มือถือ (<640) 2 · 640–1279 3 · จอคอม (≥1280) 5 คอลัมน์ — เท่าสินค้าแนะนำ */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-2">
+      <div className={PRODUCT_GRID}>
         {items.map((p) => (
           <ProductCard key={p._id} product={p} />
         ))}

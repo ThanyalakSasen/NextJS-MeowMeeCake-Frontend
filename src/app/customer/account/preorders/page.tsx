@@ -18,6 +18,7 @@ import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
 import { shopPreorderKey, shopPreordersKey } from "../../lib/shopQueries";
 import { ORDER_STATUSES, ORDER_STATUS_TONE, REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../purchases/orderLabels";
+import { NextActionLine, nextAction } from "../_components/NextAction";
 import { thaiDate } from "../../preorder/lib/preorderDates";
 import ReviewLink from "../_components/ReviewLink";
 
@@ -175,12 +176,11 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
               : to("delivery")}
           </p>
           <span className="block text-sm font-bold text-stone-800">{to("total", { amount: baht(p.total_amount) })}</span>
-          {unpaid && (
-            <span className={`block text-xs font-medium ${p.has_payment && p.payment_status !== "failed" ? "text-amber-600" : "text-red-500"}`}>
-              {p.payment_status === "failed" ? to("slipRejected") : p.has_payment ? to("slipSent") : p.payment_due_at ? t("unpaidBy", { date: thaiDate(p.payment_due_at, true, locale) }) : to("unpaid")}
-            </span>
+          {/* ใครต้องทำอะไรต่อ — จบแล้ว (สำเร็จ/ยกเลิก) ไม่ต้องแสดง */}
+          {nextAction(p).who !== "none" && <NextActionLine order={p} />}
+          {unpaid && !p.has_payment && p.payment_status !== "failed" && p.payment_due_at && (
+            <span className="block text-xs text-red-500">{t("unpaidBy", { date: thaiDate(p.payment_due_at, true, locale) })}</span>
           )}
-          {p.order_status === "cancelled" && p.payment_status === "paid" && <span className="block text-xs font-medium text-amber-600">{to("awaitRefund")}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ReviewLink kind="preorder" doc={p} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={REVIEW_PILL_INLINE} reviewedClassName={REVIEWED_PILL} />

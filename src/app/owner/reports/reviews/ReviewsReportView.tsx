@@ -49,6 +49,10 @@ export function ReviewsReportView({
                 manage.showUnrepliedNegative(dashboard.productId);
                 onTab("manage");
               }}
+              onViewUnread={() => {
+                manage.showUnread(dashboard.productId);
+                onTab("manage");
+              }}
             />
           ),
         },

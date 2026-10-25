@@ -284,7 +284,7 @@ function Form() {
           aria-busy={busy}
           onMouseDown={() => setPressed(true)}
           onAnimationEnd={() => setPressed(false)}
-          className={`mt-5 h-[40px] cursor-pointer rounded-xl border-none bg-[#f2ae00] text-sm font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait ${
+          className={`mt-5 h-[40px] cursor-pointer rounded-lg border-none bg-[#f2ae00] text-sm font-bold text-[#4A342E] shadow-[0_4px_12px_rgba(242,174,0,0.25)] transition-all disabled:cursor-wait ${
             locked ? "!cursor-not-allowed !bg-[#e1d6cd] !shadow-none" : ""
           } ${
             busy
@@ -310,7 +310,7 @@ function Form() {
         type="button"
         onClick={handleLine}
         disabled={busy || lineLoading}
-        className={`mt-2.5 flex h-[40px] w-full items-center justify-center gap-2.5 rounded-xl text-sm font-semibold text-white transition-all ${
+        className={`mt-2.5 flex h-[40px] w-full items-center justify-center gap-2.5 rounded-lg text-sm font-semibold text-white transition-all ${
           lineLoading ? "cursor-wait bg-[#06C755]/60" : "bg-[#06C755] hover:enabled:bg-[#05b14c]"
         }`}
       >

@@ -6,7 +6,7 @@
 // ตัดออก (backend ยังไม่รองรับ — BACKLOG2 §16): กระดิ่งแจ้งเตือนลูกค้า · เมนู "เซ็ตขนม"
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
-import { FaShoppingCart, FaUser } from "react-icons/fa";
+import { FaCalendarCheck, FaShoppingCart, FaUser } from "react-icons/fa";
 import { AiOutlineSearch } from "react-icons/ai";
 import { useState, useEffect, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -15,6 +15,7 @@ import StoreLogo from "./StoreLogo";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { shopCartService } from "@/services/shopCart";
 import { useCartCountStore } from "@/app/customer/store/cartCountStore";
+import { usePreorderBasket } from "@/app/customer/preorder/lib/preorderBasket";
 import { useSidebarMenuStore } from "@/app/customer/store/sidebarMenuStore";
 import { HOME_PATH, LOGIN_PATH } from "@/constants/auth";
 import DoorLogoutIcon from "./DoorLogoutIcon";
@@ -47,6 +48,8 @@ export default function Navbar() {
   // มือถือ: ช่องค้นหาย่อเป็นไอคอน กดแล้วค่อยกางช่องค้นหาเต็มความกว้างใต้แถบบน
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const count = useCartCountStore((s) => s.count);
+  // รายการพรีออเดอร์ที่ยังไม่ยืนยัน (localStorage) — แสดงรวมที่ปุ่มตะกร้า · หน้าตะกร้าแยกเป็นอีกส่วน (ชำระคนละบิล)
+  const preorderBasket = usePreorderBasket();
   const setCount = useCartCountStore((s) => s.setCount);
   const pathname = usePathname();
   const router = useRouter();
@@ -62,11 +65,11 @@ export default function Navbar() {
   const hasSidebarMenu = useSidebarMenuStore((s) => s.mountedCount > 0);
   const setSidebarOpen = useSidebarMenuStore((s) => s.setMobileOpen);
 
+  // นับเป็นจำนวนรายการ (แบบเดียวกับตะกร้าปกติ) · ก่อน hydrate = 0 กัน HTML ไม่ตรงกับ server
+  const preorderCount = hydrated ? (preorderBasket?.items.length ?? 0) : 0;
+  const onlyPreorder = count === 0 && preorderCount > 0;
   const isHomePage = pathname === "/customer";
   const isStaff = !!user?.roleType && user.roleType !== "customer";
-  // หน้าที่อยู่ในเมนู "บัญชีของฉัน" (SideBarMenu) — รวมหน้าเปลี่ยนรหัสผ่านด้วย
-  const isAccountPage =
-    (pathname?.startsWith("/customer/account") || pathname?.startsWith("/customer/changepassword")) ?? false;
   // หน้าสินค้าทั้งหมด: ค้นหาทันทีระหว่างพิมพ์ (ไม่ต้องกดปุ่มค้นหา)
   const isProductListPage = pathname === "/customer/product";
 
@@ -293,18 +296,46 @@ export default function Navbar() {
                 )}
               </li>
               <li>
+                {/* ตะกร้า — สินค้าปกติมาก่อนเสมอ:
+                    มีสินค้าปกติ (แม้มีพรีออเดอร์ค้างด้วย) = ไอคอนตะกร้า + จำนวนสินค้าปกติ → หน้าตะกร้า (ส่วนพรีออเดอร์อยู่ท้ายหน้า)
+                    ไม่มีสินค้าปกติ แต่มีพรีออเดอร์ = ไอคอนปฏิทิน + จำนวนพรีออเดอร์ → ไปหน้ายืนยันพรีออเดอร์ทันที */}
                 <Link
-                  href="/customer/cart"
-                  aria-label={count > 0 ? t("cartWithCount", { count }) : t("cart")}
+                  href={onlyPreorder ? "/customer/preorder/checkout" : "/customer/cart"}
+                  aria-label={
+                    onlyPreorder
+                      ? t("cartWithPreorder", { preorder: preorderCount })
+                      : count > 0
+                        ? t("cartWithCount", { count })
+                        : t("cart")
+                  }
                   className={`${navButton} shadow-sm text-sm !bg-[#fff] !text-[#4A342E] ${
-                    pathname === "/customer/cart" ? "ring-2 ring-white" : "hover:!bg-[#e2d7c7]"
+                    pathname === "/customer/cart" || (onlyPreorder && pathname === "/customer/preorder/checkout")
+                      ? "ring-2 ring-white"
+                      : "hover:!bg-[#e2d7c7]"
                   }`}
                 >
-                  <FaShoppingCart size={22} />
-                  <span className="hidden lg:inline font-bold">{t("cart")} {count > 0 && <span>({count})</span>}</span>
-                  {count > 0 && (
-                    <span className="lg:hidden absolute -top-1.5 -right-1.5 min-w-[1.25rem] h-5 px-1 rounded-full bg-red-500 !text-white text-[11px] font-bold leading-5 text-center">
-                      {count > 99 ? "99+" : count}
+                  {onlyPreorder ? <FaCalendarCheck size={20} /> : <FaShoppingCart size={22} />}
+                  <span className="hidden lg:inline font-bold">
+                    {onlyPreorder ? (
+                      <>
+                        {t("preorderBasket")} <span>({preorderCount})</span>
+                      </>
+                    ) : (
+                      <>
+                        {t("cart")} {count > 0 && <span>({count})</span>}
+                      </>
+                    )}
+                  </span>
+                  {(onlyPreorder || count > 0) && (
+                    <span
+                      className={`lg:hidden absolute -top-1.5 -right-1.5 min-w-[1.25rem] h-5 px-1 rounded-full ${
+                        onlyPreorder ? "bg-[#8C5A3C]" : "bg-red-500"
+                      } !text-white text-[11px] font-bold leading-5 text-center`}
+                    >
+                      {(() => {
+                        const n = onlyPreorder ? preorderCount : count;
+                        return n > 99 ? "99+" : n;
+                      })()}
                     </span>
                   )}
                 </Link>
@@ -315,27 +346,25 @@ export default function Navbar() {
         {/* ช่องค้นหาแบบกาง (มือถือ) */}
         {showMobileSearch && <div className="md:hidden pb-2">{searchForm}</div>}
 
-        {/* แถวล่าง: เมนูหลัก — ซ่อนในหน้าบัญชีเพราะมีเมนูของตัวเองแล้ว */}
-        {!isAccountPage && (
-          <div className="border-t border-[#8C5A3C]/40 py-2.5">
-            <ul className="flex items-center justify-between gap-3 overflow-x-auto text-sm font-medium sm:justify-center sm:gap-10 sm:text-base">
-              {NAV_LINKS.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className={`whitespace-nowrap pb-1 transition inline-block ${
-                      pathname === l.href || (l.href === "/customer/preorder" && !!pathname?.startsWith("/customer/preorder/"))
-                        ? "font-bold border-b-2 border-[#e2d7c7] !text-[#e2d7c7]"
-                        : "!text-white hover:!text-[#e2d7c7]"
-                    }`}
-                  >
-                    {t(l.labelKey)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {/* แถวล่าง: เมนูหลัก — แสดงทุกหน้า รวมหน้าบัญชีที่มีเมนูด้านซ้าย */}
+        <div className="border-t border-[#8C5A3C]/40 py-2.5">
+          <ul className="flex items-center justify-between gap-3 overflow-x-auto text-sm font-medium sm:justify-center sm:gap-10 sm:text-base">
+            {NAV_LINKS.map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  className={`whitespace-nowrap pb-1 transition inline-block ${
+                    pathname === l.href || (l.href === "/customer/preorder" && !!pathname?.startsWith("/customer/preorder/"))
+                      ? "font-bold border-b-2 border-[#e2d7c7] !text-[#e2d7c7]"
+                      : "!text-white hover:!text-[#e2d7c7]"
+                  }`}
+                >
+                  {t(l.labelKey)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </nav>
   );

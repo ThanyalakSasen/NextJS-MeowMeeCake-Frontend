@@ -30,6 +30,11 @@ declare global {
   }
 }
 
+/** google.accounts.id ตั้งค่าแล้วหรือยัง (ทั้งหน้า ไม่ใช่ต่อปุ่ม) */
+let gisInitialized = false;
+/** ตัวรับ credential ของปุ่มที่แสดงอยู่ — GIS เก็บ callback ตัวแรกที่ initialize ไว้ จึงส่งต่อผ่านตัวแปรนี้ */
+let activeCredentialHandler: ((credential: string) => void) | null = null;
+
 export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolean; onCredential: (credential: string) => void }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -58,11 +63,17 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
   useEffect(() => {
     const gid = window.google?.accounts.id;
     if (!ready || !gid || !slot.current) return;
-    gid.initialize({
-      client_id: CLIENT_ID,
-      ux_mode: "popup",
-      callback: (r) => r.credential && callbackRef.current(r.credential),
-    });
+    // ปุ่มที่แสดงอยู่ตอนนี้เป็นคนรับผล (ปุ่มเดิมที่ unmount ไปแล้วไม่รับ)
+    activeCredentialHandler = (credential) => callbackRef.current(credential);
+    // initialize ครั้งเดียวต่อหน้า — เรียกซ้ำ GIS เตือน "initialize() is called multiple times" (mount ใหม่ · เปลี่ยนภาษา · dev รัน effect 2 รอบ)
+    if (!gisInitialized) {
+      gid.initialize({
+        client_id: CLIENT_ID,
+        ux_mode: "popup",
+        callback: (r) => r.credential && activeCredentialHandler?.(r.credential),
+      });
+      gisInitialized = true;
+    }
     gid.renderButton(slot.current, {
       type: "standard",
       theme: "outline",
@@ -81,7 +92,7 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
         type="button"
         disabled
         title={t("auth.googleNotConfigured")}
-        className="flex h-[40px] w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-[#e1d6cd] bg-white text-sm font-semibold text-[#4e342e] opacity-60"
+        className="flex h-[40px] w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-lg border-[1.5px] border-[#e1d6cd] bg-white text-sm font-semibold text-[#4e342e] opacity-60"
       >
         <FcGoogle size={20} />
         {t("auth.loginWithGoogle")}
@@ -92,9 +103,9 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
   return (
     <>
       {wanted && <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onReady={() => setReady(true)} />}
-      {/* ปุ่มของ Google มุมโค้ง 4px — กรอบ rounded-xl (เท่าปุ่มอื่น) ตัดมุมแล้วเส้นขอบของ Google หายตรงมุม
+      {/* ปุ่มของ Google มุมโค้ง 4px — กรอบ rounded-lg (เท่าปุ่มอื่น) ตัดมุมแล้วเส้นขอบของ Google หายตรงมุม
           → วาดเส้นขอบโค้งทับเอง (สีเดียวกับขอบ Google #dadce0 · pointer-events-none ให้คลิกทะลุไปที่ปุ่ม) */}
-      <div className={`relative flex h-[40px] w-full justify-center overflow-hidden rounded-xl bg-white ${disabled ? "pointer-events-none opacity-60" : ""}`}>
+      <div className={`relative flex h-[40px] w-full justify-center overflow-hidden rounded-lg bg-white ${disabled ? "pointer-events-none opacity-60" : ""}`}>
         {/* ช่องที่ Google วาดปุ่มลงไป — ไม่ใส่ aria-label (div ไม่มี role ใส่ไม่ได้ · ปุ่มของ Google/ปุ่มแทนมีข้อความของตัวเอง) */}
         <div ref={slot} className="w-full" />
         {/* ปุ่มแทนระหว่างยังไม่โหลดสคริปต์ Google — หน้าตาเหมือนปุ่ม outline ของ Google · ชี้/โฟกัส/กด = เริ่มโหลด */}
@@ -111,7 +122,7 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
             {t("auth.loginWithGoogle")}
           </button>
         )}
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-xl border border-[#dadce0]" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-lg border border-[#dadce0]" />
       </div>
     </>
   );

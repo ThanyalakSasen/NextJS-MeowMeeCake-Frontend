@@ -4,15 +4,19 @@
 // ยกจาก FrontOffice src/app/customer/reset-password/page.tsx · API GET (เช็คลิงก์) + POST /auth/reset-password { token, newPassword }
 // CustomerChrome ซ่อน Navbar/Footer ของหน้านี้อยู่แล้ว (HIDE_CHROME_ROUTES)
 // บันทึกสำเร็จ → พากลับหน้า /login ทันที + แจ้ง "เปลี่ยนรหัสผ่านสำเร็จ" (AlertHost อยู่ที่ providers จึงค้างข้ามหน้าได้)
+// ลิงก์ใช้ไม่ได้/หมดอายุ → "ขอลิงก์ใหม่" เปิดหน้าต่างเลือกบัญชี Google ทันทีแล้วส่งลิงก์ใหม่ (ไม่ต้องไปหน้าอื่น — token เดิมไม่บอกว่าเป็นอีเมลไหน)
+//   ไม่ได้ตั้ง Client ID / เลือกบัญชีไม่สำเร็จ = ไปหน้ากรอกอีเมล
 // ─────────────────────────────────────────────────────────────
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Eye, EyeOff, Lock, LockOpen, XCircle } from "lucide-react";
+import { Eye, EyeOff, Lock, LockOpen, Mail, XCircle } from "lucide-react";
 import { checkResetToken, resetPassword } from "@/lib/authClient";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { LOGIN_PATH, MIN_PASSWORD_LENGTH } from "@/constants/auth";
+import { GOOGLE_CLIENT_ID, preloadGoogleAccountPicker } from "@/app/login/_components/googleAccountPicker";
+import { FORGOT_PASSWORD_PATH, resetPasswordWithGoogle } from "@/app/login/_components/forgotPasswordFlow";
 
 const MAX_PASSWORD = 72;
 const page = "flex min-h-screen items-center justify-center bg-[#f8f6f3] p-5";
@@ -69,6 +73,26 @@ function ResetPasswordContent() {
     void checkResetToken(token).then(setTokenValid);
   }, [token]);
 
+  // ── ลิงก์ใช้ไม่ได้ → ขอลิงก์ใหม่ (เลือกบัญชี Google แล้วส่งทันที) ──
+  const [requesting, setRequesting] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  // โหลดสคริปต์ Google ไว้ก่อน — กดแล้วหน้าต่างเลือกบัญชีเปิดในจังหวะคลิก (เบราว์เซอร์ไม่บล็อก popup)
+  useEffect(() => {
+    if (tokenValid === false && GOOGLE_CLIENT_ID) preloadGoogleAccountPicker();
+  }, [tokenValid]);
+  const requestNewLink = async () => {
+    if (!GOOGLE_CLIENT_ID) return router.push(FORGOT_PASSWORD_PATH);
+    setRequesting(true);
+    try {
+      const result = await resetPasswordWithGoogle();
+      if (result.status === "sent") setSentTo(result.email);
+      else if (result.status === "pickFailed") router.push(FORGOT_PASSWORD_PATH);
+      else if (result.status === "sendFailed") alert.error(isApiError(result.error) ? result.error.message : t("sendFailed"));
+    } finally {
+      setRequesting(false);
+    }
+  };
+
   const submit = async () => {
     if (password.length < MIN_PASSWORD_LENGTH) {
       alert.warning(t("minLength", { n: MIN_PASSWORD_LENGTH }));
@@ -109,9 +133,21 @@ function ResetPasswordContent() {
           <XCircle className="mx-auto mb-3 h-10 w-10 text-red-600" />
           <h1 className="mb-2 text-xl font-bold text-red-700">{t("linkInvalid")}</h1>
           <p className="mb-6 text-sm leading-relaxed text-[#77665e]">{t("linkRule")}</p>
-          <button type="button" className={`${outlineButton} mb-3`} onClick={() => router.push("/customer/forgot-password")}>
-            {t("requestNew")}
-          </button>
+          {sentTo ? (
+            // ส่งลิงก์ใหม่แล้ว — แทนปุ่มขอลิงก์ในการ์ดเดิม
+            <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-left text-sm text-green-800">
+              <p className="m-0 flex items-center gap-2 font-semibold">
+                <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {t("sentTitle")}
+              </p>
+              <p className="m-0 mt-1 leading-relaxed">{t("newLinkSent", { email: sentTo })}</p>
+              <p className="m-0 mt-1 text-xs text-green-700">{t("spamHint")}</p>
+            </div>
+          ) : (
+            <button type="button" className={`${outlineButton} mb-3`} disabled={requesting} aria-busy={requesting} onClick={() => void requestNewLink()}>
+              {requesting ? t("sending") : t("requestNew")}
+            </button>
+          )}
           <button type="button" className={outlineButton} onClick={() => router.push(LOGIN_PATH)}>
             {t("backToLogin")}
           </button>
