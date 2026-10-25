@@ -9,6 +9,7 @@ import { TabbedPageLayout } from "@/components/shared/layout";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { SettingsTab, useReviewSettingsViewModel } from "./useReviewSettingsViewModel";
 import { AspectsTab } from "./_components/AspectsTab";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 // แท็บคำสำหรับวิเคราะห์แยก chunk — antd Tabs วาดเฉพาะแท็บที่เปิด โหลดเมื่อเปิดแท็บนั้นครั้งแรก
 const TermsTab = dynamic(() => import("./_components/TermsTab").then((m) => m.TermsTab));
@@ -21,9 +22,12 @@ export function ReviewSettingsView(vm: VM) {
     <TabbedPageLayout
       title={t("reviewSettings.title")}
       actions={
-        <Link href="/owner/reports/reviews">
-          <Button icon={<ArrowLeftIcon className="h-4 w-4" />}>{t("reviewSettings.back")}</Button>
-        </Link>
+        <>
+          <RestoreDeletedButton menu="reports_reviews" resources={["semanticTerms"]} />
+          <Link href="/owner/reports/reviews">
+            <Button icon={<ArrowLeftIcon className="h-4 w-4" />}>{t("reviewSettings.back")}</Button>
+          </Link>
+        </>
       }
       activeKey={vm.tab}
       onChange={(k) => vm.setTab(k as SettingsTab)}

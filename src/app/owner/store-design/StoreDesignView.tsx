@@ -15,6 +15,7 @@ import { FilterToolbar, SearchInput, TypeTabBar } from "@/components/shared/data
 import { actionIcon } from "@/components/shared/actions";
 import type { useStoreDesignViewModel } from "./useStoreDesignViewModel";
 import { BannerCard } from "./_components/BannerCard";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 // ฟอร์มแบนเนอร์ (Form/DatePicker/อัปโหลดรูป) แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
 const BannerFormModal = dynamic(() => import("./_components/BannerFormModal").then((m) => m.BannerFormModal), { ssr: false });
@@ -38,11 +39,14 @@ export function StoreDesignView(vm: VM) {
     <ListPageLayout
       title={t("storeDesign.title")}
       actions={
-        vm.perm.create && (
-          <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
-            {t("storeDesign.addBanner")}
-          </Button>
-        )
+        <>
+          <RestoreDeletedButton menu="store_design" resources={["banners"]} />
+          {vm.perm.create && (
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
+              {t("storeDesign.addBanner")}
+            </Button>
+          )}
+        </>
       }
       toolbar={
         <FilterToolbar
