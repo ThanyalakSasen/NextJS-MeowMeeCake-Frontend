@@ -12,6 +12,12 @@ export const REVIEW_ASPECTS_KEY = ["review-aspects"] as const;
 export const REVIEWS_PAGE_SIZE = 10;
 export const REVIEWS_DEFAULT_SORT: ReviewSort = "newest";
 
+/** ?view= จากลิงก์แจ้งเตือน (backend adminLinks.reviewsNeedsReply) — เปิดแท็บจัดการรีวิวพร้อมตัวกรองสำเร็จรูป */
+export type ReviewsLinkView = "negative_unreplied";
+export function linkViewFrom(v: unknown): ReviewsLinkView | undefined {
+  return v === "negative_unreplied" ? v : undefined;
+}
+
 /** params ของหน้าแรกเมื่อยังไม่กรองอะไร — ตรงกับ toParams(DEFAULT_FILTERS, "", 1, REVIEWS_PAGE_SIZE) */
 export function initialReviewListParams(): ReviewListParams {
   return { page: 1, limit: REVIEWS_PAGE_SIZE, sort: REVIEWS_DEFAULT_SORT };

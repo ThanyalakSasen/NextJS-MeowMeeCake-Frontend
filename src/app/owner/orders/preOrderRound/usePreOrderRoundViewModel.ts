@@ -1,6 +1,6 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ Pre-order Round — 3 แท็บ (รอบพรีออเดอร์ / สรุปรอบ / คำสั่งซื้อพรีออเดอร์) sync กับ ?tab=
+// ViewModel ของ Pre-order Round — 3 แท็บ (สรุปรอบ · ค่าเริ่มต้น / รอบพรีออเดอร์ / คำสั่งซื้อพรีออเดอร์) sync กับ ?tab=
 // แท็บ "สรุปรอบ" (F4) มี ViewModel ของตัวเอง (useRoundDashboardViewModel) ประกอบเข้ามาเป็น vm.dashboard
 // ผ่าน router (แพทเทิร์นเดียวกับ Production) · โหลดรอบ+พรีออเดอร์ทั้งหมด 1 ครั้งต่อแท็บ แล้วกรอง/
 // แบ่งหน้าฝั่ง client เหมือน Manage Orders/Production
