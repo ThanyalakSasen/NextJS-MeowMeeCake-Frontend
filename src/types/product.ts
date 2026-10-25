@@ -53,6 +53,9 @@ export interface Product {
   avg_rating?: number;
   review_count?: number;
   is_visible: boolean;
+  /** ออเดอร์เว็บส่งทั่วประเทศได้ไหม — ค่ายกเว้นรายสินค้า · null/ไม่มี = ตามหมวด
+   *  แก้ผ่าน PATCH /admin/shipping-zones/products (สิทธิ์ shipping) ไม่ใช่ PATCH สินค้า */
+  ships_nationwide?: boolean | null;
   created_at: string;
   updated_at: string;
 }
