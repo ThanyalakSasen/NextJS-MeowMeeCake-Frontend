@@ -68,17 +68,18 @@ export function PreOrderRoundView(vm: VM) {
         {vm.selectedRound && !vm.isRoundDetailLoading && <RoundDetailContent {...vm} round={vm.selectedRound} />}
       </DetailModal>
 
+      {editUsed && vm.editRoundTarget && (
+        <EditRoundModal
+          open={vm.editRoundOpen}
+          round={vm.editRoundTarget}
+          saving={vm.savingRound}
+          onClose={vm.closeEditRound}
+          onSubmit={vm.onEditRoundSubmit}
+        />
+      )}
+
       {vm.selectedRound && (
         <>
-          {editUsed && (
-            <EditRoundModal
-              open={vm.editRoundOpen}
-              round={vm.selectedRound}
-              saving={vm.savingRound}
-              onClose={vm.closeEditRound}
-              onSubmit={vm.onEditRoundSubmit}
-            />
-          )}
           {reopenUsed && (
             <ReopenRoundModal
               open={vm.reopenOpen}
