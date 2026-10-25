@@ -17,6 +17,7 @@ import { ExpenseFormModal } from "./_components/ExpenseFormModal";
 import { ReceiptThumb } from "./_components/ReceiptThumb";
 import { RecurringRemindersList } from "./_components/RecurringRemindersList";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 type VM = ReturnType<typeof useFinanceExpensesViewModel>;
 
@@ -81,6 +82,7 @@ export function FinanceExpensesView(vm: VM) {
       title={t("finance.expensesTitle")}
       actions={
         <>
+          <RestoreDeletedButton menu="finance_expenses" resources={["expenses"]} />
           <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
             {t("common.export")}
           </Button>
