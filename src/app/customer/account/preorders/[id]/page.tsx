@@ -26,6 +26,7 @@ import ReviewLink from "../../_components/ReviewLink";
 import { shopPointsKey, shopCouponsKey, shopPreorderKey, shopPreorderPaymentPageKey, shopPreordersKey } from "../../../lib/shopQueries";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../../purchases/orderLabels";
 import { thaiDate } from "../../../preorder/lib/preorderDates";
+import ShopSpinner from "@/components/customer/ShopSpinner";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -87,7 +88,7 @@ function PreorderDetailContent() {
   if (validId && (preorderQ.isLoading || paymentQ.isLoading)) {
     return (
       <div className={`${shopPage} flex items-center justify-center`}>
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label={tc("loading")} />
+        <ShopSpinner label={tc("loading")} />
       </div>
     );
   }

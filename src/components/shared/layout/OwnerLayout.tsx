@@ -72,6 +72,10 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   // false ตอน render ฝั่ง server + รอบ hydrate (ค่าเดียวกัน) → true หลัง hydrate
   const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // sidebar ใน drawer สร้างเมื่อเปิดครั้งแรก แล้วคาไว้ (ให้ปิดแบบเลื่อนออกได้) — เดิม render sidebar 2 ชุดทุกหน้า
+  // ทั้งที่ drawer ปิดอยู่ (มือถือ) หรือไม่มีวันเปิด (desktop) = งาน hydrate เพิ่มเปล่า ๆ
+  const [drawerMounted, setDrawerMounted] = useState(false);
+  if (drawerOpen && !drawerMounted) setDrawerMounted(true);
 
   useEffect(() => {
     // แนบ next ไว้ด้วย — โหมด AUTH_GATE="client" ไม่มี proxy ช่วยใส่ ?next= ให้ (LoginForm รับเฉพาะ path ที่ขึ้นต้น /owner)
@@ -154,7 +158,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
           <div className="sidebar-overlay lg:hidden" onClick={() => setDrawerOpen(false)} aria-hidden="true" />
         )}
         <div className={`sidebar-drawer lg:hidden ${drawerOpen ? "open" : ""}`}>
-          <Sidebar onLogout={handleLogout} />
+          {drawerMounted && <Sidebar onLogout={handleLogout} inDrawer />}
         </div>
 
         <div className="layout-main">

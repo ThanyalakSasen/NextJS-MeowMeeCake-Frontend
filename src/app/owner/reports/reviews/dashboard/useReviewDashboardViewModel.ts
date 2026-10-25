@@ -12,7 +12,7 @@ import { exportToCsv } from "@/lib/exportCsv";
 import { reviewsService } from "@/services/reviews";
 import { sortByThai } from "@/lib/thaiSort";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
-import { REVIEW_FILTER_OPTIONS_KEY } from "../reviewsQuery";
+import { REVIEW_FILTER_OPTIONS_KEY, REVIEW_STATS_KEY } from "../reviewsQuery";
 import { bucketUnitFor, previousRange, sortProductRows, toReviewStats, type ProductSort, type ProductSortKey } from "./reviewStats";
 
 /** until ของ backend เป็น $lt → ส่งต้นช่วงถัดไป (ครอบมิลลิวินาทีสุดท้ายของ endOf) */
@@ -37,7 +37,7 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
     ...(productId ? { product_id: productId } : {}),
   };
   const q = useQuery({
-    queryKey: ["reviews", "admin", "stats", params],
+    queryKey: [...REVIEW_STATS_KEY, params],
     queryFn: () => reviewsService.stats(params),
     enabled,
   });

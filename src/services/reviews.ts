@@ -58,8 +58,8 @@ export const reviewsService = {
     };
   },
   /** สรุปรีวิวของช่วงเวลา (แดชบอร์ด) — until แบบ $lt */
-  stats: async (params: ReviewStatsParams): Promise<AdminReviewStats> =>
-    (await http.get<ItemResponse<AdminReviewStats>>(`${BASE}/stats`, { params })).data,
+  stats: async (params: ReviewStatsParams, h: HttpReader = http): Promise<AdminReviewStats> =>
+    (await h.get<ItemResponse<AdminReviewStats>>(`${BASE}/stats`, { params })).data,
   moderate: async (id: string, body: ReviewModeration): Promise<Review> => (await http.patch<ItemResponse<Review>>(`${BASE}/${id}`, body)).data,
   remove: (id: string) => http.delete(`${BASE}/${id}`),
   filterOptions: async (h: HttpReader = http): Promise<ReviewFilterOptions> => (await h.get<ItemResponse<ReviewFilterOptions>>(`${BASE}/filter-options`)).data,

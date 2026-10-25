@@ -26,6 +26,7 @@ import { useReviewedItems } from "../../hooks/useReviewedItems";
 import { catalogProductKey } from "../../lib/catalogQueries";
 import { reviewAspectsKey, shopPointsKey, shopReviewsKey } from "../../lib/shopQueries";
 import ShopImage from "@/components/customer/ShopImage";
+import ShopSpinner from "@/components/customer/ShopSpinner";
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_MB = 5;
@@ -409,7 +410,7 @@ export function ReviewLoading() {
   const tc = useTranslations("shop.common");
   return (
     <div className={`${shopCard} flex justify-center py-12`}>
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label={tc("loading")} />
+      <ShopSpinner label={tc("loading")} />
     </div>
   );
 }

@@ -8,9 +8,11 @@
 // ─────────────────────────────────────────────────────────────
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { meOptional, logout } from "@/lib/authClient";
+import { CUSTOMER_SESSION_KEY } from "@/constants/auth";
 import type { CurrentUser } from "@/types/auth";
 
-export const CUSTOMER_SESSION_KEY = ["auth", "me", "optional"] as const;
+// key อยู่ใน constants/auth.ts — server component import ค่าจากไฟล์ "use client" ไม่ได้ (ได้ client reference)
+export { CUSTOMER_SESSION_KEY };
 
 export type CustomerSessionStatus = "loading" | "authenticated" | "unauthenticated";
 

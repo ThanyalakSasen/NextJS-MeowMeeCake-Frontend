@@ -28,11 +28,12 @@ const BKK_OFFSET_MS = 7 * 60 * 60 * 1000;
 /**
  * [ต้นเดือน, สิ้นเดือน] ของเดือนปัจจุบัน "ตามเวลาไทย" เป็น ISO — ใช้ฝั่ง server (UTC) ตอน prefetch
  * ให้ได้ค่าเดียวกับ getRangeStartEnd("month", dayjs()) ที่ browser ในไทยคำนวณ → query key ตรงกัน ไม่ดึงซ้ำ
+ * monthOffset = เลื่อนเดือน (-1 = เดือนก่อน)
  */
-export function bangkokMonthRangeIso(): [string, string] {
+export function bangkokMonthRangeIso(monthOffset = 0): [string, string] {
   const bkk = new Date(Date.now() + BKK_OFFSET_MS);
   const y = bkk.getUTCFullYear();
-  const m = bkk.getUTCMonth();
+  const m = bkk.getUTCMonth() + monthOffset;
   const start = Date.UTC(y, m, 1) - BKK_OFFSET_MS;
   const end = Date.UTC(y, m + 1, 1) - BKK_OFFSET_MS - 1;
   return [new Date(start).toISOString(), new Date(end).toISOString()];

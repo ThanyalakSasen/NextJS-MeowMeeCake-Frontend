@@ -13,6 +13,25 @@ function tag(locale: Locale | string | undefined): string {
   return localeTag[(locale as Locale) ?? defaultLocale] ?? "th-TH";
 }
 
+// สร้าง Intl.* ใหม่ทุกครั้งแพง (โหลดข้อมูล locale) — ตารางเรียกทีละแถว/ทีละช่อง → แคชตาม locale+options
+// (Lighthouse มือถือ: format วันที่/ตัวเลขในตารางหลังร้านกิน ~30 ms ต่อหน้าตอน hydrate)
+const numberFormats = new Map<string, Intl.NumberFormat>();
+const dateFormats = new Map<string, Intl.DateTimeFormat>();
+
+function numberFormat(locale: Locale | string | undefined, opts: Intl.NumberFormatOptions): Intl.NumberFormat {
+  const key = tag(locale) + JSON.stringify(opts);
+  let f = numberFormats.get(key);
+  if (!f) numberFormats.set(key, (f = new Intl.NumberFormat(tag(locale), opts)));
+  return f;
+}
+
+function dateFormat(locale: Locale | string | undefined, opts: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = tag(locale) + JSON.stringify(opts);
+  let f = dateFormats.get(key);
+  if (!f) dateFormats.set(key, (f = new Intl.DateTimeFormat(tag(locale), opts)));
+  return f;
+}
+
 /** เงินบาท: ฿1,234 (ไม่มีทศนิยมถ้าเป็นจำนวนเต็ม) */
 export function formatCurrency(
   amount: number,
@@ -20,7 +39,7 @@ export function formatCurrency(
   opts: { decimals?: number } = {}
 ): string {
   const decimals = opts.decimals ?? (Number.isInteger(amount) ? 0 : 2);
-  return new Intl.NumberFormat(tag(locale), {
+  return numberFormat(locale, {
     style: "currency",
     currency: "THB",
     minimumFractionDigits: decimals,
@@ -34,7 +53,7 @@ export function formatNumber(
   locale: Locale | string = defaultLocale,
   opts: Intl.NumberFormatOptions = {}
 ): string {
-  return new Intl.NumberFormat(tag(locale), opts).format(value);
+  return numberFormat(locale, opts).format(value);
 }
 
 /** เปอร์เซ็นต์: 12.3% (รับค่าที่เป็นตัวเลขเปอร์เซ็นต์อยู่แล้ว เช่น 12.3) */
@@ -43,7 +62,7 @@ export function formatPercent(
   locale: Locale | string = defaultLocale,
   fractionDigits = 1
 ): string {
-  return `${new Intl.NumberFormat(tag(locale), {
+  return `${numberFormat(locale, {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   }).format(value)}%`;
@@ -58,7 +77,7 @@ export function formatDate(
   if (iso === null || iso === undefined || iso === "") return "—";
   const d = iso instanceof Date ? iso : new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return new Intl.DateTimeFormat(tag(locale), {
+  return dateFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -74,7 +93,7 @@ export function formatDate(
 export function formatDayMonth(date: string, locale: Locale | string = defaultLocale, opts: { withYear?: boolean } = {}): string {
   const d = new Date(`${date}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return "—";
-  return new Intl.DateTimeFormat(tag(locale), {
+  return dateFormat(locale, {
     day: "numeric",
     month: "short",
     ...(opts.withYear ? { year: "numeric" } : {}),
