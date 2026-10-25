@@ -9,6 +9,7 @@ import { ACCESS_DENIED_PATH } from "@/constants/auth";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { emptyProductForm, toInput, type ProductFormValue } from "../productForm";
+import { useShippingScopeSaver } from "../useShippingScopeSaver";
 
 export function useAddProductViewModel() {
   const t = useTranslations();
@@ -21,10 +22,17 @@ export function useAddProductViewModel() {
     if (!perm.create) router.replace(ACCESS_DENIED_PATH);
   }, [perm.create, router]);
 
+  const saveShippingScope = useShippingScopeSaver();
+
+  // สร้างสินค้าก่อน แล้วตั้งขอบเขตจัดส่ง (endpoint แยก) — ขั้นที่ 2 พลาด สินค้ายังถูกสร้าง แจ้งให้ไปตั้งที่หน้าค่าจัดส่ง
   const create = useMutation({
-    mutationFn: (v: ProductFormValue) => productsService.create(toInput(v)),
-    onSuccess: () => {
-      alert.success(t("products.saved"));
+    mutationFn: async (v: ProductFormValue) => {
+      const res = await productsService.create(toInput(v));
+      return { shippingSaved: await saveShippingScope(res.data._id, v.shipping_scope) };
+    },
+    onSuccess: ({ shippingSaved }) => {
+      if (shippingSaved) alert.success(t("products.saved"));
+      else alert.warning(t("products.shippingScopeFailed"));
       router.push("/owner/products");
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("products.saveFailed")),

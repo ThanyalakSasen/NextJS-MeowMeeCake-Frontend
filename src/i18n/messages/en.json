@@ -729,7 +729,14 @@
     "lowStockThresholdInvalid": "Must be a whole number, 0 or more",
     "imageUploadFailed": "Could not upload the image. Please try again.",
     "imageTooLarge": "This image is too large to upload. Please choose one under 4 MB.",
-    "visibleFor": "Show {name} in the shop"
+    "visibleFor": "Show {name} in the shop",
+    "shippingScope": "Delivery (website orders)",
+    "shippingScopeHint": "Customers can always pick up at the shop · set many products at once on the online shipping page",
+    "shippingScopeCategory": "Follow category",
+    "shippingScopeCategoryIs": "Follow category ({scope})",
+    "shippingScopeNationwide": "Ships nationwide",
+    "shippingScopeProvince": "Ships within the shop's province only",
+    "shippingScopeFailed": "Product saved, but the delivery setting failed — set it again on the edit page or the shipping page"
   },
   "productStock": {
     "title": "Finished product stock",
