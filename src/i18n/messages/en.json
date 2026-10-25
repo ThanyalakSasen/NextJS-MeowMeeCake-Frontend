@@ -2988,7 +2988,8 @@
         "received": "Received",
         "pickedUp": "Picked up"
       },
-      "reviewStatus": "Review status"
+      "reviewStatus": "Review status",
+      "reviewNotYet": "You can review once the order is completed and paid"
     },
     "preorders": {
       "all": "All pre-orders",
@@ -3036,7 +3037,6 @@
       "sent": "Slip sent — awaiting review",
       "sendFailed": "Could not send the slip. Please try again.",
       "paid": "Payment received — thank you for your order",
-      "expiredCancelled": "Payment time is up and this order was cancelled — if you already transferred, please contact the store with your slip",
       "blockedDefault": "This order can no longer be paid",
       "blocked": "{reason} — please do not transfer money for this order",
       "lateUpload": "Payment time is up — if you already transferred, attach your slip to reopen the order (stock permitting)",
