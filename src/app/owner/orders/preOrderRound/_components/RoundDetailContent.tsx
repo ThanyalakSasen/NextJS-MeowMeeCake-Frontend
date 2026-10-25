@@ -39,7 +39,7 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
       <div className="flex items-center justify-between">
         <StatusBadge group="roundStatus" value={round.round_status} />
         {vm.perm.update && !final && (
-          <EditButton size="small" onClick={vm.openEditRound} />
+          <EditButton size="small" onClick={() => vm.openEditRound()} />
         )}
       </div>
 
