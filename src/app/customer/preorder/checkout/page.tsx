@@ -148,7 +148,10 @@ function PreorderCheckoutContent() {
   const subtotal = Math.round(basket.items.reduce((s, it) => s + it.unit_price * it.quantity, 0) * 100) / 100;
 
   // โค้ด/คูปอง/แต้ม — สูตรเดียวกับ checkout ปกติ (backend preorderService ใช้ฐานเดียวกับ orderService)
-  const promoKey = `${orderType}|${deliveryFee}|${subtotal}`;
+  // promoKey รวมรายการสินค้า (โค้ดที่จำกัดหมวด/สินค้าขึ้นกับว่ามีอะไรในตะกร้า ไม่ใช่แค่ยอดรวม) + ที่อยู่จัดส่ง
+  // — เปลี่ยนอย่างใดอย่างหนึ่ง = ต้องกดใช้โค้ดใหม่ ไม่โชว์ส่วนลดค้างที่ backend อาจไม่ให้
+  const itemsKey = basket.items.map((it) => `${basketLineKey(it)}x${it.quantity}`).sort().join(",");
+  const promoKey = `${orderType}|${isDelivery ? (address?._id ?? "") : ""}|${deliveryFee}|${subtotal}|${itemsKey}`;
   const activePromo = promo && promo.forKey === promoKey ? promo : null;
   const coupons = couponsQ.data ?? [];
   const selectedCoupon = activePromo ? null : (coupons.find((c) => c._id === couponId) ?? null);
@@ -352,7 +355,7 @@ function PreorderCheckoutContent() {
                   value={promoInput}
                   placeholder={tk("promoCode")}
                   aria-label={tk("promoCode")}
-                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                  onChange={(e) => setPromoInput(e.target.value.toUpperCase().replace(/\s+/g, ""))}
                 />
                 <button
                   type="button"
@@ -366,6 +369,7 @@ function PreorderCheckoutContent() {
               {promo && !activePromo && <p className="text-xs text-amber-700">{tk("reapplyCode")}</p>}
               {promoInput.trim() && !canCheckPromo && isDelivery && <p className="m-0 text-xs text-gray-500">{t("promoNeedDelivery")}</p>}
               <CouponSelectBox
+                codeApplied={!!activePromo}
                 coupons={coupons}
                 selectedId={activePromo ? null : couponId}
                 subtotal={subtotal}

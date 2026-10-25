@@ -366,7 +366,7 @@ function CheckoutContent() {
                   value={promoInput}
                   placeholder={t("promoCode")}
                   aria-label={t("promoCode")}
-                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                  onChange={(e) => setPromoInput(e.target.value.toUpperCase().replace(/\s+/g, ""))}
                 />
                 <button
                   type="button"
@@ -380,6 +380,7 @@ function CheckoutContent() {
               {promo && !activePromo && <p className="text-xs text-amber-700">{t("reapplyCode")}</p>}
 
               <CouponSelectBox
+                codeApplied={!!activePromo}
                 coupons={coupons}
                 selectedId={couponId}
                 subtotal={subtotal}

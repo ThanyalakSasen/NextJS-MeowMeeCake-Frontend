@@ -28,6 +28,7 @@ import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/compo
 import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ReviewLink from "../../_components/ReviewLink";
+import { reviewNotice } from "../../../hooks/useReviewedItems";
 import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
 import BuyAgainButton from "../../_components/BuyAgainButton";
@@ -35,7 +36,6 @@ import { NextActionBanner } from "../../_components/NextAction";
 import AskShopButton from "../../_components/AskShopButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../orderLabels";
-import { canReview } from "../../../hooks/useReviewedItems";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -103,7 +103,8 @@ function OrderContent() {
     );
   }
 
-  // สถานะรีวิว — อยู่บรรทัดเดียวกับสถานะจัดส่ง (ออเดอร์รับเองอยู่บรรทัดนัดรับ) · ยังรีวิวไม่ได้ = ไม่แสดง
+  // สถานะรีวิว — อยู่บรรทัดเดียวกับสถานะจัดส่ง (ออเดอร์รับเองอยู่บรรทัดนัดรับ)
+  // ยังรีวิวไม่ได้ = ข้อความเงื่อนไขแทนปุ่ม · ออเดอร์ที่ยกเลิกแล้ว (รีวิวไม่ได้อีก) = ไม่แสดง
   const showPickupRow = order.order_type === "takeaway" && !!(order.pickup_point_name || order.pickup_date);
   const showDeliveryRow = order.order_type === "delivery" && !!order.delivery_status && order.order_status !== "cancelled";
   const reviewStatus = (
@@ -114,6 +115,7 @@ function OrderContent() {
       href={`/customer/account/purchases/${order._id}/review`}
       className={REVIEW_PILL}
       reviewedClassName={REVIEWED_PILL}
+      notEligibleText={reviewNotice(order, t)}
     />
   );
 
@@ -228,7 +230,7 @@ function OrderContent() {
             )}
 
             {/* ไม่มีแถวสถานะจัดส่ง/นัดรับ (เช่น ออเดอร์จัดส่งที่ร้านยังไม่ตั้งสถานะ) — แสดงสถานะรีวิวเป็นแถวของตัวเอง */}
-            {!showPickupRow && !showDeliveryRow && canReview(order) && (
+            {!showPickupRow && !showDeliveryRow && order.order_status !== "cancelled" && (
               <div className="flex items-center justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">
                 <p className="font-semibold">{t("reviewStatus")}</p>
                 {reviewStatus}

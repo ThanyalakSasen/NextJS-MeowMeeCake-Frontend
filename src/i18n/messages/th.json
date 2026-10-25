@@ -2638,7 +2638,23 @@
       "percentOff": "ลด {percent}%",
       "percentOffMax": "ลด {percent}% (สูงสุด {max})",
       "amountOff": "ลด {amount}",
-      "freeShipping": "ส่งฟรี"
+      "freeShipping": "ส่งฟรี",
+      "codeLabel": "รหัสคูปอง {code}",
+      "copyCode": "คัดลอก",
+      "copied": "คัดลอกแล้ว",
+      "copyFailed": "คัดลอกไม่ได้ กรุณาจดรหัส",
+      "off": "ส่วนลด",
+      "upTo": "สูงสุด {max}",
+      "usableCount": "ใช้ได้ {n} จาก {total} ใบ",
+      "replacesCode": "กำลังใช้โค้ดส่วนลดอยู่ — เลือกคูปองจะยกเลิกโค้ด (ใช้ร่วมกันไม่ได้)",
+      "minOrderShort": "ขั้นต่ำ {amount}",
+      "expiresToday": "หมดอายุวันนี้",
+      "expiresInDays": "หมดอายุใน {n} วัน",
+      "validUntilShort": "ใช้ได้ถึง {date}",
+      "saveAmount": "ประหยัด {amount}",
+      "best": "คุ้มที่สุด",
+      "showAll": "ดูคูปองทั้งหมด (อีก {n} ใบ)",
+      "showLess": "แสดงน้อยลง"
     },
     "pickup": {
       "locations": "จุดรับสินค้า",
@@ -2855,7 +2871,8 @@
         "received": "ได้รับสินค้าแล้ว",
         "pickedUp": "รับสินค้าแล้ว"
       },
-      "reviewStatus": "สถานะรีวิว"
+      "reviewStatus": "สถานะรีวิว",
+      "reviewAfterCompleted": "รีวิวได้เมื่อคำสั่งซื้อเสร็จสิ้น"
     },
     "preorders": {
       "all": "พรีออเดอร์ทั้งหมด",
@@ -2891,7 +2908,8 @@
       "pickupSelfShort": "รับเอง",
       "paidContactToCancel": "ชำระเงินแล้ว — หากต้องการยกเลิกกรุณาติดต่อร้าน",
       "preorder": "พรีออเดอร์",
-      "reviewOnlyCompleted": "รีวิวได้เมื่อพรีออเดอร์เสร็จสิ้นและชำระเงินแล้ว"
+      "reviewOnlyCompleted": "รีวิวได้เมื่อพรีออเดอร์เสร็จสิ้นและชำระเงินแล้ว",
+      "reviewAfterCompleted": "รีวิวได้เมื่อพรีออเดอร์เสร็จสิ้น"
     },
     "slip": {
       "minSec": "{mm}:{ss} นาที",
@@ -3136,7 +3154,33 @@
       "showOldCoupons": "ดูคูปองที่ใช้แล้ว/หมดอายุ ({n})",
       "hideOldCoupons": "ซ่อนคูปองที่ใช้แล้ว/หมดอายุ",
       "showMoreHistory": "ดูเพิ่มเติม ({n} รายการ)",
-      "showLessHistory": "แสดงน้อยลง"
+      "showLessHistory": "แสดงน้อยลง",
+      "tabsLabel": "เมนูสมาชิก",
+      "tabCoupons": "คูปองของฉัน",
+      "tabRedeem": "แลกแต้ม",
+      "tabHistory": "ประวัติแต้ม",
+      "tabEarn": "วิธีสะสมแต้ม",
+      "statCoupons": "คูปองพร้อมใช้",
+      "statRedeemable": "คูปองที่แลกได้ตอนนี้",
+      "goRedeem": "ดูคูปองที่แลกได้",
+      "couponsHint": "เลือกใช้คูปองได้ที่หน้าชำระเงิน หรือคัดลอกรหัสไปกรอก",
+      "shopNow": "ไปเลือกซื้อสินค้า →",
+      "redeemBefore": "แลกได้ถึง {date}",
+      "filterAll": "ทั้งหมด",
+      "filterEarn": "ได้รับ",
+      "filterSpend": "ใช้ไป",
+      "historySummary": "ได้รับ +{earned} · ใช้ไป -{spent} แต้ม",
+      "noHistoryFilter": "ไม่มีรายการในหมวดนี้",
+      "canUsePoints": "แต้มถึงขั้นต่ำแล้ว ใช้เป็นส่วนลดที่หน้าชำระเงินได้เลย",
+      "memberName": "ชื่อสมาชิก",
+      "couponUnit": "ใบ",
+      "tileCouponsEmpty": "ยังไม่มีคูปองพร้อมใช้",
+      "tileCouponsReady": "ใช้ได้ที่หน้าชำระเงิน",
+      "tileCouponsExpire": "ใบที่ใกล้หมดอายุเหลือ {n} วัน",
+      "tileCouponsExpireToday": "มีคูปองหมดอายุวันนี้",
+      "tileRedeemReady": "แต้มพอแล้ว กดเพื่อแลกคูปอง",
+      "tileRedeemNext": "สะสมอีก {n} แต้ม แลกใบถัดไปได้",
+      "tileRedeemEmpty": "ยังไม่มีคูปองให้แลกในขณะนี้"
     },
     "checkout": {
       "loginToOrder": "กรุณาเข้าสู่ระบบเพื่อสั่งซื้อสินค้า",

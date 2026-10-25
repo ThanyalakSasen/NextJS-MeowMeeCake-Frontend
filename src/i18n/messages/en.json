@@ -2638,7 +2638,23 @@
       "percentOff": "{percent}% off",
       "percentOffMax": "{percent}% off (up to {max})",
       "amountOff": "{amount} off",
-      "freeShipping": "Free shipping"
+      "freeShipping": "Free shipping",
+      "codeLabel": "Coupon code {code}",
+      "copyCode": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Couldn't copy — please note the code",
+      "off": "OFF",
+      "upTo": "up to {max}",
+      "usableCount": "{n} of {total} usable",
+      "replacesCode": "A discount code is applied — choosing a coupon will remove it (can't combine)",
+      "minOrderShort": "Min. {amount}",
+      "expiresToday": "Expires today",
+      "expiresInDays": "Expires in {n} days",
+      "validUntilShort": "Valid until {date}",
+      "saveAmount": "Save {amount}",
+      "best": "Best deal",
+      "showAll": "Show all coupons ({n} more)",
+      "showLess": "Show less"
     },
     "pickup": {
       "locations": "Pickup points",
@@ -2855,7 +2871,8 @@
         "received": "Received",
         "pickedUp": "Picked up"
       },
-      "reviewStatus": "Review status"
+      "reviewStatus": "Review status",
+      "reviewAfterCompleted": "You can review once the order is completed"
     },
     "preorders": {
       "all": "All pre-orders",
@@ -2891,7 +2908,8 @@
       "pickupSelfShort": "Self pickup",
       "paidContactToCancel": "Paid — please contact the store to cancel",
       "preorder": "Pre-order",
-      "reviewOnlyCompleted": "You can review once the pre-order is completed and paid"
+      "reviewOnlyCompleted": "You can review once the pre-order is completed and paid",
+      "reviewAfterCompleted": "You can review once the pre-order is completed"
     },
     "slip": {
       "minSec": "{mm}:{ss} min",
@@ -3136,7 +3154,33 @@
       "showOldCoupons": "Show used/expired coupons ({n})",
       "hideOldCoupons": "Hide used/expired coupons",
       "showMoreHistory": "Show more ({n})",
-      "showLessHistory": "Show less"
+      "showLessHistory": "Show less",
+      "tabsLabel": "Member menu",
+      "tabCoupons": "My coupons",
+      "tabRedeem": "Redeem points",
+      "tabHistory": "Points history",
+      "tabEarn": "How to earn",
+      "statCoupons": "Coupons ready",
+      "statRedeemable": "Redeemable now",
+      "goRedeem": "See redeemable coupons",
+      "couponsHint": "Pick a coupon at checkout, or copy the code",
+      "shopNow": "Start shopping →",
+      "redeemBefore": "Redeem by {date}",
+      "filterAll": "All",
+      "filterEarn": "Earned",
+      "filterSpend": "Spent",
+      "historySummary": "Earned +{earned} · Spent -{spent} pts",
+      "noHistoryFilter": "No items in this filter",
+      "canUsePoints": "You can use points as a discount at checkout",
+      "memberName": "Member",
+      "couponUnit": "",
+      "tileCouponsEmpty": "No coupons ready yet",
+      "tileCouponsReady": "Use them at checkout",
+      "tileCouponsExpire": "Nearest one expires in {n} days",
+      "tileCouponsExpireToday": "A coupon expires today",
+      "tileRedeemReady": "Enough points — tap to redeem",
+      "tileRedeemNext": "Earn {n} more points to redeem the next one",
+      "tileRedeemEmpty": "No coupons to redeem right now"
     },
     "checkout": {
       "loginToOrder": "Please log in to place an order",

@@ -11,6 +11,19 @@ import { shopReviewsKey } from "../lib/shopQueries";
 export const canReview = (doc: { order_status: string; payment_status: string }) =>
   doc.order_status === "completed" && doc.payment_status === "paid";
 
+/**
+ * ข้อความแทนปุ่มรีวิวในหน้ารายละเอียด เมื่อยังรีวิวไม่ได้
+ * ชำระแล้ว (กำลังเตรียม · พร้อมส่งมอบ ฯลฯ) = "รีวิวได้เมื่อ…เสร็จสิ้น" · ยังไม่ชำระ = "…เสร็จสิ้นและชำระเงินแล้ว"
+ * ยกเลิกแล้ว (รีวิวไม่ได้อีก) / รีวิวได้แล้ว = undefined
+ */
+export function reviewNotice(
+  doc: { order_status: string; payment_status: string },
+  t: (key: "reviewAfterCompleted" | "reviewOnlyCompleted") => string,
+): string | undefined {
+  if (doc.order_status === "cancelled" || canReview(doc)) return undefined;
+  return doc.payment_status === "paid" ? t("reviewAfterCompleted") : t("reviewOnlyCompleted");
+}
+
 export function useReviewedItems(kind: ReviewKind, enabled = true) {
   const q = useQuery({ queryKey: shopReviewsKey, queryFn: shopReviewsService.mine, enabled, staleTime: 60_000 });
   const reviewed = new Set(

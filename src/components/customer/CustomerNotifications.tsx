@@ -11,6 +11,7 @@ import { AlertTriangle, Bell, CheckCircle2, Info, XCircle, type LucideIcon } fro
 import { notificationHref, type CustomerNotification, type CustomerNotificationType } from "@/services/shopNotifications";
 import { useCustomerNotifications } from "@/app/customer/hooks/useCustomerNotifications";
 import { formatDate } from "@/i18n/format";
+import CouponCodeTicket from "./CouponCodeTicket";
 
 const TYPE_ICON: Record<CustomerNotificationType, { Icon: LucideIcon; cls: string }> = {
   info: { Icon: Info, cls: "bg-sky-50 text-sky-600" },
@@ -48,24 +49,28 @@ function NotificationRow({ n, onOpen, compact, now }: { n: CustomerNotification;
   const t = useTranslations("shop.notifications");
   const locale = useLocale();
   const { Icon, cls } = TYPE_ICON[n.type] ?? TYPE_ICON.info;
+  // ปุ่มคัดลอกรหัสคูปองอยู่นอกปุ่มของแถว (ห้ามซ้อน <button>) — เยื้องให้ตรงกับข้อความ (px-4 + ไอคอน 32px + gap 12px)
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(n)}
-      className={`flex w-full gap-3 px-4 py-3 text-left transition hover:bg-[#e2d7c7]/30 ${n.read_at ? "" : "bg-[#FAF6F0]"}`}
-    >
-      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${cls}`}>
-        <Icon size={16} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center justify-between gap-2">
-          <span className={`truncate text-sm ${n.read_at ? "font-medium text-stone-700" : "font-bold text-[#4A342E]"}`}>{n.title}</span>
-          {!n.read_at && <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" aria-label={t("unreadDot")} />}
+    <div className={n.read_at ? "" : "bg-[#FAF6F0]"}>
+      <button
+        type="button"
+        onClick={() => onOpen(n)}
+        className="flex w-full gap-3 px-4 py-3 text-left transition hover:bg-[#e2d7c7]/30"
+      >
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${cls}`}>
+          <Icon size={16} />
         </span>
-        <span className={`block whitespace-pre-line text-xs text-stone-600 ${compact ? "line-clamp-2" : ""}`}>{n.message}</span>
-        <span className="mt-0.5 block text-[11px] text-stone-500">{timeAgo(n.visible_at ?? n.created_at, now, t, locale)}</span>
-      </span>
-    </button>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center justify-between gap-2">
+            <span className={`truncate text-sm ${n.read_at ? "font-medium text-stone-700" : "font-bold text-[#4A342E]"}`}>{n.title}</span>
+            {!n.read_at && <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" aria-label={t("unreadDot")} />}
+          </span>
+          <span className={`block whitespace-pre-line text-xs text-stone-600 ${compact ? "line-clamp-2" : ""}`}>{n.message}</span>
+          <span className="mt-0.5 block text-[11px] text-stone-500">{timeAgo(n.visible_at ?? n.created_at, now, t, locale)}</span>
+        </span>
+      </button>
+      {n.ref_type === "coupon" && n.coupon_code && <CouponCodeTicket code={n.coupon_code} className="-mt-1 pb-3 pl-[60px] pr-4" />}
+    </div>
   );
 }
 
