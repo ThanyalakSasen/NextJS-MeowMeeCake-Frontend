@@ -25,6 +25,7 @@ import { catalogProductKey } from "../lib/catalogQueries";
 import { cartIssueText, cartIssues, cartProductId, type StockInfo } from "../lib/cartIssues";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ShopImage from "@/components/customer/ShopImage";
+import ShopSpinner from "@/components/customer/ShopSpinner";
 
 export default function CartPage() {
   const t = useTranslations("shop.cart");
@@ -98,7 +99,7 @@ function CartContent() {
   if (cartQ.isLoading) {
     return (
       <div className={`${shopPage} flex items-center justify-center`}>
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label={tc("loading")} />
+        <ShopSpinner label={tc("loading")} />
       </div>
     );
   }

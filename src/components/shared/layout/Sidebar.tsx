@@ -16,7 +16,10 @@ import { Logo } from "@/components/base";
 import { MenuGroupItem } from "./MenuGroupItem";
 import { MENU_ICONS } from "./menuIcons";
 
-export function Sidebar({ onLogout }: { onLogout?: () => void }) {
+/** จอที่ sidebar ตัว desktop แสดง — ตรงกับ `hidden lg:block` ใน OwnerLayout (Tailwind lg = 64rem) */
+const DESKTOP_QUERY = "(min-width: 64rem)";
+
+export function Sidebar({ onLogout, inDrawer = false }: { onLogout?: () => void; inDrawer?: boolean }) {
   const t = useTranslations("nav");
   const tc = useTranslations("common");
   const pathname = usePathname();
@@ -53,9 +56,13 @@ export function Sidebar({ onLogout }: { onLogout?: () => void }) {
   }, [pathname]);
 
   // เลื่อนเมนู active ให้อยู่ในสายตา (เมนูยาว/จอเตี้ย) — หลังกลุ่มกางแล้ว
+  // ข้ามเมื่อ sidebar ไม่แสดง (ตัว desktop ต่ำกว่า lg เป็น display:none) — scrollIntoView บังคับคำนวณ style+layout
+  // ทั้งหน้าทันทีระหว่าง hydrate (Lighthouse มือถือ ~100–150 ms ใน long task) ทั้งที่ไม่มีอะไรให้เลื่อน
+  // เช็คด้วย matchMedia ไม่ใช่ DOM (checkVisibility ก็บังคับคำนวณ style ทั้งหน้าเหมือนกัน) · ตัวใน drawer สร้างตอนเปิดเท่านั้น
   useEffect(() => {
+    if (!inDrawer && !window.matchMedia(DESKTOP_QUERY).matches) return;
     navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest" });
-  }, [activeHref, openKey]);
+  }, [activeHref, openKey, inDrawer]);
 
   return (
     <aside className="sidebar">

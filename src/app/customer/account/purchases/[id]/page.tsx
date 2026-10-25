@@ -34,6 +34,7 @@ import BuyAgainButton from "../../_components/BuyAgainButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../orderLabels";
 import { canReview } from "../../../hooks/useReviewedItems";
+import ShopSpinner from "@/components/customer/ShopSpinner";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -82,7 +83,7 @@ function OrderContent() {
   if (validId && (orderQ.isLoading || paymentQ.isLoading)) {
     return (
       <div className={`${shopPage} flex items-center justify-center`}>
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label={tc("loading")} />
+        <ShopSpinner label={tc("loading")} />
       </div>
     );
   }

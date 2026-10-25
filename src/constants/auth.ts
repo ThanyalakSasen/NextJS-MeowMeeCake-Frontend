@@ -6,6 +6,8 @@
 /** ชื่อ cookie ที่ backend ตั้งตอน login — frontend เช็คแค่ "มีไหม" ไม่ verify (D18) */
 /** react-query key ของผู้ใช้ปัจจุบัน (useCurrentUser) — อยู่ที่นี่เพื่อให้ server component (owner layout) ใช้ค่าเดียวกันได้ */
 export const CURRENT_USER_KEY = ["auth", "me"] as const;
+/** react-query key ของผู้ใช้หน้าร้าน (useCustomerSession) — customer/layout.tsx (server) ใส่ค่าให้ล่วงหน้า */
+export const CUSTOMER_SESSION_KEY = ["auth", "me", "optional"] as const;
 
 export const AUTH_COOKIE = process.env.NEXT_PUBLIC_AUTH_COOKIE || "mmc_session";
 
