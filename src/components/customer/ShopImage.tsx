@@ -5,7 +5,9 @@
 //   เดิมใช้ <img> ดึง JPEG ต้นฉบับ 500–900 KB มาแสดงในการ์ดเล็ก ๆ · R2 ไม่ส่ง cache header (Lighthouse LCP 6–12 วิ)
 // รูปอื่น (data: · blob: · backend localhost ตอน dev · /public) → unoptimized = เหมือน <img> เดิม
 // ขนาดที่แสดงจริงคุมด้วย className (w-full h-full object-cover) — width/height แค่บอกสัดส่วน + ขนาดสูงสุดของ srcset
-// รูปหลักของหน้า (LCP) ส่ง priority → loading="eager" + fetchPriority="high"
+// รูปหลักของหน้า (LCP) ส่ง priority → preload (<link rel="preload"> ใน <head>) — browser เริ่มโหลดรูปทันทีที่อ่าน head
+//   เดิม loading="eager" + fetchPriority="high" ต้องรอ parse HTML ไปถึง <img> (หน้าหลังร้านมี CSS antd inline ก่อนเนื้อหา)
+//   → /owner/products รูปแรกเริ่มโหลดช้า 1.6 วิ (Lighthouse มือถือ LCP 3.6 วิ) · เอกสาร next/image: preload ห้ามใช้คู่ loading/fetchPriority
 // ─────────────────────────────────────────────────────────────
 import Image from "next/image";
 import { IMAGE_QUALITY, isOptimizableImage } from "@/constants/images";
@@ -27,7 +29,7 @@ export default function ShopImage({
   className?: string;
   width?: number;
   height?: number;
-  /** รูปหลักเหนือขอบจอ (LCP) — โหลดทันทีด้วยความสำคัญสูง */
+  /** รูปหลักเหนือขอบจอ (LCP) — preload ใน <head> */
   priority?: boolean;
   onError?: () => void;
 }) {
@@ -41,8 +43,8 @@ export default function ShopImage({
       quality={IMAGE_QUALITY}
       unoptimized={!isOptimizableImage(src)}
       className={className}
-      loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : undefined}
+      preload={priority}
+      loading={priority ? undefined : "lazy"}
       onError={onError}
     />
   );
