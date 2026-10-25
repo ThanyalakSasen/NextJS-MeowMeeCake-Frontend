@@ -10,6 +10,7 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { fromProduct, toUpdateInput, type ProductFormValue } from "../../productForm";
 import { productKey } from "../../productFormQuery";
+import { useShippingScopeSaver } from "../../useShippingScopeSaver";
 
 export function useEditProductViewModel() {
   const t = useTranslations();
@@ -29,11 +30,19 @@ export function useEditProductViewModel() {
     enabled: !!id,
   });
 
+  const saveShippingScope = useShippingScopeSaver();
+  const initialValues = q.data ? fromProduct(q.data.data) : undefined;
+
   const update = useMutation({
     // ไม่ส่งสต็อกใน PATCH — ปรับสต็อกที่หน้าสต็อกสินค้า (PUT …/stock) เท่านั้น
-    mutationFn: (v: ProductFormValue) => productsService.update(id, toUpdateInput(v)),
-    onSuccess: () => {
-      alert.success(t("products.saved"));
+    // ขอบเขตจัดส่งบันทึกแยก (endpoint ของเมนูจัดส่ง) เฉพาะเมื่อเปลี่ยนจากค่าเดิม
+    mutationFn: async (v: ProductFormValue) => {
+      await productsService.update(id, toUpdateInput(v));
+      return { shippingSaved: await saveShippingScope(id, v.shipping_scope, initialValues?.shipping_scope) };
+    },
+    onSuccess: ({ shippingSaved }) => {
+      if (shippingSaved) alert.success(t("products.saved"));
+      else alert.warning(t("products.shippingScopeFailed"));
       router.push("/owner/products");
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("products.saveFailed")),
@@ -46,7 +55,7 @@ export function useEditProductViewModel() {
     isLoading: !!id && q.isPending,
     isError: q.isError,
     // Form mount หลังโหลดเสร็จ → ใช้ initialValues ตรง ๆ ได้ ไม่ต้อง setFieldsValue
-    initialValues: q.data ? fromProduct(q.data.data) : undefined,
+    initialValues,
     submitting: update.isPending,
     onSubmit: (v: ProductFormValue) => update.mutate(v),
     onCancel: () => router.push("/owner/products"),

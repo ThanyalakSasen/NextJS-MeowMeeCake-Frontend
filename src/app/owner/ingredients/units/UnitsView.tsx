@@ -7,6 +7,7 @@ import { DashboardPageLayout } from "@/components/shared/layout";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { useUnitsViewModel } from "./useUnitsViewModel";
 import { UnitListCard } from "./_components/UnitListCard";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 // ฟอร์ม/โมดัลแยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
 const UnitFormModal = dynamic(() => import("./_components/UnitFormModal").then((m) => m.UnitFormModal), { ssr: false });
@@ -18,7 +19,7 @@ export function UnitsView(vm: VM) {
   const formUsed = useOpenedOnce(vm.modalOpen);
 
   return (
-    <DashboardPageLayout title={t("units.title")}>
+    <DashboardPageLayout title={t("units.title")} actions={<RestoreDeletedButton menu="units" resources={["units"]} />}>
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
       ) : vm.isLoading ? (

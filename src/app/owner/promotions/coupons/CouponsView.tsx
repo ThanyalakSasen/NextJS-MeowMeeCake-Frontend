@@ -11,6 +11,7 @@ import { FilterToolbar, SearchInput, TypeTabBar, FilterField } from "@/component
 import { actionIcon } from "@/components/shared/actions";
 import type { useCouponsViewModel } from "./useCouponsViewModel";
 import { CouponCard } from "./_components/CouponCard";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 // ฟอร์มคูปอง (Form/DatePicker/Select หลายตัว) แยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า
 const CouponFormModal = dynamic(() => import("./_components/CouponFormModal").then((m) => m.CouponFormModal), { ssr: false });
 
@@ -24,11 +25,14 @@ export function CouponsView(vm: VM) {
     <ListPageLayout
       title={t("coupons.title")}
       actions={
-        vm.perm.create && (
-          <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
-            {t("coupons.addCoupon")}
-          </Button>
-        )
+        <>
+          <RestoreDeletedButton menu="promotions" resources={["promotions"]} />
+          {vm.perm.create && (
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
+              {t("coupons.addCoupon")}
+            </Button>
+          )}
+        </>
       }
       toolbar={
         <FilterToolbar

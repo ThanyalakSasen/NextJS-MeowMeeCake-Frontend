@@ -101,6 +101,10 @@ export function CouponCard({
           <div className="mt-auto flex flex-col gap-1 border-t border-gray-100 pt-2 text-xs text-gray-500">
             <span>{formatDate(coupon.start_date, locale)} – {formatDate(coupon.end_date, locale)}</span>
             <span>{minLabel} · {scopeLabel}</span>
+            <span>
+              {coupon.audience === "members" ? t("coupons.audienceMembers") : t("coupons.audienceAll")}
+              {coupon.stackable && ` · ${t("coupons.stackableLabel")}`}
+            </span>
           </div>
         </div>
       </div>

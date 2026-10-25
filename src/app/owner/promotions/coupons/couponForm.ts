@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────────
 // couponForm.ts — helper ล้วนของฟอร์มคูปอง (ใช้ร่วม Add / Edit) + สถานะคูปอง
-// ไม่มีช่อง "กลุ่มลูกค้า" (ทั่วไป/ใหม่เท่านั้น) เพราะ backend ไม่มี concept นี้รองรับเลย — ถ้าใส่ไว้จะ
-// เป็นแค่ label หลอกไม่มีผลจริง (บั๊กคลาสเดียวกับปุ่ม deactivate พนักงานที่เจอมาก่อนหน้านี้)
+// กลุ่มลูกค้า (audience): ทุกคน / เฉพาะสมาชิก — backend ตรวจจริงตอนสร้างออเดอร์ (บัญชีลูกค้าทั่วไปของ POS ใช้โปรสมาชิกไม่ได้)
+// ใช้ร่วมกับโปรอื่น (stackable): POS เลือกโปรได้หลายตัวเมื่อทุกตัวเปิดช่องนี้
 // ─────────────────────────────────────────────────────────────
 import dayjs, { type Dayjs } from "dayjs";
 import type { CouponStatus, DiscountType } from "@/constants/enumConfig";
-import type { Promotion, PromotionChannel, PromotionInput } from "@/types/promotion";
+import type { Promotion, PromotionAudience, PromotionChannel, PromotionInput } from "@/types/promotion";
 
 export type CouponScope = "all" | "category" | "product";
 
@@ -26,6 +26,8 @@ export interface CouponFormValue {
   pointsCost?: number;
   chInstore: boolean;
   chOnline: boolean;
+  audience: PromotionAudience;
+  stackable: boolean;
 }
 
 export const emptyCouponForm: CouponFormValue = {
@@ -37,6 +39,8 @@ export const emptyCouponForm: CouponFormValue = {
   categoryIds: [],
   chInstore: true,
   chOnline: true,
+  audience: "all",
+  stackable: false,
 };
 
 export function fromPromotion(p: Promotion): CouponFormValue {
@@ -56,6 +60,8 @@ export function fromPromotion(p: Promotion): CouponFormValue {
     pointsCost: p.points_cost ?? undefined,
     chInstore: p.applicable_channels.includes("instore"),
     chOnline: p.applicable_channels.includes("online"),
+    audience: p.audience ?? "all",
+    stackable: p.stackable ?? false,
   };
 }
 
@@ -86,6 +92,8 @@ export function toInput(v: CouponFormValue): PromotionInput {
     // null (ไม่ใช่ undefined) — ล้างช่องตอนแก้ไขต้องปิดการแลกจริง ไม่ใช่คงค่าเดิมไว้
     points_cost: v.pointsCost && v.pointsCost > 0 ? Math.round(v.pointsCost) : null,
     applicable_channels: channels.length > 0 ? channels : ["online", "instore"],
+    audience: v.audience,
+    stackable: v.stackable,
     start_date: (start ?? dayjs()).startOf("day").toISOString(),
     end_date: (end ?? dayjs().add(1, "year")).endOf("day").toISOString(),
   };

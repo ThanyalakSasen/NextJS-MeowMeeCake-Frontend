@@ -6,6 +6,7 @@ import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { DetailModal } from "@/components/shared/feedback";
 import type { usePreOrderRoundViewModel } from "./usePreOrderRoundViewModel";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 // ทุกแท็บ/โมดัล/ลิ้นชัก (Form, DatePicker, Steps …) แยก chunk โหลดเมื่อใช้ครั้งแรก — แบบเดียวกับ Production
 // (เปิดจากลิงก์แจ้งเตือน ?tab=orders ไม่ต้องโหลดตาราง/การ์ดของแท็บสรุปรอบ) · เดิม import ทั้งหมดตั้งแต่แรก → JS ที่ต้อง parse/รันตอนโหลดหน้าเยอะ (TBT 420ms)
@@ -35,6 +36,7 @@ export function PreOrderRoundView(vm: VM) {
     <>
       <TabbedPageLayout
         title={t("preorderRound.title")}
+        actions={<RestoreDeletedButton menu="preorder" resources={["preorderRounds"]} />}
         activeKey={vm.activeTab}
         onChange={vm.setActiveTab}
         items={[
@@ -66,17 +68,18 @@ export function PreOrderRoundView(vm: VM) {
         {vm.selectedRound && !vm.isRoundDetailLoading && <RoundDetailContent {...vm} round={vm.selectedRound} />}
       </DetailModal>
 
+      {editUsed && vm.editRoundTarget && (
+        <EditRoundModal
+          open={vm.editRoundOpen}
+          round={vm.editRoundTarget}
+          saving={vm.savingRound}
+          onClose={vm.closeEditRound}
+          onSubmit={vm.onEditRoundSubmit}
+        />
+      )}
+
       {vm.selectedRound && (
         <>
-          {editUsed && (
-            <EditRoundModal
-              open={vm.editRoundOpen}
-              round={vm.selectedRound}
-              saving={vm.savingRound}
-              onClose={vm.closeEditRound}
-              onSubmit={vm.onEditRoundSubmit}
-            />
-          )}
           {reopenUsed && (
             <ReopenRoundModal
               open={vm.reopenOpen}

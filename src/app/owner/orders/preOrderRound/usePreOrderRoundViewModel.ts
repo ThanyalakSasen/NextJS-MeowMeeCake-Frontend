@@ -135,12 +135,15 @@ export function usePreOrderRoundViewModel() {
   const closeRoundDrawer = () => setRoundDrawerOpen(false);
 
   // แก้ชื่อ/ช่วงเวลาของรอบ (เฉพาะ scheduled/open — closed/cancelled แก้ไม่ได้ backend ปฏิเสธ 409)
+  // เปิดได้ 2 ทาง: ปุ่มในตาราง (ส่งแถวมา) · ปุ่มในหน้าต่างรายละเอียด (ใช้รอบที่เปิดดูอยู่)
+  // เก็บรอบที่แก้ไว้หลังปิด — modal ยังต้องมีข้อมูลระหว่าง animation ปิด
   const [editRoundOpen, setEditRoundOpen] = useState(false);
+  const [editRoundTarget, setEditRoundTarget] = useState<PreorderRound | null>(null);
   const updateRound = useMutation({
     mutationFn: ({ id, body }: { id: string; body: UpdateRoundInput }) => preorderRoundsService.update(id, body),
     onSuccess: () => {
       alert.success(t("preorderRound.updated"));
-      invalidateRounds(selectedRoundId);
+      invalidateRounds(editRoundTarget?._id);
       setEditRoundOpen(false);
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.updateFailed")),
@@ -489,8 +492,15 @@ export function usePreOrderRoundViewModel() {
     selectedRound, roundDrawerOpen, isRoundDetailLoading: roundDetailQ.isLoading,
     onViewRound, closeRoundDrawer,
 
-    editRoundOpen, openEditRound: () => setEditRoundOpen(true), closeEditRound: () => setEditRoundOpen(false),
-    onEditRoundSubmit: (body: UpdateRoundInput) => selectedRound && updateRound.mutate({ id: selectedRound._id, body }),
+    editRoundOpen, editRoundTarget,
+    openEditRound: (r?: PreorderRound) => {
+      const target = r ?? selectedRound;
+      if (!target) return;
+      setEditRoundTarget(target);
+      setEditRoundOpen(true);
+    },
+    closeEditRound: () => setEditRoundOpen(false),
+    onEditRoundSubmit: (body: UpdateRoundInput) => editRoundTarget && updateRound.mutate({ id: editRoundTarget._id, body }),
     savingRound: updateRound.isPending,
 
     isFinalRoundStatus, getNextRoundStatus,

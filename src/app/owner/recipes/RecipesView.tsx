@@ -15,6 +15,7 @@ import { CategoryManagerButton } from "@/components/shared/categories";
 import type { useRecipesViewModel } from "./useRecipesViewModel";
 import { RecipeCard } from "./_components/RecipeCard";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 // ฟอร์มสูตร (Form/Select/ตัวแก้วัตถุดิบ-ขั้นตอน) + ลิ้นชักรายละเอียด แยก chunk — โหลดเมื่อเปิดครั้งแรก
 // ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัล/ลิ้นชักไม่ render ฝั่ง server อยู่แล้ว — Portal ของ antd คืน null)
@@ -217,6 +218,7 @@ export function RecipesView(vm: VM) {
     <>
       <TabbedPageLayout
         title={t("recipes.title")}
+        actions={<RestoreDeletedButton menu="recipes" resources={["recipes", "components", "componentCategories"]} />}
         activeKey={vm.activeTab}
         onChange={(k) => vm.setActiveTab(k as VM["activeTab"])}
         items={[

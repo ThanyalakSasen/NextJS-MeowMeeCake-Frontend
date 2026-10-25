@@ -19,10 +19,12 @@ const loadCash = () => import("./_components/CashPaymentModal");
 const loadQr = () => import("./_components/QRPaymentModal");
 const loadDone = () => import("./_components/PaymentDoneModal");
 const loadPicker = () => import("./_components/CustomizationPickerModal");
+const loadHeld = () => import("./_components/HeldBillsModal");
 const CashPaymentModal = dynamic(() => loadCash().then((m) => m.CashPaymentModal), { ssr: false });
 const QRPaymentModal = dynamic(() => loadQr().then((m) => m.QRPaymentModal), { ssr: false });
 const PaymentDoneModal = dynamic(() => loadDone().then((m) => m.PaymentDoneModal), { ssr: false });
 const CustomizationPickerModal = dynamic(() => loadPicker().then((m) => m.CustomizationPickerModal), { ssr: false });
+const HeldBillsModal = dynamic(() => loadHeld().then((m) => m.HeldBillsModal), { ssr: false });
 
 type VM = ReturnType<typeof usePOSViewModel>;
 
@@ -31,6 +33,7 @@ export function POSView(vm: VM) {
   const cashUsed = useOpenedOnce(vm.payDialog === "cash");
   const qrUsed = useOpenedOnce(vm.payDialog === "qr");
   const doneUsed = useOpenedOnce(vm.payDialog === "done");
+  const heldUsed = useOpenedOnce(vm.heldOpen);
   const hasItems = vm.cart.length > 0;
   useEffect(() => {
     if (!hasItems) return;
@@ -82,8 +85,9 @@ export function POSView(vm: VM) {
           promoEvals={vm.promoEvals}
           billPromotions={vm.billPromotions}
           bestPromoId={vm.bestPromoId}
-          selectedPromoId={vm.selectedPromoId}
+          selectedPromoIds={vm.selectedPromoIds}
           selectedPromoInvalid={vm.selectedPromoInvalid}
+          discountExceeds={vm.discountExceeds}
           subtotal={vm.subtotal}
           discount={vm.discount}
           total={vm.total}
@@ -108,6 +112,9 @@ export function POSView(vm: VM) {
           onPayCash={vm.openCash}
           onPayQr={vm.openQr}
           onClearBill={vm.onClearBill}
+          onHoldBill={vm.holdBill}
+          onOpenHeld={vm.openHeld}
+          heldCount={vm.heldBills.length}
         />
       </div>
 
@@ -134,7 +141,16 @@ export function POSView(vm: VM) {
           onSwitchToCash={vm.openCash}
         />
       )}
-      {doneUsed && <PaymentDoneModal open={vm.payDialog === "done"} done={vm.done} onNewBill={vm.closeDialog} />}
+      {doneUsed && <PaymentDoneModal open={vm.payDialog === "done"} done={vm.done} store={vm.store} onNewBill={vm.closeDialog} />}
+      {heldUsed && (
+        <HeldBillsModal
+          open={vm.heldOpen}
+          bills={vm.heldBills}
+          onResume={(b) => void vm.resumeBill(b)}
+          onDelete={(b) => void vm.deleteHeldBill(b)}
+          onClose={vm.closeHeld}
+        />
+      )}
 
       {vm.picker && (
         <CustomizationPickerModal

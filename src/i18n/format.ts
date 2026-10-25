@@ -68,3 +68,16 @@ export function formatDate(
     timeZone: "Asia/Bangkok",
   }).format(d);
 }
+
+/** วันที่แบบ "YYYY-MM-DD" (วันตามปฏิทิน ไม่มีเวลา เช่น จาก sales-by-day) → "8 ต.ค." · withYear → "8 ต.ค. 2569"
+ *  อ่านเป็น UTC แล้ว format เป็น UTC — วันไม่เลื่อนตาม timezone ของเครื่อง */
+export function formatDayMonth(date: string, locale: Locale | string = defaultLocale, opts: { withYear?: boolean } = {}): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return "—";
+  return new Intl.DateTimeFormat(tag(locale), {
+    day: "numeric",
+    month: "short",
+    ...(opts.withYear ? { year: "numeric" } : {}),
+    timeZone: "UTC",
+  }).format(d);
+}

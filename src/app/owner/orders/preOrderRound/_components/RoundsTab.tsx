@@ -8,7 +8,7 @@ import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound } from "@/types/preorderRound";
-import { DeleteButton, ViewButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, EditButton, ViewButton, actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { isFinalRoundStatus } from "../preorderStatus";
 
@@ -102,6 +102,9 @@ export function RoundsTab(vm: VM) {
           actions={(r) => (
             <div className="flex justify-end gap-2">
               <ViewButton size="small" onClick={() => vm.onViewRound(r)} />
+              {vm.perm.update && !isFinalRoundStatus(r.round_status) && (
+                <EditButton size="small" onClick={() => vm.openEditRound(r)} />
+              )}
               {vm.perm.delete && isFinalRoundStatus(r.round_status) && (
                 <ConfirmDeletePopup title={t("preorderRound.deleteConfirm")} onConfirm={() => vm.onDeleteRound(r._id)}>
                   <DeleteButton size="small" />

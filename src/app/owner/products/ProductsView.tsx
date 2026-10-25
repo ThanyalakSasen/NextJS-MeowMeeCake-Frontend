@@ -18,6 +18,7 @@ import { ProductGrid } from "./_components/ProductGrid";
 import { CategoryChip } from "./_components/CategoryChip";
 import { RatingDisplay } from "./_components/RatingDisplay";
 import { sortByThai } from "@/lib/thaiSort";
+import { RestoreDeletedButton } from "@/components/shared/restore";
 
 type VM = ReturnType<typeof useProductsViewModel>;
 
@@ -56,6 +57,7 @@ export function ProductsView(vm: VM) {
       actions={
         <div className="flex flex-wrap gap-2">
           <CategoryManagerButton kind="product" />
+          <RestoreDeletedButton menu="products" resources={["products", "productCategories"]} />
           {vm.perm.create && (
             <Button type="primary" icon={actionIcon("add")} href="/owner/products/addProducts">
               {t("products.addProduct")}
