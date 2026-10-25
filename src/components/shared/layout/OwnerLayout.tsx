@@ -58,6 +58,7 @@ const SSR_PAGES = [
   "/owner/notificationsHistory",
   "/owner/products/addProducts",
   "/owner/reports/reviews/settings",
+  "/owner/reports/reviews/dashboard",
   "/owner/orders/delivery-zones",
 ];
 /** หน้าที่ path มี id (dynamic segment) — เทียบด้วย pattern */
