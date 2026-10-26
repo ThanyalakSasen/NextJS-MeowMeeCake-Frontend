@@ -6,22 +6,34 @@
 // · ปุ่มหัวใจ (รายการโปรด D5/U3) อ่านจาก cache เดียวของ useFavorites — ไม่ยิงขอรายการต่อใบแบบต้นแบบ
 // · ป้ายแพ้อาหาร: ทุกบัตร — จาก /shop/allergen-warnings (useAllergenWarnings · ล็อกอิน + บันทึกอาหารที่แพ้ไว้)
 //   ผลของระบบแนะนำ (สินค้าคล้าย C1 · แนะนำสำหรับคุณ C2) ส่งมาเป็น props ได้ — ใช้ props ก่อน
-// · เหตุผลที่แนะนำ: ส่งมาเป็น props จากผลของระบบแนะนำเท่านั้น
 // · "เพิ่มลงตะกร้า" = quickAdd: สินค้ามีตัวเลือก → พาไปหน้าสินค้าให้เลือกก่อน
+// · ป้าย "ส่งเฉพาะ จ.…" มุมซ้ายล่างของรูป — สินค้าที่ส่งนอกจังหวัดร้านไม่ได้ (useLocalOnlyShipping)
+// · โครงบัตร (กรอบ · รูป · ระยะ · ตัวอักษร · ปุ่ม) มาจาก shopStyles ร่วมกับบัตรพรีออเดอร์ — ทุกหน้าหน้าตาเหมือนกัน
+//   และวางใน productGrid ที่เดียวกัน บัตรจึงกว้างเท่ากัน · h-full = สูงเท่ากันทั้งแถว ราคา/ปุ่มชิดล่างตรงกัน
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { Truck } from "lucide-react";
 import { useLocalName } from "@/app/customer/lib/localName";
 import { FaSpinner, FaCheck, FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 import type { Product } from "@/types/product";
 import { resolveUploadUrl } from "@/lib/uploads";
-import { effectivePrice, hasSalePrice, salePercent } from "@/lib/pricing";
+import { effectivePrice, hasSalePrice } from "@/lib/pricing";
 import { useAddToCart } from "@/app/customer/hooks/useAddToCart";
 import { useFavorites } from "@/app/customer/hooks/useFavorites";
 import { useAllergenWarnings } from "@/app/customer/hooks/useAllergenWarnings";
+import { useLocalOnlyShipping } from "@/app/customer/hooks/useLocalOnlyShipping";
 import type { AllergenWarning, AllergenWarningLevel } from "@/services/catalog";
 import ShopImage from "./ShopImage";
+import {
+  productCardBody,
+  productCardButton,
+  productCardFrame,
+  productCardImage,
+  productCardSubtitle,
+  productCardTitle,
+} from "./shopStyles";
 
 /**
  * สินค้านี้จะถูกแสดงเป็นบัตรหรือไม่ — ProductCard จะ return null ถ้าได้ false
@@ -65,12 +77,27 @@ export function AllergenBadge({ warning }: { warning: AllergenWarning | null }) 
   );
 }
 
+/** ป้าย "ส่งเฉพาะ จ.หนองคาย" มุมซ้ายล่างของรูป — สินค้าที่ส่งนอกจังหวัดร้านไม่ได้ (ใช้ทั้งบัตรปกติและบัตรพรีออเดอร์) */
+export function LocalOnlyBadge({ productId, category }: { productId: string; category: Product["category_id"] | null }) {
+  const t = useTranslations("shop.productCard");
+  const { isLocalOnly, province } = useLocalOnlyShipping();
+  if (!isLocalOnly(productId, category)) return null;
+  return (
+    <span
+      title={t("localOnlyHint", { province })}
+      className="absolute bottom-2 left-2 inline-flex max-w-[calc(100%-1rem)] items-center gap-1 truncate rounded-full border border-sky-200 bg-sky-50/95 px-2 py-0.5 text-[11px] font-semibold leading-4 text-sky-800 shadow-sm"
+    >
+      <Truck size={12} aria-hidden="true" className="shrink-0" />
+      <span className="truncate">{t("localOnly", { province })}</span>
+    </span>
+  );
+}
+
 export default function ProductCard({
   product,
   showAddToCart = true,
   showFavorite = true,
   allergenWarning: allergenWarningProp = null,
-  reasons,
   priority = false,
 }: {
   product: Product;
@@ -78,8 +105,6 @@ export default function ProductCard({
   showFavorite?: boolean;
   /** จากระบบแนะนำ (สินค้าคล้าย · แนะนำสำหรับคุณ) — มีเมื่อ login + บันทึกอาหารที่แพ้ไว้ */
   allergenWarning?: AllergenWarning | null;
-  /** เหตุผลที่แนะนำ — แสดงข้อแรก */
-  reasons?: string[];
   /** บัตรแถวแรกของหน้า (เหนือขอบจอ) — โหลดรูปทันทีด้วยความสำคัญสูง (LCP) */
   priority?: boolean;
 }) {
@@ -97,21 +122,20 @@ export default function ProductCard({
   const categoryName = categoryNameOf(product);
   const imgSrc = resolveUploadUrl(product.product_img?.[0]);
   const rating = Number(product.avg_rating ?? 0);
+  const reviewCount = product.review_count ?? 0;
   const favorite = favorites.isFavorite(product._id);
   const allergenWarning = allergenWarningProp ?? allergenWarningOf(product._id);
+  const names = localNames(product.product_name_th, product.product_name_eng);
 
   return (
-    <Link
-      href={`/customer/product/${product._id}`}
-      className="group block bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-    >
-      <div className="relative w-full aspect-square bg-gray-50 overflow-hidden">
+    <Link href={`/customer/product/${product._id}`} className={productCardFrame}>
+      <div className={productCardImage}>
         {/* รูปที่โหลดไม่ขึ้น (ไฟล์หายจากเซิร์ฟเวอร์) → แสดง "ไม่มีรูปภาพ" แทนรูปแตก */}
         {imgSrc && imgSrc !== failedImg ? (
           <ShopImage
             src={imgSrc}
             alt={product.product_name_eng || product.product_name_th}
-            sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
             priority={priority}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             onError={() => setFailedImg(imgSrc)}
@@ -153,50 +177,39 @@ export default function ProductCard({
         )}
 
         <AllergenBadge warning={allergenWarning} />
+        <LocalOnlyBadge productId={product._id} category={product.category_id ?? null} />
       </div>
 
       {/* ฟอนต์อิงฐาน 18px (globals.css html 112.5%) · ขั้นต่ำของแอป 16px = text-sm/text-xs · 17px = text-[0.9444rem] · 18px = text-base
-          ชื่อ/ราคา โตตามจอ 16 → 17 (≥768) → 18 (≥1280) · ชื่อรอง/฿/ปุ่ม คงที่ 16 (ขั้นต่ำ — ห้ามใช้ค่า px ที่เล็กกว่านี้) */}
-      <div className="p-5 sm:p-3 flex flex-col justify-between !bg-[#fff]">
-        <div>
-          <h3 className="text-sm md:text-[0.9444rem] xl:text-base font-semibold text-black line-clamp-1">
-            {localNames(product.product_name_th, product.product_name_eng).primary}
-          </h3>
-          <p className="text-sm text-black line-clamp-1 mb-2">
-            {localNames(product.product_name_th, product.product_name_eng).secondary || " "}
-          </p>
-          {reasons?.[0] && <p className="-mt-1 mb-2 line-clamp-1 text-xs text-[#8C5A3C]">{reasons[0]}</p>}
+          ชื่อ/ราคา โตตามจอ 16 → 17 (≥768) → 18 (≥1280) · ชื่อรอง/ปุ่ม คงที่ 16 (ขั้นต่ำ — ห้ามใช้ค่า px ที่เล็กกว่านี้)
+          บน: ชื่อ + ชื่อรอง · ล่าง (mt-auto ชิดล่างเสมอ): ราคา | ดาว แถวเดียว แล้วปุ่ม */}
+      <div className={productCardBody}>
+        <div className="min-w-0">
+          <h3 className={productCardTitle}>{names.primary}</h3>
+          <p className={productCardSubtitle}>{names.secondary || " "}</p>
         </div>
 
-        <div>
-          <div className="flex items-end justify-between my-1">
-            {/* ราคา — กำลังลดราคา: ราคาลดสีแดง + ราคาเดิมขีดฆ่า + ป้าย % */}
+        <div className="mt-auto space-y-2">
+          <div className="flex items-end justify-between gap-2">
+            {/* ราคา — กำลังลดราคา: ราคาลดสีแดง + ราคาเดิมขีดฆ่า (ไม่มีป้าย % — เอาออก 2026-10-26) */}
             {hasSalePrice(product) ? (
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="flex items-baseline gap-1">
-                  <span className="text-sm font-bold text-red-600">฿</span>
-                  <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-red-600">
-                    {effectivePrice(product).toLocaleString()}
-                  </span>
+              <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+                <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-red-600">
+                  ฿{effectivePrice(product).toLocaleString()}
                 </span>
                 <span className="text-xs text-stone-500 line-through">฿{product.product_price?.toLocaleString()}</span>
-                <span className="text-sm font-bold text-white bg-red-500 rounded px-1 py-0.5 leading-none">
-                  -{salePercent(product)}%
-                </span>
               </div>
             ) : (
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-[#8C5A3C]">฿</span>
-                <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-[#8C5A3C]">
-                  {product.product_price?.toLocaleString()}
-                </span>
-              </div>
+              <span className="text-sm md:text-[0.9444rem] xl:text-base font-extrabold text-[#8C5A3C]">
+                ฿{product.product_price?.toLocaleString()}
+              </span>
             )}
 
-            <div className="flex items-center gap-2 text-black text-xs font-medium pb-0.5" title={t("reviews", { n: product.review_count ?? 0 })}>
-              <FaStar className="text-amber-400 text-base" />
+            <span className="flex shrink-0 items-center gap-1 pb-0.5 text-xs font-medium text-stone-700" title={t("reviews", { n: reviewCount })}>
+              <FaStar className="text-amber-400" aria-hidden="true" />
               <span>{rating.toFixed(1)}</span>
-            </div>
+              {reviewCount > 0 && <span className="text-stone-500">({reviewCount})</span>}
+            </span>
           </div>
 
           {showAddToCart && (
@@ -208,11 +221,9 @@ export default function ProductCard({
                 e.stopPropagation();
                 void quickAdd(product._id);
               }}
-              className={`w-full h-[44px] px-2 mt-1 text-sm font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-1 ${
-                isSuccess
-                  ? "!bg-emerald-600 border border-emerald-600 !text-white shadow-md"
-                  : "!bg-white !text-[#4A342E] border border-[#8C5A3C]/30 shadow-md shadow-[#4A342E]/20 hover:!bg-[#4A342E] hover:!text-white hover:shadow-lg active:scale-[0.98]"
-              } disabled:opacity-75 disabled:cursor-not-allowed`}
+              className={`${productCardButton} ${
+                isSuccess ? "!border-emerald-600 !bg-emerald-600 !text-white" : ""
+              } disabled:cursor-not-allowed disabled:opacity-75`}
             >
               {isLoading ? (
                 <>

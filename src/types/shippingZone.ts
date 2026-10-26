@@ -1,19 +1,28 @@
 // ─────────────────────────────────────────────────────────────
-// src/types/shippingZone.ts — โซนค่าส่งของออเดอร์เว็บ A–D (shippingZoneModel ฝั่ง backend · BACKLOG4 F2 · Q-BE2)
+// src/types/shippingZone.ts — โซนค่าส่งของออเดอร์เว็บ (shippingZoneModel ฝั่ง backend · BACKLOG4 F2 · Q-BE2)
+// ชุดเริ่มต้น A–D · เพิ่มโซนได้ตั้งแต่ 2026-10-26 (รหัส E, F, … backend ตั้งให้) · D = จังหวัดอื่นทั้งหมด (อยู่ท้ายเสมอ)
 // คนละชุดกับ DeliveryZone (/admin/delivery-zones — ค่าส่งออเดอร์ที่สร้างจากหลังร้าน)
 // ─────────────────────────────────────────────────────────────
 
-export type ShippingZoneCode = "A" | "B" | "C" | "D";
+/** ตัวอักษรอังกฤษตัวใหญ่ 1 ตัว */
+export type ShippingZoneCode = string;
 
 export interface ShippingZone {
   _id: string;
   zone_code: ShippingZoneCode;
   /** เช่น "Zone A — จังหวัดหนองคาย" */
   zone_label: string;
-  /** ชื่อทางการใน 77 จังหวัด · โซน D ว่างเสมอ (= จังหวัดที่ไม่อยู่ใน A–C) */
+  /** ชื่อทางการใน 77 จังหวัด · โซน D ว่างเสมอ (= จังหวัดที่ไม่อยู่ในโซนอื่น) */
   provinces: string[];
   /** บาท */
   fee: number;
+}
+
+/** POST /admin/shipping-zones — เพิ่มโซน (ต้องมีจังหวัดอย่างน้อย 1 · ซ้ำโซนอื่น = 409) */
+export interface ShippingZoneCreate {
+  zone_label: string;
+  fee: number;
+  provinces: string[];
 }
 
 /** PATCH /admin/shipping-zones/:zone_code — อย่างน้อย 1 ฟิลด์ */

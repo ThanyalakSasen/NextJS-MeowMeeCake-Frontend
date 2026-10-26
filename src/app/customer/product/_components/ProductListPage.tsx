@@ -16,6 +16,7 @@ import { FaFilter, FaSortAmountDown, FaTimes } from "react-icons/fa";
 import { catalogService } from "@/services/catalog";
 import { effectivePrice } from "@/lib/pricing";
 import ProductCard, { categoryNameOf, isProductCardVisible } from "@/components/customer/ProductCard";
+import { productGrid } from "@/components/customer/shopStyles";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from "../../lib/catalogQueries";
 import { thaiCompare } from "@/lib/thaiSort";
@@ -89,7 +90,7 @@ export default function ProductListPage({ query }: { query: string }) {
     return result;
   }, [products, currentCategory, sortBy]);
 
-  // จอ <768px: ตัวกรอง (หมวด + เรียง) อยู่ในแผงเลื่อนเข้าจากขวา เปิดด้วยปุ่มไอคอน
+  // จอ <1280px: ตัวกรอง (หมวด + เรียง) อยู่ในแผงเลื่อนเข้าจากขวา เปิดด้วยปุ่มไอคอน
   const [sheetOpen, setSheetOpen] = useState(false);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -126,22 +127,23 @@ export default function ProductListPage({ query }: { query: string }) {
 
   return (
     <div className="w-full min-h-screen text-[#4A342E] pt-54 sm:pt-52 md:pt-50 pb-36">
-      <div className="w-full max-w-[1200px] mx-auto px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
+      {/* ขอบข้างแคบกว่าหน้าอื่น + กว้างสุด 1320px — ให้พื้นที่บัตรสินค้ามากขึ้น (บัตรกว้างขึ้น) */}
+      <div className="w-full max-w-[1320px] mx-auto px-[12px] sm:px-[16px] md:px-[24px] xl:px-[32px]">
         <CustomerBreadcrumb items={[{ label: t("allProducts") }]} />
 
-        {/* หัวข้อ · จอ <768px: ปุ่มล้าง (เมื่อกำลังกรอง) + ปุ่มไอคอนตัวกรอง ชิดขวาแถวเดียวกัน · หมวด/การเรียงที่เลือกอยู่ใต้หัวข้อ */}
-        <div className="mb-4 md:mb-8 flex items-start justify-between gap-3">
+        {/* หัวข้อ · จอ <1280px: ปุ่มล้าง (เมื่อกำลังกรอง) + ปุ่มไอคอนตัวกรอง ชิดขวาแถวเดียวกัน · หมวด/การเรียงที่เลือกอยู่ใต้หัวข้อ */}
+        <div className="mb-4 xl:mb-8 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4A342E] tracking-tight break-words">
               {searchQuery ? t("searchResult", { q: searchQuery }) : t("allProducts")}
             </h1>
-            <p className="md:hidden m-0 mt-1 truncate text-sm text-[#4A342E]">
+            <p className="xl:hidden m-0 mt-1 truncate text-sm text-[#4A342E]">
               <span className="font-semibold">{currentCategory === ALL ? t("all") : currentCategory}</span>
               <span className="text-stone-500"> · {t(`sort.${sortBy}`)}</span>
             </p>
           </div>
 
-          <div className="md:hidden flex shrink-0 items-center gap-2">
+          <div className="xl:hidden flex shrink-0 items-center gap-2">
             {filterActive && (
               <button
                 type="button"
@@ -168,9 +170,9 @@ export default function ProductListPage({ query }: { query: string }) {
           </div>
         </div>
 
-        {/* แผงตัวกรอง (จอ <768px) — เลื่อนเข้าจากขวา เต็มความสูง · เลือกแล้วกรองทันทีและปิดแผง · Esc / แตะพื้นหลัง = ปิด */}
+        {/* แผงตัวกรอง (จอ <1280px) — เลื่อนเข้าจากขวา เต็มความสูง · เลือกแล้วกรองทันทีและปิดแผง · Esc / แตะพื้นหลัง = ปิด */}
         {sheetOpen && (
-          <div className="md:hidden fixed inset-0 z-[60] flex justify-end">
+          <div className="xl:hidden fixed inset-0 z-[60] flex justify-end">
             <div className="absolute inset-0 bg-black/40" onClick={() => setSheetOpen(false)} aria-hidden="true" />
             <div
               role="dialog"
@@ -251,9 +253,9 @@ export default function ProductListPage({ query }: { query: string }) {
           </div>
         )}
 
-        {/* ซ้าย = หมวดหมู่ / ขวา = รายการสินค้า · จอ <768px ซ่อน (ใช้แผ่นตัวกรองแทน) */}
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <aside className="hidden md:block w-full lg:w-64 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-[#8C5A3C]/10 shrink-0 lg:sticky lg:top-56">
+        {/* ซ้าย = หมวดหมู่ / ขวา = รายการสินค้า · จอ <1280px ซ่อน (ใช้แผ่นตัวกรองแทน) */}
+        <div className="flex flex-col xl:flex-row gap-6 items-start">
+          <aside className="hidden xl:block w-56 bg-white rounded-2xl p-5 shadow-sm border border-[#8C5A3C]/10 shrink-0 sticky top-56">
             <div className="flex items-center gap-2 pb-3 mb-3 border-b border-gray-100 font-bold text-[#4A342E]">
               <FaFilter className="text-[#8C5A3C] text-sm" />
               {/* h2 — การ์ดสินค้าเป็น h3 ต้องมี h2 คั่นจาก h1 (Lighthouse heading-order) */}
@@ -262,15 +264,15 @@ export default function ProductListPage({ query }: { query: string }) {
             {loading || categoriesQ.isPending ? (
               <div className="py-4 text-center text-xs text-[#8C5A3C]">{t("loadingCategories")}</div>
             ) : (
-              // 768–1023px: หลายแถว (ขึ้นบรรทัดใหม่เมื่อไม่พอ) ไม่ต้องเลื่อนซ้ายขวา · ≥1024px: แถบซ้ายแนวตั้ง
-              <div className="flex flex-row flex-wrap lg:flex-col lg:flex-nowrap gap-1.5">
+              // ≥1280px: แถบซ้ายแนวตั้ง (จอเล็กกว่านี้ใช้ปุ่มตัวกรอง + แผงเลื่อนเข้าจากขวาแบบมือถือ)
+              <div className="flex flex-col gap-1.5">
                 {categoryCards.map((c) => {
                   const isActive = currentCategory === c.name;
                   return (
                     <Link
                       key={c.name}
                       href={categoryHref(c.name)}
-                      className={`flex min-h-[44px] items-center justify-between px-3.5 py-1 rounded-xl text-sm font-medium transition-all whitespace-nowrap lg:whitespace-normal ${
+                      className={`flex min-h-[44px] items-center justify-between px-3.5 py-1 rounded-xl text-sm font-medium transition-all ${
                         isActive ? "bg-[#8C5A3C] text-white shadow-sm font-semibold" : "text-[#4A342E] hover:bg-[#8C5A3C]/10"
                       }`}
                     >
@@ -290,8 +292,8 @@ export default function ProductListPage({ query }: { query: string }) {
           </aside>
 
           <section className="flex-1 w-full">
-            {/* เรียงตาม — จอ <768px อยู่ในแผ่นตัวกรอง */}
-            <div className="hidden md:flex bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-[#8C5A3C]/10 mb-6 flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* เรียงตาม — จอ <1280px อยู่ในแผ่นตัวกรอง */}
+            <div className="hidden xl:flex bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-[#8C5A3C]/10 mb-6 flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#4A342E]">
                 <FaSortAmountDown className="text-[#8C5A3C]" />
                 <span>{t("sortBy")}</span>
@@ -329,7 +331,7 @@ export default function ProductListPage({ query }: { query: string }) {
                 </button>
               </div>
             ) : visible.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <div className={productGrid}>
                 {/* h2 ซ่อน (absolute — ไม่กินช่อง grid) (สำหรับ screen reader) — จอมือถือแผงหมวดหมู่ที่มี h2 ถูกซ่อน การ์ดสินค้า (h3) จะต่อจาก h1 ตรง ๆ (Lighthouse heading-order) */}
                 <h2 className="sr-only">{t("listHeading")}</h2>
                 {/* 2 ใบแรก = แถวแรกบนมือถือ (รูปใหญ่สุดเหนือขอบจอ — LCP) → โหลดก่อน */}

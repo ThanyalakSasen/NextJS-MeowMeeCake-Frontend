@@ -1,6 +1,6 @@
 "use client";
 // ฟอร์มโซนค่าส่งเว็บ (ใน modal แก้ไข) — ชื่อโซน · ค่าส่ง · จังหวัด (เลือกจาก 77 จังหวัดเท่านั้น · จังหวัดที่อยู่โซนอื่นเลือกไม่ได้)
-// โซน D ไม่มีช่องจังหวัด — ใช้กับจังหวัดที่ไม่อยู่ในโซน A–C ทั้งหมด
+// โซน D ไม่มีช่องจังหวัด — ใช้กับจังหวัดที่ไม่อยู่ในโซนอื่นทั้งหมด · code = null = โซนใหม่ (ต้องเลือกจังหวัด)
 import { useTranslations } from "next-intl";
 import { Input, InputNumber, Select } from "@/components/base";
 import { FormField } from "@/components/shared/form";
@@ -11,9 +11,9 @@ import { FALLBACK_ZONE, type ShippingZoneForm } from "../shippingZoneForm";
 export function ShippingZoneFormFields({
   code, form, errors, taken, onChange,
 }: {
-  code: ShippingZoneCode;
+  code: ShippingZoneCode | null;
   form: ShippingZoneForm;
-  errors: Partial<Record<"zone_label" | "fee", string>>;
+  errors: Partial<Record<"zone_label" | "fee" | "provinces", string>>;
   /** จังหวัด → โซนอื่นที่ใช้อยู่ */
   taken: Map<string, ShippingZoneCode>;
   onChange: (f: ShippingZoneForm) => void;
@@ -28,7 +28,7 @@ export function ShippingZoneFormFields({
   return (
     <div className="flex flex-col gap-4">
       <FormField label={t("shippingZones.fields.label")} required error={errors.zone_label}>
-        <Input value={form.zone_label} maxLength={120} onChange={(e) => set("zone_label", e.target.value)} />
+        <Input value={form.zone_label} maxLength={120} placeholder={t("shippingZones.fields.labelPlaceholder")} onChange={(e) => set("zone_label", e.target.value)} />
       </FormField>
 
       <FormField label={t("shippingZones.fields.fee")} required error={errors.fee}>
@@ -40,7 +40,7 @@ export function ShippingZoneFormFields({
         <p className="m-0 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">{t("shippingZones.fallbackHint")}</p>
       ) : (
         <>
-          <FormField label={t("shippingZones.fields.provinces")}>
+          <FormField label={t("shippingZones.fields.provinces")} required={code === null} error={errors.provinces}>
             <Select
               mode="multiple"
               showSearch

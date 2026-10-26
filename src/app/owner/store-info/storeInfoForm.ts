@@ -4,6 +4,8 @@
 // ─────────────────────────────────────────────────────────────
 import type { SocialKey, WeekDay } from "@/services/storeInfo";
 import type { AdminStoreProfile, AdminWeeklyMarket, StoreProfileInput, StoreSettings } from "@/types/storeAdmin";
+// ตัวจัดรูปแบบที่อยู่เดียวกับหน้าร้าน (ต./อ./จ. · แขวง/เขต) — ที่ตั้งหน้าร้านหลักที่บันทึกจะตรงกับที่ลูกค้าเห็น
+import { formatStoreAddress } from "@/app/customer/lib/storeFormat";
 
 /** หัวข้อที่แก้/บันทึกแยกกัน (ทีละหัวข้อ) */
 export type SectionKey = "general" | "contact" | "markets" | "promptpay";
@@ -44,7 +46,7 @@ export const EMPTY_SETTINGS: StoreSettings = {
 };
 
 export const NEW_MARKET: AdminWeeklyMarket = {
-  name: "", location: "", days: [], open_time: "17:00", close_time: "22:00", map_url: "", is_active: true,
+  name: "", location: "", days: [], open_time: "17:00", close_time: "22:00", map_url: "", is_active: true, is_main: false,
 };
 
 export function profileToForm(p: AdminStoreProfile): ProfileForm {
@@ -133,7 +135,7 @@ export function validateMarkets(markets: AdminWeeklyMarket[]): FieldError | null
   return null;
 }
 
-/** ค่าที่ส่ง — ตัดช่องว่าง · วันเรียงจันทร์→อาทิตย์ · คง _id เดิม */
+/** ค่าที่ส่ง — ตัดช่องว่าง · วันเรียงจันทร์→อาทิตย์ · คง _id เดิม · ส่ง is_main เสมอ (ไม่ส่ง = backend ใช้ค่าเดิม) */
 export function marketsPayload(markets: AdminWeeklyMarket[]): AdminWeeklyMarket[] {
   return markets.map((m) => ({
     ...(m._id ? { _id: m._id } : {}),
@@ -144,7 +146,26 @@ export function marketsPayload(markets: AdminWeeklyMarket[]): AdminWeeklyMarket[
     close_time: m.close_time,
     map_url: m.map_url.trim(),
     is_active: m.is_active,
+    is_main: m.is_main === true,
   }));
+}
+
+/** ลิงก์แผนที่จากพิกัดร้าน (รูปแบบเดียวกับหน้า "ติดต่อเรา") · ไม่มีพิกัด = "" */
+function storeMapUrl(a: StoreSettings): string {
+  return a.latitude != null && a.longitude != null
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${a.latitude},${a.longitude}`)}`
+    : "";
+}
+
+/**
+ * หน้าร้านหลักใช้ที่อยู่ร้าน (ด้านบนของการ์ด) เลย — ไม่ต้องกรอกที่ตั้ง/ลิงก์แผนที่ซ้ำ (2026-10-26)
+ * ที่ตั้ง = ที่อยู่ร้าน · ลิงก์แผนที่ = จากพิกัดร้าน (ไม่มีพิกัด = คงลิงก์เดิมไว้)
+ */
+export function syncMainMarket(markets: AdminWeeklyMarket[], address: StoreSettings): AdminWeeklyMarket[] {
+  // ยังกรอกที่อยู่ไม่ครบ (หรือพนักงานที่ไม่เห็นที่อยู่ร้าน) = ไม่แตะ
+  if (ADDRESS_FIELDS.some((k) => !address[k].trim())) return markets;
+  const location = formatStoreAddress(address).slice(0, 200);
+  return markets.map((m) => (m.is_main ? { ...m, location, map_url: storeMapUrl(address) || m.map_url } : m));
 }
 
 /** ตรวจไฟล์โลโก้ — คืน key ของ error หรือ null */

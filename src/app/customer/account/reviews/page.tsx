@@ -6,6 +6,8 @@
 // ตัวกรอง (ฝั่งหน้าเว็บ — โหลดรีวิวของตัวเองมาครบแล้ว) ใช้พร้อมกันได้ทุกกลุ่ม:
 //   ค้นหาชื่อสินค้า/ข้อความรีวิว · สถานะ (ร้านตอบแล้ว / มีรูปหรือวิดีโอ / พรีออเดอร์) · จำนวนดาว · เรียงลำดับ
 // รีวิวที่ร้านซ่อนยังแสดงให้เจ้าของเห็น (มีป้าย "ไม่แสดงบนหน้าสินค้า")
+// แต่ละรีวิวบอกที่มา (2026-10-26): เลขที่คำสั่งซื้อ/พรีออเดอร์ (กดไปหน้ารายละเอียด) · วันที่สั่ง · ตัวเลือก · จำนวน · ราคา
+// มุมขวาบน = "วันที่รีวิว 26 ตุลาคม 2569" (วันที่แบบเต็ม พ.ศ.)
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -20,7 +22,7 @@ import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import ShopImage from "@/components/customer/ShopImage";
-import { shopButton, shopInput, shopPage } from "@/components/customer/shopStyles";
+import { baht, shopButton, shopInput, shopPage } from "@/components/customer/shopStyles";
 import { shopReviewHistoryKey } from "../../lib/shopQueries";
 
 type StatusFilter = "all" | "replied" | "media" | "preorder";
@@ -356,6 +358,9 @@ function ReviewCard({ review: r }: { review: MyReviewDetail }) {
   const photos = r.image.map((u) => resolveUploadUrl(u)).filter((u): u is string => !!u);
   const video = resolveUploadUrl(r.video);
   const productName = r.product.name || t("productRemoved");
+  // "26 ตุลาคม 2569" — th-TH ใช้ปฏิทินพุทธ (พ.ศ.) อยู่แล้ว
+  const longDate = (iso: string) =>
+    new Intl.DateTimeFormat(locale === "th" ? "th-TH" : "en-GB", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
 
   const productHeader = (
     <span className="flex min-w-0 items-center gap-3">
@@ -385,9 +390,59 @@ function ReviewCard({ review: r }: { review: MyReviewDetail }) {
               <EyeOff className="h-3 w-3" aria-hidden="true" /> {t("hidden")}
             </span>
           )}
-          {r.created_at ? formatDate(r.created_at, locale) : ""}
+          {r.created_at && <span className="font-medium text-stone-600">{t("reviewedOn", { date: longDate(r.created_at) })}</span>}
         </span>
       </div>
+
+      {r.source && (
+        <dl className="m-0 grid grid-cols-1 gap-x-6 gap-y-1 rounded-xl bg-[#FAF6F0] px-3.5 py-2.5 text-xs text-stone-600 sm:grid-cols-2 sm:text-sm">
+          <div className="flex gap-1.5">
+            <dt className="shrink-0 text-stone-500">{r.source.kind === "preorder" ? t("fromPreorder") : t("fromOrder")}</dt>
+            <dd className="m-0 min-w-0 font-semibold text-[#4A342E]">
+              {r.source.doc_id ? (
+                <Link
+                  href={r.source.kind === "preorder" ? `/customer/account/preorders/${r.source.doc_id}` : `/customer/account/purchases/${r.source.doc_id}`}
+                  className="underline-offset-2 hover:underline"
+                >
+                  {r.source.doc_no}
+                </Link>
+              ) : (
+                r.source.doc_no
+              )}
+            </dd>
+          </div>
+          {r.source.ordered_at && (
+            <div className="flex gap-1.5">
+              <dt className="shrink-0 text-stone-500">{t("orderedOn")}</dt>
+              <dd className="m-0">{longDate(r.source.ordered_at)}</dd>
+            </div>
+          )}
+          {r.source.variant_name && (
+            <div className="flex gap-1.5">
+              <dt className="shrink-0 text-stone-500">{t("variant")}</dt>
+              <dd className="m-0 min-w-0">{r.source.variant_name}</dd>
+            </div>
+          )}
+          <div className="flex gap-1.5">
+            <dt className="shrink-0 text-stone-500">{t("qtyPrice")}</dt>
+            <dd className="m-0">{t("qtyPriceValue", { n: r.source.quantity, price: baht(r.source.total_price) })}</dd>
+          </div>
+          {r.source.options.length > 0 && (
+            <div className="flex gap-1.5 sm:col-span-2">
+              <dt className="shrink-0 text-stone-500">{t("options")}</dt>
+              <dd className="m-0 min-w-0">
+                {r.source.options.map((o) => (o.text_value ? `${o.option_name}: "${o.text_value}"` : o.option_name)).join(" · ")}
+              </dd>
+            </div>
+          )}
+          {r.source.special_request && (
+            <div className="flex gap-1.5 sm:col-span-2">
+              <dt className="shrink-0 text-stone-500">{t("note")}</dt>
+              <dd className="m-0 min-w-0">{r.source.special_request}</dd>
+            </div>
+          )}
+        </dl>
+      )}
 
       <div className="flex flex-col gap-2">
         <Stars value={r.rating} />

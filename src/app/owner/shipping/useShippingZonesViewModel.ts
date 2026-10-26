@@ -1,7 +1,7 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // ViewModel ของ "ค่าจัดส่งหน้าร้านออนไลน์" (BACKLOG4 F2 · ต้นแบบ FrontOffice owner/shipping) — MVVM + i18n
-// แก้โซน A–D ผ่าน /admin/shipping-zones (สิทธิ์ store_info.view / update · backend Q-BE2)
+// เพิ่ม/แก้/ลบโซนผ่าน /admin/shipping-zones (สิทธิ์ shipping.view/create/update/delete · backend Q-BE2) · โซน D ลบไม่ได้
 // ใช้คิดค่าส่งออเดอร์/พรีออเดอร์ที่ลูกค้าสั่งจากหน้าเว็บ · ค่าส่งของออเดอร์ที่สร้างจากหลังร้านอยู่ที่ "โซนค่าจัดส่ง" (delivery-zones)
 // ขอบเขตจัดส่งรายหมวด (ส่งทั่วประเทศ/เฉพาะจังหวัดร้าน) อยู่ที่ปุ่ม <CategoryShippingButton> มุมขวาบน
 // (ปุ่มเดียวกันในหน้าจัดการข้อมูลสินค้า · ข้อมูลจาก hooks/useCategoryShipping — ไม่ผ่าน ViewModel นี้)
@@ -14,9 +14,13 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { ShippingZone, ShippingZoneCode } from "@/types/shippingZone";
-import { shippingZonesKey } from "@/app/customer/lib/catalogQueries";
+import { CATALOG_PRODUCT_PARAMS, catalogProductsKey, shippingZonesKey } from "@/app/customer/lib/catalogQueries";
+import { useLocalOnlyShipping } from "@/app/customer/hooks/useLocalOnlyShipping";
+import { catalogService } from "@/services/catalog";
+import { sortOptionsThai } from "@/lib/thaiSort";
 import {
-  provinceOwners, resolveShippingZone, toShippingZoneForm, toShippingZoneUpdate, validateShippingZone,
+  EMPTY_SHIPPING_ZONE_FORM, provinceOwners, resolveShippingZone, toShippingZoneCreate, toShippingZoneForm, toShippingZoneUpdate,
+  validateShippingZone,
   type ShippingZoneErrors, type ShippingZoneForm,
 } from "./shippingZoneForm";
 import { SHIPPING_ZONES_KEY as KEY } from "./shippingQuery";
@@ -31,31 +35,59 @@ export function useShippingZonesViewModel() {
   const q = useQuery({ queryKey: KEY, queryFn: () => shippingZonesService.list() });
   const zones = useMemo(() => q.data ?? [], [q.data]);
 
-  // ── แก้ไข (modal) ──
-  const [editing, setEditing] = useState<{ code: ShippingZoneCode; form: ShippingZoneForm } | null>(null);
+  const refresh = () => {
+    void qc.invalidateQueries({ queryKey: KEY });
+    void qc.invalidateQueries({ queryKey: shippingZonesKey });
+  };
+
+  // ── เพิ่ม/แก้ไข (modal) — code = null คือเพิ่มโซนใหม่ ──
+  const [editing, setEditing] = useState<{ code: ShippingZoneCode | null; form: ShippingZoneForm } | null>(null);
   const [errors, setErrors] = useState<ShippingZoneErrors>({});
 
   const save = useMutation({
-    mutationFn: ({ code, form }: { code: ShippingZoneCode; form: ShippingZoneForm }) =>
-      shippingZonesService.update(code, toShippingZoneUpdate(code, form)),
-    onSuccess: (zone) => {
-      alert.success(t("shippingZones.saved", { code: zone.zone_code }));
+    mutationFn: ({ code, form }: { code: ShippingZoneCode | null; form: ShippingZoneForm }) =>
+      code === null ? shippingZonesService.create(toShippingZoneCreate(form)) : shippingZonesService.update(code, toShippingZoneUpdate(code, form)),
+    onSuccess: (zone, { code }) => {
+      alert.success(t(code === null ? "shippingZones.added" : "shippingZones.saved", { code: zone.zone_code }));
       setEditing(null);
-      void qc.invalidateQueries({ queryKey: KEY });
-      void qc.invalidateQueries({ queryKey: shippingZonesKey });
+      refresh();
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("shippingZones.saveFailed")),
   });
 
   const onSave = () => {
     if (!editing) return;
-    const errs = validateShippingZone(editing.form);
+    const errs = validateShippingZone(editing.form, editing.code === null);
     setErrors(errs);
     if (Object.keys(errs).length === 0) save.mutate(editing);
   };
 
-  // ── ตรวจว่าจังหวัดไหนใช้โซนอะไร ──
+  // ── ลบโซน (ยกเว้นโซน D) — จังหวัดของโซนที่ลบไปใช้ค่าส่งโซน D ──
+  const remove = useMutation({
+    mutationFn: (code: ShippingZoneCode) => shippingZonesService.remove(code),
+    onSuccess: (_r, code) => {
+      alert.success(t("shippingZones.deleted", { code }));
+      refresh();
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("shippingZones.deleteFailed")),
+  });
+
+  // ── ลองเช็กค่าส่ง: จังหวัด + สินค้า (ไม่บังคับ) ──
+  // ตรรกะเดียวกับ backend quoteStorefrontDelivery: มีสินค้าที่ส่งได้เฉพาะจังหวัดร้าน + ปลายทางคนละจังหวัด = ส่งไม่ได้
+  // ขอบเขตจัดส่งรายสินค้าใช้ hook เดียวกับป้ายบนบัตรสินค้า (API สาธารณะ) · สินค้า = ที่เปิดขายในหน้าร้าน
   const [checkProvince, setCheckProvince] = useState("");
+  const [checkProducts, setCheckProducts] = useState<string[]>([]);
+  const productsQ = useQuery({ queryKey: catalogProductsKey, queryFn: () => catalogService.products(CATALOG_PRODUCT_PARAMS), staleTime: 5 * 60_000 });
+  const { isLocalOnly, province: storeProvince } = useLocalOnlyShipping();
+  const products = useMemo(() => productsQ.data?.data ?? [], [productsQ.data]);
+  const check = useMemo(() => {
+    if (!checkProvince.trim()) return null;
+    const picked = products.filter((p) => checkProducts.includes(p._id));
+    const localOnlyNames = picked.filter((p) => isLocalOnly(p._id, p.category_id ?? null)).map((p) => p.product_name_th);
+    const zone = resolveShippingZone(checkProvince, zones);
+    const blocked = localOnlyNames.length > 0 && checkProvince.trim() !== storeProvince;
+    return zone ? { zone, blocked, localOnlyNames } : null;
+  }, [checkProvince, checkProducts, products, zones, isLocalOnly, storeProvince]);
 
   return {
     perm,
@@ -72,6 +104,12 @@ export function useShippingZonesViewModel() {
       setErrors({});
       setEditing({ code: z.zone_code, form: toShippingZoneForm(z) });
     },
+    openAdd: () => {
+      setErrors({});
+      setEditing({ code: null, form: { ...EMPTY_SHIPPING_ZONE_FORM } });
+    },
+    onDelete: (z: ShippingZone) => remove.mutate(z.zone_code),
+    deletingCode: remove.isPending ? remove.variables : null,
     closeEdit: () => setEditing(null),
     setForm: (form: ShippingZoneForm) => {
       setEditing((e) => (e ? { ...e, form } : e));
@@ -85,6 +123,11 @@ export function useShippingZonesViewModel() {
 
     checkProvince,
     setCheckProvince,
-    checkResult: checkProvince.trim() ? resolveShippingZone(checkProvince, zones) : null,
+    checkProducts,
+    setCheckProducts,
+    productOptions: sortOptionsThai(products.map((p) => ({ value: p._id, label: p.product_name_th }))),
+    check,
+    /** จังหวัดร้าน (ขอบเขตของสินค้าที่ส่งทั่วประเทศไม่ได้) */
+    storeProvince,
   };
 }

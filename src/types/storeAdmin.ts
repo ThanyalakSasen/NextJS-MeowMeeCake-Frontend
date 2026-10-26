@@ -16,6 +16,8 @@ export interface AdminWeeklyMarket {
   map_url: string;
   /** false = ซ่อน (งดออกร้านชั่วคราว) · ต้องเปิดอย่างน้อย 1 แห่ง */
   is_active: boolean;
+  /** หน้าร้านหลัก — มีได้ 1 แห่ง · backend จัดให้อยู่ลำดับแรกเสมอ */
+  is_main?: boolean;
 }
 
 export interface PhoneContact {

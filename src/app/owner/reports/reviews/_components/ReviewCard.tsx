@@ -1,16 +1,16 @@
 "use client";
-// การ์ดรีวิว 1 รายการ — เลือก · รูปสินค้า · ดาว/ลูกค้า/วันที่/เลขออเดอร์ · ป้ายที่มาผลวิเคราะห์ + ตอบแล้ว/ยัง ·
+// การ์ดรีวิว 1 รายการ — ป้าย "ใหม่" (ยังไม่อ่าน) + ปุ่มอ่านแล้ว · รูปสินค้า · ดาว/ลูกค้า/วันที่/เลขออเดอร์ · ป้ายที่มาผลวิเคราะห์ + ตอบแล้ว/ยัง ·
 // สถานะ (แสดง/ซ่อน/รออนุมัติ) · ปักหมุด · อ่านแล้ว · ข้อความ (ย่อ/อ่านเพิ่ม) · หัวข้อชอบ/ติ · แท็กภายใน · รูป/วิดีโอ ·
 // โน้ตภายใน · ตอบกลับ · ปุ่มแท็ก/รายละเอียด/ลบ — ปุ่มแก้ไขตามสิทธิ์ reports.update / delete
 import { useState } from "react";
-import { Checkbox, Image, Tooltip } from "antd";
+import { Image, Tooltip } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-import { PhotoIcon, TagIcon } from "@heroicons/react/24/outline";
+import { PhotoIcon } from "@heroicons/react/24/outline";
 import { MapPinIcon as PinSolid } from "@heroicons/react/24/solid";
 import { MapPinIcon as PinOutline } from "@heroicons/react/24/outline";
 import { Button, Select } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
-import { DeleteButton, ViewButton } from "@/components/shared/actions";
+import { DeleteButton } from "@/components/shared/actions";
 import { formatDate } from "@/i18n/format";
 import ShopImage from "@/components/customer/ShopImage";
 import { thumbSrc } from "@/lib/thumbSrc";
@@ -34,21 +34,17 @@ const SOURCE_CLASS = {
 } as const;
 
 export function ReviewCard({
-  review: r, selected, canUpdate, canDelete, suggestions,
-  onSelect, onStatus, onTogglePin, onSaveReply, onSaveNote, onTags, onDetail, onDelete,
+  review: r, canUpdate, canDelete, suggestions,
+  onStatus, onTogglePin, onSaveReply, onSaveNote, onDelete,
 }: {
   review: ReviewRow;
-  selected: boolean;
   canUpdate: boolean;
   canDelete: boolean;
   suggestions: ReplySuggestion[];
-  onSelect: () => void;
   onStatus: (s: ReviewStatus) => void;
   onTogglePin: () => void;
   onSaveReply: (text: string) => Promise<boolean>;
   onSaveNote: (text: string) => Promise<boolean>;
-  onTags: () => void;
-  onDetail: () => void;
   onDelete: () => void;
 }) {
   const t = useTranslations();
@@ -59,8 +55,7 @@ export function ReviewCard({
   const replied = !!r.shop_reply?.text;
 
   return (
-    <li className={`flex gap-3 rounded-xl border bg-white p-3 ${selected ? "border-brown-300 ring-1 ring-brown-200" : "border-gray-100"}`}>
-      <Checkbox checked={selected} onChange={onSelect} className="mt-1 self-start" aria-label={t("reviews.selectOne")} />
+    <li className="flex gap-3 rounded-xl border border-gray-100 bg-white p-3">
       {/* รูปสินค้า — ซ่อนบนจอแคบ ให้เนื้อหารีวิวได้ความกว้างเต็ม */}
       <div className="hidden h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100 sm:flex">
         {r.productImage ? (
@@ -134,15 +129,13 @@ export function ReviewCard({
           <p className="m-0 mt-1 text-xs text-gray-300">{t("reviews.noComment")}</p>
         )}
 
-        {(r.topics.length > 0 || r.internalTags.length > 0) && (
+        {/* แท็กภายในไม่แสดงแล้ว (2026-10-26 — เอาปุ่มแก้แท็กออก) · เหลือหัวข้อที่ลูกค้าพูดถึง */}
+        {r.topics.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1">
             {r.topics.map((tp, i) => (
               <span key={`t-${i}`} className={`rounded border px-1.5 py-0.5 text-[11px] ${TOPIC_CLASS[tp.sentiment]}`}>
                 {tp.label || t("reviews.unknownTopic")}
               </span>
-            ))}
-            {r.internalTags.map((tag) => (
-              <span key={`g-${tag}`} className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600">#{tag.replace(/^#/, "")}</span>
             ))}
           </div>
         )}
@@ -178,12 +171,7 @@ export function ReviewCard({
         </div>
 
         <div className="mt-2 flex flex-wrap items-center justify-end gap-1">
-          {canUpdate && (
-            <Button size="small" type="text" icon={<TagIcon className="h-4 w-4" />} onClick={onTags}>
-              {t("reviews.internalTags")}
-            </Button>
-          )}
-          <ViewButton size="small" onClick={onDetail} />
+          {/* เอาปุ่ม "แท็กภายใน" กับ "ดู" ออก (2026-10-26) — เหลือแค่ลบ */}
           {canDelete && (
             <ConfirmDeletePopup title={t("reviews.deleteConfirm")} onConfirm={onDelete}>
               <DeleteButton size="small" />

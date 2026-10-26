@@ -1,5 +1,6 @@
 "use client";
-// หน้าร้านประจำสัปดาห์ — หน้าร้านหลัก + จุดออกร้านประจำ พร้อมวัน-เวลาเปิด
+// หน้าร้านประจำสัปดาห์ (โหมดแก้ไข) — หน้าร้านหลัก (ป้าย/ปุ่ม "ตั้งเป็นหน้าร้านหลัก" · อยู่ลำดับแรก · ที่ตั้ง = ที่อยู่ร้าน ไม่ต้องกรอก) + จุดออกร้านประจำ พร้อมวัน-เวลาเปิด
+// โหมดดู = MarketsRead (ReadView.tsx)
 // ลูกค้าเห็นที่ "ติดต่อเรา" และเลือกเป็นจุดรับสินค้าตอนสั่งแบบรับเอง (เฉพาะที่เปิดแสดง) · ต้องเปิดอย่างน้อย 1 แห่ง
 // แก้/ลบได้ตามสิทธิ์ (canEdit/canRemove จาก ViewModel) · รายการใหม่แก้ได้เสมอ
 import { useTranslations } from "next-intl";
@@ -12,7 +13,7 @@ import { TimeSelect } from "./TimeSelect";
 import { actionIcon } from "@/components/shared/actions";
 
 export function WeeklyMarketsEditor({
-  markets, editing, error, canCreate, canEdit, canRemove, onField, onToggleDay, onToggleActive, onAdd, onRemove,
+  markets, editing, error, canCreate, canEdit, canRemove, onField, onToggleDay, onToggleActive, onAdd, onRemove, onSetMain, mainAddress,
 }: {
   markets: AdminWeeklyMarket[];
   editing: boolean;
@@ -25,12 +26,17 @@ export function WeeklyMarketsEditor({
   onToggleActive: (i: number, active: boolean) => void;
   onAdd: () => void;
   onRemove: (i: number) => void;
+  onSetMain: (i: number) => void;
+  /** ช่องที่อยู่ร้าน + พิกัด (เจ้าของร้าน) — แสดงในรายการหน้าร้านหลัก: ที่อยู่ร้าน = ที่ตั้งหน้าร้านหลัก (ข้อมูลชุดเดียวกัน) */
+  mainAddress?: React.ReactNode;
 }) {
   const t = useTranslations();
   const noneActive = !markets.some((m) => m.is_active);
 
+  const hasMain = markets.some((m) => m.is_main);
   return (
     <div className="flex flex-col gap-3">
+      {mainAddress && !hasMain && <div className="rounded-lg border border-gray-100 p-3">{mainAddress}</div>}
       {noneActive && (
         <p className="m-0 text-xs text-amber-600">
           {markets.length === 0 ? t("storeInfo.markets.empty") : t("storeInfo.markets.noneActive")}
@@ -52,6 +58,15 @@ export function WeeklyMarketsEditor({
                   onChange={(v) => onToggleActive(i, v)}
                 />
                 <span className="text-xs text-gray-500">{m.is_active ? t("storeInfo.markets.active") : t("storeInfo.markets.hidden")}</span>
+                {m.is_main ? (
+                  <span className="rounded-full bg-brown-800 px-2 py-0.5 text-xs font-semibold text-white">{t("storeInfo.markets.main")}</span>
+                ) : (
+                  editable && (
+                    <Button type="link" size="small" onClick={() => onSetMain(i)}>
+                      {t("storeInfo.markets.setMain")}
+                    </Button>
+                  )
+                )}
               </span>
               {canRemove(m) && (
                 <Button type="link" danger size="small" onClick={() => onRemove(i)}>
@@ -70,16 +85,27 @@ export function WeeklyMarketsEditor({
                   onChange={(e) => onField(i, "name", e.target.value)}
                 />
               </FormField>
-              <FormField label={t("storeInfo.markets.location")}>
-                <Input
-                  value={m.location}
-                  maxLength={200}
-                  disabled={!editable}
-                  placeholder={editable ? t("storeInfo.markets.locationPlaceholder") : "—"}
-                  onChange={(e) => onField(i, "location", e.target.value)}
-                />
-              </FormField>
+              {m.is_main ? (
+                // หน้าร้านหลัก: ที่ตั้ง = ที่อยู่ร้าน (กรอกด้านล่าง) — พนักงานที่ไม่เห็นที่อยู่ร้านเห็นข้อความแทน
+                !mainAddress && (
+                  <FormField label={t("storeInfo.markets.location")}>
+                    <p className="m-0 rounded-lg bg-brown-50 px-3 py-2 text-xs leading-relaxed text-brown-800">{t("storeInfo.markets.mainUsesAddress")}</p>
+                  </FormField>
+                )
+              ) : (
+                <FormField label={t("storeInfo.markets.location")}>
+                  <Input
+                    value={m.location}
+                    maxLength={200}
+                    disabled={!editable}
+                    placeholder={editable ? t("storeInfo.markets.locationPlaceholder") : "—"}
+                    onChange={(e) => onField(i, "location", e.target.value)}
+                  />
+                </FormField>
+              )}
             </div>
+
+            {m.is_main && mainAddress}
 
             <div className="flex flex-col gap-1">
               <span className="text-sm text-brown-800">
@@ -121,7 +147,7 @@ export function WeeklyMarketsEditor({
                     onChange={(v) => onField(i, "close_time", v)} />
                 </span>
               </div>
-              <FormField label={t("storeInfo.markets.mapUrl")}>
+              {!m.is_main && <FormField label={t("storeInfo.markets.mapUrl")}>
                 <Input
                   type="url"
                   value={m.map_url}
@@ -129,7 +155,7 @@ export function WeeklyMarketsEditor({
                   placeholder={editable ? "https://maps.app.goo.gl/..." : "—"}
                   onChange={(e) => onField(i, "map_url", e.target.value)}
                 />
-              </FormField>
+              </FormField>}
             </div>
           </div>
         );

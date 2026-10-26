@@ -15,6 +15,7 @@ export type MenuKey =
   | "pricing" | "promotions"
   | "production" | "ingredients" | "ingredient_stock" | "ingredient_history" | "units" | "recipes"
   | "employees" | "permissions" | "user_log"
+  | "chats"
   | "store_design" | "store_info" | "shipping"
   | "reports";
 
@@ -26,6 +27,7 @@ export const ALL_MENU_KEYS: MenuKey[] = [
   "pricing", "promotions",
   "production", "ingredients", "ingredient_stock", "ingredient_history", "units", "recipes",
   "employees", "permissions", "user_log",
+  "chats",
   "store_design", "store_info", "shipping",
 ];
 
@@ -77,6 +79,8 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/store-design", menuKey: "store_design" },
   { prefix: "/owner/store-info", menuKey: "store_info" },
   { prefix: "/owner/shipping", menuKey: "shipping" },
+  // แชทลูกค้า (แทนฟอร์มส่งข้อความหาเรา 2026-10-26)
+  { prefix: "/owner/chats", menuKey: "chats" },
 ];
 
 export function resolveMenuKey(pathname: string): MenuKey | null {

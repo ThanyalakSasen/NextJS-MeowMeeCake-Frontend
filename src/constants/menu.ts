@@ -64,7 +64,8 @@ export const MENU_SECTIONS: MenuSection[] = [
           { labelKey: "products", href: "/owner/products", icon: "ShoppingBagIcon", menuKey: "products" },
           { labelKey: "productStock", href: "/owner/products/productStock", icon: "ArchiveBoxIcon", menuKey: "stock" },
           // คำพ้องค้นหา (E3) — /admin/search-synonyms ใช้สิทธิ์ search_synonyms.*
-          { labelKey: "searchSynonyms", href: "/owner/products/search-synonyms", icon: "TagIcon", menuKey: "search_synonyms" },
+          // คำพ้องค้นหา — ซ่อนจากเมนู (2026-10-26) · หน้า /owner/products/search-synonyms + สิทธิ์ยังอยู่
+          // { labelKey: "searchSynonyms", href: "/owner/products/search-synonyms", icon: "TagIcon", menuKey: "search_synonyms" },
         ],
       },
       {
@@ -81,6 +82,8 @@ export const MENU_SECTIONS: MenuSection[] = [
         ],
       },
       { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "pos" },
+      // แชทลูกค้า — /admin/chats ใช้สิทธิ์ chats.* (ตัวเลขข้อความที่ยังไม่อ่านแสดงข้างชื่อเมนู — Sidebar)
+      { labelKey: "chats", icon: "ChatBubbleLeftRightIcon", href: "/owner/chats", menuKey: "chats" },
       {
         labelKey: "promotions",
         icon: "TagIcon",

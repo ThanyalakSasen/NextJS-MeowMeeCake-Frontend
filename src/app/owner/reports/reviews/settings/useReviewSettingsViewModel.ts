@@ -103,11 +103,12 @@ export function useReviewSettingsViewModel() {
     onError: fail,
   });
 
-  const move = (index: number, dir: -1 | 1) => {
-    const j = index + dir;
-    if (j < 0 || j >= aspects.length) return;
+  /** ย้ายหัวข้อจากตำแหน่ง from ไป to (ลากการ์ด · ปุ่มลูกศรบนคีย์บอร์ด) — บันทึกลำดับทั้งชุด */
+  const moveTo = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0 || from >= aspects.length || to >= aspects.length) return;
     const ids = aspects.map((a) => a._id);
-    [ids[index], ids[j]] = [ids[j], ids[index]];
+    const [moved] = ids.splice(from, 1);
+    ids.splice(to, 0, moved);
     reorder.mutate(ids);
   };
 
@@ -181,7 +182,8 @@ export function useReviewSettingsViewModel() {
       const v = text.trim();
       if (v !== (a.placeholder_text ?? "")) updateAspect.mutate({ id: a._id, body: { placeholder_text: v || null } });
     },
-    onMove: move,
+    onMove: (index: number, dir: -1 | 1) => moveTo(index, index + dir),
+    onMoveTo: moveTo,
     reordering: reorder.isPending,
     onDeleteAspect: (a: ReviewAspect) => removeAspect.mutate(a),
     onRestoreAspect: (a: ReviewAspect) => restoreAspect.mutate(a),

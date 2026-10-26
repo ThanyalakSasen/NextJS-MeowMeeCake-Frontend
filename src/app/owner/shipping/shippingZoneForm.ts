@@ -1,10 +1,11 @@
 // ─────────────────────────────────────────────────────────────
 // ฟอร์ม + กติกาโซนค่าส่งเว็บ (BACKLOG4 F2) — สำเนากติกา backend schemas/shipping.ts + shippingService.updateShippingZone
 //   - จังหวัดต้องเป็นชื่อทางการใน 77 จังหวัด (หน้าเว็บให้เลือกจากรายการเท่านั้น)
-//   - จังหวัดหนึ่งอยู่ได้โซนเดียว · โซน D = จังหวัดที่เหลือทั้งหมด (ใส่จังหวัดไม่ได้)
-//   - ค่าส่งคิดตามจังหวัดในที่อยู่ลูกค้า: ตรงกับ A/B/C → โซนนั้น · ไม่ตรง = โซน D (backend lib/shipping.ts computeShippingFee)
+//   - จังหวัดหนึ่งอยู่ได้โซนเดียว · โซน D = จังหวัดที่เหลือทั้งหมด (ใส่จังหวัดไม่ได้ · ลบไม่ได้)
+//   - ค่าส่งคิดตามจังหวัดในที่อยู่ลูกค้า: ตรงกับโซนไหน → โซนนั้น · ไม่ตรง = โซน D (backend lib/shipping.ts computeShippingFee)
+//   - เพิ่มโซนใหม่ได้ (2026-10-26) — ต้องเลือกจังหวัดอย่างน้อย 1 · รหัสโซน backend ตั้งให้
 // ─────────────────────────────────────────────────────────────
-import type { ShippingZone, ShippingZoneCode, ShippingZoneUpdate } from "@/types/shippingZone";
+import type { ShippingZone, ShippingZoneCode, ShippingZoneCreate, ShippingZoneUpdate } from "@/types/shippingZone";
 
 export interface ShippingZoneForm {
   zone_label: string;
@@ -12,11 +13,13 @@ export interface ShippingZoneForm {
   provinces: string[];
 }
 
-export type ShippingZoneErrorKey = "labelRequired" | "labelTooLong" | "feeInvalid";
-export type ShippingZoneErrors = Partial<Record<"zone_label" | "fee", ShippingZoneErrorKey>>;
+export type ShippingZoneErrorKey = "labelRequired" | "labelTooLong" | "feeInvalid" | "provincesRequired";
+export type ShippingZoneErrors = Partial<Record<"zone_label" | "fee" | "provinces", ShippingZoneErrorKey>>;
 
 /** โซนที่เหลือทั้งหมด — ไม่มีรายชื่อจังหวัด */
 export const FALLBACK_ZONE: ShippingZoneCode = "D";
+
+export const EMPTY_SHIPPING_ZONE_FORM: ShippingZoneForm = { zone_label: "", fee: 0, provinces: [] };
 
 export const toShippingZoneForm = (z: ShippingZone): ShippingZoneForm => ({
   zone_label: z.zone_label,
@@ -24,12 +27,14 @@ export const toShippingZoneForm = (z: ShippingZone): ShippingZoneForm => ({
   provinces: [...z.provinces],
 });
 
-export function validateShippingZone(f: ShippingZoneForm): ShippingZoneErrors {
+/** isNew = เพิ่มโซนใหม่ — ต้องมีจังหวัดอย่างน้อย 1 (โซนที่ไม่มีจังหวัดไม่มีผลอะไร) */
+export function validateShippingZone(f: ShippingZoneForm, isNew = false): ShippingZoneErrors {
   const e: ShippingZoneErrors = {};
   const label = f.zone_label.trim();
   if (!label) e.zone_label = "labelRequired";
   else if (label.length > 120) e.zone_label = "labelTooLong";
   if (!Number.isFinite(f.fee) || f.fee < 0 || Math.round(f.fee * 100) !== f.fee * 100) e.fee = "feeInvalid";
+  if (isNew && f.provinces.length === 0) e.provinces = "provincesRequired";
   return e;
 }
 
@@ -38,6 +43,12 @@ export const toShippingZoneUpdate = (code: ShippingZoneCode, f: ShippingZoneForm
   zone_label: f.zone_label.trim(),
   fee: f.fee,
   ...(code === FALLBACK_ZONE ? {} : { provinces: [...new Set(f.provinces)] }),
+});
+
+export const toShippingZoneCreate = (f: ShippingZoneForm): ShippingZoneCreate => ({
+  zone_label: f.zone_label.trim(),
+  fee: f.fee,
+  provinces: [...new Set(f.provinces)],
 });
 
 /** จังหวัด → รหัสโซนที่ใช้อยู่ (ไม่นับโซนที่กำลังแก้) — ใช้ปิดตัวเลือกที่อยู่โซนอื่นแล้ว */

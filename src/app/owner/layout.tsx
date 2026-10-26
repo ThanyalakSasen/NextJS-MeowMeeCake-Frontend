@@ -15,8 +15,9 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const qc = new QueryClient();
   if (user) qc.setQueryData(CURRENT_USER_KEY, user);
   // ยกเว้น shop.notifications — กระดิ่งหลังร้านใช้ชุดเดียวกับหน้าร้าน (NotificationDropdown · shared/notifications/NotificationRow)
+  // + shop.orderStatus — การ์ดออเดอร์ที่แนบในแชท (shared/chat/ChatMessageList · หน้าแชทลูกค้าหลังร้าน)
   const { shop, ...rest } = all;
-  const messages = { ...rest, shop: { notifications: shop.notifications } };
+  const messages = { ...rest, shop: { notifications: shop.notifications, orderStatus: shop.orderStatus } };
   return (
     <NextIntlClientProvider messages={messages}>
       <HydrationBoundary state={dehydrate(qc)}>

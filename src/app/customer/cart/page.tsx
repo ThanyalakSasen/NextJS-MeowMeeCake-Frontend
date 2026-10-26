@@ -5,12 +5,14 @@
 // ตัดออก (backend ยังไม่รองรับ): แพ็กเกจ/เซ็ตขนม · ตัวเลือกสินค้าหลายตัว · หมายเหตุต่อชิ้น
 // รายการที่ซื้อไม่ได้ (ปิดขาย · หมด · สต็อกไม่พอ — สต็อกจาก /catalog/products/:id) แสดงต่อบรรทัด + ปิดปุ่มสั่งซื้อ (U6 · lib/cartIssues)
 // backend ตรวจซ้ำตอนกดสั่งซื้อเสมอ · ช่องค้นหาอยู่ใน Navbar หน้าร้านแล้ว (FrontOffice ซ่อน Navbar ในตะกร้าเลยมีช่องแยก)
+// ตะกร้าเดียวทั้งสินค้าปกติและพรีออเดอร์ — มีสินค้าปกติ = แสดงแค่สินค้าปกติ + แถบเตือนว่ามีพรีออเดอร์ค้าง · ไม่มี = แสดงรายการพรีออเดอร์ (localStorage · preorderBasket)
+// สั่งแยกกัน 2 ปุ่ม: สินค้าปกติ → /customer/checkout · พรีออเดอร์ → /customer/preorder/checkout (backend สร้างคนละคำสั่งซื้อ · 1 พรีออเดอร์ = 1 รอบ)
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
-import { FaImage, FaTrashAlt } from "react-icons/fa";
+import { FaCalendarCheck, FaImage, FaShoppingCart, FaTrashAlt } from "react-icons/fa";
 import { cartItemOptionText, shopCartService, type ShopCart, type ShopCartItem } from "@/services/shopCart";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { alert } from "@/lib/alert";
@@ -26,6 +28,10 @@ import { cartIssueText, cartIssues, cartProductId, type StockInfo } from "../lib
 import FlowSteps from "@/components/customer/FlowSteps";
 import ShopImage from "@/components/customer/ShopImage";
 import ShopSpinner from "@/components/customer/ShopSpinner";
+import {
+  basketLineKey, removePreorderBasketItem, updatePreorderBasketItem, usePreorderBasket, type PreorderBasket,
+} from "../preorder/lib/preorderBasket";
+import { thaiDate } from "../preorder/lib/preorderDates";
 
 export default function CartPage() {
   const t = useTranslations("shop.cart");
@@ -44,6 +50,7 @@ function CartContent() {
   const tc = useTranslations("shop.common");
   const qc = useQueryClient();
   const setCount = useCartCountStore((s) => s.setCount);
+  const basket = usePreorderBasket();
 
   const cartQ = useQuery({
     queryKey: shopCartKey,
@@ -119,14 +126,19 @@ function CartContent() {
 
   const cart: ShopCart = cartQ.data;
   const issues = cartIssues(cart.items, stockOf);
+  const hasNormal = cart.items.length > 0;
+  // มีสินค้าปกติ = แสดงเฉพาะสินค้าปกติ (ไม่แสดงพรีออเดอร์เลย) · ไม่มี = แสดงรายการพรีออเดอร์แทน (2026-10-26)
+  const preorder = hasNormal ? null : basket;
+  // พรีออเดอร์ที่ถูกซ่อนไว้ (มีสินค้าปกติอยู่) — บอกว่ายังค้างอยู่ ไม่ให้ลูกค้าลืม
+  const hiddenPreorderCount = hasNormal ? (basket?.items.length ?? 0) : 0;
 
   return (
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("title") }]} className="!mb-0" />
-        {cart.items.length > 0 && <FlowSteps kind="order" current={1} />}
+        {(hasNormal || preorder) && <FlowSteps current={1} />}
 
-        {cart.items.length === 0 ? (
+        {!hasNormal && !preorder ? (
           <div className={`${shopCard} mx-auto w-full max-w-md space-y-4 text-center`}>
             <h2 className="text-lg font-bold">{t("empty")}</h2>
             <Link href="/customer/product" className={`${shopButtonPrimary} w-full`}>
@@ -138,12 +150,32 @@ function CartContent() {
             <div className="space-y-4 lg:col-span-8">
               <div className="flex items-center justify-between">
                 <h1 className="text-xl font-bold">
-                  {t("title")} <span className="text-sm font-medium text-gray-500">{t("itemCount", { n: cart.items.length })}</span>
+                  {t("title")} <span className="text-sm font-medium text-gray-500">{t("itemCount", { n: hasNormal ? cart.items.length : (preorder?.items.length ?? 0) })}</span>
                 </h1>
                 <Link href="/customer/product" className="text-sm font-semibold text-[#8C5A3C] hover:text-[#4A342E]">
                   {t("continueShopping")}
                 </Link>
               </div>
+
+              {hiddenPreorderCount > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  <span className="flex items-center gap-2">
+                    <FaCalendarCheck className="shrink-0" aria-hidden="true" />
+                    {t("preorderPending", { n: hiddenPreorderCount })}
+                  </span>
+                  <Link href="/customer/preorder/checkout" className="font-semibold underline-offset-2 hover:underline">
+                    {t("checkoutPreorder")}
+                  </Link>
+                </div>
+              )}
+
+              {/* ── สินค้าปกติ ── */}
+              {hasNormal && (
+                <h2 className="m-0 flex items-center gap-2 text-base font-bold text-[#4A342E]">
+                  <FaShoppingCart className="text-[#8C5A3C]" aria-hidden="true" />
+                  {t("normalSection")} <span className="text-sm font-medium text-gray-500">{t("itemCount", { n: cart.items.length })}</span>
+                </h2>
+              )}
 
               {cart.items.map((item) => {
                 const product = productOf(item);
@@ -211,11 +243,18 @@ function CartContent() {
                   </div>
                 );
               })}
+
+              {/* ── พรีออเดอร์ (ต่อจากสินค้าปกติ) ── */}
+              {preorder && <PreorderSection basket={preorder} withDivider={false} />}
             </div>
 
-            <div className="lg:sticky lg:top-44 lg:col-span-4">
+            <div className="flex flex-col gap-4 lg:sticky lg:top-44 lg:col-span-4">
+              {hasNormal && (
               <div className={`${shopCard} space-y-4`}>
-                <h2 className="border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">{t("summary")}</h2>
+                <h2 className="flex items-center gap-2 border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">
+                  <FaShoppingCart className="text-base text-[#8C5A3C]" aria-hidden="true" />
+                  {t("summary")}
+                </h2>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-gray-600">
                     <span>{t("subtotal", { n: cart.summary.total_quantity })}</span>
@@ -242,10 +281,124 @@ function CartContent() {
                 )}
                 <p className="text-center text-xs text-gray-500">{t("payHint")}</p>
               </div>
+              )}
+              {preorder && <PreorderSummary basket={preorder} />}
             </div>
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+const basketQty = (b: PreorderBasket) => b.items.reduce((n, it) => n + it.quantity, 0);
+const basketTotal = (b: PreorderBasket) => b.items.reduce((n, it) => n + it.unit_price * it.quantity, 0);
+
+/** รายการพรีออเดอร์ในตะกร้า — แก้จำนวน (ในขั้นต่ำ–สูงสุดของรอบ) / ลบได้ · หมายเหตุพิเศษแก้ที่หน้ายืนยันพรีออเดอร์ */
+function PreorderSection({ basket, withDivider }: { basket: PreorderBasket; withDivider: boolean }) {
+  const t = useTranslations("shop.cart");
+  const locale = useLocale();
+  const { name: localName } = useLocalName();
+  return (
+    <section className={`space-y-4 ${withDivider ? "border-t border-dashed border-[#8C5A3C]/30 pt-4" : ""}`}>
+      <div>
+        <h2 className="m-0 flex items-center gap-2 text-base font-bold text-[#4A342E]">
+          <FaCalendarCheck className="text-[#8C5A3C]" aria-hidden="true" />
+          {t("preorderSection")} <span className="text-sm font-medium text-gray-500">{t("itemCount", { n: basket.items.length })}</span>
+        </h2>
+        <p className="m-0 mt-0.5 text-xs text-gray-600">{t("preorderRound", { round: basket.round_name, date: thaiDate(basket.pickup_date, false, locale) })}</p>
+      </div>
+      {basket.items.map((it) => {
+        const key = basketLineKey(it);
+        const img = resolveUploadUrl(it.product_img);
+        const name = localName(it.product_name_th, it.product_name_eng);
+        return (
+          <div key={key} className={`${shopCard} flex gap-4`}>
+            <Link
+              href={`/customer/product/${it.product_id}?round=${basket.round_id}`}
+              className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#FAF6F0] sm:h-24 sm:w-24"
+            >
+              {img ? (
+                <ShopImage src={img} alt={name} width={192} height={192} sizes="96px" className="h-full w-full object-cover" />
+              ) : (
+                <FaImage className="text-2xl text-[#8C5A3C]/40" />
+              )}
+            </Link>
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1.5 font-bold">
+                    <span className="truncate">{name}</span>
+                    <span className="shrink-0 rounded-full bg-[#FAF6F0] px-2 py-0.5 text-[10px] font-semibold text-[#8C5A3C]">{t("preorderBadge")}</span>
+                  </p>
+                  {it.option_text && <p className="text-xs text-gray-500">{it.option_text}</p>}
+                  <p className="text-sm text-gray-600">{t("perUnit", { price: baht(it.unit_price) })}</p>
+                  {it.min_qty > 1 && <p className="text-[11px] text-gray-500">{t("preorderMinQty", { n: it.min_qty })}</p>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removePreorderBasketItem(key)}
+                  aria-label={t("removeItem", { name })}
+                  className="rounded-lg p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+                >
+                  <FaTrashAlt />
+                </button>
+              </div>
+              <div className="mt-auto flex items-center justify-between gap-3">
+                <div className="flex items-center overflow-hidden rounded-xl border border-[#8C5A3C]/30">
+                  <button
+                    type="button"
+                    onClick={() => updatePreorderBasketItem(key, { quantity: it.quantity - 1 })}
+                    disabled={it.quantity <= Math.max(1, it.min_qty)}
+                    aria-label={t("decrease")}
+                    className="flex h-[34px] w-[36px] items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40"
+                  >
+                    -
+                  </button>
+                  <span className="w-10 text-center text-sm font-bold">{it.quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => updatePreorderBasketItem(key, { quantity: it.quantity + 1 })}
+                    disabled={it.quantity >= it.max_qty}
+                    aria-label={t("increase")}
+                    className="flex h-[34px] w-[36px] items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40"
+                  >
+                    +
+                  </button>
+                </div>
+                <span className="font-bold text-[#8C5A3C]">{baht(it.unit_price * it.quantity)}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+/** สรุปพรีออเดอร์ — สั่งแยกจากสินค้าปกติ (ไปหน้ายืนยันพรีออเดอร์) */
+function PreorderSummary({ basket }: { basket: PreorderBasket }) {
+  const t = useTranslations("shop.cart");
+  return (
+    <div className={`${shopCard} space-y-4`}>
+      <h2 className="flex items-center gap-2 border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">
+        <FaCalendarCheck className="text-base text-[#8C5A3C]" aria-hidden="true" />
+        {t("summaryPreorder")}
+      </h2>
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between text-gray-600">
+          <span>{t("subtotal", { n: basketQty(basket) })}</span>
+          <span className="font-semibold text-[#4A342E]">{baht(basketTotal(basket))}</span>
+        </div>
+        <div className="flex justify-between text-gray-600">
+          <span>{t("deliveryFee")}</span>
+          <span className="italic text-[#8C5A3C]">{t("nextStep")}</span>
+        </div>
+      </div>
+      <Link href="/customer/preorder/checkout" className={`${shopButtonPrimary} w-full`}>
+        {t("checkoutPreorder")}
+      </Link>
+      <p className="text-center text-xs text-gray-500">{t("preorderSeparate")}</p>
     </div>
   );
 }

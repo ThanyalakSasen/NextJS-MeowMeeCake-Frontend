@@ -1,7 +1,7 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ShippingScopePanel — "จัดส่งนอกจังหวัดตามหมวดหมู่สินค้า" (ในปุ่มจัดส่งนอกจังหวัด หน้าค่าจัดส่งหน้าร้านออนไลน์)
-//   บนสุด: สรุปทั้งร้าน (ส่งทั่วประเทศ x · เฉพาะจังหวัดร้าน y) + ค้นหา · กรองหมวด · กรองขอบเขต
+// ShippingScopePanel — "ตั้งค่าส่งสินค้าไปต่างจังหวัด" (ปุ่มตั้งค่าส่งต่างจังหวัด หน้าค่าจัดส่ง)
+//   บนสุด: สรุปทั้งร้าน (ส่งได้ทุกจังหวัด x · เฉพาะจังหวัดร้าน y) + ค้นหา · กรองหมวด (เอาตัวกรองขอบเขตจัดส่งออก 2026-10-26)
 //   แต่ละหมวด = การ์ด: ชื่อ + จำนวน + ป้ายสถานะ (ทุกรายการ / บางรายการ x/n / เฉพาะจังหวัดร้าน) + สวิตช์ "ทั้งหมวด"
 //     กดหัวการ์ดเพื่อกางสินค้า — กางได้ทีละหมวด (กางหมวดใหม่ หมวดเดิมย่อเอง) · สวิตช์ทั้งหมวด = ตั้งค่าหมวด + ล้างค่ารายสินค้า (useCategoryShipping.onToggleWholeCategory)
 //   แต่ละสินค้า = สวิตช์รายสินค้า กดแล้วบันทึกทันที (useProductShipping) · ป้าย "ตั้งแยกจากหมวด" = ค่าต่างจากหมวด
@@ -14,7 +14,7 @@ import { EmptyState, Select, Switch } from "@/components/base";
 import { SearchInput } from "@/components/shared/data";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { useCategoryShipping } from "@/hooks/useCategoryShipping";
-import type { ShippingScopeFilter, useProductShipping } from "@/hooks/useProductShipping";
+import type { useProductShipping } from "@/hooks/useProductShipping";
 import type { CategoryShipping, ProductShipping } from "@/types/shippingZone";
 import { CategoryShippingSwitch } from "./CategoryShippingSwitch";
 
@@ -177,18 +177,6 @@ export function ShippingScopePanel({ cats, prods }: { cats: Cats; prods: Prods }
           placeholder={t("shippingZones.products.categoryFilter")}
           aria-label={t("shippingZones.products.categoryFilter")}
           onChange={(v?: string) => prods.setCategoryId(v)}
-        />
-        <Select
-          allowClear
-          className="w-full sm:w-40"
-          value={prods.scope}
-          options={[
-            { value: "nationwide", label: t("shippingZones.categories.nationwide") },
-            { value: "province", label: t("shippingZones.categories.provinceOnly") },
-          ]}
-          placeholder={t("shippingZones.products.scopeFilter")}
-          aria-label={t("shippingZones.products.scopeFilter")}
-          onChange={(v?: ShippingScopeFilter) => prods.setScope(v)}
         />
       </div>
 

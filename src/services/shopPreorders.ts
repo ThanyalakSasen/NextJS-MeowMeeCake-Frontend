@@ -36,6 +36,8 @@ export interface RoundProduct {
   sale_price: number | null;
   product_img: string[];
   preorder_config: { min_order_qty: number | null; max_order_qty: number | null; lead_time_days: number | null } | null;
+  /** หมวดสินค้า (id) — ใช้ตัดสินป้าย "ส่งเฉพาะในจังหวัด" บนบัตร · backend รุ่นเก่าไม่ส่ง = null */
+  category_id: string | null;
 }
 
 export interface StorefrontRoundItem {
@@ -113,6 +115,8 @@ export interface CreatePreorderInput {
   recipient_name?: string;
   recipient_phone?: string;
   user_coupon_id?: string;
+  /** โค้ดส่วนลด (ใช้แทนคูปองของฉัน) */
+  promotion_code?: string;
   points_to_redeem?: number;
   pickup_location_id?: string;
   pickup_date?: string;
@@ -132,6 +136,7 @@ function toRoundItem(raw: any): StorefrontRoundItem {
       sale_price: p.sale_price ?? null,
       product_img: Array.isArray(p.product_img) ? p.product_img : [],
       preorder_config: p.preorder_config ?? null,
+      category_id: p.category_id ? String(typeof p.category_id === "object" ? p.category_id._id : p.category_id) : null,
     },
     current_price: Number(raw.current_price ?? 0),
     min_order_qty: Number(raw.min_order_qty ?? 1),

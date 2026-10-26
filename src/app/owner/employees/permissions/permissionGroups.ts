@@ -37,6 +37,7 @@ export const PERMISSION_GROUPS: { sectionKey: SectionKey; menus: PermissionMenu[
       { groupKey: "products", keys: ["products", "stock", "search_synonyms"] },
       { groupKey: "ordersManage", keys: ["orders", "preorder", "payments"] },
       { groupKey: null, keys: ["pos"] },
+      { groupKey: null, keys: ["chats"] },
       { groupKey: "promotions", keys: ["pricing", "promotions"] },
     ],
   },
@@ -132,7 +133,7 @@ const ROLE_TEMPLATES: Record<RoleTemplateKey, Partial<Record<MenuKey, string>>> 
     dashboard: "v",
     reports_sales: "v", reports_reviews: "vcu", finance_expenses: "vcu", finance_summary: "v",
     products: "vcud", stock: "vu", search_synonyms: "vcud",
-    orders: "vcud", preorder: "vcud", pos: "vcud", payments: "vca",
+    orders: "vcud", preorder: "vcud", pos: "vcud", payments: "vca", chats: "vc",
     pricing: "vcud", promotions: "vcud",
     production: "vcuda", ingredients: "vcud", ingredient_stock: "vcud", ingredient_history: "vcud", units: "vcud", recipes: "vcud",
     employees: "vcu", permissions: "vcu", user_log: "v",
@@ -141,7 +142,7 @@ const ROLE_TEMPLATES: Record<RoleTemplateKey, Partial<Record<MenuKey, string>>> 
   // เท่าที่ POS ใช้: ขาย · ยืนยันการชำระ · เปลี่ยนสถานะ · ส่งมอบพรีออเดอร์ · คิดส่วนลด — ไม่เห็นตัวเลขการเงิน
   counter: {
     products: "v", stock: "v", pricing: "v",
-    orders: "vcu", preorder: "vu", pos: "vcu", payments: "vca",
+    orders: "vcu", preorder: "vu", pos: "vcu", payments: "vca", chats: "vc",
     promotions: "v",
   },
   // เปิด/เริ่ม/ปิดงานผลิต (production.approve = ตัดสต็อกวัตถุดิบ) · รับเข้า/เบิกวัตถุดิบ · ปรับสต็อกหลังอบ · ดูสูตร · ดูยอดพรีออเดอร์

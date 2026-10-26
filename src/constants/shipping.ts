@@ -8,3 +8,6 @@ export const NATIONWIDE_CATEGORY_KEYWORDS = ["ซาวโดว์", "sourdough
 /** ค่าที่ backend ใช้จริงเมื่อหมวดยังไม่ได้ตั้ง ships_nationwide */
 export const guessShipsNationwide = (categoryName: string) =>
   NATIONWIDE_CATEGORY_KEYWORDS.some((k) => categoryName.toLowerCase().includes(k));
+
+/** จังหวัดร้านเมื่อร้านยังไม่ได้ตั้งที่อยู่ (ป้าย "ส่งเฉพาะ จ.…" บนบัตรสินค้า) */
+export const DEFAULT_STORE_PROVINCE = "หนองคาย";
