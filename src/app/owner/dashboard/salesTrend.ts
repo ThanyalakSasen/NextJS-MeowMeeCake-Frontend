@@ -3,7 +3,7 @@
 // N วันล่าสุดตามปฏิทินไทย (วันนี้อยู่ท้าย · วันนี้นับถึงตอนนี้) — กราฟแท่งกับยอดแยกช่องทางใช้ช่วงเดียวกัน
 // sales-by-day ตัดช่วงเป็น now − N×24 ชม. → ได้วันที่เกินมา 1 วัน (บางส่วน) ข้างหน้า ตัดทิ้งที่นี่
 // ─────────────────────────────────────────────────────────────
-import type { SalesByDay } from "@/services/reports";
+import type { RevenueChannel, SalesByDay } from "@/services/reports";
 
 export const SALES_RANGES = [7, 30, 90] as const;
 export type SalesRange = (typeof SALES_RANGES)[number];
@@ -12,10 +12,15 @@ export const DEFAULT_SALES_RANGE: SalesRange = 30;
 export const salesByDayKey = (days: SalesRange) => ["reports", "sales-by-day", days] as const;
 export const channelRevenueKey = (days: SalesRange) => ["reports", "revenue-by-channel", "last-days", days] as const;
 
+/** ลำดับช่องทางในกราฟแท่งซ้อน (ล่าง → บน) และในกล่องแยกช่องทาง */
+export const CHANNEL_ORDER: RevenueChannel[] = ["preorder", "pos", "web", "other"];
+
 export interface SalesDay {
   date: string;
   revenue: number;
   orders: number;
+  /** ยอดแยกช่องทางของวันนั้น — null = backend รุ่นเก่ายังไม่ส่ง (วาดแท่งสีเดียว) */
+  channels: Record<RevenueChannel, { revenue: number; orders: number }> | null;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -39,12 +44,21 @@ export function rangeStartIso(days: number, now = Date.now()): string {
   return new Date(bangkokTodayStart(now) - (days - 1) * DAY_MS).toISOString();
 }
 
-/** ครบทุกวันในช่วง — วันที่ backend ไม่ส่งมา (ไม่มียอด) = 0 */
+const ZERO_CHANNELS = (): Record<RevenueChannel, { revenue: number; orders: number }> => ({
+  preorder: { revenue: 0, orders: 0 },
+  pos: { revenue: 0, orders: 0 },
+  web: { revenue: 0, orders: 0 },
+  other: { revenue: 0, orders: 0 },
+});
+
+/** ครบทุกวันในช่วง — วันที่ backend ไม่ส่งมา (ไม่มียอด) = 0 · ไม่มีวันไหนส่ง channels เลย = backend รุ่นเก่า → channels null ทุกวัน */
 export function fillDays(series: SalesByDay["series"], days: number, now = Date.now()): SalesDay[] {
   const byDate = new Map(series.map((d) => [d.date, d]));
+  const withChannels = series.some((d) => d.channels);
   return bangkokDayKeys(days, now).map((date) => {
     const d = byDate.get(date);
-    return { date, revenue: d?.revenue ?? 0, orders: d?.orders ?? 0 };
+    const channels = withChannels ? { ...ZERO_CHANNELS(), ...d?.channels } : null;
+    return { date, revenue: d?.revenue ?? 0, orders: d?.orders ?? 0, channels };
   });
 }
 

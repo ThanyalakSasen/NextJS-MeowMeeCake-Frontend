@@ -35,6 +35,7 @@ import PickupLocationPicker from "@/components/customer/PickupLocationPicker";
 import CheckoutAddressForm from "@/components/customer/CheckoutAddressForm";
 import CouponSelectBox from "@/components/customer/CouponSelectBox";
 import PointsRedeemBox from "@/components/customer/PointsRedeemBox";
+import ShopSpinner from "@/components/customer/ShopSpinner";
 
 const PHONE_RE = /^0\d{8,9}$/;
 
@@ -128,7 +129,7 @@ function CheckoutContent() {
   if (cartQ.isLoading || addressesQ.isLoading) {
     return (
       <div className={`${shopPage} flex items-center justify-center`}>
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#8C5A3C]/20 border-t-[#8C5A3C]" aria-label={tc("loading")} />
+        <ShopSpinner label={tc("loading")} />
       </div>
     );
   }

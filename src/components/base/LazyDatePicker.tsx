@@ -18,6 +18,17 @@ type PickerModule = typeof import("./DatePicker");
 let loaded: PickerModule | null = null;
 const loadPicker = () => import("./DatePicker").then((m) => (loaded = m));
 
+/**
+ * รูปแบบค่าเริ่มต้นของ antd ต่อชนิด picker (ให้ปุ่มก่อนโหลดแสดงเหมือนช่องจริง) · quarter ใช้ plugin quarterOfYear (utils/period)
+ * ไม่มี "week" — รูปแบบสัปดาห์ของ antd (wo) ต้องใช้ plugin ที่โหลดมากับ picker · picker="week" ให้ใช้ DatePicker ตรง ๆ
+ */
+const DEFAULT_FORMAT: Partial<Record<NonNullable<DatePickerProps["picker"]>, string>> = {
+  date: "YYYY-MM-DD",
+  month: "YYYY-MM",
+  quarter: "YYYY-[Q]Q",
+  year: "YYYY",
+};
+
 export function LazyDatePicker(props: DatePickerProps) {
   const { locale } = useContext(ConfigProvider.ConfigContext);
   // เริ่มเป็นปุ่มเสมอ (ฝั่ง server = ฝั่ง browser ตอน hydrate) — โหลดแล้วค่อยสลับเป็น DatePicker จริง
@@ -25,7 +36,7 @@ export function LazyDatePicker(props: DatePickerProps) {
 
   if (Picker) return <Picker {...props} defaultOpen autoFocus />;
 
-  const format = typeof props.format === "string" ? props.format : "YYYY-MM-DD";
+  const format = typeof props.format === "string" ? props.format : DEFAULT_FORMAT[props.picker ?? "date"] ?? "YYYY-MM-DD";
   const value = props.value ? dayjs(props.value as dayjs.ConfigType) : null;
   const placeholder = (typeof props.placeholder === "string" && props.placeholder) || locale?.DatePicker?.lang.placeholder || "";
   const activate = () => {
@@ -39,6 +50,7 @@ export function LazyDatePicker(props: DatePickerProps) {
       disabled={props.disabled}
       onClick={activate}
       onPointerEnter={() => void loadPicker()}
+      style={props.style}
       className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-[#e4dad1] bg-white px-[11px] text-left transition-colors hover:border-brown-800 focus-visible:border-brown-800 disabled:cursor-not-allowed disabled:bg-gray-50"
     >
       <span className={value?.isValid() ? "truncate" : "truncate text-gray-500"}>

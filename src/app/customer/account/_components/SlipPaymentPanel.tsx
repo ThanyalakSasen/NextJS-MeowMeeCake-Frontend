@@ -5,7 +5,7 @@
 // GET /shop/{orders|preorders}/{id}/payment (QR พร้อมเพย์จาก backend + กำหนดชำระ) → แนบสลิป:
 //   มีรายการชำระเงินที่ pending/failed อยู่แล้ว = แนบกับใบเดิม · ยังไม่มี = POST /shop/payments ก่อน
 //   แล้ว POST /shop/payments/{id}/slip (multipart — backend PR #54)
-// ออเดอร์หมดเวลาแล้ว (late_upload) = แนบสลิปกับใบเดิมเพื่อเปิดกลับ · พรีออเดอร์ไม่มี late_upload (backend ยกเลิกแล้วจบ)
+// ออเดอร์หมดเวลาแล้ว (late_upload) = แนบสลิปกับใบเดิม หรือสร้างใบพร้อมสลิป (POST /shop/payments multipart) เพื่อเปิดกลับ · พรีออเดอร์ไม่มี late_upload (backend ยกเลิกแล้วจบ)
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -68,10 +68,10 @@ export default function SlipPaymentPanel({
   const paid = page.payment_status === "paid" || page.payment_record_status === "paid";
   const awaitingReview = page.payment_record_status === "pending" && !!page.slip_url;
   const rejected = page.payment_record_status === "failed";
-  // แนบกับรายการเดิมได้ (pending/failed) — หมดเวลาแล้วต้องแนบกับใบเดิมเท่านั้น (สร้างใบใหม่แบบไม่มีสลิป = 400)
+  // แนบกับรายการเดิมได้ (pending/failed) · หมดเวลาแล้วและยังไม่มีใบ = สร้างใบพร้อมสลิปในคำขอเดียว (createWithSlip)
   const reusablePaymentId =
     page.payment_id && (page.payment_record_status === "pending" || page.payment_record_status === "failed") ? page.payment_id : null;
-  const canUpload = page.can_pay || (page.late_upload && !!reusablePaymentId);
+  const canUpload = page.can_pay || page.late_upload;
 
   const secondsLeft = useSecondsLeft(page, fetchedAt);
   const showCountdown = page.can_pay && !awaitingReview && secondsLeft !== null;
@@ -97,7 +97,10 @@ export default function SlipPaymentPanel({
 
   const uploadMutation = useMutation({
     mutationFn: async (slip: File) => {
-      const paymentId = reusablePaymentId ?? (await shopPaymentsService.create(kind, docId, page.amount))._id;
+      if (reusablePaymentId) return shopPaymentsService.uploadSlip(reusablePaymentId, slip);
+      // หมดเวลาแล้ว: สร้างใบแบบไม่มีสลิปไม่ได้ (400) → ส่งสลิปไปพร้อมการสร้าง
+      if (page.late_upload) return shopPaymentsService.createWithSlip(kind, docId, page.amount, slip);
+      const paymentId = (await shopPaymentsService.create(kind, docId, page.amount))._id;
       return shopPaymentsService.uploadSlip(paymentId, slip);
     },
     onSuccess: () => {
@@ -119,15 +122,6 @@ export default function SlipPaymentPanel({
         <FaCheckCircle className="shrink-0 text-2xl" />
         <p className="text-sm font-semibold">{t("paid")}</p>
       </div>
-    );
-  }
-
-  if (page.late_upload && !reusablePaymentId) {
-    // backend ยังไม่มีทางอัปโหลดสลิปโดยไม่มีรายการชำระเงิน (POST /shop/payments ไม่มีสลิป = 400) — BACKLOG4 Q-BE1
-    return (
-      <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-        {t("expiredCancelled")}
-      </p>
     );
   }
 

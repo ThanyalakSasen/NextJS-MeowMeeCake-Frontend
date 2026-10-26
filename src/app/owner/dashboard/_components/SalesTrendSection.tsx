@@ -3,6 +3,7 @@
 // แท่งเป็น <button> (โฟกัสด้วยคีย์บอร์ดได้ · aria-label บอกวัน ยอด จำนวนออเดอร์) ชี้/โฟกัส = กล่องรายละเอียดของวันนั้น
 // วาดด้วย div ไม่ใช้ไลบรารีกราฟ — แท่งไม่เกิน 90 อัน ไม่ต้องโหลด JS เพิ่ม
 // ไม่มีสิทธิ์ดูยอดแยกช่องทาง (channels = null) → กราฟกว้างเต็มแถว
+// stacked = แท่งซ้อนสีตามช่องทาง (สีเดียวกับกล่องแยกช่องทาง ซึ่งเป็น legend ไปในตัว) · ไม่มีสิทธิ์ / backend รุ่นเก่า = แท่งสีเดียว
 import { useState } from "react";
 import Link from "next/link";
 import { Segmented } from "antd";
@@ -11,7 +12,7 @@ import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatCurrency, formatDayMonth, formatNumber } from "@/i18n/format";
 import type { RevenueChannel } from "@/services/reports";
 import type { useDashboardViewModel } from "../useDashboardViewModel";
-import { SALES_RANGES, axisMax, tickEvery, type SalesRange } from "../salesTrend";
+import { CHANNEL_ORDER, SALES_RANGES, axisMax, tickEvery, type SalesDay, type SalesRange } from "../salesTrend";
 
 type Sales = ReturnType<typeof useDashboardViewModel>["sales"];
 
@@ -45,6 +46,9 @@ function SalesChartCard(sales: Sales) {
   const hasSales = summary.total > 0;
   const tip = active !== null ? days[active] : null;
   const tipLeft = active !== null ? ((active + 0.5) / days.length) * 100 : 0;
+  // กล่องรายละเอียดแบบแยกช่องทางสูงขึ้น — แท่งสูงมากให้กล่องทับปลายแท่งแทนการล้นขึ้นไปทับหัวการ์ด
+  const tipBottom = tip ? Math.min(tip.revenue / top, sales.stacked ? 0.45 : 1) * 100 : 0;
+  const tipChannels = (d: SalesDay) => (sales.stacked && d.channels ? CHANNEL_ORDER.filter((k) => d.channels![k].revenue > 0) : []);
 
   return (
     <section className="section-card flex h-full flex-col">
@@ -91,20 +95,41 @@ function SalesChartCard(sales: Sales) {
                     <button
                       key={d.date}
                       type="button"
-                      aria-label={t("salesBarLabel", {
-                        date: formatDayMonth(d.date, locale, { withYear: true }),
-                        amount: formatCurrency(d.revenue, locale),
-                        n: formatNumber(d.orders, locale),
-                      })}
+                      aria-label={[
+                        t("salesBarLabel", {
+                          date: formatDayMonth(d.date, locale, { withYear: true }),
+                          amount: formatCurrency(d.revenue, locale),
+                          n: formatNumber(d.orders, locale),
+                        }),
+                        ...tipChannels(d).map((k) => `${t(`channel.${k}`)} ${formatCurrency(d.channels![k].revenue, locale)}`),
+                      ].join(" · ")}
                       onMouseEnter={() => setActive(i)}
                       onFocus={() => setActive(i)}
                       onBlur={() => setActive(null)}
                       className="flex h-full min-w-0 flex-1 cursor-pointer items-end rounded-t focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brown-600"
                     >
-                      <span
-                        className={`block w-full rounded-t ${i === active ? "bg-brown-700" : d.revenue > 0 ? "bg-brown-400" : "bg-gray-200"}`}
-                        style={{ height: d.revenue > 0 ? `${(d.revenue / top) * 100}%` : 2 }}
-                      />
+                      {sales.stacked && d.channels && d.revenue > 0 ? (
+                        // ซ้อนจากล่างขึ้นบนตาม CHANNEL_ORDER · ชี้แท่งไหน แท่งอื่นจางลง (สีช่องทางต้องคงไว้ให้อ่านออก)
+                        <span
+                          className={`flex w-full flex-col-reverse overflow-hidden rounded-t transition-opacity ${active !== null && i !== active ? "opacity-40" : ""}`}
+                          style={{ height: `${(d.revenue / top) * 100}%` }}
+                        >
+                          {CHANNEL_ORDER.map((k) =>
+                            d.channels![k].revenue > 0 ? (
+                              <span
+                                key={k}
+                                className={`block w-full shrink-0 ${CHANNEL_COLOR[k]}`}
+                                style={{ height: `${(d.channels![k].revenue / d.revenue) * 100}%` }}
+                              />
+                            ) : null,
+                          )}
+                        </span>
+                      ) : (
+                        <span
+                          className={`block w-full rounded-t ${i === active ? "bg-brown-700" : d.revenue > 0 ? "bg-brown-400" : "bg-gray-200"}`}
+                          style={{ height: d.revenue > 0 ? `${(d.revenue / top) * 100}%` : 2 }}
+                        />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -113,7 +138,7 @@ function SalesChartCard(sales: Sales) {
                     className="pointer-events-none absolute z-10 whitespace-nowrap rounded-lg bg-brown-900 px-3 py-2 shadow-lg"
                     style={{
                       left: `${tipLeft}%`,
-                      bottom: `calc(${(tip.revenue / top) * 100}% + 8px)`,
+                      bottom: `calc(${tipBottom}% + 8px)`,
                       transform: `translateX(${tipLeft > 85 ? "-100%" : tipLeft < 15 ? "0" : "-50%"})`,
                     }}
                     aria-hidden="true"
@@ -121,6 +146,19 @@ function SalesChartCard(sales: Sales) {
                     <p className="m-0 text-xs text-brown-100">{formatDayMonth(tip.date, locale, { withYear: true })}</p>
                     <p className="m-0 text-base font-semibold text-white">{formatCurrency(tip.revenue, locale)}</p>
                     <p className="m-0 text-xs text-brown-100">{t("salesOrders", { n: formatNumber(tip.orders, locale) })}</p>
+                    {tipChannels(tip).length > 0 && (
+                      <ul className="m-0 mt-1.5 flex list-none flex-col gap-0.5 border-t border-white/20 p-0 pt-1.5">
+                        {tipChannels(tip).map((k) => (
+                          <li key={k} className="flex items-center justify-between gap-4 text-xs text-brown-100">
+                            <span className="flex items-center gap-1.5">
+                              <span className={`h-2 w-2 shrink-0 rounded-sm ring-1 ring-white/70 ${CHANNEL_COLOR[k]}`} />
+                              {t(`channel.${k}`)}
+                            </span>
+                            <span className="font-semibold text-white">{formatCurrency(tip.channels![k].revenue, locale)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
               </div>
