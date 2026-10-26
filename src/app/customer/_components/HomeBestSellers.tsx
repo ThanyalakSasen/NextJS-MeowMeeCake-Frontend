@@ -4,14 +4,16 @@
 // backend ยังไม่มียอดขายแบบสาธารณะ (ยอดจริงอยู่ที่ /admin/dashboard/top-products ต้องเป็นพนักงาน)
 // → เรียงตามจำนวนรีวิว (review_count — รีวิวได้เฉพาะคนที่ซื้อแล้ว) แล้วคะแนนเฉลี่ย · ไม่มีรีวิวเลย = ไม่นับ
 // ถ้า backend เพิ่ม endpoint สินค้าขายดีภายหลัง เปลี่ยนแค่ bestSellersOf() เป็นข้อมูลจากตัวนั้น
-// ใช้สินค้าพร้อมขายชุดเดียวกับหน้าแรก (กรอง isProductCardVisible แล้ว) สูงสุด 10 ชิ้น · ไม่มีเลย = ซ่อนทั้งส่วน
+// ใช้สินค้าพร้อมขายชุดเดียวกับหน้าแรก (กรอง isProductCardVisible แล้ว) สูงสุด 8 ชิ้น · ไม่มีเลย = ซ่อนทั้งส่วน
 // ─────────────────────────────────────────────────────────────
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { Product } from "@/types/product";
 import ProductCard from "@/components/customer/ProductCard";
+import { productGrid } from "@/components/customer/shopStyles";
 
-const MAX_ITEMS = 10;
+// 8 = 2 แถวเต็มบนจอคอม (4 คอลัมน์ — productGrid)
+const MAX_ITEMS = 8;
 
 function bestSellersOf(products: Product[]): Product[] {
   return products
@@ -38,8 +40,8 @@ export default function HomeBestSellers({ products, loading }: {
         </h2>
       </div>
 
-      {/* มือถือ (<640) 2 · 640–1279 3 · จอคอม (≥1280) 5 คอลัมน์ — เท่าสินค้าแนะนำ */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-2">
+      {/* ตารางเดียวกับทุกหน้า (productGrid) — บัตรขนาดเท่าหน้าสินค้าทั้งหมด */}
+      <div className={productGrid}>
         {items.map((p) => (
           <ProductCard key={p._id} product={p} />
         ))}

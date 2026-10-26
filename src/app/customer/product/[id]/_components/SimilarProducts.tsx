@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { catalogService } from "@/services/catalog";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import ProductCard, { isProductCardVisible } from "@/components/customer/ProductCard";
+import RecommendationGrid, { RECOMMENDATION_MAX } from "@/components/customer/RecommendationGrid";
 
 export default function SimilarProducts({ productId }: { productId: string }) {
   const t = useTranslations("shop.similar");
@@ -16,7 +17,7 @@ export default function SimilarProducts({ productId }: { productId: string }) {
   // key รวมสถานะ login — ผลต่างกัน (ป้ายแพ้อาหารมีเฉพาะตอน login)
   const q = useQuery({
     queryKey: ["catalog", "product", productId, "similar", status === "authenticated"],
-    queryFn: () => catalogService.similar(productId, 10),
+    queryFn: () => catalogService.similar(productId, RECOMMENDATION_MAX),
     enabled: status !== "loading",
   });
   const items = (q.data ?? []).filter((r) => isProductCardVisible(r.product));
@@ -32,11 +33,8 @@ export default function SimilarProducts({ productId }: { productId: string }) {
       {!q.isSuccess ? (
         <p className="animate-pulse py-8 text-center text-xs text-[#8C5A3C] sm:text-sm">{t("loading")}</p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 xl:grid-cols-5">
-          {items.map((r) => (
-            <ProductCard key={r.product._id} product={r.product} showAddToCart={false} allergenWarning={r.allergenWarning} reasons={r.reasons} />
-          ))}
-        </div>
+        // แสดงเฉพาะแถวเต็ม (RecommendationGrid) · ไม่แสดงเหตุผลที่แนะนำบนบัตร
+        <RecommendationGrid items={items} render={(r) => <ProductCard product={r.product} allergenWarning={r.allergenWarning} />} />
       )}
     </section>
   );

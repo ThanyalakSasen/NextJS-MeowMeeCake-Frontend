@@ -8,21 +8,25 @@ import type { StoreSettings } from "@/types/storeAdmin";
 import { ADDRESS_FIELDS } from "../storeInfoForm";
 import { CoordinateInput } from "./CoordinateInput";
 
-export function StoreAddressFields({ address, editable, onField, onCoordinates, onResolveShortLink, fieldError }: {
+export function StoreAddressFields({ address, editable, onField, onCoordinates, onResolveShortLink, fieldError, embedded = false }: {
   address: StoreSettings;
   editable: boolean;
   onField: <K extends keyof StoreSettings>(key: K, value: StoreSettings[K]) => void;
   onCoordinates: (lat: number | null, lng: number | null) => void;
   onResolveShortLink: (url: string) => Promise<{ lat: number; lng: number }>;
   fieldError: (name: string) => string | undefined;
+  /** อยู่ในฟอร์มหน้าร้านหลัก — ไม่มีหัวข้อ "ที่อยู่ร้าน" แยก (ที่อยู่ = ที่ตั้งหน้าร้านหลัก) */
+  embedded?: boolean;
 }) {
   const t = useTranslations();
   return (
     <div className="flex flex-col gap-3">
-      <div>
-        <p className="m-0 text-sm font-semibold text-brown-800">{t("storeInfo.address.title")}</p>
-        <p className="m-0 text-xs text-gray-500">{t("storeInfo.address.hint")}</p>
-      </div>
+      {!embedded && (
+        <div>
+          <p className="m-0 text-sm font-semibold text-brown-800">{t("storeInfo.address.title")}</p>
+          <p className="m-0 text-xs text-gray-500">{t("storeInfo.address.hint")}</p>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {ADDRESS_FIELDS.map((key) => (
           <div key={key} className={key === "house_no" ? "sm:col-span-2" : undefined}>

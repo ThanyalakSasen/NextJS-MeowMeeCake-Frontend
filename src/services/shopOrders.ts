@@ -185,6 +185,15 @@ export const shopOrdersService = {
   },
 
   /** POST /shop/promotions/validate { code, delivery_fee } — ไม่ผ่านเงื่อนไข = 422 พร้อมข้อความ */
+  /**
+   * ตรวจโค้ดกับรายการที่ส่งมา (หน้าชำระพรีออเดอร์ — ไม่มีตะกร้า) · ยอดเป็นค่าประมาณ ตอนสร้างพรีออเดอร์ backend คิดจากราคาในรอบอีกครั้ง
+   */
+  validatePromotionForLines: async (
+    code: string,
+    lines: { product_id: string; quantity: number; line_total: number }[],
+    deliveryFee: number,
+  ): Promise<PromotionCheck> =>
+    (await http.post<ItemResponse<PromotionCheck>>("/shop/promotions/validate", { code, lines, delivery_fee: deliveryFee })).data,
   validatePromotion: async (code: string, deliveryFee: number): Promise<PromotionCheck> => {
     const res = await http.post<ItemResponse<PromotionCheck>>("/shop/promotions/validate", {
       code,

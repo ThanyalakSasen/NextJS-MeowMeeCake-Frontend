@@ -1,34 +1,32 @@
 "use client";
-// View ของ "ค่าจัดส่งหน้าร้านออนไลน์" (BACKLOG4 F2) — ใช้กับอะไร · ตรวจจังหวัด · ตารางโซน A–D + modal แก้ไข
-// + ปุ่ม "จัดส่งนอกจังหวัด" มุมขวาบน (สวิตช์ส่งทั่วประเทศรายหมวด — ปุ่มเดียวกับหน้าจัดการข้อมูลสินค้า)
-// แก้ไขตามสิทธิ์ store_info.update · โซนคงที่ 4 โซน (ไม่มีเพิ่ม/ลบ)
+// View ของ "ค่าจัดส่ง" (เว็บไซต์ · BACKLOG4 F2) — วิธีคิดค่าส่ง 3 ข้อ · เครื่องมือลองเช็กค่าส่ง (จังหวัด + สินค้า) ·
+// การ์ดโซนแถวละ 1 ใบ (เห็นจังหวัดครบ · โซน D อยู่ท้าย) + modal เพิ่ม/แก้ไข · ปุ่ม "ตั้งค่าส่งต่างจังหวัด" มุมขวาบน (สวิตช์ส่งทั่วประเทศรายหมวด)
+// ปุ่ม "เพิ่มโซน" มุมขวาบนของรายการโซน (2026-10-26) · เพิ่ม/แก้/ลบตามสิทธิ์ shipping.create/update/delete · โซน D ลบไม่ได้
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import { Card, Select, Tag } from "@/components/base";
+import { Button, Card, Select, Tag } from "@/components/base";
 import { CategoryShippingButton } from "@/components/shared/categories";
 import { ListPageLayout } from "@/components/shared/layout";
-import { DataTable } from "@/components/shared/data";
-import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
-import { EditButton } from "@/components/shared/actions";
+import { ConfirmDeletePopup, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { PROVINCE_OPTIONS } from "@/constants/thaiProvinces";
 import { formatCurrency } from "@/i18n/format";
-import type { ShippingZone } from "@/types/shippingZone";
 import type { useShippingZonesViewModel } from "./useShippingZonesViewModel";
 import { FALLBACK_ZONE } from "./shippingZoneForm";
-import { NOTICE_TAG, SHIPPING_ZONE_CONFIG } from "@/constants/enumConfig";
+import { NOTICE_TAG, shippingZoneStyle } from "@/constants/enumConfig";
 
 // โมดัลแก้ไขโซน (antd Modal + ฟอร์ม) แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
 const ShippingZoneEditModal = dynamic(() => import("./_components/ShippingZoneEditModal").then((m) => m.ShippingZoneEditModal), { ssr: false });
 
 type VM = ReturnType<typeof useShippingZonesViewModel>;
-const PROVINCES_SHOWN = 8;
 
 export function ShippingZonesView(vm: VM) {
   const t = useTranslations();
   const modalUsed = useOpenedOnce(!!vm.editing);
   const locale = useLocale();
   const money = (n: number) => formatCurrency(n, locale);
+  const zoneD = vm.zones.find((z) => z.zone_code === FALLBACK_ZONE);
 
   return (
     <ListPageLayout title={t("shippingZones.title")} actions={<CategoryShippingButton />}>
@@ -38,78 +36,136 @@ export function ShippingZonesView(vm: VM) {
         <LoadingSpin />
       ) : (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5 rounded-xl border border-brown-100 bg-brown-50 px-4 py-3 text-sm leading-relaxed text-brown-800">
-            <p className="m-0">{t("shippingZones.usage")}</p>
-            <p className="m-0">{t("shippingZones.scopeNote")}</p>
-          </div>
+          {/* ── วิธีคิดค่าส่ง 3 ข้อ ── */}
+          <Card className="p-4">
+            <p className="m-0 mb-2 text-sm font-semibold text-brown-800">{t("shippingZones.how.title")}</p>
+            <ol className="m-0 flex list-none flex-col gap-2 p-0">
+              {[
+                t("shippingZones.how.step1", { d: zoneD ? money(zoneD.fee) : "—" }),
+                t("shippingZones.how.step2"),
+                t("shippingZones.how.step3", { province: vm.storeProvince }),
+              ].map((text, i) => (
+                <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-gray-700">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brown-800 text-xs font-bold text-white">{i + 1}</span>
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ol>
+          </Card>
 
+          {/* ── ลองเช็กค่าส่ง ── */}
           <Card className="flex flex-col gap-3 p-4">
-            <p className="m-0 text-sm font-semibold text-brown-800">{t("shippingZones.checker.title")}</p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Select
-                showSearch
-                allowClear
-                className="w-full sm:w-64"
-                value={vm.checkProvince || undefined}
-                options={PROVINCE_OPTIONS}
-                placeholder={t("shippingZones.checker.placeholder")}
-                aria-label={t("shippingZones.checker.title")}
-                onChange={(v?: string) => vm.setCheckProvince(v ?? "")}
-              />
-              {vm.checkResult && (
-                <span className="text-sm text-gray-700">
-                  {t("shippingZones.checker.result", { code: vm.checkResult.zone_code, fee: money(vm.checkResult.fee) })}
-                </span>
-              )}
+            <div>
+              <p className="m-0 text-sm font-semibold text-brown-800">{t("shippingZones.checker.title")}</p>
+              <p className="m-0 text-xs text-gray-500">{t("shippingZones.checker.hint")}</p>
             </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-[16rem_1fr]">
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-gray-500">{t("shippingZones.checker.province")}</span>
+                <Select
+                  showSearch
+                  allowClear
+                  value={vm.checkProvince || undefined}
+                  options={PROVINCE_OPTIONS}
+                  placeholder={t("shippingZones.checker.placeholder")}
+                  aria-label={t("shippingZones.checker.province")}
+                  onChange={(v?: string) => vm.setCheckProvince(v ?? "")}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-gray-500">{t("shippingZones.checker.products")}</span>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  maxTagCount="responsive"
+                  value={vm.checkProducts}
+                  options={vm.productOptions}
+                  placeholder={t("shippingZones.checker.productsPlaceholder")}
+                  aria-label={t("shippingZones.checker.products")}
+                  onChange={(v: string[]) => vm.setCheckProducts(v)}
+                />
+              </label>
+            </div>
+            {vm.check && (
+              <div
+                className={`rounded-lg border px-3 py-2.5 text-sm ${
+                  vm.check.blocked ? "border-red-200 bg-red-50 text-red-800" : "border-green-200 bg-green-50 text-green-900"
+                }`}
+                role="status"
+              >
+                {vm.check.blocked ? (
+                  <>
+                    <p className="m-0 font-semibold">{t("shippingZones.checker.blocked", { province: vm.storeProvince })}</p>
+                    <p className="m-0 mt-0.5">{t("shippingZones.checker.blockedItems", { items: vm.check.localOnlyNames.join(", ") })}</p>
+                  </>
+                ) : (
+                  <p className="m-0">
+                    {t.rich("shippingZones.checker.ok", {
+                      code: vm.check.zone.zone_code,
+                      label: vm.check.zone.zone_label,
+                      fee: money(vm.check.zone.fee),
+                      b: (c) => <strong>{c}</strong>,
+                    })}
+                  </p>
+                )}
+              </div>
+            )}
           </Card>
 
-          <Card className="flex flex-col gap-3 p-4">
-            <DataTable<ShippingZone>
-              inCard
-              rows={vm.zones}
-              rowKey={(z) => z.zone_code}
-              emptyText={t("common.noData")}
-              columns={[
-                {
-                  key: "code",
-                  title: t("shippingZones.fields.code"),
-                  width: 80,
-                  align: "center",
-                  render: (z) => <Tag color={SHIPPING_ZONE_CONFIG[z.zone_code].antColor} className="!m-0 font-bold">{z.zone_code}</Tag>,
-                },
-                {
-                  key: "label",
-                  title: t("shippingZones.fields.label"),
-                  width: 240,
-                  render: (z) => <span className="font-semibold text-brown-800">{z.zone_label}</span>,
-                },
-                {
-                  key: "provinces",
-                  title: t("shippingZones.fields.provinces"),
-                  render: (z) =>
-                    z.zone_code === FALLBACK_ZONE ? (
-                      <Tag color={NOTICE_TAG.catchAllZone} className="!m-0">{t("shippingZones.fallbackTag")}</Tag>
+          {/* ── โซน แถวละ 1 ใบ — หัวรายการ: จำนวนโซน (ซ้าย) · ปุ่มเพิ่มโซน (ขวา) ── */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="m-0 text-sm font-semibold text-brown-800">{t("shippingZones.listTitle", { n: vm.zones.length })}</p>
+            {vm.perm.create && (
+              <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
+                {t("shippingZones.add")}
+              </Button>
+            )}
+          </div>
+          <ul className="m-0 flex list-none flex-col gap-3 p-0">
+            {vm.zones.map((z) => {
+              const hit = vm.check && !vm.check.blocked && vm.check.zone.zone_code === z.zone_code;
+              return (
+                <li key={z.zone_code}>
+                  <Card className={`flex flex-col gap-3 p-4 ${hit ? "ring-2 ring-brown-300" : ""}`}>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Tag color={shippingZoneStyle(z.zone_code).antColor} className="!m-0 font-bold">{z.zone_code}</Tag>
+                      <span className="min-w-0 flex-1 font-semibold text-brown-800">{z.zone_label}</span>
+                      <span className="text-lg font-bold text-brown-900">{money(z.fee)}</span>
+                      {(vm.perm.update || (vm.perm.delete && z.zone_code !== FALLBACK_ZONE)) && (
+                        <span className="flex gap-1">
+                          {vm.perm.update && <EditButton size="small" onClick={() => vm.openEdit(z)} />}
+                          {vm.perm.delete && z.zone_code !== FALLBACK_ZONE && (
+                            <ConfirmDeletePopup title={t("shippingZones.deleteConfirm", { code: z.zone_code })} onConfirm={() => vm.onDelete(z)}>
+                              <DeleteButton size="small" loading={vm.deletingCode === z.zone_code} />
+                            </ConfirmDeletePopup>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                    {z.zone_code === FALLBACK_ZONE ? (
+                      <p className="m-0 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                        <Tag color={NOTICE_TAG.catchAllZone} className="!m-0">{t("shippingZones.fallbackTag")}</Tag>
+                        {t("shippingZones.fallbackHint")}
+                      </p>
                     ) : z.provinces.length === 0 ? (
-                      <span className="text-gray-500">{t("shippingZones.noProvinces")}</span>
+                      <p className="m-0 text-sm text-gray-500">{t("shippingZones.noProvinces")}</p>
                     ) : (
-                      <span className="flex flex-wrap gap-1">
-                        {z.provinces.slice(0, PROVINCES_SHOWN).map((p) => (
-                          <Tag key={p} className="!m-0">{p}</Tag>
-                        ))}
-                        {z.provinces.length > PROVINCES_SHOWN && (
-                          <Tag className="!m-0" title={z.provinces.slice(PROVINCES_SHOWN).join(", ")}>
-                            {t("shippingZones.moreProvinces", { n: z.provinces.length - PROVINCES_SHOWN })}
-                          </Tag>
-                        )}
-                      </span>
-                    ),
-                },
-                { key: "fee", title: t("shippingZones.fields.fee"), width: 110, align: "right", render: (z) => money(z.fee) },
-              ]}
-              actions={vm.perm.update ? (z) => <EditButton size="small" onClick={() => vm.openEdit(z)} /> : undefined}
-            />
-          </Card>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-xs text-gray-500">{t("shippingZones.provinceCount", { n: z.provinces.length })}</span>
+                        <span className="flex flex-wrap gap-1">
+                          {z.provinces.map((p) => (
+                            <Tag key={p} className="!m-0">{p}</Tag>
+                          ))}
+                        </span>
+                      </div>
+                    )}
+                  </Card>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 

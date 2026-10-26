@@ -33,3 +33,5 @@ export const shopReviewsKey = ["shop", "reviews"] as const;
 /** หน้า "รีวิวของฉัน" — ขึ้นต้นด้วย shopReviewsKey: เขียนรีวิวใหม่ (invalidate shopReviewsKey) แล้วหน้านี้โหลดใหม่ด้วย */
 export const shopReviewHistoryKey = [...shopReviewsKey, "history"] as const;
 export const reviewAspectsKey = ["catalog", "review-aspects"] as const;
+/** แชทกับร้าน — ตัวเลขข้อความจากร้านที่ยังไม่อ่าน (ไอคอนแชทบน Navbar) · เปิดห้อง/อ่านแล้ว invalidate */
+export const shopChatUnreadKey = ["shop", "chat", "unread"] as const;

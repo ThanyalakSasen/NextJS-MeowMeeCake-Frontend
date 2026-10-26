@@ -2,8 +2,8 @@
 // ─────────────────────────────────────────────────────────────
 // ฟอร์มเขียนรีวิว (BACKLOG3-merge D7) — ใช้ร่วมกันระหว่างออเดอร์ (purchases/[id]/review) กับพรีออเดอร์ (preorders/[id]/review)
 // ยกจาก FrontOffice account/pendingreview/[id] — ต่างจากต้นแบบ:
-//   - ต้นแบบมี 2 โหมด (ทีละชิ้นผ่าน ?next= · รีวิวรวม ?mode=combined) · ที่นี่หน้าเดียว: ติ๊กรายการที่จะใช้รีวิวนี้
-//     (ติ๊ก 1 ชิ้น = ทีละชิ้น) ส่งแล้วรายการที่เหลือยังรีวิวต่อได้ในหน้าเดิม
+//   - หลายชิ้น = ถามก่อน (2026-10-26): "รีวิวทั้งหมดพร้อมกัน" (ติ๊กเลือกชิ้นที่ใช้รีวิวเดียวกัน) หรือ "รีวิวทีละชิ้น"
+//     (ฟอร์มทีละชิ้น ส่งแล้วไปชิ้นถัดไปเอง · บอก "ชิ้นที่ x จาก n") · เปลี่ยนวิธีได้ระหว่างทาง · ชิ้นเดียว = ไม่ถาม
 //   - ส่งแบบ …_ids เสมอ (backend สร้างรีวิวแยกของแต่ละชิ้นด้วยเนื้อหาเดียวกัน) · ผ่านบางชิ้น = แสดงชิ้นที่ไม่ผ่านพร้อมเหตุผล
 // แบบ Grab: ให้ดาวก่อน แล้วถามต่อ — 4-5 ดาว "ประทับใจสิ่งใด?" · 1-3 ดาว "ควรปรับปรุงตรงไหน?" (แง่มุมเป็นคำชม/คำติตามดาว)
 // ไฟล์อัปโหลดก่อนส่ง · ส่งไม่ผ่านเลยสักชิ้น → ลบไฟล์ที่อัปไปแล้ว (DELETE /shop/reviews/upload)
@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CakeSlice, Send, Star, Upload, Video, X } from "lucide-react";
+import { CakeSlice, Layers, ListOrdered, Send, Star, Upload, Video, X } from "lucide-react";
 import { catalogService } from "@/services/catalog";
 import { shopReviewsService, type ReviewKind } from "@/services/shopReviews";
 import { resolveUploadUrl } from "@/lib/uploads";
@@ -82,9 +82,15 @@ export default function WriteReviewForm({
   });
   const imageOf = (productId: string) => resolveUploadUrl(productQs[productIds.indexOf(productId)]?.data?.product_img?.[0]);
 
+  // วิธีรีวิวเมื่อมีหลายชิ้น — null = ยังไม่เลือก (ถามก่อน) · ชิ้นเดียว = รีวิวชิ้นนั้นเลย
+  const [mode, setMode] = useState<"all" | "one" | null>(null);
+  const oneByOne = pending.length > 1 && mode === "one";
+  // ทีละชิ้น: นับลำดับจากจำนวนที่ยังไม่รีวิวตอนเริ่ม (ส่งแล้ว pending สั้นลง → ชิ้นถัดไป)
+  const [startCount, setStartCount] = useState(0);
+
   // ติ๊กไว้ = ใช้รีวิวนี้ · ค่าเริ่มต้นทุกรายการที่ยังไม่รีวิว (unchecked เก็บแทน checked → รายการที่โหลดทีหลังติ๊กให้เอง)
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set());
-  const targets = pending.filter((it) => !unchecked.has(it._id));
+  const targets = oneByOne ? pending.slice(0, 1) : pending.filter((it) => !unchecked.has(it._id));
 
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -225,7 +231,8 @@ export default function WriteReviewForm({
       if (remaining > 0) {
         resetForm();
         setUnchecked(new Set());
-        alert.success(tw("thanksRemaining", { n: remaining }));
+        alert.success(oneByOne ? tw("thanksNext", { n: remaining }) : tw("thanksRemaining", { n: remaining }));
+        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
       alert.success(tw("thanks"));
@@ -244,6 +251,39 @@ export default function WriteReviewForm({
     return <ReviewNotice text={tw("allDone")} href={backHref} link={to("backToDetail")} />;
   }
 
+  // หลายชิ้น + ยังไม่เลือกวิธี → ถามก่อน
+  if (pending.length > 1 && mode === null) {
+    const choice = (value: "all" | "one", Icon: typeof Layers, title: string, desc: string) => (
+      <button
+        type="button"
+        onClick={() => {
+          setMode(value);
+          setStartCount(pending.length);
+        }}
+        className="flex w-full items-start gap-3 rounded-2xl border-2 border-[#8C5A3C]/20 bg-white p-4 text-left transition hover:border-[#8C5A3C] hover:bg-[#FAF6F0]"
+      >
+        <Icon className="mt-0.5 h-6 w-6 shrink-0 text-[#8C5A3C]" aria-hidden="true" />
+        <span>
+          <span className="block text-base font-bold text-[#4A342E]">{title}</span>
+          <span className="block text-sm text-stone-600">{desc}</span>
+        </span>
+      </button>
+    );
+    return (
+      <div className={`${shopCard} space-y-4`}>
+        <div>
+          <h1 className="m-0 text-lg font-bold sm:text-xl">{tw("title")}</h1>
+          <p className="m-0 text-sm text-stone-500">
+            {kind === "preorder" ? tw("preorderNo", { no: docNo }) : tw("orderNo", { no: docNo })} · {tw("itemsToReview", { n: pending.length })}
+          </p>
+        </div>
+        <p className="m-0 text-sm font-semibold text-stone-800">{tw("askMode")}</p>
+        {choice("all", Layers, tw("modeAll"), tw("modeAllDesc", { n: pending.length }))}
+        {choice("one", ListOrdered, tw("modeOne"), tw("modeOneDesc"))}
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={submit} className={`${shopCard} space-y-6`}>
       <div className="space-y-3 border-b border-stone-200 pb-5">
@@ -251,11 +291,30 @@ export default function WriteReviewForm({
           <h1 className="text-lg font-bold sm:text-xl">{tw("title")}</h1>
           <p className="text-sm text-stone-500">
             {kind === "preorder" ? tw("preorderNo", { no: docNo }) : tw("orderNo", { no: docNo })}
-            {pending.length > 1 && tw("pickHint")}
+            {pending.length > 1 && !oneByOne && tw("pickHint")}
           </p>
+          {pending.length > 1 && (
+            <p className="m-0 mt-1 flex flex-wrap items-center gap-2 text-sm">
+              {oneByOne && (
+                <span className="rounded-full bg-[#4A342E] px-2.5 py-0.5 text-xs font-bold text-white">
+                  {tw("stepOf", { i: Math.max(1, startCount - pending.length + 1), n: Math.max(startCount, pending.length) })}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setMode(null);
+                }}
+                className="text-xs font-semibold text-[#8C5A3C] underline-offset-2 hover:underline"
+              >
+                {tw("changeMode")}
+              </button>
+            </p>
+          )}
         </div>
         <div className="space-y-2">
-          {pending.map((it) => {
+          {(oneByOne ? pending.slice(0, 1) : pending).map((it) => {
             const checked = !unchecked.has(it._id);
             const img = imageOf(it.product_id);
             const body = (
@@ -275,7 +334,7 @@ export default function WriteReviewForm({
                 </div>
               </>
             );
-            return pending.length > 1 ? (
+            return pending.length > 1 && !oneByOne ? (
               <label
                 key={it._id}
                 className={`flex cursor-pointer items-center gap-3 rounded-xl border p-2.5 transition ${

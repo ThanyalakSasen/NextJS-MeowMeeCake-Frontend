@@ -4,3 +4,4 @@ export { DetailModal } from "./DetailModal";
 export { AlertHost } from "./AlertHost";
 export { LoadFailed } from "./LoadFailed";
 export { LazyTooltip } from "./LazyTooltip";
+export { InfoTip } from "./InfoTip";

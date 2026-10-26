@@ -20,7 +20,8 @@ import thMessages from "@/i18n/messages/th.json";
 // ─────────────────────────────────────────────────────────────
 // ส่งเฉพาะ shop.* ไปกับ HTML (~73 KB แทนทั้งไฟล์ ~240 KB) — โค้ดหน้าร้านใช้แต่ useTranslations("shop.*")
 // ถ้าเพิ่มคอมโพเนนต์ที่ใช้ namespace อื่นในหน้าร้าน ต้องเพิ่มชื่อที่นี่ด้วย
-const shopMessages = { shop: thMessages.shop };
+// chat = แชทกับร้าน (ไอคอนบน Navbar · หน้า /customer/chat · ติดต่อเรา) — ใช้ร่วมกับหลังร้าน จึงไม่อยู่ใต้ shop.*
+const shopMessages = { shop: thMessages.shop, chat: thMessages.chat };
 
 // cookie ที่ไม่ใช่ session login — มีแต่พวกนี้ = guest ไม่ต้องถาม backend (ไม่เพิ่ม TTFB ให้หน้าสาธารณะ)
 const NON_SESSION_COOKIES = new Set([LOCALE_COOKIE, "g_state"]);

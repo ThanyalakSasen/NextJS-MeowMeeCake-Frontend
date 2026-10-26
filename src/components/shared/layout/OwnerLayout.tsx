@@ -38,6 +38,7 @@ const SSR_PAGES = [
   "/owner/orders/manageOrders",
   "/owner/orders/preOrderRound",
   "/owner/orders/OrderInStore",
+  "/owner/chats",
   "/owner/promotions/pricing",
   "/owner/promotions/coupons",
   "/owner/production",

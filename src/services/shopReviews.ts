@@ -42,6 +42,18 @@ export interface MyReviewDetail {
   from_preorder: boolean;
   /** null = ร้านยังไม่ตอบ */
   shop_reply: { text: string; replied_at: string | null } | null;
+  /** ที่มา: คำสั่งซื้อ/พรีออเดอร์ + รายการที่ซื้อ · null = รายการถูกลบไปแล้ว */
+  source: {
+    kind: "order" | "preorder";
+    doc_id: string | null;
+    doc_no: string;
+    ordered_at: string | null;
+    variant_name: string | null;
+    options: { option_name: string; text_value: string | null }[];
+    special_request: string | null;
+    quantity: number;
+    total_price: number;
+  } | null;
   created_at: string;
 }
 
@@ -102,6 +114,19 @@ export const shopReviewsService = {
         hidden: r.is_visible === false || r.status === "hidden" || r.status === "pending",
         from_preorder: !!r.preorder_order_item_id,
         shop_reply: reply ? { text: String(reply.text), replied_at: reply.replied_at ? String(reply.replied_at) : null } : null,
+        source: r.source
+          ? {
+              kind: r.source.kind === "preorder" ? ("preorder" as const) : ("order" as const),
+              doc_id: r.source.doc_id ? String(r.source.doc_id) : null,
+              doc_no: String(r.source.doc_no ?? ""),
+              ordered_at: r.source.ordered_at ? String(r.source.ordered_at) : null,
+              variant_name: r.source.variant_name ?? null,
+              options: Array.isArray(r.source.options) ? r.source.options : [],
+              special_request: r.source.special_request ?? null,
+              quantity: Number(r.source.quantity ?? 0),
+              total_price: Number(r.source.total_price ?? 0),
+            }
+          : null,
         created_at: String(r.created_at ?? ""),
       };
     });

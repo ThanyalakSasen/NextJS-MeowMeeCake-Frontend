@@ -1,7 +1,9 @@
 // ─────────────────────────────────────────────────────────────
 // src/services/shippingZones.ts — โซนค่าส่งเว็บ /admin/shipping-zones (สิทธิ์ store_info · BACKLOG4 F2 · backend Q-BE2)
 //   GET   /admin/shipping-zones              โซน A–D (backend สร้างชุดเริ่มต้นให้ถ้ายังไม่มี)
+//   POST  /admin/shipping-zones              { zone_label, fee, provinces } — เพิ่มโซน (รหัสถัดไป E, F, …) · สิทธิ์ shipping.create
 //   PATCH /admin/shipping-zones/:zone_code   { zone_label?, fee?, provinces? } — จังหวัดซ้ำโซนอื่น = 409 · ไม่ใช่ 77 จังหวัด = 400
+//   DELETE /admin/shipping-zones/:zone_code  ลบโซน (ลบจริง · โซน D ลบไม่ได้) · สิทธิ์ shipping.delete
 //   GET   /admin/shipping-zones/categories      หมวดหมู่สินค้า + ส่งทั่วประเทศได้ไหม (ค่าที่มีผล + ยังไม่เคยตั้งหรือเปล่า)
 //   PATCH /admin/shipping-zones/categories/:id  { ships_nationwide } — สิทธิ์ store_info.update (ไม่ต้องมีสิทธิ์สินค้า)
 //   GET   /admin/shipping-zones/products        สินค้าทั้งหมด + ค่ายกเว้นรายสินค้า (null = ตามหมวด)
@@ -10,7 +12,9 @@
 // ─────────────────────────────────────────────────────────────
 import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
-import type { CategoryShipping, ProductShipping, ShippingZone, ShippingZoneCode, ShippingZoneUpdate } from "@/types/shippingZone";
+import type {
+  CategoryShipping, ProductShipping, ShippingZone, ShippingZoneCode, ShippingZoneCreate, ShippingZoneUpdate,
+} from "@/types/shippingZone";
 
 const BASE = "/admin/shipping-zones";
 
@@ -28,8 +32,15 @@ export const shippingZonesService = {
    *  ส่งเป็น queryFn ตรง ๆ ไม่ได้ (react-query จะส่ง context มาเป็น h) — ห่อ () => เสมอ */
   list: async (h: HttpReader = http): Promise<ShippingZone[]> => (await h.getList<any>(BASE)).data.map(toZone),
 
+  create: async (body: ShippingZoneCreate): Promise<ShippingZone> =>
+    toZone((await http.post<ItemResponse<any>>(BASE, body)).data),
+
   update: async (code: ShippingZoneCode, body: ShippingZoneUpdate): Promise<ShippingZone> =>
     toZone((await http.patch<ItemResponse<any>>(`${BASE}/${code}`, body)).data),
+
+  remove: async (code: ShippingZoneCode): Promise<void> => {
+    await http.delete(`${BASE}/${code}`);
+  },
 
   listCategories: async (): Promise<CategoryShipping[]> =>
     (await http.getList<CategoryShipping>(`${BASE}/categories`)).data,

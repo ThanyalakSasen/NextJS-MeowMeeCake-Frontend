@@ -13,7 +13,7 @@ import { shopButtonPrimary, shopPage } from "@/components/customer/shopStyles";
 import { preorderRoundsKey } from "../lib/shopQueries";
 import { thaiDate } from "./lib/preorderDates";
 import { isRoundOpen, useNow } from "./lib/useNow";
-import { BasketBar, CountdownText, PreorderSteps } from "./_components/PreorderParts";
+import { BasketBar, CountdownText, PreorderStepsButton } from "./_components/PreorderParts";
 
 export default function PreorderRoundsPage() {
   const t = useTranslations("shop.preorderShop");
@@ -28,9 +28,12 @@ export default function PreorderRoundsPage() {
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: t("crumb") }]} className="!mb-0" />
-        <header>
-          <h1 className="m-0 text-2xl font-bold text-stone-800 sm:text-3xl">{t("title")}</h1>
-          <p className="m-0 mt-1 text-sm text-stone-500">{t("subtitle")}</p>
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="m-0 text-2xl font-bold text-stone-800 sm:text-3xl">{t("title")}</h1>
+            <p className="m-0 mt-1 text-sm text-stone-500">{t("subtitle")}</p>
+          </div>
+          <PreorderStepsButton className="self-start sm:self-auto" />
         </header>
 
         <BasketBar />
@@ -80,7 +83,6 @@ export default function PreorderRoundsPage() {
           </>
         )}
 
-        <PreorderSteps />
       </div>
     </div>
   );

@@ -4,7 +4,7 @@
 // 1) วิธีรับสินค้า: จัดส่ง (เลือก/เพิ่มที่อยู่ในสมุด + ชื่อ/เบอร์ผู้รับ) หรือรับที่จุดรับ (GET /catalog/pickup-locations + วันรับ)
 // 2) ค่าส่ง: POST /shop/orders/delivery-quote ตามจังหวัด
 // 3) ส่วนลด (C3): โค้ดส่วนลด (POST /shop/promotions/validate) **หรือ** คูปองของฉัน (GET /shop/coupons) อย่างใดอย่างหนึ่ง
-//    + ใช้แต้มร่วมได้ (GET /shop/points) — เพดานแต้มคิดจากยอดสินค้าหลังหักคูปอง/โค้ด เหมือน backend orderService
+//    ใช้แต้มตอนสั่งไม่ได้แล้ว (2026-10-26) — แลกแต้มเป็นคูปองที่หน้าสมาชิก (ลิงก์ในสรุปคำสั่งซื้อ)
 // 4) สั่งซื้อ: POST /shop/orders (source "cart") → ไปหน้าออเดอร์ (/customer/account/purchases/[id]) เพื่อชำระเงิน/แนบสลิป
 // ยอดที่แสดงเป็นยอดประมาณ — backend คิดค่าส่ง/ส่วนลด/แต้มใหม่เองตอนสร้างออเดอร์เสมอ
 // ─────────────────────────────────────────────────────────────
@@ -18,7 +18,8 @@ import { cartItemOptionText, shopCartService } from "@/services/shopCart";
 import { shopAddressesService, type ShopAddress } from "@/services/shopAddresses";
 import { shopOrdersService, type CreateShopOrderInput } from "@/services/shopOrders";
 import { pickupLocationsService } from "@/services/pickupLocations";
-import { couponDiscount, maxRedeemablePoints, pointsToBaht, shopLoyaltyService } from "@/services/shopLoyalty";
+import { couponDiscount, shopLoyaltyService } from "@/services/shopLoyalty";
+import { normalizePromoCode } from "@/lib/promoCode";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { OrderType } from "@/types/order";
@@ -34,7 +35,6 @@ import { pickupLocationsKey, shopAddressesKey, shopCartKey, shopCouponsKey, shop
 import PickupLocationPicker from "@/components/customer/PickupLocationPicker";
 import CheckoutAddressForm from "@/components/customer/CheckoutAddressForm";
 import CouponSelectBox from "@/components/customer/CouponSelectBox";
-import PointsRedeemBox from "@/components/customer/PointsRedeemBox";
 import ShopSpinner from "@/components/customer/ShopSpinner";
 
 const PHONE_RE = /^0\d{8,9}$/;
@@ -64,7 +64,6 @@ function CheckoutContent() {
   const addressesQ = useQuery({ queryKey: shopAddressesKey, queryFn: shopAddressesService.list });
   // จุดรับ/แต้ม/คูปอง โหลดไม่สำเร็จ = แค่ไม่แสดงส่วนนั้น (ไม่กันการสั่งซื้อ)
   const pickupQ = useQuery({ queryKey: pickupLocationsKey, queryFn: pickupLocationsService.list });
-  const pointsQ = useQuery({ queryKey: shopPointsKey, queryFn: shopLoyaltyService.points });
   const couponsQ = useQuery({ queryKey: shopCouponsKey, queryFn: shopLoyaltyService.availableCoupons });
 
   const [orderType, setOrderType] = useState<OrderType>("delivery");
@@ -74,7 +73,6 @@ function CheckoutContent() {
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState<{ code: string; discount: number; freeShipping: boolean; forKey: string } | null>(null);
   const [couponId, setCouponId] = useState<string | null>(null);
-  const [pointsInput, setPointsInput] = useState(0);
   const [pickupLocationId, setPickupLocationId] = useState<string | null>(null);
   const [pickupDate, setPickupDate] = useState<string | null>(null);
 
@@ -155,22 +153,8 @@ function CheckoutContent() {
   const selectedCoupon = coupons.find((c) => c._id === couponId) ?? null;
   const couponAmount = selectedCoupon ? (couponDiscount(selectedCoupon, subtotal, deliveryFee).amount ?? 0) : 0;
   const codeOrCouponDiscount = activePromo ? activePromo.discount : couponAmount;
-  const freeShippingDiscount = activePromo ? activePromo.freeShipping : selectedCoupon?.discount_type === "FreeShipping";
 
-  // แต้ม: ฐาน = ยอดสินค้า − ส่วนลดสินค้าจากคูปอง/โค้ด (ไม่เกินยอดสินค้า) — ตรงกับ backend orderService.createOrder
-  // ส่วนลดส่งฟรีไม่ลดฐาน (Q-BE14) · ค่าที่กรอกเกินเพดานใหม่ (เช่นเลือกคูปองทีหลัง) ถูกตัดลงอัตโนมัติ
-  const goodsDiscount = freeShippingDiscount ? 0 : codeOrCouponDiscount;
-  const points = pointsQ.data ?? null;
-  let pointsToRedeem = 0;
-  let maxPoints = 0;
-  if (points) {
-    maxPoints = maxRedeemablePoints(points.balance, subtotal - Math.min(goodsDiscount, subtotal), points.rules);
-    const capped = Math.min(pointsInput, maxPoints);
-    pointsToRedeem = capped - (capped % points.rules.REDEEM_STEP);
-  }
-  const pointsDiscount = points ? pointsToBaht(pointsToRedeem, points.rules) : 0;
-
-  const discount = codeOrCouponDiscount + pointsDiscount;
+  const discount = codeOrCouponDiscount;
   const total = Math.max(0, subtotal + deliveryFee - discount);
   const recipientOk = recipientName.trim().length > 0 && PHONE_RE.test(recipientPhone.trim());
 
@@ -197,7 +181,6 @@ function CheckoutContent() {
     }
     if (activePromo) body.promotion_code = activePromo.code;
     else if (selectedCoupon && couponAmount > 0) body.user_coupon_id = selectedCoupon._id;
-    if (pointsToRedeem > 0) body.points_to_redeem = pointsToRedeem;
     orderMutation.mutate(body);
   };
 
@@ -205,10 +188,11 @@ function CheckoutContent() {
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: tcart("title"), href: "/customer/cart" }, { label: t("confirmOrder") }]} className="!mb-0" />
-        <FlowSteps kind="order" current={2} />
+        <FlowSteps current={2} />
+        <h1 className="m-0 text-xl font-bold sm:text-2xl">{t("confirmOrder")}</h1>
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-          <div className="space-y-6 lg:col-span-8">
+          <div className="space-y-6 lg:col-span-6">
             {/* วิธีรับสินค้า */}
             <section className={`${shopCard} space-y-4`}>
               <h2 className="text-lg font-bold">{t("receiveMethod")}</h2>
@@ -333,9 +317,16 @@ function CheckoutContent() {
               </section>
             )}
 
+          </div>
+
+          {/* สรุปยอด */}
+          <div className="lg:sticky lg:top-44 lg:col-span-6">
+            <div className={`${shopCard} space-y-4`}>
+              <h2 className="border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">{t("summary")}</h2>
+
             {/* รายการสินค้า */}
-            <section className={`${shopCard} space-y-3`}>
-              <h2 className="text-lg font-bold">{t("items")}</h2>
+            <div className="space-y-3 border-b border-[#8C5A3C]/10 pb-4">
+              <h3 className="m-0 text-base font-bold">{t("items")}</h3>
               {cart.items.map((it) => {
                 const name = typeof it.product_id === "object" && it.product_id ? localName(it.product_id.product_name_th, it.product_id.product_name_eng) : t("product");
                 const options = cartItemOptionText(it);
@@ -351,13 +342,7 @@ function CheckoutContent() {
                   </div>
                 );
               })}
-            </section>
-          </div>
-
-          {/* สรุปยอด */}
-          <div className="lg:sticky lg:top-44 lg:col-span-4">
-            <div className={`${shopCard} space-y-4`}>
-              <h2 className="border-b border-[#8C5A3C]/10 pb-3 text-lg font-bold">{t("summary")}</h2>
+            </div>
 
               <div className="flex gap-2">
                 <input
@@ -365,7 +350,7 @@ function CheckoutContent() {
                   value={promoInput}
                   placeholder={t("promoCode")}
                   aria-label={t("promoCode")}
-                  onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                  onChange={(e) => setPromoInput(normalizePromoCode(e.target.value))}
                 />
                 <button
                   type="button"
@@ -389,7 +374,10 @@ function CheckoutContent() {
                 }}
               />
 
-              {points && <PointsRedeemBox points={points} max={maxPoints} value={pointsInput} onChange={setPointsInput} />}
+              {/* ใช้แต้มตอนสั่งซื้อไม่ได้แล้ว (2026-10-26) — แลกแต้มเป็นคูปองที่หน้าสมาชิก แล้วเลือกคูปองด้านบน */}
+              <Link href="/customer/account/member?tab=redeem" className="block rounded-xl bg-[#FAF6F0] px-3 py-2 text-xs font-semibold text-[#8C5A3C] hover:underline">
+                {tcart("redeemPointsHint")}
+              </Link>
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-gray-600">
@@ -424,12 +412,6 @@ function CheckoutContent() {
                   <div className="flex justify-between text-green-700">
                     <span>{t("coupon", { code: selectedCoupon.promotion_code })}</span>
                     <span className="font-semibold">-{baht(couponAmount)}</span>
-                  </div>
-                )}
-                {pointsDiscount > 0 && (
-                  <div className="flex justify-between text-green-700">
-                    <span>{t("points", { n: pointsToRedeem.toLocaleString() })}</span>
-                    <span className="font-semibold">-{baht(pointsDiscount)}</span>
                   </div>
                 )}
               </div>

@@ -16,7 +16,8 @@ export function orderTimelineStep(o: Pick<ShopOrder, "order_status" | "payment_s
   return step;
 }
 
-export default function OrderTimeline({ order }: { order: ShopOrder }) {
+/** ใช้ทั้งออเดอร์และพรีออเดอร์ (ฟิลด์สถานะชุดเดียวกัน) */
+export default function OrderTimeline({ order }: { order: Pick<ShopOrder, "order_status" | "payment_status" | "order_type" | "delivery_status"> }) {
   const t = useTranslations("shop.orders.timeline");
   if (order.order_status === "cancelled") return null;
   const delivery = order.order_type === "delivery";

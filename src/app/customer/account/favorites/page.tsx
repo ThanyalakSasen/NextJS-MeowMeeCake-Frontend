@@ -15,7 +15,17 @@ import type { FavoriteItem } from "@/services/shopFavorites";
 import { resolveUploadUrl } from "@/lib/uploads";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
-import { baht, shopButton, shopPage } from "@/components/customer/shopStyles";
+import {
+  baht,
+  productCardBody,
+  productCardButton,
+  productCardFrame,
+  productCardImage,
+  productCardSubtitle,
+  productCardTitle,
+  shopButton,
+  shopPage,
+} from "@/components/customer/shopStyles";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useAddToCart } from "../../hooks/useAddToCart";
 import ShopImage from "@/components/customer/ShopImage";
@@ -38,7 +48,8 @@ function FavoritesContent() {
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
+      {/* กว้างกว่าหน้าบัญชีอื่น (1320px · ขอบแคบ) — ให้การ์ดแถวละ 6 บนจอใหญ่ไม่เล็กเกินไป */}
+      <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-5 px-[12px] sm:px-[16px] md:px-[24px] xl:px-[32px]">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: ta("favorites") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <div className="flex min-w-0 flex-1 flex-col gap-5">
@@ -63,7 +74,8 @@ function FavoritesContent() {
                 <Link href="/customer/product" className={shopButton}>{t("shopNow")}</Link>
               </div>
             ) : (
-              <ul className="m-0 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3">
+              // มือถือ 2 · จอกลาง 3 · จอใหญ่ (≥1280) 6 ต่อแถว
+              <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
                 {items.map((item) => (
                   <FavoriteCard
                     key={item.id}
@@ -81,6 +93,10 @@ function FavoritesContent() {
   );
 }
 
+/**
+ * การ์ดรายการโปรด — โครงเดียวกับการ์ดสินค้าหน้าอื่น (shopStyles: กรอบ · รูปสี่เหลี่ยมจัตุรัส · ชื่อ · ราคา|ดาว · ปุ่มเต็มกว้าง)
+ * ต่างตรงที่: หัวใจมุมขวาบน = เอาออกจากรายการโปรด · แสดงสินค้าหมด/พรีออเดอร์ด้วย (หน้าอื่นซ่อน)
+ */
 function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removing: boolean; onRemove: () => void }) {
   const t = useTranslations("shop.favorites");
   const { names: localNames } = useLocalName();
@@ -88,93 +104,98 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
   const [imgFailed, setImgFailed] = useState(false);
   const href = `/customer/product/${item.id}`;
   const img = resolveUploadUrl(item.image);
+  const names = localNames(item.name, item.nameeg);
 
   return (
-    <li className={`group relative flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:border-stone-300 ${item.inStock ? "" : "opacity-75"}`}>
-      <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden bg-stone-100">
-        <Link href={href} className="block h-full w-full" tabIndex={-1} aria-hidden="true">
+    <li className={item.inStock ? "" : "opacity-80"}>
+      <Link href={href} className={productCardFrame}>
+        <div className={productCardImage}>
           {img && !imgFailed ? (
             <ShopImage
               src={img}
-              alt=""
-              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              alt={item.name}
+              sizes="(min-width: 1280px) 16vw, (min-width: 640px) 33vw, 50vw"
               className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
               onError={() => setImgFailed(true)}
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-xs text-stone-500">{t("noImage")}</span>
           )}
-        </Link>
 
-        <button
-          type="button"
-          onClick={onRemove}
-          disabled={removing}
-          aria-label={t("removeAria", { name: item.name })}
-          title={t("remove")}
-          className="absolute right-3 top-3 flex h-[36px] w-[36px] items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-md transition hover:bg-white disabled:opacity-60"
-        >
-          {removing ? <FaSpinner className="animate-spin text-xs text-stone-500" /> : <FaHeart className="text-base text-[#E05353]" />}
-        </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              // การ์ดทั้งใบเป็นลิงก์ — กันไม่ให้กดหัวใจแล้วเปิดหน้าสินค้า
+              e.preventDefault();
+              e.stopPropagation();
+              onRemove();
+            }}
+            disabled={removing}
+            aria-label={t("removeAria", { name: item.name })}
+            title={t("remove")}
+            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 shadow-md backdrop-blur-sm transition hover:scale-110 hover:bg-white disabled:opacity-60"
+          >
+            {removing ? <FaSpinner className="animate-spin text-xs text-stone-500" /> : <FaHeart className="text-sm text-red-500" />}
+          </button>
 
-        {!item.inStock && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-            <span className="rounded-full bg-stone-900/80 px-3 py-1.5 text-xs font-bold text-white">{t("outOfStock")}</span>
+          {!item.inStock && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
+              <span className="rounded-full bg-stone-900/80 px-3 py-1 text-xs font-bold text-white">{t("outOfStock")}</span>
+            </div>
+          )}
+          {item.is_preorder && item.inStock && (
+            <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-[#4A342E] px-2 py-0.5 text-[11px] font-bold text-white">{t("preorder")}</span>
+          )}
+        </div>
+
+        <div className={productCardBody}>
+          <div className="min-w-0">
+            <h2 className={productCardTitle}>{names.primary}</h2>
+            <p className={productCardSubtitle}>{names.secondary || " "}</p>
           </div>
-        )}
-        {item.is_preorder && item.inStock && (
-          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-[#4A342E] px-2.5 py-1 text-[11px] font-bold text-white">{t("preorder")}</span>
-        )}
-      </div>
 
-      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
-        <div className="space-y-1">
-          {item.category && <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#4A342E]">{item.category}</span>}
-          <Link href={href} className="block">
-            <h2 className="m-0 line-clamp-1 text-base font-bold leading-snug text-stone-800 hover:text-[#8C5A3C]">{localNames(item.name, item.nameeg).primary}</h2>
-          </Link>
-          {localNames(item.name, item.nameeg).secondary && <span className="line-clamp-1 block text-xs text-stone-500">{localNames(item.name, item.nameeg).secondary}</span>}
-          {item.rating !== "-" && (
-            <span className="flex items-center gap-1 pt-1 text-xs font-bold text-amber-500">
-              <FaStar /> {Number(item.rating).toFixed(1)}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between gap-2 border-t border-stone-200/60 pt-2">
-          <span className="flex items-baseline gap-1.5">
-            <span className={`text-lg font-bold ${item.originalPrice ? "text-red-600" : "text-stone-900"}`}>{baht(item.price)}</span>
-            {item.originalPrice ? <span className="text-xs text-stone-500 line-through">{baht(item.originalPrice)}</span> : null}
-          </span>
-
-          {item.is_preorder ? (
-            <Link href={href} className="inline-flex h-[44px] items-center rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition hover:bg-[#4A342E] hover:text-white">
-              {t("view")}
-            </Link>
-          ) : (
-            <button
-              type="button"
-              disabled={!item.inStock || status === "loading" || status === "success"}
-              onClick={() => void quickAdd(item.id)}
-              className={`inline-flex h-[44px] items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition-all duration-200 ${
-                status === "success"
-                  ? "border border-emerald-600 bg-emerald-600 text-white"
-                  : "border border-[#8C5A3C]/30 bg-white text-[#4A342E] shadow-md shadow-[#4A342E]/20 hover:bg-[#4A342E] hover:text-white active:scale-[0.98]"
-              } disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none`}
-            >
-              {!item.inStock ? (
-                t("soldOut")
-              ) : status === "loading" ? (
-                <><FaSpinner className="animate-spin" /> {t("adding")}</>
-              ) : status === "success" ? (
-                <><FaCheck /> {t("added")}</>
-              ) : (
-                <><ShoppingCart className="h-4 w-4" aria-hidden="true" /> {t("addToCart")}</>
+          <div className="mt-auto space-y-2">
+            <div className="flex items-end justify-between gap-2">
+              <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+                <span className={`text-sm font-extrabold md:text-[0.9444rem] xl:text-base ${item.originalPrice ? "text-red-600" : "text-[#8C5A3C]"}`}>
+                  {baht(item.price)}
+                </span>
+                {item.originalPrice ? <span className="text-xs text-stone-500 line-through">{baht(item.originalPrice)}</span> : null}
+              </span>
+              {item.rating !== "-" && (
+                <span className="flex shrink-0 items-center gap-1 pb-0.5 text-xs font-medium text-stone-700">
+                  <FaStar className="text-amber-400" aria-hidden="true" /> {Number(item.rating).toFixed(1)}
+                </span>
               )}
-            </button>
-          )}
+            </div>
+
+            {item.is_preorder ? (
+              <span className={productCardButton}>{t("view")}</span>
+            ) : (
+              <button
+                type="button"
+                disabled={!item.inStock || status === "loading" || status === "success"}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void quickAdd(item.id);
+                }}
+                className={`${productCardButton} ${status === "success" ? "!border-emerald-600 !bg-emerald-600 !text-white" : ""} disabled:cursor-not-allowed disabled:opacity-60`}
+              >
+                {!item.inStock ? (
+                  t("soldOut")
+                ) : status === "loading" ? (
+                  <><FaSpinner className="animate-spin" /> {t("adding")}</>
+                ) : status === "success" ? (
+                  <><FaCheck /> {t("added")}</>
+                ) : (
+                  <><ShoppingCart className="h-4 w-4" aria-hidden="true" /> {t("addToCart")}</>
+                )}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </Link>
     </li>
   );
 }

@@ -1,8 +1,11 @@
 "use client";
-// แท็บ "หัวข้อรีวิว" — ตัวอย่างปุ่มในฟอร์มลูกค้า · เพิ่ม · รายการ (ลำดับ/ไอคอน/ชื่อ/คำแนะนำ/เปิด-ปิด/ลบ) · หัวข้อที่ลบแล้ว (กู้คืน)
-import { Popover, Tooltip } from "antd";
+// แท็บ "หัวข้อรีวิว" — ตัวอย่างปุ่มในฟอร์มลูกค้า · เพิ่ม · รายการ (ลำดับ/ไอคอน/ชื่อ/เปิด-ปิด/ลบ) · หัวข้อที่ลบแล้ว (กู้คืน)
+// เรียงลำดับ: จับที่ด้ามจับ ⠿ แล้วลากการ์ด (pointer events — ใช้ได้ทั้งเมาส์และนิ้ว) ปล่อยแล้วบันทึกทั้งชุด
+// คีย์บอร์ด: โฟกัสด้ามจับแล้วกด ↑/↓
+import { useRef, useState } from "react";
+import { Popover } from "antd";
 import { useTranslations } from "next-intl";
-import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 import { Button, Card, Input, Switch } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
 import { DeleteButton, actionIcon } from "@/components/shared/actions";
@@ -15,6 +18,48 @@ export function AspectsTab({ vm }: { vm: VM }) {
   const t = useTranslations();
   const canEdit = vm.perm.update;
   const active = vm.aspects.filter((a) => a.is_active);
+
+  // ── ลากเรียง ── drag = ตำแหน่งเริ่ม + ตำแหน่งที่ลากมาถึง (แสดงตัวอย่างก่อนปล่อย)
+  const [drag, setDrag] = useState<{ from: number; over: number } | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const indexAt = (y: number) => {
+    const items = [...(listRef.current?.querySelectorAll<HTMLElement>("[data-aspect-index]") ?? [])];
+    for (const el of items) {
+      const r = el.getBoundingClientRect();
+      if (y < r.top + r.height / 2) return Number(el.dataset.aspectIndex);
+    }
+    return items.length - 1;
+  };
+  const shown = (() => {
+    if (!drag || drag.from === drag.over) return vm.aspects.map((a, i) => ({ a, i }));
+    const list = vm.aspects.map((a, i) => ({ a, i }));
+    const [moved] = list.splice(drag.from, 1);
+    list.splice(drag.over, 0, moved);
+    return list;
+  })();
+  const handleProps = (i: number) =>
+    canEdit && !vm.reordering
+      ? {
+          onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
+            e.currentTarget.setPointerCapture(e.pointerId);
+            setDrag({ from: i, over: i });
+          },
+          onPointerMove: (e: React.PointerEvent) => {
+            if (drag) setDrag({ ...drag, over: indexAt(e.clientY) });
+          },
+          onPointerUp: () => {
+            if (drag) vm.onMoveTo(drag.from, drag.over);
+            setDrag(null);
+          },
+          onPointerCancel: () => setDrag(null),
+          onKeyDown: (e: React.KeyboardEvent) => {
+            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+              e.preventDefault();
+              vm.onMove(i, e.key === "ArrowUp" ? -1 : 1);
+            }
+          },
+        }
+      : {};
 
   return (
     <div className="flex flex-col gap-4">
@@ -29,12 +74,10 @@ export function AspectsTab({ vm }: { vm: VM }) {
         {active.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {active.map((a) => (
-              <Tooltip key={a._id} title={a.placeholder_text || undefined}>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-brown-200 bg-brown-50 px-3 py-1 text-xs text-brown-800">
-                  <AspectIcon icon={resolveAspectIcon(a.icon, a.aspect_name_eng)} size={13} />
-                  {a.aspect_name_th}
-                </span>
-              </Tooltip>
+              <span key={a._id} className="inline-flex items-center gap-1.5 rounded-full border border-brown-200 bg-brown-50 px-3 py-1 text-xs text-brown-800">
+                <AspectIcon icon={resolveAspectIcon(a.icon, a.aspect_name_eng)} size={13} />
+                {a.aspect_name_th}
+              </span>
             ))}
           </div>
         ) : (
@@ -53,20 +96,32 @@ export function AspectsTab({ vm }: { vm: VM }) {
         )}
       </Card>
 
-      <ul className="m-0 flex list-none flex-col gap-2 p-0">
-        {vm.aspects.map((a, i) => {
+      {canEdit && vm.aspects.length > 1 && <p className="m-0 text-xs text-gray-500">{t("reviewSettings.aspects.dragHint")}</p>}
+      <ul ref={listRef} className="m-0 flex list-none flex-col gap-2 p-0">
+        {shown.map(({ a, i }, pos) => {
+          const dragging = drag?.from === i;
           const renaming = vm.renaming?.id === a._id ? vm.renaming : null;
           const iconKey = resolveAspectIcon(a.icon, a.aspect_name_eng);
           return (
-            <li key={a._id} className={`flex flex-col gap-2 rounded-xl border bg-white p-3 ${a.is_active ? "border-gray-100" : "border-dashed border-gray-200 opacity-75"}`}>
+            <li
+              key={a._id}
+              data-aspect-index={pos}
+              className={`flex flex-col rounded-xl border bg-white p-3 transition-shadow ${
+                dragging ? "border-brown-400 shadow-lg ring-2 ring-brown-200" : a.is_active ? "border-gray-100" : "border-dashed border-gray-200 opacity-75"
+              }`}
+            >
               <div className="flex flex-wrap items-center gap-2">
                 {canEdit && (
-                  <span className="flex flex-col">
-                    <Button size="small" type="text" disabled={i === 0 || vm.reordering} aria-label={t("reviewSettings.aspects.moveUp")}
-                      icon={<ArrowUpIcon className="h-3.5 w-3.5" />} onClick={() => vm.onMove(i, -1)} />
-                    <Button size="small" type="text" disabled={i === vm.aspects.length - 1 || vm.reordering} aria-label={t("reviewSettings.aspects.moveDown")}
-                      icon={<ArrowDownIcon className="h-3.5 w-3.5" />} onClick={() => vm.onMove(i, 1)} />
-                  </span>
+                  <button
+                    type="button"
+                    {...handleProps(i)}
+                    aria-label={t("reviewSettings.aspects.dragHandle", { name: a.aspect_name_th })}
+                    title={t("reviewSettings.aspects.dragHint")}
+                    disabled={vm.reordering}
+                    className="flex h-9 w-7 shrink-0 cursor-grab touch-none items-center justify-center rounded border-none bg-transparent text-gray-500 hover:bg-gray-100 active:cursor-grabbing disabled:cursor-wait"
+                  >
+                    <Bars3Icon className="h-5 w-5" aria-hidden="true" />
+                  </button>
                 )}
                 <Popover
                   trigger={canEdit ? "click" : []}
@@ -118,16 +173,6 @@ export function AspectsTab({ vm }: { vm: VM }) {
                   )}
                 </span>
               </div>
-              <Input
-                key={`${a._id}-${a.placeholder_text ?? ""}`}
-                size="small"
-                defaultValue={a.placeholder_text ?? ""}
-                maxLength={120}
-                disabled={!canEdit}
-                placeholder={t("reviewSettings.aspects.placeholderHint")}
-                onBlur={(e) => vm.onPlaceholder(a, e.target.value)}
-                onPressEnter={(e) => vm.onPlaceholder(a, (e.target as HTMLInputElement).value)}
-              />
             </li>
           );
         })}

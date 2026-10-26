@@ -62,6 +62,10 @@ export const reviewsService = {
     (await h.get<ItemResponse<AdminReviewStats>>(`${BASE}/stats`, { params })).data,
   moderate: async (id: string, body: ReviewModeration): Promise<Review> => (await http.patch<ItemResponse<Review>>(`${BASE}/${id}`, body)).data,
   remove: (id: string) => http.delete(`${BASE}/${id}`),
+  /** POST /admin/reviews/bulk — อ่านแล้ว/ยังไม่อ่านหลายรายการ (≤ 200) */
+  markRead: async (ids: string[], read = true): Promise<void> => {
+    await http.post(`${BASE}/bulk`, { ids, action: read ? "mark_read" : "mark_unread" });
+  },
   filterOptions: async (h: HttpReader = http): Promise<ReviewFilterOptions> => (await h.get<ItemResponse<ReviewFilterOptions>>(`${BASE}/filter-options`)).data,
 
   /** ผลวิเคราะห์ sentiment รายรีวิว — มีเฉพาะรีวิวที่ is_analyzed แล้ว */

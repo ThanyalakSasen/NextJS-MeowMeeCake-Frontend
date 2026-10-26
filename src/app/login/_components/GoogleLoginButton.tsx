@@ -10,6 +10,9 @@
 // เดิมโหลดทันทีที่เปิดหน้า: เบราว์เซอร์ที่ login Google อยู่ได้ cookie บุคคลที่สาม 16 ตัว + Issues
 // (Lighthouse Best Practices 77) · ระหว่างยังไม่โหลดแสดงปุ่มหน้าตาเหมือนกัน — บนมือถือถ้าแตะปุ่มนี้เป็นอย่างแรก
 // แตะครั้งแรกจะเริ่มโหลด แล้วแตะอีกครั้งที่ปุ่มของ Google
+// initialize() ครั้งเดียวต่อการโหลดหน้า (gisInitialized) — callback ชี้ไปที่ตัวแปรระดับโมดูล (activeCallback) ของปุ่มที่แสดงอยู่
+// เดิมเรียกทุกครั้งที่ปุ่ม mount ใหม่/เปลี่ยนภาษา → GSI เตือน "google.accounts.id.initialize() is called multiple times" ซ้ำ ๆ
+// renderButton() วาดใหม่ได้หลายครั้ง (ไม่เตือน)
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
@@ -18,6 +21,10 @@ import { FcGoogle } from "react-icons/fc";
 import { GOOGLE_CLIENT_ID, type GoogleOAuth2 } from "./googleAccountPicker";
 
 const CLIENT_ID = GOOGLE_CLIENT_ID;
+
+/** GIS initialize แล้วหรือยัง (ทั้งหน้า) · callback ของปุ่มที่แสดงอยู่ล่าสุด */
+let gisInitialized = false;
+let activeCallback: ((credential: string) => void) | null = null;
 
 interface GoogleId {
   initialize(opts: { client_id: string; callback: (r: { credential?: string }) => void; ux_mode?: "popup" }): void;
@@ -49,20 +56,27 @@ export function GoogleLoginButton({ disabled, onCredential }: { disabled: boolea
       for (const e of events) window.removeEventListener(e, on);
     };
   }, [wanted]);
-  // callback ล่าสุดเสมอ — GIS เก็บ callback ตัวแรกที่ initialize ไว้
-  const callbackRef = useRef(onCredential);
+  // callback ล่าสุดเสมอ — GIS เก็บ callback ตัวแรกที่ initialize ไว้ (initialize ครั้งเดียว → ชี้ผ่าน activeCallback)
   useEffect(() => {
-    callbackRef.current = onCredential;
+    activeCallback = onCredential;
+    return () => {
+      if (activeCallback === onCredential) activeCallback = null;
+    };
   }, [onCredential]);
 
   useEffect(() => {
     const gid = window.google?.accounts.id;
     if (!ready || !gid || !slot.current) return;
-    gid.initialize({
-      client_id: CLIENT_ID,
-      ux_mode: "popup",
-      callback: (r) => r.credential && callbackRef.current(r.credential),
-    });
+    if (!gisInitialized) {
+      gid.initialize({
+        client_id: CLIENT_ID,
+        ux_mode: "popup",
+        callback: (r) => {
+          if (r.credential) activeCallback?.(r.credential);
+        },
+      });
+      gisInitialized = true;
+    }
     gid.renderButton(slot.current, {
       type: "standard",
       theme: "outline",

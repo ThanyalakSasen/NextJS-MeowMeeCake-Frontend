@@ -27,7 +27,7 @@ import { storeInfoKey, storeLogoKey } from "@/app/customer/lib/catalogQueries";
 import { thaiCompare } from "@/lib/thaiSort";
 import {
   DAY_ORDER, EMPTY_PROFILE, EMPTY_SETTINGS, NEW_MARKET, logoError, marketsPayload, profilePayload, profileToForm, sameValue,
-  sectionChanged, validateAddress, validateMarkets, validateProfile,
+  sectionChanged, syncMainMarket, validateAddress, validateMarkets, validateProfile,
   type FieldError, type FormErrors, type ProfileForm, type SectionKey,
 } from "./storeInfoForm";
 import { MARKETS_KEY, PROFILE_KEY, SETTINGS_KEY } from "./storeInfoQuery";
@@ -83,10 +83,15 @@ export function useStoreInfoViewModel() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [marketsError, setMarketsError] = useState<FieldError | null>(null);
 
+  // หน้าร้านหลักใช้ที่อยู่ร้าน — เจ้าของร้านเท่านั้นที่เห็นที่อยู่ (พนักงานบันทึกตามที่มีอยู่)
+  const marketsToSave = isOwner ? syncMainMarket(markets, address) : markets;
+
   const dirty = (() => {
     if (editing === null) return false;
     if (editing === "markets") {
-      return !sameValue(marketsPayload(markets), marketsPayload(savedMarkets)) || (isOwner && !sameValue(address, savedSettings));
+      // เทียบกับค่าเดิมที่ sync แล้วด้วย — ไม่งั้นแค่เปิดแก้ (ที่ตั้งเดิมยังไม่ตรงที่อยู่ร้าน) ก็ขึ้นเตือน "ยังไม่บันทึก"
+      const savedSynced = isOwner ? syncMainMarket(savedMarkets, savedSettings) : savedMarkets;
+      return !sameValue(marketsPayload(marketsToSave), marketsPayload(savedSynced)) || (isOwner && !sameValue(address, savedSettings));
     }
     return sectionChanged(editing, profile, savedProfile) || (editing === "general" && logoFile !== null);
   })();
@@ -145,8 +150,8 @@ export function useStoreInfoViewModel() {
   const save = useMutation({
     mutationFn: async (section: SectionKey) => {
       if (section === "markets") {
-        if (!sameValue(marketsPayload(markets), marketsPayload(savedMarkets))) {
-          qc.setQueryData(MARKETS_KEY, await storeAdminService.updateWeeklyMarkets(marketsPayload(markets)));
+        if (!sameValue(marketsPayload(marketsToSave), marketsPayload(savedMarkets))) {
+          qc.setQueryData(MARKETS_KEY, await storeAdminService.updateWeeklyMarkets(marketsPayload(marketsToSave)));
         }
         if (isOwner && !sameValue(address, savedSettings)) {
           qc.setQueryData(SETTINGS_KEY, await storeAdminService.updateSettings(address));
@@ -176,7 +181,7 @@ export function useStoreInfoViewModel() {
     const section = editing;
     if (!section) return;
     if (section === "markets") {
-      const mErr = validateMarkets(markets);
+      const mErr = validateMarkets(marketsToSave);
       const aErr = isOwner ? validateAddress(address) : {};
       setMarketsError(mErr);
       setErrors(aErr);
@@ -186,7 +191,9 @@ export function useStoreInfoViewModel() {
       setErrors(pErr);
       if (Object.keys(pErr).length > 0) return void alert.error(t("storeInfo.checkFields"));
     }
-    if (!dirty) return setEditing(null);
+    // ไม่ได้แก้อะไร แต่ที่ตั้งหน้าร้านหลักยังไม่ตรงที่อยู่ร้าน → บันทึกให้ตรงด้วย
+    const mainOutOfSync = section === "markets" && !sameValue(marketsPayload(marketsToSave), marketsPayload(savedMarkets));
+    if (!dirty && !mainOutOfSync) return setEditing(null);
     save.mutate(section);
   };
 
@@ -228,6 +235,12 @@ export function useStoreInfoViewModel() {
     setMarketField(i, "is_active", active);
   };
   const addMarket = () => setMarkets((ms) => [...ms, { ...NEW_MARKET }]);
+  /** ตั้งเป็นหน้าร้านหลัก (แห่งเดียว) แล้วย้ายขึ้นลำดับแรก — ตรงกับที่ backend บันทึก */
+  const setMainMarket = (i: number) =>
+    setMarkets((ms) => {
+      const next = ms.map((m, j) => ({ ...m, is_main: j === i }));
+      return [next[i], ...next.filter((_, j) => j !== i)];
+    });
   const removeMarket = async (i: number) => {
     if (isLastActive(i)) return void alert.warning(t("storeInfo.markets.lastActive"));
     const name = markets[i]?.name.trim();
@@ -290,6 +303,7 @@ export function useStoreInfoViewModel() {
     setMarketField,
     toggleMarketDay,
     toggleMarketActive,
+    setMainMarket,
     addMarket,
     removeMarket,
 

@@ -1,5 +1,5 @@
 "use client";
-// โมดัลแก้ไขโซนค่าจัดส่ง — แยกไฟล์ให้ View โหลดแบบ next/dynamic เมื่อเปิดครั้งแรก (antd Modal + ฟอร์มไม่ต้องโหลดตอนเปิดหน้า)
+// โมดัลเพิ่ม/แก้ไขโซนค่าจัดส่ง (editing.code = null คือเพิ่มโซนใหม่) — แยกไฟล์ให้ View โหลดแบบ next/dynamic เมื่อเปิดครั้งแรก (antd Modal + ฟอร์มไม่ต้องโหลดตอนเปิดหน้า)
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import { modalButtonIcons } from "@/components/shared/actions";
@@ -10,17 +10,18 @@ type VM = ReturnType<typeof useShippingZonesViewModel>;
 
 export function ShippingZoneEditModal(vm: VM) {
   const t = useTranslations();
+  const isNew = vm.editing?.code === null;
   return (
     <Modal
       open={!!vm.editing}
-      title={vm.editing ? t("shippingZones.editTitle", { code: vm.editing.code }) : ""}
+      title={!vm.editing ? "" : vm.editing.code === null ? t("shippingZones.addTitle") : t("shippingZones.editTitle", { code: vm.editing.code })}
       width={640}
       onCancel={vm.closeEdit}
       onOk={vm.onSave}
       confirmLoading={vm.saving}
       okText={t("common.save")}
       cancelText={t("common.cancel")}
-      {...modalButtonIcons("save")}
+      {...modalButtonIcons(isNew ? "add" : "save")}
       destroyOnHidden
     >
       {vm.editing && (

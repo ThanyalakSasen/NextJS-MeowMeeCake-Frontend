@@ -12,9 +12,11 @@ import { catalogService, type SimilarProduct } from "@/services/catalog";
 import type { Product } from "@/types/product";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import ProductCard, { isProductCardVisible } from "@/components/customer/ProductCard";
+import RecommendationGrid, { RECOMMENDATION_MAX } from "@/components/customer/RecommendationGrid";
 import { homeRecommendationsKey } from "../lib/catalogQueries";
 
-const MAX_ITEMS = 10;
+// ขอสูงสุด 10 · แสดงเฉพาะแถวเต็ม (จอใหญ่ 2 แถว = 8) (RecommendationGrid) · ไม่แสดงเหตุผลที่แนะนำบนบัตร
+const MAX_ITEMS = RECOMMENDATION_MAX;
 
 async function loadRecommendations(authed: boolean): Promise<SimilarProduct[]> {
   if (!authed) return catalogService.recommended();
@@ -60,12 +62,7 @@ export default function HomeRecommendations({ fallbackProducts, fallbackLoading 
           <p className="text-base sm:text-lg text-[#8C5A3C] font-medium animate-pulse">{t("loadingRecs")}</p>
         </div>
       ) : items.length > 0 ? (
-        // มือถือ (<640) 2 · 640–1279 3 · จอคอม (≥1280) 5 คอลัมน์
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-2">
-          {items.map((r) => (
-            <ProductCard key={r.product._id} product={r.product} allergenWarning={r.allergenWarning} reasons={r.reasons} />
-          ))}
-        </div>
+        <RecommendationGrid items={items} render={(r) => <ProductCard product={r.product} allergenWarning={r.allergenWarning} />} />
       ) : (
         <div className="flex justify-center items-center py-16 bg-white/50 rounded-2xl border border-dashed border-[#8C5A3C]/20">
           <p className="text-base sm:text-lg text-gray-500">{t("noProducts")}</p>

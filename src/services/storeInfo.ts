@@ -24,6 +24,8 @@ export interface WeeklyMarket {
   open_time: string;
   close_time: string;
   map_url: string;
+  /** หน้าร้านหลัก (backend ส่งมาเป็นรายการแรกเสมอ) */
+  is_main?: boolean;
 }
 
 export interface StoreAddress {

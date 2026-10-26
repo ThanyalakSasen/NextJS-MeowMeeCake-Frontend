@@ -4,15 +4,19 @@
 // ยกจาก FrontOffice src/app/customer/reset-password/page.tsx · API GET (เช็คลิงก์) + POST /auth/reset-password { token, newPassword }
 // CustomerChrome ซ่อน Navbar/Footer ของหน้านี้อยู่แล้ว (HIDE_CHROME_ROUTES)
 // บันทึกสำเร็จ → พากลับหน้า /login ทันที + แจ้ง "เปลี่ยนรหัสผ่านสำเร็จ" (AlertHost อยู่ที่ providers จึงค้างข้ามหน้าได้)
+// ลิงก์หมดอายุ/ใช้ไปแล้ว → "ขอลิงก์ใหม่" = เปิดหน้าต่างเลือกบัญชี Google แล้วส่งลิงก์ใหม่ไปอีเมลนั้นทันที (ไม่ต้องไปกรอกอีเมลอีกหน้า)
+//   ไม่ได้ตั้ง Google client / เลือกบัญชีไม่ได้ → ไปหน้า /customer/forgot-password แบบเดิม · "ใช้อีเมลอื่น" ไปหน้าเดิมเสมอ
 // ─────────────────────────────────────────────────────────────
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Eye, EyeOff, Lock, LockOpen, XCircle } from "lucide-react";
+import { Eye, EyeOff, Lock, LockOpen, Mail, XCircle } from "lucide-react";
 import { checkResetToken, resetPassword } from "@/lib/authClient";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { LOGIN_PATH, MIN_PASSWORD_LENGTH } from "@/constants/auth";
+import { GOOGLE_CLIENT_ID, preloadGoogleAccountPicker } from "@/app/login/_components/googleAccountPicker";
+import { resetPasswordWithGoogle } from "@/app/login/_components/forgotPasswordFlow";
 
 const MAX_PASSWORD = 72;
 const page = "flex min-h-screen items-center justify-center bg-[#f8f6f3] p-5";
@@ -63,11 +67,32 @@ function ResetPasswordContent() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // ขอลิงก์ใหม่ด้วยบัญชี Google — ส่งแล้วแสดงอีเมลที่ส่งไป
+  const [requesting, setRequesting] = useState(false);
+  const [resent, setResent] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
     void checkResetToken(token).then(setTokenValid);
   }, [token]);
+
+  // ลิงก์ใช้ไม่ได้ → โหลดสคริปต์ Google ไว้ก่อน ให้หน้าต่างเลือกบัญชีเปิดทันทีตอนกด
+  useEffect(() => {
+    if (tokenValid === false && GOOGLE_CLIENT_ID) preloadGoogleAccountPicker();
+  }, [tokenValid]);
+
+  const requestNewLink = async () => {
+    if (!GOOGLE_CLIENT_ID) return router.push("/customer/forgot-password");
+    setRequesting(true);
+    try {
+      const r = await resetPasswordWithGoogle();
+      if (r.status === "sent") setResent(r.email);
+      else if (r.status === "pickFailed") router.push("/customer/forgot-password");
+      else if (r.status === "sendFailed") alert.error(isApiError(r.error) ? r.error.message : t("sendFailed"));
+    } finally {
+      setRequesting(false);
+    }
+  };
 
   const submit = async () => {
     if (password.length < MIN_PASSWORD_LENGTH) {
@@ -102,6 +127,33 @@ function ResetPasswordContent() {
     );
   }
 
+  if (!tokenValid && resent) {
+    return (
+      <div className={page}>
+        <div className={card}>
+          <Mail className="mx-auto mb-3 h-10 w-10 text-[#8C5A3C]" />
+          <h1 className="mb-2 text-xl font-bold text-[#4a342e]">{t("sentTitle")}</h1>
+          <p className="mb-2 text-sm leading-relaxed text-[#77665e]">
+            {t.rich("sentBody", { email: resent, b: (c) => <strong className="font-semibold text-[#4a342e]">{c}</strong>, br: () => <br /> })}
+          </p>
+          <p className="mb-6 text-xs text-[#77665e]">{t("spamHint")}</p>
+          <a
+            href={`https://mail.google.com/mail/u/?authuser=${encodeURIComponent(resent)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${outlineButton} mb-3 flex items-center justify-center gap-2`}
+          >
+            <Mail className="h-5 w-5" aria-hidden="true" />
+            {t("openGmail")}
+          </a>
+          <button type="button" className={outlineButton} onClick={() => router.push(LOGIN_PATH)}>
+            {t("backToLogin")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!tokenValid) {
     return (
       <div className={page}>
@@ -109,9 +161,17 @@ function ResetPasswordContent() {
           <XCircle className="mx-auto mb-3 h-10 w-10 text-red-600" />
           <h1 className="mb-2 text-xl font-bold text-red-700">{t("linkInvalid")}</h1>
           <p className="mb-6 text-sm leading-relaxed text-[#77665e]">{t("linkRule")}</p>
-          <button type="button" className={`${outlineButton} mb-3`} onClick={() => router.push("/customer/forgot-password")}>
-            {t("requestNew")}
+          <button type="button" className={`${outlineButton} mb-1`} onClick={() => void requestNewLink()} disabled={requesting}>
+            {requesting ? t("sending") : t("requestNew")}
           </button>
+          {GOOGLE_CLIENT_ID && (
+            <p className="mb-3 text-xs text-[#77665e]">
+              {t("requestNewHint")}{" "}
+              <button type="button" className="font-semibold text-[#4A342E] underline" onClick={() => router.push("/customer/forgot-password")}>
+                {t("useOtherEmail")}
+              </button>
+            </p>
+          )}
           <button type="button" className={outlineButton} onClick={() => router.push(LOGIN_PATH)}>
             {t("backToLogin")}
           </button>
