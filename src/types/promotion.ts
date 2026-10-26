@@ -51,8 +51,9 @@ export interface PromotionInput {
   applicable_channels?: PromotionChannel[];
   audience?: PromotionAudience;
   stackable?: boolean;
-  /** null = ล้างเงื่อนไข (ไม่จำกัด) · ไม่ส่ง = PATCH คงค่าเดิม — 4 ช่องนี้ backend รับ nullish */
+  /** null = ล้างเงื่อนไข (ไม่จำกัด) · ไม่ส่ง = PATCH คงค่าเดิม — 5 ช่องนี้ backend รับ nullish */
   min_order_amount?: number | null;
+  max_discount_amount?: number | null;
   applicable_products?: string[];
   applicable_categories?: string[];
   min_quantity?: number | null;

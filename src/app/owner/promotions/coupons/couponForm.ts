@@ -15,6 +15,8 @@ export interface CouponFormValue {
   discountType: DiscountType;
   discountValue?: number;
   minOrder?: number;
+  /** เพดานส่วนลด (บาท) — ใช้เฉพาะแบบ Percentage · ว่าง = ไม่จำกัด */
+  maxDiscount?: number;
   scope: CouponScope;
   productIds: string[];
   categoryIds: string[];
@@ -50,6 +52,7 @@ export function fromPromotion(p: Promotion): CouponFormValue {
     discountType: p.discount_type,
     discountValue: p.discount_value || undefined,
     minOrder: p.min_order_amount ?? undefined,
+    maxDiscount: p.max_discount_amount ?? undefined,
     scope: p.applicable_products.length > 0 ? "product" : p.applicable_categories.length > 0 ? "category" : "all",
     productIds: p.applicable_products,
     categoryIds: p.applicable_categories,
@@ -86,6 +89,8 @@ export function toInput(v: CouponFormValue): PromotionInput {
     // ช่องว่าง/0 = null (ไม่ใช่ undefined) — axios ตัด undefined ออกจาก JSON แล้ว PATCH คงค่าเดิมไว้
     // ล้างช่องตอนแก้ไขจึงไม่เคยล้างได้ · ขอบเขตทั้งบิลล้าง min_quantity ด้วย ไม่งั้นค่าที่ซ่อนอยู่นับชิ้นทั้งบิล
     min_order_amount: v.minOrder || null,
+    // เพดานมีผลเฉพาะ Percentage (discountEngine) — เปลี่ยนเป็นแบบอื่นแล้วล้างทิ้ง ไม่ให้ค่าที่ซ่อนอยู่ค้าง
+    max_discount_amount: v.discountType === "Percentage" && v.maxDiscount ? v.maxDiscount : null,
     applicable_products: isProductScope ? v.productIds : [],
     applicable_categories: isCategoryScope ? v.categoryIds : [],
     min_quantity: (isProductScope || isCategoryScope) && v.minQuantity ? v.minQuantity : null,

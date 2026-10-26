@@ -82,7 +82,11 @@ export function CouponCard({
 
           <div className="mb-1">
             <p className="text-2xl font-bold" style={{ color: isExpired ? "#4b5563" : typeCfg.color }}>{discountLabel}</p>
-            <p className="text-xs text-gray-500">{t(`enums.discountType.${coupon.discount_type}`)}</p>
+            <p className="text-xs text-gray-500">
+              {t(`enums.discountType.${coupon.discount_type}`)}
+              {coupon.discount_type === "Percentage" && coupon.max_discount_amount != null &&
+                ` · ${t("coupons.maxDiscountLabel", { amount: formatCurrency(coupon.max_discount_amount, locale) })}`}
+            </p>
           </div>
 
           {coupon.usage_limit ? (

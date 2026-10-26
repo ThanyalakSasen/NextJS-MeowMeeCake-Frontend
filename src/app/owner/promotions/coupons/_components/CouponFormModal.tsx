@@ -29,6 +29,7 @@ export function CouponFormModal({
   const t = useTranslations();
   const [form] = useAntForm<CouponFormValue>();
 
+  const discountType = Form.useWatch("discountType", form);
   const scope: CouponScope = Form.useWatch("scope", form) ?? "all";
   const productIds: string[] = Form.useWatch("productIds", form) ?? [];
   const categoryIds: string[] = Form.useWatch("categoryIds", form) ?? [];
@@ -92,6 +93,12 @@ export function CouponFormModal({
             <InputNumber min={0} placeholder={t("coupons.noMinimumPlaceholder")} />
           </FormItem>
         </div>
+
+        {discountType === "Percentage" && (
+          <FormItem name="maxDiscount" label={t("coupons.fieldMaxDiscount")} extra={t("coupons.maxDiscountHint")}>
+            <InputNumber min={0} placeholder={t("coupons.unlimitedPlaceholder")} />
+          </FormItem>
+        )}
 
         <FormItem name="scope" label={t("coupons.fieldScope")} rules={required}>
           <Select
