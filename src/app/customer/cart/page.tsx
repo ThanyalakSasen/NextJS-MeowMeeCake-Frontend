@@ -5,7 +5,7 @@
 // ตัดออก (backend ยังไม่รองรับ): แพ็กเกจ/เซ็ตขนม · ตัวเลือกสินค้าหลายตัว · หมายเหตุต่อชิ้น
 // รายการที่ซื้อไม่ได้ (ปิดขาย · หมด · สต็อกไม่พอ — สต็อกจาก /catalog/products/:id) แสดงต่อบรรทัด + ปิดปุ่มสั่งซื้อ (U6 · lib/cartIssues)
 // backend ตรวจซ้ำตอนกดสั่งซื้อเสมอ · ช่องค้นหาอยู่ใน Navbar หน้าร้านแล้ว (FrontOffice ซ่อน Navbar ในตะกร้าเลยมีช่องแยก)
-// ตะกร้าเดียวทั้งสินค้าปกติและพรีออเดอร์ — มีสินค้าปกติ = แสดงแค่สินค้าปกติ · ไม่มี = แสดงรายการพรีออเดอร์ (localStorage · preorderBasket)
+// ตะกร้าเดียวทั้งสินค้าปกติและพรีออเดอร์ — มีสินค้าปกติ = แสดงแค่สินค้าปกติ + แถบเตือนว่ามีพรีออเดอร์ค้าง · ไม่มี = แสดงรายการพรีออเดอร์ (localStorage · preorderBasket)
 // สั่งแยกกัน 2 ปุ่ม: สินค้าปกติ → /customer/checkout · พรีออเดอร์ → /customer/preorder/checkout (backend สร้างคนละคำสั่งซื้อ · 1 พรีออเดอร์ = 1 รอบ)
 // ─────────────────────────────────────────────────────────────
 import Link from "next/link";
@@ -129,6 +129,8 @@ function CartContent() {
   const hasNormal = cart.items.length > 0;
   // มีสินค้าปกติ = แสดงเฉพาะสินค้าปกติ (ไม่แสดงพรีออเดอร์เลย) · ไม่มี = แสดงรายการพรีออเดอร์แทน (2026-10-26)
   const preorder = hasNormal ? null : basket;
+  // พรีออเดอร์ที่ถูกซ่อนไว้ (มีสินค้าปกติอยู่) — บอกว่ายังค้างอยู่ ไม่ให้ลูกค้าลืม
+  const hiddenPreorderCount = hasNormal ? (basket?.items.length ?? 0) : 0;
 
   return (
     <div className={shopPage}>
@@ -154,6 +156,18 @@ function CartContent() {
                   {t("continueShopping")}
                 </Link>
               </div>
+
+              {hiddenPreorderCount > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  <span className="flex items-center gap-2">
+                    <FaCalendarCheck className="shrink-0" aria-hidden="true" />
+                    {t("preorderPending", { n: hiddenPreorderCount })}
+                  </span>
+                  <Link href="/customer/preorder/checkout" className="font-semibold underline-offset-2 hover:underline">
+                    {t("checkoutPreorder")}
+                  </Link>
+                </div>
+              )}
 
               {/* ── สินค้าปกติ ── */}
               {hasNormal && (

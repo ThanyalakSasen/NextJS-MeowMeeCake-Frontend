@@ -2961,6 +2961,7 @@
       "summaryPreorder": "Pre-order summary",
       "checkoutPreorder": "Check out pre-order",
       "preorderSeparate": "Pre-orders are paid and delivered separately from ready-to-ship items",
+      "preorderPending": "You still have {n} pre-order item(s) waiting (ordered separately from ready-to-ship items)",
       "redeemPointsHint": "Have points? Exchange them for a discount on the Membership page (100 points = ฿10), then pick the coupon above →"
     },
     "orderStatus": {
