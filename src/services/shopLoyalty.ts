@@ -75,6 +75,8 @@ export interface MyCoupon {
   max_discount_amount: number | null;
   expires_at: string;
   state: "available" | "used" | "expired";
+  /** points = แลกแต้มเป็นส่วนลดบาท · promotion = แลกจากโปร (คูปองเก่าไม่มี field = promotion) */
+  source?: "promotion" | "points";
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -93,11 +95,14 @@ export const pointsToBaht = (points: number, r: PointRules) => round2(points * r
  * ส่วนลดของคูปองของฉัน (รวมค่าส่งถ้าเป็นคูปองส่งฟรี) · null = ใช้กับออเดอร์นี้ไม่ได้ (พร้อมรหัสเหตุผล — ข้อความอยู่ฝั่งหน้าจอ)
  * คูปองไม่มีขอบเขตสินค้า/หมวด → คิดจากยอดสินค้าทั้งหมด (discountEngine.computeDiscount)
  */
-/** exceeds_total = คูปองลดเป็นบาทที่มูลค่ามากกว่ายอดสินค้า — เลือกไม่ได้ (2026-10-26 · backend ตรวจซ้ำ) */
+/**
+ * exceeds_total = คูปองแลกแต้ม (ลดเป็นบาท) ที่มูลค่ามากกว่ายอดสินค้า — เลือกไม่ได้ (2026-10-26 · backend ตรวจซ้ำ)
+ * คูปองจากโปรลดได้ไม่เกินยอดเหมือนเดิม — ตรงกับ backend couponService.applyUserCoupon
+ */
 export type CouponUnusableReason = "min_order" | "needs_delivery_fee" | "no_discount" | "exceeds_total";
 
 export function couponDiscount(
-  c: Pick<MyCoupon, "discount_type" | "discount_value" | "min_order_amount" | "max_discount_amount">,
+  c: Pick<MyCoupon, "discount_type" | "discount_value" | "min_order_amount" | "max_discount_amount" | "source">,
   subtotal: number,
   deliveryFee: number,
 ): { amount: number; reason: null } | { amount: null; reason: CouponUnusableReason } {
@@ -110,8 +115,8 @@ export function couponDiscount(
     amount = subtotal * (c.discount_value / 100);
     if (c.max_discount_amount != null) amount = Math.min(amount, c.max_discount_amount);
   } else {
-    if (c.discount_value > subtotal) return { amount: null, reason: "exceeds_total" };
-    amount = c.discount_value;
+    if (c.source === "points" && c.discount_value > subtotal) return { amount: null, reason: "exceeds_total" };
+    amount = Math.min(c.discount_value, subtotal);
   }
   amount = round2(Math.max(0, amount));
   return amount > 0 ? { amount, reason: null } : { amount: null, reason: "no_discount" };
