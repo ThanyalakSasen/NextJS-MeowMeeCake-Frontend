@@ -102,7 +102,8 @@ export interface RevenueByChannel extends Record<RevenueChannel, number> {
 export interface SalesByDay {
   from: string;
   to: string;
-  series: { date: string; revenue: number; orders: number }[];
+  /** channels = ยอดของวันนั้นแยกตามช่องทาง (กติกาเดียวกับ revenue-by-channel) — backend รุ่นเก่ายังไม่ส่ง */
+  series: { date: string; revenue: number; orders: number; channels?: Record<RevenueChannel, { revenue: number; orders: number }> }[];
 }
 
 export const reportsService = {

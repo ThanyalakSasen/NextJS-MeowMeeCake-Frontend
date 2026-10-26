@@ -7,14 +7,11 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { reportsService, type RevenueChannel } from "@/services/reports";
+import { reportsService } from "@/services/reports";
 import { usePermission } from "@/context/PermissionsContext";
 import {
-  DEFAULT_SALES_RANGE, channelRevenueKey, fillDays, rangeStartIso, salesByDayKey, summarize, type SalesRange,
+  CHANNEL_ORDER, DEFAULT_SALES_RANGE, channelRevenueKey, fillDays, rangeStartIso, salesByDayKey, summarize, type SalesRange,
 } from "./salesTrend";
-
-/** ลำดับในกล่องแยกช่องทาง — พรีออเดอร์ (ช่องทางหลักของร้าน) ก่อน · other = เลขออเดอร์รุ่นเก่า แสดงเมื่อมียอด */
-const CHANNEL_ORDER: RevenueChannel[] = ["preorder", "pos", "web", "other"];
 
 export function useDashboardViewModel() {
   const show = {
@@ -42,6 +39,7 @@ export function useDashboardViewModel() {
     enabled: canChannels,
   });
   const salesDays = useMemo(() => (salesQ.data ? fillDays(salesQ.data.series, salesRange) : []), [salesQ.data, salesRange]);
+  // กล่องแยกช่องทาง: พรีออเดอร์ (ช่องทางหลักของร้าน) ก่อน · other = เลขออเดอร์รุ่นเก่า แสดงเมื่อมียอด
   const channels = useMemo(() => {
     const r = channelQ.data;
     if (!r) return [];
@@ -74,6 +72,8 @@ export function useDashboardViewModel() {
       isLoading: salesQ.isPending,
       isError: salesQ.isError,
       refetch: () => void salesQ.refetch(),
+      /** แท่งซ้อนสีตามช่องทาง — ต้องมีสิทธิ์เดียวกับกล่องแยกช่องทาง และ backend ส่ง channels รายวันมา */
+      stacked: canChannels && salesDays.some((day) => day.channels),
       /** null = ไม่มีสิทธิ์ดูยอดแยกช่องทาง (ไม่แสดงกล่อง) */
       channels: canChannels ? channels : null,
       channelsLoading: channelQ.isPending,
