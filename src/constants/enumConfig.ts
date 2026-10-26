@@ -280,6 +280,15 @@ export const READ_STATUS_CONFIG: Record<ReadStatus, StatusStyle> = {
   unread: { color: "#1d4ed8", antColor: "processing" },
 };
 
+// ─── ผลการส่ง LINE ถึงเจ้าของร้าน (ประวัติการแจ้งเตือน · owner/notificationsHistory/lineStatus.ts) ──
+export type LineDeliveryStatus = "sent" | "failed" | "webOnly";
+
+export const LINE_DELIVERY_CONFIG: Record<LineDeliveryStatus, StatusStyle> = {
+  sent:    { color: "#15803d", antColor: "success" },
+  failed:  { color: "#b91c1c", antColor: "error" },
+  webOnly: { color: "#475569", antColor: "default" },
+};
+
 // ─── สถานะรีวิวลูกค้า — ค่าตรงกับ ReviewStatus ใน types/review.ts ──
 // (status กับ is_visible เปลี่ยนคู่กัน: approved = แสดง · hidden = ซ่อน)
 export const REVIEW_STATUS_CONFIG: Record<"approved" | "pending" | "hidden", StatusStyle> = {
