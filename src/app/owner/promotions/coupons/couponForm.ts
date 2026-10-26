@@ -83,12 +83,14 @@ export function toInput(v: CouponFormValue): PromotionInput {
     promotion_name: v.name.trim(),
     discount_type: v.discountType,
     discount_value: v.discountValue ?? 0,
-    min_order_amount: v.minOrder || undefined,
+    // ช่องว่าง/0 = null (ไม่ใช่ undefined) — axios ตัด undefined ออกจาก JSON แล้ว PATCH คงค่าเดิมไว้
+    // ล้างช่องตอนแก้ไขจึงไม่เคยล้างได้ · ขอบเขตทั้งบิลล้าง min_quantity ด้วย ไม่งั้นค่าที่ซ่อนอยู่นับชิ้นทั้งบิล
+    min_order_amount: v.minOrder || null,
     applicable_products: isProductScope ? v.productIds : [],
     applicable_categories: isCategoryScope ? v.categoryIds : [],
-    min_quantity: isProductScope || isCategoryScope ? v.minQuantity : undefined,
-    usage_limit: v.usageLimit || undefined,
-    max_user_per_user: v.perCustomer || undefined,
+    min_quantity: (isProductScope || isCategoryScope) && v.minQuantity ? v.minQuantity : null,
+    usage_limit: v.usageLimit || null,
+    max_user_per_user: v.perCustomer || null,
     // null (ไม่ใช่ undefined) — ล้างช่องตอนแก้ไขต้องปิดการแลกจริง ไม่ใช่คงค่าเดิมไว้
     points_cost: v.pointsCost && v.pointsCost > 0 ? Math.round(v.pointsCost) : null,
     applicable_channels: channels.length > 0 ? channels : ["online", "instore"],

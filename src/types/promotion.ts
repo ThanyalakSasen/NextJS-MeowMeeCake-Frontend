@@ -51,12 +51,13 @@ export interface PromotionInput {
   applicable_channels?: PromotionChannel[];
   audience?: PromotionAudience;
   stackable?: boolean;
-  min_order_amount?: number;
+  /** null = ล้างเงื่อนไข (ไม่จำกัด) · ไม่ส่ง = PATCH คงค่าเดิม — 4 ช่องนี้ backend รับ nullish */
+  min_order_amount?: number | null;
   applicable_products?: string[];
   applicable_categories?: string[];
-  min_quantity?: number;
-  usage_limit?: number;
-  max_user_per_user?: number;
+  min_quantity?: number | null;
+  usage_limit?: number | null;
+  max_user_per_user?: number | null;
   /** จำนวนเต็มบวก · null = ปิดการแลกด้วยแต้ม */
   points_cost?: number | null;
   start_date: string;
