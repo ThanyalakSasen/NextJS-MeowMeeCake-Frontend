@@ -23,6 +23,7 @@ import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/compo
 import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ReviewLink from "../../_components/ReviewLink";
+import { canReview } from "../../../hooks/useReviewedItems";
 import { shopPointsKey, shopCouponsKey, shopPreorderKey, shopPreorderPaymentPageKey, shopPreordersKey } from "../../../lib/shopQueries";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../../purchases/orderLabels";
 import { thaiDate } from "../../../preorder/lib/preorderDates";
@@ -245,6 +246,8 @@ function PreorderDetailContent() {
             </button>
           )}
         </div>
+        {/* ยังรีวิวไม่ได้ — บอกเงื่อนไขแทนการซ่อนปุ่มเฉยๆ (TC-CUS-115) */}
+        {p.order_status !== "cancelled" && !canReview(p) && <p className="text-center text-sm text-gray-500">{to("reviewNotYet")}</p>}
         {p.payment_status === "paid" && p.order_status !== "cancelled" && p.order_status !== "completed" && (
           <p className="m-0 text-center text-xs text-gray-500">{t("paidContactToCancel")}</p>
         )}

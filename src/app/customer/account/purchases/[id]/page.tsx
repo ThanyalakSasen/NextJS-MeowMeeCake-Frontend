@@ -231,6 +231,11 @@ function OrderContent() {
               </div>
             )}
 
+            {/* ยังรีวิวไม่ได้ (ออเดอร์ยังไม่จบ / ยังไม่ชำระ) — บอกเงื่อนไขแทนการซ่อนปุ่มเฉยๆ (TC-CUS-115) */}
+            {order.order_status !== "cancelled" && !canReview(order) && (
+              <p className="border-t border-[#8C5A3C]/10 pt-4 text-sm text-gray-500">{t("reviewNotYet")}</p>
+            )}
+
             {order.order_type === "delivery" && order.delivery_address && (
               <div className="border-t border-[#8C5A3C]/10 pt-4 text-sm">
                 <p className="mb-1 font-semibold">{t("deliveryAddress")}</p>

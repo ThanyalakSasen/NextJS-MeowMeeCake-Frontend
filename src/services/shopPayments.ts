@@ -82,6 +82,17 @@ export const shopPaymentsService = {
   create: (kind: PaymentKind, id: string, amount: number) =>
     kind === "order" ? shopPaymentsService.createForOrder(id, amount) : shopPaymentsService.createForPreorder(id, amount),
 
+  /** POST /shop/payments แบบ multipart (ไฟล์ + order_id/preorder_id + amount) — สร้างรายการพร้อมสลิปในคำขอเดียว
+   *  ใช้กับออเดอร์ที่หมดเวลาแล้วและยังไม่มีรายการชำระเงิน → backend เปิดออเดอร์กลับ (TC-CUS-85) */
+  createWithSlip: async (kind: PaymentKind, id: string, amount: number, file: File): Promise<ShopPayment> => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append(kind === "order" ? "order_id" : "preorder_id", id);
+    form.append("amount", String(amount));
+    const res = await http.post<ItemResponse<ShopPayment>>("/shop/payments", form);
+    return res.data;
+  },
+
   /** POST /shop/payments/{id}/slip (multipart field "file") — JPEG/PNG/WEBP/AVIF ≤ 5 MB */
   uploadSlip: async (paymentId: string, file: File): Promise<ShopPayment> => {
     const form = new FormData();
