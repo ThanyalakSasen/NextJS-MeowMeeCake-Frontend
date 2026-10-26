@@ -34,9 +34,9 @@ export function CouponCard({
 
   const discountLabel =
     coupon.discount_type === "Percentage"
-      ? `${coupon.discount_value}% OFF`
+      ? `${coupon.discount_value}%`
       : coupon.discount_type === "Amount"
-        ? `${formatCurrency(coupon.discount_value, locale)} OFF`
+        ? formatCurrency(coupon.discount_value, locale)
         : t("coupons.freeShipping");
 
   const scopeLabel =
