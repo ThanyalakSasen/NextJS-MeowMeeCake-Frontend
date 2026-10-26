@@ -4,8 +4,8 @@
 // ทีเดียว (เหมือน Ingredient Stock #11) ยิงผ่าน productsService.update() (PATCH /admin/products/[id])
 // ตรง ๆ — ไม่มี backend resource "แคมเปญส่วนลด" แยก (ดู pricingHelpers.ts)
 //
-// สิทธิ์เช็คจาก "products" ไม่ใช่ "promotions" (แม้หน้านี้จะอยู่ใต้เมนูโปรโมชัน) เพราะ endpoint จริง
-// ที่ยิงคือ /admin/products ซึ่งต้องมี products.update ไม่ใช่ promotions.*
+// สิทธิ์เช็คจาก "pricing" (เมนูย่อยของหน้านี้เอง) ไม่ใช่ "promotions" — PATCH /admin/products/[id]
+// ฝั่ง backend รับ products.update หรือ pricing.update อย่างใดอย่างหนึ่ง
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

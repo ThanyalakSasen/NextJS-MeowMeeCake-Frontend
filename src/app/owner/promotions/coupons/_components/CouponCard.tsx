@@ -34,9 +34,9 @@ export function CouponCard({
 
   const discountLabel =
     coupon.discount_type === "Percentage"
-      ? `${coupon.discount_value}% OFF`
+      ? `${coupon.discount_value}%`
       : coupon.discount_type === "Amount"
-        ? `${formatCurrency(coupon.discount_value, locale)} OFF`
+        ? formatCurrency(coupon.discount_value, locale)
         : t("coupons.freeShipping");
 
   const scopeLabel =
@@ -82,7 +82,11 @@ export function CouponCard({
 
           <div className="mb-1">
             <p className="text-2xl font-bold" style={{ color: isExpired ? "#4b5563" : typeCfg.color }}>{discountLabel}</p>
-            <p className="text-xs text-gray-500">{t(`enums.discountType.${coupon.discount_type}`)}</p>
+            <p className="text-xs text-gray-500">
+              {t(`enums.discountType.${coupon.discount_type}`)}
+              {coupon.discount_type === "Percentage" && coupon.max_discount_amount != null &&
+                ` · ${t("coupons.maxDiscountLabel", { amount: formatCurrency(coupon.max_discount_amount, locale) })}`}
+            </p>
           </div>
 
           {coupon.usage_limit ? (

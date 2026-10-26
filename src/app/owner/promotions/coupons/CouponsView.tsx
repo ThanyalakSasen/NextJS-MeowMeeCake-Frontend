@@ -45,6 +45,7 @@ export function CouponsView(vm: VM) {
                   { value: "all", label: `${t("common.all")} (${vm.counts.all})` },
                   { value: "active", label: `${t("enums.couponStatus.active")} (${vm.counts.active})` },
                   { value: "scheduled", label: `${t("enums.couponStatus.scheduled")} (${vm.counts.scheduled})` },
+                  { value: "inactive", label: `${t("enums.couponStatus.inactive")} (${vm.counts.inactive})` },
                   { value: "expired", label: `${t("enums.couponStatus.expired")} (${vm.counts.expired})` },
                 ]}
               />
