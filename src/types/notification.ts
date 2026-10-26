@@ -20,6 +20,10 @@ export interface NotificationDTO {
   module: NotificationModule | LegacyNotificationModule;
   is_read: boolean;
   link?: string | null;
+  /** push เข้า LINE เจ้าของร้านสำเร็จ (backend notificationService.notify) */
+  line_sent?: boolean;
+  /** ข้อความ error ตอน push ไม่สำเร็จ · ทั้งสองช่องว่าง = แจ้งในเว็บอย่างเดียว (line: false เช่นออเดอร์ POS) */
+  line_error?: string | null;
   created_at: string;
   updated_at: string;
 }

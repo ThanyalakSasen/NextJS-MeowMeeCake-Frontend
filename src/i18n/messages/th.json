@@ -2372,6 +2372,17 @@
     "deleted": "ลบการแจ้งเตือนเรียบร้อยแล้ว",
     "deleteFailed": "ลบการแจ้งเตือนไม่สำเร็จ",
     "detailTitle": "รายละเอียดการแจ้งเตือน",
+    "colLine": "LINE",
+    "lineStatus": {
+      "sent": "ส่ง LINE แล้ว",
+      "failed": "ส่ง LINE ไม่สำเร็จ",
+      "webOnly": "เว็บอย่างเดียว"
+    },
+    "lineReason": {
+      "quota": "ส่ง LINE ไม่สำเร็จ: โควตาข้อความ LINE ของเดือนนี้หมดแล้ว (รีเซ็ตวันที่ 1 ของเดือน หรืออัปเกรดแพ็กเกจ LINE OA)",
+      "notConfigured": "ส่ง LINE ไม่สำเร็จ: เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า LINE (LINE_CHANNEL_ACCESS_TOKEN / LINE_TARGET_ID)",
+      "other": "ส่ง LINE ไม่สำเร็จ: {error}"
+    },
     "goToLink": "ไปที่รายการ",
     "empty": "ไม่พบการแจ้งเตือน"
   },

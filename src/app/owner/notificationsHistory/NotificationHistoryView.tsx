@@ -14,6 +14,7 @@ import { NOTIFICATION_MODULES, type NotificationDTO } from "@/types/notification
 import type { NotificationType } from "@/types";
 import { DeleteButton, actionIcon } from "@/components/shared/actions";
 import type { useNotificationHistoryViewModel } from "./useNotificationHistoryViewModel";
+import { LineStatusTag } from "./_components/LineStatusTag";
 
 // ลิ้นชักรายละเอียดแยก chunk — โหลดเมื่อเปิดครั้งแรก (ลิ้นชักไม่ render ฝั่ง server อยู่แล้ว)
 const DetailModal = dynamic(() => import("@/components/shared/feedback/DetailModal").then((m) => m.DetailModal), { ssr: false });
@@ -75,6 +76,11 @@ export function NotificationHistoryView(vm: VM) {
           {n.is_read ? t("notifications.statusRead") : t("notifications.statusUnread")}
         </Tag>
       ),
+    },
+    {
+      key: "line",
+      title: t("notifications.colLine"),
+      render: (n) => <LineStatusTag notif={n} />,
     },
   ];
 

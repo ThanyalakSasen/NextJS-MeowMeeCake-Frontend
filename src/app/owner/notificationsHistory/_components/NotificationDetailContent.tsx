@@ -5,6 +5,8 @@ import { Divider, Tag } from "@/components/base";
 import { formatDate } from "@/i18n/format";
 import { NOTIFICATION_TYPE_COLOR, READ_STATUS_CONFIG } from "@/constants/enumConfig";
 import type { NotificationDTO } from "@/types/notification";
+import { lineFailReason } from "../lineStatus";
+import { LineStatusTag } from "./LineStatusTag";
 
 export function NotificationDetailContent({ notif }: { notif: NotificationDTO }) {
   const t = useTranslations();
@@ -21,7 +23,10 @@ export function NotificationDetailContent({ notif }: { notif: NotificationDTO })
       </Tag>,
     ],
     [t("systemLog.colTime"), formatDate(notif.created_at, locale, { withTime: true })],
+    [t("notifications.colLine"), <LineStatusTag key="l" notif={notif} />],
   ];
+  const lineError = notif.line_sent ? null : notif.line_error;
+  const reason = lineError ? lineFailReason(lineError) : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,6 +45,12 @@ export function NotificationDetailContent({ notif }: { notif: NotificationDTO })
           </div>
         ))}
       </div>
+
+      {lineError && reason && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {reason === "other" ? t("notifications.lineReason.other", { error: lineError }) : t(`notifications.lineReason.${reason}`)}
+        </p>
+      )}
     </div>
   );
 }

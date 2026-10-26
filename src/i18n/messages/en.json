@@ -2372,6 +2372,17 @@
     "deleted": "Notification deleted",
     "deleteFailed": "Could not delete notification",
     "detailTitle": "Notification detail",
+    "colLine": "LINE",
+    "lineStatus": {
+      "sent": "Sent to LINE",
+      "failed": "LINE failed",
+      "webOnly": "Web only"
+    },
+    "lineReason": {
+      "quota": "LINE delivery failed: this month’s LINE message quota is used up (resets on the 1st, or upgrade the LINE OA plan)",
+      "notConfigured": "LINE delivery failed: LINE is not configured on the server (LINE_CHANNEL_ACCESS_TOKEN / LINE_TARGET_ID)",
+      "other": "LINE delivery failed: {error}"
+    },
     "goToLink": "Go to item",
     "empty": "No notifications found"
   },
