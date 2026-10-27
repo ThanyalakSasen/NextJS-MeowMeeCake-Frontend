@@ -804,6 +804,8 @@
     "statusChanged": "Changed {no} status to \"{status}\"",
     "statusChangeFailed": "Could not change status",
     "statusLockedHint": "Payment must be verified as \"Paid\" before the order status can be changed",
+    "markReady": "Mark as ready",
+    "markReadyHint": "Press when the items are prepared — the status changes to \"Ready\" right away",
     "paymentUpdated": "Updated payment for {no}",
     "paymentUpdateFailed": "Could not update payment",
     "cancelled": "Cancelled order {no}",
