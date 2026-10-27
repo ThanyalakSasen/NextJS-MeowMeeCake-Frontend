@@ -20,6 +20,7 @@ import { shopPreorderKey, shopPreordersKey } from "../../lib/shopQueries";
 import { ORDER_STATUSES, ORDER_STATUS_TONE, REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../purchases/orderLabels";
 import { thaiDate } from "../../preorder/lib/preorderDates";
 import ReviewLink from "../_components/ReviewLink";
+import HistorySearch from "../_components/HistorySearch";
 
 const PAGE_SIZE = 10;
 /** ปุ่มรีวิวแบบเดียวกับประวัติคำสั่งซื้อ — อยู่แถวเดียวกับปุ่มอื่น จึงจัดกึ่งกลางแนวตั้งแทน self-start */
@@ -42,7 +43,8 @@ function PreordersContent() {
   const labels = useOrderLabels();
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
   const [page, setPage] = useState(1);
-  const params = { page, limit: PAGE_SIZE, ...(filter === "all" ? {} : { order_status: filter }) };
+  const [search, setSearch] = useState("");
+  const params = { page, limit: PAGE_SIZE, ...(filter === "all" ? {} : { order_status: filter }), ...(search ? { search } : {}) };
   const listQ = useQuery({
     queryKey: [...shopPreordersKey, params],
     queryFn: () => shopPreordersService.list(params),
@@ -82,6 +84,15 @@ function PreordersContent() {
               </label>
             </header>
 
+            {/* ค้นหาเลขพรีออเดอร์ หรือชื่อสินค้า */}
+            <HistorySearch
+              placeholder={t("searchPlaceholder")}
+              onSearch={(q) => {
+                setSearch(q);
+                setPage(1);
+              }}
+            />
+
             {listQ.isLoading ? (
               <p className="rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center text-sm text-stone-500">{t("loadingList")}</p>
             ) : listQ.isError ? (
@@ -89,8 +100,8 @@ function PreordersContent() {
             ) : preorders.length === 0 ? (
               <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center">
                 <CalendarClock className="h-8 w-8 text-stone-300" aria-hidden="true" />
-                <p className="m-0 text-sm font-medium text-stone-500">{filter === "all" ? t("empty") : t("emptyFiltered")}</p>
-                {filter === "all" && <Link href="/customer/preorder" className={shopButton}>{t("viewRounds")}</Link>}
+                <p className="m-0 text-sm font-medium text-stone-500">{search ? to("emptySearch", { q: search }) : filter === "all" ? t("empty") : t("emptyFiltered")}</p>
+                {filter === "all" && !search && <Link href="/customer/preorder" className={shopButton}>{t("viewRounds")}</Link>}
               </div>
             ) : (
               <div className="flex flex-col gap-4">
@@ -116,6 +127,7 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
   const t = useTranslations("shop.preorders");
   const { name: localName } = useLocalName();
   const to = useTranslations("shop.orders");
+  const ts = useTranslations("shop.slip");
   const labels = useOrderLabels();
   const locale = useLocale();
   const [expanded, setExpanded] = useState(false);
@@ -175,11 +187,14 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
               : to("delivery")}
           </p>
           <span className="block text-sm font-bold text-stone-800">{to("total", { amount: baht(p.total_amount) })}</span>
-          {unpaid && (
-            <span className={`block text-xs font-medium ${p.has_payment && p.payment_status !== "failed" ? "text-amber-600" : "text-red-500"}`}>
-              {p.payment_status === "failed" ? to("slipRejected") : p.has_payment ? to("slipSent") : p.payment_due_at ? t("unpaidBy", { date: thaiDate(p.payment_due_at, true, locale) }) : to("unpaid")}
+          {/* สลิปล่าสุดไม่ผ่าน — กล่องแดงข้อความเดียวกับหน้ารายละเอียด */}
+          {unpaid && p.payment_status === "failed" ? (
+            <p className="m-0 mt-1 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{ts("rejected")}</p>
+          ) : unpaid ? (
+            <span className={`block text-xs font-medium ${p.has_payment ? "text-amber-600" : "text-red-500"}`}>
+              {p.has_payment ? to("slipSent") : p.payment_due_at ? t("unpaidBy", { date: thaiDate(p.payment_due_at, true, locale) }) : to("unpaid")}
             </span>
-          )}
+          ) : null}
           {p.order_status === "cancelled" && p.payment_status === "paid" && <span className="block text-xs font-medium text-amber-600">{to("awaitRefund")}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-2">

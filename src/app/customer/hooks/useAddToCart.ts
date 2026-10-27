@@ -16,6 +16,7 @@ import { catalogService } from "@/services/catalog";
 import { hasCustomization } from "@/lib/customizationSelection";
 import { productCustomizationKey } from "../lib/catalogQueries";
 import { shopCartKey } from "../lib/shopQueries";
+import { setSelected } from "../lib/cartSelection";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { LOGIN_PATH } from "@/constants/auth";
@@ -46,7 +47,9 @@ export function useAddToCart() {
 
     setStatus("loading");
     try {
-      await shopCartService.addItem({ product_id: productId, quantity: qty, ...customization });
+      const res = await shopCartService.addItem({ product_id: productId, quantity: qty, ...customization });
+      // สินค้า+ตัวเลือกเดิม backend รวมเข้าบรรทัดเดิม (_id เดิม) — ถ้าบรรทัดนั้นเคยติ๊กออก ต้องติ๊กกลับ ไม่งั้นสั่งไม่ได้
+      if (res.data?._id) setSelected([res.data._id], true);
       increment();
       // ดึงตะกร้าใหม่ทันที — cache ของหน้าตะกร้า/checkout (staleTime 30 วิ) ไม่งั้นยังโชว์ของเก่าจนกว่าจะรีเฟรช
       // จำนวนที่ไอคอนตะกร้าใช้ค่าจริงจาก backend (สินค้า+ตัวเลือกเดิม = รวมจำนวน ไม่เพิ่มบรรทัด)

@@ -35,3 +35,5 @@ export const shopReviewHistoryKey = [...shopReviewsKey, "history"] as const;
 export const reviewAspectsKey = ["catalog", "review-aspects"] as const;
 /** แชทกับร้าน — ตัวเลขข้อความจากร้านที่ยังไม่อ่าน (ไอคอนแชทบน Navbar) · เปิดห้อง/อ่านแล้ว invalidate */
 export const shopChatUnreadKey = ["shop", "chat", "unread"] as const;
+/** หน้าชำระรวมหลายบิล (ตะกร้ารวม) */
+export const paymentGroupKey = (id: string) => ["shop", "payment-groups", id] as const;

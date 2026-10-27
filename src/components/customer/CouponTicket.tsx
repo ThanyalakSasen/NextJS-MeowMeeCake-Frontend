@@ -46,8 +46,11 @@ export function CouponTicket({
   selected = false,
   ribbon,
   badge,
+  singleLineTitle = false,
   children,
 }: {
+  /** ชื่อคูปองบรรทัดเดียว (ไม่ตัดขึ้นบรรทัดใหม่ · จอแคบมาก = ตัดท้ายเป็น … และดูชื่อเต็มได้จาก tooltip) */
+  singleLineTitle?: boolean;
   type: DiscountType;
   value: number;
   title: string;
@@ -75,9 +78,15 @@ export function CouponTicket({
         <span className="absolute -bottom-2 -left-[9px] h-4 w-4 rounded-full border border-stone-200 bg-[#FAF6F0]" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1 px-3.5 py-3">
-        <div className="flex items-start gap-2 pr-14">
+        {/* เว้นขวาให้ป้ายมุม (ribbon) เฉพาะตอนมีป้าย — เดิมเว้นตลอด ชื่อคูปองเลยถูกบีบขึ้นบรรทัดใหม่ */}
+        <div className={`flex items-start gap-2 ${ribbon ? "pr-14" : ""}`}>
           <Ticket className={`mt-0.5 h-4 w-4 shrink-0 ${muted ? "text-stone-400" : "text-[#8C5A3C]"}`} aria-hidden="true" />
-          <p className="m-0 min-w-0 flex-1 text-sm font-bold text-stone-800">{title}</p>
+          <p
+            className={`m-0 min-w-0 flex-1 text-sm font-bold text-stone-800 ${singleLineTitle ? "truncate" : ""}`}
+            title={singleLineTitle ? title : undefined}
+          >
+            {title}
+          </p>
           {badge}
         </div>
         {lines.filter(Boolean).map((l, i) => (

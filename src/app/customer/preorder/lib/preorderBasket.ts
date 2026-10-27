@@ -1,13 +1,16 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// รายการพรีออเดอร์ (ตะกร้าพรีออเดอร์) — ยกจาก FrontOffice preorder/lib/preorderCheckoutStorage.ts
-// หน้าสินค้า (โหมดพรีออเดอร์) → เพิ่มลงรายการ → /customer/preorder/checkout · แยกจากตะกร้าปกติ (backend ไม่มีตะกร้าพรีออเดอร์)
-// ได้หลายสินค้าแต่ต้อง "รอบเดียวกัน" (1 พรีออเดอร์ = 1 รอบ — server บังคับ) · เก็บใน localStorage (ข้ามหน้า/รีเฟรชได้)
+// รายการพรีออเดอร์ในตะกร้า — ยกจาก FrontOffice preorder/lib/preorderCheckoutStorage.ts
+// ตะกร้ารวม (2026-10-27): เก็บได้หลายรอบพร้อมกัน (1 รอบ = 1 บิลตอนสั่ง — server บังคับ 1 พรีออเดอร์ = 1 รอบ)
+// สั่งพร้อมสินค้าปกติในตะกร้าที่ /customer/checkout (POST /shop/checkout) · เก็บใน localStorage (ข้ามหน้า/รีเฟรชได้)
+// รูปแบบเดิม (รอบเดียว · key mmc_preorder_basket) ย้ายเข้ารูปแบบใหม่ให้เองตอนอ่านครั้งแรก
 // ราคาในนี้แสดงผลเท่านั้น — server ตรวจโควตา/ขั้นต่ำ/ราคาใหม่ตอนสั่งจริงเสมอ
 // ─────────────────────────────────────────────────────────────
 import { useSyncExternalStore } from "react";
+import { preorderSelectKey, setSelected } from "../../lib/cartSelection";
 
-const STORAGE_KEY = "mmc_preorder_basket";
+const STORAGE_KEY = "mmc_preorder_baskets";
+const LEGACY_KEY = "mmc_preorder_basket";
 const CHANGE_EVENT = "mmc-preorder-basket-change";
 
 export interface PreorderBasketItem {
@@ -30,6 +33,7 @@ export interface PreorderBasketItem {
   option_text: string | null;
 }
 
+/** รายการของรอบเดียว (= 1 บิลตอนสั่ง) */
 export interface PreorderBasket {
   round_id: string;
   round_name: string;
@@ -42,52 +46,70 @@ export interface PreorderBasket {
 export const basketLineKey = (it: Pick<PreorderBasketItem, "round_item_id" | "variant_ids" | "options">) =>
   JSON.stringify([it.round_item_id, [...it.variant_ids].sort(), it.options]);
 
-let cache: { raw: string | null; basket: PreorderBasket | null } = { raw: null, basket: null };
+const EMPTY: PreorderBasket[] = [];
+let cache: { raw: string | null; baskets: PreorderBasket[] } = { raw: null, baskets: EMPTY };
 
-export function readPreorderBasket(): PreorderBasket | null {
-  let raw: string | null = null;
+const isBasket = (b: unknown): b is PreorderBasket =>
+  !!b && typeof b === "object" && !!(b as PreorderBasket).round_id && Array.isArray((b as PreorderBasket).items) && (b as PreorderBasket).items.length > 0;
+
+/** ย้ายตะกร้ารูปแบบเดิม (รอบเดียว) มาเก็บแบบหลายรอบ — ครั้งเดียว */
+function migrateLegacy(): void {
   try {
-    raw = localStorage.getItem(STORAGE_KEY);
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (!legacy) return;
+    localStorage.removeItem(LEGACY_KEY);
+    if (localStorage.getItem(STORAGE_KEY)) return;
+    const parsed = JSON.parse(legacy) as unknown;
+    if (isBasket(parsed)) localStorage.setItem(STORAGE_KEY, JSON.stringify([parsed]));
   } catch {
-    return null;
+    /* ข้อมูลเดิมเสีย — ทิ้งไป */
   }
-  // useSyncExternalStore ต้องได้ object เดิมถ้าข้อมูลไม่เปลี่ยน (กัน render วน)
-  if (raw === cache.raw) return cache.basket;
-  let basket: PreorderBasket | null = null;
-  try {
-    const parsed = raw ? (JSON.parse(raw) as PreorderBasket) : null;
-    basket = parsed?.round_id && Array.isArray(parsed.items) && parsed.items.length > 0 ? parsed : null;
-  } catch {
-    basket = null;
-  }
-  cache = { raw, basket };
-  return basket;
 }
 
-export function savePreorderBasket(basket: PreorderBasket | null): void {
+export function readPreorderBaskets(): PreorderBasket[] {
+  let raw: string | null = null;
   try {
-    if (!basket || basket.items.length === 0) localStorage.removeItem(STORAGE_KEY);
-    else localStorage.setItem(STORAGE_KEY, JSON.stringify(basket));
+    migrateLegacy();
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return EMPTY;
+  }
+  // useSyncExternalStore ต้องได้ object เดิมถ้าข้อมูลไม่เปลี่ยน (กัน render วน)
+  if (raw === cache.raw) return cache.baskets;
+  let baskets: PreorderBasket[] = EMPTY;
+  try {
+    const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+    baskets = Array.isArray(parsed) ? parsed.filter(isBasket) : EMPTY;
+  } catch {
+    baskets = EMPTY;
+  }
+  cache = { raw, baskets };
+  return baskets;
+}
+
+function save(baskets: PreorderBasket[]): void {
+  const kept = baskets.filter((b) => b.items.length > 0);
+  try {
+    if (kept.length === 0) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(kept));
   } catch {
     /* storage ใช้ไม่ได้ (private mode ฯลฯ) */
   }
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
-export const clearPreorderBasket = () => savePreorderBasket(null);
+/** ล้างรอบที่ระบุ (สั่งสำเร็จแล้ว) · ไม่ระบุ = ล้างทั้งหมด */
+export function clearPreorderBaskets(roundIds?: string[]): void {
+  if (!roundIds) return save([]);
+  const drop = new Set(roundIds);
+  save(readPreorderBaskets().filter((b) => !drop.has(b.round_id)));
+}
 
-/**
- * เพิ่มเข้ารายการ — ว่าง/รอบเดียวกัน = เพิ่ม (ซ้ำรวมจำนวน ไม่เกิน max) · มีของรอบอื่นค้าง = คืน conflict ให้ถามลูกค้าก่อน
- * (replace: true = ล้างรอบเดิมแล้วเริ่มรอบนี้)
- */
-export function addToPreorderBasket(
-  round: Pick<PreorderBasket, "round_id" | "round_name" | "pickup_date">,
-  item: PreorderBasketItem,
-  opts: { replace?: boolean } = {},
-): { ok: true } | { ok: false; conflictRoundName: string } {
-  const current = readPreorderBasket();
-  if (current && current.round_id !== round.round_id && !opts.replace) return { ok: false, conflictRoundName: current.round_name };
-  const base: PreorderBasket = current && current.round_id === round.round_id ? current : { ...round, items: [] };
+/** เพิ่มเข้ารายการของรอบนั้น (สร้างรอบใหม่ถ้ายังไม่มี) · ซ้ำ = รวมจำนวน ไม่เกิน max · เก็บได้หลายรอบพร้อมกัน */
+export function addToPreorderBasket(round: Pick<PreorderBasket, "round_id" | "round_name" | "pickup_date">, item: PreorderBasketItem): void {
+  const baskets = readPreorderBaskets();
+  const current = baskets.find((b) => b.round_id === round.round_id);
+  const base: PreorderBasket = current ? { ...current, ...round } : { ...round, items: [] };
   const key = basketLineKey(item);
   const existing = base.items.find((it) => basketLineKey(it) === key);
   const items = existing
@@ -97,20 +119,29 @@ export function addToPreorderBasket(
           : it,
       )
     : [...base.items, item];
-  savePreorderBasket({ ...base, items });
-  return { ok: true };
+  const next = { ...base, items };
+  save(current ? baskets.map((b) => (b.round_id === round.round_id ? next : b)) : [...baskets, next]);
+  // เพิ่งใส่ = ตั้งใจจะสั่ง → ติ๊กเลือกเสมอ · key ของรายการพรีออเดอร์ซ้ำได้ (รอบ+สินค้า+ตัวเลือกเดิม) ถ้าเคยติ๊กออก
+  // แล้วลบทิ้ง ใส่ใหม่จะค้างเป็น "ไม่เลือก" → หน้าตะกร้าปิดปุ่มสั่งซื้อ / หน้ายืนยันขึ้นว่าตะกร้าว่าง
+  setSelected([preorderSelectKey(round.round_id, key)], true);
 }
 
-export function updatePreorderBasketItem(key: string, patch: Partial<Pick<PreorderBasketItem, "quantity" | "special_request">>): void {
-  const current = readPreorderBasket();
-  if (!current) return;
-  savePreorderBasket({ ...current, items: current.items.map((it) => (basketLineKey(it) === key ? { ...it, ...patch } : it)) });
+function patchRound(roundId: string, fn: (items: PreorderBasketItem[]) => PreorderBasketItem[]): void {
+  save(readPreorderBaskets().map((b) => (b.round_id === roundId ? { ...b, items: fn(b.items) } : b)));
 }
 
-export function removePreorderBasketItem(key: string): void {
-  const current = readPreorderBasket();
-  if (!current) return;
-  savePreorderBasket({ ...current, items: current.items.filter((it) => basketLineKey(it) !== key) });
+/** เอารายการที่สั่งแล้วออก (สั่งบางรายการ — ที่ไม่ได้เลือกยังอยู่ในตะกร้า) */
+export function removePreorderLines(lines: { roundId: string; keys: string[] }[]): void {
+  const drop = new Map(lines.map((l) => [l.roundId, new Set(l.keys)]));
+  save(readPreorderBaskets().map((b) => (drop.has(b.round_id) ? { ...b, items: b.items.filter((it) => !drop.get(b.round_id)!.has(basketLineKey(it))) } : b)));
+}
+
+export function updatePreorderBasketItem(roundId: string, key: string, patch: Partial<Pick<PreorderBasketItem, "quantity" | "special_request">>): void {
+  patchRound(roundId, (items) => items.map((it) => (basketLineKey(it) === key ? { ...it, ...patch } : it)));
+}
+
+export function removePreorderBasketItem(roundId: string, key: string): void {
+  patchRound(roundId, (items) => items.filter((it) => basketLineKey(it) !== key));
 }
 
 function subscribe(onChange: () => void) {
@@ -122,7 +153,10 @@ function subscribe(onChange: () => void) {
   };
 }
 
-/** รายการพรีออเดอร์ปัจจุบัน (อัปเดตอัตโนมัติเมื่อเปลี่ยน · ฝั่ง server = null) */
-export function usePreorderBasket(): PreorderBasket | null {
-  return useSyncExternalStore(subscribe, readPreorderBasket, () => null);
+/** รายการพรีออเดอร์ทุกรอบ (อัปเดตอัตโนมัติเมื่อเปลี่ยน · ฝั่ง server = []) */
+export function usePreorderBaskets(): PreorderBasket[] {
+  return useSyncExternalStore(subscribe, readPreorderBaskets, () => EMPTY);
 }
+
+/** จำนวนรายการ (บรรทัด) ทุกรอบรวมกัน — ป้ายตัวเลขตะกร้า */
+export const preorderLineCount = (baskets: PreorderBasket[]) => baskets.reduce((s, b) => s + b.items.length, 0);

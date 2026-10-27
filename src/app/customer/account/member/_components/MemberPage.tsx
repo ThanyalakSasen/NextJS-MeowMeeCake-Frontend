@@ -307,6 +307,7 @@ function MyCouponsTab({ coupons, loading, failed, onRedeem }: { coupons: MyCoupo
                 type={c.discount_type}
                 value={c.discount_value}
                 title={c.promotion_name}
+                singleLineTitle
                 muted={c.state !== "available"}
                 badge={<span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${COUPON_STATE[c.state]}`}>{t(`state.${c.state}`)}</span>}
                 lines={[

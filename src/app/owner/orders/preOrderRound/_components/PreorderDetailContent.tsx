@@ -9,7 +9,7 @@ import type { Preorder } from "@/types/preorder";
 import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { lineExtras } from "../useRoundDashboardViewModel";
-import { DeliverySection, RefundSection, SlipImage } from "@/components/shared/orders";
+import { DeliverySection, GroupPaymentNote, RefundSection, SlipImage } from "@/components/shared/orders";
 import { isAwaitingRefund } from "@/types/order";
 import { NOTICE_TAG } from "@/constants/enumConfig";
 
@@ -100,6 +100,7 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
           <Divider className="!my-0" />
           <div>
             <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.paymentProof")}</p>
+            <GroupPaymentNote payment={payment} />
             {payment?.slip_image_url ? (
               <div className="flex items-start gap-3">
                 <SlipImage url={payment.slip_image_url} />

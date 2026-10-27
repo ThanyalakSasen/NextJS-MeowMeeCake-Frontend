@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import ChatWidget from "./chat/ChatWidget";
+import ProfileSetupPrompt from "./ProfileSetupPrompt";
 
 // route ที่ไม่ต้องแสดง Navbar/Footer (หน้าที่เปิดจากลิงก์ในอีเมล: ตั้งรหัสผ่านใหม่ · ยืนยันอีเมล)
 // usePathname() คืนเฉพาะ path ไม่รวม query string จึงครอบคลุม ?token=... ด้วย
@@ -31,6 +32,8 @@ export default function CustomerChrome({ children }: { children: React.ReactNode
       <Footer />
       {/* แชทกับร้าน — ปุ่มลอยมุมล่างขวาทุกหน้า (เดิมเป็นไอคอนบน Navbar) */}
       <ChatWidget />
+      {/* สมัครด้วย Google/LINE ใหม่ — ป๊อปอัปชวนกรอกข้อมูลบัญชี (กรอกเลย / ไว้ภายหลัง) */}
+      <ProfileSetupPrompt />
     </div>
   );
 }

@@ -77,11 +77,19 @@ export function AllergenBadge({ warning }: { warning: AllergenWarning | null }) 
   );
 }
 
-/** ป้าย "ส่งเฉพาะ จ.หนองคาย" มุมซ้ายล่างของรูป — สินค้าที่ส่งนอกจังหวัดร้านไม่ได้ (ใช้ทั้งบัตรปกติและบัตรพรีออเดอร์) */
-export function LocalOnlyBadge({ productId, category }: { productId: string; category: Product["category_id"] | null }) {
+/** ป้าย "ส่งเฉพาะ จ.หนองคาย" มุมซ้ายล่างของรูป — สินค้าที่ส่งนอกจังหวัดร้านไม่ได้ · สินค้าพรีออเดอร์ส่งได้ทุกจังหวัด = ไม่มีป้าย */
+export function LocalOnlyBadge({
+  productId,
+  category,
+  isPreorder = false,
+}: {
+  productId: string;
+  category: Product["category_id"] | null;
+  isPreorder?: boolean;
+}) {
   const t = useTranslations("shop.productCard");
   const { isLocalOnly, province } = useLocalOnlyShipping();
-  if (!isLocalOnly(productId, category)) return null;
+  if (isPreorder || !isLocalOnly(productId, category)) return null;
   return (
     <span
       title={t("localOnlyHint", { province })}
@@ -177,7 +185,7 @@ export default function ProductCard({
         )}
 
         <AllergenBadge warning={allergenWarning} />
-        <LocalOnlyBadge productId={product._id} category={product.category_id ?? null} />
+        <LocalOnlyBadge productId={product._id} category={product.category_id ?? null} isPreorder={product.is_preorder} />
       </div>
 
       {/* ฟอนต์อิงฐาน 18px (globals.css html 112.5%) · ขั้นต่ำของแอป 16px = text-sm/text-xs · 17px = text-[0.9444rem] · 18px = text-base

@@ -1,7 +1,8 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// เพิ่มที่อยู่ใหม่ระหว่างสั่งซื้อ — ใช้ร่วมกันหน้า checkout ปกติ และ checkout พรีออเดอร์ (D3)
-// POST /shop/addresses · cache ร่วมกับสมุดที่อยู่ (shopAddressesKey — ผู้เรียก invalidate เองใน onCreated)
+// ฟอร์มที่อยู่ระหว่างสั่งซื้อ — ใช้ร่วมกันหน้า checkout ปกติ และ checkout พรีออเดอร์ (D3) · 2 โหมด:
+//   เพิ่มที่อยู่ใหม่ (ไม่ส่ง onApply) → POST /shop/addresses · cache ร่วมกับสมุดที่อยู่ (ผู้เรียก invalidate เองใน onCreated)
+//   แก้เฉพาะคำสั่งซื้อนี้ (ส่ง onApply + initial) → ไม่เรียก API ไม่บันทึกลงสมุดที่อยู่ — ผู้เรียกส่งเป็น delivery_address ตอนสั่ง
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -13,32 +14,40 @@ import { shopButton, shopButtonPrimary, shopInput } from "@/components/customer/
 
 const ZIP_RE = /^\d{5}$/;
 
-const EMPTY_ADDRESS: ShopAddressInput = { house_no: "", sub_district: "", district: "", province: "", zip_code: "" };
+export type AddressFields = Omit<ShopAddressInput, "is_default">;
 
-export default function CheckoutAddressForm({ onCreated, onCancel }: { onCreated: (a: ShopAddress) => void; onCancel: () => void }) {
+const EMPTY_ADDRESS: AddressFields = { house_no: "", sub_district: "", district: "", province: "", zip_code: "" };
+
+type Props =
+  | { onCreated: (a: ShopAddress) => void; onCancel: () => void; onApply?: undefined; initial?: undefined }
+  | { onApply: (a: AddressFields) => void; initial: AddressFields; onCancel: () => void; onCreated?: undefined };
+
+export default function CheckoutAddressForm(props: Props) {
+  const { onCancel } = props;
+  const local = !!props.onApply;
   const t = useTranslations("shop.address");
   const tc = useTranslations("shop.common");
-  const [form, setForm] = useState<ShopAddressInput>(EMPTY_ADDRESS);
+  const [form, setForm] = useState<AddressFields>(props.initial ?? EMPTY_ADDRESS);
   const [isDefault, setIsDefault] = useState(false);
 
+  const trimmed = (): AddressFields => ({
+    house_no: form.house_no.trim(),
+    sub_district: form.sub_district.trim(),
+    district: form.district.trim(),
+    province: form.province.trim(),
+    zip_code: form.zip_code.trim(),
+  });
+
   const createMutation = useMutation({
-    mutationFn: () =>
-      shopAddressesService.create({
-        house_no: form.house_no.trim(),
-        sub_district: form.sub_district.trim(),
-        district: form.district.trim(),
-        province: form.province.trim(),
-        zip_code: form.zip_code.trim(),
-        is_default: isDefault,
-      }),
+    mutationFn: () => shopAddressesService.create({ ...trimmed(), is_default: isDefault }),
     onSuccess: (a) => {
       alert.success(t("saved"));
-      onCreated(a);
+      props.onCreated?.(a);
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("saveFailed")),
   });
 
-  const fields: { key: keyof ShopAddressInput; label: string; max: number; wide?: boolean }[] = [
+  const fields: { key: keyof AddressFields; label: string; max: number; wide?: boolean }[] = [
     { key: "house_no", label: t("houseNo"), max: 200, wide: true },
     { key: "sub_district", label: t("subDistrict"), max: 120 },
     { key: "district", label: t("district"), max: 120 },
@@ -48,7 +57,8 @@ export default function CheckoutAddressForm({ onCreated, onCancel }: { onCreated
   const filled = fields.every((f) => String(form[f.key] ?? "").trim()) && ZIP_RE.test(form.zip_code.trim());
 
   return (
-    <div className="space-y-3 rounded-xl border border-dashed border-[#8C5A3C]/30 p-4">
+    <div className="space-y-3 rounded-xl border border-dashed border-[#8C5A3C]/30 bg-white p-4">
+      {local && <p className="m-0 rounded-lg bg-[#FAF6F0] px-3 py-2 text-xs text-[#4A342E]">{t("editOnceHint")}</p>}
       <div className="grid gap-3 sm:grid-cols-2">
         {fields.map((f) => (
           <label key={f.key} className={`space-y-1 text-sm ${f.wide ? "sm:col-span-2" : ""}`}>
@@ -68,17 +78,25 @@ export default function CheckoutAddressForm({ onCreated, onCancel }: { onCreated
           </label>
         ))}
       </div>
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
-        {t("setDefault")}
-      </label>
+      {!local && (
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
+          {t("setDefault")}
+        </label>
+      )}
       <div className="flex justify-end gap-2">
         <button type="button" className={shopButton} onClick={onCancel} disabled={createMutation.isPending}>
           {tc("cancel")}
         </button>
-        <button type="button" className={shopButtonPrimary} disabled={!filled || createMutation.isPending} onClick={() => createMutation.mutate()}>
-          {createMutation.isPending ? tc("saving") : t("save")}
-        </button>
+        {local ? (
+          <button type="button" className={shopButtonPrimary} disabled={!filled} onClick={() => props.onApply?.(trimmed())}>
+            {t("useOnce")}
+          </button>
+        ) : (
+          <button type="button" className={shopButtonPrimary} disabled={!filled || createMutation.isPending} onClick={() => createMutation.mutate()}>
+            {createMutation.isPending ? tc("saving") : t("save")}
+          </button>
+        )}
       </div>
     </div>
   );

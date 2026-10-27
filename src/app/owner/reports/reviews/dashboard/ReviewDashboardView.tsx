@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, Card, DatePicker, EmptyState, LazyDatePicker, Select, type DatePickerProps } from "@/components/base";
 import { TypeTabBar } from "@/components/shared/data";
-import { LazyTooltip, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import { InfoTip, LazyTooltip, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { StatCard, StatCardsGrid, type StatCardStatus } from "@/components/shared/stats";
 import { formatDate, formatNumber, formatPercent } from "@/i18n/format";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
@@ -124,16 +124,6 @@ export function ReviewDashboardView({
             )}
           </div>
 
-          {/* ข้อมูลในหน้านี้คืออะไร — กางอ่านได้ */}
-          <details className="rounded-xl border border-gray-100 bg-white px-4 py-2.5 text-sm text-gray-700">
-            <summary className="cursor-pointer font-semibold text-brown-800">{t("reviewsDashboard.guideTitle")}</summary>
-            <ul className="m-0 mt-2 flex list-disc flex-col gap-1 pl-5 text-xs leading-relaxed text-gray-600">
-              {(["guideKpi", "guideTodo", "guideTopics", "guideTrend", "guideProducts"] as const).map((k) => (
-                <li key={k}>{t(`reviewsDashboard.${k}`)}</li>
-              ))}
-            </ul>
-          </details>
-
           {/* 2) ตัวเลขหลัก */}
           <Kpis s={s} onViewUnreplied={onViewUnreplied} />
 
@@ -149,8 +139,11 @@ export function ReviewDashboardView({
             <RatingDistribution s={s} />
           </div>
 
-          {/* 5) แนวโน้มตามเวลา */}
-          <Trend s={s} />
+          {/* 5) เจาะลึก: หัวข้อที่ถูกติเทียบช่วงก่อน · สรุปตามหมวดหมู่ (แทนกราฟแนวโน้มตามเวลา — ดูสินค้าเดียว = มีหมวดเดียว ไม่ต้องแสดง) */}
+          <div className={`grid grid-cols-1 gap-5 ${vm.productId ? "" : "lg:grid-cols-2"}`}>
+            <AspectTrends s={s} />
+            {!vm.productId && <Categories s={s} />}
+          </div>
 
           {/* 6) รายสินค้า (ดูสินค้าเดียวอยู่ = ไม่ต้องมี) */}
           {!vm.productId && (
@@ -205,13 +198,14 @@ function actionSentence(s: ReviewStats, drops: number, t: TD): string {
   return parts.length ? t("actionSentence", { items: parts.join(" · ") }) : t("actionNone");
 }
 
+/** การ์ดของแต่ละส่วน — คำอธิบาย (hint) อยู่ในไอคอน ⓘ ข้างหัวข้อ ชี้/แตะแล้วขึ้น (แทนกล่อง "ข้อมูลในหน้านี้คืออะไร?" เดิม) */
 function Section({ title, hint, action, children }: { title: string; hint?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-4 py-3">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-1">
           <p className="m-0 text-sm font-semibold text-brown-900">{title}</p>
-          {hint && <p className="m-0 text-xs text-gray-500">{hint}</p>}
+          {hint && <InfoTip text={hint} />}
         </div>
         {action}
       </div>
@@ -377,36 +371,94 @@ function DroppingProducts({ s, onPick }: { s: ReviewStats; onPick: (id: string) 
   );
 }
 
+/** กลุ่มความพอใจตามดาว — สีเดียวกันทั้งแถบสรุปและแถบรายดาว */
+const RATING_GROUPS = [
+  { key: "ratingGood", stars: [5, 4], bar: "bg-success", chip: "bg-green-50 text-green-700" },
+  { key: "ratingMid", stars: [3], bar: "bg-amber-400", chip: "bg-amber-50 text-amber-700" },
+  { key: "ratingBad", stars: [2, 1], bar: "bg-danger", chip: "bg-red-50 text-red-700" },
+] as const;
+
+/**
+ * ลูกค้าให้กี่ดาว — อ่านจากบนลงล่าง: คะแนนเฉลี่ยตัวใหญ่ + ดาว → สัดส่วน พอใจ / เฉยๆ / ไม่พอใจ (แถบเดียว) →
+ * จำนวนรายดาว (แถบยาวตามสัดส่วนของทั้งหมด · สีตามกลุ่ม · ตัวเลข + % อยู่ท้ายแถว)
+ */
 function RatingDistribution({ s }: { s: ReviewStats }) {
   const t = useTranslations();
   const locale = useLocale();
-  const max = Math.max(...s.ratingCounts, 1);
+  const pct = (n: number) => (s.total ? (n / s.total) * 100 : 0);
+  const groups = RATING_GROUPS.map((g) => ({ ...g, n: g.stars.reduce((sum, star) => sum + (s.ratingCounts[star - 1] ?? 0), 0) }));
+  const avg = s.avg ?? 0;
   return (
     <Section title={t("reviewsDashboard.ratingDist")} hint={t("reviewsDashboard.ratingDistHint")}>
-      <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
-        {[5, 4, 3, 2, 1].map((star) => {
-          const n = s.ratingCounts[star - 1];
-          const label = t("reviewsDashboard.countPct", {
-            n: formatNumber(n, locale),
-            pct: formatPercent(s.total ? (n / s.total) * 100 : 0, locale, 0),
-          });
-          return (
-            <li key={star} className="grid items-center gap-3" style={{ gridTemplateColumns: "64px 1fr 96px" }}>
-              <span className="text-sm text-gray-600">{t("reviewsDashboard.starsLabel", { n: star })}</span>
-              <LazyTooltip title={`${t("reviewsDashboard.starsLabel", { n: star })}: ${label}`}>
-                <div className="h-3.5 rounded bg-gray-100">
-                  <div
-                    className={`h-full rounded ${star <= 2 ? "bg-danger" : "bg-brown-500"}`}
-                    style={{ width: n ? `${Math.max((n / max) * 100, 2)}%` : 0 }}
-                  />
-                </div>
-              </LazyTooltip>
-              <span className="text-right text-sm font-medium text-gray-800">{label}</span>
-            </li>
-          );
-        })}
-      </ul>
+      {s.total === 0 ? (
+        <p className="py-4 text-center text-sm text-gray-500">{t("reviewsDashboard.emptySection")}</p>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {/* คะแนนเฉลี่ย */}
+          <div className="flex items-center gap-3">
+            <span className="text-4xl font-bold leading-none text-brown-900">{avg.toFixed(1)}</span>
+            <div className="flex flex-col gap-0.5">
+              <Stars value={avg} />
+              <span className="text-xs text-gray-500">{t("reviewsDashboard.ratingAvgOf", { n: formatNumber(s.total, locale) })}</span>
+            </div>
+          </div>
+
+          {/* พอใจ / เฉยๆ / ไม่พอใจ */}
+          <div className="flex flex-col gap-2">
+            <div className="flex h-3 overflow-hidden rounded-full bg-gray-100">
+              {groups.map((g) => (g.n ? <div key={g.key} className={`h-full ${g.bar}`} style={{ width: `${pct(g.n)}%` }} /> : null))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {groups.map((g) => (
+                <span key={g.key} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${g.chip}`}>
+                  {t(`reviewsDashboard.${g.key}`)} · {formatPercent(pct(g.n), locale, 0)}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* รายดาว */}
+          <ul className="m-0 flex list-none flex-col gap-2 border-t border-gray-100 p-0 pt-3">
+            {[5, 4, 3, 2, 1].map((star) => {
+              const n = s.ratingCounts[star - 1] ?? 0;
+              const g = RATING_GROUPS.find((x) => (x.stars as readonly number[]).includes(star))!;
+              return (
+                <li key={star} className="grid items-center gap-3" style={{ gridTemplateColumns: "48px 1fr 88px" }}>
+                  <span className="flex items-center gap-1 text-sm text-gray-700" aria-label={t("reviewsDashboard.starsLabel", { n: star })}>
+                    <span className="font-semibold">{star}</span>
+                    <span className="text-amber-400" aria-hidden>
+                      ★
+                    </span>
+                  </span>
+                  <div className="h-2.5 rounded-full bg-gray-100">
+                    <div className={`h-full rounded-full ${g.bar}`} style={{ width: n ? `${Math.max(pct(n), 2)}%` : 0 }} />
+                  </div>
+                  <span className="text-right text-sm text-gray-800">
+                    <span className="font-semibold">{formatNumber(n, locale)}</span>{" "}
+                    <span className="text-xs text-gray-500">({formatPercent(pct(n), locale, 0)})</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </Section>
+  );
+}
+
+/** ดาว 5 ดวง เติมตามคะแนน (ส่วนทศนิยมเติมบางส่วน) */
+function Stars({ value }: { value: number }) {
+  return (
+    <span className="relative inline-block text-lg leading-none tracking-wider" aria-hidden>
+      <span className="text-gray-200">★★★★★</span>
+      <span
+        className="absolute inset-0 overflow-hidden whitespace-nowrap text-amber-400"
+        style={{ width: `${(Math.max(0, Math.min(5, value)) / 5) * 100}%` }}
+      >
+        ★★★★★
+      </span>
+    </span>
   );
 }
 
@@ -587,42 +639,107 @@ function NeedsReply({ s, onViewAll }: { s: ReviewStats; onViewAll: () => void })
   );
 }
 
-/** จำนวนรีวิวตามช่วงเวลา — แท่ง = จำนวน (แท่งแดง = เฉลี่ยต่ำกว่า 3 ดาว) · ชี้ดูจำนวน + คะแนนเฉลี่ย */
-function Trend({ s }: { s: ReviewStats }) {
+/**
+ * สรุปตามหมวดหมู่สินค้า (แทนกราฟแนวโน้มตามเวลา 2026-10-27) — จำนวนรีวิว · คะแนนเฉลี่ย · รีวิวแย่ · หัวข้อที่ถูกติบ่อยของหมวด
+ * แถบ = สัดส่วนจำนวนรีวิวเทียบหมวดที่มากสุด · คะแนนเฉลี่ยต่ำกว่า 3 = สีแดง
+ */
+function Categories({ s }: { s: ReviewStats }) {
   const t = useTranslations();
   const locale = useLocale();
-  const max = Math.max(...s.buckets.map((b) => b.count), 1);
-  const label = (d: ReviewStats["buckets"][number]) =>
-    s.bucketUnit === "day"
-      ? d.start.toDate().toLocaleDateString(locale === "en" ? "en-GB" : "th-TH", { day: "numeric", month: "short" })
-      : d.start.toDate().toLocaleDateString(locale === "en" ? "en-GB" : "th-TH", { month: "short", year: "2-digit" });
+  const rows = [...s.categories].sort((a, b) => b.count - a.count);
+  const max = Math.max(...rows.map((c) => c.count), 1);
   return (
-    <Section title={t("reviewsDashboard.trend")} hint={t("reviewsDashboard.trendHint")}>
-      {s.buckets.length <= 1 ? (
-        <p className="py-4 text-center text-sm text-gray-500">{t("reviewsDashboard.trendSingle")}</p>
+    <Section title={t("reviewsDashboard.categories")} hint={t("reviewsDashboard.categoriesHint")}>
+      {rows.length === 0 ? (
+        <p className="py-4 text-center text-sm text-gray-500">{t("reviewsDashboard.emptySection")}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <div className="flex h-40 min-w-full items-end gap-1" style={{ minWidth: s.buckets.length * 18 }}>
-            {s.buckets.map((b) => (
-              <LazyTooltip
-                key={b.key}
-                title={t("reviewsDashboard.trendTip", { label: label(b), n: b.count, avg: b.avg != null ? b.avg.toFixed(1) : "—" })}
-              >
-                <div className="flex h-full min-w-[14px] flex-1 flex-col items-center justify-end gap-1">
-                  {b.count > 0 && <span className="text-[10px] text-gray-500">{b.count}</span>}
-                  <div
-                    className={`w-full rounded-t ${b.avg != null && b.avg < 3 ? "bg-danger" : "bg-brown-500"}`}
-                    style={{ height: b.count ? `${Math.max((b.count / max) * 100, 4)}%` : 2, opacity: b.count ? 1 : 0.25 }}
-                  />
+        <ul className="m-0 flex list-none flex-col gap-3 p-0">
+          {rows.map((c) => {
+            const issues = c.aspects.filter((a) => a.negative > 0);
+            return (
+              <li key={c.id || c.name} className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{c.name || t("reviewsDashboard.unknownCategory")}</span>
+                  <span className={`shrink-0 ${c.avg < 3 ? "text-danger" : "text-gray-600"}`}>
+                    {t("reviewsDashboard.productStat", { n: formatNumber(c.count, locale), avg: c.avg.toFixed(1) })}
+                  </span>
                 </div>
-              </LazyTooltip>
-            ))}
-          </div>
-          <div className="mt-1 flex justify-between text-[10px] text-gray-500">
-            <span>{label(s.buckets[0])}</span>
-            <span>{label(s.buckets[s.buckets.length - 1])}</span>
-          </div>
-        </div>
+                <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                  <div className={`h-full rounded-full ${c.avg < 3 ? "bg-danger" : "bg-brown-500"}`} style={{ width: `${(c.count / max) * 100}%` }} />
+                </div>
+                {(c.negative > 0 || issues.length > 0) && (
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                    {c.negative > 0 && <span className="text-gray-500">{t("reviewsDashboard.categoryNegative", { n: formatNumber(c.negative, locale) })}</span>}
+                    {issues.map((a) => (
+                      <span key={a.name} className="rounded-full bg-red-50 px-2 py-0.5 font-semibold text-red-700">
+                        {t("reviewsDashboard.issueChip", { name: a.name, n: a.negative })}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
+/**
+ * หัวข้อที่ถูกติ เทียบช่วงก่อนหน้า — เพิ่มขึ้นมากสุดก่อน
+ * แต่ละหัวข้อ: บอกการเปลี่ยนแปลงเป็นคำ (ใหม่ · ไม่มีแล้ว · เพิ่ม/ลด กี่ครั้ง กี่ % · เท่าเดิม) + แถบเทียบ ช่วงก่อน (เทา) กับช่วงนี้ (แดง)
+ */
+function AspectTrends({ s }: { s: ReviewStats }) {
+  const t = useTranslations();
+  const locale = useLocale();
+  const rows = s.aspectTrends;
+  const max = Math.max(...(rows ?? []).flatMap((a) => [a.negative, a.prevNegative]), 1);
+  const change = (a: NonNullable<ReviewStats["aspectTrends"]>[number]) => {
+    if (a.delta === 0) return { tone: "text-gray-500", icon: "＝", text: t("reviewsDashboard.aspectTrendSameN", { n: a.negative }) };
+    if (a.prevNegative === 0) return { tone: "text-danger", icon: "▲", text: t("reviewsDashboard.aspectTrendNew", { n: a.negative }) };
+    if (a.negative === 0) return { tone: "text-green-700", icon: "▼", text: t("reviewsDashboard.aspectTrendGone", { n: a.prevNegative }) };
+    const p = formatPercent((Math.abs(a.delta) / a.prevNegative) * 100, locale, 0);
+    return a.delta > 0
+      ? { tone: "text-danger", icon: "▲", text: t("reviewsDashboard.aspectTrendUp", { n: a.delta, pct: p }) }
+      : { tone: "text-green-700", icon: "▼", text: t("reviewsDashboard.aspectTrendDown", { n: -a.delta, pct: p }) };
+  };
+  return (
+    <Section title={t("reviewsDashboard.aspectTrend")} hint={t("reviewsDashboard.aspectTrendHint")}>
+      {rows === null ? (
+        <p className="py-4 text-center text-sm text-gray-500">{t("reviewsDashboard.vsPrevNone")}</p>
+      ) : rows.length === 0 ? (
+        <p className="py-4 text-center text-sm text-gray-500">{t("reviewsDashboard.aspectTrendEmpty")}</p>
+      ) : (
+        <ul className="m-0 flex list-none flex-col gap-3 p-0">
+          {rows.map((a) => {
+            const c = change(a);
+            return (
+              <li key={a.name} className="flex flex-col gap-1.5 border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
+                <div className="flex items-start justify-between gap-3 text-sm">
+                  <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{a.name}</span>
+                  <span className={`shrink-0 text-right text-xs font-semibold ${c.tone}`}>
+                    <span aria-hidden>{c.icon} </span>
+                    {c.text}
+                  </span>
+                </div>
+                {/* ช่วงก่อน vs ช่วงนี้ — ความยาวเทียบกับหัวข้อที่ถูกติมากสุดในตาราง */}
+                <div className="grid items-center gap-x-2 gap-y-1 text-[11px] text-gray-500" style={{ gridTemplateColumns: "56px 1fr 24px" }}>
+                  <span>{t("reviewsDashboard.aspectTrendPrev")}</span>
+                  <div className="h-1.5 rounded-full bg-gray-100">
+                    <div className="h-full rounded-full bg-gray-400" style={{ width: `${(a.prevNegative / max) * 100}%` }} />
+                  </div>
+                  <span className="text-right">{a.prevNegative}</span>
+                  <span>{t("reviewsDashboard.aspectTrendNow")}</span>
+                  <div className="h-1.5 rounded-full bg-gray-100">
+                    <div className="h-full rounded-full bg-danger" style={{ width: `${(a.negative / max) * 100}%` }} />
+                  </div>
+                  <span className="text-right font-semibold text-gray-700">{a.negative}</span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </Section>
   );

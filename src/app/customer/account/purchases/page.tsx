@@ -27,6 +27,8 @@ import { ORDER_STATUSES, ORDER_STATUS_TONE, REVIEWED_PILL, REVIEW_PILL, useOrder
 import ReviewLink from "../_components/ReviewLink";
 import OrderItemThumb from "../_components/OrderItemThumb";
 import BuyAgainButton from "../_components/BuyAgainButton";
+import HistorySearch from "../_components/HistorySearch";
+import { thaiDate } from "../../preorder/lib/preorderDates";
 
 const PAGE_SIZE = 10;
 const actionLink =
@@ -46,7 +48,8 @@ function PurchasesContent() {
   const labels = useOrderLabels();
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
   const [page, setPage] = useState(1);
-  const params = { page, limit: PAGE_SIZE, ...(filter === "all" ? {} : { order_status: filter }) };
+  const [search, setSearch] = useState("");
+  const params = { page, limit: PAGE_SIZE, ...(filter === "all" ? {} : { order_status: filter }), ...(search ? { search } : {}) };
   const listQ = useQuery({
     queryKey: [...shopOrdersKey, params],
     queryFn: () => shopOrdersService.list(params),
@@ -89,6 +92,15 @@ function PurchasesContent() {
               </label>
             </header>
 
+            {/* ค้นหาเลขคำสั่งซื้อ หรือชื่อสินค้า */}
+            <HistorySearch
+              placeholder={t("searchPlaceholder")}
+              onSearch={(q) => {
+                setSearch(q);
+                setPage(1);
+              }}
+            />
+
             {listQ.isLoading ? (
               <p className="rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center text-sm text-stone-500">{t("loadingList")}</p>
             ) : listQ.isError ? (
@@ -97,9 +109,9 @@ function PurchasesContent() {
               <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-stone-200 bg-white p-12 text-center">
                 <ShoppingBag className="h-8 w-8 text-stone-300" aria-hidden="true" />
                 <p className="m-0 text-sm font-medium text-stone-500">
-                  {filter === "all" ? t("empty") : t("emptyFiltered")}
+                  {search ? t("emptySearch", { q: search }) : filter === "all" ? t("empty") : t("emptyFiltered")}
                 </p>
-                {filter === "all" && <Link href="/customer/product" className={shopButton}>{t("shopNow")}</Link>}
+                {filter === "all" && !search && <Link href="/customer/product" className={shopButton}>{t("shopNow")}</Link>}
               </div>
             ) : (
               <div className="flex flex-col gap-4">
@@ -125,6 +137,7 @@ function PurchasesContent() {
 
 function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | null }) {
   const t = useTranslations("shop.orders");
+  const ts = useTranslations("shop.slip");
   const { names: localNames } = useLocalName();
   const labels = useOrderLabels();
   const locale = useLocale();
@@ -200,15 +213,18 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
             </p>
           )}
           <span className="block text-sm font-bold text-stone-800">{t("total", { amount: baht(order.total_amount) })}</span>
-          {unpaid && (
-            <span className={`block text-xs font-medium ${order.has_payment && order.payment_status !== "failed" ? "text-amber-600" : "text-red-500"}`}>
-              {order.payment_status === "failed"
-                ? t("slipRejected")
-                : order.has_payment
-                  ? t("slipSent")
+          {/* สลิปล่าสุดไม่ผ่าน — กล่องแดงข้อความเดียวกับหน้ารายละเอียด (ปุ่มแนบสลิปใหม่อยู่ด้านขวา) */}
+          {unpaid && order.payment_status === "failed" ? (
+            <p className="m-0 mt-1 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{ts("rejected")}</p>
+          ) : unpaid ? (
+            <span className={`block text-xs font-medium ${order.has_payment ? "text-amber-600" : "text-red-500"}`}>
+              {order.has_payment
+                ? t("slipSent")
+                : order.payment_due_at
+                  ? t("unpaidBy", { date: thaiDate(order.payment_due_at, true, locale) })
                   : t("unpaid")}
             </span>
-          )}
+          ) : null}
           {order.order_status === "cancelled" && order.payment_status === "paid" && (
             <span className="block text-xs font-medium text-amber-600">{t("awaitRefund")}</span>
           )}
