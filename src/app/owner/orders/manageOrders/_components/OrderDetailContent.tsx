@@ -27,6 +27,9 @@ export function OrderDetailContent({
   paidPaymentId,
   refunding,
   onRefund,
+  canMarkReady,
+  markingReady,
+  onMarkReady,
 }: {
   order: Order;
   payment: Payment | null;
@@ -43,6 +46,10 @@ export function OrderDetailContent({
   paidPaymentId: string | null;
   refunding: boolean;
   onRefund: (paymentId: string) => void;
+  /** กำลังเตรียม + ชำระแล้ว + มีสิทธิ์ — ปุ่ม "สินค้าพร้อมแล้ว" (preparing → ready) */
+  canMarkReady: boolean;
+  markingReady: boolean;
+  onMarkReady: () => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -70,6 +77,15 @@ export function OrderDetailContent({
         </div>
       ) : (
         <OrderLifecycleSteps status={order.order_status} />
+      )}
+
+      {canMarkReady && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="m-0 text-sm text-gray-600">{t("orders.markReadyHint")}</p>
+          <Button type="primary" size="small" icon={actionIcon("next", "small")} loading={markingReady} onClick={onMarkReady}>
+            {t("orders.markReady")}
+          </Button>
+        </div>
       )}
 
       {isAwaitingRefund(order) && (

@@ -205,7 +205,8 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
           <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancelOrder(order)}>{t("orders.cancel")}</Button>
           {next && (
             <Button type="primary" size="small" icon={actionIcon("next", "small")} onClick={() => vm.onAdvanceOrderStatus(order)}>
-              {t("preorderRound.advanceTo", { status: t(`enums.orderStatus.${next}`) })}
+              {/* จ่ายแล้ว backend เลื่อนเป็น preparing ให้เอง — ขั้นถัดไปคือปุ่ม "สินค้าพร้อมแล้ว" แบบหน้าจัดการคำสั่งซื้อ */}
+              {next === "ready" ? t("orders.markReady") : t("preorderRound.advanceTo", { status: t(`enums.orderStatus.${next}`) })}
             </Button>
           )}
         </div>
