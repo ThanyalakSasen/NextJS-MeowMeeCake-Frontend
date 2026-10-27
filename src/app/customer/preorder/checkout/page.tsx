@@ -251,7 +251,7 @@ function PreorderCheckoutContent() {
                       </div>
                       {it.option_text && <p className="m-0 text-xs text-gray-500">{it.option_text}</p>}
                       <input
-                        className="h-[44px] w-full rounded-lg border border-[#8C5A3C]/15 px-2 text-xs"
+                        className="h-[40px] w-full rounded-lg border border-[#8C5A3C]/15 px-2 text-xs"
                         maxLength={500}
                         placeholder={t("notePlaceholder")}
                         aria-label={t("noteAria", { name: localName(it.product_name_th, it.product_name_eng) })}

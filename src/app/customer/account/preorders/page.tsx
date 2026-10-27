@@ -74,7 +74,7 @@ function PreordersContent() {
                     setFilter(e.target.value as OrderStatus | "all");
                     setPage(1);
                   }}
-                  className="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#4A342E]/30 sm:text-sm"
+                  className="h-[40px] rounded-xl border border-stone-200 bg-white px-3 text-xs font-medium text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#4A342E]/30 sm:text-sm"
                 >
                   <option value="all">{t("all")}</option>
                   {ORDER_STATUSES.map((s) => <option key={s} value={s}>{labels.orderStatus(s)}</option>)}

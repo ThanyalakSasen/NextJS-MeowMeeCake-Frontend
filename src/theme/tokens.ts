@@ -58,17 +58,17 @@ export const typography = {
  *  ทั้งสามค่าเท่ากันโดยตั้งใจ — "ปุ่มกับช่องกรอกต้องสูงเท่ากันจริง รวม padding แล้ว"
  *  size="small" / "large" จึงเปลี่ยนแค่ระยะใน ไม่เปลี่ยนความสูงอีกต่อไป
  *
- *  ทำไม 36 — antd ไม่ได้ตั้งความสูงตรง ๆ แต่คำนวณ padding ย้อนกลับจาก height:
+ *  ทำไม 40 — เท่าปุ่ม/ช่องกรอก Tailwind ฝั่งลูกค้า (h-[40px]) · antd ไม่ได้ตั้งความสูงตรง ๆ แต่คำนวณ padding ย้อนกลับจาก height:
  *      padding = max((height − ความสูงเนื้อหา) / 2 − ขอบ, 0)
- *    ปุ่ม      เนื้อหา = fontSize + 8        = 26px  → padding 4px   ✓
- *    ช่องกรอก  เนื้อหา = fontSize × lineHeight = 30.6px → padding 1.7px ✓
+ *    ปุ่ม      เนื้อหา = fontSize + 8        = 26px  → padding 6px   ✓
+ *    ช่องกรอก  เนื้อหา = fontSize × lineHeight = 30.6px → padding 3.7px ✓
  *    ที่ 32px ช่องกรอกจะได้ padding 0 แล้วเนื้อหาล้นขอบ — 36 คือค่าต่ำสุดที่รอด
  *    (ปุ่มกับช่องกรอกคิด line-height คนละสูตร — ดู node_modules/antd/es/button/style/token.js)
  */
 export const control = {
-  heightSM: 36,
-  height: 36,
-  heightLG: 36,
+  heightSM: 40,
+  height: 40,
+  heightLG: 40,
   radiusSM: 6,
   radius: 8,
   radiusLG: 12,

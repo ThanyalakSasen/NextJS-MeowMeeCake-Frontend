@@ -520,7 +520,7 @@ function PointsExchange({ points, busy, onConvert }: { points: MyPoints; busy: b
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center overflow-hidden rounded-xl border border-[#8C5A3C]/30 bg-white">
             <button type="button" aria-label={t("convertLess")} disabled={busy || value <= min} onClick={() => setAmount(value - step)}
-              className="flex h-[44px] w-[44px] items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">-</button>
+              className="flex h-[40px] w-[40px] items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">-</button>
             <input
               type="number"
               inputMode="numeric"
@@ -530,10 +530,10 @@ function PointsExchange({ points, busy, onConvert }: { points: MyPoints; busy: b
               value={value}
               aria-label={t("convertPoints")}
               onChange={(e) => setAmount(Number(e.target.value) || min)}
-              className="h-[44px] w-24 border-none text-center text-sm font-bold outline-none"
+              className="h-[40px] w-24 border-none text-center text-sm font-bold outline-none"
             />
             <button type="button" aria-label={t("convertMore")} disabled={busy || value >= maxPts} onClick={() => setAmount(value + step)}
-              className="flex h-[44px] w-[44px] items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">+</button>
+              className="flex h-[40px] w-[40px] items-center justify-center font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">+</button>
           </div>
           <button type="button" disabled={busy || value >= maxPts} onClick={() => setAmount(maxPts)}
             className="text-sm font-semibold text-[#8C5A3C] hover:underline disabled:opacity-40">{t("convertAll")}</button>

@@ -5,7 +5,7 @@
 // antd render Table/Input/Select/Button/Tag ฯลฯ ด้วย design token ของตัวเอง (ไม่ผ่าน class Tailwind)
 // ที่นี่คือ "จุดเดียว" ที่ map token โปรเจกต์เข้ากับ token ของ antd
 //
-// แนวปรับ: เป็นมิตรกับผู้สูงอายุ — ตัวอักษร 16–28px, บรรทัด 1.7, control สูง 36 เท่ากันหมด
+// แนวปรับ: เป็นมิตรกับผู้สูงอายุ — ตัวอักษร 16–28px, บรรทัด 1.7, control สูง 40 เท่ากันหมด
 // ─────────────────────────────────────────────────────────────
 import type { ThemeConfig } from "antd";
 import { color, typography, control } from "@/theme/tokens";
@@ -67,8 +67,8 @@ export const antdTheme: ThemeConfig = {
       rowHoverBg: color.bgApp,
     },
     // Select คำนวณ padding จาก fontHeight ซึ่ง antd ไม่ได้คิดจาก lineHeight ที่เราตั้ง (ได้ 26 · บรรทัดจริง 30.6)
-    // → padding เกินจน Select สูง ~40.6px ไม่เท่า Input/DatePicker (36) · ตั้งให้ตรงกับบรรทัดจริง = สูง 36 เท่ากัน
-    // fontHeight เป็น MapToken — type ของ components ไม่รวมไว้ แต่ตอนรัน antd เอา token ของ component ทับ token ทั้งหมด (วัดแล้วได้ 36)
+    // → padding เกินจน Select สูง ~40.6px ไม่เท่า Input/DatePicker · ตั้งให้ตรงกับบรรทัดจริง = สูงเท่ากัน
+    // fontHeight เป็น MapToken — type ของ components ไม่รวมไว้ แต่ตอนรัน antd เอา token ของ component ทับ token ทั้งหมด (วัดแล้วได้เท่า controlHeight)
     Select: {
       fontHeight: typography.size.base * typography.lineHeight,
     } as NonNullable<ThemeConfig["components"]>["Select"],
