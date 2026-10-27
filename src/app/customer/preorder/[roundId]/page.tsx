@@ -93,7 +93,7 @@ export default function PreorderRoundPage() {
           ) : (
             <div className={productGrid}>
               {items.map((it) => (
-                <RoundProductCard key={it._id} item={it} roundId={round._id} />
+                <RoundProductCard key={it._id} item={it} round={round} canOrder={isOpen} />
               ))}
             </div>
           )}

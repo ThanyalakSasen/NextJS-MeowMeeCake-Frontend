@@ -151,9 +151,6 @@ function PreorderDetailContent() {
               <p className="font-bold">{t("placed")}</p>
               <p className="text-sm">{t("placedHint")}</p>
             </div>
-            <Link href={`/customer/account/preorders/${p._id}/success`} className="shrink-0 text-sm font-semibold text-green-800 underline">
-              {tf("payLater")}
-            </Link>
           </div>
         )}
 
@@ -265,17 +262,26 @@ function PreorderDetailContent() {
             )}
           </section>
 
-          <section className={`${shopCard} space-y-4 lg:col-span-2`}>
-            <h2 className="text-lg font-bold">{to("payment")}</h2>
-            {paymentQ.data ? (
-              <SlipPaymentPanel kind="preorder" docId={p._id} page={paymentQ.data} fetchedAt={paymentQ.dataUpdatedAt} onChanged={refresh}
-                onUploaded={isNew ? () => router.push(`/customer/account/preorders/${p._id}/success`) : undefined} />
-            ) : (
+          {/* การ์ดชำระเงินแบบเดียวกับหน้าชำระรวมหลายบิล (PaymentCard) */}
+          {paymentQ.data ? (
+            <SlipPaymentPanel kind="preorder" docId={p._id} page={paymentQ.data} fetchedAt={paymentQ.dataUpdatedAt} onChanged={refresh}
+              className="lg:sticky lg:top-44 lg:col-span-2"
+              onUploaded={isNew ? () => router.push(`/customer/account/preorders/${p._id}/success`) : undefined} />
+          ) : (
+            <section className={`${shopCard} space-y-4 lg:col-span-2`}>
+              <h2 className="text-lg font-bold">{to("payment")}</h2>
               <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{to("paymentLoadFailed")}</p>
-            )}
-          </section>
+            </section>
+          )}
         </div>
 
+        {/* ขั้นชำระเงิน (เพิ่งสั่ง · ยังไม่ส่งสลิป) — ชำระภายหลัง (ไปหน้าสั่งซื้อสำเร็จ) / กลับหน้าหลัก */}
+        {isNew && !(p.payment_status === "paid" || p.has_payment) && p.order_status !== "cancelled" ? (
+          <div className="flex flex-wrap justify-center gap-2">
+            <Link href={`/customer/account/preorders/${p._id}/success`} className={shopButton}>{tf("payLaterBtn")}</Link>
+            <Link href="/customer" className={shopButton}>{tf("backHome")}</Link>
+          </div>
+        ) : (
         <div className="flex flex-wrap justify-center gap-2">
           <Link href="/customer/account/preorders" className={shopButton}>{t("viewAll")}</Link>
           {/* แสดง 2 ปุ่มเท่านั้น: ดูทั้งหมด + (ยกเลิกได้ = ยกเลิก · ไม่ได้ = กลับ) */}
@@ -288,6 +294,7 @@ function PreorderDetailContent() {
             <BackButton fallback="/customer/account/preorders" className={shopButton} />
           )}
         </div>
+        )}
         {p.payment_status === "paid" && p.order_status !== "cancelled" && p.order_status !== "completed" && (
           <p className="m-0 text-center text-xs text-gray-500">{t("paidContactToCancel")}</p>
         )}

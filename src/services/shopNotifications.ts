@@ -15,7 +15,8 @@ export interface CustomerNotification {
   type: CustomerNotificationType;
   /** path ในเว็บ (backend ตั้ง) — ผ่าน notificationHref ก่อนใช้ */
   link: string | null;
-  ref_type: "order" | "preorder" | "coupon" | "promotion" | "bundle" | "preorder_round" | null;
+  /** profile_setup = ชวนกรอกข้อมูลบัญชี (สมัครด้วย Google/LINE) — เด้งเป็นป๊อปอัป (ProfileSetupPrompt) */
+  ref_type: "order" | "preorder" | "coupon" | "promotion" | "bundle" | "preorder_round" | "review" | "profile_setup" | null;
   ref_id: string | null;
   /** รหัสคูปอง/โค้ดส่วนลด (แจ้งเตือนแลกคูปอง · โค้ดใหม่) — แสดงพร้อมปุ่มคัดลอก */
   coupon_code?: string | null;

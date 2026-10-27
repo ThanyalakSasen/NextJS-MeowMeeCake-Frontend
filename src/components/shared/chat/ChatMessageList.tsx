@@ -21,6 +21,7 @@ export default function ChatMessageList({
   messages,
   viewer,
   attachmentHref,
+  onOpenAttachment,
   hasMore,
   loadingOlder,
   onLoadOlder,
@@ -31,6 +32,8 @@ export default function ChatMessageList({
   viewer: ChatSenderType;
   /** ลิงก์ไปหน้ารายละเอียดของคำสั่งซื้อที่แนบ (ต่างกันระหว่างหน้าร้าน/หลังร้าน) */
   attachmentHref: (a: ChatAttachment) => string;
+  /** ส่งมา = กดการ์ดแล้วเปิดป๊อปอัปแทนการไปหน้าอื่น (หลังร้าน) · ไม่ส่ง = ลิงก์ไป attachmentHref */
+  onOpenAttachment?: (a: ChatAttachment) => void;
   hasMore?: boolean;
   loadingOlder?: boolean;
   onLoadOlder?: () => void;
@@ -96,7 +99,14 @@ export default function ChatMessageList({
             )}
             <div className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : ""} ${grouped ? "" : "mt-1.5"}`}>
               <div className={`flex max-w-[80%] flex-col gap-1.5 sm:max-w-[70%] ${mine ? "items-end" : "items-start"}`}>
-                {m.attachment && <AttachmentCard a={m.attachment} href={attachmentHref(m.attachment)} mine={mine} />}
+                {m.attachment && (
+                  <AttachmentCard
+                    a={m.attachment}
+                    href={attachmentHref(m.attachment)}
+                    mine={mine}
+                    onOpen={onOpenAttachment ? () => onOpenAttachment(m.attachment!) : undefined}
+                  />
+                )}
                 {m.body && (
                   <p
                     className={`m-0 whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm ${
@@ -119,19 +129,17 @@ export default function ChatMessageList({
   );
 }
 
-/** การ์ดคำสั่งซื้อที่แนบ — เลขที่ · สินค้า · ยอด · สถานะ ณ ตอนส่ง · กดไปหน้ารายละเอียด */
-function AttachmentCard({ a, href, mine }: { a: ChatAttachment; href: string; mine: boolean }) {
+/** การ์ดคำสั่งซื้อที่แนบ — เลขที่ · สินค้า · ยอด · สถานะ ณ ตอนส่ง · กดไปหน้ารายละเอียด (หรือเปิดป๊อปอัป ถ้ามี onOpen) */
+function AttachmentCard({ a, href, mine, onOpen }: { a: ChatAttachment; href: string; mine: boolean; onOpen?: () => void }) {
   const t = useTranslations("chat");
   const ts = useTranslations("shop.orderStatus");
   const Icon = a.kind === "order" ? ReceiptText : Package;
   const more = Math.max(0, a.item_count - 1);
-  return (
-    <Link
-      href={href}
-      className={`block w-64 max-w-full rounded-2xl border bg-white p-3 text-[#4A342E] shadow-sm transition hover:shadow-md ${
-        mine ? "border-[#8C5A3C]/40" : "border-[#8C5A3C]/15"
-      }`}
-    >
+  const className = `block w-64 max-w-full rounded-2xl border bg-white p-3 text-left text-[#4A342E] shadow-sm transition hover:shadow-md ${
+    mine ? "border-[#8C5A3C]/40" : "border-[#8C5A3C]/15"
+  }`;
+  const body = (
+    <>
       <span className="flex items-center gap-2 text-xs font-semibold text-[#8C5A3C]">
         <Icon size={14} aria-hidden="true" />
         {a.kind === "order" ? t("attachOrder") : t("attachPreorder")}
@@ -149,6 +157,15 @@ function AttachmentCard({ a, href, mine }: { a: ChatAttachment; href: string; mi
         )}
       </span>
       <span className="mt-1.5 block text-right text-xs font-semibold text-[#8C5A3C] underline-offset-2 hover:underline">{t("viewDetail")}</span>
+    </>
+  );
+  return onOpen ? (
+    <button type="button" onClick={onOpen} className={className}>
+      {body}
+    </button>
+  ) : (
+    <Link href={href} className={className}>
+      {body}
     </Link>
   );
 }

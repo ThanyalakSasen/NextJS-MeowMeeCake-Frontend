@@ -15,6 +15,9 @@ export interface Payment {
   slip_image_url?: string | null;
   verified_by?: string | null;
   verified_at?: string | null;
+  /** ชำระรวมหลายบิล (สลิปเดียว — ตะกร้ารวม) · ยืนยัน/ปฏิเสธใบหนึ่ง = ทุกบิลในกลุ่ม */
+  group_id?: string | null;
+  group?: { doc_nos: string[]; total_amount: number; bill_count: number } | null;
   created_at: string;
   updated_at: string;
 }

@@ -1,6 +1,7 @@
 "use client";
 // View ของแชทลูกค้า — ซ้าย: รายการห้อง (ค้นหา · เฉพาะที่ยังไม่อ่าน) · ขวา: ข้อความในห้อง + ช่องตอบ
 // จอแคบ (<1024px): แสดงทีละฝั่ง — เลือกห้องแล้วเห็นห้อง มีปุ่มย้อนกลับไปรายการ
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeftIcon, ChatBubbleLeftRightIcon, EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import { Avatar, Switch } from "@/components/base";
@@ -9,7 +10,8 @@ import { SearchInput } from "@/components/shared/data";
 import { LoadFailed } from "@/components/shared/feedback";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
 import ChatComposer from "@/components/shared/chat/ChatComposer";
-import type { ChatConversation } from "@/types/chat";
+import type { ChatAttachment, ChatConversation } from "@/types/chat";
+import { ChatOrderPopup } from "./_components/ChatOrderPopup";
 import { staffAttachmentHref, type useChatsViewModel } from "./useChatsViewModel";
 
 type VM = ReturnType<typeof useChatsViewModel>;
@@ -18,6 +20,8 @@ export function ChatsView(vm: VM) {
   const t = useTranslations("chat");
   const tn = useTranslations("nav");
   const conv = vm.thread.conversation;
+  // กดการ์ดคำสั่งซื้อที่ลูกค้าแนบ = ป๊อปอัปรายละเอียดทับหน้าแชท (ไม่ออกจากห้อง)
+  const [openAttachment, setOpenAttachment] = useState<ChatAttachment | null>(null);
   const customer = conv?.customer;
 
   return (
@@ -101,6 +105,7 @@ export function ChatsView(vm: VM) {
                   messages={vm.thread.messages}
                   viewer="staff"
                   attachmentHref={staffAttachmentHref}
+                  onOpenAttachment={setOpenAttachment}
                   hasMore={vm.thread.hasMore}
                   loadingOlder={vm.thread.loadingOlder}
                   onLoadOlder={() => void vm.thread.loadOlder()}
@@ -116,6 +121,7 @@ export function ChatsView(vm: VM) {
           )}
         </section>
       </div>
+      <ChatOrderPopup attachment={openAttachment} onClose={() => setOpenAttachment(null)} />
     </ListPageLayout>
   );
 }

@@ -15,7 +15,7 @@ import StoreLogo from "./StoreLogo";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { shopCartService } from "@/services/shopCart";
 import { useCartCountStore } from "@/app/customer/store/cartCountStore";
-import { usePreorderBasket } from "@/app/customer/preorder/lib/preorderBasket";
+import { preorderLineCount, usePreorderBaskets } from "@/app/customer/preorder/lib/preorderBasket";
 import { useSidebarMenuStore } from "@/app/customer/store/sidebarMenuStore";
 import { HOME_PATH, LOGIN_PATH } from "@/constants/auth";
 import DoorLogoutIcon from "./DoorLogoutIcon";
@@ -50,8 +50,7 @@ export default function Navbar() {
   const normalCount = useCartCountStore((s) => s.count);
   const setCount = useCartCountStore((s) => s.setCount);
   // ตะกร้าเดียว: นับรวมรายการพรีออเดอร์ (localStorage) · มีแต่พรีออเดอร์ = ไอคอนปฏิทิน · มีทั้งสองแบบ = ไอคอนตะกร้า + ปฏิทินเล็กมุมล่าง
-  const preorderBasket = usePreorderBasket();
-  const preorderCount = preorderBasket?.items.length ?? 0;
+  const preorderCount = preorderLineCount(usePreorderBaskets());
   const count = normalCount + preorderCount;
   const onlyPreorder = preorderCount > 0 && normalCount === 0;
   const pathname = usePathname();

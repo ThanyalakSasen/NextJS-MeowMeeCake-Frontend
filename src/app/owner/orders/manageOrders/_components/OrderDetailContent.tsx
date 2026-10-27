@@ -10,7 +10,7 @@ import { isAwaitingRefund, type DeliveryUpdateInput, type Order } from "@/types/
 import type { Payment } from "@/types/payment";
 import { actionIcon } from "@/components/shared/actions";
 import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
-import { DeliverySection, RefundSection, SlipImage } from "@/components/shared/orders";
+import { DeliverySection, GroupPaymentNote, RefundSection, SlipImage } from "@/components/shared/orders";
 import { NOTICE_TAG } from "@/constants/enumConfig";
 
 export function OrderDetailContent({
@@ -179,6 +179,7 @@ export function OrderDetailContent({
 
       <div>
         <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.paymentProof")}</p>
+        <GroupPaymentNote payment={payment} />
         {payment?.slip_image_url ? (
           <div className="flex items-center gap-3">
             <SlipImage url={payment.slip_image_url} size={56} />

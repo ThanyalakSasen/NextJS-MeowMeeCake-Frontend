@@ -166,7 +166,8 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
   const regularPrice = roundItem ? effectivePrice(product) : product.product_price;
   const unitName = typeof product.unit_id === "object" && product.unit_id ? product.unit_id.unit_name : "";
   const categoryName = categoryNameOf(product);
-  const localOnly = isLocalOnly(product._id, product.category_id ?? null);
+  // สินค้าพรีออเดอร์ส่งได้ทุกจังหวัด (backend ไม่ตรวจขอบเขตจัดส่งของพรีออเดอร์)
+  const localOnly = !isPreorder && isLocalOnly(product._id, product.category_id ?? null);
   const rating = Number(product.avg_rating ?? 0);
   const isLoading = status === "loading";
   const isSuccess = status === "success";
