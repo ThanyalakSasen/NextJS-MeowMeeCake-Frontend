@@ -133,7 +133,7 @@ export default function Navbar() {
   };
 
   // ขนาดเป็น px ตายตัว (ไม่ใช่ rem) — ฐานฟอนต์ของแอป 18px จะขยาย h-11 ฯลฯ เป็น ~50px
-  // ช่องค้นหาสูง 44px · ปุ่มค้นหาในช่อง 36×36 · ปุ่มทุกปุ่มใน Navbar สูง 44px (ขนาดแตะขั้นต่ำที่แนะนำ)
+  // ช่องค้นหาสูง 40px (เท่าช่องกรอกทั้งแอป) · ปุ่มค้นหาในช่อง 32×32 · ปุ่มทุกปุ่มใน Navbar สูง 44px (ขนาดแตะขั้นต่ำที่แนะนำ)
   const searchForm = (
     <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
       <input
@@ -142,12 +142,12 @@ export default function Navbar() {
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder={t("searchPlaceholder")}
         aria-label={t("searchAria")}
-        className="w-full h-[44px] pl-4 pr-[48px] text-base text-[#4A342E] bg-white placeholder:text-gray-500 rounded-xl outline-none focus:ring-2 focus:ring-white shadow-inner transition"
+        className="w-full h-[40px] pl-4 pr-[44px] text-base text-[#4A342E] bg-white placeholder:text-gray-500 rounded-xl outline-none focus:ring-2 focus:ring-white shadow-inner transition"
       />
       <button
         type="submit"
         aria-label={t("search")}
-        className="absolute right-[4px] top-[4px] h-[36px] w-[36px] bg-[#8C5A3C] !text-white rounded-lg hover:bg-[#8C5A3C]/90 flex items-center justify-center transition"
+        className="absolute right-[4px] top-[4px] h-[32px] w-[32px] bg-[#8C5A3C] !text-white rounded-lg hover:bg-[#8C5A3C]/90 flex items-center justify-center transition"
       >
         <AiOutlineSearch size={20} className="!text-white" />
       </button>

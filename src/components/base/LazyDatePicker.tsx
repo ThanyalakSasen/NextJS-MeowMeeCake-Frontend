@@ -51,7 +51,7 @@ export function LazyDatePicker(props: DatePickerProps) {
       onClick={activate}
       onPointerEnter={() => void loadPicker()}
       style={props.style}
-      className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-[#e4dad1] bg-white px-[11px] text-left transition-colors hover:border-brown-800 focus-visible:border-brown-800 disabled:cursor-not-allowed disabled:bg-gray-50"
+      className="flex h-[40px] w-full items-center justify-between gap-2 rounded-lg border border-[#e4dad1] bg-white px-[11px] text-left transition-colors hover:border-brown-800 focus-visible:border-brown-800 disabled:cursor-not-allowed disabled:bg-gray-50"
     >
       <span className={value?.isValid() ? "truncate" : "truncate text-gray-500"}>
         {value?.isValid() ? value.format(format) : placeholder}
@@ -89,7 +89,7 @@ export function LazyRangePicker(props: RangeProps) {
       disabled={props.disabled === true}
       onClick={activate}
       onPointerEnter={() => void loadPicker()}
-      className="flex h-9 w-[20rem] max-w-full items-center gap-3 rounded-lg border border-[#e4dad1] bg-white px-[11px] text-left transition-colors hover:border-brown-800 focus-visible:border-brown-800 disabled:cursor-not-allowed disabled:bg-gray-50"
+      className="flex h-[40px] w-[20rem] max-w-full items-center gap-3 rounded-lg border border-[#e4dad1] bg-white px-[11px] text-left transition-colors hover:border-brown-800 focus-visible:border-brown-800 disabled:cursor-not-allowed disabled:bg-gray-50"
     >
       {part(start, phStart)}
       <ArrowLongRightIcon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />

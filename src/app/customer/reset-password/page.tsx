@@ -25,7 +25,7 @@ const card =
 const outlineButton =
   "h-[44px] w-full rounded-xl border border-[#8C5A3C]/30 bg-white text-sm font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white hover:shadow-lg active:scale-[0.98]";
 const input =
-  "w-full rounded-xl border border-[#e2d9d5] bg-[#fcfcfc] py-3 pl-3.5 pr-11 text-sm text-[#4a342e] outline-none transition placeholder:text-[#b0a5a0] focus:border-[#8C5A3C] focus:bg-white focus:ring-4 focus:ring-[#8C5A3C]/15";
+  "w-full rounded-xl border border-[#e2d9d5] bg-[#fcfcfc] h-[40px] pl-3.5 pr-11 text-sm text-[#4a342e] outline-none transition placeholder:text-[#b0a5a0] focus:border-[#8C5A3C] focus:bg-white focus:ring-4 focus:ring-[#8C5A3C]/15";
 
 function PasswordField({
   label, value, onChange, placeholder,

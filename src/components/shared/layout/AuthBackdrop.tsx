@@ -8,7 +8,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 export const authInputClass =
-  "w-full px-3.5 py-3 pr-11 rounded-xl text-sm outline-none transition bg-white border-[1.5px] border-[#e1d6cd] text-[#1a1a1a] md:text-inherit focus:ring-4 focus:ring-[#f2ae00]/15 focus:border-[#f2ae00]";
+  "h-[40px] w-full px-3.5 pr-11 rounded-xl text-sm outline-none transition bg-white border-[1.5px] border-[#e1d6cd] text-[#1a1a1a] md:text-inherit focus:ring-4 focus:ring-[#f2ae00]/15 focus:border-[#f2ae00]";
 export const authLabelClass = "text-[14.5px] font-semibold text-[#1a1a1a] md:text-[#4e342e]";
 /** ข้อความรอง — เทา (บนการ์ดขาวทั้งสองขนาดจอ) */
 export const authMutedClass = "text-stone-600 md:text-stone-500";
