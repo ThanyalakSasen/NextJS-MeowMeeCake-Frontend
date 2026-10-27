@@ -21,7 +21,7 @@ import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ShopSpinner from "@/components/customer/ShopSpinner";
 import { shopButton, shopCard, shopPage } from "@/components/customer/shopStyles";
-import { shopOrdersKey, shopPreordersKey } from "../../../lib/shopQueries";
+import { shopOrdersAllKey, shopPreordersAllKey } from "../../../lib/shopQueries";
 import { PayCard, PayQr, SlipDropzone, useSecondsLeft, useSlipFile } from "../../_components/PaymentCard";
 import { isObjectId, usePaymentGroup } from "./groupShared";
 import GroupBillsDetail from "./GroupBillsDetail";
@@ -144,8 +144,9 @@ function PayPanel({
       alert.success(t("sent"));
       slip.pick(null);
       void refetch();
-      void qc.invalidateQueries({ queryKey: shopOrdersKey });
-      void qc.invalidateQueries({ queryKey: shopPreordersKey });
+      // ทุกบิลในกลุ่ม: รายการ + ใบเดียว + หน้าชำระเงิน — ไม่งั้นเปิดบิลจากหน้าสำเร็จยังเห็น QR รอชำระ
+      void qc.invalidateQueries({ queryKey: shopOrdersAllKey });
+      void qc.invalidateQueries({ queryKey: shopPreordersAllKey });
       // ส่งสลิปแล้ว = ขั้นตอนสั่งซื้อสำเร็จ + สรุปทุกบิล
       router.push(successHref);
     },

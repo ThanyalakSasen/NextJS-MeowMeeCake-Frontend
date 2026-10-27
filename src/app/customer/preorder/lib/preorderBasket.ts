@@ -46,6 +46,12 @@ export interface PreorderBasket {
 export const basketLineKey = (it: Pick<PreorderBasketItem, "round_item_id" | "variant_ids" | "options">) =>
   JSON.stringify([it.round_item_id, [...it.variant_ids].sort(), it.options]);
 
+/** เฉพาะรายการที่ติ๊กเลือกในตะกร้า · รอบที่ไม่ได้เลือกเลย = ไม่มีบิล — หน้าตะกร้ากับหน้ายืนยันต้องใช้ตัวเดียวกัน */
+export const selectedBaskets = (baskets: PreorderBasket[], isSelected: (key: string) => boolean): PreorderBasket[] =>
+  baskets
+    .map((b) => ({ ...b, items: b.items.filter((it) => isSelected(preorderSelectKey(b.round_id, basketLineKey(it)))) }))
+    .filter((b) => b.items.length > 0);
+
 const EMPTY: PreorderBasket[] = [];
 let cache: { raw: string | null; baskets: PreorderBasket[] } = { raw: null, baskets: EMPTY };
 

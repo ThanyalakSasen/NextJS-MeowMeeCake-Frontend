@@ -31,7 +31,7 @@ import FlowSteps from "@/components/customer/FlowSteps";
 import ShopImage from "@/components/customer/ShopImage";
 import ShopSpinner from "@/components/customer/ShopSpinner";
 import {
-  basketLineKey, removePreorderBasketItem, updatePreorderBasketItem, usePreorderBaskets, type PreorderBasket,
+  basketLineKey, removePreorderBasketItem, selectedBaskets, updatePreorderBasketItem, usePreorderBaskets, type PreorderBasket,
 } from "../preorder/lib/preorderBasket";
 import { thaiDate } from "../preorder/lib/preorderDates";
 import { preorderSelectKey, useCartSelection } from "../lib/cartSelection";
@@ -135,9 +135,7 @@ function CartContent() {
   // ตะกร้ารวม (2026-10-27): สินค้าปกติ + พรีออเดอร์ทุกรอบในหน้าเดียว · สั่งครั้งเดียว = หลายบิล (1 ปกติ + 1 ต่อรอบ)
   // ติ๊กเลือกได้ว่าจะสั่งรายการไหน/บิลไหน — ไม่ได้เลือก = ยังอยู่ในตะกร้า (lib/cartSelection)
   const pickedNormal = cart.items.filter((it) => sel.isSelected(it._id));
-  const pickedBaskets = baskets
-    .map((b) => ({ ...b, items: b.items.filter((it) => sel.isSelected(preorderSelectKey(b.round_id, basketLineKey(it)))) }))
-    .filter((b) => b.items.length > 0);
+  const pickedBaskets = selectedBaskets(baskets, sel.isSelected);
   const billCount = (pickedNormal.length > 0 ? 1 : 0) + pickedBaskets.length;
   const totalBills = (hasNormal ? 1 : 0) + baskets.length;
   const lineCount = cart.items.length + baskets.reduce((s, b) => s + b.items.length, 0);

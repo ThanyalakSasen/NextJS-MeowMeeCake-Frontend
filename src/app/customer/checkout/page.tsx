@@ -39,8 +39,8 @@ import { useRecipientContact } from "../hooks/useRecipientContact";
 import {
   pickupLocationsKey, preorderRoundKey, shopAddressesKey, shopCartKey, shopCouponsKey, shopOrdersKey, shopPointsKey, shopPreordersKey,
 } from "../lib/shopQueries";
-import { basketLineKey, removePreorderLines, usePreorderBaskets, type PreorderBasket } from "../preorder/lib/preorderBasket";
-import { preorderSelectKey, useCartSelection } from "../lib/cartSelection";
+import { basketLineKey, removePreorderLines, selectedBaskets, usePreorderBaskets, type PreorderBasket } from "../preorder/lib/preorderBasket";
+import { useCartSelection } from "../lib/cartSelection";
 import { preorderPickupDates, thaiDate } from "../preorder/lib/preorderDates";
 import { isRoundOpen, useNow } from "../preorder/lib/useNow";
 import PickupLocationPicker from "@/components/customer/PickupLocationPicker";
@@ -145,10 +145,7 @@ function CheckoutContent() {
   const cartQ = useQuery({ queryKey: shopCartKey, queryFn: shopCartService.get });
   const allBaskets = usePreorderBaskets();
   const sel = useCartSelection();
-  // เฉพาะรายการที่ติ๊กเลือกในตะกร้า · รอบที่ไม่ได้เลือกเลย = ไม่มีบิล
-  const baskets = allBaskets
-    .map((b) => ({ ...b, items: b.items.filter((it) => sel.isSelected(preorderSelectKey(b.round_id, basketLineKey(it)))) }))
-    .filter((b) => b.items.length > 0);
+  const baskets = selectedBaskets(allBaskets, sel.isSelected);
   const roundQs = useQueries({
     queries: baskets.map((b) => ({ queryKey: preorderRoundKey(b.round_id), queryFn: () => shopPreordersService.round(b.round_id) })),
   });
@@ -203,7 +200,7 @@ function CheckoutContent() {
       key: b.round_id,
       kind: "preorder",
       lines: b.items.map((it) => ({
-        key: it.round_item_id + (it.option_text ?? ""),
+        key: basketLineKey(it),
         name: localName(it.product_name_th, it.product_name_eng),
         options: it.option_text,
         img: resolveUploadUrl(it.product_img) ?? null,
@@ -266,15 +263,20 @@ function CheckoutContent() {
   );
   const billNo = (key: string) => bills.findIndex((b) => b.key === key) + 1;
 
+  // ค่าส่งของบิลนี้คิดได้แล้ว (ส่งถึง + ได้ราคา) — บิลที่เก็บค่าส่งแทนยังคิดไม่ได้ = ยังไม่ยกเว้นให้บิลที่รวม
+  const quoteReady = (i: number) => quoteQs[i]?.data?.deliverable === true;
   const priced = bills.map((b, i) => {
     const cfg = cfgOf(b);
     const q = quoteQs[i];
     const isDelivery = cfg.orderType === "delivery";
     // บิลที่รวมค่าส่งกับบิลอื่น = ไม่เก็บ (ยังถามค่าส่งเพื่อตรวจว่าส่งถึงได้)
-    const combinedWith = isDelivery ? (combined.get(b.key) ?? null) : null;
+    const payer = isDelivery ? (combined.get(b.key) ?? null) : null;
+    const combinedWith = payer && quoteReady(bills.findIndex((x) => x.key === payer)) ? payer : null;
     const fee = isDelivery && !combinedWith ? (q?.data?.fee ?? 0) : 0;
     const undeliverable = isDelivery && q?.data?.deliverable === false;
     const quoteLoading = isDelivery && !!cfg.address && !!q?.isLoading;
+    // ถามค่าส่งไม่สำเร็จ = ยังไม่รู้ยอดจริง (backend คิดค่าส่งตอนสั่ง) → ห้ามสั่ง ไม่งั้นยอดที่ยืนยันไม่ตรงกับยอดชำระ
+    const quoteFailed = isDelivery && !!cfg.address && !!q?.isError;
     const needsPickup = !isDelivery && b.pickupLocations.length > 0;
     const pickupOk =
       !needsPickup || (!!cfg.pickupDate && !!b.pickupLocations.find((l) => l._id === cfg.pickupLocationId)?.order_pickup_dates.includes(cfg.pickupDate));
@@ -284,7 +286,7 @@ function CheckoutContent() {
     const roundClosed = b.kind === "preorder" && !!b.round && !isRoundOpen(b.round, now);
     const qtyOk = !b.basket || b.basket.items.every((it) => it.quantity >= it.min_qty && it.quantity <= it.max_qty);
     const preorderOk = b.kind === "order" || (!!b.round && !roundClosed && missing.length === 0 && qtyOk);
-    const methodOk = isDelivery ? !!cfg.address && !quoteLoading && !undeliverable : !pickupQ.isLoading && pickupOk;
+    const methodOk = isDelivery ? !!cfg.address && !quoteLoading && !quoteFailed && !undeliverable : !pickupQ.isLoading && pickupOk;
     return { bill: b, cfg, fee, combinedWith, combinedWithNo: combinedWith ? billNo(combinedWith) : null, isDelivery, undeliverable, quoteLoading, quote: q, needsPickup, pickupOk, missing, roundClosed, qtyOk, preorderOk, methodOk };
   });
 
@@ -356,8 +358,11 @@ function CheckoutContent() {
     mutationFn: shopCheckoutService.checkout,
     onSuccess: (res, vars) => {
       if (vars.order) {
-        setCount(0);
-        void qc.invalidateQueries({ queryKey: shopCartKey });
+        // สั่งเฉพาะรายการที่เลือก — ที่เหลือยังอยู่ในตะกร้า ไอคอนตะกร้าใช้จำนวนจริงจาก backend
+        void qc
+          .fetchQuery({ queryKey: shopCartKey, queryFn: shopCartService.get, staleTime: 0 })
+          .then((c) => setCount(c.summary?.item_count ?? c.items.length))
+          .catch(() => qc.invalidateQueries({ queryKey: shopCartKey }));
         void qc.invalidateQueries({ queryKey: shopOrdersKey });
       }
       if (vars.preorders.length) {

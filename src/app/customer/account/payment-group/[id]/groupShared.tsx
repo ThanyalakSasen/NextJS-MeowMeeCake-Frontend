@@ -1,7 +1,6 @@
 "use client";
 // ใช้ร่วมกันหน้าชำระรวม (page.tsx) และหน้าสั่งซื้อสำเร็จของชำระรวม (success/page.tsx)
 // — page.tsx ของ Next export ได้แค่ default จึงแยกออกมาไว้ที่นี่
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { shopCheckoutService, type GroupBill } from "@/services/shopCheckout";
@@ -10,22 +9,17 @@ import { paymentGroupKey } from "../../../lib/shopQueries";
 
 export const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
-/** GET /shop/payment-groups/{id} — fetchedAt ใช้ชดเชยนาฬิกาเครื่องตอนนับถอยหลัง */
+/** GET /shop/payment-groups/{id} — fetchedAt (dataUpdatedAt · ข้อมูลจาก cache ก็ถูก) ใช้ชดเชยนาฬิกาเครื่องตอนนับถอยหลัง */
 export function usePaymentGroup(id: string, valid: boolean) {
-  const [fetchedAt, setFetchedAt] = useState(0);
   const q = useQuery({
     queryKey: paymentGroupKey(id),
-    queryFn: async () => {
-      const page = await shopCheckoutService.paymentGroup(id);
-      setFetchedAt(Date.now());
-      return page;
-    },
+    queryFn: () => shopCheckoutService.paymentGroup(id),
     enabled: valid,
     retry: (n, e) => !(isApiError(e) && e.status === 404) && n < 2,
     // รอร้านตรวจ = ดึงใหม่เป็นระยะ ให้เห็นตอนร้านยืนยันแล้ว
     refetchInterval: (query) => (query.state.data?.status === "awaiting_review" ? 30_000 : false),
   });
-  return { q, fetchedAt };
+  return { q, fetchedAt: q.dataUpdatedAt };
 }
 
 /** ป้ายสถานะบิล — ยกเลิก / ชำระแล้ว / รอตรวจสลิป / รอชำระ */
