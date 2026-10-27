@@ -5,3 +5,4 @@ export { SlipImage } from "./SlipImage";
 export { DeliverySection } from "./DeliverySection";
 export { RefundSection } from "./RefundSection";
 export { GroupPaymentNote } from "./GroupPaymentNote";
+export { customerClosesDelivery } from "./deliveryClose";

@@ -9,7 +9,7 @@ import type { Preorder } from "@/types/preorder";
 import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { lineExtras } from "../useRoundDashboardViewModel";
-import { DeliverySection, GroupPaymentNote, RefundSection, SlipImage } from "@/components/shared/orders";
+import { DeliverySection, GroupPaymentNote, RefundSection, SlipImage, customerClosesDelivery } from "@/components/shared/orders";
 import { isAwaitingRefund } from "@/types/order";
 import { NOTICE_TAG } from "@/constants/enumConfig";
 
@@ -21,7 +21,10 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
   const { order } = vm;
   const isCancelled = order.order_status === "cancelled";
   const final = vm.isFinalOrderStatus(order.order_status);
-  const next = vm.getNextOrderStatus(order.order_status);
+  const customerCloses = customerClosesDelivery(order);
+  // จัดส่ง: ร้านเลื่อนได้ถึง "พร้อมส่งมอบ" — "สำเร็จ" รอลูกค้ากด "ได้รับสินค้าแล้ว"
+  const nextRaw = vm.getNextOrderStatus(order.order_status);
+  const next = customerCloses && nextRaw === "completed" ? null : nextRaw;
   const dueState = vm.paymentDueState(order);
   const payment = vm.selectedPayment;
 
@@ -171,6 +174,7 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
             canUpdate={vm.perm.update && !isCancelled}
             saving={vm.savingDelivery}
             onSave={vm.onSaveDelivery}
+            customerCloses={customerCloses}
           />
         </>
       )}

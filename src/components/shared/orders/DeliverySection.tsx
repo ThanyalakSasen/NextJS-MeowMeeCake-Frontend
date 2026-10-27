@@ -23,11 +23,14 @@ export function DeliverySection({
   canUpdate,
   saving,
   onSave,
+  customerCloses = false,
 }: {
   info: DeliveryInfo;
   canUpdate: boolean;
   saving: boolean;
   onSave: (input: DeliveryUpdateInput) => void;
+  /** ลูกค้าเป็นคนปิดงาน (shared/orders/deliveryClose) — ร้านเลือก "ส่งถึงแล้ว" ไม่ได้ (ยังแสดงถ้าลูกค้ากดแล้ว) */
+  customerCloses?: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -96,8 +99,14 @@ export function DeliverySection({
         <Select
           value={status}
           onChange={(v) => setStatus(v as DeliveryStatus)}
-          options={DELIVERY_STATUSES.map((s) => ({ value: s, label: t(`enums.deliveryStatus.${s}`) }))}
+          options={DELIVERY_STATUSES.filter((s) => !customerCloses || s !== "delivered" || info.delivery_status === "delivered").map((s) => ({
+            value: s,
+            label: t(`enums.deliveryStatus.${s}`),
+          }))}
         />
+        {customerCloses && info.delivery_status !== "delivered" && (
+          <span className="text-xs text-gray-500">{t("orders.customerConfirmsHint")}</span>
+        )}
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-gray-600">{t("orders.shippingCarrier")}</span>

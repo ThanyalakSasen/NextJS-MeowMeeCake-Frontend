@@ -24,6 +24,7 @@ import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/compo
 import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
 import BackButton from "../../_components/BackButton";
+import ConfirmReceivedButton, { canConfirmReceived } from "../../_components/ConfirmReceivedButton";
 import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ReviewLink from "../../_components/ReviewLink";
@@ -284,12 +285,14 @@ function PreorderDetailContent() {
         ) : (
         <div className="flex flex-wrap justify-center gap-2">
           <Link href="/customer/account/preorders" className={shopButton}>{t("viewAll")}</Link>
-          {/* แสดง 2 ปุ่มเท่านั้น: ดูทั้งหมด + (ยกเลิกได้ = ยกเลิก · ไม่ได้ = กลับ) */}
+          {/* แสดง 2 ปุ่มเท่านั้น: ดูทั้งหมด + (ยกเลิกได้ = ยกเลิก · ร้านจัดส่งแล้ว = ได้รับสินค้าแล้ว · ไม่ได้ = กลับ) */}
           {canCustomerCancelPreorder(p) ? (
             <button type="button" onClick={() => void onCancel()} disabled={cancel.isPending}
               className="h-[44px] rounded-xl border border-red-600/30 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-50">
               {cancel.isPending ? to("cancelling") : t("cancelPreorder")}
             </button>
+          ) : canConfirmReceived(p) ? (
+            <ConfirmReceivedButton kind="preorder" id={p._id} />
           ) : (
             <BackButton fallback="/customer/account/preorders" className={shopButton} />
           )}

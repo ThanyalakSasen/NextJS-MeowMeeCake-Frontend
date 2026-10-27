@@ -224,4 +224,9 @@ export const shopPreordersService = {
   cancel: async (id: string, reason?: string): Promise<void> => {
     await http.post(`/shop/preorders/${encodeURIComponent(id)}/cancel`, reason ? { reason } : {});
   },
+
+  /** POST /shop/preorders/{id}/received — ลูกค้ากด "ได้รับสินค้าแล้ว" (จัดส่ง · ร้านจัดส่งแล้ว) → ส่งถึง + สำเร็จ */
+  confirmReceived: async (id: string): Promise<void> => {
+    await http.post(`/shop/preorders/${encodeURIComponent(id)}/received`, {});
+  },
 };

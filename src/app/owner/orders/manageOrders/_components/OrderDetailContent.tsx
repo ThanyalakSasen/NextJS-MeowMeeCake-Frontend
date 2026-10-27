@@ -10,7 +10,7 @@ import { isAwaitingRefund, type DeliveryUpdateInput, type Order } from "@/types/
 import type { Payment } from "@/types/payment";
 import { actionIcon } from "@/components/shared/actions";
 import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
-import { DeliverySection, GroupPaymentNote, RefundSection, SlipImage } from "@/components/shared/orders";
+import { DeliverySection, GroupPaymentNote, RefundSection, SlipImage, customerClosesDelivery } from "@/components/shared/orders";
 import { NOTICE_TAG } from "@/constants/enumConfig";
 
 export function OrderDetailContent({
@@ -171,6 +171,7 @@ export function OrderDetailContent({
             canUpdate={canUpdateDelivery && !isCancelled}
             saving={savingDelivery}
             onSave={onSaveDelivery}
+            customerCloses={customerClosesDelivery(order)}
           />
         </>
       )}
