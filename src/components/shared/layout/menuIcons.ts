@@ -30,6 +30,7 @@ import {
   ShieldCheckIcon,
   ClockIcon,
   TruckIcon,
+  InboxStackIcon,
 } from "@heroicons/react/24/solid";
 
 export const MENU_ICONS: Record<string, React.ElementType> = {
@@ -58,4 +59,5 @@ export const MENU_ICONS: Record<string, React.ElementType> = {
   ShieldCheckIcon,
   ClockIcon,
   TruckIcon,
+  InboxStackIcon,
 };
