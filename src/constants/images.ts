@@ -9,7 +9,9 @@
 // ─────────────────────────────────────────────────────────────
 const DEFAULT_IMAGE_HOSTS = ["pub-532ee3faa882438bb6441b549140fa85.r2.dev"];
 
-export const OPTIMIZED_IMAGE_HOSTS: string[] = (process.env.NEXT_PUBLIC_IMAGE_HOSTS ?? "")
+export const OPTIMIZED_IMAGE_HOSTS: string[] = (
+  process.env.NEXT_PUBLIC_IMAGE_HOSTS ?? ""
+)
   .split(",")
   .map((h) => h.trim())
   .filter(Boolean)
@@ -26,7 +28,9 @@ export function isOptimizableImage(src: string): boolean {
   if (src.startsWith("/") && !src.startsWith("//")) return true;
   try {
     const u = new URL(src);
-    return u.protocol === "https:" && OPTIMIZED_IMAGE_HOSTS.includes(u.hostname);
+    return (
+      u.protocol === "https:" && OPTIMIZED_IMAGE_HOSTS.includes(u.hostname)
+    );
   } catch {
     return false;
   }
