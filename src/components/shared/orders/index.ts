@@ -3,5 +3,6 @@
 // (มี screen ที่ 2 มาใช้ = ต้องขึ้น shared/) — เดิมอ้างกันด้วย relative path "../../_components/"
 export { SlipImage } from "./SlipImage";
 export { DeliverySection } from "./DeliverySection";
+export { useMarkShipped } from "./useMarkShipped";
 export { RefundSection } from "./RefundSection";
 export { GroupPaymentNote } from "./GroupPaymentNote";

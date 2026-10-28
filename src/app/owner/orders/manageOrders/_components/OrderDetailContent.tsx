@@ -30,6 +30,9 @@ export function OrderDetailContent({
   canMarkReady,
   markingReady,
   onMarkReady,
+  canMarkShipped,
+  markingShipped,
+  onMarkShipped,
 }: {
   order: Order;
   payment: Payment | null;
@@ -50,6 +53,10 @@ export function OrderDetailContent({
   canMarkReady: boolean;
   markingReady: boolean;
   onMarkReady: () => void;
+  /** ออเดอร์จัดส่ง + พร้อมส่งมอบ + มีสิทธิ์ — ปุ่ม "จัดส่งเรียบร้อยแล้ว" ใน DeliverySection */
+  canMarkShipped: boolean;
+  markingShipped: boolean;
+  onMarkShipped: () => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -83,7 +90,7 @@ export function OrderDetailContent({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="m-0 text-sm text-gray-600">{t("orders.markReadyHint")}</p>
           <Button type="primary" size="small" icon={actionIcon("next", "small")} loading={markingReady} onClick={onMarkReady}>
-            {t("orders.markReady")}
+            {t(order.order_type === "delivery" ? "orders.markReadyDelivery" : "orders.markReadyTakeaway")}
           </Button>
         </div>
       )}
@@ -171,6 +178,9 @@ export function OrderDetailContent({
             canUpdate={canUpdateDelivery && !isCancelled}
             saving={savingDelivery}
             onSave={onSaveDelivery}
+            canMarkShipped={canMarkShipped}
+            markingShipped={markingShipped}
+            onMarkShipped={onMarkShipped}
           />
         </>
       )}
