@@ -62,6 +62,8 @@ export default function PreorderOrderBox({
   const [qty, setQty] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [showProblems, setShowProblems] = useState(false);
+  // เพิ่มสำเร็จ = ปุ่มขึ้น "เพิ่มแล้ว" ชั่วครู่ (ไม่มีป๊อปอัป — ไอคอนตะกร้าบน Navbar นับเพิ่มให้เห็นเอง)
+  const [added, setAdded] = useState(false);
   const now = useNow();
 
   if (!hasRoundParam || (!loading && (!round || !roundItem))) {
@@ -116,7 +118,8 @@ export default function PreorderOrderBox({
     // ตะกร้ารวม: เก็บได้หลายรอบ (ไม่ต้องล้างรอบเดิม) · อยู่หน้าเดิม — ไอคอนตะกร้าบน Navbar นับเพิ่มให้เห็น
     addToPreorderBasket({ round_id: round._id, round_name: round.round_name, pickup_date: round.pickup_date }, item);
     setShowProblems(false);
-    alert.success(t("addedToCart"));
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
   };
 
   return (
@@ -169,7 +172,7 @@ export default function PreorderOrderBox({
         </div>
         <button type="button" disabled={disabled} onClick={add}
           className={`${btn} min-w-[12rem] flex-1 bg-[#4A342E] text-white shadow-md hover:bg-[#8C5A3C]`}>
-          {soldOut ? t("full") : !isOpen ? t("roundNotOpen") : t("addToCart", { amount: baht(unit * quantity) })}
+          {soldOut ? t("full") : !isOpen ? t("roundNotOpen") : added ? t("addedToCart") : t("addToCart", { amount: baht(unit * quantity) })}
         </button>
       </div>
     </div>

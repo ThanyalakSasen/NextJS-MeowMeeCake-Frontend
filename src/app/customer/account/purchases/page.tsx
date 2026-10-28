@@ -26,11 +26,13 @@ import { shopOrderKey, shopOrdersKey } from "../../lib/shopQueries";
 import { ORDER_STATUSES, ORDER_STATUS_TONE, REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "./orderLabels";
 import ReviewLink from "../_components/ReviewLink";
 import OrderItemThumb from "../_components/OrderItemThumb";
-import BuyAgainButton from "../_components/BuyAgainButton";
+import { BuyAgainAfterReview } from "../_components/BuyAgainButton";
 import HistorySearch from "../_components/HistorySearch";
 import { thaiDate } from "../../preorder/lib/preorderDates";
 
 const PAGE_SIZE = 10;
+/** ปุ่มรีวิวอยู่แถวเดียวกับปุ่มอื่น จึงจัดกึ่งกลางแนวตั้งแทน self-start (เหมือนประวัติพรีออเดอร์) */
+const REVIEW_PILL_INLINE = REVIEW_PILL.replace("self-start", "self-center");
 const actionLink =
   "whitespace-nowrap rounded-xl border border-[#8C5A3C]/30 bg-white px-4 py-2 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white";
 
@@ -155,20 +157,9 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
           <span className="block text-sm font-semibold text-stone-800">{t("orderNo", { no: order.order_no })}</span>
           <span className="block text-xs text-stone-500">{t("orderedAt", { date: formatDate(order.created_at, locale, { withTime: true }) })}</span>
         </div>
-        {/* สถานะรีวิวแทนสถานะคำสั่งซื้อ — ออเดอร์ที่ยังรีวิวไม่ได้ (ยังไม่สำเร็จ/ยังไม่ชำระ) แสดงสถานะคำสั่งซื้อเหมือนเดิม */}
-        <ReviewLink
-          kind="order"
-          doc={order}
-          itemIds={detail?.items.map((it) => it._id)}
-          href={`${href}/review`}
-          className={REVIEW_PILL}
-          reviewedClassName={REVIEWED_PILL}
-          fallback={
-            <span className={`self-start rounded-full px-3 py-1 text-xs font-semibold ${ORDER_STATUS_TONE[order.order_status]}`}>
-              {labels.orderStatus(order.order_status)}
-            </span>
-          }
-        />
+        <span className={`self-start rounded-full px-3 py-1 text-xs font-semibold ${ORDER_STATUS_TONE[order.order_status]}`}>
+          {labels.orderStatus(order.order_status)}
+        </span>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -229,10 +220,11 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
             <span className="block text-xs font-medium text-amber-600">{t("awaitRefund")}</span>
           )}
         </div>
+        {/* ปุ่มรีวิวอยู่แถวเดียวกับปุ่มอื่น — ตำแหน่งเดียวกับประวัติพรีออเดอร์ */}
         <div className="flex flex-wrap items-center gap-2">
-          {detail && (order.order_status === "completed" || order.order_status === "cancelled") && (
-            <BuyAgainButton items={detail.items} className={actionLink} />
-          )}
+          <ReviewLink kind="order" doc={order} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={REVIEW_PILL_INLINE} reviewedClassName={REVIEWED_PILL} />
+          {/* สำเร็จแล้ว = ซื้ออีกครั้งหลังรีวิวครบเท่านั้น · ยกเลิกแล้ว = แสดงเลย */}
+          {detail && <BuyAgainAfterReview order={order} items={detail.items} className={actionLink} />}
           <Link href={href} className={actionLink}>{t("viewDetail")}</Link>
         </div>
       </div>

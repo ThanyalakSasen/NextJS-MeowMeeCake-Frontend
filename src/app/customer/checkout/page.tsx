@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FaCalendarCheck, FaCheckCircle, FaImage, FaMapMarkerAlt, FaPen, FaPlus, FaShoppingCart, FaStore, FaTruck } from "react-icons/fa";
+import { FaCalendarCheck, FaCheckCircle, FaImage, FaMapMarkerAlt, FaPen, FaShoppingCart, FaStore, FaTruck } from "react-icons/fa";
 import { resolveUploadUrl } from "@/lib/uploads";
 import ShopImage from "@/components/customer/ShopImage";
 import { cartItemOptionText, shopCartService } from "@/services/shopCart";
@@ -934,7 +934,6 @@ function BillCard({
                 onClick={onOpenAddressForm}
                 className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#8C5A3C]/25 bg-white/60 p-3 text-sm font-semibold text-[#8C5A3C] transition hover:border-[#8C5A3C]/50 hover:bg-white"
               >
-                <FaPlus className="text-xs" aria-hidden="true" />
                 {t("addAddress")}
               </button>
             )}
