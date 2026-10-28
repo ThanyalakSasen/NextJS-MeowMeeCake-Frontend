@@ -4,6 +4,7 @@
 // ใช้เฉพาะ order_type = "delivery" · ไม่มีสิทธิ์ update = แสดงอย่างเดียว
 // state ของฟอร์มเริ่มจาก info — parent ใส่ key={updated_at} ให้รีเซ็ตเองหลังบันทึก/ดึงข้อมูลใหม่
 // ส่งเฉพาะฟิลด์ที่เปลี่ยน · shipped_at/delivered_at backend ตั้งให้เองตามสถานะ (ไม่ต้องกรอก)
+// สถานะจัดส่งเปลี่ยนด้วยปุ่มขั้นถัดไป (เดิมเป็น dropdown) — กดแล้วบันทึกทันที พร้อมขนส่ง/เลขพัสดุ/หมายเหตุที่แก้ค้างไว้
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -11,12 +12,24 @@ import { Button, Input, TextArea, Select } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { actionIcon } from "@/components/shared/actions";
 import { formatDate } from "@/i18n/format";
-import { DELIVERY_STATUSES, SHIPPING_CARRIERS, type DeliveryStatus, type ShippingCarrier } from "@/constants/enumConfig";
+import { SHIPPING_CARRIERS, type DeliveryStatus, type ShippingCarrier } from "@/constants/enumConfig";
 import type { DeliveryInfo, DeliveryUpdateInput } from "@/types/order";
 
 /** ตรงกับ backend schemas/order.ts updateDeliveryBody */
 const MAX_TRACKING = 200;
 const MAX_NOTE = 1000;
+
+/** ปุ่มขั้นถัดไปของแต่ละสถานะจัดส่ง · danger = ปุ่มแดง · ส่งถึงแล้ว = ไม่มีปุ่ม */
+type StepLabel = "deliveryActionShip" | "deliveryActionDelivered" | "deliveryActionFailed" | "deliveryActionReship";
+const NEXT_STEPS: Record<DeliveryStatus, { to: DeliveryStatus; label: StepLabel; danger?: boolean }[]> = {
+  pending: [{ to: "shipping", label: "deliveryActionShip" }],
+  shipping: [
+    { to: "delivered", label: "deliveryActionDelivered" },
+    { to: "failed", label: "deliveryActionFailed", danger: true },
+  ],
+  failed: [{ to: "shipping", label: "deliveryActionReship" }],
+  delivered: [],
+};
 
 export function DeliverySection({
   info,
@@ -31,13 +44,11 @@ export function DeliverySection({
 }) {
   const t = useTranslations();
   const locale = useLocale();
-  const [status, setStatus] = useState<DeliveryStatus>(info.delivery_status);
   const [carrier, setCarrier] = useState<ShippingCarrier | null>(info.shipping_carrier);
   const [tracking, setTracking] = useState(info.tracking_no ?? "");
   const [note, setNote] = useState(info.delivered_note ?? "");
 
   const changes: DeliveryUpdateInput = {};
-  if (status !== info.delivery_status) changes.delivery_status = status;
   if (carrier !== info.shipping_carrier) changes.shipping_carrier = carrier;
   if (tracking.trim() !== (info.tracking_no ?? "")) changes.tracking_no = tracking.trim() || null;
   if (note.trim() !== (info.delivered_note ?? "")) changes.delivered_note = note.trim() || null;
@@ -91,14 +102,23 @@ export function DeliverySection({
         <StatusBadge group="deliveryStatus" value={info.delivery_status} />
       </div>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-gray-600">{t("orders.deliveryStatusLabel")}</span>
-        <Select
-          value={status}
-          onChange={(v) => setStatus(v as DeliveryStatus)}
-          options={DELIVERY_STATUSES.map((s) => ({ value: s, label: t(`enums.deliveryStatus.${s}`) }))}
-        />
-      </label>
+      {NEXT_STEPS[info.delivery_status].length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {NEXT_STEPS[info.delivery_status].map((s) => (
+            <Button
+              key={s.to}
+              size="small"
+              type={s.danger ? "default" : "primary"}
+              danger={s.danger}
+              icon={actionIcon(s.danger ? "cancelAction" : "next", "small")}
+              disabled={saving}
+              onClick={() => onSave({ ...changes, delivery_status: s.to })}
+            >
+              {t(`orders.${s.label}`)}
+            </Button>
+          ))}
+        </div>
+      )}
       <label className="flex flex-col gap-1">
         <span className="text-gray-600">{t("orders.shippingCarrier")}</span>
         <Select
