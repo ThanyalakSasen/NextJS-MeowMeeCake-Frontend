@@ -4,7 +4,8 @@
 // ใช้เฉพาะ order_type = "delivery" · ไม่มีสิทธิ์ update = แสดงอย่างเดียว
 // state ของฟอร์มเริ่มจาก info — parent ใส่ key={updated_at} ให้รีเซ็ตเองหลังบันทึก/ดึงข้อมูลใหม่
 // ส่งเฉพาะฟิลด์ที่เปลี่ยน · shipped_at/delivered_at backend ตั้งให้เองตามสถานะ (ไม่ต้องกรอก)
-// สถานะจัดส่งเปลี่ยนด้วยปุ่มขั้นถัดไป (เดิมเป็น dropdown) — กดแล้วบันทึกทันที พร้อมขนส่ง/เลขพัสดุ/หมายเหตุที่แก้ค้างไว้
+// ไม่มีปุ่ม/dropdown เปลี่ยนสถานะจัดส่งตรง ๆ — flow: กำลังเตรียม → "พร้อมจัดส่ง" (order ready) → เลือกขนส่ง + กรอกเลขพัสดุ
+// แล้วบันทึก → ปุ่ม "จัดส่งเรียบร้อยแล้ว" (parent: delivery_status shipping + order completed) · ปุ่มนี้กดได้เมื่อบันทึกขนส่ง/เลขพัสดุแล้วเท่านั้น
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -12,35 +13,30 @@ import { Button, Input, TextArea, Select } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { actionIcon } from "@/components/shared/actions";
 import { formatDate } from "@/i18n/format";
-import { SHIPPING_CARRIERS, type DeliveryStatus, type ShippingCarrier } from "@/constants/enumConfig";
+import { SHIPPING_CARRIERS, type ShippingCarrier } from "@/constants/enumConfig";
 import type { DeliveryInfo, DeliveryUpdateInput } from "@/types/order";
 
 /** ตรงกับ backend schemas/order.ts updateDeliveryBody */
 const MAX_TRACKING = 200;
 const MAX_NOTE = 1000;
 
-/** ปุ่มขั้นถัดไปของแต่ละสถานะจัดส่ง · danger = ปุ่มแดง · ส่งถึงแล้ว = ไม่มีปุ่ม */
-type StepLabel = "deliveryActionShip" | "deliveryActionDelivered" | "deliveryActionFailed" | "deliveryActionReship";
-const NEXT_STEPS: Record<DeliveryStatus, { to: DeliveryStatus; label: StepLabel; danger?: boolean }[]> = {
-  pending: [{ to: "shipping", label: "deliveryActionShip" }],
-  shipping: [
-    { to: "delivered", label: "deliveryActionDelivered" },
-    { to: "failed", label: "deliveryActionFailed", danger: true },
-  ],
-  failed: [{ to: "shipping", label: "deliveryActionReship" }],
-  delivered: [],
-};
-
 export function DeliverySection({
   info,
   canUpdate,
   saving,
   onSave,
+  canMarkShipped,
+  markingShipped,
+  onMarkShipped,
 }: {
   info: DeliveryInfo;
   canUpdate: boolean;
   saving: boolean;
   onSave: (input: DeliveryUpdateInput) => void;
+  /** ออเดอร์อยู่สถานะพร้อมส่งมอบ (ready) + มีสิทธิ์ — โชว์ปุ่ม "จัดส่งเรียบร้อยแล้ว" */
+  canMarkShipped: boolean;
+  markingShipped: boolean;
+  onMarkShipped: () => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -53,6 +49,8 @@ export function DeliverySection({
   if (tracking.trim() !== (info.tracking_no ?? "")) changes.tracking_no = tracking.trim() || null;
   if (note.trim() !== (info.delivered_note ?? "")) changes.delivered_note = note.trim() || null;
   const dirty = Object.keys(changes).length > 0;
+  // "จัดส่งเรียบร้อยแล้ว" ต้องมีขนส่ง + เลขพัสดุที่บันทึกแล้ว (ค่าจาก info ไม่ใช่ฟอร์มที่ยังไม่บันทึก) และไม่มีการแก้ค้าง
+  const shipReady = !!info.shipping_carrier && !!info.tracking_no && !dirty;
   // ลำดับตามรายการใน SHIPPING_CARRIERS (ขนส่งที่ใช้บ่อยก่อน · "ร้านจัดส่งเอง"/"อื่น ๆ" ท้ายสุด) — ไม่เรียง ก-ฮ
   const carrierOptions = SHIPPING_CARRIERS.map((c) => ({ value: c, label: t(`enums.shippingCarrier.${c}`) }));
 
@@ -102,23 +100,6 @@ export function DeliverySection({
         <StatusBadge group="deliveryStatus" value={info.delivery_status} />
       </div>
 
-      {NEXT_STEPS[info.delivery_status].length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {NEXT_STEPS[info.delivery_status].map((s) => (
-            <Button
-              key={s.to}
-              size="small"
-              type={s.danger ? "default" : "primary"}
-              danger={s.danger}
-              icon={actionIcon(s.danger ? "cancelAction" : "next", "small")}
-              disabled={saving}
-              onClick={() => onSave({ ...changes, delivery_status: s.to })}
-            >
-              {t(`orders.${s.label}`)}
-            </Button>
-          ))}
-        </div>
-      )}
       <label className="flex flex-col gap-1">
         <span className="text-gray-600">{t("orders.shippingCarrier")}</span>
         <Select
@@ -164,6 +145,24 @@ export function DeliverySection({
           {t("orders.deliverySave")}
         </Button>
       </div>
+
+      {canMarkShipped && (
+        <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+          <p className={`m-0 text-xs ${shipReady ? "text-gray-500" : "text-amber-700"}`}>
+            {shipReady ? t("orders.markShippedHint") : t("orders.markShippedNeedsInfo")}
+          </p>
+          <Button
+            size="small"
+            type="primary"
+            icon={actionIcon("verify", "small")}
+            loading={markingShipped}
+            disabled={!shipReady || saving}
+            onClick={onMarkShipped}
+          >
+            {t("orders.markShipped")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

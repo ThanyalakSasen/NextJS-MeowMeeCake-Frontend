@@ -471,10 +471,30 @@ export function usePreOrderRoundViewModel() {
     );
   };
 
+  // "จัดส่งเรียบร้อยแล้ว" — แบบเดียวกับหน้าจัดการคำสั่งซื้อ: สถานะจัดส่ง "กำลังจัดส่ง" (แจ้งลูกค้าพร้อมเลขพัสดุ) แล้วปิดเป็น completed
+  const shippedMutation = useMutation({
+    mutationFn: async (o: Preorder) => {
+      if (o.delivery_status !== "shipping") await preordersService.updateDelivery(o._id, { delivery_status: "shipping" });
+      return preordersService.updateStatus(o._id, "completed");
+    },
+    onSettled: invalidateOrders,
+  });
+
+  const onMarkShipped = () => {
+    if (!selectedOrder) return;
+    const no = selectedOrder.preorder_no;
+    shippedMutation.mutate(selectedOrder, {
+      onSuccess: () => alert.success(t("orders.markShippedDone", { no })),
+      onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.markShippedFailed")),
+    });
+  };
+
   return {
     t, locale, perm,
     onSaveDelivery,
     savingDelivery: deliveryMutation.isPending,
+    onMarkShipped,
+    markingShipped: shippedMutation.isPending,
     activeTab, setActiveTab,
     preorderProducts,
     dashboard,

@@ -103,6 +103,9 @@ export function ChatOrderPopup({ attachment, onClose }: { attachment: ChatAttach
           canMarkReady={false}
           markingReady={false}
           onMarkReady={noop}
+          canMarkShipped={false}
+          markingShipped={false}
+          onMarkShipped={noop}
         />
       )}
       {kind === "preorder" && preorder && (

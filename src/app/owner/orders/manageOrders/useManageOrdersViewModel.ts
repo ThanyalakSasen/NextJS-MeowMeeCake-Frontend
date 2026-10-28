@@ -167,7 +167,7 @@ export function useManageOrdersViewModel() {
     );
   };
 
-  // ยืนยันสลิปแล้ว backend เลื่อนเป็น preparing ให้เอง — เหลือปุ่มเดียว "สินค้าพร้อมแล้ว" → ready
+  // ยืนยันสลิปแล้ว backend เลื่อนเป็น preparing ให้เอง — เหลือปุ่มเดียว "พร้อมจัดส่ง" / "พร้อมรับที่หน้าร้าน" → ready
   const canMarkReady = (order: Order) =>
     perm.update && order.order_status === "preparing" && order.payment_status === "paid";
   const onMarkReady = (order: Order) => onStatusChange(order, "ready");
@@ -253,6 +253,26 @@ export function useManageOrdersViewModel() {
     );
   };
 
+  // "จัดส่งเรียบร้อยแล้ว" — ออเดอร์จัดส่งที่พร้อมส่งมอบ + บันทึกขนส่ง/เลขพัสดุแล้ว: สถานะจัดส่ง "กำลังจัดส่ง" (backend แจ้งลูกค้า
+  // พร้อมเลขพัสดุ + ตั้ง shipped_at) แล้วปิดออเดอร์เป็น completed — ออเดอร์จัดส่งไม่ปิดงานทางอื่น (ดู statusSelectOptions)
+  const shippedMutation = useMutation({
+    mutationFn: async (order: Order) => {
+      if (order.delivery_status !== "shipping") await ordersService.updateDelivery(order._id, { delivery_status: "shipping" });
+      return ordersService.updateStatus(order._id, "completed");
+    },
+    onSettled: invalidate,
+  });
+  const canMarkShipped = (order: Order) =>
+    perm.update && order.order_type === "delivery" && order.order_status === "ready";
+  const onMarkShipped = () => {
+    if (!selectedOrder) return;
+    const no = selectedOrder.order_no;
+    shippedMutation.mutate(selectedOrder, {
+      onSuccess: () => alert.success(t("orders.markShippedDone", { no })),
+      onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.markShippedFailed")),
+    });
+  };
+
   const onExport = () => {
     if (filtered.length === 0) {
       alert.info(t("orders.exportEmpty"));
@@ -321,5 +341,7 @@ export function useManageOrdersViewModel() {
     refunding: refundMutation.isPending,
     onSaveDelivery,
     savingDelivery: deliveryMutation.isPending,
+    canMarkShipped, onMarkShipped,
+    markingShipped: shippedMutation.isPending,
   };
 }

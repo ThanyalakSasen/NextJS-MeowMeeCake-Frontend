@@ -73,7 +73,7 @@ export function ManageOrdersView(vm: VM) {
             value={o.order_status}
             disabled={!paymentVerified || !vm.perm.update}
             style={{ width: 140 }}
-            options={statusSelectOptions(o.order_status).map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
+            options={statusSelectOptions(o.order_status, o.order_type).map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
             onChange={(next) => vm.onStatusChange(o, next as OrderStatus)}
           />
         );
@@ -99,7 +99,7 @@ export function ManageOrdersView(vm: VM) {
       {vm.canMarkReady(o) && (
         <Tooltip title={t("orders.markReadyHint")}>
           <Button size="small" type="primary" icon={actionIcon("next", "small")} disabled={vm.changingStatus} onClick={() => vm.onMarkReady(o)}>
-            {t("orders.markReady")}
+            {t(o.order_type === "delivery" ? "orders.markReadyDelivery" : "orders.markReadyTakeaway")}
           </Button>
         </Tooltip>
       )}
@@ -236,6 +236,9 @@ export function ManageOrdersView(vm: VM) {
             canMarkReady={vm.canMarkReady(vm.selectedOrder)}
             markingReady={vm.changingStatus}
             onMarkReady={() => vm.selectedOrder && vm.onMarkReady(vm.selectedOrder)}
+            canMarkShipped={vm.canMarkShipped(vm.selectedOrder)}
+            markingShipped={vm.markingShipped}
+            onMarkShipped={vm.onMarkShipped}
           />
         )}
       </DetailModal>
