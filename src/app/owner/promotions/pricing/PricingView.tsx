@@ -53,7 +53,7 @@ export function PricingView(vm: VM) {
     {
       key: "discount",
       title: t("pricing.colDiscount"),
-      render: (r) => <DiscountCell discount={r.discount} highlight={r.isDirty && r.discount !== null} onChange={(d) => vm.onChangeDiscount(r, d)} />,
+      render: (r) => <DiscountCell percent={r.discount} highlight={r.isDirty && r.discount !== null} onChange={(d) => vm.onChangeDiscount(r, d)} />,
     },
     {
       key: "is_visible",

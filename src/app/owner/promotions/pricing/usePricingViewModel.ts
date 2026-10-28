@@ -17,7 +17,7 @@ import { alert } from "@/lib/alert";
 import { refId } from "@/lib/refId";
 import { productKindOf, type ProductKind } from "@/types/product";
 import { isApiError } from "@/types/api";
-import { calcSalePrice, discountFromSalePrice, type Discount } from "./pricingHelpers";
+import { calcSalePrice, discountFromSalePrice } from "./pricingHelpers";
 import { PRICING_CATEGORIES_KEY, PRICING_PRODUCTS_KEY, PRICING_PRODUCTS_PARAMS } from "./pricingQuery";
 import { sortOptionsThai } from "@/lib/thaiSort";
 
@@ -29,7 +29,8 @@ export interface PricingRow {
   productType: ProductKind;
   basePrice: number;
   salePrice: number | null;
-  discount: Discount | null;
+  /** ส่วนลดเปอร์เซ็นต์ที่คิดจากราคาปกติ/ราคาลด · null = ไม่มีส่วนลด */
+  discount: number | null;
   isVisible: boolean;
   isDirty: boolean;
 }
@@ -108,14 +109,14 @@ export function usePricingViewModel() {
   const onChangeBasePrice = (row: PricingRow, value: number | null) => {
     const basePrice = value ?? 0;
     // มีส่วนลดตั้งไว้อยู่แล้ว → คำนวณราคาลดใหม่ตามส่วนลดเดิม กันราคาลดค้างผิดตามราคาปกติใหม่
-    const salePrice = row.discount ? calcSalePrice(basePrice, row.discount) : row.salePrice;
+    const salePrice = row.discount != null ? calcSalePrice(basePrice, row.discount) : row.salePrice;
     setDraft(row._id, { basePrice, salePrice });
   };
 
   const onChangeSalePrice = (row: PricingRow, value: number | null) => setDraft(row._id, { salePrice: value });
 
-  const onChangeDiscount = (row: PricingRow, disc: Discount | null) =>
-    setDraft(row._id, { salePrice: disc ? calcSalePrice(row.basePrice, disc) : null });
+  const onChangeDiscount = (row: PricingRow, percent: number | null) =>
+    setDraft(row._id, { salePrice: percent != null ? calcSalePrice(row.basePrice, percent) : null });
 
   const onToggleVisible = (row: PricingRow) => setDraft(row._id, { isVisible: !row.isVisible });
 
