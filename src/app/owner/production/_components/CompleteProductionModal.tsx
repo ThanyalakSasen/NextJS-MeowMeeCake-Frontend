@@ -99,13 +99,13 @@ export function CompleteProductionModal({
         </div>
 
         <div className="flex flex-col gap-2">
-          <div className="grid grid-cols-[1fr_6rem_8rem] gap-3 px-3 text-xs font-medium text-gray-500">
+          <div className="grid grid-cols-[minmax(0,1fr)_6rem_8rem] gap-3 px-3 text-xs font-medium text-gray-500">
             <span>{t("production.colProduct")}</span>
             <span className="text-right">{t("production.colPlanned")}</span>
             <span className="text-right">{t("production.colActual")}</span>
           </div>
           {items.map((it) => (
-            <div key={it._id} className="grid grid-cols-[1fr_6rem_8rem] items-center gap-3 rounded-lg border border-gray-100 px-3 py-2">
+            <div key={it._id} className="grid grid-cols-[minmax(0,1fr)_6rem_8rem] items-center gap-3 rounded-lg border border-gray-100 px-3 py-2">
               <span className="truncate text-sm text-brown-800" title={it.product_name}>{it.product_name}</span>
               <span className="text-right text-sm text-gray-700">
                 {it.planned_qty} {it.unit_abbr}
@@ -143,7 +143,7 @@ export function CompleteProductionModal({
                 onChange={(d) => { if (d && !Array.isArray(d)) setProduced(d.startOf("day")); }}
               />
             </label>
-            <div className="grid grid-cols-[1fr_10rem] gap-3 px-3 text-xs font-medium text-gray-500">
+            <div className="grid grid-cols-[minmax(0,1fr)_10rem] gap-3 px-3 text-xs font-medium text-gray-500">
               <span>{t("production.colProduct")}</span>
               <span>{t("production.expiryDate")}</span>
             </div>
@@ -151,7 +151,7 @@ export function CompleteProductionModal({
               const expiry = expiryOf(it);
               const invalid = expiry != null && expiry.isBefore(produced, "day");
               return (
-                <div key={it._id} className="grid grid-cols-[1fr_10rem] items-center gap-3 rounded-lg border border-gray-100 px-3 py-2">
+                <div key={it._id} className="grid grid-cols-[minmax(0,1fr)_10rem] items-center gap-3 rounded-lg border border-gray-100 px-3 py-2">
                   <span className="truncate text-sm text-brown-800" title={it.product_name}>
                     {it.product_name}
                     {it.shelf_life_days ? (

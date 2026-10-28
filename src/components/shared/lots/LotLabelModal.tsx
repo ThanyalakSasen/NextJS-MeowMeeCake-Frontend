@@ -54,12 +54,12 @@ export function LotLabelModal({ lots, onClose }: { lots: ProductLot[]; onClose: 
         </label>
 
         <div className="flex flex-col gap-2">
-          <div className="grid grid-cols-[1fr_6rem] gap-3 px-3 text-xs font-medium text-gray-500">
+          <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-3 px-3 text-xs font-medium text-gray-500">
             <span>{t("lots.colProduct")}</span>
             <span className="text-right">{t("lots.copies")}</span>
           </div>
           {lots.map((l) => (
-            <div key={l._id} className="grid grid-cols-[1fr_6rem] items-center gap-3 rounded-lg border border-gray-100 px-3 py-2">
+            <div key={l._id} className="grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-3 rounded-lg border border-gray-100 px-3 py-2">
               <div className="min-w-0">
                 <p className="m-0 truncate text-sm text-brown-800" title={l.product_name_th ?? ""}>{l.product_name_th}</p>
                 <p className="m-0 text-xs text-gray-500">
