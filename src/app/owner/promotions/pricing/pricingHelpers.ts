@@ -17,15 +17,3 @@ export function discountFromSalePrice(base: number, salePrice: number | null): n
   if (salePrice === null || base <= 0 || salePrice >= base) return null;
   return Math.round(((base - salePrice) / base) * 100);
 }
-
-// แท็กหมวดหมู่ — สุ่มสีจาก preset ของ antd ให้คงที่ต่อ category เดิมเสมอ (hash ชื่อ/id)
-// เฉพาะสี preset ของ antd ที่ตัวอักษรบนพื้น tag ผ่านคอนทราสต์ 4.5:1 (blue 5.5 · purple 8.9 · magenta 5.0 · geekblue 7.9)
-// green/gold/volcano/cyan ได้แค่ 2.8–4.4 → Lighthouse Accessibility ตก
-const TAG_COLORS = ["blue", "purple", "magenta", "geekblue"];
-
-export function tagColorFor(seed: string): string {
-  if (!seed) return "default";
-  let h = 0;
-  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return TAG_COLORS[h % TAG_COLORS.length];
-}
