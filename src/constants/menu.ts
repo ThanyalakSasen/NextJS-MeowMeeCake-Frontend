@@ -34,21 +34,46 @@ export const MENU_SECTIONS: MenuSection[] = [
     labelKey: "sectionOverview",
     items: [
       // ผูก dashboard — ไม่มีสิทธิ์ = ซ่อน (widget ยิง /admin/dashboard/* ที่ต้อง dashboard.view · Final-Backlog P11)
-      { labelKey: "dashboard", icon: "HomeIcon", href: "/owner/dashboard", menuKey: "dashboard" },
+      {
+        labelKey: "dashboard",
+        icon: "HomeIcon",
+        href: "/owner/dashboard",
+        menuKey: "dashboard",
+      },
       {
         labelKey: "reports",
         icon: "PresentationChartBarIcon",
         children: [
-          { labelKey: "reportsSales", href: "/owner/reports/sales", icon: "ArrowTrendingUpIcon", menuKey: "reports_sales" },
-          { labelKey: "reportsReviews", href: "/owner/reports/reviews", icon: "ChatBubbleLeftRightIcon", menuKey: "reports_reviews" },
+          {
+            labelKey: "reportsSales",
+            href: "/owner/reports/sales",
+            icon: "ArrowTrendingUpIcon",
+            menuKey: "reports_sales",
+          },
+          {
+            labelKey: "reportsReviews",
+            href: "/owner/reports/reviews",
+            icon: "ChatBubbleLeftRightIcon",
+            menuKey: "reports_reviews",
+          },
         ],
       },
       {
         labelKey: "finance",
         icon: "CurrencyDollarIcon",
         children: [
-          { labelKey: "financeExpenses", href: "/owner/finance/expenses", icon: "ReceiptPercentIcon", menuKey: "finance_expenses" },
-          { labelKey: "financeSummary", href: "/owner/finance/summary", icon: "ChartPieIcon", menuKey: "finance_summary" },
+          {
+            labelKey: "financeExpenses",
+            href: "/owner/finance/expenses",
+            icon: "ReceiptPercentIcon",
+            menuKey: "finance_expenses",
+          },
+          {
+            labelKey: "financeSummary",
+            href: "/owner/finance/summary",
+            icon: "ChartPieIcon",
+            menuKey: "finance_summary",
+          },
         ],
       },
     ],
@@ -58,39 +83,76 @@ export const MENU_SECTIONS: MenuSection[] = [
     items: [
       {
         // ปิด G2 (เดิม Product Stock ไม่มี sidebar leaf ทั้งที่ nav/breadcrumb/menuKey พร้อมแล้ว)
+
         labelKey: "products",
+        href: "/owner/products",
         icon: "ShoppingBagIcon",
-        children: [
-          { labelKey: "products", href: "/owner/products", icon: "ShoppingBagIcon", menuKey: "products" },
-          { labelKey: "productStock", href: "/owner/products/productStock", icon: "ArchiveBoxIcon", menuKey: "stock" },
-          // คำพ้องค้นหา (E3) — /admin/search-synonyms ใช้สิทธิ์ search_synonyms.*
-          // คำพ้องค้นหา — ซ่อนจากเมนู (2026-10-26) · หน้า /owner/products/search-synonyms + สิทธิ์ยังอยู่
-          // { labelKey: "searchSynonyms", href: "/owner/products/search-synonyms", icon: "TagIcon", menuKey: "search_synonyms" },
-        ],
+        menuKey: "products",
       },
       {
-        // กลุ่มไม่มี href/menuKey ของตัวเอง — Sidebar กรองสิทธิ์จาก children เท่านั้น
-        labelKey: "ordersManage",
-        icon: "ClipboardDocumentListIcon",
-        children: [
-          { labelKey: "ordersManage", href: "/owner/orders/manageOrders", icon: "ClipboardDocumentListIcon", menuKey: "orders" },
-          { labelKey: "ordersPreorderRound", href: "/owner/orders/preOrderRound", icon: "ClockIcon", menuKey: "preorder" },
-          // โซนค่าจัดส่งหลังร้าน (I8) — /admin/delivery-zones ใช้สิทธิ์ orders.*
-          // ซ่อนจาก sidebar ชั่วคราว (2026-10-11) · หน้า /owner/orders/delivery-zones, breadcrumb, service ยังอยู่ครบ
-          // เข้าได้ทาง URL ตรง ๆ — เปิดเมนูคืนได้ด้วยการเอาคอมเมนต์บรรทัดล่างออก
-          // { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
-        ],
+        labelKey: "productStock",
+        href: "/owner/products/productStock",
+        icon: "ArchiveBoxIcon",
+        menuKey: "stock",
       },
-      { labelKey: "ordersInStore", icon: "BuildingStorefrontIcon", href: "/owner/orders/OrderInStore", menuKey: "pos" },
+
+      // คำพ้องค้นหา (E3) — /admin/search-synonyms ใช้สิทธิ์ search_synonyms.*
+      // {
+      //   labelKey: "searchSynonyms",
+      //   href: "/owner/products/search-synonyms",
+      //   icon: "TagIcon",
+      //   menuKey: "search_synonyms",
+      // },
+
+      {
+        // กลุ่มไม่มี href/menuKey ของตัวเอง — Sidebar กรองสิทธิ์จาก children เท่านั้น
+
+        labelKey: "ordersManage",
+        href: "/owner/orders/manageOrders",
+        icon: "ClipboardDocumentListIcon",
+        menuKey: "orders",
+
+        // โซนค่าจัดส่งหลังร้าน (I8) — /admin/delivery-zones ใช้สิทธิ์ orders.*
+        // ซ่อนจาก sidebar ชั่วคราว (2026-10-11) · หน้า /owner/orders/delivery-zones, breadcrumb, service ยังอยู่ครบ
+        // เข้าได้ทาง URL ตรง ๆ — เปิดเมนูคืนได้ด้วยการเอาคอมเมนต์บรรทัดล่างออก
+        // { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
+      },
+      {
+        labelKey: "ordersPreorderRound",
+        href: "/owner/orders/preOrderRound",
+        icon: "ClockIcon",
+        menuKey: "preorder",
+      },
+      {
+        labelKey: "ordersInStore",
+        icon: "BuildingStorefrontIcon",
+        href: "/owner/orders/OrderInStore",
+        menuKey: "pos",
+      },
       // แชทลูกค้า — /admin/chats ใช้สิทธิ์ chats.* (ตัวเลขข้อความที่ยังไม่อ่านแสดงข้างชื่อเมนู — Sidebar)
-      { labelKey: "chats", icon: "ChatBubbleLeftRightIcon", href: "/owner/chats", menuKey: "chats" },
+      {
+        labelKey: "chats",
+        icon: "ChatBubbleLeftRightIcon",
+        href: "/owner/chats",
+        menuKey: "chats",
+      },
       {
         labelKey: "promotions",
         icon: "TagIcon",
         children: [
           // ตั้งราคาแก้ราคาผ่าน PATCH /admin/products — backend ยอมรับ pricing.update (หรือ products.update)
-          { labelKey: "promotionsPricing", href: "/owner/promotions/pricing", icon: "CurrencyDollarIcon", menuKey: "pricing" },
-          { labelKey: "promotionsCoupons", href: "/owner/promotions/coupons", icon: "TicketIcon", menuKey: "promotions" },
+          {
+            labelKey: "promotionsPricing",
+            href: "/owner/promotions/pricing",
+            icon: "CurrencyDollarIcon",
+            menuKey: "pricing",
+          },
+          {
+            labelKey: "promotionsCoupons",
+            href: "/owner/promotions/coupons",
+            icon: "TicketIcon",
+            menuKey: "promotions",
+          },
         ],
       },
     ],
@@ -98,26 +160,71 @@ export const MENU_SECTIONS: MenuSection[] = [
   {
     labelKey: "sectionProductionIngredients",
     items: [
-      { labelKey: "production", icon: "WrenchScrewdriverIcon", href: "/owner/production", menuKey: "production" },
+      {
+        labelKey: "production",
+        icon: "WrenchScrewdriverIcon",
+        href: "/owner/production",
+        menuKey: "production",
+      },
       {
         labelKey: "ingredients",
         icon: "BeakerIcon",
         children: [
-          { labelKey: "ingredients", href: "/owner/ingredients", icon: "CubeIcon", menuKey: "ingredients" },
-          { labelKey: "ingredientStock", href: "/owner/ingredients/ingredientStock", icon: "ArchiveBoxIcon", menuKey: "ingredient_stock" },
-          { labelKey: "ingredientHistory", href: "/owner/ingredients/ingredientHistory", icon: "ArrowsRightLeftIcon", menuKey: "ingredient_history" },
-          { labelKey: "units", href: "/owner/ingredients/units", icon: "ScaleIcon", menuKey: "units" },
+          {
+            labelKey: "ingredients",
+            href: "/owner/ingredients",
+            icon: "CubeIcon",
+            menuKey: "ingredients",
+          },
+          {
+            labelKey: "ingredientStock",
+            href: "/owner/ingredients/ingredientStock",
+            icon: "ArchiveBoxIcon",
+            menuKey: "ingredient_stock",
+          },
+          {
+            labelKey: "ingredientHistory",
+            href: "/owner/ingredients/ingredientHistory",
+            icon: "ArrowsRightLeftIcon",
+            menuKey: "ingredient_history",
+          },
+          {
+            labelKey: "units",
+            href: "/owner/ingredients/units",
+            icon: "ScaleIcon",
+            menuKey: "units",
+          },
         ],
       },
-      { labelKey: "recipes", icon: "BookOpenIcon", href: "/owner/recipes", menuKey: "recipes" },
+      {
+        labelKey: "recipes",
+        icon: "BookOpenIcon",
+        href: "/owner/recipes",
+        menuKey: "recipes",
+      },
     ],
   },
   {
     labelKey: "sectionEmployees",
     items: [
-      { labelKey: "employees", href: "/owner/employees", icon: "UsersIcon", menuKey: "employees" },
-      { labelKey: "permissions", href: "/owner/employees/permissions", icon: "ShieldCheckIcon", menuKey: "permissions" },
-      { labelKey: "systemLog", href: "/owner/employees/userLog", icon: "ClipboardDocumentListIcon", menuKey: "user_log" },
+      {
+        labelKey: "employees",
+        href: "/owner/employees",
+        icon: "UsersIcon",
+        menuKey: "employees",
+      },
+      {
+        labelKey: "permissions",
+        href: "/owner/employees/permissions",
+        icon: "ShieldCheckIcon",
+        menuKey: "permissions",
+      },
+      {
+        labelKey: "systemLog",
+        href: "/owner/employees/userLog",
+        icon: "ClipboardDocumentListIcon",
+        menuKey: "user_log",
+      },
     ],
   },
   {
@@ -125,11 +232,26 @@ export const MENU_SECTIONS: MenuSection[] = [
     labelKey: "sectionStorefront",
     items: [
       // แบนเนอร์ — /admin/banners ใช้สิทธิ์ store_design.* · ห้ามถอด menuKey ออก (Final-Backlog P13)
-      { labelKey: "storeDesign", icon: "PaintBrushIcon", href: "/owner/store-design", menuKey: "store_design" },
+      {
+        labelKey: "storeDesign",
+        icon: "PaintBrushIcon",
+        href: "/owner/store-design",
+        menuKey: "store_design",
+      },
       // พนักงานเห็นเมื่อมี store_info.view (แก้ได้เฉพาะหน้าร้านประจำสัปดาห์) · owner เห็นทุกหัวข้อ
-      { labelKey: "storeInfo", icon: "BuildingStorefrontIcon", href: "/owner/store-info", menuKey: "store_info" },
+      {
+        labelKey: "storeInfo",
+        icon: "BuildingStorefrontIcon",
+        href: "/owner/store-info",
+        menuKey: "store_info",
+      },
       // ค่าจัดส่งหน้าร้านออนไลน์ (F2) — /admin/shipping-zones ใช้ shipping.* · คนละชุดกับ "โซนค่าจัดส่ง" ของหลังร้าน
-      { labelKey: "webShipping", icon: "TruckIcon", href: "/owner/shipping", menuKey: "shipping" },
+      {
+        labelKey: "webShipping",
+        icon: "TruckIcon",
+        href: "/owner/shipping",
+        menuKey: "shipping",
+      },
     ],
   },
 ];
@@ -160,7 +282,11 @@ export function allMenuHrefs(): string[] {
 export function findActiveHref(pathname: string): string | null {
   let best: string | null = null;
   for (const href of allMenuHrefs()) {
-    if (isPathWithin(pathname, href) && (best === null || href.length > best.length)) best = href;
+    if (
+      isPathWithin(pathname, href) &&
+      (best === null || href.length > best.length)
+    )
+      best = href;
   }
   return best;
 }
@@ -171,7 +297,8 @@ export function findActiveGroupKey(pathname: string): string | null {
   if (active === null) return null;
   for (const section of MENU_SECTIONS) {
     for (const item of section.items) {
-      if (item.children?.some((c) => c.href === active)) return `${section.labelKey}.${item.labelKey}`;
+      if (item.children?.some((c) => c.href === active))
+        return `${section.labelKey}.${item.labelKey}`;
     }
   }
   return null;

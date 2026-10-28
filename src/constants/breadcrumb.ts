@@ -51,15 +51,20 @@ const GROUP_LABEL_BY_PREFIX: { prefix: string; labelKey: NavKey }[] = [
 
 /** สร้าง breadcrumb trail จาก pathname — เริ่มด้วย "หน้าหลัก" เสมอ (labelKey = "dashboard") */
 export function buildBreadcrumbs(pathname: string): BreadcrumbItem[] {
-  const crumbs: BreadcrumbItem[] = [{ labelKey: "dashboard", href: "/owner/dashboard" }];
-  const group = GROUP_LABEL_BY_PREFIX.find((g) => pathname.startsWith(g.prefix));
+  const crumbs: BreadcrumbItem[] = [
+    { labelKey: "dashboard", href: "/owner/dashboard" },
+  ];
+  const group = GROUP_LABEL_BY_PREFIX.find((g) =>
+    pathname.startsWith(g.prefix),
+  );
   if (group) crumbs.push({ labelKey: group.labelKey });
   const segments = pathname.split("/").filter(Boolean);
   let acc = "";
   for (const seg of segments) {
     acc += `/${seg}`;
     const key = ROUTE_NAV_KEY[acc];
-    if (key && acc !== "/owner/dashboard") crumbs.push({ labelKey: key, href: acc });
+    if (key && acc !== "/owner/dashboard")
+      crumbs.push({ labelKey: key, href: acc });
   }
   return crumbs;
 }

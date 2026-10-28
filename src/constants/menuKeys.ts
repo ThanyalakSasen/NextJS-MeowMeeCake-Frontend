@@ -9,26 +9,62 @@
 // "reports" เลิกใช้แล้ว (แตกเป็น reports_sales / reports_reviews / finance_expenses / finance_summary) — มีไว้ให้ type ของแถวเก่า
 export type MenuKey =
   | "dashboard"
-  | "reports_sales" | "reports_reviews" | "finance_expenses" | "finance_summary"
-  | "products" | "stock" | "search_synonyms"
-  | "orders" | "preorder" | "pos" | "payments"
-  | "pricing" | "promotions"
-  | "production" | "ingredients" | "ingredient_stock" | "ingredient_history" | "units" | "recipes"
-  | "employees" | "permissions" | "user_log"
+  | "reports_sales"
+  | "reports_reviews"
+  | "finance_expenses"
+  | "finance_summary"
+  | "products"
+  | "stock"
+  | "search_synonyms"
+  | "orders"
+  | "preorder"
+  | "pos"
+  | "payments"
+  | "pricing"
+  | "promotions"
+  | "production"
+  | "ingredients"
+  | "ingredient_stock"
+  | "ingredient_history"
+  | "units"
+  | "recipes"
+  | "employees"
+  | "permissions"
+  | "user_log"
   | "chats"
-  | "store_design" | "store_info" | "shipping"
+  | "store_design"
+  | "store_info"
+  | "shipping"
   | "reports";
 
 export const ALL_MENU_KEYS: MenuKey[] = [
   "dashboard",
-  "reports_sales", "reports_reviews", "finance_expenses", "finance_summary",
-  "products", "stock", "search_synonyms",
-  "orders", "preorder", "pos", "payments",
-  "pricing", "promotions",
-  "production", "ingredients", "ingredient_stock", "ingredient_history", "units", "recipes",
-  "employees", "permissions", "user_log",
+  "reports_sales",
+  "reports_reviews",
+  "finance_expenses",
+  "finance_summary",
+  "products",
+  "stock",
+  "search_synonyms",
+  "orders",
+  "preorder",
+  "pos",
+  "payments",
+  "pricing",
+  "promotions",
+  "production",
+  "ingredients",
+  "ingredient_stock",
+  "ingredient_history",
+  "units",
+  "recipes",
+  "employees",
+  "permissions",
+  "user_log",
   "chats",
-  "store_design", "store_info", "shipping",
+  "store_design",
+  "store_info",
+  "shipping",
 ];
 
 /** สิทธิ์ 5 อย่างของ menu_key เดียว — ตรงกับ can_view/create/update/delete/approve ของ backend */
@@ -41,10 +77,18 @@ export interface MenuPermissionSet {
 }
 
 export const FULL_MENU_ACCESS: MenuPermissionSet = {
-  view: true, create: true, update: true, delete: true, approve: true,
+  view: true,
+  create: true,
+  update: true,
+  delete: true,
+  approve: true,
 };
 export const NO_MENU_ACCESS: MenuPermissionSet = {
-  view: false, create: false, update: false, delete: false, approve: false,
+  view: false,
+  create: false,
+  update: false,
+  delete: false,
+  approve: false,
 };
 
 // map path → menu_key เรียงจาก prefix เจาะจงกว่าไว้ก่อน (longest-prefix match)
@@ -69,7 +113,10 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/promotions", menuKey: "promotions" },
   { prefix: "/owner/production", menuKey: "production" },
   { prefix: "/owner/ingredients/ingredientStock", menuKey: "ingredient_stock" },
-  { prefix: "/owner/ingredients/ingredientHistory", menuKey: "ingredient_history" },
+  {
+    prefix: "/owner/ingredients/ingredientHistory",
+    menuKey: "ingredient_history",
+  },
   { prefix: "/owner/ingredients/units", menuKey: "units" },
   { prefix: "/owner/ingredients", menuKey: "ingredients" },
   { prefix: "/owner/recipes", menuKey: "recipes" },
@@ -86,7 +133,10 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
 export function resolveMenuKey(pathname: string): MenuKey | null {
   let best: { prefix: string; menuKey: MenuKey } | null = null;
   for (const entry of ROUTE_MENU_MAP) {
-    if (pathname.startsWith(entry.prefix) && (!best || entry.prefix.length > best.prefix.length)) {
+    if (
+      pathname.startsWith(entry.prefix) &&
+      (!best || entry.prefix.length > best.prefix.length)
+    ) {
       best = entry;
     }
   }
@@ -95,6 +145,8 @@ export function resolveMenuKey(pathname: string): MenuKey | null {
 
 /** role_type ที่ข้าม permission ทั้งหมด (เจ้าของร้าน) — backend จริงมีแค่ owner/staff/customer
  *  ไม่มี "admin" เลย (เทียบ lowercase กันเผื่อ role_type มาจาก source อื่นที่ตัวพิมพ์ไม่ตรง) */
-export function isUnrestrictedRole(roleType: string | undefined | null): boolean {
+export function isUnrestrictedRole(
+  roleType: string | undefined | null,
+): boolean {
   return (roleType ?? "").toLowerCase() === "owner";
 }
