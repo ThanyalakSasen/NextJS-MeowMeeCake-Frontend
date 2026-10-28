@@ -13,7 +13,7 @@ import { Button, Input, TextArea, Select } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { actionIcon } from "@/components/shared/actions";
 import { formatDate } from "@/i18n/format";
-import { SHIPPING_CARRIERS, type ShippingCarrier } from "@/constants/enumConfig";
+import { SHIPPING_CARRIERS, carrierNeedsTracking, type ShippingCarrier } from "@/constants/enumConfig";
 import type { DeliveryInfo, DeliveryUpdateInput } from "@/types/order";
 
 /** ตรงกับ backend schemas/order.ts updateDeliveryBody */
@@ -49,8 +49,9 @@ export function DeliverySection({
   if (tracking.trim() !== (info.tracking_no ?? "")) changes.tracking_no = tracking.trim() || null;
   if (note.trim() !== (info.delivered_note ?? "")) changes.delivered_note = note.trim() || null;
   const dirty = Object.keys(changes).length > 0;
-  // "จัดส่งเรียบร้อยแล้ว" ต้องมีขนส่ง + เลขพัสดุที่บันทึกแล้ว (ค่าจาก info ไม่ใช่ฟอร์มที่ยังไม่บันทึก) และไม่มีการแก้ค้าง
-  const shipReady = !!info.shipping_carrier && !!info.tracking_no && !dirty;
+  // "จัดส่งเรียบร้อยแล้ว" ต้องมีขนส่งที่บันทึกแล้ว (+ เลขพัสดุ ถ้าเป็นขนส่งพัสดุ) — ค่าจาก info ไม่ใช่ฟอร์มที่ยังไม่บันทึก · ไม่มีการแก้ค้าง
+  const shipReady =
+    !!info.shipping_carrier && (!carrierNeedsTracking(info.shipping_carrier) || !!info.tracking_no) && !dirty;
   // ลำดับตามรายการใน SHIPPING_CARRIERS (ขนส่งที่ใช้บ่อยก่อน · "ร้านจัดส่งเอง"/"อื่น ๆ" ท้ายสุด) — ไม่เรียง ก-ฮ
   const carrierOptions = SHIPPING_CARRIERS.map((c) => ({ value: c, label: t(`enums.shippingCarrier.${c}`) }));
 

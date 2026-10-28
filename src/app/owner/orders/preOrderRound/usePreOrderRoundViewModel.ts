@@ -30,6 +30,7 @@ import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrde
 import { LIST_ALL } from "@/lib/http";
 import { PREORDERS_KEY, ROUNDS_KEY, tabFrom, type TabKey } from "./preorderQuery";
 import { useRoundDashboardViewModel } from "./useRoundDashboardViewModel";
+import { useMarkShipped } from "@/components/shared/orders";
 
 export type { TabKey };
 
@@ -471,30 +472,15 @@ export function usePreOrderRoundViewModel() {
     );
   };
 
-  // "จัดส่งเรียบร้อยแล้ว" — แบบเดียวกับหน้าจัดการคำสั่งซื้อ: สถานะจัดส่ง "กำลังจัดส่ง" (แจ้งลูกค้าพร้อมเลขพัสดุ) แล้วปิดเป็น completed
-  const shippedMutation = useMutation({
-    mutationFn: async (o: Preorder) => {
-      if (o.delivery_status !== "shipping") await preordersService.updateDelivery(o._id, { delivery_status: "shipping" });
-      return preordersService.updateStatus(o._id, "completed");
-    },
-    onSettled: invalidateOrders,
-  });
-
-  const onMarkShipped = () => {
-    if (!selectedOrder) return;
-    const no = selectedOrder.preorder_no;
-    shippedMutation.mutate(selectedOrder, {
-      onSuccess: () => alert.success(t("orders.markShippedDone", { no })),
-      onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.markShippedFailed")),
-    });
-  };
+  // "จัดส่งเรียบร้อยแล้ว" — ใช้ร่วมกับหน้าจัดการคำสั่งซื้อ (shared/orders/useMarkShipped)
+  const { markShippedFor, markingShipped } = useMarkShipped(preordersService, invalidateOrders);
+  const onMarkShipped = () => selectedOrder && markShippedFor(selectedOrder, selectedOrder.preorder_no);
 
   return {
     t, locale, perm,
     onSaveDelivery,
     savingDelivery: deliveryMutation.isPending,
-    onMarkShipped,
-    markingShipped: shippedMutation.isPending,
+    onMarkShipped, markingShipped,
     activeTab, setActiveTab,
     preorderProducts,
     dashboard,

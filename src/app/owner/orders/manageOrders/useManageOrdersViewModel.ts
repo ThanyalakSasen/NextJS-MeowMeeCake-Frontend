@@ -21,6 +21,7 @@ import { isApiError } from "@/types/api";
 import { STATUS_SELECT_OPTIONS, isFinalStatus } from "./orderStatus";
 import { LIST_ALL } from "@/lib/http";
 import { ORDERS_KEY } from "./ordersQuery";
+import { useMarkShipped } from "@/components/shared/orders";
 
 export function useManageOrdersViewModel() {
   const t = useTranslations();
@@ -253,25 +254,11 @@ export function useManageOrdersViewModel() {
     );
   };
 
-  // "จัดส่งเรียบร้อยแล้ว" — ออเดอร์จัดส่งที่พร้อมส่งมอบ + บันทึกขนส่ง/เลขพัสดุแล้ว: สถานะจัดส่ง "กำลังจัดส่ง" (backend แจ้งลูกค้า
-  // พร้อมเลขพัสดุ + ตั้ง shipped_at) แล้วปิดออเดอร์เป็น completed — ออเดอร์จัดส่งไม่ปิดงานทางอื่น (ดู statusSelectOptions)
-  const shippedMutation = useMutation({
-    mutationFn: async (order: Order) => {
-      if (order.delivery_status !== "shipping") await ordersService.updateDelivery(order._id, { delivery_status: "shipping" });
-      return ordersService.updateStatus(order._id, "completed");
-    },
-    onSettled: invalidate,
-  });
+  // "จัดส่งเรียบร้อยแล้ว" — ออเดอร์จัดส่งที่พร้อมส่งมอบ + บันทึกขนส่ง (และเลขพัสดุ) แล้ว · ออเดอร์จัดส่งไม่ปิดงานทางอื่น (ดู statusSelectOptions)
+  const { markShippedFor, markingShipped } = useMarkShipped(ordersService, invalidate);
   const canMarkShipped = (order: Order) =>
     perm.update && order.order_type === "delivery" && order.order_status === "ready";
-  const onMarkShipped = () => {
-    if (!selectedOrder) return;
-    const no = selectedOrder.order_no;
-    shippedMutation.mutate(selectedOrder, {
-      onSuccess: () => alert.success(t("orders.markShippedDone", { no })),
-      onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.markShippedFailed")),
-    });
-  };
+  const onMarkShipped = () => selectedOrder && markShippedFor(selectedOrder, selectedOrder.order_no);
 
   const onExport = () => {
     if (filtered.length === 0) {
@@ -341,7 +328,6 @@ export function useManageOrdersViewModel() {
     refunding: refundMutation.isPending,
     onSaveDelivery,
     savingDelivery: deliveryMutation.isPending,
-    canMarkShipped, onMarkShipped,
-    markingShipped: shippedMutation.isPending,
+    canMarkShipped, onMarkShipped, markingShipped,
   };
 }
