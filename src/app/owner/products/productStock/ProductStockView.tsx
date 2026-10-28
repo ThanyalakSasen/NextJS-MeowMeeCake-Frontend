@@ -13,6 +13,7 @@ import { StockProgressRow } from "./_components/StockProgressRow";
 import { StockActionModal } from "./_components/StockActionModal";
 import { BulkStockModal, StockAlertSection } from "@/components/shared/stock";
 import { LoadFailed } from "@/components/shared/feedback";
+import { LotLookupModal } from "@/components/shared/lots";
 
 type VM = ReturnType<typeof useProductStockViewModel>;
 
@@ -103,11 +104,16 @@ export function ProductStockView(vm: VM) {
     <ListPageLayout
       title={t("productStock.title")}
       actions={
-        vm.perm.update && (
-          <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
-            {t("bulkStock.open")}
+        <>
+          <Button icon={actionIcon("scan")} onClick={vm.openLotLookup}>
+            {t("lots.lookup")}
           </Button>
-        )
+          {vm.perm.update && (
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
+              {t("bulkStock.open")}
+            </Button>
+          )}
+        </>
       }
       toolbar={
         <FilterToolbar
@@ -211,6 +217,8 @@ export function ProductStockView(vm: VM) {
         onClose={vm.closeAction}
         onSubmit={vm.onSubmit}
       />
+
+      {vm.lotLookupOpen && <LotLookupModal onClose={vm.closeLotLookup} />}
     </ListPageLayout>
   );
 }

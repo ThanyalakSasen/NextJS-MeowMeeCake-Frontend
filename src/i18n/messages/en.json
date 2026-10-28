@@ -266,6 +266,7 @@
     "product_type": "Product type",
     "product_stock_quantity": "Stock quantity",
     "low_stock_threshold": "Alert when stock is at or below (pcs)",
+    "shelf_life_days": "Shelf life (days)",
     "avg_rating": "Average rating",
     "review_count": "Review count",
     "preorder_config": "Pre-order settings",
@@ -731,6 +732,8 @@
     "deleteFailed": "Delete failed",
     "saleLtPrice": "Sale price must be lower than the price",
     "lowStockThresholdHint": "Leave blank = 5",
+    "shelfLifeHint": "Sets each production lot's expiry date (production date + shelf life) · Leave blank = not set",
+    "shelfLifeInvalid": "Must be a whole number, 1 or more",
     "stockEditHint": "Adjust stock on the Product Stock page",
     "lowStockThresholdInvalid": "Must be a whole number, 0 or more",
     "imageUploadFailed": "Could not upload the image. Please try again.",
@@ -1387,7 +1390,15 @@
     "completeNoPending": "All items have already been deducted",
     "actualZeroHint": "Enter 0 if none were produced — the item is cancelled and no ingredients are deducted",
     "completeSubmit": "Complete",
-    "completeNeedsApprove": "Completing production requires the \"approve\" permission for Production — contact the owner"
+    "completeNeedsApprove": "Completing production requires the \"approve\" permission for Production — contact the owner",
+    "lotDatesTitle": "Production / expiry dates (lots)",
+    "lotDatesHint": "A lot with a barcode number is created for every item — expiry is calculated from the product's shelf life; adjust it to the real date or clear it if there is none",
+    "producedDate": "Produced on",
+    "expiryDate": "Expiry date",
+    "shelfLife": "Shelf life {n} days",
+    "noExpiry": "No expiry",
+    "expiryBeforeProduced": "Expiry date can't be before the production date",
+    "lotsTitle": "Product lots ({n})"
   },
   "pricing": {
     "title": "Product Pricing",
@@ -4085,5 +4096,38 @@
     "widgetClose": "Close chat",
     "openOrderPage": "Open order management page",
     "noOrderPermission": "You don't have permission to view this order"
+  },
+  "lots": {
+    "printLabels": "Print labels",
+    "printTitle": "Print barcode labels",
+    "labelSize": "Label size",
+    "copies": "Copies",
+    "print": "Print",
+    "printHint": "Set the paper size in the label printer driver to match the label, and turn off the browser's headers/footers",
+    "popupBlocked": "The browser blocked the print window — allow pop-ups and try again",
+    "produced": "MFG",
+    "expires": "EXP",
+    "noExpiry": "No expiry",
+    "lookup": "Scan lot",
+    "lookupTitle": "Look up a lot",
+    "scanPlaceholder": "Scan the label barcode or type a lot number and press Enter",
+    "notFound": "Lot {no} not found",
+    "colLot": "Lot no.",
+    "colProduct": "Product",
+    "colProduced": "Produced",
+    "colExpiry": "Expiry",
+    "colQty": "Qty",
+    "qtyProduced": "Produced",
+    "qtyRemaining": "Remaining",
+    "preorderNoStock": "Pre-order (no stock)",
+    "productionNo": "Production order",
+    "round": "Round",
+    "empty": "No lots yet",
+    "expiryState": {
+      "expired": "Expired",
+      "expiring": "Expiring soon",
+      "ok": "OK",
+      "none": "No expiry"
+    }
   }
 }

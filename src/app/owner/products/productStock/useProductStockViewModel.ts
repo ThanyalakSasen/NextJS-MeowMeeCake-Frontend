@@ -130,6 +130,8 @@ export function useProductStockViewModel() {
 
   // ── ทำหลายรายการพร้อมกัน — ส่งทีละรายการ (backend ไม่มี bulk) · คืน error ของรายการที่ไม่สำเร็จให้ modal ──
   const [bulkOpen, setBulkOpen] = useState(false);
+  // สแกนบาร์โค้ดบนฉลากดูล็อต (วันผลิต/หมดอายุ/รอบผลิต) — ดูได้ทุกคนที่เข้าหน้านี้
+  const [lotLookupOpen, setLotLookupOpen] = useState(false);
   const bulkItems = useMemo<BulkStockItem[]>(
     () => rows.map((r) => ({ id: r._id, name: r.name, unit: r.unit, stock: r.stock })),
     [rows],
@@ -157,6 +159,7 @@ export function useProductStockViewModel() {
   return {
     perm,
     bulkOpen, openBulk: () => setBulkOpen(true), closeBulk: () => setBulkOpen(false), bulkItems, onBulkSubmit,
+    lotLookupOpen, openLotLookup: () => setLotLookupOpen(true), closeLotLookup: () => setLotLookupOpen(false),
     rows: filtered,
     alertRows,
     stats,

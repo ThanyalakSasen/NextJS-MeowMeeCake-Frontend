@@ -19,6 +19,8 @@ export interface ProductFormValue {
   product_stock_quantity: number;
   /** ว่าง (null/undefined) = ใช้ค่ากลางของ backend (5) · ซ่อนตอน preorder เหมือน stock */
   low_stock_threshold?: number | null;
+  /** อายุสินค้า (วัน) — ว่าง = ไม่ตั้ง (ล็อตไม่มีวันหมดอายุเริ่มต้น) */
+  shelf_life_days?: number | null;
   product_description?: string;
   /** array ของ URL ที่อัปโหลดจริงแล้วผ่าน productsService.uploadImages() */
   product_img?: string[];
@@ -72,6 +74,7 @@ export function fromProduct(p: Product): ProductFormValue {
     sale_price: p.sale_price ?? undefined,
     product_stock_quantity: p.product_stock_quantity ?? 0,
     low_stock_threshold: p.low_stock_threshold ?? null,
+    shelf_life_days: p.shelf_life_days ?? null,
     product_description: p.product_description,
     product_img: p.product_img ?? [],
     preorder_config: p.preorder_config ?? undefined,
@@ -103,6 +106,7 @@ export function toInput(v: ProductFormValue): ProductInput {
     product_stock_quantity: isPreorder ? null : v.product_stock_quantity,
     // preorder ไม่มีสต็อก → ไม่ส่ง key นี้เลย · ว่าง = null (backend ใช้ค่ากลาง 5)
     low_stock_threshold: isPreorder ? undefined : (v.low_stock_threshold ?? null),
+    shelf_life_days: v.shelf_life_days ?? null,
     preorder_config: isPreorder ? (v.preorder_config as PreorderConfig) : null,
   };
 }
