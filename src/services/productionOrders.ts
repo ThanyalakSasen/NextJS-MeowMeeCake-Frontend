@@ -10,6 +10,7 @@ import type {
   ProductionOrderCreateInput,
   ProductionOrderFromRoundInput,
   ProductionFromRoundPreview,
+  ProductionStockCheck,
   ProductionOrderUpdateInput,
   ProductionOrderListParams,
 } from "@/types/productionOrder";
@@ -35,6 +36,10 @@ export const productionOrdersService = {
   /** ดูล่วงหน้าว่ารอบนี้จะได้ใบสั่งผลิตแบบไหน + เหตุที่สร้างไม่ได้ (ฟอร์มสร้างจากรอบ) */
   previewFromRound: (roundId: string) =>
     http.get<ItemResponse<ProductionFromRoundPreview>>(`${BASE}/from-preorder-round`, { params: { round_id: roundId } }),
+
+  /** เช็ควัตถุดิบพอผลิตไหม ระหว่างกรอกฟอร์มสร้าง (ไม่บันทึกอะไร) — เทียบสต็อกวัตถุดิบตอนนี้ */
+  stockCheck: (items: { recipe_id: string; planned_qty: number }[]) =>
+    http.post<ItemResponse<ProductionStockCheck>>(`${BASE}/stock-check`, { items }),
 
   update: (id: string, body: ProductionOrderUpdateInput) =>
     http.patch<ItemResponse<RawProductionOrder>>(`${BASE}/${id}`, body),

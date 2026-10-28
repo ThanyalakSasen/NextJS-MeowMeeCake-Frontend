@@ -1280,6 +1280,16 @@
     "colExpiry": "Expires"
   },
   "production": {
+    "stockChecking": "Checking ingredients...",
+    "stockCheckFailed": "Could not check ingredients — you can still create the order; stock is checked again when production is completed",
+    "stockShortRow": "Cannot be produced yet — not enough ingredients",
+    "stockShortLine": "{name}: {stock} {unit} in stock · needs {need} · short {missing}",
+    "stockMaxQty": "Current ingredients are enough for at most {n} {unit}",
+    "stockRecipeInvalid": "This product's recipe cannot be calculated (yield is 0) — fix the recipe first",
+    "stockShortTotal": "Not enough ingredients for all items combined (several products share an ingredient)",
+    "stockShortConfirmTitle": "Not enough ingredients",
+    "stockShortConfirm": "There are not enough ingredients for this plan — create the production order anyway? (Receive enough stock before completing production)",
+    "stockShortConfirmOk": "Create anyway",
     "orderNotFound": "Production order not found, or the link is invalid",
     "title": "Manage Production",
     "tabPlan": "Production Plan / Orders",
