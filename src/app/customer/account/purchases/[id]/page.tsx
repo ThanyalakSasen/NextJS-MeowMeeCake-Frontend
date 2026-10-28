@@ -30,7 +30,7 @@ import FlowSteps from "@/components/customer/FlowSteps";
 import ReviewLink from "../../_components/ReviewLink";
 import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
-import BuyAgainButton from "../../_components/BuyAgainButton";
+import { BuyAgainAfterReview } from "../../_components/BuyAgainButton";
 import BackButton from "../../_components/BackButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../orderLabels";
@@ -138,6 +138,9 @@ function OrderContent() {
               <p className="font-bold">{t("placed")}</p>
               <p className="text-sm">{t("placedHint")}</p>
             </div>
+            {!(order.payment_status === "paid" || order.has_payment) && order.order_status !== "cancelled" && (
+              <Link href={`/customer/account/purchases/${order._id}/success`} className={`${shopButton} shrink-0`}>{tf("payLaterBtn")}</Link>
+            )}
           </div>
         )}
 
@@ -273,13 +276,17 @@ function OrderContent() {
           <Link href="/customer/account/purchases" className={shopButton}>
             {t("viewAll")}
           </Link>
-          {/* แสดง 2 ปุ่มเท่านั้น (2026-10-26): ดูทั้งหมด + ปุ่มเดียวตามสถานะ — ยกเลิกได้ = ยกเลิก · จบแล้ว/ยกเลิกแล้ว = สั่งซื้ออีกครั้ง · อื่น ๆ = กลับ */}
+          {/* แสดง 2 ปุ่มเท่านั้น (2026-10-26): ดูทั้งหมด + ปุ่มเดียวตามสถานะ — ยกเลิกได้ = ยกเลิก
+              · ยกเลิกแล้ว / สำเร็จแล้วและรีวิวครบ = สั่งซื้ออีกครั้ง (2026-10-28) · อื่น ๆ = กลับ */}
           {canCustomerCancel(order) ? (
             <CancelOrderButton orderId={order._id} orderNo={order.order_no} paid={order.payment_status === "paid"} />
-          ) : order.order_status === "completed" || order.order_status === "cancelled" ? (
-            <BuyAgainButton items={order.items} className={shopButton} />
           ) : (
-            <BackButton fallback="/customer/account/purchases" className={shopButton} />
+            <BuyAgainAfterReview
+              order={order}
+              items={order.items}
+              className={shopButton}
+              fallback={<BackButton fallback="/customer/account/purchases" className={shopButton} />}
+            />
           )}
         </div>
         )}

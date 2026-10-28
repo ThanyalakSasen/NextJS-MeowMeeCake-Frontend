@@ -87,6 +87,9 @@ function PaymentGroupContent() {
               <p className="font-bold">{to("placed")}</p>
               <p className="text-sm">{t("placedHint", { n: page.bills.length })}</p>
             </div>
+            {page.status === "awaiting_payment" && (
+              <Link href={successHref} className={`${shopButton} shrink-0`}>{tf("payLaterBtn")}</Link>
+            )}
           </div>
         )}
 

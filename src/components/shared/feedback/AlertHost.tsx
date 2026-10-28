@@ -56,6 +56,9 @@ export function AlertHost() {
     <Modal
       open={!!current}
       centered
+      // อยู่เหนือป๊อปอัปอื่นเสมอ — antd Modal z-index เท่ากัน (1000) อันที่ต่อท้าย DOM ทีหลังจะทับ
+      // (เช่น DetailModal ของออเดอร์เปิดหลัง AlertHost เคย mount → confirm "ปฏิเสธสลิป" ไปอยู่ข้างหลัง กดไม่ได้)
+      zIndex={2000}
       width={420}
       footer={null}
       closable={a.dismissible}

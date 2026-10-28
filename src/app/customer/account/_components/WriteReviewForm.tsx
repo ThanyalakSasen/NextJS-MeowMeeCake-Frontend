@@ -2,10 +2,11 @@
 // ─────────────────────────────────────────────────────────────
 // ฟอร์มเขียนรีวิว (BACKLOG3-merge D7) — ใช้ร่วมกันระหว่างออเดอร์ (purchases/[id]/review) กับพรีออเดอร์ (preorders/[id]/review)
 // ยกจาก FrontOffice account/pendingreview/[id] — ต่างจากต้นแบบ:
-//   - หลายชิ้น = ถามก่อน: "รีวิวทั้งหมดพร้อมกัน" = หน้าเดียวยาว ๆ ทุกชิ้นมีดาว/แง่มุม/ข้อความ/รูปของตัวเอง ส่งทีเดียว
-//     (ไม่มีช่องติ๊กเลือกสินค้า · 2026-10-27) หรือ "รีวิวทีละชิ้น" (ฟอร์มทีละชิ้น ส่งแล้วไปชิ้นถัดไปเอง · บอก "ชิ้นที่ x จาก n")
+//   - หลายชิ้น = ถามก่อน (2026-10-28):
+//     "รีวิวทั้งหมดพร้อมกัน" = การ์ดรีวิวใบเดียว (ดาว/แง่มุม/ข้อความ/รูปชุดเดียว) ใช้กับทุกชิ้น ส่งคำขอเดียว (…_ids ทุกชิ้น)
+//     "รีวิวทีละชิ้น" = หน้าเดียวยาว ๆ แต่ละชิ้นมีการ์ดของตัวเอง ส่งทีเดียว (ส่งทีละชิ้นตามลำดับ)
 //     · เปลี่ยนวิธีได้ระหว่างทาง · ชิ้นเดียว = ไม่ถาม
-//   - ส่งทีละชิ้น (…_ids 1 รายการ) — ชิ้นที่ไม่ผ่านยังอยู่ในฟอร์มพร้อมเหตุผล ชิ้นที่ผ่านหายไปจากฟอร์ม
+//   - ชิ้นที่ไม่ผ่านยังอยู่ในฟอร์มพร้อมเหตุผล ชิ้นที่ผ่านหายไปจากฟอร์ม
 // แบบ Grab: ให้ดาวก่อน แล้วถามต่อ — 4-5 ดาว "ประทับใจสิ่งใด?" · 1-3 ดาว "ควรปรับปรุงตรงไหน?" (แง่มุมเป็นคำชม/คำติตามดาว)
 // ไฟล์อัปโหลดก่อนส่ง · ชิ้นไหนส่งไม่ผ่าน → ลบไฟล์ของชิ้นนั้นที่อัปไปแล้ว (DELETE /shop/reviews/upload)
 // ─────────────────────────────────────────────────────────────
@@ -35,7 +36,7 @@ const MAX_IMAGE_MB = 5;
 const MAX_VIDEO_MB = 30;
 const MAX_TEXT = 500;
 
-const sentimentForRating = (rating: number) => (rating >= 4 ? "positive" : "negative");
+const sentimentForRating = (rating: number) => (rating >= 4 ? ("positive" as const) : ("negative" as const));
 
 export interface ReviewableItem {
   _id: string;
@@ -67,6 +68,8 @@ interface Draft {
 }
 
 const EMPTY_DRAFT: Draft = { rating: 0, aspectIds: [], comment: "", images: [], video: null };
+/** key ของการ์ดรีวิวใบเดียวที่ใช้กับทุกชิ้น (โหมดรีวิวทั้งหมดพร้อมกัน) */
+const SHARED = "__all__";
 
 export default function WriteReviewForm({
   kind,
@@ -102,11 +105,11 @@ export default function WriteReviewForm({
 
   // วิธีรีวิวเมื่อมีหลายชิ้น — null = ยังไม่เลือก (ถามก่อน) · ชิ้นเดียว = รีวิวชิ้นนั้นเลย
   const [mode, setMode] = useState<"all" | "one" | null>(null);
-  const allAtOnce = pending.length > 1 && mode === "all";
-  // ทีละชิ้น: นับลำดับจากจำนวนที่ยังไม่รีวิวตอนเริ่ม (ส่งแล้ว pending สั้นลง → ชิ้นถัดไป)
-  const [startCount, setStartCount] = useState(0);
-  // แบบรวม = ทุกชิ้นที่ยังไม่รีวิวในหน้าเดียว · ทีละชิ้น/ชิ้นเดียว = ชิ้นแรกที่ยังไม่รีวิว
-  const targets = allAtOnce ? pending : pending.slice(0, 1);
+  // รวม = การ์ดใบเดียวใช้กับทุกชิ้น · ทีละชิ้น = การ์ดแยกของทุกชิ้นในหน้าเดียว
+  const shared = pending.length > 1 && mode === "all";
+  const eachCard = pending.length > 1 && mode === "one";
+  // หลายชิ้นส่งทุกชิ้นที่ยังไม่รีวิว · ชิ้นเดียว = ชิ้นนั้น
+  const targets = pending.length > 1 ? pending : pending.slice(0, 1);
 
   // เนื้อหารีวิวแยกต่อชิ้น (key = item _id)
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
@@ -142,34 +145,62 @@ export default function WriteReviewForm({
     setDrafts((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !ids.includes(id))));
   };
 
+  /** ส่งรีวิวเนื้อหาเดียวกันให้หลายชิ้นในคำขอเดียว — คืนชิ้นที่ไม่ผ่าน · ไม่ผ่านเลย = ลบไฟล์ที่อัปไปแล้ว */
+  const submitShared = async (its: ReviewableItem[], d: Draft): Promise<{ item: ReviewableItem; message: string }[]> => {
+    let uploaded: string[] = [];
+    try {
+      uploaded = await uploadMedia(d, (u) => (uploaded = u));
+      const { failed } = await shopReviewsService.create({ kind, itemIds: its.map((it) => it._id), ...reviewBody(d, uploaded) });
+      // บางชิ้นผ่าน = ไฟล์ถูกใช้แล้ว ไม่ลบ
+      return failed.flatMap((f) => {
+        const item = its.find((it) => it._id === f.item_id);
+        return item ? [{ item, message: f.message }] : [];
+      });
+    } catch (err) {
+      void shopReviewsService.discardUploads(uploaded);
+      const message = errorText(err);
+      return its.map((item) => ({ item, message }));
+    }
+  };
+
+  /** อัปรูป/วิดีโอของ draft — onUploaded รับไฟล์ที่อัปสำเร็จแล้ว (ไว้ลบทิ้งถ้ามีไฟล์ไหนพัง) */
+  const uploadMedia = async (d: Draft, onUploaded: (urls: string[]) => void) => {
+    const uploads = await Promise.allSettled([
+      ...d.images.map((m) => shopReviewsService.upload(m.file, "image")),
+      ...(d.video ? [shopReviewsService.upload(d.video.file, "video")] : []),
+    ]);
+    const uploaded = uploads.flatMap((u) => (u.status === "fulfilled" ? [u.value] : []));
+    onUploaded(uploaded);
+    const uploadFailed = uploads.find((u): u is PromiseRejectedResult => u.status === "rejected");
+    if (uploadFailed) throw uploadFailed.reason;
+    return uploaded;
+  };
+
+  const reviewBody = (d: Draft, uploaded: string[]) => {
+    const sentiment = sentimentForRating(d.rating);
+    return {
+      rating: d.rating,
+      review_text: d.comment.trim() || undefined,
+      image: d.images.length ? uploaded.slice(0, d.images.length) : undefined,
+      video: d.video ? uploaded[d.images.length] : undefined,
+      aspect_feedback: d.aspectIds.length ? d.aspectIds.map((aspect_id) => ({ aspect_id, sentiment })) : undefined,
+    };
+  };
+
+  const errorText = (err: unknown) =>
+    isApiError(err) ? err.message : err instanceof Error && err.message ? err.message : tw("sendFailed");
+
   /** ส่งรีวิวของ 1 ชิ้น — คืนข้อความผิดพลาด (null = สำเร็จ) · ไม่สำเร็จ = ลบไฟล์ที่อัปไปแล้วของชิ้นนั้น */
   const submitOne = async (it: ReviewableItem, d: Draft): Promise<string | null> => {
     let uploaded: string[] = [];
     try {
-      const uploads = await Promise.allSettled([
-        ...d.images.map((m) => shopReviewsService.upload(m.file, "image")),
-        ...(d.video ? [shopReviewsService.upload(d.video.file, "video")] : []),
-      ]);
-      uploaded = uploads.flatMap((u) => (u.status === "fulfilled" ? [u.value] : []));
-      const uploadFailed = uploads.find((u): u is PromiseRejectedResult => u.status === "rejected");
-      if (uploadFailed) throw uploadFailed.reason;
-
-      const sentiment = sentimentForRating(d.rating);
-      const { failed } = await shopReviewsService.create({
-        kind,
-        itemIds: [it._id],
-        rating: d.rating,
-        review_text: d.comment.trim() || undefined,
-        image: d.images.length ? uploaded.slice(0, d.images.length) : undefined,
-        video: d.video ? uploaded[d.images.length] : undefined,
-        aspect_feedback: d.aspectIds.length ? d.aspectIds.map((aspect_id) => ({ aspect_id, sentiment })) : undefined,
-      });
+      uploaded = await uploadMedia(d, (u) => (uploaded = u));
+      const { failed } = await shopReviewsService.create({ kind, itemIds: [it._id], ...reviewBody(d, uploaded) });
       if (failed.length > 0) throw new Error(failed[0].message);
       return null;
     } catch (err) {
       void shopReviewsService.discardUploads(uploaded);
-      if (isApiError(err)) return err.message;
-      return err instanceof Error && err.message ? err.message : tw("sendFailed");
+      return errorText(err);
     }
   };
 
@@ -178,26 +209,35 @@ export default function WriteReviewForm({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (targets.length === 0) return;
-    const missing = targets.find((it) => draftOf(it._id).rating === 0);
-    if (missing) {
-      if (!allAtOnce) return alert.warning(tw("needRating"));
-      document.getElementById(`review-item-${missing._id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      return alert.warning(tw("needRatingEach", { name: nameOf(missing) }));
+    if (shared) {
+      if (draftOf(SHARED).rating === 0) return alert.warning(tw("needRating"));
+    } else {
+      const missing = targets.find((it) => draftOf(it._id).rating === 0);
+      if (missing) {
+        if (!eachCard) return alert.warning(tw("needRating"));
+        document.getElementById(`review-item-${missing._id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return alert.warning(tw("needRatingEach", { name: nameOf(missing) }));
+      }
     }
 
     setSubmitting(true);
     try {
-      // ส่งทีละชิ้นตามลำดับ — ไม่อัปโหลดรูป/วิดีโอของทุกชิ้นพร้อมกัน
-      const failed: { item: ReviewableItem; message: string }[] = [];
-      const done: ReviewableItem[] = [];
-      for (const it of targets) {
-        const message = await submitOne(it, draftOf(it._id));
-        if (message) failed.push({ item: it, message });
-        else done.push(it);
+      let failed: { item: ReviewableItem; message: string }[] = [];
+      if (shared) {
+        // การ์ดเดียว = อัปไฟล์ครั้งเดียว ส่งคำขอเดียวให้ทุกชิ้น
+        failed = await submitShared(targets, draftOf(SHARED));
+      } else {
+        // แยกการ์ด = ส่งทีละชิ้นตามลำดับ — ไม่อัปโหลดรูป/วิดีโอของทุกชิ้นพร้อมกัน
+        for (const it of targets) {
+          const message = await submitOne(it, draftOf(it._id));
+          if (message) failed.push({ item: it, message });
+        }
       }
+      const done = targets.filter((it) => !failed.some((f) => f.item._id === it._id));
 
       if (done.length > 0) {
-        clearDrafts(done.map((it) => it._id));
+        // การ์ดรวม: ล้างเมื่อผ่านครบ (ชิ้นที่ไม่ผ่านยังใช้เนื้อหาเดิมส่งซ้ำได้)
+        clearDrafts(shared ? (failed.length === 0 ? [SHARED] : []) : done.map((it) => it._id));
         await qc.invalidateQueries({ queryKey: shopReviewsKey });
         void qc.invalidateQueries({ queryKey: shopPointsKey });
         for (const pid of new Set(done.map((it) => it.product_id))) void qc.invalidateQueries({ queryKey: [...catalogProductKey(pid), "reviews"] });
@@ -209,12 +249,6 @@ export default function WriteReviewForm({
         return;
       }
 
-      const remaining = pending.length - done.length;
-      if (remaining > 0) {
-        alert.success(tw("thanksNext", { n: remaining }));
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
       alert.success(tw("thanks"));
       router.push(backHref);
     } finally {
@@ -235,10 +269,7 @@ export default function WriteReviewForm({
     const choice = (value: "all" | "one", Icon: typeof Layers, title: string, desc: string) => (
       <button
         type="button"
-        onClick={() => {
-          setMode(value);
-          setStartCount(pending.length);
-        }}
+        onClick={() => setMode(value)}
         className="flex w-full items-start gap-3 rounded-2xl border-2 border-[#8C5A3C]/20 bg-white p-4 text-left transition hover:border-[#8C5A3C] hover:bg-[#FAF6F0]"
       >
         <Icon className="mt-0.5 h-6 w-6 shrink-0 text-[#8C5A3C]" aria-hidden="true" />
@@ -304,15 +335,13 @@ export default function WriteReviewForm({
           <h1 className="text-lg font-bold sm:text-xl">{tw("title")}</h1>
           <p className="text-sm text-stone-500">
             {docLabel}
-            {allAtOnce && ` · ${tw("itemsToReview", { n: pending.length })}`}
+            {pending.length > 1 && ` · ${tw("itemsToReview", { n: pending.length })}`}
           </p>
           {pending.length > 1 && (
             <p className="m-0 mt-1 flex flex-wrap items-center gap-2 text-sm">
-              {!allAtOnce && (
-                <span className="rounded-full bg-[#4A342E] px-2.5 py-0.5 text-xs font-bold text-white">
-                  {tw("stepOf", { i: Math.max(1, startCount - pending.length + 1), n: Math.max(startCount, pending.length) })}
-                </span>
-              )}
+              <span className="rounded-full bg-[#4A342E] px-2.5 py-0.5 text-xs font-bold text-white">
+                {shared ? tw("modeAll") : tw("modeOne")}
+              </span>
               <button
                 type="button"
                 onClick={() => {
@@ -326,18 +355,28 @@ export default function WriteReviewForm({
             </p>
           )}
         </div>
-        {!allAtOnce && targets[0] && itemHeader(targets[0])}
+        {/* ชิ้นเดียว = หัวสินค้า · รวม = รายการทุกชิ้นที่การ์ดนี้ใช้ด้วย */}
+        {!shared && !eachCard && targets[0] && itemHeader(targets[0])}
+        {shared && (
+          <div className="space-y-2">
+            <p className="m-0 text-xs font-semibold text-stone-500">{tw("sharedFor", { n: targets.length })}</p>
+            {targets.map((it) => <div key={it._id}>{itemHeader(it)}</div>)}
+          </div>
+        )}
       </div>
 
-      {allAtOnce ? (
-        // แบบรวม: ทุกชิ้นเรียงลงมาในหน้าเดียว แต่ละชิ้นมีฟอร์มของตัวเอง (ไม่มีช่องติ๊กเลือกสินค้า)
-        <div className="space-y-6">
+      {shared ? (
+        // รีวิวทั้งหมดพร้อมกัน: การ์ดรีวิวใบเดียว ใช้กับทุกชิ้น
+        <ReviewFields draft={draftOf(SHARED)} onChange={(patch) => patchDraft(SHARED, patch)} aspects={aspects} media={media} />
+      ) : eachCard ? (
+        // รีวิวทีละชิ้น: การ์ดแยกของทุกชิ้น เรียงลงมาในหน้าเดียว
+        <div className="space-y-5">
           {targets.map((it, i) => (
             <section
               key={it._id}
               id={`review-item-${it._id}`}
               aria-label={nameOf(it)}
-              className={`scroll-mt-24 space-y-4 ${i > 0 ? "border-t-2 border-dashed border-[#8C5A3C]/15 pt-6" : ""}`}
+              className="scroll-mt-24 space-y-4 rounded-2xl border border-[#8C5A3C]/20 bg-white p-4 sm:p-5"
             >
               {itemHeader(it, i + 1)}
               {fieldsFor(it)}
@@ -352,7 +391,7 @@ export default function WriteReviewForm({
         <Link href={backHref} className={shopButton}>{tc("cancel")}</Link>
         <button type="submit" disabled={submitting || targets.length === 0} className={shopButtonPrimary}>
           <Send size={16} />
-          {submitting ? tw("sending") : allAtOnce ? tw("sendAll", { n: targets.length }) : tw("send")}
+          {submitting ? tw("sending") : targets.length > 1 ? tw("sendAll", { n: targets.length }) : tw("send")}
         </button>
       </div>
     </form>
