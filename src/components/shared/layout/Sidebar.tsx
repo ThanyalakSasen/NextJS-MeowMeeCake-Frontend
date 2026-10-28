@@ -2,11 +2,13 @@
 // ─────────────────────────────────────────────────────────────
 // Sidebar — Logo + เมนูกรองตาม permission + logout
 // active-state: findActiveHref (longest-prefix, boundary-safe) จาก @/constants/menu
+// เมนูย่อยแบบแท็บ (?tab=) ต้องรู้ query ด้วย — อ่าน useSearchParams ใต้ <Suspense> ของตัวเอง
+// (layout ไม่ต้องอยู่ใต้ Suspense ทั้งก้อน · หน้า dynamic ไม่ suspend จริง · fallback = sidebar ที่ไม่รู้ query)
 // ใช้ CSS class จาก globals.css (.sidebar, .menu-item-*, .submenu-*)
 // ─────────────────────────────────────────────────────────────
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ShoppingBagIcon } from "@heroicons/react/24/solid";
 import DoorLogoutIcon from "@/components/customer/DoorLogoutIcon";
@@ -20,14 +22,29 @@ import { ChatUnreadBadge } from "./ChatUnreadBadge";
 /** จอที่ sidebar ตัว desktop แสดง — ตรงกับ `hidden lg:block` ใน OwnerLayout (Tailwind lg = 64rem) */
 const DESKTOP_QUERY = "(min-width: 64rem)";
 
-export function Sidebar({ onLogout, inDrawer = false }: { onLogout?: () => void; inDrawer?: boolean }) {
+type SidebarProps = { onLogout?: () => void; inDrawer?: boolean };
+
+export function Sidebar(props: SidebarProps) {
+  return (
+    <Suspense fallback={<SidebarView {...props} search={null} />}>
+      <SidebarWithSearch {...props} />
+    </Suspense>
+  );
+}
+
+function SidebarWithSearch(props: SidebarProps) {
+  const search = useSearchParams();
+  return <SidebarView {...props} search={search} />;
+}
+
+function SidebarView({ onLogout, inDrawer = false, search }: SidebarProps & { search: URLSearchParams | null }) {
   const t = useTranslations("nav");
   const tc = useTranslations("common");
   const pathname = usePathname();
   const access = useMenuAccess();
   const navRef = useRef<HTMLElement>(null);
 
-  const activeHref = useMemo(() => findActiveHref(pathname), [pathname]);
+  const activeHref = useMemo(() => findActiveHref(pathname, search), [pathname, search]);
 
   // กรองเมนูตามสิทธิ์ — item/child ที่มี menuKey แต่ไม่มี view → ซ่อน · group ที่ child หมด → ซ่อน
   const sections = useMemo(() => {
@@ -45,15 +62,16 @@ export function Sidebar({ onLogout, inDrawer = false }: { onLogout?: () => void;
     })).filter((s) => s.items.length > 0);
   }, [access]);
 
-  const [openKey, setOpenKey] = useState<string | null>(() => findActiveGroupKey(pathname));
+  const [openKey, setOpenKey] = useState<string | null>(() => findActiveGroupKey(pathname, search));
 
   // เปิดกลุ่มของหน้าปัจจุบันทุกครั้งที่นำทาง (ผ่าน breadcrumb / ลิงก์อื่น / router.push ก็ตาม)
   // toggle มือระหว่างนำทางยังอยู่ — effect ผูกกับ pathname ไม่ใช่ทุก render
   // (แนวเดียวกับ OwnerLayout.tsx ที่ปิด drawer ตาม pathname)
   useEffect(() => {
-    const g = findActiveGroupKey(pathname);
+    const g = findActiveGroupKey(pathname, search);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (g) setOpenKey(g);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- เปิดกลุ่มเฉพาะตอนเปลี่ยนหน้า (สลับ ?tab= อยู่กลุ่มเดิมอยู่แล้ว)
   }, [pathname]);
 
   // เลื่อนเมนู active ให้อยู่ในสายตา (เมนูยาว/จอเตี้ย) — หลังกลุ่มกางแล้ว

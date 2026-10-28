@@ -36,6 +36,7 @@ export function TabbedPageLayout({
   onChange,
   items,
   tabsAlign = "start",
+  hideTabBar = false,
 }: {
   title: string;
   actions?: React.ReactNode;
@@ -44,7 +45,10 @@ export function TabbedPageLayout({
   items: TabbedPageLayoutItem[];
   /** "end" = แท็บชิดขวา (แบบหน้ารายงานยอดขาย: ตัวกรองซ้าย · สวิตช์ขวา) */
   tabsAlign?: "start" | "end";
+  /** ซ่อนแถบแท็บ — เมื่อสลับแท็บจากที่อื่นแทน (เช่น เมนูย่อยใน Sidebar ของหน้ารอบพรีออเดอร์) */
+  hideTabBar?: boolean;
 }) {
+  const showTabs = items.length > 1 && !hideTabBar;
   const active = items.find((i) => i.key === activeKey);
   return (
     <div className="flex flex-col gap-5">
@@ -58,11 +62,11 @@ export function TabbedPageLayout({
       {/* ครอบด้วย flex row — ถ้าวาง Segmented เป็นลูกของ flex-col ตรง ๆ มันจะถูกยืดเต็มความกว้าง
           (align-items ของ flex column คือ stretch) ผิดจากหน้าอื่นที่แท็บหดตามเนื้อหา */}
       {/* แท็บเดียว = ไม่มีอะไรให้สลับ → ไม่แสดงแถบแท็บ (เหลือแค่ toolbar ถ้ามี) */}
-      {(items.length > 1 || active?.toolbar) && (
+      {(showTabs || active?.toolbar) && (
         <div className="flex flex-wrap items-center gap-3">
           {active?.toolbar}
           {tabsAlign === "end" && <div className="flex-1" />}
-          {items.length > 1 && (
+          {showTabs && (
             <TypeTabBar
               value={activeKey}
               onChange={onChange}

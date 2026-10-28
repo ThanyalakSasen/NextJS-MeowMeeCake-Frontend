@@ -118,10 +118,30 @@ export const MENU_SECTIONS: MenuSection[] = [
         // { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
       },
       {
+        // แท็บของหน้ารอบพรีออเดอร์ย้ายมาเป็นเมนูย่อย — หน้าเดียวกัน แยกด้วย ?tab= (หน้าไม่แสดงแถบแท็บแล้ว)
+        // ตัวแรกคือแท็บเริ่มต้น (เปิดหน้าโดยไม่มี ?tab=) — ต้องตรงกับ tabFrom ใน preorderQuery.ts
         labelKey: "ordersPreorderRound",
-        href: "/owner/orders/preOrderRound",
         icon: "ClockIcon",
-        menuKey: "preorder",
+        children: [
+          {
+            labelKey: "preorderDashboard",
+            href: "/owner/orders/preOrderRound?tab=dashboard",
+            icon: "ChartPieIcon",
+            menuKey: "preorder",
+          },
+          {
+            labelKey: "preorderRounds",
+            href: "/owner/orders/preOrderRound?tab=rounds",
+            icon: "ClockIcon",
+            menuKey: "preorder",
+          },
+          {
+            labelKey: "preorderOrders",
+            href: "/owner/orders/preOrderRound?tab=orders",
+            icon: "ClipboardDocumentListIcon",
+            menuKey: "preorder",
+          },
+        ],
       },
       {
         labelKey: "ordersInStore",
@@ -278,22 +298,35 @@ export function allMenuHrefs(): string[] {
   return out;
 }
 
-/** leaf ที่ active = href ที่ isPathWithin และยาวที่สุด (→ /owner/ingredients/units ชนะ /owner/ingredients) · null ถ้าไม่มี */
-export function findActiveHref(pathname: string): string | null {
+/**
+ * leaf ที่ active = href ที่ isPathWithin และยาวที่สุด (→ /owner/ingredients/units ชนะ /owner/ingredients) · null ถ้าไม่มี
+ * href ที่มี query (เมนูย่อยแบบแท็บ เช่น ?tab=rounds) ตรงเมื่อ path เท่ากันและ query ทุกตัวตรงกับ search
+ * ไม่มี query ไหนตรง (เปิดหน้าโดยไม่มี ?tab=) → ตัวแรกของ path นั้น = แท็บเริ่มต้น
+ */
+export function findActiveHref(pathname: string, search?: URLSearchParams | null): string | null {
   let best: string | null = null;
+  let tabDefault: string | null = null;
   for (const href of allMenuHrefs()) {
+    const [path, query] = href.split("?");
+    if (query) {
+      if (path !== pathname) continue;
+      tabDefault ??= href;
+      const want = new URLSearchParams(query);
+      if ([...want].every(([k, v]) => search?.get(k) === v)) return href;
+      continue;
+    }
     if (
       isPathWithin(pathname, href) &&
       (best === null || href.length > best.length)
     )
       best = href;
   }
-  return best;
+  return tabDefault ?? best;
 }
 
 /** key ของกลุ่ม (`${section.labelKey}.${item.labelKey}`) ที่มี child ตรงกับ findActiveHref · null ถ้าหน้าปัจจุบันไม่ได้อยู่ในกลุ่มใด */
-export function findActiveGroupKey(pathname: string): string | null {
-  const active = findActiveHref(pathname);
+export function findActiveGroupKey(pathname: string, search?: URLSearchParams | null): string | null {
+  const active = findActiveHref(pathname, search);
   if (active === null) return null;
   for (const section of MENU_SECTIONS) {
     for (const item of section.items) {
