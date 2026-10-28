@@ -27,6 +27,8 @@ export interface StockProductRow {
   unit: string;
   price: number;
   stock: number;
+  /** products.low_stock_threshold — null = ใช้ค่าเริ่มต้น 5 */
+  threshold: number | null;
   status: StockStatus;
   value: number;
 }
@@ -77,7 +79,8 @@ export function useProductStockViewModel() {
           unit: unitLabel(p.unit_id) || t("productStock.unitDefault"),
           price: p.product_price,
           stock,
-          status: getStockStatus(stock),
+          threshold: p.low_stock_threshold ?? null,
+          status: getStockStatus(stock, p.low_stock_threshold),
           value: stock * p.product_price,
         };
       });
