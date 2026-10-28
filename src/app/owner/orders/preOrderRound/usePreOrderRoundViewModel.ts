@@ -24,7 +24,7 @@ import { isApiError } from "@/types/api";
 import type { OrderStatus, RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound, CloseRoundResult, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
 import type { Preorder } from "@/types/preorder";
-import type { DeliveryUpdateInput } from "@/types/order";
+import type { DeliveryUpdateInput, OrderType } from "@/types/order";
 import { formatCurrency } from "@/i18n/format";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 import { LIST_ALL } from "@/lib/http";
@@ -301,6 +301,7 @@ export function usePreOrderRoundViewModel() {
   const [orderSearch, setOrderSearchState] = useState("");
   const [orderStatusFilter, setOrderStatusFilterState] = useState<OrderStatus | "all">("all");
   const [orderRoundFilter, setOrderRoundFilterState] = useState<string>("all");
+  const [orderTypeFilter, setOrderTypeFilterState] = useState<OrderType | "all">("all");
   const [orderPage, setOrderPage] = useState(1);
   const [orderPageSize, setOrderPageSize] = useState(10);
 
@@ -310,9 +311,10 @@ export function usePreOrderRoundViewModel() {
       const matchSearch = !q || o.preorder_no.toLowerCase().includes(q) || o.customer_name.toLowerCase().includes(q);
       const matchStatus = orderStatusFilter === "all" || o.order_status === orderStatusFilter;
       const matchRound = orderRoundFilter === "all" || o.round_id === orderRoundFilter;
-      return matchSearch && matchStatus && matchRound;
+      const matchType = orderTypeFilter === "all" || o.order_type === orderTypeFilter;
+      return matchSearch && matchStatus && matchRound && matchType;
     });
-  }, [preorders, orderSearch, orderStatusFilter, orderRoundFilter]);
+  }, [preorders, orderSearch, orderStatusFilter, orderRoundFilter, orderTypeFilter]);
 
   const orderRows = useMemo(
     () => ordersFiltered.slice((orderPage - 1) * orderPageSize, orderPage * orderPageSize),
@@ -520,6 +522,7 @@ export function usePreOrderRoundViewModel() {
     orderSearch, setOrderSearch: (v: string) => { setOrderSearchState(v); setOrderPage(1); },
     orderStatusFilter, setOrderStatusFilter: (v: OrderStatus | "all") => { setOrderStatusFilterState(v); setOrderPage(1); },
     orderRoundFilter, setOrderRoundFilter: (v: string) => { setOrderRoundFilterState(v); setOrderPage(1); },
+    orderTypeFilter, setOrderTypeFilter: (v: OrderType | "all") => { setOrderTypeFilterState(v); setOrderPage(1); },
     orderPage, orderPageSize, setOrderPagination: (p: number, ps: number) => { setOrderPage(p); setOrderPageSize(ps); },
     orderRows, orderTotal: ordersFiltered.length, orderStats, roundOptions,
     isOrdersLoading: preordersQ.isPending, isOrdersError: preordersQ.isError, refetchOrders: () => preordersQ.refetch(),

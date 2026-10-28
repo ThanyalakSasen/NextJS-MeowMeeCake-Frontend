@@ -63,6 +63,32 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
         />
       )}
 
+      {/* จัดส่ง: ที่อยู่ + สถานะจัดส่ง/ขนส่ง/เลขพัสดุ — ไว้บนสุดถัดจากสถานะ (เดิมอยู่ใต้สลิป ต้องเลื่อนหาจนดูเหมือนไม่มี) */}
+      {order.order_type === "delivery" && (
+        <>
+          <Divider className="!my-0" />
+          {order.delivery_address && (
+            <div>
+              <p className="mb-1 text-sm font-medium text-gray-600">{t("preorderRound.deliveryAddress")}</p>
+              <p className="text-sm text-gray-800">
+                {order.delivery_address.recipient_name} · {order.delivery_address.recipient_phone}
+              </p>
+              <p className="text-sm text-gray-600">
+                {order.delivery_address.house_no} {order.delivery_address.sub_district} {order.delivery_address.district}{" "}
+                {order.delivery_address.province} {order.delivery_address.zip_code}
+              </p>
+            </div>
+          )}
+          <DeliverySection
+            key={order.updated_at}
+            info={order}
+            canUpdate={vm.perm.update && !isCancelled}
+            saving={vm.savingDelivery}
+            onSave={vm.onSaveDelivery}
+          />
+        </>
+      )}
+
       <Divider className="!my-0" />
 
       <div className="flex flex-col gap-2 text-sm">
@@ -143,35 +169,6 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
               <p className="text-sm text-gray-600">{t("orders.noSlipYet")}</p>
             )}
           </div>
-        </>
-      )}
-
-      {order.order_type === "delivery" && order.delivery_address && (
-        <>
-          <Divider className="!my-0" />
-          <div>
-            <p className="mb-1 text-sm font-medium text-gray-600">{t("preorderRound.deliveryAddress")}</p>
-            <p className="text-sm text-gray-800">
-              {order.delivery_address.recipient_name} · {order.delivery_address.recipient_phone}
-            </p>
-            <p className="text-sm text-gray-600">
-              {order.delivery_address.house_no} {order.delivery_address.sub_district} {order.delivery_address.district}{" "}
-              {order.delivery_address.province} {order.delivery_address.zip_code}
-            </p>
-          </div>
-        </>
-      )}
-
-      {order.order_type === "delivery" && (
-        <>
-          <Divider className="!my-0" />
-          <DeliverySection
-            key={order.updated_at}
-            info={order}
-            canUpdate={vm.perm.update && !isCancelled}
-            saving={vm.savingDelivery}
-            onSave={vm.onSaveDelivery}
-          />
         </>
       )}
 
