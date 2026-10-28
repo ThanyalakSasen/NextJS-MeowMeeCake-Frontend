@@ -117,31 +117,25 @@ export const MENU_SECTIONS: MenuSection[] = [
         // เข้าได้ทาง URL ตรง ๆ — เปิดเมนูคืนได้ด้วยการเอาคอมเมนต์บรรทัดล่างออก
         // { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
       },
+      // แท็บของหน้ารอบพรีออเดอร์ย้ายมาเป็นเมนูระดับบน 3 ตัว — หน้าเดียวกัน แยกด้วย ?tab= (หน้าไม่แสดงแถบแท็บแล้ว)
+      // ตัวแรกคือแท็บเริ่มต้น (เปิดหน้าโดยไม่มี ?tab=) — ต้องตรงกับ tabFrom ใน preorderQuery.ts
       {
-        // แท็บของหน้ารอบพรีออเดอร์ย้ายมาเป็นเมนูย่อย — หน้าเดียวกัน แยกด้วย ?tab= (หน้าไม่แสดงแถบแท็บแล้ว)
-        // ตัวแรกคือแท็บเริ่มต้น (เปิดหน้าโดยไม่มี ?tab=) — ต้องตรงกับ tabFrom ใน preorderQuery.ts
-        labelKey: "ordersPreorderRound",
+        labelKey: "preorderDashboard",
+        href: "/owner/orders/preOrderRound?tab=dashboard",
+        icon: "ChartPieIcon",
+        menuKey: "preorder",
+      },
+      {
+        labelKey: "preorderRounds",
+        href: "/owner/orders/preOrderRound?tab=rounds",
         icon: "ClockIcon",
-        children: [
-          {
-            labelKey: "preorderDashboard",
-            href: "/owner/orders/preOrderRound?tab=dashboard",
-            icon: "ChartPieIcon",
-            menuKey: "preorder",
-          },
-          {
-            labelKey: "preorderRounds",
-            href: "/owner/orders/preOrderRound?tab=rounds",
-            icon: "ClockIcon",
-            menuKey: "preorder",
-          },
-          {
-            labelKey: "preorderOrders",
-            href: "/owner/orders/preOrderRound?tab=orders",
-            icon: "ClipboardDocumentListIcon",
-            menuKey: "preorder",
-          },
-        ],
+        menuKey: "preorder",
+      },
+      {
+        labelKey: "preorderOrders",
+        href: "/owner/orders/preOrderRound?tab=orders",
+        icon: "InboxStackIcon",
+        menuKey: "preorder",
       },
       {
         labelKey: "ordersInStore",
