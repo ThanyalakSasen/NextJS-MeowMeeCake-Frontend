@@ -62,6 +62,14 @@ function AccountContent() {
   useLineResultToast();
 
   const profile = profileQ.data;
+  // ?edit=profile (จากป๊อปอัปชวนกรอกข้อมูล) = เปิดฟอร์มแก้ไขทันที แล้วลบ query ออก (รีเฟรชไม่เปิดซ้ำ)
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [autoEdit] = useState(() => params.get("edit") === "profile");
+  useEffect(() => {
+    if (params.get("edit")) router.replace(pathname, { scroll: false });
+  }, [params, router, pathname]);
   return (
     <div className={shopPage}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
@@ -77,7 +85,7 @@ function AccountContent() {
             ) : (
               <>
                 {emailQ.data?.auth_provider === "line" && <LineAccountEmail status={emailQ.data} />}
-                <ProfileSection profile={profile} />
+                <ProfileSection profile={profile} autoEdit={autoEdit} />
                 <RefundAccountSection profile={profile} />
                 <LineSection authProvider={profile.auth_provider} />
                 <AllergySection profile={profile} />
@@ -182,21 +190,23 @@ function LineAccountEmail({ status }: { status: { needs_email: boolean; email: s
 }
 
 // ── ข้อมูลส่วนตัว + หน้าต่างแก้ไข ──
-function ProfileSection({ profile }: { profile: ShopProfile }) {
+function ProfileSection({ profile, autoEdit = false }: { profile: ShopProfile; autoEdit?: boolean }) {
   const t = useTranslations("shop.account");
   const tc = useTranslations("shop.common");
   const locale = useLocale();
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  // today = YYYY-MM-DD ณ ตอนเปิดหน้าต่าง (อ่านเวลาใน handler ไม่ใช่ตอน render — กติกา React Compiler)
-  const [form, setForm] = useState({ name: "", phone: "", birthday: "", today: "" });
+  // today = YYYY-MM-DD ณ ตอนเปิดหน้าต่าง (อ่านเวลาใน handler / ตัวเริ่มค่า state ไม่ใช่ตอน render — กติกา React Compiler)
+  const formOf = (p: ShopProfile) => ({
+    name: p.user_fullname,
+    phone: p.user_phone ?? "",
+    birthday: p.user_birthdate ? p.user_birthdate.slice(0, 10) : "",
+    today: new Date().toISOString().slice(0, 10),
+  });
+  // autoEdit (?edit=profile) = เปิดฟอร์มตั้งแต่แรก
+  const [open, setOpen] = useState(autoEdit);
+  const [form, setForm] = useState(() => (autoEdit ? formOf(profile) : { name: "", phone: "", birthday: "", today: "" }));
   const openEdit = () => {
-    setForm({
-      name: profile.user_fullname,
-      phone: profile.user_phone ?? "",
-      birthday: profile.user_birthdate ? profile.user_birthdate.slice(0, 10) : "",
-      today: new Date().toISOString().slice(0, 10),
-    });
+    setForm(formOf(profile));
     setOpen(true);
   };
   const save = useMutation({

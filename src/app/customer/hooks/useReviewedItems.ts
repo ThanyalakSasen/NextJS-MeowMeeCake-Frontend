@@ -11,6 +11,18 @@ import { shopReviewsKey } from "../lib/shopQueries";
 export const canReview = (doc: { order_status: string; payment_status: string }) =>
   doc.order_status === "completed" && doc.payment_status === "paid";
 
+/**
+ * เหตุที่ยังรีวิวไม่ได้ (null = รีวิวได้) — ลำดับ/เงื่อนไขเดียวกับ backend reviewService.reviewBlockReason
+ * ข้อความอยู่ที่ shop.orders.reviewBlocked.* (ตรงกับข้อความ error ของ backend)
+ */
+export type ReviewBlockReason = "cancelled" | "unpaid" | "notCompleted";
+export function reviewBlockReason(doc: { order_status: string; payment_status: string }): ReviewBlockReason | null {
+  if (doc.order_status === "cancelled") return "cancelled";
+  if (doc.payment_status !== "paid") return "unpaid";
+  if (doc.order_status !== "completed") return "notCompleted";
+  return null;
+}
+
 export function useReviewedItems(kind: ReviewKind, enabled = true) {
   const q = useQuery({ queryKey: shopReviewsKey, queryFn: shopReviewsService.mine, enabled, staleTime: 60_000 });
   const reviewed = new Set(

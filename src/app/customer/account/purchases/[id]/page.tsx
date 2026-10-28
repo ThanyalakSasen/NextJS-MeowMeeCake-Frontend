@@ -31,6 +31,7 @@ import ReviewLink from "../../_components/ReviewLink";
 import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
 import BuyAgainButton from "../../_components/BuyAgainButton";
+import BackButton from "../../_components/BackButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../orderLabels";
 import { canReview } from "../../../hooks/useReviewedItems";
@@ -102,7 +103,7 @@ function OrderContent() {
     );
   }
 
-  // สถานะรีวิว — อยู่บรรทัดเดียวกับสถานะจัดส่ง (ออเดอร์รับเองอยู่บรรทัดนัดรับ) · ยังรีวิวไม่ได้ = ไม่แสดง
+  // สถานะรีวิว — อยู่บรรทัดเดียวกับสถานะจัดส่ง (ออเดอร์รับเองอยู่บรรทัดนัดรับ) · ยังรีวิวไม่ได้ = บอกเงื่อนไข (showReason)
   const showPickupRow = order.order_type === "takeaway" && !!(order.pickup_point_name || order.pickup_date);
   const showDeliveryRow = order.order_type === "delivery" && !!order.delivery_status && order.order_status !== "cancelled";
   const reviewStatus = (
@@ -113,6 +114,7 @@ function OrderContent() {
       href={`/customer/account/purchases/${order._id}/review`}
       className={REVIEW_PILL}
       reviewedClassName={REVIEWED_PILL}
+      showReason
     />
   );
 
@@ -128,7 +130,7 @@ function OrderContent() {
           className="!mb-0"
         />
 
-        {isNew && <FlowSteps kind="order" current={order.payment_status === "paid" || order.has_payment ? 4 : 3} />}
+        {isNew && <FlowSteps current={order.payment_status === "paid" || order.has_payment ? 4 : 3} />}
         {isNew && (
           <div className="flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-green-800">
             <FaCheckCircle className="shrink-0 text-2xl" />
@@ -136,9 +138,6 @@ function OrderContent() {
               <p className="font-bold">{t("placed")}</p>
               <p className="text-sm">{t("placedHint")}</p>
             </div>
-            <Link href={`/customer/account/purchases/${order._id}/success`} className="shrink-0 text-sm font-semibold text-green-800 underline">
-              {tf("payLater")}
-            </Link>
           </div>
         )}
 
@@ -250,24 +249,40 @@ function OrderContent() {
             )}
           </section>
 
-          <section className={`${shopCard} space-y-4 lg:col-span-2`}>
-            <h2 className="text-lg font-bold">{t("payment")}</h2>
-            {paymentQ.data ? (
-              <SlipPaymentPanel kind="order" docId={order._id} page={paymentQ.data} fetchedAt={paymentQ.dataUpdatedAt} onChanged={refresh}
-                onUploaded={isNew ? () => router.push(`/customer/account/purchases/${order._id}/success`) : undefined} />
-            ) : (
+          {/* การ์ดชำระเงินแบบเดียวกับหน้าชำระรวมหลายบิล (PaymentCard) */}
+          {paymentQ.data ? (
+            <SlipPaymentPanel kind="order" docId={order._id} page={paymentQ.data} fetchedAt={paymentQ.dataUpdatedAt} onChanged={refresh}
+              className="lg:sticky lg:top-44 lg:col-span-2"
+              onUploaded={isNew ? () => router.push(`/customer/account/purchases/${order._id}/success`) : undefined} />
+          ) : (
+            <section className={`${shopCard} space-y-4 lg:col-span-2`}>
+              <h2 className="text-lg font-bold">{t("payment")}</h2>
               <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{t("paymentLoadFailed")}</p>
-            )}
-          </section>
+            </section>
+          )}
         </div>
 
+        {/* ขั้นชำระเงิน (เพิ่งสั่ง · ยังไม่ส่งสลิป) — ชำระภายหลัง (ไปหน้าสั่งซื้อสำเร็จ) / กลับหน้าหลัก */}
+        {isNew && !(order.payment_status === "paid" || order.has_payment) && order.order_status !== "cancelled" ? (
+          <div className="flex flex-wrap justify-center gap-2">
+            <Link href={`/customer/account/purchases/${order._id}/success`} className={shopButton}>{tf("payLaterBtn")}</Link>
+            <Link href="/customer" className={shopButton}>{tf("backHome")}</Link>
+          </div>
+        ) : (
         <div className="flex flex-wrap justify-center gap-2">
           <Link href="/customer/account/purchases" className={shopButton}>
             {t("viewAll")}
           </Link>
-          {(order.order_status === "completed" || order.order_status === "cancelled") && <BuyAgainButton items={order.items} className={shopButton} />}
-          {canCustomerCancel(order) && <CancelOrderButton orderId={order._id} orderNo={order.order_no} paid={order.payment_status === "paid"} />}
+          {/* แสดง 2 ปุ่มเท่านั้น (2026-10-26): ดูทั้งหมด + ปุ่มเดียวตามสถานะ — ยกเลิกได้ = ยกเลิก · จบแล้ว/ยกเลิกแล้ว = สั่งซื้ออีกครั้ง · อื่น ๆ = กลับ */}
+          {canCustomerCancel(order) ? (
+            <CancelOrderButton orderId={order._id} orderNo={order.order_no} paid={order.payment_status === "paid"} />
+          ) : order.order_status === "completed" || order.order_status === "cancelled" ? (
+            <BuyAgainButton items={order.items} className={shopButton} />
+          ) : (
+            <BackButton fallback="/customer/account/purchases" className={shopButton} />
+          )}
         </div>
+        )}
       </div>
     </div>
   );

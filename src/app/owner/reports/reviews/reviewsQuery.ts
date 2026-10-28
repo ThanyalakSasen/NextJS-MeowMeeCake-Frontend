@@ -10,7 +10,7 @@ export const REVIEW_STATS_KEY = ["reviews", "admin", "stats"] as const;
 export const REVIEW_FILTER_OPTIONS_KEY = ["reviews", "filter-options"] as const;
 export const REVIEW_ASPECTS_KEY = ["review-aspects"] as const;
 
-// 10 (เดิม 20) — การ์ดรีวิวมี antd Select/Tooltip/Checkbox หลายตัว · 20 ใบ render+hydrate รวดเดียว = TBT ~400ms บนมือถือ
+// 10 (เดิม 20) — การ์ดรีวิวมี antd Select/Tooltip หลายตัว · 20 ใบ render+hydrate รวดเดียว = TBT ~400ms บนมือถือ
 export const REVIEWS_PAGE_SIZE = 10;
 export const REVIEWS_DEFAULT_SORT: ReviewSort = "newest";
 

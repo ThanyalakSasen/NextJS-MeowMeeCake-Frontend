@@ -82,6 +82,8 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
     setPeriod,
     selectedDate,
     setSelectedDate,
+    /** ช่วงที่แสดงอยู่ (บอกในกล่องสรุปว่าข้อมูลวันไหน) */
+    range,
     /** ช่วงก่อนหน้า (แสดงในคำอธิบาย "เทียบกับ …") */
     prevRange: prev,
 

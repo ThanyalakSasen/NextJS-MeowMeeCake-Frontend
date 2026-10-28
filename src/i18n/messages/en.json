@@ -123,9 +123,10 @@
     "notificationsHistory": "Notification History",
     "logout": "Log out",
     "deliveryZones": "Delivery Zones",
-    "webShipping": "Online Shipping Fees",
+    "webShipping": "Shipping fees",
     "storefront": "View storefront",
-    "myAccount": "My account"
+    "myAccount": "My account",
+    "chats": "Customer chats"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -452,11 +453,11 @@
   },
   "enums": {
     "orderStatus": {
-      "pending": "Pending",
-      "confirmed": "Confirmed",
+      "pending": "Awaiting confirmation",
+      "confirmed": "Order accepted",
       "preparing": "Preparing",
-      "ready": "Ready",
-      "completed": "Completed",
+      "ready": "Ready to ship / pick up",
+      "completed": "Delivered",
       "cancelled": "Cancelled"
     },
     "paymentStatus": {
@@ -633,7 +634,8 @@
       "store_design": "Banners",
       "store_info": "Store info",
       "shipping": "Online shipping fees",
-      "reports": "Reports & finance (legacy)"
+      "reports": "Reports & finance (legacy)",
+      "chats": "Customer chats"
     },
     "deliveryStatus": {
       "pending": "Awaiting shipment",
@@ -734,8 +736,8 @@
     "shippingScopeHint": "Customers can always pick up at the shop · set many products at once on the online shipping page",
     "shippingScopeCategory": "Follow category",
     "shippingScopeCategoryIs": "Follow category ({scope})",
-    "shippingScopeNationwide": "Ships nationwide",
-    "shippingScopeProvince": "Ships within the shop's province only",
+    "shippingScopeNationwide": "Ships to every province",
+    "shippingScopeProvince": "Ships only within the shop's province",
     "shippingScopeFailed": "Product saved, but the delivery setting failed — set it again on the edit page or the shipping page"
   },
   "productStock": {
@@ -880,7 +882,10 @@
     "cancelReasonField": "Cancellation reason",
     "cancelReasonPlaceholder": "e.g. Out of ingredients / customer called to cancel",
     "cancelReasonRequired": "Please enter a cancellation reason",
-    "cancelPaidNotice": "This order is already paid — after cancelling it will be \"awaiting refund\". Transfer {amount} back to the customer, then press \"Confirm refund sent\" in the order details"
+    "cancelPaidNotice": "This order is already paid — after cancelling it will be \"awaiting refund\". Transfer {amount} back to the customer, then press \"Confirm refund sent\" in the order details",
+    "groupPaymentNote": "This slip pays for {n} bills ({docs}), slip total {amount} — approving/rejecting here applies to every bill",
+    "markReady": "Mark as ready",
+    "markReadyHint": "Press when the items are prepared — the status changes to \"Ready\" right away"
   },
   "preorderRound": {
     "paymentDue": "Payment due",
@@ -1429,7 +1434,6 @@
     "scopeAll": "All products",
     "minQtyLabel": "Buy {n}+ items",
     "minOrderLabel": "Min. {amount}",
-    "maxDiscountLabel": "Max {amount}",
     "noMinimum": "No minimum",
     "usageOf": "Used {used}/{limit} times",
     "usageUnlimited": "Used {used} times (unlimited)",
@@ -1450,8 +1454,6 @@
     "fieldDiscountValue": "Discount value",
     "discountValuePlaceholder": "e.g. 20",
     "fieldMinOrder": "Minimum order (baht)",
-    "fieldMaxDiscount": "Maximum discount (baht)",
-    "maxDiscountHint": "For percentage discounts, e.g. 10% off up to 50 baht · leave empty for no cap",
     "noMinimumPlaceholder": "No minimum",
     "fieldScope": "Products or categories included",
     "scopeAllOption": "All products",
@@ -1475,7 +1477,10 @@
     "percentMax": "Percent discount must not exceed 100",
     "fieldPointsCost": "Redeem with points",
     "pointsCostHint": "Customers can redeem this as a personal coupon on the website · leave empty to disable",
-    "pointsCostPlaceholder": "e.g. 100 points"
+    "pointsCostPlaceholder": "e.g. 100 points",
+    "maxDiscountLabel": "Max {amount}",
+    "fieldMaxDiscount": "Maximum discount (baht)",
+    "maxDiscountHint": "For percentage discounts, e.g. 10% off up to 50 baht · leave empty for no cap"
   },
   "recipes": {
     "title": "Manage Recipes",
@@ -1897,7 +1902,9 @@
       "order": "Regular order",
       "allStatuses": "All statuses",
       "reset": "Clear filters",
-      "negativeOnly": "Negative reviews only (1-2 stars)"
+      "negativeOnly": "Negative reviews only (1-2 stars)",
+      "search": "Search",
+      "allOrderKinds": "All types"
     },
     "summary": {
       "count": "{n} reviews match",
@@ -2032,20 +2039,15 @@
     "unrepliedNegative": "{n} negative reviews unanswered",
     "allReplied": "All answered",
     "withMedia": "{n} with photo/video",
-    "ratingDist": "Rating distribution",
+    "ratingDist": "How many stars customers give",
     "starsLabel": "{n} stars",
     "countPct": "{n} ({pct})",
-    "trend": "Reviews over time",
-    "trendTip": "{label}: {n} reviews · avg {avg}★",
-    "aspects": "Topics customers mention",
+    "aspects": "What customers praise / complain about",
     "liked": "Liked",
     "improve": "Needs improvement",
     "aspectTip": "{name}: liked {pos} · needs improvement {neg}",
-    "topProducts": "Most-reviewed products",
-    "lowProducts": "Lowest-rated products",
-    "lowProductsHint": "Products with at least {n} reviews",
     "productStat": "{n} reviews · ★ {avg}",
-    "needsReply": "Negative reviews awaiting reply",
+    "needsReply": "Bad reviews not answered yet",
     "viewAll": "View all",
     "empty": "No reviews in this period",
     "emptySection": "No data yet",
@@ -2056,23 +2058,21 @@
     "vsPrevNone": "No reviews in the previous period",
     "points": "{n} pts",
     "categories": "By product category",
-    "categoriesHint": "Red tags = the category's most criticized topics (times mentioned)",
+    "categoriesHint": "Reviews and average rating per category (red bar = below 3★) · bad reviews (1–2★) · red chips = the category's most-criticised topics (count)",
     "categoryNegative": "{n} negative",
     "issueChip": "{name} {n}",
     "noIssues": "No criticized topics",
     "unknownCategory": "(Unknown category)",
     "aspectTrend": "Criticized topics vs previous period",
-    "aspectTrendHint": "Times customers chose \"needs improvement\" · biggest increase first",
-    "aspectTrendTopic": "Topic",
+    "aspectTrendHint": "How often customers picked \"needs improvement\" for each topic, this period vs the previous period of the same length · red = more complaints · green = fewer · biggest increase first",
     "aspectTrendNow": "This period",
     "aspectTrendPrev": "Previous",
-    "aspectTrendChange": "Change",
     "aspectTrendSame": "No change",
     "aspectTrendEmpty": "No criticized topics in either period",
     "productFilter": "All products",
     "viewAllProducts": "Show all products",
-    "productTable": "Product analysis",
-    "productTableHint": "Click a column header to sort · Click a product to see its dashboard",
+    "productTable": "Rating by product",
+    "productTableHint": "Every product reviewed in this period: reviews · average · change vs previous · % bad · top complaint — click a header to sort · click a product to open its dashboard · export to CSV",
     "colProduct": "Product",
     "colReviews": "Reviews",
     "colAvg": "★ Avg",
@@ -2083,7 +2083,59 @@
     "csvAvg": "Average rating",
     "csvPrevAvg": "Previous average",
     "csvAvgDelta": "Change",
-    "csvNegative": "Negative reviews (1–2★)"
+    "csvNegative": "Negative reviews (1–2★)",
+    "groupOverview": "Overview",
+    "groupOverviewInfo": "Shows: review count · average rating · share of bad reviews (1–2 stars) · share replied, for the selected period vs. the previous period of the same length (▲▼ green = better · red = worse) · the corner badge says good / watch / bad · below: reviews per star level, and topics customers liked (green) / complained about (red)",
+    "groupAction": "Do this now",
+    "groupActionInfo": "Shows: bad reviews (1–2 stars) the shop hasn't answered yet, and products whose average dropped by {drop} stars or more vs. the previous period — handle these before other customers see",
+    "groupCause": "Root causes",
+    "groupCauseInfo": "Shows: which topics each category gets complaints about · topics that got more or fewer complaints than last period · a table of every product (click a column to sort, e.g. most reviews or lowest rating) — use it to find what to improve",
+    "overviewSentence": "{n} reviews this period, average {avg} stars",
+    "overviewSame": "— same as the previous period",
+    "overviewUp": "— up {d} stars from the previous period",
+    "overviewDown": "— down {d} stars from the previous period",
+    "actionSentence": "To do: {items}",
+    "actionUnreplied": "{n} bad reviews awaiting reply",
+    "actionDropping": "{n} products dropping",
+    "actionNone": "Nothing pending — all bad reviews answered and no product is dropping",
+    "causeSentence": "Most criticised topic: \"{name}\" ({n} times)",
+    "causeNone": "No criticised topics this period",
+    "status": {
+      "good": "Good",
+      "warn": "Watch",
+      "bad": "Bad"
+    },
+    "totalInfo": "All reviews this period — fewer than before = watch · less than half = bad",
+    "avgInfo": "Average rating — 4.0+ = good · 3.5–3.9 = watch · below 3.5 = bad",
+    "negativeInfo": "Share of 1–2 star reviews — up to 10% = good · up to 25% = watch · over 25% = bad",
+    "dropping": "Products dropping",
+    "droppingHint": "Average dropped by {d} stars or more vs the previous period · click for details",
+    "droppingNone": "No products dropping",
+    "needsReplyNone": "No bad reviews awaiting reply",
+    "replyInfo": "Share of reviews the shop has replied to — the badge is based on unanswered bad reviews (1–2 stars): none = good · 1–4 = watch · 5+ = bad · click the card to reply",
+    "replySubPending": "{n} bad reviews waiting — click to reply →",
+    "replySubDone": "Replied {n} of {total} reviews",
+    "aspectsHint": "Counted from the topics customers pick when reviewing (praise = 4–5★ reviews · complaint = 1–3★) · green = praise, red = complaint · most-criticised first",
+    "likedN": "Liked {n}",
+    "improveN": "Complaints {n}",
+    "ratingDistHint": "Average rating · share of satisfied (4–5★, green) / neutral (3★, yellow) / unsatisfied (1–2★, red) customers · and the number of reviews per star with % of all reviews",
+    "needsReplyHint": "1–2★ reviews the shop hasn't replied to (latest 5) — replying quickly shows other customers you care",
+    "dataScope": "Showing: reviews for {scope}, {from} – {to}",
+    "scopeAll": "the whole shop",
+    "scopeProduct": "\"{name}\"",
+    "topProducts": "Most reviewed products",
+    "topProductsHint": "Top 5 most-reviewed products in this period · click to open that product's dashboard",
+    "lowProducts": "Lowest rated products",
+    "lowProductsHint": "Top 5 · only products with at least {n} reviews",
+    "ratingGood": "Satisfied (4–5★)",
+    "ratingMid": "Neutral (3★)",
+    "ratingBad": "Unsatisfied (1–2★)",
+    "ratingAvgOf": "Average of {n} reviews",
+    "aspectTrendSameN": "Unchanged ({n} times)",
+    "aspectTrendNew": "{n} complaints (none before)",
+    "aspectTrendGone": "No complaints now (was {n})",
+    "aspectTrendUp": "{n} more complaints (+{pct})",
+    "aspectTrendDown": "{n} fewer complaints (−{pct})"
   },
   "reviewSettings": {
     "title": "Review topic settings",
@@ -2110,12 +2162,13 @@
       "moveDown": "Move down",
       "shown": "Shown in form",
       "hidden": "Hidden from form",
-      "placeholderHint": "Hint shown on hover (optional) e.g. \"sweetness, freshness\" — press Enter or click elsewhere to save",
       "deleteConfirm": "Delete topic \"{name}\"? Existing reviews keep it; you can restore it later",
       "deleted": "Deleted topic \"{name}\" — restore it below",
       "deletedTitle": "Deleted topics ({n})",
       "restore": "Restore",
-      "restored": "Restored topic \"{name}\""
+      "restored": "Restored topic \"{name}\"",
+      "dragHint": "Drag ☰ to reorder (or focus and press ↑/↓) — customers see the buttons in this order",
+      "dragHandle": "Drag to reorder: {name}"
     },
     "terms": {
       "intro": "Words or phrases customers often write and which topic they belong to (e.g. \"too sweet\" → Taste) — the text analysis uses them for reviews where the customer didn't pick a topic",
@@ -2128,9 +2181,6 @@
       "term": "Word / phrase",
       "termPlaceholder": "e.g. too sweet",
       "aspect": "Topic",
-      "synonyms": "Same-meaning words",
-      "synonymsLabel": "Same-meaning words (press Enter or separate with ,)",
-      "synonymsPlaceholder": "e.g. overly sweet, very sweet",
       "empty": "No analysis keywords yet",
       "required": "Please enter a word and choose a topic",
       "saved": "Keyword saved",
@@ -2219,7 +2269,7 @@
     },
     "address": {
       "title": "Store address",
-      "hint": "The province limits delivery of items that cannot ship nationwide · shown on \"Contact us\"",
+      "hint": "The shop's province — products set to \"shop's province only\" can be delivered only within it · shown on the Contact page",
       "house_no": "House no. / village / soi / road",
       "house_noPlaceholder": "e.g. 99/1 Moo 3, Mittraphap Rd.",
       "sub_district": "Sub-district",
@@ -2245,8 +2295,8 @@
     },
     "markets": {
       "title": "Weekly markets",
-      "titleWithAddress": "Store address & weekly markets",
-      "description": "The main shop and regular market stalls with opening days and hours — customers see them on \"Contact us\" and pick one as a pickup point (visible ones only)",
+      "titleWithAddress": "Storefronts (address · open days & hours)",
+      "description": "Main storefront = store address (one set of data) plus regular market spots with open days and hours — customers see them on \"Contact us\" and can pick them for pickup (visible ones only)",
       "empty": "No weekly markets yet — at least 1 is needed for customer pickup",
       "noneActive": "No visible weekly market — at least 1 is needed for customer pickup",
       "editHint": "(click \"Edit\" on this section to add one)",
@@ -2267,7 +2317,12 @@
       "lastActive": "At least 1 weekly market must stay visible",
       "removeTitle": "Remove weekly market",
       "removeConfirm": "Remove \"{name}\" from the list? (applies when you save)",
-      "thisOne": "this market"
+      "thisOne": "this market",
+      "main": "Main store",
+      "hiddenBadge": "Hidden",
+      "setMain": "Make main store",
+      "mainUsesAddress": "The main storefront uses the store address and pin — the owner edits it",
+      "mainNoAddress": "Store address not filled in yet — click \"Edit\" and fill it in the main storefront entry"
     },
     "days": {
       "mon": "Mon",
@@ -2296,6 +2351,11 @@
       "marketMapUrl": "Market #{n}: invalid map link",
       "logoType": "Only PNG, JPG, WebP or AVIF files are supported",
       "logoSize": "File must be 5MB or smaller"
+    },
+    "read": {
+      "pin": "Map pin",
+      "hours": "{open} - {close}",
+      "openMap": "Open Google Maps"
     }
   },
   "searchSynonyms": {
@@ -2375,6 +2435,8 @@
     "deleted": "Notification deleted",
     "deleteFailed": "Could not delete notification",
     "detailTitle": "Notification detail",
+    "goToLink": "Go to item",
+    "empty": "No notifications found",
     "colLine": "LINE",
     "lineStatus": {
       "sent": "Sent to LINE",
@@ -2385,9 +2447,7 @@
       "quota": "LINE delivery failed: this month’s LINE message quota is used up (resets on the 1st, or upgrade the LINE OA plan)",
       "notConfigured": "LINE delivery failed: LINE is not configured on the server (LINE_CHANNEL_ACCESS_TOKEN / LINE_TARGET_ID)",
       "other": "LINE delivery failed: {error}"
-    },
-    "goToLink": "Go to item",
-    "empty": "No notifications found"
+    }
   },
   "accessDenied": {
     "title": "You don't have access to this page",
@@ -2430,7 +2490,7 @@
     "saveFailed": "Failed to save category",
     "deleteFailed": "Failed to delete category",
     "inUse": "Cannot delete \"{name}\": {n} products still use this category",
-    "shippingHint": "Ships nationwide = web orders can be delivered to any province · store province only = delivery within the store province (pickup is always allowed) · * = not set yet, guessed from the name"
+    "shippingHint": "Every province = customers anywhere can have it delivered · shop's province only = delivery only within the shop's province (pickup always possible) · * = not set yet, chosen from the category name"
   },
   "trash": {
     "open": "Deleted items",
@@ -2598,12 +2658,10 @@
     }
   },
   "shippingZones": {
-    "title": "Online Shipping Fees",
-    "usage": "The customer's delivery province is matched against zones A–C — anything else uses zone D · no free shipping by order total (free shipping only via coupons) · orders created in the back office use \"Delivery Zones\" instead",
-    "scopeNote": "Categories without \"ships nationwide\" can only be delivered within the store province — set this with the \"Out-of-province delivery\" button at the top right, or in \"Manage categories\" on the products page",
+    "title": "Shipping fees (website orders)",
     "fallbackTag": "All other provinces",
-    "fallbackHint": "Zone D automatically covers every province not in zones A–C — only its name and fee can be edited",
-    "noProvinces": "No provinces yet",
+    "fallbackHint": "Automatically covers every province not in another zone — only the zone name and fee can be edited (can't be deleted)",
+    "noProvinces": "No provinces in this zone yet",
     "moreProvinces": "+{n} provinces",
     "editTitle": "Edit zone {code}",
     "saved": "Zone {code} saved",
@@ -2614,28 +2672,37 @@
       "fee": "Fee",
       "provinces": "Provinces",
       "provincesPlaceholder": "Pick provinces",
-      "provincesHint": "A province can belong to one zone only — remove it from its current zone before moving it",
-      "provinceTaken": "{province} (zone {code})"
+      "provincesHint": "A province can be in one zone only — to move it, remove it from its current zone first",
+      "provinceTaken": "{province} (zone {code})",
+      "labelPlaceholder": "e.g. Zone E — Bangkok & vicinity"
     },
     "errors": {
       "labelRequired": "Please enter a zone name",
       "labelTooLong": "Zone name must be 120 characters or fewer",
-      "feeInvalid": "Fee must be 0 or more with at most 2 decimals"
+      "feeInvalid": "Fee must be 0 or more with at most 2 decimals",
+      "provincesRequired": "Pick at least 1 province"
     },
     "checker": {
-      "title": "Check fee by province",
+      "title": "Try a shipping quote",
       "placeholder": "Pick a province",
-      "result": "Zone {code} — fee {fee}"
+      "result": "Zone {code} — fee {fee}",
+      "hint": "Pick a destination province (and products if you like) to see the customer's shipping fee and whether it can ship",
+      "province": "Destination province",
+      "products": "Items in cart (optional)",
+      "productsPlaceholder": "Pick products to check they can ship there",
+      "blocked": "Can't ship to this province — some items ship within {province} only",
+      "blockedItems": "Items that can't ship: {items} · the customer must pick up at the store or use an address in {province}",
+      "ok": "This province is in zone {code} ({label}) — fee <b>{fee}</b>"
     },
     "categories": {
-      "button": "Out-of-province delivery",
-      "title": "Out-of-province delivery by category",
-      "hint": "On = ships nationwide · Off = store province only (customers can always pick up) · The \"Whole category\" switch sets every product in the category at once · Click a category to set individual products · * = never set, guessed from the category name",
+      "button": "Product delivery areas",
+      "title": "Which products can ship to other provinces",
+      "hint": "Switch on = ships to every province · off = ships only within the shop's province (customers can still pick up) · \"Whole category\" switches every item in the category at once · tap a category to set items one by one · * = not set yet, chosen from the category name · pre-order products always ship to every province",
       "empty": "No product categories yet",
-      "nationwide": "Ships nationwide",
-      "provinceOnly": "Store province only",
-      "autoHint": "Not set yet — guessed from the name (sourdough = nationwide). Toggle to set it.",
-      "toggleLabel": "Ships nationwide: {name}",
+      "nationwide": "Ships to every province",
+      "provinceOnly": "Shop's province only",
+      "autoHint": "Not set yet — chosen from the category name (e.g. sourdough = every province) · flip the switch to set it yourself",
+      "toggleLabel": "Ships to every province: {name}",
       "saveFailed": "Could not save the category delivery setting"
     },
     "products": {
@@ -2646,14 +2713,27 @@
       "saveFailed": "Could not save the product delivery setting",
       "groupSummary": "{n} products",
       "noCategory": "No category",
-      "statusAll": "All ship nationwide",
-      "statusSome": "{on}/{n} ship nationwide",
-      "statusNone": "All province only",
+      "statusAll": "All items ship to every province",
+      "statusSome": "{on}/{n} items ship to every province",
+      "statusNone": "Every item: shop's province only",
       "wholeCategory": "Whole category",
-      "custom": "Custom",
-      "scopeFilter": "All delivery scopes",
+      "custom": "Differs from category",
       "noProducts": "No products to set up yet"
-    }
+    },
+    "how": {
+      "title": "How the shipping fee is calculated",
+      "step1": "We look at the province in the customer's delivery address and use that zone's fee — provinces in no zone use the zone D fee ({d})",
+      "step2": "One fee per order, no matter how many items or how much it costs · store pickup = no fee · free shipping only when the customer uses a free-shipping coupon",
+      "step3": "Some products ship only within {province} (e.g. fresh cakes with a short shelf life) — if the cart has even one, the customer must use an address in {province} or pick up at the shop · choose which products can ship to other provinces with the \"Product delivery areas\" button at the top right · pre-order products always ship everywhere"
+    },
+    "provinceCount": "{n} provinces",
+    "listTitle": "All zones ({n})",
+    "add": "Add zone",
+    "addTitle": "Add shipping zone",
+    "added": "Zone {code} added",
+    "deleted": "Zone {code} deleted — its provinces now use the zone D fee",
+    "deleteFailed": "Could not delete the zone",
+    "deleteConfirm": "Delete zone {code}? Its provinces will use the zone D fee instead (can't be undone)"
   },
   "shop": {
     "nav": {
@@ -2667,15 +2747,16 @@
       "openMenu": "Open menu",
       "logoHome": "MeowMee Cake — Home",
       "accountMenu": "Account menu",
-      "myAccount": "My account",
-      "myOrders": "My orders",
+      "myAccount": "Account",
+      "myOrders": "Orders",
       "member": "Membership",
       "favorites": "Favorites",
       "logout": "Log out",
       "login": "Log in",
       "cart": "Cart",
       "cartWithCount": "Cart ({count} items)",
-      "backOffice": "Back office"
+      "backOffice": "Back office",
+      "cartWithPreorder": "Cart ({count} items · {preorder} pre-order)"
     },
     "common": {
       "loading": "Loading",
@@ -2684,15 +2765,16 @@
       "home": "Home",
       "cancel": "Cancel",
       "saving": "Saving...",
-      "allProducts": "All products"
+      "allProducts": "All products",
+      "close": "Close"
     },
     "accountMenu": {
-      "aria": "My account menu",
+      "aria": "Account menu",
       "home": "MeowMee Cake — Home",
       "closeMenu": "Close menu",
-      "groupAccount": "My account",
-      "groupOrders": "My orders",
-      "profile": "My info",
+      "groupAccount": "Account",
+      "groupOrders": "Orders",
+      "profile": "Personal info",
       "address": "Addresses",
       "changePassword": "Change password",
       "member": "Membership",
@@ -2701,7 +2783,7 @@
       "favorites": "Favorites",
       "notifications": "Notifications",
       "logout": "Log out",
-      "reviews": "My reviews"
+      "reviews": "Reviews"
     },
     "address": {
       "saved": "Address saved",
@@ -2727,7 +2809,7 @@
       "keep": "Keep",
       "fillAll": "Please fill in every field",
       "zipInvalid": "Postal code must be 5 digits",
-      "title": "My addresses",
+      "title": "Addresses",
       "addNew": "Add new address",
       "loading": "Loading addresses...",
       "loadFailed": "Could not load addresses. Please refresh the page.",
@@ -2741,7 +2823,9 @@
       "editTitle": "Edit address",
       "saveBtn": "Save",
       "setDefaultAuto": "Set as default address (picked automatically at checkout)",
-      "recipientHint": "Recipient name and phone are entered with each order"
+      "recipientHint": "Recipient name and phone are entered with each order",
+      "editOnceHint": "Edits apply to this order only — your saved addresses are not changed",
+      "useOnce": "Use this address for this order"
     },
     "footer": {
       "fallbackAddress": "Mueang District, Nong Khai 43000",
@@ -2751,7 +2835,9 @@
       "menu": "Menu",
       "allProducts": "All products",
       "shipping": "Shipping & delivery",
-      "contact": "Contact us"
+      "contact": "Contact us",
+      "locations": "Stores & pickup points",
+      "openMaps": "Open Google Maps"
     },
     "hero": {
       "banner": "Banner {n}"
@@ -2786,7 +2872,18 @@
       "percentOff": "{percent}% off",
       "percentOffMax": "{percent}% off (up to {max})",
       "amountOff": "{amount} off",
-      "freeShipping": "Free shipping"
+      "freeShipping": "Free shipping",
+      "off": "off",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyCode": "Copy code {code}",
+      "copyManual": "Copy this code",
+      "codeLabel": "Code {code}",
+      "codeHeading": "Code:",
+      "usableCount": "{n} of {total} usable",
+      "bestValue": "Best value",
+      "saves": "Saves {amount} on this order",
+      "exceedsTotal": "The {amount} coupon is more than your order total — add more items first"
     },
     "pickup": {
       "locations": "Pickup points",
@@ -2818,7 +2915,9 @@
       "reviews": "{n} reviews",
       "adding": "Adding...",
       "added": "Added",
-      "addToCart": "Add to cart"
+      "addToCart": "Add to cart",
+      "localOnly": "{province} only",
+      "localOnlyHint": "Delivers within {province} province only (or pick up at the shop)"
     },
     "pick": {
       "groupRequired": "Please choose {group}",
@@ -2845,7 +2944,6 @@
       "empty": "Your cart is empty",
       "browse": "Browse products",
       "itemCount": "({n} items)",
-      "continueShopping": "← Continue shopping",
       "product": "Product",
       "perUnit": "{price} / each",
       "removeItem": "Remove {name}",
@@ -2857,14 +2955,38 @@
       "nextStep": "Calculated at the next step",
       "blocked": "{n} items can't be ordered yet — please remove them or lower the quantity",
       "checkout": "Proceed to checkout",
-      "payHint": "Pay with PromptPay, then attach your slip to confirm"
+      "payHint": "Pay with PromptPay, then attach your slip to confirm",
+      "normalSection": "Ready-to-ship items",
+      "preorderSection": "Pre-orders",
+      "preorderRound": "Round {round} · pickup from {date}",
+      "preorderBadge": "Pre-order",
+      "preorderMinQty": "Minimum {n} pcs",
+      "summaryNormal": "Ready-to-ship summary",
+      "summaryPreorder": "Pre-order summary",
+      "checkoutPreorder": "Check out pre-order",
+      "preorderSeparate": "Pre-orders are paid and delivered separately from ready-to-ship items",
+      "redeemPointsHint": "Have points? Exchange them for a discount on the Membership page (100 points = ฿10), then pick the coupon above →",
+      "billNormal": "Ready-to-ship items ({n})",
+      "billPreorder": "Pre-order {round} ({n})",
+      "itemsTotal": "Items total",
+      "checkoutBills": "Check out all ({n} bills)",
+      "billsHint": "One checkout makes {n} bills (separate deliveries/pickups) — pay once with one slip",
+      "selectItem": "Select {name} to order",
+      "selectBill": "Select everything in {name}",
+      "selectNone": "Nothing selected — tick the items you want to order",
+      "unselectedStay": "Unselected items ({n}) will stay in your cart",
+      "normalSubtitle": "Ready-to-ship items — delivered or picked up once the shop confirms",
+      "preorderPickup": "Pick up from {date}",
+      "selectedOf": "{n}/{total} selected",
+      "qtyTimesPrice": "{qty} × {price}",
+      "preorderPending": "You still have {n} pre-order item(s) waiting (ordered separately from ready-to-ship items)"
     },
     "orderStatus": {
-      "pending": "Pending",
-      "confirmed": "Confirmed",
+      "pending": "Ordered",
+      "confirmed": "Paid",
       "preparing": "Preparing",
-      "ready": "Ready to ship / pick up",
-      "completed": "Completed",
+      "ready": "Preparing",
+      "completed": "Delivered",
       "cancelled": "Cancelled"
     },
     "paymentStatus": {
@@ -2922,9 +3044,9 @@
       "allOrders": "All orders",
       "loginToView": "Please log in to see your order history",
       "loginToViewOne": "Please log in to see this order",
-      "myAccount": "My account",
+      "myAccount": "Account",
       "history": "Order history",
-      "historyTitle": "My order history",
+      "historyTitle": "Order history",
       "filterBy": "Show by status:",
       "loadingList": "Loading your orders...",
       "loadFailed": "Could not load your orders. Please refresh the page.",
@@ -2947,7 +3069,6 @@
       "pickupOn": "Pickup {date}",
       "pickupNoDate": "Pickup",
       "total": "Total: {amount}",
-      "slipRejected": "Slip was rejected — please upload a new one",
       "slipSent": "Slip sent — awaiting review",
       "unpaid": "Not paid yet",
       "awaitRefund": "Awaiting refund from the store",
@@ -2995,15 +3116,24 @@
       "timeline": {
         "aria": "Order status",
         "placed": "Ordered",
-        "paid": "Paid / confirmed",
+        "paid": "Paid",
         "preparing": "Preparing",
-        "shipping": "Shipping",
-        "readyPickup": "Ready for pickup",
-        "received": "Received",
-        "pickedUp": "Picked up"
+        "delivered": "Delivered"
       },
       "reviewStatus": "Review status",
-      "reviewNotYet": "You can review once the order is completed and paid"
+      "reviewNotYet": "You can review once the order is completed and paid",
+      "labelOrder": "order",
+      "labelPreorder": "pre-order",
+      "reviewBlocked": {
+        "cancelled": "This {label} was cancelled, so it can't be reviewed",
+        "unpaid": "You can review after the {label} is paid",
+        "notCompleted": "You can review once you've received it (the {label} is completed)"
+      },
+      "back": "Back to previous page",
+      "unpaidBy": "Not paid yet · by {date}",
+      "searchPlaceholder": "Search order number or product name",
+      "emptySearch": "No results for \"{q}\"",
+      "clearSearch": "Clear search"
     },
     "preorders": {
       "all": "All pre-orders",
@@ -3039,7 +3169,8 @@
       "pickupSelfShort": "Self pickup",
       "paidContactToCancel": "Paid — please contact the store to cancel",
       "preorder": "Pre-order",
-      "reviewOnlyCompleted": "You can review once the pre-order is completed and paid"
+      "reviewOnlyCompleted": "You can review once the pre-order is completed and paid",
+      "searchPlaceholder": "Search pre-order number or product name"
     },
     "slip": {
       "minSec": "{mm}:{ss} min",
@@ -3067,7 +3198,13 @@
       "previewAlt": "Slip preview",
       "sending": "Sending slip...",
       "send": "Send slip",
-      "accepted": "JPG, PNG, WEBP or AVIF, up to 5 MB"
+      "accepted": "JPG, PNG, WEBP or AVIF, up to 5 MB",
+      "groupHint": "This bill was ordered with others — you can pay them all at once",
+      "groupLink": "Go to combined payment",
+      "title": "Payment",
+      "sub": "Scan the PromptPay QR, then attach your transfer slip",
+      "pickSlip": "Tap to choose a slip image",
+      "changeSlip": "Tap to change the image"
     },
     "review": {
       "rating": {
@@ -3081,7 +3218,7 @@
       "imageTooBig": "\"{name}\" is larger than {mb}MB — please choose another file",
       "videoTooBig": "The video is larger than {mb}MB — please choose another file",
       "needRating": "Please give a star rating before submitting",
-      "needItem": "Please choose at least one product to review",
+      "needRatingEach": "Please give \"{name}\" a star rating before submitting",
       "product": "Product",
       "partialFail": "{ok} reviews sent, {failed} failed: {list}",
       "thanksRemaining": "Thanks for your review! {n} items left to review",
@@ -3092,7 +3229,7 @@
       "title": "Review products",
       "preorderNo": "Pre-order #{no}",
       "orderNo": "Order #{no}",
-      "pickHint": " · Choose the products this review applies to (same rating, text and photos for each)",
+      "sendAll": "Send all reviews ({n} items)",
       "option": "Option: {name} · ",
       "rate": "Rating",
       "rateValue": "Rating: {n}/5",
@@ -3111,7 +3248,16 @@
       "pointsHint": "Each review earns reward points (more with photos)",
       "sending": "Sending review...",
       "sendMany": "Send {n} reviews",
-      "send": "Send review"
+      "send": "Send review",
+      "itemsToReview": "{n} items to review",
+      "askMode": "How would you like to review?",
+      "modeAll": "Review all at once",
+      "modeAllDesc": "Review all {n} items on one page — a separate rating and comment for each, sent together",
+      "modeOne": "Review one by one",
+      "modeOneDesc": "Rate and comment on each item separately; moves to the next item after sending",
+      "stepOf": "Item {i} of {n}",
+      "changeMode": "Change review mode",
+      "thanksNext": "Thanks! On to the next item ({n} left)"
     },
     "account": {
       "lineLinked": "LINE connected",
@@ -3119,8 +3265,8 @@
       "lineError": "Could not connect LINE. Please try again.",
       "lineSessionExpired": "Your session expired while connecting LINE — please log in and try again",
       "loginToManage": "Please log in to manage your account",
-      "myAccount": "My account",
-      "profileTitle": "My info",
+      "myAccount": "Account",
+      "profileTitle": "Personal info",
       "loadFailed": "Could not load your account. Please refresh the page.",
       "emailSaved": "Email saved — please click the verification link in your email",
       "emailSaveFailed": "Could not save the email",
@@ -3186,7 +3332,7 @@
     },
     "favorites": {
       "loginToView": "Please log in to see your favorites",
-      "title": "My favorites",
+      "title": "Favorites",
       "count": "Products you saved ({n})",
       "loading": "Loading favorites...",
       "loadFailed": "Could not load favorites. Please refresh the page.",
@@ -3266,7 +3412,33 @@
       "validUntil": " · valid until {date}",
       "history": "Points history",
       "noHistory": "No points history yet",
-      "latest50": "Showing the latest 50"
+      "latest50": "Showing the latest 50",
+      "cardBadge": "Member",
+      "shortcutUsable": "Coupons you can use now",
+      "shortcutRedeemable": "Coupons you can redeem",
+      "couponCount": "{n}",
+      "tabs": {
+        "coupons": "My coupons",
+        "redeem": "Redeem",
+        "history": "Points history",
+        "earn": "How to earn"
+      },
+      "goRedeem": "See redeemable coupons →",
+      "couponHowTo": "Redeemed coupons: pick them from \"My coupons\" at checkout · their codes don't work in the promo code box",
+      "convertHeading": "Exchange points for a discount",
+      "convertRule": "{min} points = {baht} off, used at checkout (in steps of {step} points)",
+      "convertNotEnough": "You need at least {min} points to exchange — {need} more to go",
+      "convertLess": "10 points less",
+      "convertMore": "10 points more",
+      "convertPoints": "Points to exchange",
+      "convertAll": "Use all points",
+      "convertGet": "{baht} discount coupon",
+      "convertNow": "Exchange for coupon",
+      "convertHint": "You get 1 discount coupon in \"My coupons\", valid for 90 days — pick it at checkout · can't be turned back into points",
+      "convertTitle": "Exchange points for a discount",
+      "convertConfirm": "Use {points} points for a {baht} discount coupon?",
+      "convertDone": "Done — the coupon is in \"My coupons\"",
+      "convertFailed": "Could not exchange points"
     },
     "checkout": {
       "loginToOrder": "Please log in to place an order",
@@ -3277,9 +3449,9 @@
       "confirmOrder": "Confirm order",
       "receiveMethod": "How to receive",
       "delivery": "Home delivery",
-      "deliveryHint": "Fee depends on area",
+      "deliveryHint": "Fee based on the delivery address's province",
       "takeaway": "Pick up at store",
-      "takeawayHint": "No delivery fee",
+      "takeawayHint": "Free, no delivery fee",
       "deliveryAddress": "Delivery address",
       "addAddress": "+ Add new address",
       "noAddress": "No saved addresses yet — tap \"Add new address\"",
@@ -3311,7 +3483,25 @@
       "amountDue": "Amount due",
       "ordering": "Placing order...",
       "needRecipient": "Fill in the address, recipient name and phone before ordering",
-      "needPickup": "Choose a pickup point and date before ordering"
+      "needPickup": "Choose a pickup point and date before ordering",
+      "billsNotice": "This order is split into {n} bills because they ship/are picked up separately — choose how to receive each bill, then pay once with one slip",
+      "billNormalTitle": "Bill {i} · Ready-to-ship items",
+      "billPreorderTitle": "Bill {i} · Pre-order {round}",
+      "editCart": "Edit in cart",
+      "recipientTitle": "Recipient",
+      "recipientTitleMany": "Recipient (used for every delivered bill)",
+      "sameAsFirst": "Same as bill 1",
+      "billTotal": "This bill",
+      "grandTotal": "Total to pay",
+      "payOnceHint": "Transfer the total once and attach one slip for all {n} bills within 30 minutes — otherwise they're cancelled automatically",
+      "payDeadline": "Please pay and attach your slip within 30 minutes — otherwise it's cancelled automatically",
+      "confirmBills": "Place {n} bills",
+      "addressEditedBadge": "Edited for this order",
+      "editAddressOnce": "Edit address (this order only)",
+      "useSavedAddress": "Use saved address",
+      "editShort": "Edit",
+      "shippingCombined": "Combined with bill {n}",
+      "shippingCombinedHint": "No delivery fee for this bill — it goes to the same address as bill {n} within 7 days, so delivery is charged once"
     },
     "preorderShop": {
       "crumb": "Pre-order",
@@ -3331,14 +3521,14 @@
       "closesIn": "Closes in",
       "opensIn": "Opens in",
       "viewItems": "View items",
-      "viewItemsCount": "View items ({n})",
+      "viewItemsCount": "View items ({n, plural, one {# item} other {# items}})",
       "viewUpcoming": "Preview items",
       "roundNotFound": "Pre-order round not found",
       "allRounds": "See all rounds",
       "roundFailed": "Could not load the round. Please refresh.",
       "notOpenYet": "Not open yet — you can preview the items",
       "closed": "Closed",
-      "roundItems": "Items in this round ({n})",
+      "roundItems": "Items in this round ({n, plural, one {# item} other {# items}})",
       "searchRound": "Search this round",
       "noMatch": "No matching items",
       "noItems": "No items in this round yet",
@@ -3350,12 +3540,14 @@
         "d2": "Quantities are limited; some items have a minimum and a per-customer limit",
         "s3": "Confirm your order",
         "d3": "Pick up at a pickup point (choose your date) or have it delivered · coupons and points can be used",
-        "s4": "Pay within 24 hours",
+        "s4": "Pay within 30 minutes",
         "d4": "Scan the QR and attach your slip on the order page — unpaid orders (or past the round's close) are cancelled automatically",
         "s5": "The store confirms and starts baking",
         "d5": "Track the status in \"Pre-order history\" under My account",
         "s6": "Pick up on your chosen date",
-        "d6": "You can cancel only before paying — after paying, please contact the store"
+        "d6": "You can cancel only before paying — after paying, please contact the store",
+        "button": "How to pre-order",
+        "gotIt": "Got it"
       },
       "days": "{n} days ",
       "hoursMins": "{h} hr {m} min",
@@ -3384,11 +3576,16 @@
       "pickupAtStore": "Pick up at the store from {date} — the store will confirm the details",
       "undeliverable": "{reason} — choose another address or pick up at a pickup point",
       "summary": "Pre-order summary",
-      "payWithin24": "Pay within 24 hours of ordering (and before the round closes) or it will be cancelled automatically",
+      "payWithin24": "Pay within 30 minutes of ordering (and before the round closes) or it will be cancelled automatically",
       "ordering": "Ordering...",
       "qtyOutOfRange": "Some quantities are outside the allowed range",
       "needRecipient": "Fill in the address, recipient name and phone",
-      "needPickup": "Choose a pickup point and date first"
+      "needPickup": "Choose a pickup point and date first",
+      "choose": "Choose",
+      "reapplyCode": "Items, quantity or address changed — please apply code {code} again",
+      "removeCode": "Remove code",
+      "basketMulti": "Pre-orders in cart: <b>{rounds} rounds</b> · {n} items · {amount}",
+      "roundNotOpenShort": "Not open yet"
     },
     "products": {
       "all": "All",
@@ -3426,7 +3623,7 @@
       "shared": "Product shared",
       "copied": "Product link copied",
       "sharedPoints": "{done} — you earned {n} points!",
-      "back": "← Back",
+      "back": "Back to previous page",
       "noImage": "No image",
       "imageN": "Image {n}",
       "share": "Share product",
@@ -3449,7 +3646,20 @@
       "noDescription": "No product details",
       "noHeating": "No reheating instructions",
       "allergenNotice": "This product contains ingredients you are allergic to: {names}",
-      "allergenNoticeGeneric": "This product contains ingredients you are allergic to"
+      "allergenNoticeGeneric": "This product contains ingredients you are allergic to",
+      "factsTitle": "Product info",
+      "factCategory": "Category",
+      "factUnit": "Unit",
+      "factType": "Type",
+      "typeReady": "Ready to ship",
+      "typePreorder": "Pre-order (by round)",
+      "factShipping": "Shipping",
+      "shipLocalOnly": "Within {province} only (or pick up)",
+      "shipNationwide": "Ships nationwide",
+      "factStock": "In stock",
+      "stockUnits": "{n} {unit}",
+      "pieces": "pcs",
+      "heatingTitle": "Heating / storage"
     },
     "preorderBox": {
       "notInRound": "This product isn't offered in the selected round",
@@ -3473,7 +3683,9 @@
       "addToList": "Add to pre-order list",
       "full": "Fully booked",
       "roundNotOpen": "Round not open",
-      "orderNow": "Pre-order now · {amount}"
+      "orderNow": "Pre-order now · {amount}",
+      "addToCart": "Add to cart · {amount}",
+      "addedToCart": "Added to cart — check out together with other items in your cart"
     },
     "custom": {
       "noExtra": "No extra charge",
@@ -3544,7 +3756,10 @@
       "message": "Message",
       "messagePlaceholder": "Tell us the cake style, the date you need it, or any other questions...",
       "sending": "Sending...",
-      "send": "Send message"
+      "send": "Send message",
+      "openChatPage": "Open full chat",
+      "mainStore": "Main store",
+      "moreLocations": "We have other pop-up spots too — ask us in chat"
     },
     "shipping": {
       "steps": {
@@ -3561,17 +3776,14 @@
       "title": "Shipping & delivery",
       "subtitle": "Choose home delivery or pick up at the store / a pickup point",
       "afterOrder": "After you order",
-      "deliveryTitle": "Home delivery — fee by province",
+      "deliveryTitle": "Home delivery fee",
       "loadingRates": "Loading delivery rates...",
       "ratesFailed": "Couldn't load delivery rates — the fee will be calculated automatically at checkout",
-      "otherProvinces": "All other provinces",
-      "scope": "Delivery area",
-      "scopeNationwide": "Products in <b>{cats}</b> ship nationwide; other categories (e.g. cakes and fresh desserts)",
-      "scopeFresh": "Fresh products such as cakes and desserts",
-      "scopeLocal": "can only be delivered within {area} — if your cart has these items, please use an address there or pick up at the store",
+      "otherProvinces": "All other provinces not listed above",
+      "scope": "Where each kind of product can be delivered",
       "inProvince": "{province}",
       "sameProvince": "the store's province",
-      "pickupTitle": "Pick up at the store / a pickup point (no delivery fee)",
+      "pickupTitle": "Pick up at the shop / pickup point (free, no delivery fee)",
       "pickupHint": "Choose a pickup point and date at checkout (only days that point is open) — pre-orders can be picked up within each round's pickup window",
       "loadingPickup": "Loading pickup points...",
       "noPickup": "No pickup points are open right now",
@@ -3582,8 +3794,16 @@
       "note3": "If a paid order is cancelled, the store refunds the full amount — you can set up a <link>PromptPay account for refunds</link> in advance",
       "moreQuestions": "More questions?",
       "contact": "Contact us",
-      "scopeExtraNationwide": "Also delivered nationwide (even though their category is local only): <b>{items}</b>",
-      "scopeExtraLocal": "These products can only be delivered within {area}: <b>{items}</b>"
+      "deliveryHint": "Based on the delivery address's province — charged once per order, however many items",
+      "perOrder": "per order",
+      "scopeAnywhereTitle": "Delivers to every province",
+      "scopeAnywhereCats": "Products in <b>{cats}</b>",
+      "scopeAnywherePreorder": "All pre-order products",
+      "scopeAnywhereItems": "Also these products: <b>{items}</b>",
+      "scopeLocalTitle": "Delivers only within {area}",
+      "scopeLocalFresh": "Other fresh products such as cakes and desserts (short shelf life)",
+      "scopeLocalItems": "Also these products: <b>{items}</b>",
+      "scopeTip": "If your cart has even one item that delivers only within {area}, use a delivery address in {area} or switch to pickup"
     },
     "password": {
       "loginToChange": "Please log in to change your password",
@@ -3631,7 +3851,9 @@
       "saveNew": "Save new password",
       "pickGoogleFailed": "Could not choose a Google account. Please try again.",
       "useGoogle": "Choose a Google account instead",
-      "openGmail": "Open Gmail"
+      "openGmail": "Open Gmail",
+      "requestNewHint": "Pick your Google account — we'll send a new link to that email right away ·",
+      "useOtherEmail": "Use another email"
     },
     "verify": {
       "verifying": "Verifying your email...",
@@ -3657,12 +3879,11 @@
     "flow": {
       "aria": "Order steps",
       "cart": "Cart",
-      "pickItems": "Choose items",
       "confirm": "Confirm order",
-      "confirmPreorder": "Confirm pre-order",
       "pay": "Pay / attach slip",
       "done": "Order placed",
-      "payLater": "Pay later →"
+      "payLaterBtn": "Pay later",
+      "backHome": "Back to home"
     },
     "success": {
       "notFound": "Order not found",
@@ -3686,12 +3907,12 @@
       "status": "Status",
       "payNow": "Pay now (scan QR / attach slip)",
       "payDeadline": "Please pay and attach your slip within 30 minutes, or the order will be cancelled automatically",
-      "payDeadlinePreorder": "Please pay and attach your slip within 24 hours (and before the round closes), or it will be cancelled automatically",
+      "payDeadlinePreorder": "Please pay and attach your slip within 30 minutes (and before the round closes), or it will be cancelled automatically",
       "home": "Back to home"
     },
     "myReviews": {
       "loginToView": "Log in to see your reviews",
-      "title": "My reviews",
+      "title": "Reviews",
       "count": "{n} reviews",
       "filterLabel": "Filter reviews",
       "filterAll": "All",
@@ -3725,7 +3946,50 @@
       "allStars": "All ratings",
       "starsChip": "{n} ({count})",
       "emptyFiltered": "No reviews match these filters",
-      "clearFilters": "Clear filters"
+      "clearFilters": "Clear filters",
+      "reviewedOn": "Reviewed on {date}",
+      "fromOrder": "Order",
+      "fromPreorder": "Pre-order",
+      "orderedOn": "Ordered on",
+      "variant": "Option",
+      "qtyPrice": "Quantity",
+      "qtyPriceValue": "{n} pcs · {price}",
+      "options": "Extras",
+      "note": "Note"
+    },
+    "profileSetup": {
+      "fillNow": "Fill in now",
+      "later": "Later",
+      "laterHint": "You can do this later from My account"
+    },
+    "paymentGroup": {
+      "loginToPay": "Please sign in to pay",
+      "crumb": "Order history",
+      "title": "Pay {n} bills together",
+      "bills": "Bills in this order",
+      "billOrder": "Order {no}",
+      "billPreorder": "Pre-order {no}",
+      "total": "Total to pay",
+      "scanOnce": "Scan once to pay the total with your banking app (PromptPay)",
+      "attachOne": "Attach transfer slip (one slip for all bills)",
+      "sent": "Slip sent — waiting for the shop to check",
+      "paid": "The shop has received payment for every bill. Thank you!",
+      "awaitingReview": "Combined slip sent — waiting for the shop to check. See each bill's status above",
+      "split": "Some bills are paid, cancelled or expired, so they can't be paid together — tap \"Pay separately\" on the bills still due",
+      "paySeparately": "Pay separately",
+      "notFound": "Combined payment not found",
+      "viewOrders": "View order history",
+      "loadFailed": "Couldn't load — please refresh this page",
+      "billCount": "({n} bills)",
+      "billsHint": "Tap a bill number to see its details",
+      "reviewing": "Slip under review",
+      "payTitle": "Payment",
+      "payOnceSub": "Transfer the total once, then attach one slip for every bill",
+      "placedHint": "{n} bills placed — transfer the total once and attach your slip below so the shop can start preparing",
+      "savedBills": "All {n} of your bills have been saved",
+      "allCancelled": "All bills cancelled",
+      "paidShort": "Fully paid",
+      "billTotal": "This bill"
     }
   },
   "bulkStock": {
@@ -3759,5 +4023,50 @@
     "colExpiry": "Expires on",
     "expiryPlaceholder": "Optional",
     "expiryBeforeDate": "Expiry date cannot be before the received date"
+  },
+  "chat": {
+    "nav": "Chat with shop",
+    "navUnread": "Chat with shop ({n} new)",
+    "pageTitle": "Chat with shop",
+    "replyHint": "We'll reply as soon as possible · attach an order to ask about it",
+    "loginFirst": "Please log in to chat with the shop",
+    "loading": "Loading messages...",
+    "loadFailed": "Couldn't load messages. Please refresh.",
+    "loadOlder": "Load earlier messages",
+    "loadingOlder": "Loading...",
+    "read": "Read",
+    "emptyTitle": "Start chatting with {store}",
+    "emptyHint": "Ask about products, party cakes, or attach an order to check its status",
+    "placeholder": "Type a message...",
+    "send": "Send",
+    "sendFailed": "Couldn't send the message. Please try again.",
+    "rateLimited": "You're sending too fast. Please wait a moment.",
+    "attachButton": "Attach an order",
+    "removeAttach": "Remove attached order",
+    "attachOrder": "Order",
+    "attachPreorder": "Pre-order",
+    "itemsMore": "{name} and {n} more",
+    "viewDetail": "View details",
+    "pickTitle": "Choose an order to attach",
+    "tabOrders": "Orders",
+    "tabPreorders": "Pre-orders",
+    "pickFailed": "Couldn't load the list. Please try again.",
+    "noOrders": "No orders yet",
+    "noPreorders": "No pre-orders yet",
+    "askAboutOrder": "Ask the shop about this",
+    "unreadRooms": "{n} unread chats",
+    "searchCustomer": "Search customer name / phone / email",
+    "unreadOnly": "Unread only",
+    "noRooms": "No customer chats yet",
+    "noMatchRooms": "No chats match the filter",
+    "pickRoom": "Pick a chat from the list",
+    "backToList": "Back to chat list",
+    "customer": "Customer",
+    "youPrefix": "You:",
+    "noReplyPermission": "View only — you need the \"create\" permission on Customer chats to reply",
+    "openFull": "Open full chat",
+    "widgetClose": "Close chat",
+    "openOrderPage": "Open order management page",
+    "noOrderPermission": "You don't have permission to view this order"
   }
 }

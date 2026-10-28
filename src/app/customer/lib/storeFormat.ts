@@ -74,3 +74,16 @@ export function nationwideCategoryNames(cats: { product_category_name: string; s
     .filter((c) => (typeof c.ships_nationwide === "boolean" ? c.ships_nationwide : guessShipsNationwide(c.product_category_name)))
     .map((c) => c.product_category_name);
 }
+
+/** หน้าร้าน/จุดรับสินค้าที่แสดงในหน้าติดต่อเรา + Footer — ไม่เกิน 2 แห่ง (หน้าร้านหลักก่อน — backend เรียงให้แล้ว) */
+export const MAX_SHOWN_LOCATIONS = 2;
+export function shownLocations(info: Pick<StoreInfo, "weekly_markets"> | undefined): StoreInfo["weekly_markets"] {
+  return (info?.weekly_markets ?? []).slice(0, MAX_SHOWN_LOCATIONS);
+}
+
+/** ลิงก์ Google Maps ของหน้าร้าน/จุดรับ — ร้านใส่ลิงก์ไว้ใช้ลิงก์นั้น · ไม่ใส่ = ค้นจากชื่อ + รายละเอียดสถานที่ */
+export function locationMapUrl(m: Pick<StoreInfo["weekly_markets"][number], "map_url" | "name" | "location">): string {
+  if (m.map_url?.trim()) return m.map_url.trim();
+  const q = [m.name, m.location].map((x) => x?.trim()).filter(Boolean).join(" ");
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+}

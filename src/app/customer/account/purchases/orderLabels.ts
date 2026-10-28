@@ -2,7 +2,8 @@
 import { useLocale, useTranslations } from "next-intl";
 import { SHIPPING_CARRIERS, type OrderStatus, type PaymentStatus, type ShippingCarrier } from "@/constants/enumConfig";
 
-export const ORDER_STATUSES: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "completed", "cancelled"];
+/** ตัวกรองหน้าร้าน — ready แสดงเป็น "กำลังเตรียมสินค้า" (backend กรอง preparing = preparing + ready) จึงไม่มีตัวเลือกแยก */
+export const ORDER_STATUSES: OrderStatus[] = ["pending", "confirmed", "preparing", "completed", "cancelled"];
 const DELIVERY_STATUSES = ["pending", "shipping", "delivered", "failed"] as const;
 
 /** สีป้ายสถานะออเดอร์ */
@@ -10,7 +11,7 @@ export const ORDER_STATUS_TONE: Record<OrderStatus, string> = {
   pending: "bg-amber-50 text-amber-700",
   confirmed: "bg-sky-50 text-sky-700",
   preparing: "bg-indigo-50 text-indigo-700",
-  ready: "bg-violet-50 text-violet-700",
+  ready: "bg-indigo-50 text-indigo-700",
   completed: "bg-emerald-50 text-emerald-700",
   cancelled: "bg-stone-100 text-stone-500",
 };

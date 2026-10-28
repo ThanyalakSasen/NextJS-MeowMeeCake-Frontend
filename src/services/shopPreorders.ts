@@ -4,7 +4,7 @@
 //   ของฉัน (login): /shop/preorders (GET/POST) · /{id} · /{id}/cancel · ชำระเงินผ่าน shopPaymentsService (kind "preorder")
 // กติกาของ backend หลัก (preorderService):
 //   ขั้นต่ำต่อรายการ = max(รายการในรอบ, preorder_config ของสินค้า) · สูงสุดต่อคนต่อรอบ = preorder_config.max_order_qty
-//   (รวมพรีออเดอร์เดิมในรอบ) · ไม่เกินโควตาเหลือของรอบ · ชำระภายใน 24 ชม. (ไม่เกินเวลาปิดรอบ) ไม่งั้นยกเลิกอัตโนมัติ
+//   (รวมพรีออเดอร์เดิมในรอบ) · ไม่เกินโควตาเหลือของรอบ · ชำระภายใน 30 นาที (ไม่เกินเวลาปิดรอบ) ไม่งั้นยกเลิกอัตโนมัติ
 //   ลูกค้ายกเลิกเองได้เฉพาะ pending/confirmed ที่ยังไม่ชำระ · ไม่มีโค้ดส่วนลด (ใช้คูปองของฉัน + แต้มได้)
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
@@ -12,6 +12,7 @@ import type { ItemResponse } from "@/types/api";
 import type { DeliveryAddress, OrderType } from "@/types/order";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import type { CartCustomization } from "@/services/shopCart";
+import type { InlineDeliveryAddress } from "@/services/shopOrders";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -36,6 +37,8 @@ export interface RoundProduct {
   sale_price: number | null;
   product_img: string[];
   preorder_config: { min_order_qty: number | null; max_order_qty: number | null; lead_time_days: number | null } | null;
+  /** หมวดสินค้า (id) — ใช้ตัดสินป้าย "ส่งเฉพาะในจังหวัด" บนบัตร · backend รุ่นเก่าไม่ส่ง = null */
+  category_id: string | null;
 }
 
 export interface StorefrontRoundItem {
@@ -112,7 +115,11 @@ export interface CreatePreorderInput {
   address_id?: string;
   recipient_name?: string;
   recipient_phone?: string;
+  /** ที่อยู่กรอกเอง (แก้เฉพาะคำสั่งซื้อนี้) — ใช้แทน address_id */
+  delivery_address?: InlineDeliveryAddress;
   user_coupon_id?: string;
+  /** โค้ดส่วนลด (ใช้แทนคูปองของฉัน) */
+  promotion_code?: string;
   points_to_redeem?: number;
   pickup_location_id?: string;
   pickup_date?: string;
@@ -132,6 +139,7 @@ function toRoundItem(raw: any): StorefrontRoundItem {
       sale_price: p.sale_price ?? null,
       product_img: Array.isArray(p.product_img) ? p.product_img : [],
       preorder_config: p.preorder_config ?? null,
+      category_id: p.category_id ? String(typeof p.category_id === "object" ? p.category_id._id : p.category_id) : null,
     },
     current_price: Number(raw.current_price ?? 0),
     min_order_qty: Number(raw.min_order_qty ?? 1),
@@ -193,7 +201,9 @@ export const shopPreordersService = {
   /** GET /catalog/preorder-rounds/{id} — รอบ + รายการที่เปิดขาย (404 = ไม่มีรอบนี้) */
   round: async (id: string): Promise<StorefrontRoundDetail> => {
     const res = await http.get<ItemResponse<any>>(`/catalog/preorder-rounds/${encodeURIComponent(id)}`);
-    return { ...res.data, items: (res.data.items ?? []).map(toRoundItem) };
+    // กันไว้อีกชั้น: รายการที่ไม่มีข้อมูลสินค้า (สินค้าถูกลบ) ไม่ต้องแสดงเป็นการ์ดว่าง
+    const items = (res.data.items ?? []).filter((it: any) => it?.product_id && typeof it.product_id === "object").map(toRoundItem);
+    return { ...res.data, items };
   },
 
   /** POST /shop/preorders — 1 ใบต่อรอบ · ค่าส่ง/ส่วนลด/ราคา backend คิดเอง */
@@ -201,7 +211,7 @@ export const shopPreordersService = {
     toShopPreorder((await http.post<ItemResponse<any>>("/shop/preorders", body)).data),
 
   /** GET /shop/preorders — ของฉัน ใหม่สุดก่อน */
-  list: async (params: { order_status?: OrderStatus; page?: number; limit?: number } = {}) => {
+  list: async (params: { order_status?: OrderStatus; page?: number; limit?: number; /** เลขพรีออเดอร์ หรือชื่อสินค้า */ search?: string } = {}) => {
     const res = await http.getList<any>("/shop/preorders", { params: { sortBy: "created_at", sortOrder: "desc", ...params } });
     return { ...res, data: res.data.map(toShopPreorder) };
   },

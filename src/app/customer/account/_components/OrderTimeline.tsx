@@ -1,32 +1,27 @@
 "use client";
-// ไทม์ไลน์สถานะออเดอร์ในหน้ารายละเอียด (BACKLOG4 U7) — ต้นแบบ FrontOffice มี 3 ขั้น (เตรียม → จัดส่ง → สำเร็จ)
-// ที่นี่ 5 ขั้นให้เห็นช่วงชำระเงินด้วย · ขั้นที่ 4–5 ตามประเภท (ส่งตามที่อยู่ / รับเอง)
+// ไทม์ไลน์สถานะออเดอร์ในหน้ารายละเอียด (BACKLOG4 U7)
+// 4 ขั้น (ผู้ใช้เลือก 2026-10-27): สั่งซื้อแล้ว → ชำระเงินแล้ว → กำลังเตรียมสินค้า → ส่งสินค้าแล้ว
+// ready (พร้อมส่ง/พร้อมรับ) นับเป็น "กำลังเตรียมสินค้า" · จัดส่งถึงแล้ว (delivered) = ส่งสินค้าแล้ว
 // backend ไม่ส่งเวลาของแต่ละสถานะ → แสดงแค่ถึงขั้นไหนแล้ว · ยกเลิกแล้วไม่แสดง (หน้ามีแถบเหตุผลยกเลิกอยู่แล้ว)
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ShopOrder } from "@/services/shopOrders";
 
-const STEP_OF_STATUS = { pending: 0, confirmed: 1, preparing: 2, ready: 3, completed: 4, cancelled: -1 } as const;
+const STEP_OF_STATUS = { pending: 0, confirmed: 1, preparing: 2, ready: 2, completed: 3, cancelled: -1 } as const;
 
-/** ขั้นสุดท้ายที่ผ่านแล้ว (0 = สั่งซื้อแล้ว · 4 = เสร็จ) */
+/** ขั้นสุดท้ายที่ผ่านแล้ว (0 = สั่งซื้อแล้ว · 3 = ส่งสินค้าแล้ว) */
 export function orderTimelineStep(o: Pick<ShopOrder, "order_status" | "payment_status" | "order_type" | "delivery_status">): number {
   let step: number = STEP_OF_STATUS[o.order_status];
   if (step === 0 && o.payment_status === "paid") step = 1;
-  if (o.order_type === "delivery" && o.delivery_status === "delivered") step = 4;
+  if (o.order_type === "delivery" && o.delivery_status === "delivered") step = 3;
   return step;
 }
 
-export default function OrderTimeline({ order }: { order: ShopOrder }) {
+/** ใช้ทั้งออเดอร์และพรีออเดอร์ (ฟิลด์สถานะชุดเดียวกัน) */
+export default function OrderTimeline({ order }: { order: Pick<ShopOrder, "order_status" | "payment_status" | "order_type" | "delivery_status"> }) {
   const t = useTranslations("shop.orders.timeline");
   if (order.order_status === "cancelled") return null;
-  const delivery = order.order_type === "delivery";
-  const labels = [
-    t("placed"),
-    t("paid"),
-    t("preparing"),
-    delivery ? t("shipping") : t("readyPickup"),
-    delivery ? t("received") : t("pickedUp"),
-  ];
+  const labels = [t("placed"), t("paid"), t("preparing"), t("delivered")];
   const done = orderTimelineStep(order);
 
   return (

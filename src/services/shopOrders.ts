@@ -60,6 +60,19 @@ export interface ShopOrderListParams {
   order_status?: OrderStatus;
   page?: number;
   limit?: number;
+  /** ค้นหาเลขคำสั่งซื้อ หรือชื่อสินค้าในคำสั่งซื้อ */
+  search?: string;
+}
+
+/** delivery_address แบบกรอกเอง — backend ต้องครบทุกช่อง (orderService/preorderService ADDRESS_FIELDS) */
+export interface InlineDeliveryAddress {
+  recipient_name: string;
+  recipient_phone: string;
+  house_no: string;
+  sub_district: string;
+  district: string;
+  province: string;
+  zip_code: string;
 }
 
 export interface CreateShopOrderInput {
@@ -68,6 +81,8 @@ export interface CreateShopOrderInput {
   address_id?: string;
   recipient_name?: string;
   recipient_phone?: string;
+  /** ที่อยู่กรอกเองทั้งก้อน (แก้เฉพาะคำสั่งซื้อนี้ — ไม่บันทึกลงสมุด) · ใช้แทน address_id (ส่งอย่างใดอย่างหนึ่ง) */
+  delivery_address?: InlineDeliveryAddress;
   /** โค้ดส่วนลด — ใช้คู่กับ user_coupon_id ไม่ได้ */
   promotion_code?: string;
   /** คูปองของฉัน (แลกด้วยแต้ม) */
@@ -77,6 +92,8 @@ export interface CreateShopOrderInput {
   /** takeaway: จุดรับ + วันรับ YYYY-MM-DD (จาก order_pickup_dates ของจุดนั้น) */
   pickup_location_id?: string;
   pickup_date?: string;
+  /** สั่งเฉพาะบางรายการในตะกร้า (ติ๊กเลือก) — ไม่ส่ง = ทั้งตะกร้า */
+  cart_item_ids?: string[];
 }
 
 /**
@@ -173,18 +190,28 @@ export const shopOrdersService = {
   },
 
   /**
-   * POST /shop/orders/delivery-quote { province, product_ids? } — ค่าส่งจากจังหวัด + ขอบเขตจัดส่งของสินค้า
-   * ไม่ส่ง productIds = สินค้าในตะกร้าปัจจุบัน · พรีออเดอร์ส่ง product_ids ของรายการในรอบเอง
+   * POST /shop/orders/delivery-quote { province, product_ids?, preorder? } — ค่าส่งจากจังหวัด + ขอบเขตจัดส่งของสินค้า
+   * ไม่ส่ง productIds = สินค้าในตะกร้าปัจจุบัน · พรีออเดอร์ส่ง product_ids ของรายการในรอบเอง + preorder: true (ส่งได้ทุกจังหวัด)
    */
-  deliveryQuote: async (province: string, productIds?: string[]): Promise<DeliveryQuote> => {
+  deliveryQuote: async (province: string, productIds?: string[], opts: { preorder?: boolean } = {}): Promise<DeliveryQuote> => {
     const res = await http.post<ItemResponse<DeliveryQuote>>("/shop/orders/delivery-quote", {
       province,
       ...(productIds ? { product_ids: productIds } : {}),
+      ...(opts.preorder ? { preorder: true } : {}),
     });
     return res.data;
   },
 
   /** POST /shop/promotions/validate { code, delivery_fee } — ไม่ผ่านเงื่อนไข = 422 พร้อมข้อความ */
+  /**
+   * ตรวจโค้ดกับรายการที่ส่งมา (หน้าชำระพรีออเดอร์ — ไม่มีตะกร้า) · ยอดเป็นค่าประมาณ ตอนสร้างพรีออเดอร์ backend คิดจากราคาในรอบอีกครั้ง
+   */
+  validatePromotionForLines: async (
+    code: string,
+    lines: { product_id: string; quantity: number; line_total: number }[],
+    deliveryFee: number,
+  ): Promise<PromotionCheck> =>
+    (await http.post<ItemResponse<PromotionCheck>>("/shop/promotions/validate", { code, lines, delivery_fee: deliveryFee })).data,
   validatePromotion: async (code: string, deliveryFee: number): Promise<PromotionCheck> => {
     const res = await http.post<ItemResponse<PromotionCheck>>("/shop/promotions/validate", {
       code,

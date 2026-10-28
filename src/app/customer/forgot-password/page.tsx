@@ -114,7 +114,7 @@ export default function ForgotPasswordPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") void sendTyped();
                 }}
-                className="mb-6 w-full max-w-xs rounded-lg border border-stone-200 px-4 py-2.5 text-sm text-stone-800 focus:border-[#4A342E] focus:outline-none focus:ring-2 focus:ring-[#4A342E]/30"
+                className="mb-6 w-full max-w-xs h-[40px] rounded-lg border border-stone-200 px-4 text-sm text-stone-800 focus:border-[#4A342E] focus:outline-none focus:ring-2 focus:ring-[#4A342E]/30"
               />
               <button type="button" className={button} onClick={() => void sendTyped()} disabled={sending}>
                 {sending ? t("sending") : t("sendLink")}

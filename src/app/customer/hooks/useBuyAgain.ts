@@ -15,6 +15,7 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { useCartCountStore } from "../store/cartCountStore";
 import { shopCartKey } from "../lib/shopQueries";
+import { setSelected } from "../lib/cartSelection";
 
 export function useBuyAgain() {
   const t = useTranslations("shop.cartActions");
@@ -33,12 +34,14 @@ export function useBuyAgain() {
         .filter((o) => o.option_id)
         .map((o) => ({ option_id: o.option_id as string, ...(o.text_value ? { text_value: o.text_value } : {}) }));
       try {
-        await shopCartService.addItem({
+        const res = await shopCartService.addItem({
           product_id: it.product_id,
           quantity: it.quantity,
           ...(it.variant_ids.length ? { variant_ids: it.variant_ids } : {}),
           ...(options.length ? { selected_options: options } : {}),
         });
+        // รวมเข้าบรรทัดเดิมที่เคยติ๊กออก = ติ๊กกลับ (เหมือน useAddToCart)
+        if (res.data?._id) setSelected([res.data._id], true);
         added++;
       } catch (e) {
         // ข้อความของ backend มักมีชื่อสินค้าอยู่แล้ว (เช่น ตัวเลือกถูกลบ) — ไม่ต่อชื่อซ้ำ

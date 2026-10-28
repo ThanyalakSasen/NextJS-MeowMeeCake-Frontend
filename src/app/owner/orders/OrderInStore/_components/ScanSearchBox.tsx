@@ -46,7 +46,7 @@ export function ScanSearchBox({
             }
           }}
           placeholder={t("pos.scanPlaceholder")}
-          className="min-h-11 min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3.5 text-lg text-brown-900 outline-none focus:border-brown-800 placeholder:text-sm placeholder:text-gray-500"
+          className="h-[40px] min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3.5 text-lg text-brown-900 outline-none focus:border-brown-800 placeholder:text-sm placeholder:text-gray-500"
         />
       </label>
 

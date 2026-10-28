@@ -2,24 +2,23 @@
 // ─────────────────────────────────────────────────────────────
 // ViewModel ของ "รีวิวลูกค้า" (BACKLOG4 E4) — ยกจาก FrontOffice reports/reviews/ReviewTable (MVVM + i18n)
 // กรอง/ค้นหา/เรียง/แบ่งหน้าที่ server + สรุปของชุดที่กรอง (summary=1 — I9) · เดิมโหลดทั้งหมดมากรองในหน้า
-// จัดการต่อรีวิว (PATCH): สถานะ · ปักหมุด · อ่านแล้ว · ตอบกลับ (คำตอบสำเร็จรูป + คำตอบเก่าที่เคยใช้) · โน้ต/แท็กภายใน
-// เลือกหลายรายการ: ส่งออก CSV (ต้นแบบ xlsx — แอปนี้ใช้ CSV ทุกหน้า)
+// จัดการต่อรีวิว (PATCH): สถานะ · ปักหมุด · ตอบกลับ (คำตอบสำเร็จรูป + คำตอบเก่าที่เคยใช้) · โน้ตภายใน
+// เอาระบบ "อ่านแล้ว" ออกทั้งหน้า (2026-10-26) — ไม่มีป้าย "ใหม่"/ปุ่มอ่านแล้ว/ตัวกรองการอ่าน · ประเภทคำสั่งซื้อย้ายไปเป็นแท็บเหนือรายการ
+// (เอาช่องติ๊กเลือก + ส่งออก CSV ออกแล้ว 2026-10-26 — ไม่มีคนใช้ · CSV ยังมีที่ตารางรายสินค้าในแดชบอร์ด)
 // แก้แล้วอัปเดต cache ของหน้าปัจจุบันทันที แล้วโหลดชุดใหม่ (summary/ลำดับอาจเปลี่ยน) · สิทธิ์เมนู reports
 // แดชบอร์ดสรุป = หน้า ./dashboard (คำนวณฝั่ง client จากรายการเดียวกัน — backend ไม่มี endpoint สรุป)
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { reviewAspectsService, reviewsService } from "@/services/reviews";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import { exportToCsv } from "@/lib/exportCsv";
-import { formatDate } from "@/i18n/format";
 import { isApiError } from "@/types/api";
 import type { Review, ReviewListParams, ReviewModeration, ReviewSort, ReviewStatus } from "@/types/review";
 import { toReviewRow, type ReviewRow } from "./reviewRow";
 import { REVIEWS_LIST_KEY, REVIEW_ASPECTS_KEY, REVIEW_FILTER_OPTIONS_KEY, REVIEWS_PAGE_SIZE, REVIEWS_DEFAULT_SORT, type ReviewsLinkView } from "./reviewsQuery";
-import { sortByThai, sortOptionsThai, thaiCompare } from "@/lib/thaiSort";
+import { sortByThai, sortOptionsThai } from "@/lib/thaiSort";
 
 export type { ReviewRow };
 
@@ -79,7 +78,6 @@ function toParams(f: ReviewFilters, q: string, page: number, limit: number): Rev
 /** enabled = แท็บจัดการรีวิวเปิดอยู่ — ไม่โหลดตอนอยู่แท็บแดชบอร์ด · initialView = ?view= จากลิงก์แจ้งเตือน */
 export function useReviewsViewModel({ enabled = true, initialView }: { enabled?: boolean; initialView?: ReviewsLinkView } = {}) {
   const t = useTranslations();
-  const locale = useLocale();
   const qc = useQueryClient();
   const perm = usePermission("reports_reviews");
 
@@ -108,16 +106,6 @@ export function useReviewsViewModel({ enabled = true, initialView }: { enabled?:
   const aspectsQ = useQuery({ queryKey: REVIEW_ASPECTS_KEY, queryFn: () => reviewAspectsService.list(), enabled });
 
   const rows = useMemo(() => (listQ.data?.data ?? []).map(toReviewRow), [listQ.data]);
-  const tagSuggestions = useMemo(() => [...new Set(rows.flatMap((r) => r.internalTags))].sort(thaiCompare), [rows]);
-
-  // ── เลือกหลายรายการ (ล้างเมื่อเปลี่ยนชุดข้อมูล) ──
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [selectionKey, setSelectionKey] = useState("");
-  const currentKey = JSON.stringify(params);
-  if (selectionKey !== currentKey) {
-    setSelectionKey(currentKey);
-    if (selected.size) setSelected(new Set());
-  }
 
   // ── จัดการรีวิว ──
   const patchCache = (id: string, patch: Partial<Review>) =>
@@ -139,7 +127,6 @@ export function useReviewsViewModel({ enabled = true, initialView }: { enabled?:
         shop_reply: doc.shop_reply ?? null,
         internal_tags: doc.internal_tags ?? [],
         internal_note: doc.internal_note ?? null,
-        read_at: doc.read_at ?? null,
       });
       refresh();
     },
@@ -165,36 +152,6 @@ export function useReviewsViewModel({ enabled = true, initialView }: { enabled?:
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("reviews.deleteFailed")),
   });
-
-  const exportSelected = () => {
-    const chosen = rows.filter((r) => selected.has(r._id));
-    exportToCsv(
-      `reviews_${new Date().toISOString().slice(0, 10)}.csv`,
-      [t("reviews.csv.date"), t("reviews.csv.product"), t("reviews.csv.customer"), t("reviews.csv.order"), t("reviews.csv.rating"),
-        t("reviews.csv.text"), t("reviews.csv.topics"), t("reviews.csv.status"), t("reviews.csv.reply"), t("reviews.csv.tags"), t("reviews.csv.note")],
-      chosen.map((r) => [
-        formatDate(r.created_at, locale, { withTime: true }),
-        r.productName,
-        r.userName,
-        r.orderNo,
-        r.rating,
-        r.review_text ?? "",
-        r.topics.map((x) => `${x.sentiment === "positive" ? "+" : x.sentiment === "negative" ? "-" : ""}${x.label}`).join(", "),
-        t(`reviews.status.${r.status}`),
-        r.shop_reply?.text ?? "",
-        r.internalTags.join(", "),
-        r.internal_note?.text ?? "",
-      ]),
-    );
-    alert.success(t("reviews.exported", { n: chosen.length }));
-  };
-
-  // ── แท็กภายใน (modal) ──
-  const [tagTarget, setTagTarget] = useState<ReviewRow | null>(null);
-  const [tagDraft, setTagDraft] = useState<string[]>([]);
-
-  // ── รายละเอียด (drawer — ผลวิเคราะห์ความรู้สึก) ──
-  const [detailId, setDetailId] = useState<string | null>(null);
 
   const activeAspects = (aspectsQ.data ?? []).filter((a) => !a.deleted_at);
   const options = optionsQ.data;
@@ -224,6 +181,8 @@ export function useReviewsViewModel({ enabled = true, initialView }: { enabled?:
     },
     filters,
     setFilter,
+    /** มีตัวกรอง/คำค้นที่ไม่ใช่ค่าเริ่มต้น — ปุ่ม "ล้างตัวกรอง" แสดงเฉพาะตอนนี้ */
+    hasActiveFilters: search.trim() !== "" || JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTERS),
     resetFilters: () => {
       setFilters(DEFAULT_FILTERS);
       setSearchRaw("");
@@ -243,40 +202,11 @@ export function useReviewsViewModel({ enabled = true, initialView }: { enabled?:
     aspectOptions: sortOptionsThai(activeAspects.map((a) => ({ value: a._id, label: a.aspect_name_th }))),
     replySuggestions: options?.reply_suggestions ?? [],
 
-    selected,
-    toggleSelect: (id: string) =>
-      setSelected((s) => {
-        const next = new Set(s);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        return next;
-      }),
-    selectAllOnPage: (on: boolean) => setSelected(on ? new Set(rows.map((r) => r._id)) : new Set()),
-    onExport: exportSelected,
-
     onStatus: (r: ReviewRow, status: ReviewStatus) => void run(r._id, { status }, `reviews.statusChanged.${status}`),
     onTogglePin: (r: ReviewRow) => void run(r._id, { is_pinned: !r.is_pinned }),
     onSaveReply: (r: ReviewRow, text: string) => run(r._id, { shop_reply_text: text }, text.trim() ? "reviews.replySaved" : "reviews.replyRemoved"),
     onSaveNote: (r: ReviewRow, text: string) => run(r._id, { internal_note_text: text }, text.trim() ? "reviews.noteSaved" : "reviews.noteRemoved"),
     onDelete: (id: string) => remove.mutate(id),
 
-    tagTarget,
-    tagDraft,
-    setTagDraft,
-    tagSuggestions,
-    tagSaving: moderate.isPending && !!tagTarget,
-    openTags: (r: ReviewRow) => {
-      setTagTarget(r);
-      setTagDraft(r.internalTags);
-    },
-    closeTags: () => setTagTarget(null),
-    saveTags: async () => {
-      if (!tagTarget) return;
-      if (await run(tagTarget._id, { internal_tags: tagDraft }, "reviews.tagsSaved")) setTagTarget(null);
-    },
-
-    detail: rows.find((r) => r._id === detailId) ?? null,
-    openDetail: (r: ReviewRow) => setDetailId(r._id),
-    closeDetail: () => setDetailId(null),
   };
 }

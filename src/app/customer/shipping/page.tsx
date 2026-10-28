@@ -68,7 +68,10 @@ export default function ShippingInfoPage() {
         </section>
 
         <section className={`${shopCard} space-y-5`}>
-          <h2 className="text-lg font-bold">{t("deliveryTitle")}</h2>
+          <div className="space-y-1">
+            <h2 className="m-0 text-lg font-bold">{t("deliveryTitle")}</h2>
+            <p className="m-0 text-sm leading-relaxed text-stone-500">{t("deliveryHint")}</p>
+          </div>
           {zonesQ.isLoading ? (
             <p className="m-0 text-sm text-stone-500">{t("loadingRates")}</p>
           ) : zones.length === 0 ? (
@@ -83,32 +86,43 @@ export default function ShippingInfoPage() {
                       {z.provinces.length > 0 ? z.provinces.join(", ") : t("otherProvinces")}
                     </p>
                   </div>
-                  <span className="shrink-0 text-sm font-extrabold text-[#8C5A3C]">{baht(z.fee)}</span>
+                  <span className="shrink-0 text-right">
+                    <span className="block text-sm font-extrabold text-[#8C5A3C]">{baht(z.fee)}</span>
+                    <span className="block text-[11px] text-stone-500">{t("perOrder")}</span>
+                  </span>
                 </div>
               ))}
             </div>
           )}
 
-          {/* ขอบเขตการจัดส่ง — ตรงกับ quoteStorefrontDelivery ของ backend (สินค้าที่ไม่ส่งทั่วประเทศ = เฉพาะจังหวัดร้าน) */}
-          <div className="space-y-1 rounded-2xl border border-amber-200/70 bg-amber-50 p-4 text-xs leading-relaxed">
-            <p className="m-0 font-bold text-amber-800">{t("scope")}</p>
-            <p className="m-0 text-amber-900/80">
-              {nationwide.length > 0
-                ? t.rich("scopeNationwide", { cats: nationwide.join(", "), b: (c) => <span className="font-semibold">{c}</span> })
-                : t("scopeFresh")}{" "}
-              {t("scopeLocal", { area: localArea })}
-            </p>
-            {/* ยกเว้นรายสินค้า — ตรงกับ productShipsNationwide ของ backend (ค่าของสินค้าก่อน ไม่ตั้งค่อยตามหมวด) */}
-            {extraNationwide.length > 0 && (
-              <p className="m-0 text-amber-900/80">
-                {t.rich("scopeExtraNationwide", { items: extraNationwide.join(", "), b: (c) => <span className="font-semibold">{c}</span> })}
-              </p>
-            )}
-            {extraLocal.length > 0 && (
-              <p className="m-0 text-amber-900/80">
-                {t.rich("scopeExtraLocal", { items: extraLocal.join(", "), area: localArea, b: (c) => <span className="font-semibold">{c}</span> })}
-              </p>
-            )}
+          {/* ขอบเขตการจัดส่ง — ตรงกับ quoteStorefrontDelivery ของ backend:
+              สินค้าที่ไม่ส่งทั่วประเทศ = เฉพาะจังหวัดร้าน · พรีออเดอร์ส่งได้ทุกจังหวัด · ยกเว้นรายสินค้าใช้ค่าของสินค้าก่อนหมวด */}
+          <div className="space-y-3 rounded-2xl border border-amber-200/70 bg-amber-50 p-4 text-sm leading-relaxed">
+            <p className="m-0 font-bold text-amber-900">{t("scope")}</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1 rounded-xl bg-white/70 p-3">
+                <p className="m-0 font-semibold text-emerald-800">✅ {t("scopeAnywhereTitle")}</p>
+                <ul className="m-0 list-disc space-y-0.5 pl-5 text-xs text-stone-700">
+                  {nationwide.length > 0 && (
+                    <li>{t.rich("scopeAnywhereCats", { cats: nationwide.join(", "), b: (c) => <span className="font-semibold">{c}</span> })}</li>
+                  )}
+                  <li>{t("scopeAnywherePreorder")}</li>
+                  {extraNationwide.length > 0 && (
+                    <li>{t.rich("scopeAnywhereItems", { items: extraNationwide.join(", "), b: (c) => <span className="font-semibold">{c}</span> })}</li>
+                  )}
+                </ul>
+              </div>
+              <div className="space-y-1 rounded-xl bg-white/70 p-3">
+                <p className="m-0 font-semibold text-sky-800">📍 {t("scopeLocalTitle", { area: localArea })}</p>
+                <ul className="m-0 list-disc space-y-0.5 pl-5 text-xs text-stone-700">
+                  <li>{t("scopeLocalFresh")}</li>
+                  {extraLocal.length > 0 && (
+                    <li>{t.rich("scopeLocalItems", { items: extraLocal.join(", "), b: (c) => <span className="font-semibold">{c}</span> })}</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+            <p className="m-0 text-xs text-amber-900/90">💡 {t("scopeTip", { area: localArea })}</p>
           </div>
         </section>
 

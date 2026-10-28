@@ -2,7 +2,7 @@
 // แท็บ "คำสำหรับวิเคราะห์" — คำ/วลีในข้อความรีวิว → หัวข้อ (ระบบวิเคราะห์ข้อความใช้จัดหมวดรีวิวที่ลูกค้าไม่ได้เลือกหัวข้อ)
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { Button, Card, Input, Select, Tag } from "@/components/base";
+import { Button, Card, Input, Select } from "@/components/base";
 import { DataTable, SearchInput, FilterField } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { DeleteButton, EditButton, actionIcon, modalButtonIcons } from "@/components/shared/actions";
@@ -49,17 +49,7 @@ export function TermsTab({ vm }: { vm: VM }) {
             rowKey={(x) => x._id}
             emptyText={t("reviewSettings.terms.empty")}
             columns={[
-              { key: "term", title: t("reviewSettings.terms.term"), width: 180, render: (x) => <span className="font-semibold text-brown-800">{x.term}</span> },
-              {
-                key: "synonyms",
-                title: t("reviewSettings.terms.synonyms"),
-                render: (x) =>
-                  x.synonyms.length ? (
-                    <span className="flex flex-wrap gap-1">{x.synonyms.map((s) => <Tag key={s} className="!m-0">{s}</Tag>)}</span>
-                  ) : (
-                    <span className="text-gray-300">—</span>
-                  ),
-              },
+              { key: "term", title: t("reviewSettings.terms.term"), render: (x) => <span className="font-semibold text-brown-800">{x.term}</span> },
               { key: "aspect", title: t("reviewSettings.terms.aspect"), width: 160, render: (x) => x.aspect?.aspect_name_th ?? "—" },
             ]}
             actions={
@@ -100,10 +90,6 @@ export function TermsTab({ vm }: { vm: VM }) {
             <FormField label={t("reviewSettings.terms.aspect")} required>
               <Select value={e.form.aspect_id || undefined} options={vm.aspectOptions}
                 onChange={(v: string) => vm.setTermForm({ ...e.form, aspect_id: v })} />
-            </FormField>
-            <FormField label={t("reviewSettings.terms.synonymsLabel")}>
-              <Select mode="tags" open={false} tokenSeparators={[","]} value={e.form.synonyms} placeholder={t("reviewSettings.terms.synonymsPlaceholder")}
-                onChange={(v: string[]) => vm.setTermForm({ ...e.form, synonyms: v })} />
             </FormField>
           </div>
         )}

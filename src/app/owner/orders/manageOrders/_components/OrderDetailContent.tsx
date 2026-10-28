@@ -10,7 +10,7 @@ import { isAwaitingRefund, type DeliveryUpdateInput, type Order } from "@/types/
 import type { Payment } from "@/types/payment";
 import { actionIcon } from "@/components/shared/actions";
 import { OrderLifecycleSteps } from "./OrderLifecycleSteps";
-import { DeliverySection, RefundSection, SlipImage } from "@/components/shared/orders";
+import { DeliverySection, GroupPaymentNote, RefundSection, SlipImage } from "@/components/shared/orders";
 import { NOTICE_TAG } from "@/constants/enumConfig";
 
 export function OrderDetailContent({
@@ -27,6 +27,9 @@ export function OrderDetailContent({
   paidPaymentId,
   refunding,
   onRefund,
+  canMarkReady,
+  markingReady,
+  onMarkReady,
 }: {
   order: Order;
   payment: Payment | null;
@@ -43,6 +46,10 @@ export function OrderDetailContent({
   paidPaymentId: string | null;
   refunding: boolean;
   onRefund: (paymentId: string) => void;
+  /** กำลังเตรียม + ชำระแล้ว + มีสิทธิ์ — ปุ่ม "สินค้าพร้อมแล้ว" (preparing → ready) */
+  canMarkReady: boolean;
+  markingReady: boolean;
+  onMarkReady: () => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -70,6 +77,15 @@ export function OrderDetailContent({
         </div>
       ) : (
         <OrderLifecycleSteps status={order.order_status} />
+      )}
+
+      {canMarkReady && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="m-0 text-sm text-gray-600">{t("orders.markReadyHint")}</p>
+          <Button type="primary" size="small" icon={actionIcon("next", "small")} loading={markingReady} onClick={onMarkReady}>
+            {t("orders.markReady")}
+          </Button>
+        </div>
       )}
 
       {isAwaitingRefund(order) && (
@@ -163,6 +179,7 @@ export function OrderDetailContent({
 
       <div>
         <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.paymentProof")}</p>
+        <GroupPaymentNote payment={payment} />
         {payment?.slip_image_url ? (
           <div className="flex items-center gap-3">
             <SlipImage url={payment.slip_image_url} size={56} />

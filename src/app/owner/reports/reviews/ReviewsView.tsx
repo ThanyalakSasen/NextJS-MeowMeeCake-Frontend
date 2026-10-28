@@ -1,19 +1,15 @@
 "use client";
-// แท็บ "จัดการรีวิว" ของหน้ารายงานความคิดเห็น (BACKLOG4 E4) — แถบกรอง · แถบสรุปของชุดที่กรอง · เลือกหลายรายการ ·
-// การ์ดรีวิว · แบ่งหน้า · modal แท็กภายใน · drawer รายละเอียด (ผลวิเคราะห์ความรู้สึก)
+// แท็บ "จัดการรีวิว" ของหน้ารายงานความคิดเห็น (BACKLOG4 E4) — แถบกรอง (dropdown 2 แถว) · แถบสรุปของชุดที่กรอง ·
+// แท็บประเภทคำสั่งซื้อ (ทั้งหมด/สั่งซื้อปกติ/พรีออเดอร์) · การ์ดรีวิว · แบ่งหน้า (เอา modal แท็กภายใน + รายละเอียดออก 2026-10-26)
 // หัวหน้า/แท็บ/ปุ่มตั้งค่าอยู่ที่ ReviewsReportView
-import { Checkbox, Modal } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import { formatNumber } from "@/i18n/format";
-import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import { Button, EmptyState, Select } from "@/components/base";
-import { PaginationBar } from "@/components/shared/data";
-import { DetailModal, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
-import { modalButtonIcons } from "@/components/shared/actions";
-import type { useReviewsViewModel } from "./useReviewsViewModel";
+import { EmptyState } from "@/components/base";
+import { PaginationBar, TypeTabBar } from "@/components/shared/data";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
+import type { ReviewFilters, useReviewsViewModel } from "./useReviewsViewModel";
 import { ReviewFiltersBar } from "./_components/ReviewFiltersBar";
 import { ReviewCard } from "./_components/ReviewCard";
-import { ReviewDetailContent } from "./_components/ReviewDetailContent";
 
 type VM = ReturnType<typeof useReviewsViewModel>;
 
@@ -21,7 +17,6 @@ export function ReviewsView(vm: VM) {
   const t = useTranslations();
   const locale = useLocale();
   const s = vm.summary;
-  const allSelected = vm.rows.length > 0 && vm.rows.every((r) => vm.selected.has(r._id));
 
   return (
     <>
@@ -32,6 +27,7 @@ export function ReviewsView(vm: VM) {
           search={vm.search}
           setSearch={vm.setSearch}
           onReset={vm.resetFilters}
+          hasActiveFilters={vm.hasActiveFilters}
           categoryOptions={vm.categoryOptions}
           productOptions={vm.productOptions}
           aspectOptions={vm.aspectOptions}
@@ -51,23 +47,17 @@ export function ReviewsView(vm: VM) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 px-1">
-          <Checkbox
-            checked={allSelected}
-            indeterminate={vm.selected.size > 0 && !allSelected}
-            disabled={vm.rows.length === 0}
-            onChange={(e) => vm.selectAllOnPage(e.target.checked)}
-          >
-            <span className="text-xs text-gray-500">{t("reviews.selectPage")}</span>
-          </Checkbox>
-          {vm.selected.size > 0 && (
-            <>
-              <span className="text-xs font-semibold text-brown-800">{t("reviews.selectedCount", { n: vm.selected.size })}</span>
-              <Button size="small" icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
-                {t("reviews.exportCsv")}
-              </Button>
-            </>
-          )}
+        {/* ประเภทคำสั่งซื้อ — แท็บชิดขวาเหนือรายการ (เดิมเป็น dropdown ในแถบกรอง) */}
+        <div className="flex flex-wrap items-center justify-end gap-2 px-1">
+          <TypeTabBar<ReviewFilters["orderKind"]>
+            value={vm.filters.orderKind}
+            onChange={(v) => vm.setFilter("orderKind", v)}
+            options={[
+              { value: "all", label: t("reviews.filter.allOrderKinds") },
+              { value: "order", label: t("reviews.filter.order") },
+              { value: "preorder", label: t("reviews.preorder") },
+            ]}
+          />
         </div>
 
         {vm.isError ? (
@@ -82,17 +72,13 @@ export function ReviewsView(vm: VM) {
               <ReviewCard
                 key={r._id}
                 review={r}
-                selected={vm.selected.has(r._id)}
                 canUpdate={vm.perm.update}
                 canDelete={vm.perm.delete}
                 suggestions={vm.replySuggestions}
-                onSelect={() => vm.toggleSelect(r._id)}
                 onStatus={(st) => vm.onStatus(r, st)}
                 onTogglePin={() => vm.onTogglePin(r)}
                 onSaveReply={(text) => vm.onSaveReply(r, text)}
                 onSaveNote={(text) => vm.onSaveNote(r, text)}
-                onTags={() => vm.openTags(r)}
-                onDetail={() => vm.openDetail(r)}
                 onDelete={() => vm.onDelete(r._id)}
               />
             ))}
@@ -102,32 +88,6 @@ export function ReviewsView(vm: VM) {
         <PaginationBar page={vm.page} pageSize={vm.pageSize} total={vm.total} onChange={vm.onPage} />
       </div>
 
-      <Modal
-        open={!!vm.tagTarget}
-        title={t("reviews.tagsTitle", { product: vm.tagTarget?.productName || t("reviews.unknownProduct") })}
-        onCancel={vm.closeTags}
-        onOk={() => void vm.saveTags()}
-        confirmLoading={vm.tagSaving}
-        okText={t("common.save")}
-        cancelText={t("common.cancel")}
-        {...modalButtonIcons("save")}
-        destroyOnHidden
-      >
-        <p className="m-0 mb-1 text-xs text-gray-500">{t("filterLabel.tags")}</p>
-        <Select
-          mode="tags"
-          aria-label={t("filterLabel.tags")}
-          value={vm.tagDraft}
-          onChange={(v: string[]) => vm.setTagDraft(v)}
-          options={vm.tagSuggestions.map((tag) => ({ value: tag, label: tag }))}
-          placeholder={t("reviews.tagsPlaceholder")}
-        />
-        <p className="m-0 mt-2 text-xs text-gray-500">{t("reviews.tagsHint")}</p>
-      </Modal>
-
-      <DetailModal open={!!vm.detail} title={t("reviews.detailTitle")} onClose={vm.closeDetail}>
-        {vm.detail && <ReviewDetailContent review={vm.detail} />}
-      </DetailModal>
     </>
   );
 }

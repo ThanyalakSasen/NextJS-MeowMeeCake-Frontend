@@ -96,6 +96,13 @@ export function ManageOrdersView(vm: VM) {
   const rowActions = (o: Order) => (
     <div className="flex justify-end gap-2">
       <ViewButton size="small" onClick={() => vm.onView(o)} />
+      {vm.canMarkReady(o) && (
+        <Tooltip title={t("orders.markReadyHint")}>
+          <Button size="small" type="primary" icon={actionIcon("next", "small")} disabled={vm.changingStatus} onClick={() => vm.onMarkReady(o)}>
+            {t("orders.markReady")}
+          </Button>
+        </Tooltip>
+      )}
       {vm.perm.update && !vm.isFinalStatus(o.order_status) && (
         <Button size="small" danger icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancel(o)}>{t("orders.cancel")}</Button>
       )}
@@ -226,6 +233,9 @@ export function ManageOrdersView(vm: VM) {
             paidPaymentId={vm.paidPayment?._id ?? null}
             refunding={vm.refunding}
             onRefund={vm.onRefund}
+            canMarkReady={vm.canMarkReady(vm.selectedOrder)}
+            markingReady={vm.changingStatus}
+            onMarkReady={() => vm.selectedOrder && vm.onMarkReady(vm.selectedOrder)}
           />
         )}
       </DetailModal>

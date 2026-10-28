@@ -307,14 +307,27 @@ export const PAYMENT_GROUP_CONFIG: Record<PaymentGroup, StatusStyle> = {
 };
 
 // ─── โซนค่าจัดส่งหน้าร้านออนไลน์ — ไล่สีจากใกล้ไปไกล ─────────
-export type ShippingZoneCode = "A" | "B" | "C" | "D";
-
-export const SHIPPING_ZONE_CONFIG: Record<ShippingZoneCode, StatusStyle> = {
+export const SHIPPING_ZONE_CONFIG: Record<"A" | "B" | "C" | "D", StatusStyle> = {
   A: { color: "#15803d", antColor: "green" },
   B: { color: "#1d4ed8", antColor: "blue" },
   C: { color: "#a16207", antColor: "gold" },
   D: { color: "#475569", antColor: "default" },
 };
+
+/** โซนที่เพิ่มเอง (E, F, …) — วนสีชุดนี้ตามตัวอักษร */
+const EXTRA_ZONE_STYLES: StatusStyle[] = [
+  { color: "#7e22ce", antColor: "purple" },
+  { color: "#c2410c", antColor: "orange" },
+  { color: "#0369a1", antColor: "processing" },
+];
+
+/** สีป้ายโซนค่าส่ง — A–D ตามชุดหลัก · โซนอื่นวนสีเพิ่ม */
+export function shippingZoneStyle(code: string): StatusStyle {
+  return (
+    SHIPPING_ZONE_CONFIG[code as keyof typeof SHIPPING_ZONE_CONFIG] ??
+    EXTRA_ZONE_STYLES[Math.max(0, code.charCodeAt(0) - 69) % EXTRA_ZONE_STYLES.length]
+  );
+}
 
 // ─── ป้ายที่ไม่ใช่ enum แต่ใช้ซ้ำหลายหน้า ────────────────────
 // อยู่ที่นี่เพราะความหมายเดียวกันต้องได้สีเดียวกันทุกหน้า — เดิมพิมพ์ชื่อสีซ้ำกันคนละไฟล์

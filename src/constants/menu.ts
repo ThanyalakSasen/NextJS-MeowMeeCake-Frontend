@@ -129,6 +129,13 @@ export const MENU_SECTIONS: MenuSection[] = [
         href: "/owner/orders/OrderInStore",
         menuKey: "pos",
       },
+      // แชทลูกค้า — /admin/chats ใช้สิทธิ์ chats.* (ตัวเลขข้อความที่ยังไม่อ่านแสดงข้างชื่อเมนู — Sidebar)
+      {
+        labelKey: "chats",
+        icon: "ChatBubbleLeftRightIcon",
+        href: "/owner/chats",
+        menuKey: "chats",
+      },
       {
         labelKey: "promotions",
         icon: "TagIcon",

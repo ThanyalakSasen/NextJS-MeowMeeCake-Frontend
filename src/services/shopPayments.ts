@@ -49,6 +49,8 @@ export interface ShopPaymentPage {
   payment_due_at: string | null;
   /** เวลา server ตอนตอบ — ใช้ชดเชยนาฬิกาเครื่องลูกค้าตอนนับถอยหลัง */
   server_time: string;
+  /** สั่งพร้อมบิลอื่น (ตะกร้ารวม) — ชำระรวมที่ /customer/account/payment-group/{group_id} · ไม่มี = null */
+  group_id?: string | null;
 }
 
 export const shopPaymentsService = {
@@ -58,7 +60,7 @@ export const shopPaymentsService = {
     return res.data;
   },
 
-  /** GET /shop/preorders/{id}/payment — แบบเดียวกับออเดอร์ แต่กำหนดชำระ = 24 ชม. (ไม่เกินปิดรอบ) · ไม่มี late_upload */
+  /** GET /shop/preorders/{id}/payment — แบบเดียวกับออเดอร์ แต่กำหนดชำระ = 30 นาที (ไม่เกินปิดรอบ) · ไม่มี late_upload */
   preorderPaymentPage: async (preorderId: string): Promise<ShopPaymentPage> => {
     const res = await http.get<ItemResponse<ShopPaymentPage>>(`/shop/preorders/${preorderId}/payment`);
     return res.data;

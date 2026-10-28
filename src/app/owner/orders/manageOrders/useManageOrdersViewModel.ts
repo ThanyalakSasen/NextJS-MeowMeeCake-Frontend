@@ -167,6 +167,11 @@ export function useManageOrdersViewModel() {
     );
   };
 
+  // ยืนยันสลิปแล้ว backend เลื่อนเป็น preparing ให้เอง — เหลือปุ่มเดียว "สินค้าพร้อมแล้ว" → ready
+  const canMarkReady = (order: Order) =>
+    perm.update && order.order_status === "preparing" && order.payment_status === "paid";
+  const onMarkReady = (order: Order) => onStatusChange(order, "ready");
+
   // ตรวจสลิป — ผ่าน resource Payments จริง (verify: true=อนุมัติ→paid, false=ปฏิเสธ→failed)
   const verifyMutation = useMutation({
     mutationFn: ({ paymentId, approved }: { paymentId: string; approved: boolean }) =>
@@ -306,9 +311,11 @@ export function useManageOrdersViewModel() {
 
     isFinalStatus,
     onStatusChange, onCancel, onVerifyPayment, onRejectPayment, onExport,
+    canMarkReady, onMarkReady,
     cancelTarget, onConfirmCancel,
     closeCancel: () => setCancelTarget(null),
     cancelling: statusMutation.isPending,
+    changingStatus: statusMutation.isPending,
     verifyingPayment: verifyMutation.isPending,
     onRefund,
     refunding: refundMutation.isPending,

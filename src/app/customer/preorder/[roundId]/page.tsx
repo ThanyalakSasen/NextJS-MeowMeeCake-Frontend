@@ -11,11 +11,11 @@ import { useState } from "react";
 import { shopPreordersService } from "@/services/shopPreorders";
 import { isApiError } from "@/types/api";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
-import { shopButton, shopInput, shopPage } from "@/components/customer/shopStyles";
+import { productGrid, shopButton, shopInput, shopPage } from "@/components/customer/shopStyles";
 import { preorderRoundKey } from "../../lib/shopQueries";
 import { thaiDate } from "../lib/preorderDates";
 import { isRoundOpen, useNow } from "../lib/useNow";
-import { BasketBar, CountdownText, PreorderSteps, RoundProductCard } from "../_components/PreorderParts";
+import { BasketBar, CountdownText, PreorderStepsButton, RoundProductCard } from "../_components/PreorderParts";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -69,9 +69,12 @@ export default function PreorderRoundPage() {
               {t("pickupFrom", { date: thaiDate(round.pickup_date, false, locale) })}
             </p>
           </div>
-          <p className={`m-0 rounded-xl px-3 py-1.5 text-sm font-semibold ${isOpen ? "bg-emerald-50 text-emerald-700" : "bg-sky-50 text-sky-700"}`}>
-            {isOpen ? <CountdownText target={round.close_date} prefix={t("closesIn")} /> : round.round_status === "scheduled" ? t("notOpenYet") : t("closed")}
-          </p>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <p className={`m-0 rounded-xl px-3 py-1.5 text-sm font-semibold ${isOpen ? "bg-emerald-50 text-emerald-700" : "bg-sky-50 text-sky-700"}`}>
+              {isOpen ? <CountdownText target={round.close_date} prefix={t("closesIn")} /> : round.round_status === "scheduled" ? t("notOpenYet") : t("closed")}
+            </p>
+            <PreorderStepsButton />
+          </div>
         </header>
 
         <BasketBar />
@@ -88,15 +91,14 @@ export default function PreorderRoundPage() {
               {round.items.length ? t("noMatch") : t("noItems")}
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className={productGrid}>
               {items.map((it) => (
-                <RoundProductCard key={it._id} item={it} roundId={round._id} />
+                <RoundProductCard key={it._id} item={it} round={round} canOrder={isOpen} />
               ))}
             </div>
           )}
         </section>
 
-        <PreorderSteps />
       </div>
     </div>
   );

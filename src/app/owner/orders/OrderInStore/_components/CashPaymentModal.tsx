@@ -38,7 +38,7 @@ export function CashPaymentModal({
   ];
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} closable={false} width={460} destroyOnHidden maskClosable={!submitting}>
+    <Modal open={open} onCancel={onClose} footer={null} closable={false} width={460} destroyOnHidden mask={{ closable: !submitting }}>
       <div role="dialog" aria-label={t("pos.cashTitle")} className="flex flex-col gap-3.5">
         <div className="flex items-center justify-between">
           <h2 className="m-0 text-[22px] font-semibold text-brown-900">{t("pos.cashTitle")}</h2>

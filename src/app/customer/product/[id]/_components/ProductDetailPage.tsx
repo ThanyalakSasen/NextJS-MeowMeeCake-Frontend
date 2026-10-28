@@ -7,6 +7,8 @@
 // พรีออเดอร์ (D3): ?round=<id> → ราคาของรอบ + เพิ่มลงรายการพรีออเดอร์ (_components/PreorderOrderBox)
 // ยังไม่ยกมา: หมายเหตุต่อชิ้นของสินค้าปกติ (ตะกร้าไม่มีฟิลด์นี้ — ใช้ออปชันกรอกข้อความแทน)
 // · รายการส่วนประกอบ (/catalog/products/{id} ไม่ส่งวัตถุดิบ — มีแค่ในผลของระบบแนะนำ)
+// ส่วนข้อมูล (2026-10-26): กล่อง "ข้อมูลสินค้า" (หมวด · หน่วย · ประเภท · การจัดส่ง · คงเหลือ) อยู่ใต้รูป · "รายละเอียดสินค้า" กับ
+//   "วิธีอุ่น / เก็บรักษา" เป็นหัวข้อเรียงกัน — เดิมเป็นปุ่มแท็บ 2 ปุ่ม ต้องกดสลับถึงจะเห็นอีกเรื่อง
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -35,6 +37,9 @@ import ReviewsSection from "./ReviewsSection";
 import SimilarProducts from "./SimilarProducts";
 import AllergenNotice from "./AllergenNotice";
 import WhenVisible from "@/components/customer/WhenVisible";
+import { categoryNameOf } from "@/components/customer/ProductCard";
+import { useLocalOnlyShipping } from "../../../hooks/useLocalOnlyShipping";
+import { Flame, ScrollText, Truck } from "lucide-react";
 
 const noopSubscribe = () => () => {};
 import ShopImage from "@/components/customer/ShopImage";
@@ -57,6 +62,7 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
   const tcart = useTranslations("shop.cart");
   const tp = useTranslations("shop.products");
   const { name: localName, names: localNames } = useLocalName();
+  const { isLocalOnly, province: shipProvince } = useLocalOnlyShipping();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const qc = useQueryClient();
@@ -87,7 +93,6 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
   const { addToCart, status } = useAddToCart();
   const favorites = useFavorites();
   const [qty, setQty] = useState(1);
-  const [activeTab, setActiveTab] = useState<"description" | "heating">("description");
   const [slideIndex, setSlideIndex] = useState(0);
   const [slidePaused, setSlidePaused] = useState(false);
   // ตัวเลือกที่ลูกค้าเลือก · null = ยังไม่แตะ (ใช้ค่าตั้งต้นจาก initialPicked)
@@ -160,6 +165,9 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
   // ราคาที่ขีดฆ่า: พรีออเดอร์ = ราคาขายจริงหน้าร้าน · ปกติ = ราคาเต็มก่อนลด
   const regularPrice = roundItem ? effectivePrice(product) : product.product_price;
   const unitName = typeof product.unit_id === "object" && product.unit_id ? product.unit_id.unit_name : "";
+  const categoryName = categoryNameOf(product);
+  // สินค้าพรีออเดอร์ส่งได้ทุกจังหวัด (backend ไม่ตรวจขอบเขตจัดส่งของพรีออเดอร์)
+  const localOnly = !isPreorder && isLocalOnly(product._id, product.category_id ?? null);
   const rating = Number(product.avg_rating ?? 0);
   const isLoading = status === "loading";
   const isSuccess = status === "success";
@@ -264,6 +272,31 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
                 ))}
               </div>
             )}
+            {/* ข้อมูลสินค้า (หมวด · หน่วย · ประเภท · การจัดส่ง · คงเหลือ) — ใต้รูปสินค้า */}
+            <section aria-labelledby="product-facts" className="mt-4 w-full max-w-[360px] rounded-xl border border-[#8C5A3C]/15 bg-white">
+              <h2 id="product-facts" className="m-0 border-b border-[#8C5A3C]/10 px-4 py-2.5 text-sm font-bold text-[#4A342E]">
+                {t("factsTitle")}
+              </h2>
+              <dl className="m-0 divide-y divide-[#8C5A3C]/10 px-4">
+                {categoryName && <FactRow label={t("factCategory")}>{categoryName}</FactRow>}
+                {unitName && <FactRow label={t("factUnit")}>{unitName}</FactRow>}
+                <FactRow label={t("factType")}>{isPreorder ? t("typePreorder") : t("typeReady")}</FactRow>
+                <FactRow label={t("factShipping")}>
+                  {localOnly ? (
+                    <span className="inline-flex items-center gap-1.5 text-sky-800">
+                      <Truck size={15} aria-hidden="true" /> {t("shipLocalOnly", { province: shipProvince })}
+                    </span>
+                  ) : (
+                    t("shipNationwide")
+                  )}
+                </FactRow>
+                {!isPreorder && (
+                  <FactRow label={t("factStock")}>
+                    {outOfStock ? <span className="text-red-600">{t("soldOut")}</span> : t("stockUnits", { n: stock.toLocaleString(), unit: unitName || t("pieces") })}
+                  </FactRow>
+                )}
+              </dl>
+            </section>
           </div>
 
           <div className="w-full flex-1 flex flex-col gap-5">
@@ -410,38 +443,14 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
               </>
             )}
 
-            <div className="flex gap-2 pt-4">
-              {(
-                [
-                  ["description", t("tabDescription")],
-                  ["heating", t("tabHeating")],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setActiveTab(key)}
-                  aria-pressed={activeTab === key}
-                  className={`flex-1 h-[44px] px-4 rounded-xl text-sm font-bold transition-all border ${
-                    activeTab === key
-                      ? "bg-[#4A342E] text-white border-[#8C5A3C] shadow-sm"
-                      : "bg-white text-[#4A342E] border-[#8C5A3C]/20 hover:bg-[#4A342E] hover:text-white"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="bg-[#FAF6F0] p-5 rounded-xl border border-[#8C5A3C]/10">
-              <h2 className="m-0 mb-1 text-xs font-bold text-[#8C5A3C] uppercase tracking-wider">
-                {activeTab === "description" ? t("descriptionTitle") : t("tabHeating")}
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                {activeTab === "description"
-                  ? product.product_description || t("noDescription")
-                  : product.preparation_heating || t("noHeating")}
-              </p>
-            </div>
+            {/* รายละเอียด + วิธีอุ่น/เก็บรักษา — แยกหัวข้อเรียงกัน (เดิมเป็นแท็บ ต้องกดสลับถึงจะเห็นอีกอัน) */}
+
+            <InfoSection icon={<ScrollText size={18} aria-hidden="true" />} title={t("descriptionTitle")}>
+              {product.product_description || t("noDescription")}
+            </InfoSection>
+            <InfoSection icon={<Flame size={18} aria-hidden="true" />} title={t("heatingTitle")}>
+              {product.preparation_heating || t("noHeating")}
+            </InfoSection>
           </div>
         </div>
 
@@ -458,5 +467,28 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
         )}
       </div>
     </div>
+  );
+}
+
+/** 1 แถวของกล่องข้อมูลสินค้า */
+function FactRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[7.5rem_1fr] gap-3 py-2 text-sm">
+      <dt className="text-gray-500">{label}</dt>
+      <dd className="m-0 min-w-0 font-medium text-[#4A342E]">{children}</dd>
+    </div>
+  );
+}
+
+/** หัวข้อ + ข้อความ (รายละเอียดสินค้า · วิธีอุ่น) */
+function InfoSection({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-1.5">
+      <h2 className="m-0 flex items-center gap-2 text-base font-bold text-[#4A342E]">
+        <span className="text-[#8C5A3C]">{icon}</span>
+        {title}
+      </h2>
+      <p className="m-0 whitespace-pre-line rounded-xl border border-[#8C5A3C]/10 bg-[#FAF6F0] p-4 text-sm leading-relaxed text-gray-700">{children}</p>
+    </section>
   );
 }

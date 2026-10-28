@@ -15,6 +15,7 @@ import { useMenuAccess } from "@/context/PermissionsContext";
 import { Logo } from "@/components/base";
 import { MenuGroupItem } from "./MenuGroupItem";
 import { MENU_ICONS } from "./menuIcons";
+import { ChatUnreadBadge } from "./ChatUnreadBadge";
 
 /** จอที่ sidebar ตัว desktop แสดง — ตรงกับ `hidden lg:block` ใน OwnerLayout (Tailwind lg = 64rem) */
 const DESKTOP_QUERY = "(min-width: 64rem)";
@@ -103,6 +104,7 @@ export function Sidebar({ onLogout, inDrawer = false }: { onLogout?: () => void;
                     >
                       <Icon className="menu-icon" aria-hidden="true" />
                       <span className="menu-item-label">{t(item.labelKey)}</span>
+                      {item.menuKey === "chats" && <ChatUnreadBadge />}
                     </Link>
                   </li>
                 );

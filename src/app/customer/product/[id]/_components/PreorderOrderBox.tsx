@@ -11,7 +11,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { roundItemLimits, type StorefrontRoundDetail, type StorefrontRoundItem } from "@/services/shopPreorders";
 import type { ProductCustomization } from "@/types/productCustomization";
 import type { CartSelection, Picked, PickProblem } from "@/lib/customizationSelection";
-import { alert, confirmAlert } from "@/lib/alert";
+import { alert } from "@/lib/alert";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { LOGIN_PATH } from "@/constants/auth";
 import { baht } from "@/components/customer/shopStyles";
@@ -83,7 +83,7 @@ export default function PreorderOrderBox({
   const unit = roundItem.current_price + (selection?.extra ?? 0);
   const disabled = !isOpen || soldOut;
 
-  // ใส่รายการพรีออเดอร์ (localStorage) แล้วไปหน้ายืนยันทันที — ไม่มีปุ่ม "เพิ่มลงรายการ" แยกแล้ว
+  // เพิ่มลงตะกร้า (รายการพรีออเดอร์ใน localStorage) แล้วอยู่หน้าเดิม — สั่งพร้อมสินค้าอื่นได้ที่ตะกร้า (ตะกร้ารวม)
   const add = () => {
     if (status !== "authenticated") {
       alert.warning(t("loginFirst"));
@@ -113,20 +113,10 @@ export default function PreorderOrderBox({
           .filter(Boolean)
           .join(" · ") || null,
     };
-    const meta = { round_id: round._id, round_name: round.round_name, pickup_date: round.pickup_date };
-    const done = () => {
-      setShowProblems(false);
-      router.push("/customer/preorder/checkout");
-    };
-    const res = addToPreorderBasket(meta, item);
-    if (res.ok) return done();
-    void confirmAlert(t("conflict", { round: res.conflictRoundName }), {
-      title: t("conflictTitle"),
-      confirmText: t("clearAndAdd"),
-      cancelText: t("keep"),
-    }).then((ok) => {
-      if (ok && addToPreorderBasket(meta, item, { replace: true }).ok) done();
-    });
+    // ตะกร้ารวม: เก็บได้หลายรอบ (ไม่ต้องล้างรอบเดิม) · อยู่หน้าเดิม — ไอคอนตะกร้าบน Navbar นับเพิ่มให้เห็น
+    addToPreorderBasket({ round_id: round._id, round_name: round.round_name, pickup_date: round.pickup_date }, item);
+    setShowProblems(false);
+    alert.success(t("addedToCart"));
   };
 
   return (
@@ -165,7 +155,7 @@ export default function PreorderOrderBox({
           disabled={disabled}
           placeholder={t("notePlaceholder")}
           onChange={(e) => setNote(e.target.value)}
-          className="w-full rounded-xl border border-[#8C5A3C]/20 bg-white px-4 py-2.5 text-xs text-[#4A342E] placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C5A3C]/40 sm:text-sm"
+          className="h-[40px] w-full rounded-xl border border-[#8C5A3C]/20 bg-white px-4 text-xs text-[#4A342E] placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C5A3C]/40 sm:text-sm"
         />
       </label>
 
@@ -179,7 +169,7 @@ export default function PreorderOrderBox({
         </div>
         <button type="button" disabled={disabled} onClick={add}
           className={`${btn} min-w-[12rem] flex-1 bg-[#4A342E] text-white shadow-md hover:bg-[#8C5A3C]`}>
-          {soldOut ? t("full") : !isOpen ? t("roundNotOpen") : t("orderNow", { amount: baht(unit * quantity) })}
+          {soldOut ? t("full") : !isOpen ? t("roundNotOpen") : t("addToCart", { amount: baht(unit * quantity) })}
         </button>
       </div>
     </div>
