@@ -58,6 +58,13 @@ export const MENU_SECTIONS: MenuSection[] = [
           },
         ],
       },
+      // แชทลูกค้า — /admin/chats ใช้สิทธิ์ chats.* (ตัวเลขข้อความที่ยังไม่อ่านแสดงข้างชื่อเมนู — Sidebar)
+      {
+        labelKey: "chats",
+        icon: "ChatBubbleLeftRightIcon",
+        href: "/owner/chats",
+        menuKey: "chats",
+      },
       {
         labelKey: "finance",
         icon: "CurrencyDollarIcon",
@@ -104,19 +111,6 @@ export const MENU_SECTIONS: MenuSection[] = [
       //   menuKey: "search_synonyms",
       // },
 
-      {
-        // กลุ่มไม่มี href/menuKey ของตัวเอง — Sidebar กรองสิทธิ์จาก children เท่านั้น
-
-        labelKey: "ordersManage",
-        href: "/owner/orders/manageOrders",
-        icon: "ClipboardDocumentListIcon",
-        menuKey: "orders",
-
-        // โซนค่าจัดส่งหลังร้าน (I8) — /admin/delivery-zones ใช้สิทธิ์ orders.*
-        // ซ่อนจาก sidebar ชั่วคราว (2026-10-11) · หน้า /owner/orders/delivery-zones, breadcrumb, service ยังอยู่ครบ
-        // เข้าได้ทาง URL ตรง ๆ — เปิดเมนูคืนได้ด้วยการเอาคอมเมนต์บรรทัดล่างออก
-        // { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
-      },
       // แท็บของหน้ารอบพรีออเดอร์ย้ายมาเป็นเมนูระดับบน 3 ตัว — หน้าเดียวกัน แยกด้วย ?tab= (หน้าไม่แสดงแถบแท็บแล้ว)
       // ตัวแรกคือแท็บเริ่มต้น (เปิดหน้าโดยไม่มี ?tab=) — ต้องตรงกับ tabFrom ใน preorderQuery.ts
       {
@@ -132,6 +126,19 @@ export const MENU_SECTIONS: MenuSection[] = [
         menuKey: "preorder",
       },
       {
+        // กลุ่มไม่มี href/menuKey ของตัวเอง — Sidebar กรองสิทธิ์จาก children เท่านั้น
+
+        labelKey: "ordersManage",
+        href: "/owner/orders/manageOrders",
+        icon: "ClipboardDocumentListIcon",
+        menuKey: "orders",
+
+        // โซนค่าจัดส่งหลังร้าน (I8) — /admin/delivery-zones ใช้สิทธิ์ orders.*
+        // ซ่อนจาก sidebar ชั่วคราว (2026-10-11) · หน้า /owner/orders/delivery-zones, breadcrumb, service ยังอยู่ครบ
+        // เข้าได้ทาง URL ตรง ๆ — เปิดเมนูคืนได้ด้วยการเอาคอมเมนต์บรรทัดล่างออก
+        // { labelKey: "deliveryZones", href: "/owner/orders/delivery-zones", icon: "TruckIcon", menuKey: "orders" },
+      },
+      {
         labelKey: "preorderOrders",
         href: "/owner/orders/preOrderRound?tab=orders",
         icon: "InboxStackIcon",
@@ -143,13 +150,7 @@ export const MENU_SECTIONS: MenuSection[] = [
         href: "/owner/orders/OrderInStore",
         menuKey: "pos",
       },
-      // แชทลูกค้า — /admin/chats ใช้สิทธิ์ chats.* (ตัวเลขข้อความที่ยังไม่อ่านแสดงข้างชื่อเมนู — Sidebar)
-      {
-        labelKey: "chats",
-        icon: "ChatBubbleLeftRightIcon",
-        href: "/owner/chats",
-        menuKey: "chats",
-      },
+
       {
         labelKey: "promotions",
         icon: "TagIcon",
@@ -297,7 +298,10 @@ export function allMenuHrefs(): string[] {
  * href ที่มี query (เมนูย่อยแบบแท็บ เช่น ?tab=rounds) ตรงเมื่อ path เท่ากันและ query ทุกตัวตรงกับ search
  * ไม่มี query ไหนตรง (เปิดหน้าโดยไม่มี ?tab=) → ตัวแรกของ path นั้น = แท็บเริ่มต้น
  */
-export function findActiveHref(pathname: string, search?: URLSearchParams | null): string | null {
+export function findActiveHref(
+  pathname: string,
+  search?: URLSearchParams | null,
+): string | null {
   let best: string | null = null;
   let tabDefault: string | null = null;
   for (const href of allMenuHrefs()) {
@@ -319,7 +323,10 @@ export function findActiveHref(pathname: string, search?: URLSearchParams | null
 }
 
 /** key ของกลุ่ม (`${section.labelKey}.${item.labelKey}`) ที่มี child ตรงกับ findActiveHref · null ถ้าหน้าปัจจุบันไม่ได้อยู่ในกลุ่มใด */
-export function findActiveGroupKey(pathname: string, search?: URLSearchParams | null): string | null {
+export function findActiveGroupKey(
+  pathname: string,
+  search?: URLSearchParams | null,
+): string | null {
   const active = findActiveHref(pathname, search);
   if (active === null) return null;
   for (const section of MENU_SECTIONS) {
