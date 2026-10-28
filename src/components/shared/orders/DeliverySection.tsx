@@ -4,6 +4,7 @@
 // ใช้เฉพาะ order_type = "delivery" · ไม่มีสิทธิ์ update = แสดงอย่างเดียว
 // state ของฟอร์มเริ่มจาก info — parent ใส่ key={updated_at} ให้รีเซ็ตเองหลังบันทึก/ดึงข้อมูลใหม่
 // ส่งเฉพาะฟิลด์ที่เปลี่ยน · shipped_at/delivered_at backend ตั้งให้เองตามสถานะ (ไม่ต้องกรอก)
+// "จัดส่งเรียบร้อย" (delivered) = ร้านนำส่งแล้ว ปิดงาน — ต้องมีเลขพัสดุ backend เปลี่ยนออเดอร์เป็นสำเร็จให้ (ถอยกลับไม่ได้)
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -23,14 +24,11 @@ export function DeliverySection({
   canUpdate,
   saving,
   onSave,
-  customerCloses = false,
 }: {
   info: DeliveryInfo;
   canUpdate: boolean;
   saving: boolean;
   onSave: (input: DeliveryUpdateInput) => void;
-  /** ลูกค้าเป็นคนปิดงาน (shared/orders/deliveryClose) — ร้านเลือก "ส่งถึงแล้ว" ไม่ได้ (ยังแสดงถ้าลูกค้ากดแล้ว) */
-  customerCloses?: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -45,6 +43,9 @@ export function DeliverySection({
   if (tracking.trim() !== (info.tracking_no ?? "")) changes.tracking_no = tracking.trim() || null;
   if (note.trim() !== (info.delivered_note ?? "")) changes.delivered_note = note.trim() || null;
   const dirty = Object.keys(changes).length > 0;
+  const needsTracking = status === "delivered" && !tracking.trim();
+  // จัดส่งเรียบร้อยแล้ว = งานปิด — เปลี่ยนสถานะจัดส่งไม่ได้ (แก้เลขพัสดุ/หมายเหตุได้)
+  const closed = info.delivery_status === "delivered";
   // ลำดับตามรายการใน SHIPPING_CARRIERS (ขนส่งที่ใช้บ่อยก่อน · "ร้านจัดส่งเอง"/"อื่น ๆ" ท้ายสุด) — ไม่เรียง ก-ฮ
   const carrierOptions = SHIPPING_CARRIERS.map((c) => ({ value: c, label: t(`enums.shippingCarrier.${c}`) }));
 
@@ -98,15 +99,11 @@ export function DeliverySection({
         <span className="text-gray-600">{t("orders.deliveryStatusLabel")}</span>
         <Select
           value={status}
+          disabled={closed}
           onChange={(v) => setStatus(v as DeliveryStatus)}
-          options={DELIVERY_STATUSES.filter((s) => !customerCloses || s !== "delivered" || info.delivery_status === "delivered").map((s) => ({
-            value: s,
-            label: t(`enums.deliveryStatus.${s}`),
-          }))}
+          options={DELIVERY_STATUSES.map((s) => ({ value: s, label: t(`enums.deliveryStatus.${s}`) }))}
         />
-        {customerCloses && info.delivery_status !== "delivered" && (
-          <span className="text-xs text-gray-500">{t("orders.customerConfirmsHint")}</span>
-        )}
+        {!closed && <span className="text-xs text-gray-500">{t("orders.deliveredCompletesHint")}</span>}
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-gray-600">{t("orders.shippingCarrier")}</span>
@@ -125,7 +122,9 @@ export function DeliverySection({
           maxLength={MAX_TRACKING}
           onChange={(e) => setTracking(e.target.value)}
           placeholder={t("orders.trackingPlaceholder")}
+          status={needsTracking ? "error" : undefined}
         />
+        {needsTracking && <span className="text-xs text-danger">{t("orders.deliveredNeedsTracking")}</span>}
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-gray-600">{t("orders.deliveryNote")}</span>
@@ -147,7 +146,7 @@ export function DeliverySection({
           type="primary"
           icon={actionIcon("save", "small")}
           loading={saving}
-          disabled={!dirty}
+          disabled={!dirty || needsTracking}
           onClick={() => onSave(changes)}
         >
           {t("orders.deliverySave")}

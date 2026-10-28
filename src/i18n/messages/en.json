@@ -885,8 +885,9 @@
     "cancelPaidNotice": "This order is already paid — after cancelling it will be \"awaiting refund\". Transfer {amount} back to the customer, then press \"Confirm refund sent\" in the order details",
     "groupPaymentNote": "This slip pays for {n} bills ({docs}), slip total {amount} — approving/rejecting here applies to every bill",
     "markReady": "Mark as ready",
-    "markReadyHint": "Press when the items are prepared — the status changes to \"Ready\" right away",
-    "customerConfirmsHint": "The shop can update up to \"Shipping\" — the customer presses \"I received my order\" on the website to close it"
+    "deliveredCompletesHint": "\"Delivered\" means the shop has handed the parcel off — the order is completed right away (tracking number required)",
+    "deliveredNeedsTracking": "Enter a tracking number before setting \"Delivered\"",
+    "markReadyHint": "Press when the items are prepared — the status changes to \"Ready\" right away"
   },
   "preorderRound": {
     "paymentDue": "Payment due",
@@ -3134,14 +3135,7 @@
       "unpaidBy": "Not paid yet · by {date}",
       "searchPlaceholder": "Search order number or product name",
       "emptySearch": "No results for \"{q}\"",
-      "clearSearch": "Clear search",
-      "received": "I received my order",
-      "receivedTitle": "Confirm you received your order",
-      "receivedConfirm": "Confirm once you have received everything — the order will be completed and you will earn points",
-      "receivedNotYet": "Not yet",
-      "receivedSaving": "Saving...",
-      "receivedDone": "Thank you — marked as received",
-      "receivedFailed": "Could not save. Please try again"
+      "clearSearch": "Clear search"
     },
     "preorders": {
       "all": "All pre-orders",

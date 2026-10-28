@@ -18,7 +18,6 @@ import { isAwaitingRefund, type Order } from "@/types/order";
 import { ViewButton, actionIcon } from "@/components/shared/actions";
 import { StockAlertSection } from "@/components/shared/stock";
 import type { useManageOrdersViewModel } from "./useManageOrdersViewModel";
-import { customerClosesDelivery } from "@/components/shared/orders";
 import { statusSelectOptions } from "./orderStatus";
 import { OrderStatusFilter } from "./_components/OrderStatusFilter";
 import { OrderDetailContent } from "./_components/OrderDetailContent";
@@ -74,7 +73,7 @@ export function ManageOrdersView(vm: VM) {
             value={o.order_status}
             disabled={!paymentVerified || !vm.perm.update}
             style={{ width: 140 }}
-            options={statusSelectOptions(o.order_status, { customerCloses: customerClosesDelivery(o) }).map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
+            options={statusSelectOptions(o.order_status, { delivery: o.order_type === "delivery" }).map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
             onChange={(next) => vm.onStatusChange(o, next as OrderStatus)}
           />
         );

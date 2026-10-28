@@ -183,11 +183,6 @@ export const shopOrdersService = {
     await http.post(`/shop/orders/${id}/cancel`, reason ? { reason } : {});
   },
 
-  /** POST /shop/orders/{id}/received — ลูกค้ากด "ได้รับสินค้าแล้ว" (จัดส่ง · ร้านจัดส่งแล้ว) → ส่งถึง + สำเร็จ */
-  confirmReceived: async (id: string): Promise<void> => {
-    await http.post(`/shop/orders/${encodeURIComponent(id)}/received`, {});
-  },
-
   /** GET /shop/orders/{id} — ออเดอร์ + รายการสินค้า (เฉพาะเจ้าของ) */
   get: async (id: string): Promise<ShopOrder> => {
     const res = await http.get<ItemResponse<any>>(`/shop/orders/${id}`);
