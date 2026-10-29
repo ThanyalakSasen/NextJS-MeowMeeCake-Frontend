@@ -16,7 +16,7 @@ import type { ComponentFormValue } from "../componentForm";
 import { emptyComponentForm, fromComponent } from "../componentForm";
 import { IngredientEditor, hasQty, wholeUnitsOk, type EditableIngredientLine, type IngredientOption } from "./IngredientEditor";
 import { isIntegerOnlyUnit } from "@/constants/ingredientCategoryUnits";
-import { StepEditor } from "./StepEditor";
+import { StepEditor, stepsTooLong } from "./StepEditor";
 
 export interface ComponentSubmitValue extends ComponentFormValue {
   ingredients: RecipeIngredientLine[];
@@ -62,6 +62,10 @@ export function ComponentFormModal({
     }
     if (!wholeUnitsOk(ingredients)) {
       alert.warning(t("recipes.wholeUnitRequired"));
+      return;
+    }
+    if (stepsTooLong(steps)) {
+      alert.warning(t("recipes.stepsTooLong"));
       return;
     }
     // ต้นทุนส่งไปเฉพาะเมื่อผู้ใช้กรอกเอง — ไม่แตะช่องนี้ = ให้ backend คำนวณจากวัตถุดิบใหม่ทุกครั้งที่บันทึก

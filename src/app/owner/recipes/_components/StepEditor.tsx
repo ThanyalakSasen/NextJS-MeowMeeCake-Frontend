@@ -6,6 +6,10 @@ import { Button, Input, TextArea, InputNumber } from "@/components/base";
 import type { RecipeStep } from "@/types/recipeShared";
 import { actionIcon } from "@/components/shared/actions";
 
+/** backend (schemas/bom.ts) รับ steps_content (JSON ของทุกขั้น) ≤ 20000 ตัวอักษร — ขั้นละ 2000 หลายขั้นรวมกันเกินได้ */
+const STEPS_CONTENT_MAX = 20000;
+export const stepsTooLong = (steps: RecipeStep[]) => JSON.stringify(steps).length > STEPS_CONTENT_MAX;
+
 export function StepEditor({
   steps,
   onChange,

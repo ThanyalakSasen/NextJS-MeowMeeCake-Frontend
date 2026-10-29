@@ -19,6 +19,7 @@ import { usePermission } from "@/context/PermissionsContext";
 import { isUnrestrictedRole } from "@/constants/menuKeys";
 import { alert, confirmAlert } from "@/lib/alert";
 import { resolveUploadUrl } from "@/lib/uploads";
+import { compressImage } from "@/lib/compressImage";
 import { isApiError } from "@/types/api";
 import type { AdminWeeklyMarket, StoreSettings } from "@/types/storeAdmin";
 import type { SocialKey, WeekDay } from "@/services/storeInfo";
@@ -205,7 +206,9 @@ export function useStoreInfoViewModel() {
   const setAddressField = <K extends keyof StoreSettings>(key: K, value: StoreSettings[K]) => setAddress((a) => ({ ...a, [key]: value }));
   const setCoordinates = (latitude: number | null, longitude: number | null) => setAddress((a) => ({ ...a, latitude, longitude }));
 
-  const pickLogo = (file: File) => {
+  const pickLogo = async (raw: File) => {
+    // ชนิดไฟล์ผิดไม่ต้องย่อ · ที่เหลือย่อก่อนตรวจขนาด (รูปมือถือ 5–15 MB ย่อแล้วผ่าน)
+    const file = logoError(raw) === "logoType" ? raw : await compressImage(raw);
     const err = logoError(file);
     if (err) return setErrors((e) => ({ ...e, logo: { key: err } }));
     setErrors((e) => Object.fromEntries(Object.entries(e).filter(([k]) => k !== "logo")));
