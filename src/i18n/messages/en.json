@@ -751,7 +751,7 @@
     "statTracked": "Products tracked",
     "statTrackedSub": "Ready-to-sell only",
     "statLow": "Low stock",
-    "statLowSub": "{n} or fewer left",
+    "statLowSub": "At or below each product's alert level",
     "statOut": "Out of stock",
     "statOutSub": "Needs production",
     "statValue": "Total stock value",
