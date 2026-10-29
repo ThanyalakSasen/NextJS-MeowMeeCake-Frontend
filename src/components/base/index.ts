@@ -11,6 +11,7 @@ export { Spinner, type SpinProps } from "./Spinner";
 export { Divider, type DividerProps } from "./Divider";
 export { DatePicker, RangePicker, type DatePickerProps } from "./DatePicker";
 export { LazyDatePicker, LazyRangePicker } from "./LazyDatePicker";
+export { LazySelect } from "./LazySelect";
 export { Avatar, initialsOf } from "./Avatar";
 export { ProgressBar } from "./ProgressBar";
 export { Card } from "./Card";
