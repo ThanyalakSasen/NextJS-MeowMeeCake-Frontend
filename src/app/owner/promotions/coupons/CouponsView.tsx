@@ -122,6 +122,7 @@ export function CouponsView(vm: VM) {
           editTarget={vm.editTarget}
           productOptions={vm.productOptions}
           categoryOptions={vm.categoryOptions}
+          promotions={vm.allPromotions}
           saving={vm.saving}
           onClose={vm.closeModal}
           onSubmit={vm.onSubmit}

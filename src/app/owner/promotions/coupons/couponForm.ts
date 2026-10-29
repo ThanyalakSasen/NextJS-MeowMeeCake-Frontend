@@ -2,6 +2,7 @@
 // couponForm.ts — helper ล้วนของฟอร์มคูปอง (ใช้ร่วม Add / Edit) + สถานะคูปอง
 // กลุ่มลูกค้า (audience): ทุกคน / เฉพาะสมาชิก — backend ตรวจจริงตอนสร้างออเดอร์ (บัญชีลูกค้าทั่วไปของ POS ใช้โปรสมาชิกไม่ได้)
 // ใช้ร่วมกับโปรอื่น (stackable): POS เลือกโปรได้หลายตัวเมื่อทุกตัวเปิดช่องนี้
+//   stackWith: เลือกได้ว่าร่วมกับโปรไหน (ว่าง = ทุกโปรที่เปิดช่องนี้) — ซ้อนได้เมื่อทั้งสองฝั่งยอมกัน
 // ─────────────────────────────────────────────────────────────
 import dayjs, { type Dayjs } from "dayjs";
 import type { CouponStatus, DiscountType } from "@/constants/enumConfig";
@@ -30,6 +31,8 @@ export interface CouponFormValue {
   chOnline: boolean;
   audience: PromotionAudience;
   stackable: boolean;
+  /** id โปรที่ใช้ร่วมได้ · ว่าง = ทุกโปรที่ stackable */
+  stackWith: string[];
 }
 
 export const emptyCouponForm: CouponFormValue = {
@@ -43,6 +46,7 @@ export const emptyCouponForm: CouponFormValue = {
   chOnline: true,
   audience: "all",
   stackable: false,
+  stackWith: [],
 };
 
 export function fromPromotion(p: Promotion): CouponFormValue {
@@ -65,6 +69,7 @@ export function fromPromotion(p: Promotion): CouponFormValue {
     chOnline: p.applicable_channels.includes("online"),
     audience: p.audience ?? "all",
     stackable: p.stackable ?? false,
+    stackWith: p.stackable_with ?? [],
   };
 }
 
@@ -101,6 +106,7 @@ export function toInput(v: CouponFormValue): PromotionInput {
     applicable_channels: channels.length > 0 ? channels : ["online", "instore"],
     audience: v.audience,
     stackable: v.stackable,
+    stackable_with: v.stackable ? (v.stackWith ?? []) : [],
     start_date: (start ?? dayjs()).startOf("day").toISOString(),
     end_date: (end ?? dayjs().add(1, "year")).endOf("day").toISOString(),
   };
