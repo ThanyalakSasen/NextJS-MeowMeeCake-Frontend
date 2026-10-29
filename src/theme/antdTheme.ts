@@ -13,7 +13,7 @@ import { color, typography, control } from "@/theme/tokens";
 export const antdTheme: ThemeConfig = {
   token: {
     // ── ตัวอักษร ──
-    fontFamily: typography.family, // Noto Sans Thai Looped (มีหัว) — ตั้งบน <html> ที่ layout.tsx
+    fontFamily: typography.family, // Noto Sans Thai (ไม่มีหัว) — ตั้งบน <html> ที่ layout.tsx
     fontSize: typography.size.base,
     fontSizeSM: typography.size.sm,
     fontSizeLG: typography.size.lg,
