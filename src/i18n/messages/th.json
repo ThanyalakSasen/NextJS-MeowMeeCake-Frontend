@@ -100,6 +100,7 @@
     "products": "จัดการข้อมูลสินค้า",
     "productsAdd": "เพิ่มสินค้า",
     "productStock": "สต็อกสินค้า",
+    "productHistory": "ประวัติสต็อกสินค้า",
     "searchSynonyms": "คำพ้องค้นหา",
     "ordersManage": "จัดการคำสั่งซื้อ",
     "ordersPreorderRound": "จัดการรอบพรีออเดอร์",
@@ -512,6 +513,14 @@
       "receive": "รับเข้า",
       "adjust": "ปรับแก้"
     },
+    "productStockTxnType": {
+      "receive": "รับเข้า",
+      "use": "เบิกใช้",
+      "adjust": "ปรับยอด",
+      "production": "ผลิตเสร็จ",
+      "sale": "ขาย",
+      "sale_return": "คืนสต็อก"
+    },
     "unitType": {
       "IngredientWeight": "น้ำหนักวัตถุดิบ",
       "IngredientVolume": "ปริมาตรวัตถุดิบ",
@@ -621,6 +630,7 @@
       "finance_summary": "สรุปกำไร-ขาดทุน",
       "products": "ข้อมูลสินค้า (รวมหมวดหมู่ / ตัวเลือก)",
       "stock": "สต็อกสินค้า",
+      "stock_history": "ประวัติสต็อกสินค้า",
       "search_synonyms": "คำพ้องค้นหา",
       "orders": "จัดการคำสั่งซื้อ",
       "preorder": "จัดการรอบพรีออเดอร์",
@@ -789,7 +799,25 @@
     "notePlaceholder": "เช่น ชำรุด หมดอายุ นับสต็อกประจำเดือน (ไม่บังคับ)",
     "alertTitle": "สินค้าใกล้หมด / หมดสต็อก ({n} รายการ)",
     "alertDescription": "ควรผลิตหรือรับเข้าเพิ่มก่อนหมดขาย",
-    "allItemsTitle": "สินค้าทั้งหมด"
+    "allItemsTitle": "สินค้าทั้งหมด",
+    "history": "ประวัติ"
+  },
+  "productHistory": {
+    "title": "ประวัติสต็อกสินค้า",
+    "allProducts": "สินค้าทั้งหมด",
+    "colTime": "เวลา",
+    "colProduct": "สินค้า",
+    "colType": "ประเภท",
+    "colQty": "จำนวน",
+    "colBalance": "คงเหลือ (ก่อน → หลัง)",
+    "colSource": "ที่มา",
+    "colNote": "หมายเหตุ",
+    "colBy": "ผู้ทำรายการ",
+    "bySystem": "ระบบ / ลูกค้า",
+    "refManual": "หน้าสต็อกสินค้า",
+    "ref_order": "ออเดอร์ {no}",
+    "ref_production_order": "ใบสั่งผลิต {no}",
+    "empty": "ยังไม่มีประวัติการเคลื่อนไหวสต็อกสินค้า"
   },
   "orders": {
     "title": "จัดการคำสั่งซื้อ",

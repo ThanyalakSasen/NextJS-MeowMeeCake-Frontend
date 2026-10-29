@@ -100,6 +100,7 @@
     "products": "Products",
     "productsAdd": "Add Product",
     "productStock": "Product Stock",
+    "productHistory": "Product Stock History",
     "searchSynonyms": "Search synonyms",
     "ordersManage": "Manage Orders",
     "ordersPreorderRound": "Manage Pre-order Rounds",
@@ -512,6 +513,14 @@
       "receive": "Receive",
       "adjust": "Adjust"
     },
+    "productStockTxnType": {
+      "receive": "Receive",
+      "use": "Use",
+      "adjust": "Adjust",
+      "production": "Produced",
+      "sale": "Sale",
+      "sale_return": "Returned"
+    },
     "unitType": {
       "IngredientWeight": "Ingredient weight",
       "IngredientVolume": "Ingredient volume",
@@ -621,6 +630,7 @@
       "finance_summary": "P&L summary",
       "products": "Products (incl. categories / options)",
       "stock": "Product stock",
+      "stock_history": "Product stock history",
       "search_synonyms": "Search synonyms",
       "orders": "Manage orders",
       "preorder": "Pre-order rounds",
@@ -789,7 +799,25 @@
     "notePlaceholder": "e.g. damaged, expired, monthly count (optional)",
     "alertTitle": "Low / out of stock products ({n})",
     "alertDescription": "Produce or restock before they sell out",
-    "allItemsTitle": "All products"
+    "allItemsTitle": "All products",
+    "history": "History"
+  },
+  "productHistory": {
+    "title": "Product stock history",
+    "allProducts": "All products",
+    "colTime": "Time",
+    "colProduct": "Product",
+    "colType": "Type",
+    "colQty": "Quantity",
+    "colBalance": "On hand (before → after)",
+    "colSource": "Source",
+    "colNote": "Note",
+    "colBy": "By",
+    "bySystem": "System / customer",
+    "refManual": "Stock page",
+    "ref_order": "Order {no}",
+    "ref_production_order": "Production {no}",
+    "empty": "No product stock movements yet"
   },
   "orders": {
     "title": "Manage Orders",

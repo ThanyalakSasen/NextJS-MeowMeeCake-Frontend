@@ -102,6 +102,12 @@ export const MENU_SECTIONS: MenuSection[] = [
         icon: "ArchiveBoxIcon",
         menuKey: "stock",
       },
+      {
+        labelKey: "productHistory",
+        href: "/owner/products/productHistory",
+        icon: "ArrowsRightLeftIcon",
+        menuKey: "stock_history",
+      },
 
       // คำพ้องค้นหา (E3) — /admin/search-synonyms ใช้สิทธิ์ search_synonyms.*
       // {
