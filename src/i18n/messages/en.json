@@ -1377,7 +1377,8 @@
       "month": "Monthly",
       "year": "Yearly"
     },
-    "historyDescription": "{n} completed production records",
+    "historyDescription": "{n} production orders in this period · {done} completed",
+    "colStatus": "Status",
     "statTotalOrders": "Total Produced",
     "statTotalOrdersSub": "orders",
     "statTotalQty": "Items Produced",

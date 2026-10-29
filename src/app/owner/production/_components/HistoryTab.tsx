@@ -1,10 +1,10 @@
 "use client";
-// แท็บ 3: ประวัติการผลิต — อ่านอย่างเดียว (สร้าง/แก้ที่แท็บแผน+สถานะ)
+// แท็บ 3: ประวัติการผลิต — อ่านอย่างเดียว (สร้าง/แก้ที่แท็บแผน+สถานะ) · ทุกใบตั้งแต่สร้าง พร้อมป้ายสถานะ
 // รายการสินค้าของแต่ละใบไม่อยู่ในตาราง — กด "ดู" เปิดป๊อปอัปรายละเอียด (ProductionOrderDetail) ที่ลิสต์ครบทุกรายการ
 import type { Dayjs } from "dayjs";
 import { useTranslations, useLocale } from "next-intl";
 import { DatePicker } from "@/components/base";
-import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
+import { StatCard, StatCardsGrid, BreakdownList, StatusBadge } from "@/components/shared/stats";
 import { DataTable, TypeTabBar, type Column } from "@/components/shared/data";
 import { EmptyState } from "@/components/base";
 import { formatDate } from "@/i18n/format";
@@ -47,6 +47,16 @@ export function HistoryTab(vm: VM) {
       render: (o) => <span className="font-medium text-brown-900 font-mono">{o.production_no}</span>,
     },
     {
+      key: "production_date",
+      title: t("production.fieldDate"),
+      render: (o) => <span className="text-gray-600">{formatDate(o.production_date, locale)}</span>,
+    },
+    {
+      key: "status",
+      title: t("production.colStatus"),
+      render: (o) => <StatusBadge group="productionStatus" value={o.production_status} />,
+    },
+    {
       key: "completed_at",
       title: t("production.colCompletedAt"),
       render: (o) => <span className="text-gray-600">{o.completed_at ? formatDate(o.completed_at, locale, { withTime: true }) : "—"}</span>,
@@ -60,7 +70,7 @@ export function HistoryTab(vm: VM) {
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-base text-gray-600">{t("production.historyDescription", { n: vm.historyStats.totalOrders })}</p>
+      <p className="text-base text-gray-600">{t("production.historyDescription", { n: vm.historyStats.allOrders, done: vm.historyStats.totalOrders })}</p>
 
       <div className="flex flex-wrap items-center gap-3">
         <TypeTabBar
