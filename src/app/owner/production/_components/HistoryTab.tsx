@@ -4,7 +4,7 @@
 import type { Dayjs } from "dayjs";
 import { useTranslations, useLocale } from "next-intl";
 import { DatePicker } from "@/components/base";
-import { StatCard, StatCardsGrid, BreakdownList, StatusBadge } from "@/components/shared/stats";
+import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
 import { DataTable, TypeTabBar, type Column } from "@/components/shared/data";
 import { EmptyState } from "@/components/base";
 import { formatDate } from "@/i18n/format";
@@ -12,6 +12,7 @@ import { ViewButton } from "@/components/shared/actions";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import type { ProductionOrder } from "@/types/productionOrder";
 import type { useProductionViewModel } from "../useProductionViewModel";
+import { PrintLotLabelsButton } from "./PrintLotLabelsButton";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
@@ -51,20 +52,17 @@ export function HistoryTab(vm: VM) {
       title: t("production.fieldDate"),
       render: (o) => <span className="text-gray-600">{formatDate(o.production_date, locale)}</span>,
     },
-    {
-      key: "status",
-      title: t("production.colStatus"),
-      render: (o) => <StatusBadge group="productionStatus" value={o.production_status} />,
-    },
-    {
-      key: "completed_at",
-      title: t("production.colCompletedAt"),
-      render: (o) => <span className="text-gray-600">{o.completed_at ? formatDate(o.completed_at, locale, { withTime: true }) : "—"}</span>,
-    },
+    // คอลัมน์ "สถานะ" + "เสร็จเมื่อ" เอาออก — ไม่มีขั้นอัปเดตสถานะการผลิตแล้ว · สถานะ/เวลาปิดงานยังดูได้ในป๊อปอัปรายละเอียด
     {
       key: "assignee",
       title: t("production.fieldAssignee"),
       render: (o) => o.assignee_name ?? "—",
+    },
+    {
+      // ล็อตสร้างตอนปิดงานผลิต — ใบที่ยังไม่เสร็จไม่มีฉลากให้พิมพ์
+      key: "lot_labels",
+      title: t("production.colLotLabels"),
+      render: (o) => (o.production_status === "done" ? <PrintLotLabelsButton orderId={o._id} /> : <span className="text-gray-500">—</span>),
     },
   ];
 

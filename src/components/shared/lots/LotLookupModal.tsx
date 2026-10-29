@@ -1,5 +1,5 @@
 "use client";
-// สแกนบาร์โค้ดบนฉลาก → ดูล็อต (สินค้า · วันผลิต/หมดอายุ · ใบสั่งผลิต/รอบ · คงเหลือ)
+// สแกนบาร์โค้ดบนฉลาก (รหัสประจำชิ้น หรือเลขล็อต) → ดูล็อต (สินค้า · ชิ้นที่ · วันผลิต/หมดอายุ · ใบสั่งผลิต/รอบ · คงเหลือ)
 // เครื่องยิงบาร์โค้ดพิมพ์ตัวอักษรแล้วกด Enter ให้เอง (keyboard wedge) — ช่องโฟกัสรอไว้ สแกนต่อได้เรื่อย ๆ
 import { useState, type ReactNode } from "react";
 import { Modal } from "antd";
@@ -64,10 +64,12 @@ export function LotLookupModal({ onClose }: { onClose: () => void }) {
             <div className="mb-2 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="m-0 font-medium text-brown-900">{lot.product_name_th}</p>
-                <p className="m-0 font-mono text-xs text-gray-500">{lot.lot_no}</p>
+                <p className="m-0 font-mono text-xs text-gray-500">{lot.piece_code ?? lot.lot_no}</p>
               </div>
               <ExpiryTag state={lot.expiry_state} />
             </div>
+            {lot.piece_no != null && row(t("lots.piece"), t("lots.pieceOf", { n: lot.piece_no, total: lot.qty_produced }))}
+            {row(t("lots.colLot"), <span className="font-mono">{lot.lot_no}</span>)}
             {row(t("lots.colProduced"), labelDate(lot.produced_date, locale))}
             {row(t("lots.colExpiry"), lot.expiry_date ? labelDate(lot.expiry_date, locale) : t("lots.noExpiry"))}
             {row(t("lots.productionNo"), <span className="font-mono">{lot.production_no ?? "—"}</span>)}
@@ -82,7 +84,8 @@ export function LotLookupModal({ onClose }: { onClose: () => void }) {
           </div>
         ) : null}
       </div>
-      {printing && lot && <LotLabelModal lots={[lot]} onClose={() => setPrinting(false)} />}
+      {/* สแกนชิ้นมา = พิมพ์ซ้ำเฉพาะชิ้นนั้น (เปลี่ยนชิ้น/จำนวนในหน้าต่างพิมพ์ได้) */}
+      {printing && lot && <LotLabelModal lots={[lot]} focusPiece={lot.piece_no} onClose={() => setPrinting(false)} />}
     </Modal>
   );
 }

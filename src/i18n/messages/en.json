@@ -1239,7 +1239,6 @@
     "fieldUnit": "Unit",
     "selectUnit": "Select a unit",
     "fieldCurrentStock": "Current stock",
-    "currentStockEditHint": "Adjust the quantity on the ingredient stock page (keeps a history)",
     "fieldReorderPoint": "Minimum stock alert level",
     "fieldReorderPointHint": "Alerts when stock falls below this amount",
     "fieldMaxStock": "Max stock",
@@ -1251,7 +1250,13 @@
     "saveFailed": "Could not save",
     "deleted": "Ingredient deleted",
     "deleteFailed": "Could not delete",
-    "deleteConfirm": "Delete ingredient \"{name}\"?"
+    "deleteConfirm": "Delete ingredient \"{name}\"?",
+    "selectCategoryFirst": "Select a category first",
+    "unitLockedByCategoryHint": "Units are filtered to match the selected category",
+    "stockEditHint": "Adjust stock on the Ingredient Stock page",
+    "maxLtReorder": "Max stock must not be less than the minimum stock alert level",
+    "maxLtCurrent": "Max stock must not be less than current stock",
+    "integerUnitOnly": "This unit must be a whole number"
   },
   "units": {
     "title": "Manage Units",
@@ -1274,6 +1279,7 @@
     "forIngredient": "Ingredients / recipes",
     "forProduct": "Products",
     "pickContext": "Pick at least one — whether this unit is for ingredients or products",
+    "contextLockedByTypeHint": "Usage context is locked automatically for this unit type",
     "saved": "Unit updated",
     "added": "Unit added",
     "saveFailed": "Could not save",
@@ -1301,13 +1307,20 @@
     "title_receive": "Receive stock — {name}",
     "title_use": "Use stock — {name}",
     "title_adjust": "Adjust stock — {name}",
+    "hint_receive": "Add quantity to stock, e.g. received from a supplier",
+    "hint_use": "Remove quantity from stock, e.g. used, damaged, or expired",
+    "hint_adjust": "Set the stock to the physical count when the system figure differs",
     "done_receive": "Received {name} into stock",
     "done_use": "Logged usage of {name}",
     "done_adjust": "Adjusted stock for {name}",
     "actionFailed": "Action failed, please try again",
     "currentStock": "Current stock {qty} {unit}",
+    "currentStockWithMax": "Current stock {qty} / max {max} {unit}",
     "qtyLabel": "Quantity ({unit})",
     "newStockLabel": "New stock level ({unit})",
+    "useExceeds": "Cannot use more than available ({qty} {unit})",
+    "receiveExceedsMax": "Exceeds max stock ({max} {unit}) · can receive at most {remain} {unit}",
+    "adjustExceedsMax": "Cannot exceed max stock ({max} {unit})",
     "noteLabel": "Note",
     "notePlaceholder": "e.g. received from supplier, used for a cake",
     "alertTitle": "Low / out of stock ingredients ({n})",
@@ -1455,7 +1468,10 @@
     "shelfLife": "Shelf life {n} days",
     "noExpiry": "No expiry",
     "expiryBeforeProduced": "Expiry date can't be before the production date",
-    "lotsTitle": "Product lots ({n})"
+    "lotsTitle": "Product lots ({n})",
+    "colLotLabels": "Lot labels",
+    "noLotsToPrint": "This production order has no lots (completed before lot tracking)",
+    "lotsLoadFailed": "Could not load lots, please try again"
   },
   "pricing": {
     "title": "Product Pricing",
@@ -4109,6 +4125,7 @@
     "notePlaceholder": "Optional",
     "current": "In stock {qty} {unit}",
     "exceeds": "Cannot exceed available stock ({qty} {unit})",
+    "exceedsMax": "Exceeds configured max stock ({max} {unit})",
     "addLine": "Add row",
     "count": "{n} items",
     "submit_receive": "Receive {n} items",
@@ -4186,7 +4203,7 @@
     "noExpiry": "No expiry",
     "lookup": "Scan lot",
     "lookupTitle": "Look up a lot",
-    "scanPlaceholder": "Scan the label barcode or type a lot number and press Enter",
+    "scanPlaceholder": "Scan the label barcode or type a lot / piece code and press Enter",
     "notFound": "Lot {no} not found",
     "colLot": "Lot no.",
     "colProduct": "Product",
@@ -4204,6 +4221,11 @@
       "expiring": "Expiring soon",
       "ok": "OK",
       "none": "No expiry"
-    }
+    },
+    "fromPiece": "From piece",
+    "piece": "Piece",
+    "pieceOf": "{n} of {total}",
+    "pieceHint": "Each label gets its own piece code (lot no.-piece no.); scanning it shows the production date, expiry and lot ·",
+    "piecesFailed": "Could not load piece codes, reopen this window ·"
   }
 }

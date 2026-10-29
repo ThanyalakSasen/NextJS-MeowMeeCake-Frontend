@@ -12,7 +12,7 @@ import { ingredientCategoriesService } from "@/services/ingredientCategories";
 import { unitsService } from "@/services/units";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import { isIngredientUnit, unitLabel } from "@/utils/unitContext";
+import { unitLabel } from "@/utils/unitContext";
 import type { StockStatus } from "@/constants/enumConfig";
 import type { IngredientInput } from "@/types/ingredient";
 import { getIngredientStatus, stockPercent } from "./ingredientStatus";
@@ -64,9 +64,9 @@ export function useIngredientsViewModel() {
   });
 
   const categories = categoriesQ.data?.data ?? [];
-  /** เฉพาะหน่วยที่ตั้งไว้ว่าใช้กับวัตถุดิบ — ป้อนให้ Select ในฟอร์ม */
+  /** รายการหน่วยนับทั้งหมด — ให้ IngredientFormModal กรอง/ล็อกตามหมวดหมู่วัตถุดิบ */
   const ingredientUnits = useMemo(
-    () => (unitsQ.data?.data ?? []).filter((u) => isIngredientUnit(u.usage_context)),
+    () => unitsQ.data?.data ?? [],
     [unitsQ.data],
   );
 
@@ -119,8 +119,12 @@ export function useIngredientsViewModel() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["ingredients"] });
 
   const save = useMutation({
-    mutationFn: ({ id, body }: { id: string | null; body: IngredientInput }) =>
-      id ? ingredientsService.update(id, body) : ingredientsService.create(body),
+    mutationFn: ({ id, body }: { id: string | null; body: IngredientInput }) => {
+      if (!id) return ingredientsService.create(body);
+      const patch: Partial<IngredientInput> = { ...body };
+      delete patch.current_stock;
+      return ingredientsService.update(id, patch);
+    },
     onSuccess: (_res, vars) => {
       alert.success(vars.id ? t("ingredients.saved") : t("ingredients.added"));
       invalidate();
