@@ -52,8 +52,9 @@ export function toExpenseInput(v: ExpenseFormValue): ExpenseInput {
     category: v.category,
     amount: v.amount ?? 0, // ฟอร์มบังคับกรอก > 0 แล้ว (ExpenseFormModal rules)
     payment_method: v.payment_method,
-    vendor: v.vendor?.trim() || undefined,
-    note: v.note?.trim() || undefined,
+    // ว่าง = "" ไม่ใช่ undefined — PATCH ที่ไม่ส่ง key คงค่าเดิมไว้ ลบข้อความตอนแก้ไขจึงไม่เคยล้างได้ · backend รับ ""
+    vendor: v.vendor?.trim() ?? "",
+    note: v.note?.trim() ?? "",
     receipt_url: v.receipt_url || null,
     is_recurring: v.is_recurring,
   };

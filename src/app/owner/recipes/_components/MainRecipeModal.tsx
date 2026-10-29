@@ -14,7 +14,8 @@ import type { ProductKind } from "@/types/product";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import type { RecipeFormValue } from "../recipeForm";
 import { emptyRecipeForm, fromRecipe } from "../recipeForm";
-import { IngredientEditor, hasQty, type EditableIngredientLine, type IngredientOption } from "./IngredientEditor";
+import { IngredientEditor, hasQty, wholeUnitsOk, type EditableIngredientLine, type IngredientOption } from "./IngredientEditor";
+import { isIntegerOnlyUnit } from "@/constants/ingredientCategoryUnits";
 import { StepEditor } from "./StepEditor";
 
 // หัวคอลัมน์ + ทุกแถวของสูตรย่อยใช้ชุดเดียวกัน · minmax(0, …) กันคอลัมน์ขยายตามชื่อสูตรยาว (ช่องจำนวนเยื้อง)
@@ -53,6 +54,9 @@ export function MainRecipeModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<RecipeFormValue>();
+  // หน่วยของจำนวนที่ได้ต่อสูตรเป็นหน่วยนับ (ชิ้น/ถาด …) → จำนวนเต็มเท่านั้น
+  const yieldUnitId = Form.useWatch("yield_unit_id", form);
+  const yieldWhole = isIntegerOnlyUnit(yieldUnitOptions.find((o) => o.value === yieldUnitId)?.label);
   const [components, setComponents] = useState<ComponentRow[]>(editTarget?.components ?? []);
   const [ingredients, setIngredients] = useState<EditableIngredientLine[]>(editTarget?.ingredients ?? []);
   const [steps, setSteps] = useState<RecipeStep[]>(editTarget?.steps ?? []);
@@ -70,6 +74,10 @@ export function MainRecipeModal({
     }
     if (!hasQty(components) || !hasQty(ingredients)) {
       alert.warning(t("recipes.qtyRequired"));
+      return;
+    }
+    if (!wholeUnitsOk(ingredients)) {
+      alert.warning(t("recipes.wholeUnitRequired"));
       return;
     }
     // ต้นทุนส่งไปเฉพาะเมื่อผู้ใช้กรอกเอง — ไม่แตะช่องนี้ = ให้ backend คำนวณจากวัตถุดิบใหม่ทุกครั้งที่บันทึก
@@ -113,9 +121,10 @@ export function MainRecipeModal({
             rules={[
               { required: true, whitespace: true, message: t("validation.required") },
               { type: "number", min: 0.01, message: t("validation.positive") },
+              ...(yieldWhole ? [{ type: "integer" as const, message: t("ingredients.integerUnitOnly") }] : []),
             ]}
           >
-            <InputNumber min={0} />
+            <InputNumber min={0} {...(yieldWhole ? { precision: 0 } : {})} />
           </FormItem>
           <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Select options={yieldUnitOptions} placeholder={t("recipes.selectUnit")} />

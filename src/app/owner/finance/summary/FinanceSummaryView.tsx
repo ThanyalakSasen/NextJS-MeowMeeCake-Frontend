@@ -26,15 +26,17 @@ export function FinanceSummaryView(vm: VM) {
   const t = useTranslations();
   const locale = useLocale();
 
+  // null (ยังโหลด/โหลดไม่สำเร็จ) = "—" ไม่ใช่ 0 บาท
+  const money = (n: number | null) => (n == null ? "—" : formatCurrency(n, locale));
   // ตารางเปรียบเทียบ: ยอดเป็น 0 = เทา (gray-700) ทุกคอลัมน์ · รายรับ = เขียว · รายจ่าย = แดง · กำไร-ขาดทุน ตามเครื่องหมาย
   const trendColumns: Column<TrendRow>[] = [
     { key: "label", title: t(`finance.trendCol_${vm.period}`) },
-    { key: "income", title: t("finance.trendColIncome"), align: "right", render: (r) => <span className={r.income !== 0 ? "text-green-600" : "text-gray-700"}>{formatCurrency(r.income, locale)}</span> },
-    { key: "expense", title: t("finance.trendColExpense"), align: "right", render: (r) => <span className={r.expense !== 0 ? "text-red-500" : "text-gray-700"}>{formatCurrency(r.expense, locale)}</span> },
+    { key: "income", title: t("finance.trendColIncome"), align: "right", render: (r) => <span className={r.income ? "text-green-600" : "text-gray-700"}>{money(r.income)}</span> },
+    { key: "expense", title: t("finance.trendColExpense"), align: "right", render: (r) => <span className={r.expense ? "text-red-500" : "text-gray-700"}>{money(r.expense)}</span> },
     { key: "profit", title: t("finance.trendColProfit"), align: "right", render: (r) => (
         // กำไร = เขียว · เท่าทุน (0) = เทา · ขาดทุน = แดง
-        <span className={`font-semibold ${r.profit > 0 ? "text-green-600" : r.profit < 0 ? "text-red-500" : "text-gray-700"}`}>
-          {formatCurrency(r.profit, locale)}
+        <span className={`font-semibold ${(r.profit ?? 0) > 0 ? "text-green-600" : (r.profit ?? 0) < 0 ? "text-red-500" : "text-gray-700"}`}>
+          {money(r.profit)}
         </span>
       ) },
   ];
@@ -92,7 +94,11 @@ export function FinanceSummaryView(vm: VM) {
               <div className="border-b border-gray-100 px-4 py-3">
                 <p className="text-sm font-semibold text-brown-900">{t(`finance.trendTitle_${vm.period}`)}</p>
               </div>
-              <DataTable inCard columns={trendColumns} rows={vm.monthlyTrend} pagination={false} />
+              {vm.trendFailed ? (
+                <LoadFailed onRetry={vm.refetchTrend} size="small" />
+              ) : (
+                <DataTable inCard columns={trendColumns} rows={vm.monthlyTrend} pagination={false} />
+              )}
             </div>
 
             <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white">

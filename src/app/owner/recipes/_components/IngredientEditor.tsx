@@ -6,6 +6,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, InputNumber, Select } from "@/components/base";
 import type { RecipeIngredientLine } from "@/types/recipeShared";
 import { actionIcon } from "@/components/shared/actions";
+import { isIntegerOnlyUnit } from "@/constants/ingredientCategoryUnits";
 
 // หัวคอลัมน์ + ทุกแถวใช้ชุดเดียวกัน · minmax(0, …) กันคอลัมน์ขยายตามชื่อวัตถุดิบยาว (fr เฉย ๆ ไม่หดต่ำกว่าเนื้อหา
 // → แถวที่ชื่อยาวดันช่องจำนวนเยื้องจากแถวอื่น)
@@ -14,6 +15,11 @@ const ROW_COLUMNS = "minmax(0, 1fr) 110px 24px";
 /** แถวระหว่างแก้ — quantity null = ช่องว่าง (กำลังพิมพ์ใหม่) · ฟอร์มตรวจ > 0 ก่อนบันทึก (hasQty)
  *  เดิมแปลงช่องว่างเป็น 0 ทันที ช่องเด้งเป็น "0" กลางการพิมพ์ และบันทึกวัตถุดิบจำนวน 0 ได้ */
 export type EditableIngredientLine = Omit<RecipeIngredientLine, "quantity"> & { quantity: number | null };
+
+/** หน่วยนับ (ฟอง/ชิ้น/กล่อง …) ต้องเป็นจำนวนเต็ม — กติกาเดียวกับสต็อกวัตถุดิบ (IngredientFormModal)
+ *  เดิมสูตรใส่ "ไข่ 1.5 ฟอง" ได้ ทั้งที่สต็อกห้ามเศษ → ผลิตแล้วตัดสต็อกเหลือเศษฟอง */
+export const wholeUnitsOk = (rows: { quantity: number | null; unit_abbr: string }[]) =>
+  rows.every((r) => r.quantity == null || !isIntegerOnlyUnit(r.unit_abbr) || Number.isInteger(r.quantity));
 
 /** ทุกแถวมีจำนวน > 0 แล้ว → ส่งเข้า API ได้ */
 export const hasQty = <T extends { quantity: number | null }>(rows: T[]): rows is (T & { quantity: number })[] =>
@@ -41,8 +47,17 @@ export function IngredientEditor({
   const remove = (i: number) => onChange(rows.filter((_, idx) => idx !== i));
   const updateIngredient = (i: number, ingredientId: string) => {
     const opt = options.find((o) => o._id === ingredientId);
+    // เปลี่ยนเป็นวัตถุดิบหน่วยนับ → ปัดจำนวนเดิมที่มีเศษขึ้นเป็นจำนวนเต็ม (ช่องจะล็อกเป็นจำนวนเต็มต่อจากนี้)
+    const whole = isIntegerOnlyUnit(opt?.unit_abbr);
     onChange(rows.map((r, idx) => (idx === i
-      ? { ...r, ingredient_id: ingredientId, ingredient_name: opt?.name ?? "", unit_id: opt?.unit_id ?? "", unit_abbr: opt?.unit_abbr ?? "" }
+      ? {
+          ...r,
+          ingredient_id: ingredientId,
+          ingredient_name: opt?.name ?? "",
+          unit_id: opt?.unit_id ?? "",
+          unit_abbr: opt?.unit_abbr ?? "",
+          quantity: whole && r.quantity != null ? Math.max(1, Math.ceil(r.quantity)) : r.quantity,
+        }
       : r)));
   };
   const updateQty = (i: number, qty: number | null) =>
@@ -77,10 +92,12 @@ export function IngredientEditor({
             size="small"
             className="!w-full"
             min={0}
-            step={0.01}
+            {...(isIntegerOnlyUnit(row.unit_abbr) ? { precision: 0, step: 1 } : { step: 0.01 })}
             aria-label={t("filterLabel.quantity")}
             value={row.quantity}
-            status={row.ingredient_id && !row.quantity ? "error" : undefined}
+            status={
+              (row.ingredient_id && !row.quantity) || !wholeUnitsOk([row]) ? "error" : undefined
+            }
             onChange={(v) => updateQty(i, v == null ? null : Number(v))}
             suffix={<span className="text-xs text-gray-500">{row.unit_abbr}</span>}
           />

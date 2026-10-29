@@ -32,7 +32,13 @@ export interface AppUser {
 export type AppUserInput = Omit<
   AppUser,
   "_id" | "created_at" | "updated_at" | "failed_login_attempts" | "lockout_until"
->;
+  | "emp_salary" | "start_working_date" | "last_working_date"
+> & {
+  /** null = ล้างค่า (backend schemas/user.ts รับ nullish) — ไม่ส่ง key = คงค่าเดิม */
+  emp_salary?: number | null;
+  start_working_date?: string | null;
+  last_working_date?: string | null;
+};
 
 /** บัญชีถูกล็อกจาก login ผิดหลายครั้งอยู่ตอนนี้ไหม (ล็อกหมดอายุเองเมื่อเลย lockout_until) */
 export function isUserLocked(u: Pick<AppUser, "lockout_until">, now: number = Date.now()): boolean {
