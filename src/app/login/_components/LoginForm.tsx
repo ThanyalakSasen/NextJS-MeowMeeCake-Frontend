@@ -128,6 +128,11 @@ function Form() {
         alert.error(isLocked ? t("auth.accountLocked", { minutes: Math.ceil(e2.retryAfterSeconds / 60) }) : e2.message);
         return;
       }
+      // 401 = อีเมลหรือรหัสผ่านผิด — ใช้ข้อความของเราเอง (แปลตามภาษา) ไม่พึ่งข้อความ backend
+      if (isApiError(e2) && e2.status === 401) {
+        alert.error(t("auth.invalidCredentials"));
+        return;
+      }
       // แจ้งด้วย toast เหมือนหน้าอื่นทั้งหมด (ดู docs/BACKLOG.md §9)
       alert.error(isApiError(e2) ? e2.message : t("auth.loginFailed"));
     }
