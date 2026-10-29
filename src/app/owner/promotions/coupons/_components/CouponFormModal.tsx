@@ -228,7 +228,13 @@ export function CouponFormModal({
           </FormItem>
         )}
 
-        <FormItem name="dateRange" label={t("coupons.fieldDateRange")} extra={t("coupons.dateRangeHint")}>
+        {/* แก้ไข: ล้างช่องแล้วบันทึก = วันที่ถูกตั้งใหม่เป็นวันนี้ +1 ปีเงียบ ๆ (ค่าเริ่มต้นของคูปองใหม่) → บังคับกรอก */}
+        <FormItem
+          name="dateRange"
+          label={t("coupons.fieldDateRange")}
+          extra={editTarget ? undefined : t("coupons.dateRangeHint")}
+          rules={editTarget ? [{ required: true, message: t("validation.required") }] : undefined}
+        >
           <RangePicker style={{ width: "100%" }} />
         </FormItem>
 

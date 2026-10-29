@@ -106,7 +106,19 @@ export function RoundItemFormModal({
           <FormItem
             name="min_order_qty"
             label={t("preorderRound.fieldMinOrderQty")}
-            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+            dependencies={["max_qty_total"]}
+            rules={[
+              { required: true, whitespace: true, message: t("validation.required") },
+              // ขั้นต่ำเกินโควตารวม = ไม่มีใครสั่งได้ (backend ปฏิเสธด้วย)
+              ({ getFieldValue }) => ({
+                validator: (_r, min: number | null | undefined) => {
+                  const max: number | null | undefined = getFieldValue("max_qty_total");
+                  return min == null || max == null || min <= max
+                    ? Promise.resolve()
+                    : Promise.reject(new Error(t("preorderRound.minExceedsMax")));
+                },
+              }),
+            ]}
           >
             <InputNumber className="!w-full" min={1} precision={0} />
           </FormItem>

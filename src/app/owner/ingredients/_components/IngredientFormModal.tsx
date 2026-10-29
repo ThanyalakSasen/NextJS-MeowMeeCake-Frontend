@@ -73,6 +73,8 @@ export function IngredientFormModal({
     () => units.find((u) => u._id === watchedUnitId),
     [units, watchedUnitId],
   );
+  // ระบบไม่แปลงหน่วย — มียอดคงเหลืออยู่ เปลี่ยนหน่วย = ยอดเดิมถูกนับเป็นหน่วยใหม่ (backend ตอบ 409 · มีสูตรใช้ก็ 409)
+  const unitLocked = !!editTarget && (editTarget.currentStock ?? 0) !== 0;
   const isIntUnit = useMemo(() => isIntegerOnlyUnit(selectedUnit), [selectedUnit]);
   const unitSuffix = selectedUnit ? (
     <span className="text-xs text-gray-500">{selectedUnit.unit_name || selectedUnit.unit_abbr}</span>
@@ -98,13 +100,13 @@ export function IngredientFormModal({
 
   // เมื่อเลือกหมวดหมู่หรือพิมพ์ชื่อวัตถุดิบ ระบบล็อกและเลือกหน่วยนับที่ตรงกับหมวดหมู่อัตโนมัติ
   useEffect(() => {
-    if (!open || !watchedCategoryId) return;
+    if (!open || !watchedCategoryId || unitLocked) return;
     const currentUnitId = form.getFieldValue("unit_id");
     const isCurrentValid = !!currentUnitId && allowedUnits.some((u) => u._id === currentUnitId);
     if (!isCurrentValid && defaultUnitId) {
       form.setFieldValue("unit_id", defaultUnitId);
     }
-  }, [open, watchedCategoryId, allowedUnits, defaultUnitId, form]);
+  }, [open, watchedCategoryId, allowedUnits, defaultUnitId, form, unitLocked]);
 
   // ถ้าเปลี่ยนมาเป็นหน่วยนับที่ต้องเป็นจำนวนเต็ม (เช่น ฟอง, ชิ้น, กล่อง) ให้ปัดค่าทศนิยมที่ค้างอยู่ในช่องปริมาณเป็นจำนวนเต็ม
   useEffect(() => {
@@ -183,9 +185,10 @@ export function IngredientFormModal({
             name="unit_id"
             label={t("ingredients.fieldUnit")}
             rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+            extra={unitLocked ? t("ingredients.unitLockedHint") : undefined}
           >
             <Select
-              disabled={!watchedCategoryId || allowedUnits.length <= 1}
+              disabled={unitLocked || !watchedCategoryId || allowedUnits.length <= 1}
               options={sortOptionsThai(
                 allowedUnits.map((u) => ({ value: u._id, label: `${u.unit_name} (${u.unit_abbr})` })),
               )}

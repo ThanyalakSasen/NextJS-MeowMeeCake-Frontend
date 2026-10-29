@@ -73,6 +73,11 @@ export function RoundFormModal({
       alert.warning(t("preorderRound.itemQtyRequired"));
       return;
     }
+    // ขั้นต่ำเกินโควตารวม = ไม่มีใครสั่งได้ (backend ปฏิเสธด้วย)
+    if (picked.some((r) => r.min_order_qty! > r.max_qty_total!)) {
+      alert.warning(t("preorderRound.minExceedsMax"));
+      return;
+    }
     const items: RoundItemInput[] = picked.map((r) => ({
       product_id: r.product_id,
       price_override: r.price_override ?? undefined,
