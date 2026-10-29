@@ -1377,7 +1377,8 @@
       "month": "รายเดือน",
       "year": "รายปี"
     },
-    "historyDescription": "บันทึกการผลิตที่เสร็จสมบูรณ์ทั้งหมด {n} รายการ",
+    "historyDescription": "ใบสั่งผลิตในช่วงนี้ {n} ใบ · ผลิตเสร็จแล้ว {done} ใบ",
+    "colStatus": "สถานะ",
     "statTotalOrders": "ผลิตทั้งหมด",
     "statTotalOrdersSub": "ใบสั่งผลิต",
     "statTotalQty": "รายการที่ผลิต",
