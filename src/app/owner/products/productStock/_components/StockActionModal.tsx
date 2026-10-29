@@ -74,7 +74,7 @@ export function StockActionModal({
             >
               <InputNumber min={mode === "adjust" ? 0 : 1} precision={0} />
             </FormItem>
-            {/* เก็บในบันทึกการทำงาน (สินค้าไม่มีประวัติสต็อกแยกแบบวัตถุดิบ) */}
+            {/* เก็บในประวัติสต็อกสินค้า (หน้า productHistory) + บันทึกการทำงาน */}
             <FormItem name="note" label={t("productStock.noteLabel")}>
               <Input maxLength={200} placeholder={t("productStock.notePlaceholder")} />
             </FormItem>

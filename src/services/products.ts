@@ -16,6 +16,7 @@
 import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { Product, ProductInput, ProductListParams } from "@/types/product";
+import type { ProductStockHistoryParams, ProductStockTransaction } from "@/types/productStockTransaction";
 
 const BASE = "/admin/products";
 
@@ -83,9 +84,16 @@ export const productsService = {
     http.put<ItemResponse<Product>>(`${BASE}/${id}/stock`, { quantity, note }),
 
   /** PATCH /admin/products/{id}/stock { delta } — ปรับด้วยส่วนต่าง (+ รับเข้า / − ตัดออก) แบบ atomic
-   *  note (ทั้ง PUT/PATCH) = หมายเหตุ — สินค้าไม่มีที่เก็บ backend บันทึกไว้ในบันทึกการทำงาน */
+   *  note (ทั้ง PUT/PATCH) = หมายเหตุ — เก็บในประวัติสต็อกสินค้า (stockHistory) + บันทึกการทำงาน */
   adjustStock: (id: string, delta: number, note?: string) =>
     http.patch<ItemResponse<Product>>(`${BASE}/${id}/stock`, { delta, note }),
+
+  /**
+   * GET /admin/products/stock-history — ประวัติสต็อกสินค้า ล่าสุดก่อน (stock_history.view หรือ stock.view)
+   * แบ่งหน้าที่ backend · กรอง product_id / type / date_from–date_to ("YYYY-MM-DD" วันไทย)
+   */
+  stockHistory: (params: ProductStockHistoryParams = {}, h: HttpReader = http) =>
+    h.getList<ProductStockTransaction>(`${BASE}/stock-history`, { params }),
 
   remove: (id: string) =>
     http.delete<EmptyResponse>(`${BASE}/${id}`),

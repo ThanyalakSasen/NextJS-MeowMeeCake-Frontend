@@ -3,8 +3,10 @@
 // ViewModel ของ Product Stock — สต็อกสินค้าปกติ (is_preorder: false)
 // รายการจาก GET /admin/products/stock-list (stock.view — Final-Backlog P12) · ชื่อหมวด/หน่วยมากับรายการ (populate)
 // รับเข้า/เบิกใช้ = PATCH /admin/products/:id/stock { delta } · ปรับยอด = PUT { quantity } (stock.update ทั้งคู่)
+// ทุกครั้ง backend บันทึกประวัติสต็อกสินค้าให้ (ผู้ทำ + หมายเหตุ) — ดูที่หน้า productHistory
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { productsService } from "@/services/products";
@@ -43,6 +45,9 @@ export function useProductStockViewModel() {
   const t = useTranslations();
   const qc = useQueryClient();
   const perm = usePermission("stock");
+  // ปุ่มประวัติ → หน้าประวัติสต็อกสินค้า (สิทธิ์แยก stock_history)
+  const historyPerm = usePermission("stock_history");
+  const router = useRouter();
 
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string>("all");
@@ -161,6 +166,9 @@ export function useProductStockViewModel() {
 
   return {
     perm,
+    canViewHistory: historyPerm.view,
+    openHistory: (r?: StockProductRow) =>
+      router.push(r ? `/owner/products/productHistory?product=${r._id}` : "/owner/products/productHistory"),
     bulkOpen, openBulk: () => setBulkOpen(true), closeBulk: () => setBulkOpen(false), bulkItems, onBulkSubmit,
     lotLookupOpen, openLotLookup: () => setLotLookupOpen(true), closeLotLookup: () => setLotLookupOpen(false),
     rows: filtered,
