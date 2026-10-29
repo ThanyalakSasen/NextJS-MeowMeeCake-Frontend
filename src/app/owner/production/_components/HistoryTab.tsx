@@ -12,6 +12,7 @@ import { ViewButton } from "@/components/shared/actions";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import type { ProductionOrder } from "@/types/productionOrder";
 import type { useProductionViewModel } from "../useProductionViewModel";
+import { PrintLotLabelsButton } from "./PrintLotLabelsButton";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
@@ -56,6 +57,12 @@ export function HistoryTab(vm: VM) {
       key: "assignee",
       title: t("production.fieldAssignee"),
       render: (o) => o.assignee_name ?? "—",
+    },
+    {
+      // ล็อตสร้างตอนปิดงานผลิต — ใบที่ยังไม่เสร็จไม่มีฉลากให้พิมพ์
+      key: "lot_labels",
+      title: t("production.colLotLabels"),
+      render: (o) => (o.production_status === "done" ? <PrintLotLabelsButton orderId={o._id} /> : <span className="text-gray-500">—</span>),
     },
   ];
 

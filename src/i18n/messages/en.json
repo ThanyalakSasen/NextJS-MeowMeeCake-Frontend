@@ -1437,7 +1437,10 @@
     "shelfLife": "Shelf life {n} days",
     "noExpiry": "No expiry",
     "expiryBeforeProduced": "Expiry date can't be before the production date",
-    "lotsTitle": "Product lots ({n})"
+    "lotsTitle": "Product lots ({n})",
+    "colLotLabels": "Lot labels",
+    "noLotsToPrint": "This production order has no lots (completed before lot tracking)",
+    "lotsLoadFailed": "Could not load lots, please try again"
   },
   "pricing": {
     "title": "Product Pricing",
