@@ -67,7 +67,7 @@ export function IngredientStockView(vm: VM) {
     ? (r: StockRow) => (
         <div className="flex justify-end gap-2">
           <Button size="small" icon={actionIcon("receive", "small")} onClick={() => vm.openAction(r, "receive")}>{t("ingredientStock.ok_receive")}</Button>
-          <Button size="small" icon={actionIcon("use", "small")} onClick={() => vm.openAction(r, "use")}>{t("ingredientStock.ok_use")}</Button>
+          <Button size="small" icon={actionIcon("use", "small")} disabled={r.currentStock <= 0} onClick={() => vm.openAction(r, "use")}>{t("ingredientStock.ok_use")}</Button>
           <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("ingredientStock.ok_adjust")}</Button>
         </div>
       )
