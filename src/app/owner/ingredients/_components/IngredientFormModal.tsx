@@ -127,6 +127,8 @@ export function IngredientFormModal({
           <FormItem
             name="reorder_point"
             label={t("ingredients.fieldReorderPoint")}
+            // ป้ายสั้นบรรทัดเดียวให้ช่องกรอก 3 ช่องในแถวตรงกัน — คำอธิบาย "แจ้งเตือน" ย้ายไปไว้ใน tooltip
+            tooltip={t("ingredients.fieldReorderPointHint")}
             rules={[{ required: true, message: t("validation.required") }]}
           >
             <InputNumber min={0} />
