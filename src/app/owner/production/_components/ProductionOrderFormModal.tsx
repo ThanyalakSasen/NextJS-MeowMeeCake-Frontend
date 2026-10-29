@@ -22,6 +22,10 @@ import type { CreateProductionOrderValue } from "../useProductionViewModel";
 import { useEditableRows, RemoveRowButton } from "@/components/shared/form";
 import { sortOptionsThai } from "@/lib/thaiSort";
 
+// หัวคอลัมน์ + ทุกแถวใช้ชุดเดียวกัน · minmax(0, …) กันคอลัมน์ขยายตามชื่อสินค้ายาว (fr เฉย ๆ ไม่หดต่ำกว่าเนื้อหา
+// → แถวที่ชื่อยาวดันช่องจำนวน/หมายเหตุเยื้องจากแถวอื่น) · จำนวน 110px ให้พอทั้งตัวเลขและหน่วย (suffix)
+const ROW_COLUMNS = "minmax(0, 1.4fr) 110px minmax(0, 1fr) 24px";
+
 interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string }
 interface StaffOption { _id: string; user_fullname: string }
 
@@ -182,7 +186,7 @@ export function ProductionOrderFormModal({
         </div>
 
         {rows.length > 0 && (
-          <div className="mb-1 grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1fr 90px 1fr 24px" }}>
+          <div className="mb-1 grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: ROW_COLUMNS }}>
             <span>{t("filterLabel.product")}</span>
             <span>{t("filterLabel.quantity")}</span>
             <span>{t("filterLabel.note")}</span>
@@ -194,7 +198,7 @@ export function ProductionOrderFormModal({
           const unit = products.find((p) => p._id === row.product_id)?.unit_abbr ?? "";
           return (
             <div key={row.key} className="mb-2">
-              <div className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 90px 1fr 24px" }}>
+              <div className="grid gap-2 items-center" style={{ gridTemplateColumns: ROW_COLUMNS }}>
                 <Select
                   size="small"
                   aria-label={t("filterLabel.product")}

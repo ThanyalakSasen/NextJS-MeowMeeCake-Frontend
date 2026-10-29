@@ -25,7 +25,7 @@ type PopulatedRef<T> = T | string | null;
 /** shape ดิบจาก backend (productionItemModel + populate product_id/recipe_id) */
 export interface RawProductionOrderItem {
   _id: string;
-  product_id: PopulatedRef<{ _id: string; product_name_th: string; product_name_eng?: string }>;
+  product_id: PopulatedRef<{ _id: string; product_name_th: string; product_name_eng?: string; shelf_life_days?: number | null }>;
   recipe_id: PopulatedRef<{ _id: string; recipe_name: string; yield_qty: number }>;
   planned_qty: number;
   actual_qty?: number | null;
@@ -64,6 +64,15 @@ export interface ProductionOrderItem {
   actual_qty?: number | null;
   item_status: ProductionItemStatus;
   notes?: string | null;
+  /** อายุสินค้า (วัน) จาก product ที่ populate — วันหมดอายุเริ่มต้นของล็อตในหน้าปิดงาน · null = ไม่ตั้ง */
+  shelf_life_days: number | null;
+}
+
+/** วันผลิต/วันหมดอายุของล็อตต่อรายการ ที่ส่งไปกับ POST /complete ("YYYY-MM-DD" · expiry null = ไม่มีวันหมดอายุ) */
+export interface CompleteLotInput {
+  item_id: string;
+  produced_date: string;
+  expiry_date: string | null;
 }
 
 /** order ฝั่ง UI — denormalize assignee_name/round_name จาก assigned_to/round_id ที่ populate มาแล้ว */

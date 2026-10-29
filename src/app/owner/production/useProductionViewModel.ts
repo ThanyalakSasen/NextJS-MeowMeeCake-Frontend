@@ -77,6 +77,7 @@ function toProductionOrder(
         actual_qty: it.actual_qty ?? null,
         item_status: it.item_status,
         notes: it.notes ?? null,
+        shelf_life_days: typeof it.product_id === "object" && it.product_id ? (it.product_id.shelf_life_days ?? null) : null,
       };
     }),
   };
@@ -353,12 +354,13 @@ export function useProductionViewModel() {
       for (const [itemId, qty] of Object.entries(v.actuals)) {
         await productionOrdersService.updateItem(itemId, qty > 0 ? { actual_qty: qty } : { actual_qty: 0, item_status: "cancelled" });
       }
-      return productionOrdersService.complete(order._id, { use_actual: v.useActual });
+      return productionOrdersService.complete(order._id, { use_actual: v.useActual, lots: v.lots });
     },
     onSettled: () => {
       invalidate();
       qc.invalidateQueries({ queryKey: ["ingredients"] });
       qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["product-lots"] });
     },
   });
 

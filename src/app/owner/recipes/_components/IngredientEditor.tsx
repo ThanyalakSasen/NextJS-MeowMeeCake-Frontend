@@ -7,6 +7,10 @@ import { Button, InputNumber, Select } from "@/components/base";
 import type { RecipeIngredientLine } from "@/types/recipeShared";
 import { actionIcon } from "@/components/shared/actions";
 
+// หัวคอลัมน์ + ทุกแถวใช้ชุดเดียวกัน · minmax(0, …) กันคอลัมน์ขยายตามชื่อวัตถุดิบยาว (fr เฉย ๆ ไม่หดต่ำกว่าเนื้อหา
+// → แถวที่ชื่อยาวดันช่องจำนวนเยื้องจากแถวอื่น)
+const ROW_COLUMNS = "minmax(0, 1fr) 110px 24px";
+
 export interface IngredientOption {
   _id: string;
   name: string;
@@ -39,14 +43,14 @@ export function IngredientEditor({
   return (
     <div className="flex flex-col gap-2">
       {rows.length > 0 && (
-        <div className="grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1fr 110px 24px" }}>
+        <div className="grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: ROW_COLUMNS }}>
           <span>{t("filterLabel.ingredient")}</span>
           <span>{t("filterLabel.quantity")}</span>
           <span />
         </div>
       )}
       {rows.map((row, i) => (
-        <div key={i} className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 110px 24px" }}>
+        <div key={i} className="grid gap-2 items-center" style={{ gridTemplateColumns: ROW_COLUMNS }}>
           <Select
             size="small"
             aria-label={t("filterLabel.ingredient")}

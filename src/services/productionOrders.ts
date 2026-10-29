@@ -7,6 +7,7 @@ import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type {
   RawProductionOrder,
+  CompleteLotInput,
   ProductionOrderCreateInput,
   ProductionOrderFromRoundInput,
   ProductionFromRoundPreview,
@@ -56,7 +57,8 @@ export const productionOrdersService = {
     http.post<ItemResponse<RawProductionOrder>>(`${BASE}/${id}/start`, {}),
 
   /** in_progress → done — หักสต็อกวัตถุดิบของรายการที่ยังไม่ถูกหักให้ครบ */
-  complete: (id: string, body: { use_actual?: boolean; allowNegative?: boolean } = {}) =>
+  /** lots = วันผลิต/วันหมดอายุของล็อตต่อรายการ (backend สร้างล็อตตอนปิดงาน — ไม่ส่ง = ค่าเริ่มต้น) */
+  complete: (id: string, body: { use_actual?: boolean; allowNegative?: boolean; lots?: CompleteLotInput[] } = {}) =>
     http.post<ItemResponse<RawProductionOrder>>(`${BASE}/${id}/complete`, body),
 
   /** → cancelled — คืนสต็อกวัตถุดิบที่หักไปแล้ว (ถ้ามี) */

@@ -8,6 +8,7 @@ import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
 import { actionIcon } from "@/components/shared/actions";
 import { getNextStatus, isFinalStatus, producedQty } from "../productionStatus";
+import { ProductionLots } from "./ProductionLots";
 
 export function ProductionOrderDetail({
   order,
@@ -118,6 +119,8 @@ export function ProductionOrderDetail({
           ))}
         </div>
       </div>
+
+      {done && <ProductionLots orderId={order._id} />}
 
       {canUpdate && !final && (
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
