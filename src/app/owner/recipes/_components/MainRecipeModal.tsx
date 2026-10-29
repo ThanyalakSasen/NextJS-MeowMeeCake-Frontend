@@ -102,7 +102,7 @@ export function MainRecipeModal({
       <Form form={form} layout="vertical" initialValues={editTarget ? fromRecipe(editTarget) : emptyRecipeForm}>
         <div className="grid grid-cols-2 gap-3">
           <FormItem name="recipe_name" label={t("recipes.fieldRecipeName")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
-            <Input placeholder={t("recipes.recipeNamePlaceholder")} />
+            <Input maxLength={120} placeholder={t("recipes.recipeNamePlaceholder")} />
           </FormItem>
           <FormItem name="product_id" label={t("recipes.fieldProduct")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Select
@@ -199,7 +199,7 @@ export function MainRecipeModal({
 
         <Divider />
         <FormItem name="note" label={t("recipes.fieldNote")}>
-          <TextArea rows={2} placeholder={t("recipes.notePlaceholder")} />
+          <TextArea maxLength={2000} rows={2} placeholder={t("recipes.notePlaceholder")} />
         </FormItem>
       </Form>
     </Modal>

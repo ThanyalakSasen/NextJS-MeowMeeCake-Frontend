@@ -74,7 +74,7 @@ export function EditRoundModal({
           label={t("preorderRound.fieldRoundName")}
           rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
         >
-          <Input />
+          <Input maxLength={200} />
         </FormItem>
         <div className="grid grid-cols-3 gap-3">
           <FormItem name="open_date" label={t("preorderRound.fieldOpenDate")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>

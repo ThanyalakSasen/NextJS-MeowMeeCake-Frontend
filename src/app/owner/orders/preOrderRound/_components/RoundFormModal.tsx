@@ -106,7 +106,7 @@ export function RoundFormModal({
           label={t("preorderRound.fieldRoundName")}
           rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
         >
-          <Input placeholder={t("preorderRound.roundNamePlaceholder")} />
+          <Input maxLength={200} placeholder={t("preorderRound.roundNamePlaceholder")} />
         </FormItem>
 
         <div className="grid grid-cols-3 gap-3">

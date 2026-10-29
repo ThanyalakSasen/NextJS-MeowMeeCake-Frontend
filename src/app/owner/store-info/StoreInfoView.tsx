@@ -87,7 +87,7 @@ export function StoreInfoView(vm: VM) {
             </FormField>
           ))}
           <FormField label={t("storeInfo.contact.email")} error={vm.fieldError("contact_email")}>
-            <Input type="email" value={p.contact_email} placeholder="hello@meowmeecake.com" onChange={(e) => vm.setProfileField("contact_email", e.target.value)} />
+            <Input maxLength={254} type="email" value={p.contact_email} placeholder="hello@meowmeecake.com" onChange={(e) => vm.setProfileField("contact_email", e.target.value)} />
           </FormField>
           <FormField label={t("storeInfo.contact.systemEmail")}>
             <Input value={vm.systemEmail || "—"} disabled suffix={<span className="text-xs text-gray-500">{t("storeInfo.contact.fromSystem")}</span>} />
@@ -96,7 +96,7 @@ export function StoreInfoView(vm: VM) {
         <div className="grid grid-cols-1 gap-3 border-t border-gray-100 pt-3 md:grid-cols-2">
           {SOCIAL_KEYS.map((k) => (
             <FormField key={k} label={t(`storeInfo.contact.social.${k}`)} error={vm.fieldError(`social_${k}`)}>
-              <Input type="url" value={p.social_links[k]} placeholder="https://..." onChange={(e) => vm.setSocial(k, e.target.value)} />
+              <Input maxLength={500} type="url" value={p.social_links[k]} placeholder="https://..." onChange={(e) => vm.setSocial(k, e.target.value)} />
             </FormField>
           ))}
         </div>
@@ -105,7 +105,7 @@ export function StoreInfoView(vm: VM) {
     promptpay: () => (
       <div className="flex flex-col gap-4">
         <FormField label={t("storeInfo.promptpay.id")} error={vm.fieldError("promptpay_id")}>
-          <Input value={p.promptpay_id} inputMode="numeric" placeholder="0812345678" onChange={(e) => vm.setProfileField("promptpay_id", e.target.value)} />
+          <Input maxLength={20} value={p.promptpay_id} inputMode="numeric" placeholder="0812345678" onChange={(e) => vm.setProfileField("promptpay_id", e.target.value)} />
           <span className="text-xs text-gray-500">{t("storeInfo.promptpay.idHint")}</span>
         </FormField>
         <FormField label={t("storeInfo.promptpay.accountName")} required={!!p.promptpay_id.trim()} error={vm.fieldError("promptpay_account_name")}>

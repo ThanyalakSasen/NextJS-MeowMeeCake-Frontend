@@ -29,13 +29,13 @@ export function StepEditor({
             {step.order}
           </div>
           <div className="flex flex-1 flex-col gap-1.5">
-            <Input
+            <Input maxLength={120}
               size="small"
               value={step.title}
               onChange={(e) => update(i, { title: e.target.value })}
               placeholder={t("recipes.stepTitlePlaceholder")}
             />
-            <TextArea
+            <TextArea maxLength={2000}
               rows={2}
               value={step.description}
               onChange={(e) => update(i, { description: e.target.value })}

@@ -57,7 +57,7 @@ export function RoleFormModal({
         }}
       >
         <FormItem name="role_name" label={t("permissions.roleName")} rules={required}>
-          <Input placeholder={t("permissions.roleNamePlaceholder")} />
+          <Input maxLength={60} placeholder={t("permissions.roleNamePlaceholder")} />
         </FormItem>
         <FormItem name="role_type" label={t("permissions.roleType")} rules={required}>
           <Select

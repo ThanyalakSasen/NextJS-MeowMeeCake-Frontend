@@ -58,7 +58,7 @@ export function ExpenseFormModal({
         </div>
 
         <FormItem name="description" label={t("finance.fieldDescription")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
-          <Input placeholder={t("finance.descriptionPlaceholder")} />
+          <Input maxLength={300} placeholder={t("finance.descriptionPlaceholder")} />
         </FormItem>
 
         <div className="grid grid-cols-3 gap-3">
@@ -76,12 +76,12 @@ export function ExpenseFormModal({
             <Select options={sortOptionsThai(EXPENSE_PAYMENT_METHODS.map((p) => ({ value: p, label: t(`enums.expensePaymentMethod.${p}`) })))} />
           </FormItem>
           <FormItem name="vendor" label={t("finance.fieldVendor")}>
-            <Input placeholder={t("finance.vendorPlaceholder")} />
+            <Input maxLength={200} placeholder={t("finance.vendorPlaceholder")} />
           </FormItem>
         </div>
 
         <FormItem name="note" label={t("finance.fieldNote")}>
-          <TextArea rows={2} placeholder={t("finance.notePlaceholder")} />
+          <TextArea maxLength={1000} rows={2} placeholder={t("finance.notePlaceholder")} />
         </FormItem>
 
         <FormItem name="receipt_url" label={t("finance.fieldReceipt")}>

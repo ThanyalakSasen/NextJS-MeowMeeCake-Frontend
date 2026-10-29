@@ -86,7 +86,7 @@ export function ComponentFormModal({
       <Form form={form} layout="vertical" initialValues={editTarget ? fromComponent(editTarget) : emptyComponentForm}>
         <div className="grid grid-cols-2 gap-3">
           <FormItem name="component_name" label={t("recipes.fieldComponentName")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
-            <Input placeholder={t("recipes.componentNamePlaceholder")} />
+            <Input maxLength={120} placeholder={t("recipes.componentNamePlaceholder")} />
           </FormItem>
           <FormItem name="componentcategory_id" label={t("recipes.fieldCategory")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Select options={categoryOptions} />
@@ -125,7 +125,7 @@ export function ComponentFormModal({
 
         <Divider />
         <FormItem name="note" label={t("recipes.fieldNote")}>
-          <TextArea rows={2} placeholder={t("recipes.notePlaceholder")} />
+          <TextArea maxLength={2000} rows={2} placeholder={t("recipes.notePlaceholder")} />
         </FormItem>
       </Form>
     </Modal>

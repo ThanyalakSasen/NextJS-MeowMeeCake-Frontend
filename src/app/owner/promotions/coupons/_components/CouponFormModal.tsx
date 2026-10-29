@@ -95,10 +95,10 @@ export function CouponFormModal({
       >
         <div className="grid grid-cols-2 gap-3">
           <FormItem name="code" label={t("coupons.fieldCode")} rules={required}>
-            <Input placeholder={t("coupons.codePlaceholder")} className="font-mono uppercase tracking-widest" />
+            <Input maxLength={50} placeholder={t("coupons.codePlaceholder")} className="font-mono uppercase tracking-widest" />
           </FormItem>
           <FormItem name="name" label={t("coupons.fieldName")} rules={required}>
-            <Input placeholder={t("coupons.namePlaceholder")} />
+            <Input maxLength={200} placeholder={t("coupons.namePlaceholder")} />
           </FormItem>
         </div>
 

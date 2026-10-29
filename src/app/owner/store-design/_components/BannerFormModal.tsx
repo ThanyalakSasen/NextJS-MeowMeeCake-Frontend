@@ -68,7 +68,7 @@ export function BannerFormModal({
           extra={t("storeDesign.customerFacingHint")}
           rules={required}
         >
-          <Input placeholder={t("storeDesign.namePlaceholder")} />
+          <Input maxLength={120} placeholder={t("storeDesign.namePlaceholder")} />
         </FormItem>
 
         <FormItem
@@ -80,7 +80,7 @@ export function BannerFormModal({
         </FormItem>
 
         <FormItem name="banner_link" label={t("storeDesign.formLink")} rules={[linkRule]}>
-          <Input placeholder="https://..." />
+          <Input maxLength={1000} placeholder="https://..." />
         </FormItem>
 
         <FormItem name="dateRange" label={t("storeDesign.formDateRange")}>
