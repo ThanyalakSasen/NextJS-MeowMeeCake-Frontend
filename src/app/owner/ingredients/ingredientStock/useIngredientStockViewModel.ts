@@ -119,7 +119,7 @@ export function useIngredientStockViewModel() {
   // ── ทำหลายรายการพร้อมกัน — ส่งทีละรายการ (backend ไม่มี bulk) · คืน error ของรายการที่ไม่สำเร็จให้ modal ──
   const [bulkOpen, setBulkOpen] = useState(false);
   const bulkItems = useMemo<BulkStockItem[]>(
-    () => rows.map((r) => ({ id: r._id, name: r.name, unit: r.unitAbbr, stock: r.currentStock })),
+    () => rows.map((r) => ({ id: r._id, name: r.name, unit: r.unitAbbr, stock: r.currentStock, maxStock: r.maxStock })),
     [rows],
   );
   const onBulkSubmit = async (m: BulkStockMode, lines: BulkStockLine[]) => {
