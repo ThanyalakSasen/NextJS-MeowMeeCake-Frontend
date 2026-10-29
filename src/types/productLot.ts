@@ -1,6 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // src/types/productLot.ts — DTO ของ /admin/product-lots (productLotModel + productLotService ฝั่ง backend)
-// 1 ล็อต = 1 รายการผลิตของใบสั่งผลิตที่ปิดงานแล้ว · lot_no = ตัวเลขในบาร์โค้ด Code128 บนฉลาก (L<YYMMDD><ลำดับ 4 หลัก> เช่น L2610280001)
+// 1 ล็อต = 1 รายการผลิตของใบสั่งผลิตที่ปิดงานแล้ว · lot_no = L<YYMMDD><ลำดับ 4 หลัก> เช่น L2610280001
+// บาร์โค้ดบนฉลากแต่ละดวง = รหัสประจำชิ้น "<lot_no>-<ลำดับชิ้น>" (backend ProductLotPieces) — ไม่ซ้ำกันทุกชิ้น
 // วันที่เป็น "YYYY-MM-DD" ตามเวลาไทย (วันบนฉลาก ไม่มีเวลา) · พรีออเดอร์ qty_remaining = null (ไม่มีสต็อก)
 // ─────────────────────────────────────────────────────────────
 
@@ -28,6 +29,15 @@ export interface ProductLot {
   qty_produced: number;
   qty_remaining: number | null;
   created_at: string;
+  /** เฉพาะค้นจากบาร์โค้ด (getByNo): ชิ้นที่สแกน (รหัสประจำชิ้น) · สแกน/พิมพ์เลขล็อตตรง ๆ = null */
+  piece_no?: number | null;
+  piece_code?: string | null;
+}
+
+/** GET /admin/product-lots/:lotNo/pieces */
+export interface ProductLotPiece {
+  piece_no: number;
+  piece_code: string;
 }
 
 export interface ProductLotListParams {

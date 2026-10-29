@@ -3,7 +3,7 @@
 // 1 หน้า = 1 แผ่น A4 (@page ไม่มีขอบ) · วางดวงตามตำแหน่งจริงของแผ่น (SHEET_PRESETS) เป็นมม.
 // บาร์โค้ด Code128 สองอันแยกกัน (JsBarcode → SVG คมทุกความละเอียด):
 //   - รหัสสินค้า (pos-/pre-) — ยิงที่ POS ลงบิลได้เหมือนเดิม
-//   - เลขล็อต — ยิงที่ "สแกนล็อต" ดูวันผลิต/วันหมดอายุ/ใบสั่งผลิต
+//   - รหัสประจำชิ้น "<เลขล็อต>-<ลำดับชิ้น>" (เก็บใน DB — productLotsService.pieces) — ไม่ซ้ำกันทุกชิ้น · ยิงที่ "สแกนล็อต" ดูวันผลิต/วันหมดอายุ/ใบสั่งผลิต/ชิ้นที่
 // บนฉลาก: ชื่อร้าน · ชื่อสินค้า · ราคา · บาร์โค้ดสองอัน · วันผลิต/วันหมดอายุ (เป็นตัวหนังสือ — ลูกค้าอ่านได้โดยไม่ต้องสแกน)
 // ต้องเรียกจาก click handler ตรง ๆ — เปิดหน้าต่างก่อน await อย่างอื่น ไม่งั้นเบราว์เซอร์บล็อกป๊อปอัป
 // ─────────────────────────────────────────────────────────────
@@ -26,9 +26,10 @@ export interface LabelTexts {
   lot: string;
 }
 
+/** 1 ดวงต่อรหัสชิ้น — codes = รหัสประจำชิ้นที่จะพิมพ์ (จาก productLotsService.pieces) */
 export interface LabelJob {
   lot: ProductLot;
-  copies: number;
+  codes: string[];
 }
 
 export interface PrintOptions {
@@ -79,7 +80,7 @@ export async function printLotLabels(jobs: LabelJob[], opts: PrintOptions): Prom
     return svg;
   };
 
-  const label = (lot: ProductLot) => {
+  const label = (lot: ProductLot, code: string) => {
     const price = labelPrice(lot);
     const exp = lot.expiry_date ? `${texts.expires} ${labelDate(lot.expiry_date, locale)}` : texts.noExpiry;
     return `<div class="top"><span class="store">${escapeHtml(opts.storeName)}</span>${
@@ -91,24 +92,24 @@ ${
     ? `<div class="code">${barcode(lot.product_code)}</div><div class="cap">${escapeHtml(lot.product_code)}</div>`
     : ""
 }
-<div class="code">${barcode(lot.lot_no)}</div><div class="cap">${escapeHtml(`${texts.lot} ${lot.lot_no}`)}</div>
+<div class="code">${barcode(code)}</div><div class="cap">${escapeHtml(`${texts.lot} ${code}`)}</div>
 <div class="dates"><span>${escapeHtml(`${texts.produced} ${labelDate(lot.produced_date, locale)}`)}</span><b>${escapeHtml(exp)}</b></div>`;
   };
 
   // ดวงว่างช่วงต้นแผ่นแรก (startAt) แล้วต่อด้วยฉลากทุกดวง → ตัดเป็นแผ่นละ slots ดวง
-  const cells: (ProductLot | null)[] = [
+  const cells: ({ lot: ProductLot; code: string } | null)[] = [
     ...Array.from({ length: Math.min(Math.max(opts.startAt, 1), slots) - 1 }, () => null),
-    ...jobs.flatMap(({ lot, copies }) => Array.from({ length: copies }, () => lot)),
+    ...jobs.flatMap(({ lot, codes }) => codes.map((code) => ({ lot, code }))),
   ];
   const pages: string[] = [];
   for (let i = 0; i < cells.length; i += slots) {
     const html = cells
       .slice(i, i + slots)
-      .map((lot, k) => {
-        if (!lot) return "";
+      .map((cell, k) => {
+        if (!cell) return "";
         const x = sheet.left + (k % sheet.cols) * (sheet.w + sheet.gapX);
         const y = sheet.top + Math.floor(k / sheet.cols) * (sheet.h + sheet.gapY);
-        return `<section class="label" style="left:${+x.toFixed(2)}mm;top:${+y.toFixed(2)}mm">${label(lot)}</section>`;
+        return `<section class="label" style="left:${+x.toFixed(2)}mm;top:${+y.toFixed(2)}mm">${label(cell.lot, cell.code)}</section>`;
       })
       .join("\n");
     pages.push(`<div class="sheet">${html}</div>`);
