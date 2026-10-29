@@ -1333,6 +1333,8 @@
     "colExpiry": "Expires"
   },
   "production": {
+    "productNoRecipe": "{name} (no recipe yet)",
+    "noRecipeHint": "Products without a recipe can't be selected — add one on the Recipes page first (used to calculate and deduct ingredients)",
     "qtyRequired": "Enter a quantity for every selected product",
     "todayTitle": "What to produce today · {date}",
     "todayOrderCount": "From {n} production orders",

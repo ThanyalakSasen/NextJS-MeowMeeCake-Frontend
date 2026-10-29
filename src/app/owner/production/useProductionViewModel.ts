@@ -154,15 +154,15 @@ export function useProductionViewModel() {
     [ordersQ.data, productsById],
   );
 
-  /** ตัวเลือกสินค้าตอนสร้างใบสั่งผลิต — เฉพาะสินค้าที่มีสูตรผูกแล้วเท่านั้น (ไม่งั้น backend reject ทันที) */
+  /** ตัวเลือกสินค้าตอนสร้างใบสั่งผลิต — สินค้าทุกตัว (ปกติ + พรีออเดอร์) · ยังไม่มีสูตร = recipe_id null
+   *  ฟอร์มแสดงแต่เลือกไม่ได้ (backend บังคับ recipe_id ต่อแถว — ใช้ตัดวัตถุดิบตอนผลิตเสร็จ) · เดิมซ่อนไปเลย ผู้ใช้ไม่รู้ว่าหายเพราะอะไร */
   const productOptions = useMemo(() => (
     (productsQ.data?.data ?? [])
-      .filter((p) => recipeByProduct.has(p._id))
       .map((p) => ({
         _id: p._id,
         name: productsById.get(p._id)?.name ?? p.product_name_th,
         unit_abbr: productsById.get(p._id)?.unit_abbr ?? "",
-        recipe_id: recipeByProduct.get(p._id)!,
+        recipe_id: recipeByProduct.get(p._id) ?? null,
       }))
       .sort((a, b) => thaiCompare(a.name, b.name))
   ), [productsQ.data, recipeByProduct, productsById]);
