@@ -24,6 +24,8 @@ export interface Promotion {
   audience?: PromotionAudience;
   /** ใช้ร่วมกับโปรอื่นในบิลเดียวได้ (POS ซ้อนโปร) — backend รุ่นเก่าไม่ส่ง = false */
   stackable?: boolean;
+  /** ใช้ร่วมได้เฉพาะโปรเหล่านี้ (id) — ว่าง/ไม่ส่ง = ร่วมกับทุกโปรที่ stackable · ซ้อนได้เมื่อทั้งสองฝั่งยอมกัน */
+  stackable_with?: string[];
   min_order_amount?: number | null;
   applicable_products: string[];
   applicable_categories: string[];
@@ -51,6 +53,7 @@ export interface PromotionInput {
   applicable_channels?: PromotionChannel[];
   audience?: PromotionAudience;
   stackable?: boolean;
+  stackable_with?: string[];
   /** null = ล้างเงื่อนไข (ไม่จำกัด) · ไม่ส่ง = PATCH คงค่าเดิม — 5 ช่องนี้ backend รับ nullish */
   min_order_amount?: number | null;
   max_discount_amount?: number | null;
