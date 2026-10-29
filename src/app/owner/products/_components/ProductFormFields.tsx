@@ -133,10 +133,10 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
       </FormItem>
 
       <FormItem name="product_price" label={t("fields.product_price")} rules={price}>
-        <InputNumber min={0} />
+        <InputNumber precision={0} min={0} />
       </FormItem>
       <FormItem name="sale_price" label={t("fields.sale_price")} dependencies={["product_price"]} rules={[saleRule]}>
-        <InputNumber min={0} />
+        <InputNumber precision={0} min={0} />
       </FormItem>
 
       {/* backend บังคับต้องมี preorder_config ครบ 3 ค่าตอน type=preorder เท่านั้น */}

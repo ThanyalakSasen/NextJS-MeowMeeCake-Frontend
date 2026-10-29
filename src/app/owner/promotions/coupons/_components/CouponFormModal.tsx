@@ -114,16 +114,16 @@ export function CouponFormModal({
 
         <div className="grid grid-cols-2 gap-3">
           <FormItem name="discountValue" label={t("coupons.fieldDiscountValue")} dependencies={["discountType"]} rules={[discountValueRule, percentMaxRule]}>
-            <InputNumber min={0} placeholder={t("coupons.discountValuePlaceholder")} />
+            <InputNumber precision={0} min={0} placeholder={t("coupons.discountValuePlaceholder")} />
           </FormItem>
           <FormItem name="minOrder" label={t("coupons.fieldMinOrder")}>
-            <InputNumber min={0} placeholder={t("coupons.noMinimumPlaceholder")} />
+            <InputNumber precision={0} min={0} placeholder={t("coupons.noMinimumPlaceholder")} />
           </FormItem>
         </div>
 
         {discountType === "Percentage" && (
           <FormItem name="maxDiscount" label={t("coupons.fieldMaxDiscount")} extra={t("coupons.maxDiscountHint")}>
-            <InputNumber min={0} placeholder={t("coupons.unlimitedPlaceholder")} />
+            <InputNumber precision={0} min={0} placeholder={t("coupons.unlimitedPlaceholder")} />
           </FormItem>
         )}
 

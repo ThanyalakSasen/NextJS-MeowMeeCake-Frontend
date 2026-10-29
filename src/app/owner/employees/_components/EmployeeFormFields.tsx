@@ -111,7 +111,7 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
         />
       </FormItem>
       <FormItem name="emp_salary" label={t("fields.emp_salary")} rules={nonNegative}>
-        <InputNumber min={0} />
+        <InputNumber precision={0} min={0} />
       </FormItem>
 
       <FormItem name="start_working_date" label={t("fields.start_working_date")}>

@@ -73,8 +73,11 @@ function ChangePasswordContent() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("changeFailed")),
   });
 
+  // ช่องว่างล้วน (กด spacebar 8 ครั้ง) ยาวพอแต่ใช้เป็นรหัสผ่านไม่ได้ — backend ไม่ได้กันไว้
   const problem =
-    next && (next.length < MIN_PASSWORD_LENGTH || next.length > MAX_PASSWORD)
+    next && !next.trim()
+      ? t("blank")
+      : next && (next.length < MIN_PASSWORD_LENGTH || next.length > MAX_PASSWORD)
       ? t("lengthRange", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD })
       : confirm && next !== confirm
         ? t("mismatchNew")

@@ -171,7 +171,7 @@ function GroupCard({ vm, group: g, index }: { vm: VM; group: GroupRow; index: nu
               aria-label={t("customization.variantName")}
               onChange={(e) => vm.setVariant(g.key, v.key, { name: e.target.value })}
             />
-            <InputNumber
+            <InputNumber precision={0}
               size="small"
               min={0}
               max={vm.limits.maxPrice}
@@ -212,7 +212,7 @@ function OptionCard({ vm, option: o, index }: { vm: VM; option: OptionRow; index
           aria-label={t("customization.optionName")}
           onChange={(e) => vm.setOption(o.key, { name: e.target.value })}
         />
-        <InputNumber
+        <InputNumber precision={0}
           min={0}
           max={vm.limits.maxPrice}
           value={o.price}

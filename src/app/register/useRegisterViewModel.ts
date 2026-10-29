@@ -75,6 +75,7 @@ export function useRegisterViewModel() {
     if (!EMAIL_RE.test(f.email.trim())) return t("register.errEmail");
     if (!birthdateOf(f)) return t("register.errBirthdate");
     if (!PHONE_RE.test(f.phone.trim())) return t("register.errPhone");
+    if (!f.password.trim()) return t("register.errPasswordBlank"); // ช่องว่างล้วน ยาวพอแต่ใช้ไม่ได้
     if (f.password.length < MIN_PASSWORD_LENGTH) return t("register.errPasswordShort", { min: MIN_PASSWORD_LENGTH });
     if (f.password.length > MAX_PASSWORD) return t("register.errPassword", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD });
     if (f.hasAllergy && f.allergies.length === 0) return t("register.errAllergy");

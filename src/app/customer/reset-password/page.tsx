@@ -95,6 +95,11 @@ function ResetPasswordContent() {
   };
 
   const submit = async () => {
+    // ช่องว่างล้วน ยาวพอแต่ใช้เป็นรหัสผ่านไม่ได้
+    if (!password.trim()) {
+      alert.warning(t("blank"));
+      return;
+    }
     if (password.length < MIN_PASSWORD_LENGTH) {
       alert.warning(t("minLength", { n: MIN_PASSWORD_LENGTH }));
       return;

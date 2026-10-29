@@ -8,7 +8,7 @@ import { formatDate } from "@/i18n/format";
 import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
 import type { ProductionStatus } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
-import { ViewButton, actionIcon } from "@/components/shared/actions";
+import { EditButton, ViewButton, actionIcon } from "@/components/shared/actions";
 import type { useProductionViewModel } from "../useProductionViewModel";
 import { LoadFailed } from "@/components/shared/feedback";
 import { TodayProductionCard } from "./TodayProductionCard";
@@ -124,7 +124,12 @@ export function PlanTab(vm: VM) {
           emptyText={t("production.empty")}
           onRowClick={vm.onView}
           actions={(o) => (
-            <ViewButton size="small" onClick={() => vm.onView(o)} />
+            <>
+              <ViewButton size="small" onClick={() => vm.onView(o)} />
+              {vm.perm.update && !vm.isFinalStatus(o.production_status) && (
+                <EditButton size="small" onClick={() => vm.openEdit(o)} />
+              )}
+            </>
           )}
           pagination={{ page: vm.page, pageSize: vm.pageSize, total: vm.planTotal, onChange: vm.setPagination }}
         />

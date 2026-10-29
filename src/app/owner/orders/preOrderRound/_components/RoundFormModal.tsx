@@ -158,7 +158,7 @@ export function RoundFormModal({
                   disabled: rows.some((r) => r.key !== row.key && r.product_id === p._id),
                 })))}
               />
-              <InputNumber
+              <InputNumber precision={0}
                 size="small"
                 className="!w-full"
                 min={0}

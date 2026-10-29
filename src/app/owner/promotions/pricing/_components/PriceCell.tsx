@@ -20,7 +20,7 @@ export function PriceCell({
 }) {
   const t = useTranslations();
   return (
-    <InputNumber
+    <InputNumber precision={0}
       value={value}
       aria-label={ariaLabel}
       onChange={(v) => onChange(v != null ? Number(v) : null)}
