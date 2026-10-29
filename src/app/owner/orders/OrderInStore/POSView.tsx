@@ -90,7 +90,7 @@ export function POSView(vm: VM) {
           discountExceeds={vm.discountExceeds}
           subtotal={vm.subtotal}
           discount={vm.discount}
-          total={vm.total}
+          total={vm.payable}
           canPay={vm.canPay}
           canCreate={vm.perm.create}
           hasItems={vm.cart.length > 0}
@@ -121,7 +121,7 @@ export function POSView(vm: VM) {
       {cashUsed && (
         <CashPaymentModal
           open={vm.payDialog === "cash"}
-          total={vm.total}
+          total={vm.payable}
           received={vm.received}
           short={vm.receivedShort}
           submitting={vm.submitting}
@@ -134,7 +134,7 @@ export function POSView(vm: VM) {
       {qrUsed && (
         <QRPaymentModal
           open={vm.payDialog === "qr"}
-          amount={vm.total}
+          amount={vm.payable}
           submitting={vm.submitting}
           onClose={vm.closeDialog}
           onConfirmPaid={vm.confirmQr}

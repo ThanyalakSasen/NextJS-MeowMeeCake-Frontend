@@ -17,7 +17,8 @@
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatCurrency } from "@/i18n/format";
 import { promotionsService } from "@/services/promotions";
 import { storeInfoService } from "@/services/storeInfo";
 import { storeInfoKey } from "@/app/customer/lib/catalogQueries";
@@ -98,8 +99,16 @@ export type MemberLookup =
 const MEMBER_PHONE = /^0\d{9}$/;
 const normalizePhone = (v: string) => v.replace(/[\s-]/g, "");
 
+/** ยอดที่ backend คิดไม่ตรงกับยอดที่แคชเชียร์รับเงินไว้ — หยุดก่อนรับเงิน */
+class TotalMismatchError extends Error {
+  constructor(readonly signature: string, readonly actual: number, readonly expected: number) {
+    super("POS total mismatch");
+  }
+}
+
 export function usePOSViewModel() {
   const t = useTranslations();
+  const locale = useLocale();
   const qc = useQueryClient();
   const perm = usePermission("pos");
 
@@ -320,8 +329,18 @@ export function usePOSViewModel() {
   /** แต้มโดยประมาณจากบิลนี้ — backend ให้จริงจากยอดหลังหักส่วนลด (ปัดเศษทิ้ง) */
   const pointsFor = (amount: number) => (bahtPerPoint ? Math.floor(Math.max(amount, 0) / bahtPerPoint) : 0);
 
+  // body ที่จะสร้างออเดอร์จากบิลนี้ — signature ใช้จับคู่ใบที่ค้างรับเงิน/ยอดจริงจาก backend กับบิลปัจจุบัน
+  const buildInput = () =>
+    buildOrderInput({ cart, userId: member?._id ?? guestUserId ?? "", discount: 0, promotionIds: appliedPromos.map((e) => e.promotion._id) });
+  const billSignature = JSON.stringify(buildInput());
+
+  // ยอดจริงจาก backend (order.total_amount) ของบิลนี้ เมื่อไม่ตรงกับที่หน้าจอคิด (ราคา/โปรเปลี่ยนหลังโหลดหน้า)
+  // — ใช้แทน total ตอนรับเงิน · บิลเปลี่ยนแล้ว signature ไม่ตรง = กลับไปใช้ยอดที่หน้าจอคิด
+  const [serverTotal, setServerTotal] = useState<{ signature: string; amount: number } | null>(null);
+  const payable = serverTotal?.signature === billSignature ? serverTotal.amount : total;
+
   const received = Number(receivedDigits || "0");
-  const receivedShort = received < total;
+  const receivedShort = received < payable;
 
   // ── ออเดอร์ที่สร้างแล้วแต่รับเงินไม่สำเร็จ (ขั้น 1 ผ่าน ขั้น 2 ล้ม เช่นเน็ตหลุด) ──
   // ออเดอร์นี้ตัดสต็อกไปแล้ว — กดยืนยันอีกครั้งต้องรับเงินใบเดิม ห้ามสร้างใบใหม่ (เดิมได้ออเดอร์ซ้ำ + ตัดสต็อกสองรอบ)
@@ -348,22 +367,27 @@ export function usePOSViewModel() {
     setReceivedDigits("");
     setQueryRaw("");
     setPicker(null);
+    setServerTotal(null);
     clearMember();
   };
 
   const checkout = useMutation({
-    mutationFn: async ({ method, received: cash }: { method: PaymentMethod; received: number }): Promise<PaymentDone> => {
+    mutationFn: async ({ method, received: cash, expected }: { method: PaymentMethod; received: number; expected: number }): Promise<PaymentDone> => {
       // ข้อความนี้ไม่โชว์ผู้ใช้ตรง ๆ (onError ใช้ t("pos.saveFailed") แทน) — ไว้ debug ใน console เท่านั้น
       const userId = member?._id ?? guestUserId;
       if (!userId) throw new Error("Guest customer account not found — run `npm run seed` on the backend");
 
       // 1) สร้างออเดอร์ — backend ตัดสต็อก + คำนวณ subtotal/ส่วนลดโปรโมชัน/total_amount ให้เองทั้งหมด
       //    มีใบที่สร้างค้างไว้จากรอบก่อน (รับเงินไม่สำเร็จ) และบิลยังเหมือนเดิม → ใช้ใบเดิม
-      const input = buildOrderInput({ cart, userId, discount: 0, promotionIds: appliedPromos.map((e) => e.promotion._id) });
+      const input = buildInput();
       const signature = JSON.stringify(input);
       if (pendingOrderRef.current && pendingOrderRef.current.signature !== signature) await abandonPendingOrder();
       const order = pendingOrderRef.current?.order ?? (await ordersService.create(input)).data;
       pendingOrderRef.current = { order, signature };
+
+      // ยอดจริงไม่ตรงกับยอดที่แคชเชียร์รับเงิน/แสดง QR ไว้ → หยุดก่อนรับเงิน (ใบยังค้างไว้ กดอีกครั้งใช้ใบเดิม)
+      // เดิมรับเงินผ่านไปเลย — ยอดจริงสูงกว่า = เงินขาดโดยไม่มีใครรู้ (เงินทอนถูกปัดเป็น 0)
+      if (Math.abs(order.total_amount - expected) >= 0.01) throw new TotalMismatchError(signature, order.total_amount, expected);
 
       // 2) รับเงิน + ปิดงานในคำขอเดียว (เงินสด/QR ที่เคาน์เตอร์ = จ่ายจริงแล้ว) — ยอดใช้ order.total_amount ของ backend
       try {
@@ -410,6 +434,11 @@ export function usePOSViewModel() {
       qc.invalidateQueries({ queryKey: ["reports"] });
     },
     onError: (e) => {
+      if (e instanceof TotalMismatchError) {
+        setServerTotal({ signature: e.signature, amount: e.actual });
+        alert.warning(t("pos.totalChanged", { total: formatCurrency(e.actual, locale), shown: formatCurrency(e.expected, locale) }));
+        return;
+      }
       const reason = isApiError(e) ? e.message : t("pos.saveFailed");
       const pending = pendingOrderRef.current;
       // สร้างออเดอร์แล้วแต่รับเงินไม่สำเร็จ — บอกว่ากดอีกครั้งได้โดยไม่สร้างออเดอร์ซ้ำ
@@ -425,7 +454,7 @@ export function usePOSViewModel() {
   };
   const confirmCash = () => {
     if (receivedShort || checkout.isPending) return;
-    checkout.mutate({ method: "cash", received });
+    checkout.mutate({ method: "cash", received, expected: payable });
   };
 
   // ── คีย์บอร์ด: ยิงบาร์โค้ดได้จากทุกที่ + พิมพ์ตัวเลขในหน้าต่างรับเงินสด ──
@@ -554,6 +583,8 @@ export function usePOSViewModel() {
 
     // บิล
     cart, itemCount, subtotal, discount, total,
+    /** ยอดที่ต้องรับจริง — ปกติ = total · ต่างเมื่อ backend คิดยอดบิลนี้ไม่ตรง (ดู serverTotal) */
+    payable,
     promosOf,
     increaseQty: (line: CartLine) => setCart((c) => setLineQty(c, line.lineKey, line.qty + 1)),
     /** สินค้านี้ในบิล (ทุกบรรทัด) เต็มสต็อกแล้ว */
@@ -598,7 +629,7 @@ export function usePOSViewModel() {
     member,
     pickMember: (m: PosMember) => { setMember(m); setMemberLookup({ state: "idle" }); },
     clearMember,
-    memberPoints: pointsFor(total),
+    memberPoints: pointsFor(payable),
 
     // ชำระเงิน
     canPay,
@@ -610,7 +641,7 @@ export function usePOSViewModel() {
     pressKey,
     pickCash: (amount: number) => setReceivedDigits(String(Math.ceil(amount))),
     confirmCash,
-    confirmQr: () => checkout.mutate({ method: "qr", received: total }),
+    confirmQr: () => checkout.mutate({ method: "qr", received: payable, expected: payable }),
     submitting: checkout.isPending,
     done,
     store: storeQ.data ?? null,
