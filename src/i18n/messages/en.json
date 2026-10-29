@@ -933,6 +933,7 @@
     "markReadyHint": "Press when the items are prepared — the status changes to \"Ready\" right away"
   },
   "preorderRound": {
+    "minExceedsMax": "Minimum per order can't exceed the round's total quota",
     "itemQtyRequired": "Enter the minimum per order and the quota for every selected product",
     "paymentDue": "Payment due",
     "paymentOverdue": "Payment overdue",
@@ -1214,6 +1215,7 @@
     "receiptThanks": "Thank you for your purchase"
   },
   "ingredients": {
+    "unitLockedHint": "The unit can change only when stock is 0 and no recipe uses this ingredient (units aren't converted)",
     "title": "Ingredients",
     "addIngredient": "Add ingredient",
     "searchPlaceholder": "Search name, supplier...",
