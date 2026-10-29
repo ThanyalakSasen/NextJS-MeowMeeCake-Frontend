@@ -33,7 +33,6 @@ export function IngredientStockView(vm: VM) {
       render: (r) => (
         <div>
           <p className="font-medium text-brown-800">{r.name}</p>
-          <p className="text-sm text-gray-600">{r.sku}</p>
         </div>
       ),
     },

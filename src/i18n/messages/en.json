@@ -1175,7 +1175,7 @@
   "ingredients": {
     "title": "Ingredients",
     "addIngredient": "Add ingredient",
-    "searchPlaceholder": "Search name, SKU, supplier...",
+    "searchPlaceholder": "Search name, supplier...",
     "statTotal": "Total ingredients",
     "statTotalSub": "items",
     "statOkSub": "Sufficient stock",
@@ -1241,7 +1241,7 @@
   },
   "ingredientStock": {
     "title": "Ingredient Stock",
-    "searchPlaceholder": "Search name, SKU...",
+    "searchPlaceholder": "Search ingredient name...",
     "statTracked": "Ingredients tracked",
     "statTrackedSub": "items",
     "statLowSub": "Consider restocking",

@@ -21,7 +21,6 @@ import { isApiError } from "@/types/api";
 
 export interface IngredientRow {
   _id: string;
-  sku: string;
   name: string;
   categoryId: string;
   category: string;
@@ -39,7 +38,6 @@ export interface IngredientRow {
 
 type StatusFilter = "all" | StockStatus;
 
-const skuOf = (id: string) => `ING-${id.slice(-6).toUpperCase()}`;
 
 export function useIngredientsViewModel() {
   const t = useTranslations();
@@ -80,7 +78,6 @@ export function useIngredientsViewModel() {
       const unitId = refId(i.unit_id);
       return {
       _id: i._id,
-      sku: skuOf(i._id),
       name: i.ingredient_name,
       categoryId,
       category: (categoryId && catMap.get(categoryId)) || "",
@@ -102,7 +99,7 @@ export function useIngredientsViewModel() {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       const matchSearch =
-        !q || r.name.toLowerCase().includes(q) || r.sku.toLowerCase().includes(q) || r.supplier.toLowerCase().includes(q);
+        !q || r.name.toLowerCase().includes(q) || r.supplier.toLowerCase().includes(q);
       const matchCategory = categoryId === "all" || r.categoryId === categoryId;
       const matchStatus = status === "all" || r.status === status;
       return matchSearch && matchCategory && matchStatus;

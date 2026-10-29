@@ -1175,7 +1175,7 @@
   "ingredients": {
     "title": "จัดการข้อมูลวัตถุดิบ",
     "addIngredient": "เพิ่มวัตถุดิบ",
-    "searchPlaceholder": "ค้นหาชื่อวัตถุดิบ, SKU, ซัพพลายเออร์...",
+    "searchPlaceholder": "ค้นหาชื่อวัตถุดิบ, ซัพพลายเออร์...",
     "statTotal": "วัตถุดิบทั้งหมด",
     "statTotalSub": "รายการ",
     "statOkSub": "สต็อกเพียงพอ",
@@ -1241,7 +1241,7 @@
   },
   "ingredientStock": {
     "title": "จัดการสต็อกวัตถุดิบ",
-    "searchPlaceholder": "ค้นหาชื่อวัตถุดิบ, SKU...",
+    "searchPlaceholder": "ค้นหาชื่อวัตถุดิบ...",
     "statTracked": "วัตถุดิบที่ติดตามสต็อก",
     "statTrackedSub": "รายการ",
     "statLowSub": "ควรสั่งซื้อเพิ่ม",
