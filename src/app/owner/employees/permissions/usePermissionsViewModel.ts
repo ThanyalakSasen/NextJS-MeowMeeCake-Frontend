@@ -227,6 +227,9 @@ export function usePermissionsViewModel() {
       for (const k of PERM_MENU_KEYS) rows[k] = { id: null, ...stripId(src[k]) };
     } else if (values.template) {
       rows = templatePerms(values.template);
+    }
+    // ทั้งแม่แบบและคัดลอกจากตำแหน่งอื่น (เดิมตัดเฉพาะแม่แบบ — คัดลอกจากตำแหน่งที่สูงกว่าได้ 403 กลางทาง)
+    if (rows) {
       for (const k of PERM_MENU_KEYS) {
         const cut = PERM_FIELDS.filter((f) => rows![k][f] && !ceiling.mayGrant(k, f));
         for (const f of cut) rows[k][f] = false;

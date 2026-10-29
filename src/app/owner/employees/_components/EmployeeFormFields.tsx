@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import type { Rule } from "antd/es/form";
+import type { Dayjs } from "dayjs";
 import { Form } from "antd";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { Button, Input, InputNumber, PasswordInput, Select, Switch, LazyDatePicker, FormItem } from "@/components/base";
@@ -118,7 +119,22 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
         <LazyDatePicker />
       </FormItem>
       {/* วันสุดท้ายที่ทำงาน อยู่คอลัมน์ขวา ใต้วันเริ่มงาน (จอเล็กเป็นคอลัมน์เดียว — ต่อกันตามลำดับ) */}
-      <FormItem name="last_working_date" label={t("fields.last_working_date")} className="md:col-start-2">
+      <FormItem
+        name="last_working_date"
+        label={t("fields.last_working_date")}
+        className="md:col-start-2"
+        dependencies={["start_working_date"]}
+        rules={[
+          ({ getFieldValue }) => ({
+            validator: (_r, last: Dayjs | null | undefined) => {
+              const start: Dayjs | null | undefined = getFieldValue("start_working_date");
+              return !last || !start || !last.isBefore(start, "day")
+                ? Promise.resolve()
+                : Promise.reject(new Error(t("employees.lastBeforeStart")));
+            },
+          }),
+        ]}
+      >
         <LazyDatePicker />
       </FormItem>
 
