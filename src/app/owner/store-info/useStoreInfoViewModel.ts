@@ -150,11 +150,13 @@ export function useStoreInfoViewModel() {
   const save = useMutation({
     mutationFn: async (section: SectionKey) => {
       if (section === "markets") {
-        if (!sameValue(marketsPayload(marketsToSave), marketsPayload(savedMarkets))) {
-          qc.setQueryData(MARKETS_KEY, await storeAdminService.updateWeeklyMarkets(marketsPayload(marketsToSave)));
-        }
+        // ที่อยู่ร้านก่อน — ที่ตั้งหน้าร้านหลักคัดลอกจากที่อยู่นี้ · เดิมบันทึกหน้าร้านก่อน ถ้าที่อยู่บันทึกไม่ผ่าน
+        // หน้าร้านหลักได้ที่อยู่ใหม่ไปแล้วแต่ที่อยู่ร้านยังเป็นของเดิม (ลำดับนี้ หน้าร้านล้ม = เปิดแก้ครั้งหน้า sync ให้เอง)
         if (isOwner && !sameValue(address, savedSettings)) {
           qc.setQueryData(SETTINGS_KEY, await storeAdminService.updateSettings(address));
+        }
+        if (!sameValue(marketsPayload(marketsToSave), marketsPayload(savedMarkets))) {
+          qc.setQueryData(MARKETS_KEY, await storeAdminService.updateWeeklyMarkets(marketsPayload(marketsToSave)));
         }
         return;
       }
