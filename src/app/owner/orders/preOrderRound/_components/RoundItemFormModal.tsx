@@ -85,7 +85,7 @@ export function RoundItemFormModal({
         <FormItem
           name="product_id"
           label={t("preorderRound.colProduct")}
-          rules={[{ required: true, message: t("validation.required") }]}
+          rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
         >
           <Select
             disabled={isEdit}
@@ -106,16 +106,16 @@ export function RoundItemFormModal({
           <FormItem
             name="min_order_qty"
             label={t("preorderRound.fieldMinOrderQty")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
-            <InputNumber className="!w-full" min={1} />
+            <InputNumber className="!w-full" min={1} precision={0} />
           </FormItem>
           <FormItem
             name="max_qty_total"
             label={t("preorderRound.fieldMaxQtyTotal")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
-            <InputNumber className="!w-full" min={Math.max(1, item?.current_qty ?? 1)} />
+            <InputNumber className="!w-full" min={Math.max(1, item?.current_qty ?? 1)} precision={0} />
           </FormItem>
         </div>
         {isEdit && (

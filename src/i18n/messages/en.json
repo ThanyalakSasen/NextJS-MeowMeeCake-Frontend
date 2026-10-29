@@ -192,7 +192,9 @@
     "required": "Required",
     "positive": "Must be greater than 0",
     "nonNegative": "Must not be negative",
-    "email": "Invalid email"
+    "email": "Invalid email",
+    "phone": "Phone must start with 0 and have 9–10 digits",
+    "maxValue": "Must not exceed {max}"
   },
   "actions": {
     "CREATE": "created",
@@ -911,6 +913,7 @@
     "alertNoSlipTitle": "No slip attached ({n})",
     "alertNoSlipDesc": "Waiting for the customer to pay and attach a slip (including orders whose slip was rejected)",
     "allOrdersTitle": "All orders",
+    "olderHiddenNotice": "All open orders are shown · closed orders show the most recent only — search by order number (3+ characters) to find older ones",
     "paymentDueAt": "Pay by",
     "pickupPoint": "Pickup point",
     "pickupOn": "Pickup date",
@@ -930,6 +933,7 @@
     "markReadyHint": "Press when the items are prepared — the status changes to \"Ready\" right away"
   },
   "preorderRound": {
+    "itemQtyRequired": "Enter the minimum per order and the quota for every selected product",
     "paymentDue": "Payment due",
     "paymentOverdue": "Payment overdue",
     "rejectPayment": "Reject slip",
@@ -1051,6 +1055,7 @@
     "itemSaveFailed": "Failed to save product in round",
     "itemRemoveFailed": "Failed to remove product from round",
     "ordersDescription": "{n} orders total",
+    "olderHiddenNotice": "All open pre-orders are shown · closed ones show the most recent only — search by pre-order number (3+ characters) to find older ones",
     "statInProgress": "In Progress",
     "searchOrderPlaceholder": "Search order number or customer name...",
     "allRounds": "All rounds",
@@ -1063,6 +1068,8 @@
     "orderStatusChanged": "Changed {no} status to \"{status}\"",
     "orderStatusChangeFailed": "Failed to change status",
     "orderCancelled": "Order {no} cancelled",
+    "cancelOrderTitle": "Cancel pre-order {no}",
+    "cancelPaidNotice": "This pre-order is paid — cancelling records a {amount} refund automatically. Remember to transfer the money back to the customer.",
     "orderCancelFailed": "Failed to cancel order",
     "closeRound": "Close this round",
     "closeConfirmTitle": "Close round \"{name}\"?",
@@ -1157,6 +1164,9 @@
     "payMethod": "Payment method",
     "newBill": "Start a new bill",
     "saveFailed": "Could not save the order",
+    "paymentPendingRetry": "Order {no} was created but payment failed ({reason}) — confirm payment again to charge the same order; no duplicate will be created",
+    "abandonedOrderReason": "Auto-cancelled by POS — the bill was changed, cleared or held after the order was created but before payment succeeded",
+    "abandonedOrderCancelFailed": "Could not cancel unpaid order {no} — please cancel it in Manage Orders to restore stock",
     "pickAdd": "Add to bill · {price}",
     "pickCount": "{n}/{max} picked",
     "pickGroupRequired": "Choose \"{group}\"",
@@ -1318,6 +1328,7 @@
     "allItemsTitle": "All ingredients"
   },
   "ingredientHistory": {
+    "olderHiddenNotice": "Showing the latest 1,000 entries — pick an ingredient to see its full history",
     "title": "Ingredient Movement History",
     "searchPlaceholder": "Search ingredient, note, person...",
     "allIngredients": "All ingredients",
@@ -1335,6 +1346,12 @@
     "colExpiry": "Expires"
   },
   "production": {
+    "productNoRecipe": "{name} (no recipe yet)",
+    "noRecipeHint": "Products without a recipe can't be selected — add one on the Recipes page first (used to calculate and deduct ingredients)",
+    "qtyRequired": "Enter a quantity for every selected product",
+    "todayTitle": "What to produce today · {date}",
+    "todayOrderCount": "From {n} production orders",
+    "todayEmpty": "Nothing scheduled for production today",
     "stockChecking": "Checking ingredients...",
     "stockCheckFailed": "Could not check ingredients — you can still create the order; stock is checked again when production is completed",
     "stockShortRow": "Cannot be produced yet — not enough ingredients",
@@ -1470,6 +1487,7 @@
     "saveAllCount": "Save all ({n})",
     "saved": "Saved pricing for {n} products",
     "saveFailed": "Could not save some products",
+    "invalidRows": "Can't save yet — the regular price must be above 0 and the sale price below it: {names}",
     "searchPlaceholder": "Search product name...",
     "allCategories": "All categories",
     "allDiscountStatus": "All pricing status",
@@ -1485,6 +1503,8 @@
     "empty": "No products match the filters"
   },
   "coupons": {
+    "discountValueRequired": "Enter a discount value above 0",
+    "channelRequired": "Enable at least one channel",
     "title": "Coupons / Discounts",
     "addCoupon": "Create coupon",
     "addTitle": "Create new coupon",
@@ -1567,6 +1587,7 @@
     "maxDiscountHint": "For percentage discounts, e.g. 10% off up to 50 baht · leave empty for no cap"
   },
   "recipes": {
+    "qtyRequired": "Every ingredient and component needs a quantity above 0",
     "title": "Manage Recipes",
     "tabMain": "Main Recipes ({n})",
     "tabComponents": "Sub-Recipes ({n})",
@@ -1946,6 +1967,9 @@
     "statRevenueSub": "{n} products",
     "statQty": "Total quantity sold",
     "statQtySub": "units",
+    "statCappedSub": "Top {n} products only",
+    "cappedNotice": "More than {n} products sold in this period — this report lists and totals only the top {n}.",
+    "shopRevenue": "Whole-shop revenue for the same period: {amount} (incl. delivery, after discounts).",
     "statTop": "#1 product",
     "qtyUnit": "{n} pcs",
     "empty": "No sales found for this period"
@@ -2293,6 +2317,7 @@
     "descriptionPlaceholder": "Extra details shown alongside the banner (optional)",
     "customerFacingHint": "This text is shown directly on the customer-facing website",
     "formLink": "Target link",
+    "linkInvalid": "The link must start with https:// (another site) or / (a page in this store)",
     "formDateRange": "Display date range",
     "formActive": "Active",
     "addCardHint": "Upload an image, recommended 1200×400px",
@@ -2487,6 +2512,7 @@
     }
   },
   "notifications": {
+    "olderHiddenNotice": "All unread notifications are shown · read ones show the latest 1,000 only",
     "title": "Notifications",
     "viewAll": "View all",
     "historyTitle": "Notification History",
@@ -2512,6 +2538,7 @@
     "markAllRead": "Mark all read",
     "markedAllRead": "All notifications marked as read",
     "markAllReadFailed": "Couldn't mark notifications as read",
+    "partialFailed": "{n} of {total} failed — please try again",
     "clearAll": "Clear all",
     "clearAllConfirm": "Delete all notifications? This cannot be undone.",
     "cleared": "All notifications deleted",
@@ -4111,7 +4138,8 @@
     "colDate_adjust": "Counted on",
     "colExpiry": "Expires on",
     "expiryPlaceholder": "Optional",
-    "expiryBeforeDate": "Expiry date cannot be before the received date"
+    "expiryBeforeDate": "Expiry date cannot be before the received date",
+    "tooLarge": "At most {max} per item"
   },
   "chat": {
     "nav": "Chat with shop",

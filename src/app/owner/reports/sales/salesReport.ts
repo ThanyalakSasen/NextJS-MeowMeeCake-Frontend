@@ -7,6 +7,9 @@
 import type { Product } from "@/types/product";
 import type { TopProductRow } from "@/services/reports";
 
+/** backend (dashboardService.topProducts) ตัดไว้ไม่เกินเท่านี้ — ขายเกินนี้ รายงานเห็นแค่ N อันดับแรก */
+export const TOP_PRODUCTS_LIMIT = 50;
+
 export type SalesMode = "revenue" | "qty";
 export type SortDir = "desc" | "asc";
 export const CATEGORY_ALL = "all";

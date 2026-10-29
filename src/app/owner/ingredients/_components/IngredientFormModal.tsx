@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { Modal } from "antd";
 import type { Rule } from "antd/es/form";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Form, FormItem, useAntForm, Input, InputNumber, Select } from "@/components/base";
 import type { IngredientInput } from "@/types/ingredient";
 import type { IngredientCategory } from "@/types/ingredientCategory";
@@ -11,6 +11,8 @@ import type { Unit } from "@/types/unit";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { IngredientRow } from "../useIngredientsViewModel";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { formatNumber } from "@/i18n/format";
+import { INGREDIENT_STOCK_MAX } from "@/components/shared/stock";
 import {
   blockIntegerKeyDown,
   blockNegativeKeyDown,
@@ -51,6 +53,7 @@ export function IngredientFormModal({
   onSave: (body: IngredientInput) => void;
 }) {
   const t = useTranslations();
+  const locale = useLocale();
   const [form] = useAntForm<FormValues>();
   const watchedCategoryId = Form.useWatch("ingredient_category_id", form);
   const watchedName = Form.useWatch("ingredient_name", form);
@@ -170,7 +173,7 @@ export function IngredientFormModal({
           <FormItem
             name="ingredient_category_id"
             label={t("ingredients.fieldCategory")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
             <Select
               options={sortOptionsThai(categories.map((c) => ({ value: c._id, label: c.ingredient_category_name })))}
@@ -180,7 +183,7 @@ export function IngredientFormModal({
           <FormItem
             name="unit_id"
             label={t("ingredients.fieldUnit")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
             <Select
               disabled={!watchedCategoryId || allowedUnits.length <= 1}
@@ -227,6 +230,8 @@ export function IngredientFormModal({
                 min: 0,
                 message: t(isIntUnit ? "ingredients.integerUnitOnly" : "validation.nonNegative"),
               },
+              // เพดานรวมเฉพาะตอนสร้าง — ตอนแก้ไขช่องปิดอยู่ ยอดเดิมที่เกิน (ข้อมูลเก่า) ต้องไม่กันการบันทึกช่องอื่น
+              ...(editTarget ? [] : [{ type: "number" as const, max: INGREDIENT_STOCK_MAX, message: t("validation.maxValue", { max: formatNumber(INGREDIENT_STOCK_MAX, locale) }) }]),
             ]}
           >
             <InputNumber

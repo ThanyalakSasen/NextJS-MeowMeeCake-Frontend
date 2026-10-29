@@ -106,6 +106,11 @@ export function useReviewsViewModel({ enabled = true, initialView }: { enabled?:
   const aspectsQ = useQuery({ queryKey: REVIEW_ASPECTS_KEY, queryFn: () => reviewAspectsService.list(), enabled });
 
   const rows = useMemo(() => (listQ.data?.data ?? []).map(toReviewRow), [listQ.data]);
+  // ลบรายการสุดท้ายของหน้าสุดท้าย / ตัวกรองเปลี่ยนจนจำนวนหน้าลดลง → หน้าปัจจุบันเกินหน้าที่มีจริง (ค้างเป็นหน้าว่าง)
+  // ถอยไปหน้าสุดท้ายเอง (ปรับ state ระหว่าง render ตอนข้อมูลจริงมาถึง — แพทเทิร์นเดียวกับ useManageOrdersViewModel)
+  const total = listQ.data?.meta.total ?? 0;
+  const lastPage = Math.max(1, Math.ceil(total / pageSize));
+  if (listQ.data && !listQ.isPlaceholderData && page > lastPage) setPage(lastPage);
 
   // ── จัดการรีวิว ──
   const patchCache = (id: string, patch: Partial<Review>) =>
@@ -165,7 +170,7 @@ export function useReviewsViewModel({ enabled = true, initialView }: { enabled?:
     refetch: () => listQ.refetch(),
 
     rows,
-    total: listQ.data?.meta.total ?? 0,
+    total,
     summary: listQ.data?.summary ?? null,
     page,
     pageSize,

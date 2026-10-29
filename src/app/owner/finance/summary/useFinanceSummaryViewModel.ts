@@ -1,7 +1,8 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // ViewModel ของ Finance P&L — รายรับจาก backend (revenue-by-channel: ออเดอร์เว็บ/หน้าร้าน + พรีออเดอร์ ที่ชำระแล้ว)
-// + ค่าใช้จ่ายจาก expenses (โหลดครั้งเดียว) → คำนวณต้นทุน/กำไรตามช่วงเวลาที่เลือก
+// + ค่าใช้จ่ายรวมตามหมวดจาก /admin/expenses/summary (backend รวมให้ตามช่วง — ไม่โหลดทุกรายการมารวมเอง
+//   ซึ่งเกินเพดาน 1,000 รายการแล้วยอดหายเงียบ) → คำนวณต้นทุน/กำไรตามช่วงเวลาที่เลือก
 // เดิมรวมรายรับเองจาก /admin/orders (limit 200, ไม่นับพรีออเดอร์ = 0 ตายตัว) และแยกยอดออนไลน์ด้วย
 // revenue-by-type ที่ backend #52 เปลี่ยน shape ไปแล้ว (ไม่มี .online → NaN ทั้งตาราง) — BACKLOG2 §3
 //
@@ -20,11 +21,8 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import { COGS_EXPENSE_CATEGORIES } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
-import { LIST_ALL } from "@/lib/http";
 import { revenueKey, trendBuckets as buildTrendBuckets } from "./summaryRanges";
-
-/** ปีค่าใช้จ่ายที่เก่ากว่านี้ถือว่าพิมพ์ผิด — ไม่นับเป็นปีแรกของตารางรายปี */
-const MIN_EXPENSE_YEAR = 2000;
+import { FIRST_EXPENSE_KEY, FIRST_EXPENSE_PARAMS, expenseSummaryKey } from "../expensesQuery";
 
 export interface PnLRow {
   key: string;
@@ -37,31 +35,28 @@ export function useFinanceSummaryViewModel() {
   const t = useTranslations();
   const locale = useLocale();
 
-  const expensesQ = useQuery({ queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: LIST_ALL }) });
-  const expenses = useMemo(() => expensesQ.data?.data ?? [], [expensesQ.data]);
-
   const [period, setPeriod] = useState<PeriodType>("month");
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
   const [rangeStart, rangeEnd] = useMemo(() => getRangeStartEnd(period, selectedDate), [period, selectedDate]);
+  const rangeFrom = rangeStart.toISOString();
+  const rangeTo = rangeEnd.toISOString();
+
+  // ค่าใช้จ่ายรวมตามหมวดของช่วงที่เลือก (backend รวมให้)
+  const summaryQ = useQuery({
+    queryKey: expenseSummaryKey(rangeFrom, rangeTo),
+    queryFn: () => expensesService.summary({ date_from: rangeFrom, date_to: rangeTo }),
+  });
 
   // รายรับแยกตามช่องทาง (คิดที่ backend ทั้งหมด — ชำระแล้ว, ช่วงวันที่ตาม created_at เหมือนที่หน้านี้เคยกรองเอง)
   const revenueQ = useQuery({
-    queryKey: revenueKey(rangeStart.toISOString(), rangeEnd.toISOString()),
-    queryFn: () => reportsService.revenueByChannel({ date_from: rangeStart.toISOString(), date_to: rangeEnd.toISOString() }),
+    queryKey: revenueKey(rangeFrom, rangeTo),
+    queryFn: () => reportsService.revenueByChannel({ date_from: rangeFrom, date_to: rangeTo }),
   });
   // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
-  const isLoading = expensesQ.isPending || revenueQ.isPending;
+  const isLoading = summaryQ.isPending || revenueQ.isPending;
   // รายรับมาจาก revenueQ อย่างเดียว — ถ้าโหลดไม่ได้ต้องบอกผู้ใช้ ห้ามโชว์รายรับ 0 / กำไรติดลบที่ผิดเงียบ ๆ
-  const isError = expensesQ.isError || revenueQ.isError;
-
-  const expensesInRange = useMemo(
-    () => expenses.filter((e) => {
-      const d = dayjs(e.date);
-      return !d.isBefore(rangeStart) && !d.isAfter(rangeEnd);
-    }),
-    [expenses, rangeStart, rangeEnd],
-  );
+  const isError = summaryQ.isError || revenueQ.isError;
 
   const revenue = revenueQ.data;
   const webIncome = revenue?.web ?? 0;
@@ -72,11 +67,10 @@ export function useFinanceSummaryViewModel() {
   const totalIncome = revenue?.total ?? 0;
   const orderCount = revenue?.orders ?? 0;
 
-  const expenseByCategory = useMemo(() => {
-    const m = new Map<ExpenseCategory, number>();
-    expensesInRange.forEach((e) => m.set(e.category, (m.get(e.category) ?? 0) + e.amount));
-    return m;
-  }, [expensesInRange]);
+  const expenseByCategory = useMemo(
+    () => new Map<ExpenseCategory, number>((summaryQ.data?.by_category ?? []).map((c) => [c.category, c.total])),
+    [summaryQ.data],
+  );
 
   const totalCogs = COGS_EXPENSE_CATEGORIES.reduce((s, c) => s + (expenseByCategory.get(c) ?? 0), 0);
   const grossProfit = totalIncome - totalCogs;
@@ -123,14 +117,14 @@ export function useFinanceSummaryViewModel() {
   // รายรับต่อช่วงจาก revenue-by-channel ช่วงละ 1 request (นับพรีออเดอร์ด้วย ตัวเลขชุดเดียวกับตาราง P&L)
   // · รายจ่ายรวมจากรายการค่าใช้จ่ายที่วันที่อยู่ในช่วง
   // ข้ามวันที่ที่อ่านไม่ได้ / ปีที่พิมพ์ผิด (เช่น 0202) — ไม่งั้นปีเป็น NaN (ตารางว่าง) หรือสร้างช่วงรายปีนับพันช่วง
-  const firstExpenseYear = useMemo(
-    () =>
-      expenses.reduce((y, e) => {
-        const d = dayjs(e.date);
-        return d.isValid() && d.year() >= MIN_EXPENSE_YEAR ? Math.min(y, d.year()) : y;
-      }, Infinity),
-    [expenses],
-  );
+  // ปีแรกที่มีค่าใช้จ่าย (ตารางรายปีเท่านั้น) — ขอรายการเก่าสุด 1 รายการ · ปีที่พิมพ์ผิด (ก่อน ค.ศ. 2000) ตัดด้วย date_from
+  const firstExpenseQ = useQuery({
+    queryKey: FIRST_EXPENSE_KEY,
+    queryFn: () => expensesService.list(FIRST_EXPENSE_PARAMS),
+    enabled: period === "year",
+  });
+  const firstExpenseDate = firstExpenseQ.data?.data[0]?.date;
+  const firstExpenseYear = firstExpenseDate && dayjs(firstExpenseDate).isValid() ? dayjs(firstExpenseDate).year() : Infinity;
   const trendBuckets = useMemo(
     () => buildTrendBuckets(period, selectedDate, firstExpenseYear),
     [period, selectedDate, firstExpenseYear],
@@ -142,7 +136,14 @@ export function useFinanceSummaryViewModel() {
     })),
   });
   const trendIncome = trendQs.map((q) => q.data?.total ?? 0);
-  const trendIncomeKey = trendIncome.join(",");
+  const trendExpenseQs = useQueries({
+    queries: trendBuckets.map((m) => ({
+      queryKey: expenseSummaryKey(m.from, m.to),
+      queryFn: () => expensesService.summary({ date_from: m.from, date_to: m.to }),
+    })),
+  });
+  const trendExpense = trendExpenseQs.map((q) => q.data?.total ?? 0);
+  const trendIncomeKey = [...trendIncome, "|", ...trendExpense].join(",");
 
   const monthlyTrend = useMemo(() => {
     const intlLocale = locale === "en" ? "en-US" : "th-TH";
@@ -154,16 +155,13 @@ export function useFinanceSummaryViewModel() {
       return new Intl.DateTimeFormat(intlLocale, { month: "short", year: "numeric" }).format(b.start.toDate());
     };
     return trendBuckets.map((b, i) => {
-      const expense = expenses.reduce((s, e) => {
-        const d = dayjs(e.date);
-        return !d.isBefore(b.start) && !d.isAfter(b.end) ? s + e.amount : s;
-      }, 0);
+      const expense = trendExpense[i];
       const income = trendIncome[i];
       return { key: b.key, label: label(b), income, expense, profit: income - expense };
     });
-    // trendIncome เป็น array ใหม่ทุก render — ใช้ trendIncomeKey แทน
+    // trendIncome/trendExpense เป็น array ใหม่ทุก render — ใช้ trendIncomeKey (รวมทั้งสองชุด) แทน
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trendBuckets, trendIncomeKey, expenses, period, locale]);
+  }, [trendBuckets, trendIncomeKey, period, locale]);
 
   // ── KPI ──
   const daysInPeriod = Math.max(1, rangeEnd.diff(rangeStart, "day") + 1);
@@ -185,13 +183,13 @@ export function useFinanceSummaryViewModel() {
   return {
     isLoading,
     isError,
-    refetch: () => { revenueQ.refetch(); expensesQ.refetch(); },
+    refetch: () => { revenueQ.refetch(); summaryQ.refetch(); },
     period, setPeriod,
     selectedDate, setSelectedDate,
     rangeStart, rangeEnd, periodLabel,
 
     totalIncome, totalCogs, totalOpex, netProfit, orderCount, cogsMethods,
-    hasData: totalIncome > 0 || expensesInRange.length > 0,
+    hasData: totalIncome > 0 || (summaryQ.data?.count ?? 0) > 0,
 
     pnlRows, monthlyTrend, kpis,
   };

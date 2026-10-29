@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Form, FormItem, useAntForm, InputNumber, Input } from "@/components/base";
 import { formatNumber } from "@/i18n/format";
 import { modalButtonIcons } from "@/components/shared/actions";
+import { INGREDIENT_STOCK_MAX } from "@/components/shared/stock";
 import {
   blockIntegerKeyDown,
   blockNegativeKeyDown,
@@ -139,6 +140,8 @@ export function StockActionModal({
                       },
                     ]
                   : []),
+                // เพดานรวม (วัตถุดิบที่ไม่ได้ตั้ง max_stock ก็ไม่เกินนี้) — stockLimits.ts
+                { type: "number", max: INGREDIENT_STOCK_MAX, message: t("validation.maxValue", { max: formatNumber(INGREDIENT_STOCK_MAX, locale) }) },
               ]}
             >
               <InputNumber

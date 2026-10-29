@@ -1,8 +1,8 @@
 "use client";
 // สร้างใบสั่งผลิต — antd Modal + base/Form · รายการสินค้าเป็นแถวไดนามิก (state ในตัว คล้าย
 // IngredientFormModal/StockActionModal — ยังไม่ซับซ้อนพอต้องแยก ViewModel ของตัวเอง)
-// รายการสินค้าที่เลือกได้ = เฉพาะที่มีสูตรผูกแล้ว (backend บังคับ recipe_id ต่อแถว — กรองไว้แล้วที่
-// useProductionViewModel.productOptions)
+// รายการสินค้า = ทุกตัว (useProductionViewModel.productOptions) · ตัวที่ยังไม่มีสูตรแสดงแต่เลือกไม่ได้
+// (backend บังคับ recipe_id ต่อแถว)
 // เช็ควัตถุดิบพอไหมทันทีที่เลือกสินค้า/แก้จำนวน (POST /production-orders/stock-check · หน่วง 400ms) — แถวที่ไม่พอขึ้นกล่องแดง
 // บอกวัตถุดิบที่ขาด คงเหลือ ต้องใช้ และผลิตได้สูงสุด · ไม่บล็อกการสร้าง (รับวัตถุดิบเข้าก่อนวันผลิตได้) แค่ถามยืนยันตอนกดสร้าง
 // query อยู่ที่นี่ไม่ใช่ ViewModel เพราะผูกกับแถวที่อยู่ใน state ของ modal นี้ (แบบเดียวกับ ReceiptUpload)
@@ -26,13 +26,14 @@ import { sortOptionsThai } from "@/lib/thaiSort";
 // → แถวที่ชื่อยาวดันช่องจำนวน/หมายเหตุเยื้องจากแถวอื่น) · จำนวน 110px ให้พอทั้งตัวเลขและหน่วย (suffix)
 const ROW_COLUMNS = "minmax(0, 1.4fr) 110px minmax(0, 1fr) 24px";
 
-interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string }
+interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string | null }
 interface StaffOption { _id: string; user_fullname: string }
 
 interface ItemRow {
   key: string;
   product_id: string;
-  planned_qty: number;
+  /** null = ช่องว่าง (กำลังพิมพ์ใหม่) — เดิมแปลงเป็น 1 ทันที ช่องเด้งเป็น "1" กลางการพิมพ์ (ลบแล้วพิมพ์ 5 ได้ 15) */
+  planned_qty: number | null;
   notes: string;
 }
 
@@ -75,7 +76,7 @@ export function ProductionOrderFormModal({
   const recipeOf = (productId: string) => products.find((p) => p._id === productId)?.recipe_id;
   const checkItems = rows.flatMap((r) => {
     const recipe_id = recipeOf(r.product_id);
-    return recipe_id && r.planned_qty > 0 ? [{ recipe_id, planned_qty: r.planned_qty }] : [];
+    return recipe_id && r.planned_qty != null && r.planned_qty > 0 ? [{ recipe_id, planned_qty: r.planned_qty }] : [];
   });
   const checkKey = JSON.stringify(checkItems);
   const [debouncedKey, setDebouncedKey] = useState("[]");
@@ -95,7 +96,7 @@ export function ProductionOrderFormModal({
   stockQ.data?.items.forEach((it, i) => sent[i] && resultBySig.set(rowSig(sent[i].recipe_id, sent[i].planned_qty), it));
   const rowResult = (r: ItemRow) => {
     const recipeId = recipeOf(r.product_id);
-    return recipeId ? resultBySig.get(rowSig(recipeId, r.planned_qty)) : undefined;
+    return recipeId && r.planned_qty != null ? resultBySig.get(rowSig(recipeId, r.planned_qty)) : undefined;
   };
   // ผลรวมทุกแถวใช้ได้เฉพาะตอนผลตรงกับแถวปัจจุบันทั้งชุด
   const checkCurrent = !!stockQ.data && !stockQ.isPlaceholderData && debouncedKey === checkKey;
@@ -116,7 +117,12 @@ export function ProductionOrderFormModal({
 
   const handleOk = async () => {
     const v = await form.validateFields();
-    const validRows = rows.filter((r) => r.product_id && r.planned_qty > 0);
+    // เลือกสินค้าแล้วแต่จำนวนว่าง = บอก (ไม่ทิ้งแถวนั้นเงียบ ๆ)
+    if (rows.some((r) => r.product_id && !r.planned_qty)) {
+      alert.warning(t("production.qtyRequired"));
+      return;
+    }
+    const validRows = rows.filter((r): r is ItemRow & { planned_qty: number } => !!r.product_id && !!r.planned_qty);
     if (validRows.length === 0) {
       alert.warning(t("production.itemsRequired"));
       return;
@@ -133,7 +139,8 @@ export function ProductionOrderFormModal({
     }
     const items: CreateProductionOrderItemInput[] = validRows.map((r) => {
       const p = products.find((pr) => pr._id === r.product_id)!;
-      return { product_id: p._id, recipe_id: p.recipe_id, planned_qty: r.planned_qty, notes: r.notes || null };
+      // เลือกได้เฉพาะตัวที่มีสูตร (ตัวอื่น disabled ใน Select)
+      return { product_id: p._id, recipe_id: p.recipe_id as string, planned_qty: r.planned_qty, notes: r.notes || null };
     });
     onSubmit({
       production_date: v.production_date.toISOString(),
@@ -162,7 +169,7 @@ export function ProductionOrderFormModal({
           <FormItem
             name="production_date"
             label={t("production.fieldDate")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
@@ -185,6 +192,9 @@ export function ProductionOrderFormModal({
           </Button>
         </div>
 
+        {products.some((p) => !p.recipe_id) && (
+          <p className="mb-2 text-xs text-gray-500">{t("production.noRecipeHint")}</p>
+        )}
         {rows.length > 0 && (
           <div className="mb-1 grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: ROW_COLUMNS }}>
             <span>{t("filterLabel.product")}</span>
@@ -207,11 +217,19 @@ export function ProductionOrderFormModal({
                   onChange={(v) => updateRow(row.key, { product_id: v as string })}
                   showSearch
                   optionFilterProp="label"
-                  options={sortOptionsThai(products.map((p) => ({
-                    value: p._id,
-                    label: p.name,
-                    disabled: rows.some((r) => r.key !== row.key && r.product_id === p._id),
-                  })))}
+                  // มีสูตรขึ้นก่อน (เรียง ก-ฮ) · ยังไม่มีสูตรต่อท้าย เลือกไม่ได้
+                  options={[
+                    ...sortOptionsThai(products.filter((p) => p.recipe_id).map((p) => ({
+                      value: p._id,
+                      label: p.name,
+                      disabled: rows.some((r) => r.key !== row.key && r.product_id === p._id),
+                    }))),
+                    ...sortOptionsThai(products.filter((p) => !p.recipe_id).map((p) => ({
+                      value: p._id,
+                      label: t("production.productNoRecipe", { name: p.name }),
+                      disabled: true,
+                    }))),
+                  ]}
                 />
                 <InputNumber
                   size="small"
@@ -219,7 +237,8 @@ export function ProductionOrderFormModal({
                   min={1}
                   aria-label={t("filterLabel.quantity")}
                   value={row.planned_qty}
-                  onChange={(v) => updateRow(row.key, { planned_qty: Number(v) || 1 })}
+                  status={row.product_id && row.planned_qty == null ? "error" : undefined}
+                  onChange={(v) => updateRow(row.key, { planned_qty: v == null ? null : Number(v) })}
                   suffix={<span className="text-xs text-gray-500">{unit}</span>}
                 />
                 <Input

@@ -110,6 +110,7 @@ export function IngredientHistoryView(vm: VM) {
             <StatCard label={t("enums.ingredientTxnType.receive")} value={vm.stats.receive} sub={t("ingredientHistory.statReceiveSub")} tone="up" />
             <StatCard label={t("enums.ingredientTxnType.use")} value={vm.stats.use} sub={t("ingredientHistory.statUseSub")} tone="muted" />
           </StatCardsGrid>
+          {vm.olderHidden && <p className="m-0 -mt-2 text-sm text-gray-500">{t("ingredientHistory.olderHiddenNotice")}</p>}
 
           <DataTable
             columns={columns}

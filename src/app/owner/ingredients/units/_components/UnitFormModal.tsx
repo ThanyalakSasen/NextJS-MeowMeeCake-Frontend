@@ -101,7 +101,7 @@ export function UnitFormModal({
         <FormItem
           name="unit_type"
           label={t("units.fieldType")}
-          rules={[{ required: true, message: t("validation.required") }]}
+          rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
         >
           <Select
             placeholder={t("units.selectType")}

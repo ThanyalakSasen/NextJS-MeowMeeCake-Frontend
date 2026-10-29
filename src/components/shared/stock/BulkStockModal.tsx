@@ -3,7 +3,7 @@
 // BulkStockModal — รับเข้า / เบิกใช้ / ปรับยอด "หลายรายการพร้อมกัน" (ใช้ทั้งหน้าสต็อกวัตถุดิบและสต็อกสินค้า)
 // backend ไม่มี endpoint แบบ bulk — ผู้เรียกส่งทีละรายการใน onSubmit แล้วคืน { [id]: ข้อความ error } ของที่ไม่สำเร็จ
 // สำเร็จหมด → ปิดหน้าต่าง · บางรายการไม่สำเร็จ → เหลือเฉพาะรายการนั้นพร้อมเหตุผล ให้แก้แล้วกดใหม่ได้ (ที่สำเร็จไม่ส่งซ้ำ)
-// เลือกรายการซ้ำไม่ได้ (ตัวเลือกที่ใช้แล้วถูกปิด) · เบิกใช้เกินคงเหลือเตือนก่อนส่ง
+// เลือกรายการซ้ำไม่ได้ (ตัวเลือกที่ใช้แล้วถูกปิด) · เบิกใช้เกินคงเหลือเตือนก่อนส่ง · จำนวนเกิน max (stockLimits.ts) เตือนก่อนส่ง
 // withDates (วัตถุดิบ): วันที่ทำรายการต่อแถว (ค่าเริ่มต้นวันนี้ · ห้ามอนาคต) + วันหมดอายุเฉพาะโหมดรับเข้า (ไม่บังคับ · ไม่ก่อนวันรับ)
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
@@ -59,6 +59,7 @@ export function BulkStockModal({
   withDates = false,
   initialIds = [],
   decimals = 0,
+  max,
   onClose,
   onSubmit,
 }: {
@@ -72,6 +73,8 @@ export function BulkStockModal({
   initialIds?: string[];
   /** ทศนิยมของจำนวน (สินค้า = 0 · วัตถุดิบ = 2) */
   decimals?: number;
+  /** จำนวนสูงสุดต่อรายการ (PRODUCT_STOCK_MAX / INGREDIENT_STOCK_MAX) */
+  max: number;
   onClose: () => void;
   /** ส่งทีละรายการ — คืน { [id]: เหตุผล } ของรายการที่ไม่สำเร็จ (ว่าง = สำเร็จหมด) */
   onSubmit: (mode: BulkStockMode, lines: BulkStockLine[]) => Promise<Record<string, string>>;
@@ -79,7 +82,7 @@ export function BulkStockModal({
   return (
     <Modal open={open} footer={null} closable={false} width={withDates ? 1080 : 760} destroyOnHidden onCancel={onClose}>
       {/* เนื้อหาแยก component — state เริ่มใหม่ทุกครั้งที่เปิด (destroyOnHidden) */}
-      {open && <Body items={items} withNote={withNote} withDates={withDates} initialIds={initialIds} decimals={decimals} onClose={onClose} onSubmit={onSubmit} />}
+      {open && <Body items={items} withNote={withNote} withDates={withDates} initialIds={initialIds} decimals={decimals} max={max} onClose={onClose} onSubmit={onSubmit} />}
     </Modal>
   );
 }
@@ -90,6 +93,7 @@ function Body({
   withDates,
   initialIds,
   decimals,
+  max,
   onClose,
   onSubmit,
 }: {
@@ -98,6 +102,7 @@ function Body({
   withDates: boolean;
   initialIds: string[];
   decimals: number;
+  max: number;
   onClose: () => void;
   onSubmit: (mode: BulkStockMode, lines: BulkStockLine[]) => Promise<Record<string, string>>;
 }) {
@@ -118,6 +123,7 @@ function Body({
   const filled = lines.filter((l) => l.id && l.value != null);
 
   const exceeds = (l: Line) => mode === "use" && !!l.id && l.value != null && l.value > (byId.get(l.id)?.stock ?? 0);
+  const tooLarge = (l: Line) => l.value != null && l.value > max;
   const exceedsMax = (l: Line) => {
     if (!l.id || l.value == null) return false;
     const item = byId.get(l.id);
@@ -131,6 +137,7 @@ function Body({
     filled.length === 0 ||
     lines.some(exceeds) ||
     lines.some(exceedsMax) ||
+    lines.some(tooLarge) ||
     lines.some(badExpiry) ||
     lines.some((l) => !!l.id !== (l.value != null));
   const showExpiry = withDates && mode === "receive";
@@ -220,6 +227,7 @@ function Body({
           const err =
             (l.id && errors[l.id]) ||
             (exceeds(l) ? t("exceeds", { qty: formatNumber(item?.stock ?? 0, locale), unit: item?.unit ?? "" }) : "") ||
+            (tooLarge(l) ? t("tooLarge", { max: formatNumber(max, locale) }) : "") ||
             (exceedsMax(l) ? t("exceedsMax", { max: formatNumber(item?.maxStock ?? 0, locale), unit: item?.unit ?? "" }) : "") ||
             (badExpiry(l) ? t("expiryBeforeDate") : "");
           return (

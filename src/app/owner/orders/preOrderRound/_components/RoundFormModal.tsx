@@ -18,8 +18,9 @@ interface ItemRow {
   key: string;
   product_id: string;
   price_override: number | null;
-  min_order_qty: number;
-  max_qty_total: number;
+  /** null = ช่องว่าง (กำลังพิมพ์ใหม่) — เดิมแปลงเป็น 1 ทันที ช่องเด้งเป็น "1" กลางการพิมพ์ */
+  min_order_qty: number | null;
+  max_qty_total: number | null;
 }
 
 // หัวคอลัมน์ + ทุกแถวใช้ชุดเดียวกัน · minmax(0, …) กันคอลัมน์ขยายตามชื่อสินค้ายาว (fr เฉย ๆ ไม่หดต่ำกว่าเนื้อหา
@@ -66,12 +67,17 @@ export function RoundFormModal({
       alert.warning(t(err));
       return;
     }
-    const validRows = rows.filter((r) => r.product_id && r.max_qty_total > 0);
-    const items: RoundItemInput[] = validRows.map((r) => ({
+    // เลือกสินค้าแล้วแต่ขั้นต่ำ/โควตาว่าง = บอก (ไม่ทิ้งแถวนั้นเงียบ ๆ)
+    const picked = rows.filter((r) => r.product_id);
+    if (picked.some((r) => !r.min_order_qty || !r.max_qty_total)) {
+      alert.warning(t("preorderRound.itemQtyRequired"));
+      return;
+    }
+    const items: RoundItemInput[] = picked.map((r) => ({
       product_id: r.product_id,
       price_override: r.price_override ?? undefined,
-      min_order_qty: r.min_order_qty,
-      max_qty_total: r.max_qty_total,
+      min_order_qty: r.min_order_qty!,
+      max_qty_total: r.max_qty_total!,
     }));
     onSubmit({
       round_name: v.round_name.trim(),
@@ -98,19 +104,19 @@ export function RoundFormModal({
         <FormItem
           name="round_name"
           label={t("preorderRound.fieldRoundName")}
-          rules={[{ required: true, message: t("validation.required") }]}
+          rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
         >
           <Input placeholder={t("preorderRound.roundNamePlaceholder")} />
         </FormItem>
 
         <div className="grid grid-cols-3 gap-3">
-          <FormItem name="open_date" label={t("preorderRound.fieldOpenDate")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem name="open_date" label={t("preorderRound.fieldOpenDate")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="close_date" label={t("preorderRound.fieldCloseDate")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem name="close_date" label={t("preorderRound.fieldCloseDate")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="pickup_date" label={t("preorderRound.fieldPickupDate")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem name="pickup_date" label={t("preorderRound.fieldPickupDate")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
         </div>
@@ -165,17 +171,21 @@ export function RoundFormModal({
                 size="small"
                 className="!w-full"
                 min={1}
+                precision={0}
                 aria-label={t("preorderRound.colMinQty")}
                 value={row.min_order_qty}
-                onChange={(v) => updateRow(row.key, { min_order_qty: Number(v) || 1 })}
+                status={row.product_id && row.min_order_qty == null ? "error" : undefined}
+                onChange={(v) => updateRow(row.key, { min_order_qty: v == null ? null : Number(v) })}
               />
               <InputNumber
                 size="small"
                 className="!w-full"
                 min={1}
+                precision={0}
                 aria-label={t("preorderRound.colMaxQty")}
                 value={row.max_qty_total}
-                onChange={(v) => updateRow(row.key, { max_qty_total: Number(v) || 1 })}
+                status={row.product_id && row.max_qty_total == null ? "error" : undefined}
+                onChange={(v) => updateRow(row.key, { max_qty_total: v == null ? null : Number(v) })}
               />
               <RemoveRowButton onClick={() => removeRow(row.key)} />
             </div>

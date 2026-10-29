@@ -131,6 +131,7 @@ export function OrdersTab(vm: VM) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-base text-gray-600">{t("preorderRound.ordersDescription", { n: vm.orderTotal })}</p>
+      {vm.olderPreordersHidden && <p className="m-0 -mt-3 text-sm text-gray-500">{t("preorderRound.olderHiddenNotice")}</p>}
 
       <StatCardsGrid>
         <StatCard label={t("common.all")} value={vm.orderStats.total} />

@@ -37,16 +37,18 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
     void form.validateFields(["password"]);
   };
 
-  const required: Rule[] = [{ required: true, message: t("validation.required") }];
+  const required: Rule[] = [{ required: true, whitespace: true, message: t("validation.required") }];
   // backend (schemas/user.ts createUserBody) บังคับ email จริง (ไม่ optional) ทั้งตอนสร้างและแก้ไข
-  const emailRule: Rule[] = [{ required: true, message: t("validation.required") }, { type: "email", message: t("validation.email") }];
+  const emailRule: Rule[] = [{ required: true, whitespace: true, message: t("validation.required") }, { type: "email", message: t("validation.email") }];
+  // backend (schemas/common.ts phone) รับ 0 ตามด้วย 8–9 หลัก · ว่างได้
+  const phoneRule: Rule[] = [{ pattern: /^0\d{8,9}$/, message: t("validation.phone") }];
   const nonNegative: Rule[] = [{ type: "number", min: 0, message: t("validation.nonNegative") }];
   // backend (schemas/user.ts createUserBody → userService.assertPasswordStrength) บังคับอย่างน้อย MIN_PASSWORD_LENGTH ตัวอักษร
   /** ข้อความช่วยใต้ช่อง — 16px (เล็กกว่าตัวอักษรของฟอร์ม ให้แยกจาก label/ค่าที่กรอกชัด) */
   const hint = (text: React.ReactNode) => <span className="text-[16px] leading-normal">{text}</span>;
 
   const passwordRule: Rule[] = [
-    { required: true, message: t("validation.required") },
+    { required: true, whitespace: true, message: t("validation.required") },
     { min: MIN_PASSWORD_LENGTH, message: t("employees.passwordHint") },
   ];
 
@@ -55,8 +57,9 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
       <FormItem name="user_fullname" label={t("fields.user_fullname")} rules={required}>
         <Input />
       </FormItem>
-      <FormItem name="user_phone" label={t("fields.user_phone")}>
-        <Input />
+      {/* เก็บแค่ตัวเลข — วาง "081-234-5678" ได้ */}
+      <FormItem name="user_phone" label={t("fields.user_phone")} rules={phoneRule} normalize={(v?: string) => v?.replace(/\D/g, "").slice(0, 10)}>
+        <Input type="tel" inputMode="numeric" />
       </FormItem>
 
       <FormItem

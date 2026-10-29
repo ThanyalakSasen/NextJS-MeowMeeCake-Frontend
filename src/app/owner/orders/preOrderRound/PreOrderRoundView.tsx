@@ -22,6 +22,8 @@ const ReopenRoundModal = dynamic(() => import("./_components/ReopenRoundModal").
 const RoundItemFormModal = dynamic(() => import("./_components/RoundItemFormModal").then((m) => m.RoundItemFormModal), { ssr: false });
 const RoundDetailContent = dynamic(() => import("./_components/RoundDetailContent").then((m) => m.RoundDetailContent), { ssr: false });
 const PreorderDetailContent = dynamic(() => import("./_components/PreorderDetailContent").then((m) => m.PreorderDetailContent), { ssr: false });
+// ยืนยันยกเลิก + เหตุผล — ตัวเดียวกับหน้าจัดการคำสั่งซื้อ
+const CancelOrderModal = dynamic(() => import("../manageOrders/_components/CancelOrderModal").then((m) => m.CancelOrderModal), { ssr: false });
 
 type VM = ReturnType<typeof usePreOrderRoundViewModel>;
 
@@ -114,6 +116,15 @@ export function PreOrderRoundView(vm: VM) {
         {vm.isOrderDetailError && !vm.isOrderDetailLoading && <p className="py-10 text-center text-gray-500">{t("orders.orderNotFound")}</p>}
         {vm.selectedOrder && !vm.isOrderDetailLoading && <PreorderDetailContent {...vm} order={vm.selectedOrder} />}
       </DetailModal>
+
+      <CancelOrderModal
+        key={vm.cancelTarget?._id ?? "none"}
+        kind="preorder"
+        order={vm.cancelTarget}
+        saving={vm.cancellingOrder}
+        onClose={vm.closeCancelOrder}
+        onConfirm={vm.onConfirmCancelOrder}
+      />
     </>
   );
 }

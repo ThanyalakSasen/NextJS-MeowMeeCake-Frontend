@@ -29,4 +29,16 @@ export type ExpenseInput = Omit<Expense, "_id" | "created_at" | "updated_at">;
 export interface ExpenseListParams extends ListParams {
   category?: ExpenseCategory;
   is_recurring?: boolean;
+  /** ISO — กรองตาม date (วันที่จ่าย) ที่ backend · รวมขอบทั้งสองฝั่ง */
+  date_from?: string;
+  date_to?: string;
+  sortBy?: "date" | "amount" | "created_at";
+  sortOrder?: "asc" | "desc";
+}
+
+/** GET /admin/expenses/summary — ยอดรวมค่าใช้จ่ายตามหมวดในช่วงวันที่ (รวมที่ backend ไม่ติดเพดานจำนวนรายการ) */
+export interface ExpenseSummary {
+  total: number;
+  count: number;
+  by_category: { category: ExpenseCategory; total: number; count: number }[];
 }

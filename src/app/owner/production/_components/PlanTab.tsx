@@ -11,6 +11,7 @@ import type { ProductionOrder } from "@/types/productionOrder";
 import { ViewButton, actionIcon } from "@/components/shared/actions";
 import type { useProductionViewModel } from "../useProductionViewModel";
 import { LoadFailed } from "@/components/shared/feedback";
+import { TodayProductionCard } from "./TodayProductionCard";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
@@ -79,6 +80,10 @@ export function PlanTab(vm: VM) {
           </div>
         )}
       </div>
+
+      {!vm.isLoading && !vm.isError && (
+        <TodayProductionCard today={vm.today} todayItems={vm.todayItems} todayOrderCount={vm.todayOrderCount} />
+      )}
 
       <StatCardsGrid>
         <StatCard label={t("common.all")} value={vm.stats.total} />

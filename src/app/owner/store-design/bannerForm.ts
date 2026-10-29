@@ -7,8 +7,8 @@ import type { Banner, BannerInput } from "@/types/banner";
 import type { BannerStatus } from "@/constants/enumConfig";
 
 /** ลำดับเดียวกับ couponForm.ts deriveCouponStatus(): ปิดเอง > หมดอายุ > รอตามกำหนด > กำลังแสดง
- *  end_date เก็บเป็น 00:00 ของ "วันสุดท้าย" (toInput ใช้ค่าจาก DatePicker ตรง ๆ) → เทียบแบบรายวัน
- *  แบนเนอร์ยังแสดงได้ตลอดวันสุดท้าย หมดอายุตั้งแต่วันถัดไป */
+ *  end_date เก็บเป็นสิ้นวันสุดท้าย (toInput) → แบนเนอร์แสดงได้ตลอดวันสุดท้าย หมดอายุตั้งแต่วันถัดไป
+ *  (แบนเนอร์ที่บันทึกก่อนแก้อาจติดเวลากลางวันอยู่ — เทียบแบบรายวันไว้ ไม่ให้สถานะเปลี่ยนกลางวัน) */
 export function getBannerStatus(b: Pick<Banner, "is_active" | "start_date" | "end_date">): BannerStatus {
   if (!b.is_active) return "inactive";
   const now = dayjs();
@@ -56,8 +56,11 @@ export function toInput(v: BannerFormValue): Omit<BannerInput, "sort_order"> {
     banner_img: v.banner_img ?? "",
     banner_description: v.banner_description?.trim() ?? "",
     is_active: v.is_active,
-    ...(link ? { banner_link: link } : {}),
-    ...(start ? { start_date: start.toISOString() } : {}),
-    ...(end ? { end_date: end.toISOString() } : {}),
+    // ว่าง = "" (ไม่ใช่ไม่ส่ง) — PATCH ที่ไม่ส่ง key คงลิงก์เดิมไว้ ล้างช่องตอนแก้ไขจึงไม่เคยล้างได้ · backend รับ "" (schemas/catalog.ts)
+    banner_link: link ?? "",
+    // DatePicker ติดเวลาตอนกดเลือกมาด้วย — หน้าร้าน (HeroCarousel) เทียบถึงระดับเวลา เดิมแบนเนอร์จึงหายกลางวันสุดท้าย
+    // (เวลาที่บังเอิญกดเลือก) ทั้งที่หลังร้านยังขึ้น "กำลังแสดง" · เริ่ม = ต้นวัน · สิ้นสุด = สิ้นวัน (แบบเดียวกับ roundDates.ts)
+    ...(start ? { start_date: start.startOf("day").toISOString() } : {}),
+    ...(end ? { end_date: end.endOf("day").toISOString() } : {}),
   };
 }

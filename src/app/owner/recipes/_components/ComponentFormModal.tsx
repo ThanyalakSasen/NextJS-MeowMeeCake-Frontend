@@ -14,7 +14,7 @@ import type { RecipeIngredientLine, RecipeStep } from "@/types/recipeShared";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { ComponentFormValue } from "../componentForm";
 import { emptyComponentForm, fromComponent } from "../componentForm";
-import { IngredientEditor, type IngredientOption } from "./IngredientEditor";
+import { IngredientEditor, hasQty, type EditableIngredientLine, type IngredientOption } from "./IngredientEditor";
 import { StepEditor } from "./StepEditor";
 
 export interface ComponentSubmitValue extends ComponentFormValue {
@@ -43,13 +43,17 @@ export function ComponentFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<ComponentFormValue>();
-  const [ingredients, setIngredients] = useState<RecipeIngredientLine[]>(editTarget?.ingredients ?? []);
+  const [ingredients, setIngredients] = useState<EditableIngredientLine[]>(editTarget?.ingredients ?? []);
   const [steps, setSteps] = useState<RecipeStep[]>(editTarget?.steps ?? []);
 
   const handleOk = async () => {
     const v = await form.validateFields();
     if (ingredients.some((i) => !i.ingredient_id)) {
       alert.warning(t("recipes.ingredientRequired"));
+      return;
+    }
+    if (!hasQty(ingredients)) {
+      alert.warning(t("recipes.qtyRequired"));
       return;
     }
     // ต้นทุนส่งไปเฉพาะเมื่อผู้ใช้กรอกเอง — ไม่แตะช่องนี้ = ให้ backend คำนวณจากวัตถุดิบใหม่ทุกครั้งที่บันทึก
@@ -73,20 +77,28 @@ export function ComponentFormModal({
     >
       <Form form={form} layout="vertical" initialValues={editTarget ? fromComponent(editTarget) : emptyComponentForm}>
         <div className="grid grid-cols-2 gap-3">
-          <FormItem name="component_name" label={t("recipes.fieldComponentName")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem name="component_name" label={t("recipes.fieldComponentName")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Input placeholder={t("recipes.componentNamePlaceholder")} />
           </FormItem>
-          <FormItem name="componentcategory_id" label={t("recipes.fieldCategory")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem name="componentcategory_id" label={t("recipes.fieldCategory")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Select options={categoryOptions} />
           </FormItem>
         </div>
 
         {/* ป้ายสั้นบรรทัดเดียวทั้งแถว ช่องกรอกจึงตรงกัน — ต้นทุนมีคำอธิบายยาว แยกเป็นแถวเต็มแบบฟอร์มสูตรหลัก */}
         <div className="grid grid-cols-2 gap-3">
-          <FormItem name="yield_qty" label={t("recipes.fieldYieldQty")}>
+          {/* backend หารด้วยค่านี้ตอนหักวัตถุดิบ — ว่าง/0 = ปิดงานผลิตไม่ได้ (สูตรหลัก) หรือสูตรย่อยถูกข้ามไม่หักวัตถุดิบ */}
+          <FormItem
+            name="yield_qty"
+            label={t("recipes.fieldYieldQty")}
+            rules={[
+              { required: true, whitespace: true, message: t("validation.required") },
+              { type: "number", min: 0.01, message: t("validation.positive") },
+            ]}
+          >
             <InputNumber min={0} />
           </FormItem>
-          <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Select options={yieldUnitOptions} placeholder={t("recipes.selectUnit")} />
           </FormItem>
         </div>

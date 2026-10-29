@@ -33,11 +33,21 @@ export interface PricingRow {
   discount: number | null;
   isVisible: boolean;
   isDirty: boolean;
+  /** บันทึกไม่ได้: ราคาปกติ ≤ 0 หรือราคาลดไม่น้อยกว่าราคาปกติ (กฎเดียวกับฟอร์มสินค้า) */
+  isInvalid: boolean;
 }
 
 type DiscFilter = "all" | "has" | "none";
 type TypeFilter = "all" | ProductKind;
-type DraftPatch = Partial<Pick<PricingRow, "basePrice" | "salePrice" | "isVisible">>;
+type DraftPatch = Partial<Pick<PricingRow, "basePrice" | "salePrice" | "isVisible">> & {
+  /** % ส่วนลดที่ตั้งไว้ (ช่องส่วนลด / ช่องราคาลด / ค่าที่บันทึกไว้เดิม) — แก้ราคาปกติแล้วคิดราคาลดใหม่จากค่านี้
+   *  ไม่ใช่จาก % ของแถวตอนนี้: ช่องราคาส่งค่าทุกครั้งที่กดแป้น ค่าระหว่างพิมพ์ (เช่น "2" ของ "200") ทำให้ % เพี้ยน
+   *  แล้วติดไปถึงค่าสุดท้าย (150/120 พิมพ์ใหม่เป็น 200 เคยได้ราคาลด 0 หรือ 20 บาท) · null = ไม่มีส่วนลด */
+  percent?: number | null;
+};
+
+/** ราคาปกติต้อง > 0 · ราคาลดว่างได้ แต่ถ้ามีต้องน้อยกว่าราคาปกติ (ProductFormFields saleRule) */
+const isValidPrice = (base: number, sale: number | null) => base > 0 && (sale === null || sale < base);
 
 export function usePricingViewModel() {
   const t = useTranslations();
@@ -72,6 +82,7 @@ export function usePricingViewModel() {
         discount: discountFromSalePrice(basePrice, salePrice),
         isVisible,
         isDirty: !!draft,
+        isInvalid: !isValidPrice(basePrice, salePrice),
       };
     });
   }, [productsQ.data, drafts, t]);
@@ -106,19 +117,31 @@ export function usePricingViewModel() {
   const setDraft = (id: string, patch: DraftPatch) =>
     setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
 
+  /** % ส่วนลดที่ใช้คิดราคาลดใหม่ตอนแก้ราคาปกติ — ที่ตั้งไว้ใน draft ก่อน ไม่งั้น % จากราคาที่บันทึกไว้ */
+  const anchorPercent = (id: string): number | null => {
+    const draft = drafts[id];
+    if (draft && "percent" in draft) return draft.percent ?? null;
+    const p = productsQ.data?.data.find((x) => x._id === id);
+    return p ? discountFromSalePrice(p.product_price, p.sale_price ?? null) : null;
+  };
+
   const onChangeBasePrice = (row: PricingRow, value: number | null) => {
     const basePrice = value ?? 0;
     // มีส่วนลดตั้งไว้อยู่แล้ว → คำนวณราคาลดใหม่ตามส่วนลดเดิม กันราคาลดค้างผิดตามราคาปกติใหม่
-    const salePrice = row.discount != null ? calcSalePrice(basePrice, row.discount) : row.salePrice;
-    setDraft(row._id, { basePrice, salePrice });
+    const percent = anchorPercent(row._id);
+    const salePrice = percent != null ? calcSalePrice(basePrice, percent) : row.salePrice;
+    setDraft(row._id, { basePrice, salePrice, percent });
   };
 
-  const onChangeSalePrice = (row: PricingRow, value: number | null) => setDraft(row._id, { salePrice: value });
+  const onChangeSalePrice = (row: PricingRow, value: number | null) =>
+    setDraft(row._id, { salePrice: value, percent: discountFromSalePrice(row.basePrice, value) });
 
   const onChangeDiscount = (row: PricingRow, percent: number | null) =>
-    setDraft(row._id, { salePrice: percent != null ? calcSalePrice(row.basePrice, percent) : null });
+    setDraft(row._id, { salePrice: percent != null ? calcSalePrice(row.basePrice, percent) : null, percent });
 
   const onToggleVisible = (row: PricingRow) => setDraft(row._id, { isVisible: !row.isVisible });
+
+  const invalidDirty = rows.filter((r) => r.isDirty && r.isInvalid);
 
   const saveAll = useMutation({
     mutationFn: async () => {
@@ -165,6 +188,12 @@ export function usePricingViewModel() {
     onChangeSalePrice,
     onChangeDiscount,
     onToggleVisible,
-    onSaveAll: () => saveAll.mutate(),
+    onSaveAll: () => {
+      if (invalidDirty.length > 0) {
+        alert.warning(t("pricing.invalidRows", { names: invalidDirty.map((r) => r.name).join(", ") }));
+        return;
+      }
+      saveAll.mutate();
+    },
   };
 }

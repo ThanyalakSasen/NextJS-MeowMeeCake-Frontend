@@ -1,11 +1,10 @@
 import { HydrationBoundary } from "@tanstack/react-query";
-import { preordersService } from "@/services/preorders";
 import { preorderRoundsService } from "@/services/preorderRounds";
 import { LIST_ALL } from "@/lib/http";
 import { serverHttpAsUser } from "@/lib/serverAuth";
 import { prefetchPublic } from "@/app/customer/lib/prefetchPublic";
 import PreOrderRoundPage from "./PreOrderRoundPageClient";
-import { PREORDERS_KEY, ROUND_DASHBOARD_KEY, ROUNDS_KEY, tabFrom } from "./preorderQuery";
+import { PREORDERS_KEY, ROUND_DASHBOARD_KEY, ROUNDS_KEY, fetchPreorders, tabFrom } from "./preorderQuery";
 
 // รอบพรีออเดอร์ — ดึงรายการรอบ + พรีออเดอร์ (ViewModel โหลดทั้งสองเสมอ) และสรุปรอบ (ถ้าเปิดแท็บนั้น · แท็บเริ่มต้น) ฝั่ง server
 // ด้วย cookie ของผู้ใช้ (no-store) ก่อนส่ง HTML · เดิมตารางขึ้นหลัง JS ทำงานแล้วค่อยยิง API
@@ -23,7 +22,7 @@ export default async function PreOrderRoundRoute({
     h
       ? [
           { queryKey: [...ROUNDS_KEY], queryFn: () => preorderRoundsService.list({ limit: LIST_ALL }, h) },
-          { queryKey: [...PREORDERS_KEY], queryFn: () => preordersService.list({ limit: LIST_ALL }, h) },
+          { queryKey: [...PREORDERS_KEY], queryFn: () => fetchPreorders(h) },
           ...(tab === "dashboard"
             ? [{ queryKey: [...ROUND_DASHBOARD_KEY], queryFn: () => preorderRoundsService.dashboard({ limit: LIST_ALL }, h) }]
             : []),

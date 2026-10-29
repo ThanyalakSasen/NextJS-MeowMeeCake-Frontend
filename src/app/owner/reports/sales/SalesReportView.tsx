@@ -9,7 +9,7 @@ import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatCurrency, formatNumber } from "@/i18n/format";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import type { useSalesReportViewModel } from "./useSalesReportViewModel";
-import { CATEGORY_ALL, colorForCategory, type SalesMode } from "./salesReport";
+import { CATEGORY_ALL, TOP_PRODUCTS_LIMIT, colorForCategory, type SalesMode } from "./salesReport";
 import { ProductBarRow } from "./_components/ProductBarRow";
 
 type VM = ReturnType<typeof useSalesReportViewModel>;
@@ -62,12 +62,12 @@ export function SalesReportView(vm: VM) {
             <StatCard
               label={t("salesReport.statRevenue")}
               value={formatCurrency(vm.totalRevenue, locale)}
-              sub={t("salesReport.statRevenueSub", { n: vm.rows.length })}
+              sub={vm.capped ? t("salesReport.statCappedSub", { n: TOP_PRODUCTS_LIMIT }) : t("salesReport.statRevenueSub", { n: vm.rows.length })}
             />
             <StatCard
               label={t("salesReport.statQty")}
               value={formatNumber(vm.totalQty, locale)}
-              sub={t("salesReport.statQtySub")}
+              sub={vm.capped ? t("salesReport.statCappedSub", { n: TOP_PRODUCTS_LIMIT }) : t("salesReport.statQtySub")}
             />
             <StatCard
               label={t("salesReport.statTop")}
@@ -76,6 +76,12 @@ export function SalesReportView(vm: VM) {
               tone="up"
             />
           </StatCardsGrid>
+          {vm.capped && (
+            <p className="m-0 text-sm text-gray-500">
+              {t("salesReport.cappedNotice", { n: TOP_PRODUCTS_LIMIT })}
+              {vm.shopRevenue != null && ` ${t("salesReport.shopRevenue", { amount: formatCurrency(vm.shopRevenue, locale) })}`}
+            </p>
+          )}
 
           <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
             <div className="p-4">

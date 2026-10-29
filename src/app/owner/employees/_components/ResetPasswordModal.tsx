@@ -26,11 +26,11 @@ export function ResetPasswordModal({
   const [form] = useAntForm();
 
   const passwordRules: Rule[] = [
-    { required: true, message: t("validation.required") },
+    { required: true, whitespace: true, message: t("validation.required") },
     { min: MIN_PASSWORD_LENGTH, message: t("employees.passwordMin", { n: MIN_PASSWORD_LENGTH }) },
   ];
   const confirmRules: Rule[] = [
-    { required: true, message: t("validation.required") },
+    { required: true, whitespace: true, message: t("validation.required") },
     ({ getFieldValue }) => ({
       validator(_, v) {
         return !v || v === getFieldValue("new_password")
