@@ -99,7 +99,8 @@ export function toInput(v: ProductFormValue): ProductInput {
     is_preorder: isPreorder,
     product_price: v.product_price,
     sale_price: v.sale_price ?? null,
-    product_description: v.product_description?.trim() || undefined,
+    // ว่าง = "" (ไม่ส่ง key = คงคำอธิบายเดิม ลบออกไม่ได้)
+    product_description: v.product_description?.trim() ?? "",
     product_img: v.product_img ?? [],
     is_visible: v.is_visible,
     // exclusive กันเสมอ (validateTypeConsistency) — null อีกฝั่งเทียบเท่า "ไม่ส่งมา" (!= null ผ่านทั้งคู่)

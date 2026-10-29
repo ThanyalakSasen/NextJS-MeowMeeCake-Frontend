@@ -1592,6 +1592,7 @@
     "maxDiscountHint": "For percentage discounts, e.g. 10% off up to 50 baht · leave empty for no cap"
   },
   "recipes": {
+    "wholeUnitRequired": "Ingredients counted in whole units (e.g. eggs, pieces, boxes) need a whole-number quantity",
     "qtyRequired": "Every ingredient and component needs a quantity above 0",
     "title": "Manage Recipes",
     "tabMain": "Main Recipes ({n})",

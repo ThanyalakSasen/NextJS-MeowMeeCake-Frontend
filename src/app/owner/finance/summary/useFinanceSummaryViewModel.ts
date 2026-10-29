@@ -135,14 +135,16 @@ export function useFinanceSummaryViewModel() {
       queryFn: () => reportsService.revenueByChannel({ date_from: m.from, date_to: m.to }),
     })),
   });
-  const trendIncome = trendQs.map((q) => q.data?.total ?? 0);
+  // null = ช่วงนั้นยังโหลดไม่เสร็จ/โหลดไม่สำเร็จ — เดิม ?? 0 ทำให้ตารางโชว์ 0 บาทเหมือนไม่มียอดจริง
+  const trendIncome = trendQs.map((q) => q.data?.total ?? null);
   const trendExpenseQs = useQueries({
     queries: trendBuckets.map((m) => ({
       queryKey: expenseSummaryKey(m.from, m.to),
       queryFn: () => expensesService.summary({ date_from: m.from, date_to: m.to }),
     })),
   });
-  const trendExpense = trendExpenseQs.map((q) => q.data?.total ?? 0);
+  const trendExpense = trendExpenseQs.map((q) => q.data?.total ?? null);
+  const trendFailed = trendQs.some((q) => q.isError) || trendExpenseQs.some((q) => q.isError);
   const trendIncomeKey = [...trendIncome, "|", ...trendExpense].join(",");
 
   const monthlyTrend = useMemo(() => {
@@ -157,7 +159,7 @@ export function useFinanceSummaryViewModel() {
     return trendBuckets.map((b, i) => {
       const expense = trendExpense[i];
       const income = trendIncome[i];
-      return { key: b.key, label: label(b), income, expense, profit: income - expense };
+      return { key: b.key, label: label(b), income, expense, profit: income == null || expense == null ? null : income - expense };
     });
     // trendIncome/trendExpense เป็น array ใหม่ทุก render — ใช้ trendIncomeKey (รวมทั้งสองชุด) แทน
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -192,5 +194,10 @@ export function useFinanceSummaryViewModel() {
     hasData: totalIncome > 0 || (summaryQ.data?.count ?? 0) > 0,
 
     pnlRows, monthlyTrend, kpis,
+    trendFailed,
+    refetchTrend: () => {
+      trendQs.forEach((q) => { if (q.isError) q.refetch(); });
+      trendExpenseQs.forEach((q) => { if (q.isError) q.refetch(); });
+    },
   };
 }

@@ -44,10 +44,8 @@ export function fromBanner(b: Banner): BannerFormValue {
   };
 }
 
-// backend รับ field เสริมพวกนี้เป็น "ไม่ส่งมา" (undefined) เท่านั้น — ส่ง null ตรง ๆ ไม่ได้
-// (zod `.optional()` ไม่ใช่ `.nullable()`, ดูคอมเมนต์ที่ types/banner.ts) จึง omit key แทนส่ง null
-// banner_description เป็นข้อยกเว้น — schema รับ "" (string ว่าง) ได้อยู่แล้ว จึงส่งตรง ๆ ได้เสมอ
-// (แก้ไขแล้วลบข้อความที่เคยกรอกไว้ให้ว่างได้จริง ไม่เหมือน banner_link/date ที่เคลียร์ผ่าน API ไม่ได้)
+// ช่องว่างส่งค่า "ล้าง" เสมอ (ไม่ใช่ไม่ส่ง key — PATCH ที่ไม่ส่ง key คงค่าเดิม ลบออกไม่ได้)
+// ข้อความ = "" · ช่วงวันที่ = null (backend schemas/catalog.ts รับ nullish — null = แสดงตลอด)
 export function toInput(v: BannerFormValue): Omit<BannerInput, "sort_order"> {
   const link = v.banner_link?.trim();
   const [start, end] = v.dateRange ?? [];
@@ -60,7 +58,7 @@ export function toInput(v: BannerFormValue): Omit<BannerInput, "sort_order"> {
     banner_link: link ?? "",
     // DatePicker ติดเวลาตอนกดเลือกมาด้วย — หน้าร้าน (HeroCarousel) เทียบถึงระดับเวลา เดิมแบนเนอร์จึงหายกลางวันสุดท้าย
     // (เวลาที่บังเอิญกดเลือก) ทั้งที่หลังร้านยังขึ้น "กำลังแสดง" · เริ่ม = ต้นวัน · สิ้นสุด = สิ้นวัน (แบบเดียวกับ roundDates.ts)
-    ...(start ? { start_date: start.startOf("day").toISOString() } : {}),
-    ...(end ? { end_date: end.endOf("day").toISOString() } : {}),
+    start_date: start ? start.startOf("day").toISOString() : null,
+    end_date: end ? end.endOf("day").toISOString() : null,
   };
 }

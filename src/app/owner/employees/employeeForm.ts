@@ -55,11 +55,12 @@ export function toInput(v: EmployeeFormValue): AppUserInput {
     user_phone: v.user_phone?.trim() || null,
     role_id: v.role_id || null,
     employment_type: v.employment_type,
-    emp_salary: v.emp_salary,
+    // ว่าง = null (ไม่ส่ง key = คงค่าเดิม ลบเงินเดือน/วันที่ออกไม่ได้)
+    emp_salary: v.emp_salary ?? null,
     emp_status: v.emp_status,
     is_active: v.is_active,
-    start_working_date: v.start_working_date ? v.start_working_date.toISOString() : undefined,
-    last_working_date: v.last_working_date ? v.last_working_date.toISOString() : undefined,
+    start_working_date: v.start_working_date ? v.start_working_date.toISOString() : null,
+    last_working_date: v.last_working_date ? v.last_working_date.toISOString() : null,
   };
 }
 

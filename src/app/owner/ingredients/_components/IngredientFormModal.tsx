@@ -140,9 +140,8 @@ export function IngredientFormModal({
       unit_id: v.unit_id,
       current_stock: v.current_stock ?? 0,
       reorder_point: v.reorder_point,
-      // backend schema max_stock เป็น .optional() ไม่ใช่ .nullable() — ส่ง null ตรง ๆ ตอนเว้นว่าง
-      // จะโดน 400 ทุกครั้ง (บั๊กคลาสเดียวกับ banner_link ที่แก้ไปแล้ว) omit key แทนถ้าไม่มีค่า
-      ...(v.max_stock != null ? { max_stock: v.max_stock } : {}),
+      // ว่าง = null (ล้างเพดาน) — ไม่ส่ง key = คงค่าเดิม ลบออกไม่ได้ · backend schemas/inventory.ts รับ nullish
+      max_stock: v.max_stock ?? null,
       cost_per_unit: v.cost_per_unit ?? 0,
       supplier: (v.supplier ?? "").trim(),
     });
