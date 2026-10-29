@@ -7,14 +7,14 @@
 //   useSlipFile    เลือกไฟล์สลิป (ตรวจชนิด/ขนาด) + URL ตัวอย่าง
 //   useSecondsLeft วินาทีที่เหลือก่อนหมดเขตชำระ (ชดเชยนาฬิกาเครื่องลูกค้าด้วย server_time)
 // ─────────────────────────────────────────────────────────────
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { FaClock, FaQrcode, FaUpload } from "react-icons/fa";
 import { alert } from "@/lib/alert";
+import { compressImage, UPLOAD_SAFE_BYTES } from "@/lib/compressImage";
 import { baht, shopButtonPrimary } from "@/components/customer/shopStyles";
 
 export const SLIP_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-export const SLIP_MAX_BYTES = 5 * 1024 * 1024;
 
 export const payCardClass = "overflow-hidden rounded-2xl border border-[#8C5A3C]/15 bg-white shadow-sm";
 const cardHead = "flex items-center gap-3 border-b border-[#8C5A3C]/10 bg-[#FAF6F0]/80 px-4 py-3 sm:px-5";
@@ -107,17 +107,28 @@ export function useSlipFile() {
   const t = useTranslations("shop.slip");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  // ref = URL ตัวอย่างล่าสุด — ย่อรูปเป็น async ค่า preview ใน closure อาจเก่าแล้วตอนย่อเสร็จ
+  const previewRef = useRef<string | null>(null);
+  const apply = (f: File | null) => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = f ? URL.createObjectURL(f) : null;
+    setFile(f);
+    setPreview(previewRef.current);
+  };
   const pick = (f: File | null) => {
-    if (preview) URL.revokeObjectURL(preview);
     if (f && !SLIP_TYPES.includes(f.type)) {
       alert.error(t("badType"));
       f = null;
-    } else if (f && f.size > SLIP_MAX_BYTES) {
-      alert.error(t("tooBig"));
-      f = null;
     }
-    setFile(f);
-    setPreview(f ? URL.createObjectURL(f) : null);
+    if (!f) return apply(null);
+    // ย่อก่อนส่ง — Vercel ตัด request เกิน 4.5 MB ด้วย 413 ก่อนถึง backend (ดู lib/compressImage.ts)
+    void compressImage(f).then((small) => {
+      if (small.size > UPLOAD_SAFE_BYTES) {
+        alert.error(t("tooBig"));
+        return apply(null);
+      }
+      apply(small);
+    });
   };
   return { file, preview, pick };
 }

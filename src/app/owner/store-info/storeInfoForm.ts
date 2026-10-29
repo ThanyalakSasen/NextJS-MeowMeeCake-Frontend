@@ -6,6 +6,7 @@ import type { SocialKey, WeekDay } from "@/services/storeInfo";
 import type { AdminStoreProfile, AdminWeeklyMarket, StoreProfileInput, StoreSettings } from "@/types/storeAdmin";
 // ตัวจัดรูปแบบที่อยู่เดียวกับหน้าร้าน (ต./อ./จ. · แขวง/เขต) — ที่ตั้งหน้าร้านหลักที่บันทึกจะตรงกับที่ลูกค้าเห็น
 import { formatStoreAddress } from "@/app/customer/lib/storeFormat";
+import { UPLOAD_SAFE_BYTES } from "@/lib/compressImage";
 
 /** หัวข้อที่แก้/บันทึกแยกกัน (ทีละหัวข้อ) */
 export type SectionKey = "general" | "contact" | "markets" | "promptpay";
@@ -13,7 +14,8 @@ export type SectionKey = "general" | "contact" | "markets" | "promptpay";
 export const DAY_ORDER: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 export const SOCIAL_KEYS: SocialKey[] = ["facebook", "line", "instagram", "website"];
 export const MAX_WEEKLY_MARKETS = 15;
-export const LOGO_MAX_BYTES = 5 * 1024 * 1024;
+/** ตรวจหลังย่อรูปแล้ว (lib/compressImage) — อัปโหลดผ่าน Vercel ซึ่งตัด request เกิน 4.5 MB ด้วย 413 ก่อนถึง backend */
+export const LOGO_MAX_BYTES = UPLOAD_SAFE_BYTES;
 export const LOGO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 
 const PROMPTPAY_RE = /^(\d{10}|\d{13})$/;

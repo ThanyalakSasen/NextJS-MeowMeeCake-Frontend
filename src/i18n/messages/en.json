@@ -1593,6 +1593,7 @@
   },
   "recipes": {
     "wholeUnitRequired": "Ingredients counted in whole units (e.g. eggs, pieces, boxes) need a whole-number quantity",
+    "stepsTooLong": "The steps are too long in total (about 20,000 characters across all steps) — please shorten descriptions or merge steps",
     "qtyRequired": "Every ingredient and component needs a quantity above 0",
     "title": "Manage Recipes",
     "tabMain": "Main Recipes ({n})",
@@ -2356,7 +2357,7 @@
       "storeName": "Store name",
       "logo": "Store logo",
       "logoPick": "Click the image to choose a new file —",
-      "logoHint": "PNG, JPG, WebP or AVIF up to 5MB · a square (1:1) image works best"
+      "logoHint": "PNG, JPG, WebP or AVIF up to 4MB · a square (1:1) image works best"
     },
     "contact": {
       "title": "Contact",
@@ -2467,7 +2468,7 @@
       "marketTimeOrder": "Market #{n}: closing time must be after opening time",
       "marketMapUrl": "Market #{n}: invalid map link",
       "logoType": "Only PNG, JPG, WebP or AVIF files are supported",
-      "logoSize": "File must be 5MB or smaller"
+      "logoSize": "File must be 4MB or smaller"
     },
     "read": {
       "pin": "Map pin",
@@ -3297,7 +3298,7 @@
       "daysHours": "{d} days {h} hr",
       "hoursMins": "{h} hr {m} min",
       "badType": "Only JPG, PNG, WEBP or AVIF images are supported",
-      "tooBig": "The slip must be 5 MB or smaller",
+      "tooBig": "The slip must be 4 MB or smaller",
       "sentReopen": "Slip sent — the order is reopened and awaiting review",
       "sent": "Slip sent — awaiting review",
       "sendFailed": "Could not send the slip. Please try again.",
@@ -3321,7 +3322,7 @@
       "previewAlt": "Slip preview",
       "sending": "Sending slip...",
       "send": "Send slip",
-      "accepted": "JPG, PNG, WEBP or AVIF, up to 5 MB",
+      "accepted": "JPG, PNG, WEBP or AVIF, up to 4 MB",
       "groupHint": "This bill was ordered with others — you can pay them all at once",
       "groupLink": "Go to combined payment",
       "title": "Payment",

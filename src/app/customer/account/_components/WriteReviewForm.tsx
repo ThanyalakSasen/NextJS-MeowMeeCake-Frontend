@@ -22,6 +22,7 @@ import { shopReviewsService, type ReviewKind } from "@/services/shopReviews";
 import type { ReviewAspect } from "@/services/shopReviews";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { alert } from "@/lib/alert";
+import { compressImage, UPLOAD_SAFE_BYTES } from "@/lib/compressImage";
 import { isApiError } from "@/types/api";
 import AspectIcon from "@/components/customer/AspectIcon";
 import { baht, shopButton, shopButtonPrimary, shopCard } from "@/components/customer/shopStyles";
@@ -32,8 +33,9 @@ import ShopImage from "@/components/customer/ShopImage";
 import ShopSpinner from "@/components/customer/ShopSpinner";
 
 const MAX_IMAGES = 5;
-const MAX_IMAGE_MB = 5;
-const MAX_VIDEO_MB = 30;
+/** ไฟล์ละไม่เกินนี้ (รูปย่อให้ก่อน · วิดีโอย่อไม่ได้) — อัปโหลดผ่าน Vercel ซึ่งตัด request เกิน 4.5 MB
+ *  เดิมวิดีโอรับ 30 MB ตามเพดาน backend แต่เกิน ~4.5 MB ได้ 413 จาก Vercel ทุกไฟล์ */
+const MAX_UPLOAD_MB = UPLOAD_SAFE_BYTES / 1024 / 1024;
 const MAX_TEXT = 500;
 
 const sentimentForRating = (rating: number) => (rating >= 4 ? ("positive" as const) : ("negative" as const));
@@ -423,17 +425,19 @@ function ReviewFields({
   const toggleAspect = (id: string) =>
     onChange({ aspectIds: aspectIds.includes(id) ? aspectIds.filter((x) => x !== id) : [...aspectIds, id] });
 
-  const addImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const addImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
     const accepted: Media[] = [];
-    for (const file of files) {
+    for (const raw of files) {
       if (images.length + accepted.length >= MAX_IMAGES) {
         alert.warning(tw("maxImages", { n: MAX_IMAGES }));
         break;
       }
-      if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
-        alert.warning(tw("imageTooBig", { name: file.name, mb: MAX_IMAGE_MB }));
+      // ย่อก่อนส่ง — Vercel ตัด request เกิน 4.5 MB ด้วย 413 ก่อนถึง backend (ดู lib/compressImage.ts)
+      const file = await compressImage(raw);
+      if (file.size > UPLOAD_SAFE_BYTES) {
+        alert.warning(tw("imageTooBig", { name: raw.name, mb: MAX_UPLOAD_MB }));
         continue;
       }
       accepted.push(media.make(file));
@@ -448,8 +452,8 @@ function ReviewFields({
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
-      alert.warning(tw("videoTooBig", { mb: MAX_VIDEO_MB }));
+    if (file.size > UPLOAD_SAFE_BYTES) {
+      alert.warning(tw("videoTooBig", { mb: MAX_UPLOAD_MB }));
       return;
     }
     media.drop(video);
@@ -544,7 +548,7 @@ function ReviewFields({
           </div>
         )}
 
-        <MediaButton icon={<Video size={16} />} disabled={!!video} label={tw("attachVideo", { n: video ? 1 : 0, mb: MAX_VIDEO_MB })}>
+        <MediaButton icon={<Video size={16} />} disabled={!!video} label={tw("attachVideo", { n: video ? 1 : 0, mb: MAX_UPLOAD_MB })}>
           <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" disabled={!!video} onChange={pickVideo} />
         </MediaButton>
         {video && (

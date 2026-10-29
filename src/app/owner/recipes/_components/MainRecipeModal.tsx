@@ -16,7 +16,7 @@ import type { RecipeFormValue } from "../recipeForm";
 import { emptyRecipeForm, fromRecipe } from "../recipeForm";
 import { IngredientEditor, hasQty, wholeUnitsOk, type EditableIngredientLine, type IngredientOption } from "./IngredientEditor";
 import { isIntegerOnlyUnit } from "@/constants/ingredientCategoryUnits";
-import { StepEditor } from "./StepEditor";
+import { StepEditor, stepsTooLong } from "./StepEditor";
 
 // หัวคอลัมน์ + ทุกแถวของสูตรย่อยใช้ชุดเดียวกัน · minmax(0, …) กันคอลัมน์ขยายตามชื่อสูตรยาว (ช่องจำนวนเยื้อง)
 // จำนวน 110px ให้พอทั้งตัวเลขและคำว่า "ชุด" (suffix) — เท่ากับช่องจำนวนของวัตถุดิบ (IngredientEditor)
@@ -78,6 +78,10 @@ export function MainRecipeModal({
     }
     if (!wholeUnitsOk(ingredients)) {
       alert.warning(t("recipes.wholeUnitRequired"));
+      return;
+    }
+    if (stepsTooLong(steps)) {
+      alert.warning(t("recipes.stepsTooLong"));
       return;
     }
     // ต้นทุนส่งไปเฉพาะเมื่อผู้ใช้กรอกเอง — ไม่แตะช่องนี้ = ให้ backend คำนวณจากวัตถุดิบใหม่ทุกครั้งที่บันทึก
