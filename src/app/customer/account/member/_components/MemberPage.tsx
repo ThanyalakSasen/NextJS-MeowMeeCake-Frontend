@@ -499,6 +499,13 @@ function PointsExchange({ points, busy, onConvert }: { points: MyPoints; busy: b
   const [amount, setAmount] = useState(min);
   const clamp = (n: number) => Math.min(Math.max(min, n - (n % step)), Math.max(min, maxPts));
   const value = clamp(amount);
+  // ข้อความที่กำลังพิมพ์ — ปัดเข้าช่วง/ลงตัวทีละ step ตอนออกจากช่อง (เดิมปัดทุกตัวอักษร พิมพ์ "250" ไม่ได้:
+  // "2" ถูกดันเป็นขั้นต่ำทันที แล้วตัวถัดไปต่อท้ายจนเกินสูงสุด) · null = ไม่ได้พิมพ์อยู่ แสดงค่าจริง
+  const [draft, setDraft] = useState<string | null>(null);
+  const commitDraft = () => {
+    if (draft !== null) setAmount(Number(draft) || min);
+    setDraft(null);
+  };
   const enough = balance >= min;
   const perMin = pointsToBaht(min, rules);
   return (
@@ -528,9 +535,11 @@ function PointsExchange({ points, busy, onConvert }: { points: MyPoints; busy: b
               min={min}
               max={maxPts}
               step={step}
-              value={value}
+              value={draft ?? value}
               aria-label={t("convertPoints")}
-              onChange={(e) => setAmount(Number(e.target.value) || min)}
+              onChange={(e) => { if (/^\d{0,7}$/.test(e.target.value)) setDraft(e.target.value); }}
+              onBlur={commitDraft}
+              onKeyDown={(e) => { if (e.key === "Enter") commitDraft(); }}
               className="h-[40px] w-24 border-none text-center text-sm font-bold outline-none"
             />
             <button type="button" aria-label={t("convertMore")} disabled={busy || value >= maxPts} onClick={() => setAmount(value + step)}
