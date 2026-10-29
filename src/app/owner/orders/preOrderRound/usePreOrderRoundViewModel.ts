@@ -24,13 +24,12 @@ import { isApiError } from "@/types/api";
 import type { OrderStatus, RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound, CloseRoundResult, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
 import type { Preorder } from "@/types/preorder";
-import type { DeliveryUpdateInput, OrderType } from "@/types/order";
+import type { DeliveryUpdateInput } from "@/types/order";
 import { formatCurrency } from "@/i18n/format";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 import { LIST_ALL } from "@/lib/http";
 import { PREORDERS_KEY, ROUNDS_KEY, tabFrom, type TabKey } from "./preorderQuery";
 import { useRoundDashboardViewModel } from "./useRoundDashboardViewModel";
-import { useMarkShipped } from "@/components/shared/orders";
 
 export type { TabKey };
 
@@ -302,7 +301,6 @@ export function usePreOrderRoundViewModel() {
   const [orderSearch, setOrderSearchState] = useState("");
   const [orderStatusFilter, setOrderStatusFilterState] = useState<OrderStatus | "all">("all");
   const [orderRoundFilter, setOrderRoundFilterState] = useState<string>("all");
-  const [orderTypeFilter, setOrderTypeFilterState] = useState<OrderType | "all">("all");
   const [orderPage, setOrderPage] = useState(1);
   const [orderPageSize, setOrderPageSize] = useState(10);
 
@@ -312,10 +310,9 @@ export function usePreOrderRoundViewModel() {
       const matchSearch = !q || o.preorder_no.toLowerCase().includes(q) || o.customer_name.toLowerCase().includes(q);
       const matchStatus = orderStatusFilter === "all" || o.order_status === orderStatusFilter;
       const matchRound = orderRoundFilter === "all" || o.round_id === orderRoundFilter;
-      const matchType = orderTypeFilter === "all" || o.order_type === orderTypeFilter;
-      return matchSearch && matchStatus && matchRound && matchType;
+      return matchSearch && matchStatus && matchRound;
     });
-  }, [preorders, orderSearch, orderStatusFilter, orderRoundFilter, orderTypeFilter]);
+  }, [preorders, orderSearch, orderStatusFilter, orderRoundFilter]);
 
   const orderRows = useMemo(
     () => ordersFiltered.slice((orderPage - 1) * orderPageSize, orderPage * orderPageSize),
@@ -472,15 +469,10 @@ export function usePreOrderRoundViewModel() {
     );
   };
 
-  // "จัดส่งเรียบร้อยแล้ว" — ใช้ร่วมกับหน้าจัดการคำสั่งซื้อ (shared/orders/useMarkShipped)
-  const { markShippedFor, markingShipped } = useMarkShipped(preordersService, invalidateOrders);
-  const onMarkShipped = () => selectedOrder && markShippedFor(selectedOrder, selectedOrder.preorder_no);
-
   return {
     t, locale, perm,
     onSaveDelivery,
     savingDelivery: deliveryMutation.isPending,
-    onMarkShipped, markingShipped,
     activeTab, setActiveTab,
     preorderProducts,
     dashboard,
@@ -528,7 +520,6 @@ export function usePreOrderRoundViewModel() {
     orderSearch, setOrderSearch: (v: string) => { setOrderSearchState(v); setOrderPage(1); },
     orderStatusFilter, setOrderStatusFilter: (v: OrderStatus | "all") => { setOrderStatusFilterState(v); setOrderPage(1); },
     orderRoundFilter, setOrderRoundFilter: (v: string) => { setOrderRoundFilterState(v); setOrderPage(1); },
-    orderTypeFilter, setOrderTypeFilter: (v: OrderType | "all") => { setOrderTypeFilterState(v); setOrderPage(1); },
     orderPage, orderPageSize, setOrderPagination: (p: number, ps: number) => { setOrderPage(p); setOrderPageSize(ps); },
     orderRows, orderTotal: ordersFiltered.length, orderStats, roundOptions,
     isOrdersLoading: preordersQ.isPending, isOrdersError: preordersQ.isError, refetchOrders: () => preordersQ.refetch(),

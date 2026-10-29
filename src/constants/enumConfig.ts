@@ -66,11 +66,6 @@ export const SHIPPING_CARRIERS = [
 
 export type ShippingCarrier = (typeof SHIPPING_CARRIERS)[number];
 
-/** ขนส่งพัสดุที่มีเลขติดตาม — ต้องกรอกเลขพัสดุก่อน "จัดส่งเรียบร้อยแล้ว" · ไรเดอร์/ร้านส่งเอง/อื่น ๆ ไม่บังคับ
- *  (ตรงกับ backend lib/shippingCarrier.ts TRACKED_CARRIERS) */
-const TRACKED_CARRIERS: readonly ShippingCarrier[] = ["thailand_post", "kerry", "flash", "jt", "ninjavan", "best", "scg"];
-export const carrierNeedsTracking = (c: ShippingCarrier) => TRACKED_CARRIERS.includes(c);
-
 // ─── การผลิต ─────────────────────────────────────────────────
 export type ProductionStatus = "planned" | "in_progress" | "done" | "cancelled";
 
@@ -126,18 +121,6 @@ export const INGREDIENT_TXN_CONFIG: Record<IngredientTxnType, { color: string; b
   use:     { color: "#be185d", bg: "#fce7f3", sign: "-" },
   receive: { color: "#15803d", bg: "#dcfce7", sign: "+" },
   adjust:  { color: "#b45309", bg: "#fef3c7", sign: "-" },
-};
-
-// ประวัติสต็อกสินค้า (backend ProductStockTransactions) — ทิศทางดูจาก delta (+/−) ไม่ใช่ type
-export type ProductStockTxnType = "receive" | "use" | "adjust" | "production" | "sale" | "sale_return";
-
-export const PRODUCT_STOCK_TXN_CONFIG: Record<ProductStockTxnType, { color: string; bg: string }> = {
-  receive:     { color: "#15803d", bg: "#dcfce7" },
-  use:         { color: "#be185d", bg: "#fce7f3" },
-  adjust:      { color: "#b45309", bg: "#fef3c7" },
-  production:  { color: "#6d28d9", bg: "#ede9fe" },
-  sale:        { color: "#1d4ed8", bg: "#dbeafe" },
-  sale_return: { color: "#0f766e", bg: "#ccfbf1" },
 };
 
 // ─── ช่องทางขาย / โปรโมชัน ───────────────────────────────────

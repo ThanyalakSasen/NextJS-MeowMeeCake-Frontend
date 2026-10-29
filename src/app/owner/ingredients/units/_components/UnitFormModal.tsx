@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { Modal, Checkbox } from "antd";
 import { useTranslations } from "next-intl";
 import { Form, FormItem, useAntForm, Input, Select } from "@/components/base";
-import { UNIT_TYPES, isIngredientUnit, isProductUnit } from "@/utils/unitContext";
-import { getUnitTypeLockedContext } from "@/constants/ingredientCategoryUnits";
+import { UNIT_TYPES } from "@/utils/unitContext";
+import { isIngredientUnit, isProductUnit } from "@/utils/unitContext";
 import type { Unit } from "@/types/unit";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { UnitContext, UnitFormValues } from "../useUnitsViewModel";
@@ -28,8 +28,6 @@ export function UnitFormModal({
   const t = useTranslations();
   const tUnitType = useTranslations("enums.unitType");
   const [form] = useAntForm<UnitFormValues>();
-  const watchedUnitType = Form.useWatch("unit_type", form);
-  const lockedContext = getUnitTypeLockedContext(watchedUnitType);
 
   useEffect(() => {
     if (!open) return;
@@ -50,22 +48,9 @@ export function UnitFormModal({
     }
   }, [open, editTarget, defaultContext, form]);
 
-  // เมื่อเลือกประเภทหน่วยที่ระบุเจาะจงว่าเป็นของวัตถุดิบหรือสินค้า ให้ล็อกค่าใช้กับให้ตรงกันทันที
-  useEffect(() => {
-    if (!open || !lockedContext) return;
-    form.setFieldsValue({
-      forIngredient: lockedContext === "ingredient",
-      forProduct: lockedContext === "product",
-    });
-  }, [open, lockedContext, form]);
-
   const handleOk = async () => {
     const v = await form.validateFields();
-    onSubmit({
-      ...v,
-      unit_name: v.unit_name.trim(),
-      unit_abbr: v.unit_abbr.trim(),
-    });
+    onSubmit(v);
   };
 
   return (
@@ -85,16 +70,16 @@ export function UnitFormModal({
           <FormItem
             name="unit_name"
             label={t("units.fieldName")}
-            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+            rules={[{ required: true, message: t("validation.required") }]}
           >
-            <Input maxLength={60} placeholder={t("units.namePlaceholder")} />
+            <Input placeholder={t("units.namePlaceholder")} />
           </FormItem>
           <FormItem
             name="unit_abbr"
             label={t("units.fieldAbbr")}
-            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+            rules={[{ required: true, message: t("validation.required") }]}
           >
-            <Input maxLength={20} placeholder={t("units.abbrPlaceholder")} />
+            <Input placeholder={t("units.abbrPlaceholder")} />
           </FormItem>
         </div>
 
@@ -109,16 +94,13 @@ export function UnitFormModal({
           />
         </FormItem>
 
-        <FormItem
-          label={t("units.fieldUsedWith")}
-          required
-        >
+        <FormItem label={t("units.fieldUsedWith")} required>
           <div className="flex flex-col gap-1.5">
             <FormItem name="forIngredient" valuePropName="checked" noStyle>
-              <Checkbox disabled={!!lockedContext}>{t("units.forIngredient")}</Checkbox>
+              <Checkbox>{t("units.forIngredient")}</Checkbox>
             </FormItem>
             <FormItem name="forProduct" valuePropName="checked" noStyle>
-              <Checkbox disabled={!!lockedContext}>{t("units.forProduct")}</Checkbox>
+              <Checkbox>{t("units.forProduct")}</Checkbox>
             </FormItem>
           </div>
         </FormItem>

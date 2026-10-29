@@ -3,7 +3,7 @@
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, Select, Tag } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
-import { isAwaitingRefund, type OrderType } from "@/types/order";
+import { isAwaitingRefund } from "@/types/order";
 import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { OrderStatus } from "@/constants/enumConfig";
@@ -53,22 +53,6 @@ export function OrdersTab(vm: VM) {
         <div>
           <p className="text-brown-800">{o.round_name}</p>
           {o.round_pickup_date && <p className="text-sm text-gray-600">{t("orders.pickupDate")}: {formatDate(o.round_pickup_date, locale)}</p>}
-        </div>
-      ),
-    },
-    {
-      // พรีออเดอร์แบบจัดส่ง: สถานะจัดส่ง + เลขพัสดุ (แก้ได้ในป๊อปอัปรายละเอียด) · รับเองแสดงแค่วิธีรับ
-      key: "delivery",
-      title: t("preorderRound.colDelivery"),
-      render: (o) => (
-        <div className="text-sm">
-          <p className="text-gray-800">{t(`enums.orderType.${o.order_type}`)}</p>
-          {o.order_type === "delivery" && (
-            <>
-              <StatusBadge group="deliveryStatus" value={o.delivery_status} />
-              {o.tracking_no && <p className="mt-0.5 text-gray-600">{t("orders.trackingNo")}: {o.tracking_no}</p>}
-            </>
-          )}
         </div>
       ),
     },
@@ -149,16 +133,6 @@ export function OrdersTab(vm: VM) {
                 value={vm.orderRoundFilter}
                 onChange={(v) => vm.setOrderRoundFilter(v as string)}
                 options={[{ value: "all", label: t("preorderRound.allRounds") }, ...vm.roundOptions]}
-              />
-            </FilterField>
-            <FilterField label={t("filterLabel.orderType")} minWidth={150}>
-              <Select
-                value={vm.orderTypeFilter}
-                onChange={(v) => vm.setOrderTypeFilter(v as OrderType | "all")}
-                options={[
-                  { value: "all", label: t("preorderRound.dashboard.allTypes") },
-                  ...(["takeaway", "delivery"] as OrderType[]).map((o) => ({ value: o, label: t(`enums.orderType.${o}`) })),
-                ]}
               />
             </FilterField>
             <FilterField label={t("filterLabel.orderStatus")} minWidth={160}>

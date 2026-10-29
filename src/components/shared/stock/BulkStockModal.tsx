@@ -15,7 +15,6 @@ import { Button, DatePicker, Input, InputNumber, Select } from "@/components/bas
 import { formatNumber } from "@/i18n/format";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import { sortOptionsThai } from "@/lib/thaiSort";
-import { isIntegerOnlyUnit } from "@/constants/ingredientCategoryUnits";
 
 export type BulkStockMode = "receive" | "use" | "adjust";
 
@@ -24,7 +23,6 @@ export interface BulkStockItem {
   name: string;
   unit: string;
   stock: number;
-  maxStock?: number | null;
 }
 
 export interface BulkStockLine {
@@ -118,21 +116,9 @@ function Body({
   const filled = lines.filter((l) => l.id && l.value != null);
 
   const exceeds = (l: Line) => mode === "use" && !!l.id && l.value != null && l.value > (byId.get(l.id)?.stock ?? 0);
-  const exceedsMax = (l: Line) => {
-    if (!l.id || l.value == null) return false;
-    const item = byId.get(l.id);
-    if (!item || item.maxStock == null || item.maxStock <= 0) return false;
-    if (mode === "receive") return item.stock + l.value > item.maxStock;
-    if (mode === "adjust") return l.value > item.maxStock;
-    return false;
-  };
   const badExpiry = (l: Line) => mode === "receive" && !!l.expiry && l.expiry.isBefore(l.date, "day");
   const invalid =
-    filled.length === 0 ||
-    lines.some(exceeds) ||
-    lines.some(exceedsMax) ||
-    lines.some(badExpiry) ||
-    lines.some((l) => !!l.id !== (l.value != null));
+    filled.length === 0 || lines.some(exceeds) || lines.some(badExpiry) || lines.some((l) => !!l.id !== (l.value != null));
   const showExpiry = withDates && mode === "receive";
 
   const update = (key: number, patch: Partial<Line>) =>
@@ -184,19 +170,11 @@ function Body({
           buttonStyle="solid"
           value={mode}
           onChange={(e) => {
-            const nextMode = e.target.value as BulkStockMode;
-            setMode(nextMode);
+            setMode(e.target.value);
             setErrors({});
             // เปลี่ยนโหมด → จำนวนเดิมความหมายเปลี่ยน (ส่วนต่าง ↔ ยอดใหม่) จึงล้างจำนวนแต่คงรายการที่เลือกไว้
-            // ถ้าสลับไปโหมดเบิกใช้ (use) รายการที่สต็อกเป็น 0 เบิกไม่ได้ ให้ล้างรายการนั้นออก
             setLines((ls) =>
-              ls.map((l) => {
-                const stock = l.id ? (byId.get(l.id)?.stock ?? 0) : 0;
-                if (nextMode === "use" && l.id && stock <= 0) {
-                  return { ...l, id: null, value: null };
-                }
-                return { ...l, value: nextMode === "adjust" && l.id ? stock : null };
-              }),
+              ls.map((l) => ({ ...l, value: e.target.value === "adjust" && l.id ? (byId.get(l.id)?.stock ?? 0) : null })),
             );
           }}
           options={(["receive", "use", "adjust"] as const).map((m) => ({ value: m, label: t(`mode_${m}`) }))}
@@ -216,11 +194,9 @@ function Body({
 
         {lines.map((l) => {
           const item = l.id ? byId.get(l.id) : undefined;
-          const lineDecimals = item && isIntegerOnlyUnit(item.unit) ? 0 : decimals;
           const err =
             (l.id && errors[l.id]) ||
             (exceeds(l) ? t("exceeds", { qty: formatNumber(item?.stock ?? 0, locale), unit: item?.unit ?? "" }) : "") ||
-            (exceedsMax(l) ? t("exceedsMax", { max: formatNumber(item?.maxStock ?? 0, locale), unit: item?.unit ?? "" }) : "") ||
             (badExpiry(l) ? t("expiryBeforeDate") : "");
           return (
             <div key={l.key} className="flex flex-col gap-0.5">
@@ -233,13 +209,7 @@ function Body({
                     placeholder={t("selectItem")}
                     value={l.id ?? undefined}
                     onChange={(v) => pick(l.key, v as string)}
-                    options={sortOptionsThai(
-                      items.map((i) => ({
-                        value: i.id,
-                        label: i.name,
-                        disabled: (used.has(i.id) && i.id !== l.id) || (mode === "use" && i.stock <= 0),
-                      })),
-                    )}
+                    options={sortOptionsThai(items.map((i) => ({ value: i.id, label: i.name, disabled: used.has(i.id) && i.id !== l.id })))}
                     className="w-full"
                   />
                   {item && (
@@ -249,25 +219,11 @@ function Body({
                   )}
                 </div>
                 <InputNumber
-                  min={mode === "adjust" ? 0 : lineDecimals ? 0.01 : 1}
-                  precision={lineDecimals}
+                  min={mode === "adjust" ? 0 : decimals ? 0.01 : 1}
+                  precision={decimals}
                   value={l.value}
                   disabled={!l.id}
                   status={err ? "error" : undefined}
-                  onKeyDown={(e) => {
-                    if (e.ctrlKey || e.metaKey || e.altKey || e.key.length > 1) return;
-                    if (/^[0-9]$/.test(e.key)) return;
-                    if (lineDecimals > 0 && e.key === ".") {
-                      const val = (e.currentTarget as HTMLInputElement | null)?.value ?? "";
-                      if (!val.includes(".")) return;
-                    }
-                    e.preventDefault();
-                  }}
-                  onPaste={(e) => {
-                    const text = e.clipboardData?.getData("text") ?? "";
-                    const pattern = lineDecimals > 0 ? /^\d*(\.\d*)?$/ : /^\d*$/;
-                    if (!pattern.test(text.trim())) e.preventDefault();
-                  }}
                   onChange={(v) => update(l.key, { value: v == null ? null : Number(v) })}
                   className="!w-full"
                 />

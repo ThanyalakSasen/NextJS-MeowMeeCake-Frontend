@@ -25,7 +25,7 @@ type PopulatedRef<T> = T | string | null;
 /** shape ดิบจาก backend (productionItemModel + populate product_id/recipe_id) */
 export interface RawProductionOrderItem {
   _id: string;
-  product_id: PopulatedRef<{ _id: string; product_name_th: string; product_name_eng?: string; shelf_life_days?: number | null }>;
+  product_id: PopulatedRef<{ _id: string; product_name_th: string; product_name_eng?: string }>;
   recipe_id: PopulatedRef<{ _id: string; recipe_name: string; yield_qty: number }>;
   planned_qty: number;
   actual_qty?: number | null;
@@ -64,15 +64,6 @@ export interface ProductionOrderItem {
   actual_qty?: number | null;
   item_status: ProductionItemStatus;
   notes?: string | null;
-  /** อายุสินค้า (วัน) จาก product ที่ populate — วันหมดอายุเริ่มต้นของล็อตในหน้าปิดงาน · null = ไม่ตั้ง */
-  shelf_life_days: number | null;
-}
-
-/** วันผลิต/วันหมดอายุของล็อตต่อรายการ ที่ส่งไปกับ POST /complete ("YYYY-MM-DD" · expiry null = ไม่มีวันหมดอายุ) */
-export interface CompleteLotInput {
-  item_id: string;
-  produced_date: string;
-  expiry_date: string | null;
 }
 
 /** order ฝั่ง UI — denormalize assignee_name/round_name จาก assigned_to/round_id ที่ populate มาแล้ว */
@@ -157,31 +148,4 @@ export interface ProductionOrderListParams extends ListParams {
   search?: string;
   date_from?: string;
   date_to?: string;
-}
-
-/** วัตถุดิบที่ไม่พอ — POST /admin/production-orders/stock-check (หน่วยตามสต็อกวัตถุดิบ ไม่แปลงหน่วย) */
-export interface IngredientShortage {
-  ingredient_id: string;
-  ingredient_name: string;
-  unit_abbr: string | null;
-  required: number;
-  in_stock: number;
-  /** ขาดอีกเท่าไหร่ = required − in_stock */
-  missing: number;
-}
-
-/** ผลเช็ควัตถุดิบระหว่างกรอกฟอร์มสร้างใบสั่งผลิต — items เรียงตามแถวที่ส่งไป */
-export interface ProductionStockCheck {
-  items: {
-    recipe_id: string;
-    /** ไม่พบสูตร หรือ yield_qty = 0 — คิดวัตถุดิบไม่ได้ */
-    recipe_invalid: boolean;
-    can_produce: boolean;
-    /** ผลิตได้สูงสุดกี่หน่วยด้วยสต็อกตอนนี้ · null = สูตรไม่ใช้วัตถุดิบ */
-    max_qty: number | null;
-    shortages: IngredientShortage[];
-  }[];
-  /** รวมทุกแถว — หลายสินค้าใช้วัตถุดิบเดียวกัน แต่ละแถวพอแต่รวมกันอาจไม่พอ */
-  total_shortages: IngredientShortage[];
-  can_produce_all: boolean;
 }

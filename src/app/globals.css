@@ -20,7 +20,7 @@
        รันตรวจ: npm run lint:theme  (scripts/check-theme.mjs)
    ════════════════════════════════════════════════════════════════════ */
 
-/* ฟอนต์หลัก = Noto Sans Thai (ไทยไม่มีหัว) โหลดใน src/app/layout.tsx ผ่าน next/font
+/* ฟอนต์หลัก = Noto Sans Thai Looped (ไทยมีหัว) โหลดใน src/app/layout.tsx ผ่าน next/font
    --font-noto-thai ถูก set บน <html> — ผูกเข้ากับ font-sans ของ Tailwind ที่นี่
    @theme inline: ให้ utility เก็บ var() ไว้ (ไม่ resolve ตอน build) */
 @theme inline {
@@ -203,7 +203,7 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  /* Noto Sans Thai ผ่าน --font-sans (ผูกใน @theme inline ด้านบน) */
+  /* Noto Sans Thai Looped ผ่าน --font-sans (ผูกใน @theme inline ด้านบน) */
   font-family: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
   line-height: 1.7;             /* เว้นบรรทัดกว้างขึ้น อ่านง่ายขึ้นสำหรับอักษรไทยที่มีวรรณยุกต์ */
   color: var(--text-strong);

@@ -1,9 +1,9 @@
 // ─────────────────────────────────────────────────────────────
 // src/services/shippingZones.ts — โซนค่าส่งเว็บ /admin/shipping-zones (สิทธิ์ store_info · BACKLOG4 F2 · backend Q-BE2)
 //   GET   /admin/shipping-zones              โซน A–D (backend สร้างชุดเริ่มต้นให้ถ้ายังไม่มี)
-//   POST  /admin/shipping-zones              { zone_label, fee, provinces } — เพิ่มโซน (รหัสถัดไป E, F, …) · สิทธิ์ shipping.create
+//   POST  /admin/shipping-zones              { zone_label, fee, provinces } — เพิ่มโซน (ได้รหัสของโซนจังหวัดอื่นทั้งหมด แล้วโซนนั้นเลื่อนเป็นตัวถัดไป) · สิทธิ์ shipping.create
 //   PATCH /admin/shipping-zones/:zone_code   { zone_label?, fee?, provinces? } — จังหวัดซ้ำโซนอื่น = 409 · ไม่ใช่ 77 จังหวัด = 400
-//   DELETE /admin/shipping-zones/:zone_code  ลบโซน (ลบจริง · โซน D ลบไม่ได้) · สิทธิ์ shipping.delete
+//   DELETE /admin/shipping-zones/:zone_code  ลบโซน (ลบจริง · โซนจังหวัดอื่นทั้งหมดลบไม่ได้ · โซนถัดไปเลื่อนรหัสขึ้นมา) · สิทธิ์ shipping.delete
 //   GET   /admin/shipping-zones/categories      หมวดหมู่สินค้า + ส่งทั่วประเทศได้ไหม (ค่าที่มีผล + ยังไม่เคยตั้งหรือเปล่า)
 //   PATCH /admin/shipping-zones/categories/:id  { ships_nationwide } — สิทธิ์ store_info.update (ไม่ต้องมีสิทธิ์สินค้า)
 //   GET   /admin/shipping-zones/products        สินค้าทั้งหมด + ค่ายกเว้นรายสินค้า (null = ตามหมวด)
@@ -25,6 +25,7 @@ const toZone = (raw: any): ShippingZone => ({
   zone_label: raw.zone_label ?? "",
   provinces: Array.isArray(raw.provinces) ? raw.provinces : [],
   fee: Number(raw.fee ?? 0),
+  is_fallback: raw.is_fallback === true,
 });
 
 export const shippingZonesService = {

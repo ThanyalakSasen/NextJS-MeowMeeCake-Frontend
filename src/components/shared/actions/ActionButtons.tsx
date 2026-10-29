@@ -19,14 +19,11 @@ import {
   CheckBadgeIcon,
   CheckCircleIcon,
   CheckIcon,
-  ClockIcon,
   EyeIcon,
   FunnelIcon,
   MinusCircleIcon,
   PencilSquareIcon,
-  PrinterIcon,
   TrashIcon,
-  ViewfinderCircleIcon,
   XCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -53,9 +50,6 @@ const ICONS = {
   use: ArrowUpTrayIcon, // เบิกใช้
   adjust: AdjustmentsHorizontalIcon, // ปรับสต็อก
   off: MinusCircleIcon, // ปิดทั้งหมด
-  print: PrinterIcon, // พิมพ์ (ฉลากบาร์โค้ด)
-  scan: ViewfinderCircleIcon, // สแกนบาร์โค้ด
-  history: ClockIcon, // ดูประวัติ (สต็อก)
 } as const;
 
 export type ActionIconKind = keyof typeof ICONS;

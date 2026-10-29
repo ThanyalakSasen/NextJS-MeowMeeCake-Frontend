@@ -1,5 +1,5 @@
 "use client";
-// แท็บ 3: ประวัติการผลิต — อ่านอย่างเดียว (สร้าง/แก้ที่แท็บแผน+สถานะ) · ทุกใบตั้งแต่สร้าง พร้อมป้ายสถานะ
+// แท็บ 3: ประวัติการผลิต — อ่านอย่างเดียว (สร้าง/แก้ที่แท็บแผน+สถานะ)
 // รายการสินค้าของแต่ละใบไม่อยู่ในตาราง — กด "ดู" เปิดป๊อปอัปรายละเอียด (ProductionOrderDetail) ที่ลิสต์ครบทุกรายการ
 import type { Dayjs } from "dayjs";
 import { useTranslations, useLocale } from "next-intl";
@@ -12,7 +12,6 @@ import { ViewButton } from "@/components/shared/actions";
 import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import type { ProductionOrder } from "@/types/productionOrder";
 import type { useProductionViewModel } from "../useProductionViewModel";
-import { PrintLotLabelsButton } from "./PrintLotLabelsButton";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
@@ -48,27 +47,20 @@ export function HistoryTab(vm: VM) {
       render: (o) => <span className="font-medium text-brown-900 font-mono">{o.production_no}</span>,
     },
     {
-      key: "production_date",
-      title: t("production.fieldDate"),
-      render: (o) => <span className="text-gray-600">{formatDate(o.production_date, locale)}</span>,
+      key: "completed_at",
+      title: t("production.colCompletedAt"),
+      render: (o) => <span className="text-gray-600">{o.completed_at ? formatDate(o.completed_at, locale, { withTime: true }) : "—"}</span>,
     },
-    // คอลัมน์ "สถานะ" + "เสร็จเมื่อ" เอาออก — ไม่มีขั้นอัปเดตสถานะการผลิตแล้ว · สถานะ/เวลาปิดงานยังดูได้ในป๊อปอัปรายละเอียด
     {
       key: "assignee",
       title: t("production.fieldAssignee"),
       render: (o) => o.assignee_name ?? "—",
     },
-    {
-      // ล็อตสร้างตอนปิดงานผลิต — ใบที่ยังไม่เสร็จไม่มีฉลากให้พิมพ์
-      key: "lot_labels",
-      title: t("production.colLotLabels"),
-      render: (o) => (o.production_status === "done" ? <PrintLotLabelsButton orderId={o._id} /> : <span className="text-gray-500">—</span>),
-    },
   ];
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-base text-gray-600">{t("production.historyDescription", { n: vm.historyStats.allOrders, done: vm.historyStats.totalOrders })}</p>
+      <p className="text-base text-gray-600">{t("production.historyDescription", { n: vm.historyStats.totalOrders })}</p>
 
       <div className="flex flex-wrap items-center gap-3">
         <TypeTabBar

@@ -21,7 +21,6 @@ import { isApiError } from "@/types/api";
 import { STATUS_SELECT_OPTIONS, isFinalStatus } from "./orderStatus";
 import { LIST_ALL } from "@/lib/http";
 import { ORDERS_KEY } from "./ordersQuery";
-import { useMarkShipped } from "@/components/shared/orders";
 
 export function useManageOrdersViewModel() {
   const t = useTranslations();
@@ -168,7 +167,7 @@ export function useManageOrdersViewModel() {
     );
   };
 
-  // ยืนยันสลิปแล้ว backend เลื่อนเป็น preparing ให้เอง — เหลือปุ่มเดียว "พร้อมจัดส่ง" / "พร้อมรับที่หน้าร้าน" → ready
+  // ยืนยันสลิปแล้ว backend เลื่อนเป็น preparing ให้เอง — เหลือปุ่มเดียว "สินค้าพร้อมแล้ว" → ready
   const canMarkReady = (order: Order) =>
     perm.update && order.order_status === "preparing" && order.payment_status === "paid";
   const onMarkReady = (order: Order) => onStatusChange(order, "ready");
@@ -254,12 +253,6 @@ export function useManageOrdersViewModel() {
     );
   };
 
-  // "จัดส่งเรียบร้อยแล้ว" — ออเดอร์จัดส่งที่พร้อมส่งมอบ + บันทึกขนส่ง (และเลขพัสดุ) แล้ว · ออเดอร์จัดส่งไม่ปิดงานทางอื่น (ดู statusSelectOptions)
-  const { markShippedFor, markingShipped } = useMarkShipped(ordersService, invalidate);
-  const canMarkShipped = (order: Order) =>
-    perm.update && order.order_type === "delivery" && order.order_status === "ready";
-  const onMarkShipped = () => selectedOrder && markShippedFor(selectedOrder, selectedOrder.order_no);
-
   const onExport = () => {
     if (filtered.length === 0) {
       alert.info(t("orders.exportEmpty"));
@@ -328,6 +321,5 @@ export function useManageOrdersViewModel() {
     refunding: refundMutation.isPending,
     onSaveDelivery,
     savingDelivery: deliveryMutation.isPending,
-    canMarkShipped, onMarkShipped, markingShipped,
   };
 }

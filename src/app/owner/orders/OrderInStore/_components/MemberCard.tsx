@@ -62,7 +62,7 @@ export function MemberCard({
               type="tel"
               inputMode="numeric"
               autoComplete="off"
-              maxLength={10}
+              maxLength={12}
               value={phone}
               disabled={disabled}
               onChange={(e) => onPhoneChange(e.target.value)}

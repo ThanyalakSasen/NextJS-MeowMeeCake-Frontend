@@ -44,7 +44,7 @@ export const color = {
 
 /** ตัวอักษร — สเกล px คือค่าที่ antd ใช้ (Tailwind ใช้ rem ของตัวเองที่ไล่จาก base 18px) */
 export const typography = {
-  family: "Noto Sans Thai, Noto Sans, sans-serif",
+  family: "var(--font-sans)",
   /** ขนาดฐานของทั้งแอป = html{font-size:112.5%} ใน globals.css */
   baseSizePx: 18,
   lineHeight: 1.7,

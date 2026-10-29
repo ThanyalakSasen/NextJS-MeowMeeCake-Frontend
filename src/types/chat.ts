@@ -20,6 +20,14 @@ export interface ChatAttachment {
   ordered_at: string | null;
 }
 
+/** คำสั่งซื้อที่เลือกจะแนบ (ก่อนส่ง / ตอนเปลี่ยนในข้อความที่แก้) — ข้อมูลพอแสดงชิป */
+export interface ChatAttachRef {
+  kind: ChatAttachmentKind;
+  id: string;
+  doc_no: string;
+  total_amount: number;
+}
+
 export interface ChatMessage {
   _id: string;
   conversation_id: string;
@@ -28,6 +36,10 @@ export interface ChatMessage {
   attachment: ChatAttachment | null;
   read_at: string | null;
   created_at: string;
+  /** ถูกลบแล้ว — body ว่าง · attachment null (แสดง "ข้อความนี้ถูกลบแล้ว") */
+  deleted: boolean;
+  /** แก้ไขล่าสุดเมื่อไร (null = ไม่เคยแก้) */
+  edited_at: string | null;
 }
 
 export interface ChatCustomer {

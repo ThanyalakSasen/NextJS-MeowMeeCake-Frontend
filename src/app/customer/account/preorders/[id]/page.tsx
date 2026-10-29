@@ -25,6 +25,7 @@ import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
 import BackButton from "../../_components/BackButton";
 import SlipPaymentPanel from "../../_components/SlipPaymentPanel";
+import EditDeliveryButton, { canEditDelivery } from "../../_components/EditDeliveryButton";
 import FlowSteps from "@/components/customer/FlowSteps";
 import ReviewLink from "../../_components/ReviewLink";
 import { canReview } from "../../../hooks/useReviewedItems";
@@ -58,6 +59,7 @@ function PreorderDetailContent() {
   const isNew = useSearchParams().get("new") === "1";
   const router = useRouter();
   const tf = useTranslations("shop.flow");
+  const te = useTranslations("shop.editDelivery");
   const validId = isObjectId(id ?? "");
   const qc = useQueryClient();
 
@@ -134,6 +136,21 @@ function PreorderDetailContent() {
       showReason
     />
   );
+
+  // ย้อนกลับไปแก้วิธีรับ/ที่อยู่ (ยังไม่ชำระ · ยังไม่ส่งสลิป · ไม่ได้ชำระรวม)
+  const editDelivery = canEditDelivery(paymentQ.data) ? (
+    <EditDeliveryButton
+      bill={{
+        kind: "preorder",
+        id: p._id,
+        order_type: p.order_type,
+        delivery_address: p.delivery_address,
+        roundPickupDate: p.round?.pickup_date ?? null,
+      }}
+      onSaved={refresh}
+      className={"inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[#8C5A3C]/25 bg-white px-3 text-xs font-semibold text-[#8C5A3C] hover:bg-[#FAF6F0]"}
+    />
+  ) : null;
 
   return (
     <div className={shopPage}>
@@ -256,11 +273,22 @@ function PreorderDetailContent() {
             )}
             {p.order_type === "delivery" && p.delivery_address && (
               <div className="border-t border-[#8C5A3C]/10 pt-4 text-sm">
-                <p className="mb-1 font-semibold">{to("deliveryAddress")}</p>
+                {/* ปุ่มแก้วิธีรับ/ที่อยู่ อยู่ขวาของหัวข้อที่อยู่จัดส่ง (ยังแก้ได้เท่านั้น) */}
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="m-0 font-semibold">{to("deliveryAddress")}</p>
+                  {editDelivery}
+                </div>
                 <p>{p.delivery_address.recipient_name} · {p.delivery_address.recipient_phone}</p>
                 <p className="text-gray-600">
                   {p.delivery_address.house_no} {p.delivery_address.sub_district} {p.delivery_address.district} {p.delivery_address.province} {p.delivery_address.zip_code}
                 </p>
+              </div>
+            )}
+            {/* รับเอง — ยังเปลี่ยนเป็นจัดส่งได้: ปุ่มอยู่ขวาของแถววิธีรับสินค้า */}
+            {p.order_type === "takeaway" && editDelivery && (
+              <div className="flex items-center justify-between gap-2 border-t border-[#8C5A3C]/10 pt-4 text-sm">
+                <p className="m-0 font-semibold">{te("receiveTakeaway")}</p>
+                {editDelivery}
               </div>
             )}
           </section>

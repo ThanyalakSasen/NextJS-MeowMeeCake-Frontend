@@ -12,9 +12,9 @@ import { useTranslations } from "next-intl";
 import { chatsService } from "@/services/chats";
 import { usePermission } from "@/context/PermissionsContext";
 import { useChatThread } from "@/hooks/useChatThread";
-import { alert } from "@/lib/alert";
+import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
-import type { ChatAttachment, ChatMessageQuery } from "@/types/chat";
+import type { ChatAttachment, ChatConversation, ChatMessage, ChatMessageQuery } from "@/types/chat";
 import { CHAT_UNREAD_KEY } from "@/components/shared/layout/ChatUnreadBadge";
 
 export const CHATS_LIST_KEY = ["admin", "chats", "list"] as const;
@@ -82,8 +82,46 @@ export function useChatsViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("sendFailed")),
   });
 
+  // แก้ไข/ลบข้อความของร้าน — สิทธิ์ chats.update / chats.delete · สำเร็จแล้วแทนที่ข้อความเดิมในรายการ
+  const editMessage = async (m: ChatMessage, body: string) => {
+    try {
+      thread.append(await chatsService.editMessage(selectedId!, m._id, body));
+      return true;
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("editFailed"));
+      return false;
+    }
+  };
+  const deleteMessage = async (m: ChatMessage) => {
+    try {
+      thread.append(await chatsService.deleteMessage(selectedId!, m._id));
+      void qc.invalidateQueries({ queryKey: CHATS_LIST_KEY });
+      return true;
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("deleteFailed"));
+      return false;
+    }
+  };
+
+  // ลบแชทออกจากรายการ (ปุ่ม … ในรายการห้อง) — ประวัติไม่หาย ลูกค้าทักใหม่ = กลับมาพร้อมประวัติเดิม · สิทธิ์ chats.delete · ลบห้องที่เปิดอยู่ = กลับไปรายการ
+  const deleteConversation = async (c: ChatConversation) => {
+    const name = c.customer?.user_fullname || t("customer");
+    if (!(await confirmAlert(t("deleteRoomConfirm", { name }), { note: t("deleteRoomNote"), variant: "delete", danger: true }))) return;
+    try {
+      await chatsService.remove(c._id);
+      if (selectedId === c._id) select(null);
+      refreshCounts();
+      alert.success(t("deleteRoomDone"));
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("deleteRoomFailed"));
+    }
+  };
+
   return {
     perm,
+    deleteConversation: perm.delete ? deleteConversation : undefined,
+    editMessage: perm.update ? editMessage : undefined,
+    deleteMessage: perm.delete ? deleteMessage : undefined,
     conversations: listQ.data?.data ?? [],
     listLoading: listQ.isPending,
     listError: listQ.isError,

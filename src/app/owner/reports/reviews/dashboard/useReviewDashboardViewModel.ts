@@ -12,8 +12,16 @@ import { exportToCsv } from "@/lib/exportCsv";
 import { reviewsService } from "@/services/reviews";
 import { sortByThai } from "@/lib/thaiSort";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
-import { REVIEW_FILTER_OPTIONS_KEY, REVIEW_STATS_KEY } from "../reviewsQuery";
+import { REVIEW_FILTER_OPTIONS_KEY, REVIEW_STATS_KEY, REVIEWS_LIST_KEY } from "../reviewsQuery";
+import { toReviewRow } from "../reviewRow";
 import { bucketUnitFor, previousRange, sortProductRows, toReviewStats, type ProductSort, type ProductSortKey } from "./reviewStats";
+
+
+/** จำนวนโน้ตภายในที่แสดงในแดชบอร์ด (ล่าสุดก่อน) */
+export const NOTES_LIMIT = 20;
+
+/** จำนวนรีวิว 5 ดาวที่แสดงในแดชบอร์ด */
+export const FIVE_STAR_LIMIT = 10;
 
 /** until ของ backend เป็น $lt → ส่งต้นช่วงถัดไป (ครอบมิลลิวินาทีสุดท้ายของ endOf) */
 const untilOf = (end: Dayjs) => end.add(1, "millisecond").toISOString();
@@ -27,7 +35,6 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
   const [sort, setSort] = useState<ProductSort>({ key: "count", dir: "desc" });
   const range = useMemo(() => getRangeStartEnd(period, selectedDate), [period, selectedDate]);
   const prev = useMemo(() => previousRange(period, range), [period, range]);
-
   const params = {
     since: range[0].toISOString(),
     until: untilOf(range[1]),
@@ -49,6 +56,35 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
     enabled,
   });
   const products = optionsQ.data?.products ?? [];
+  
+  const fiveStarParams = {
+    rating: 5,
+    
+    until: params.until,
+    ...(productId ? { product_id: productId } : {}),
+  };
+  const fiveStarQ = useQuery({
+    queryKey: [...REVIEWS_LIST_KEY, "five-star", fiveStarParams],
+    queryFn: () => reviewsService.list(fiveStarParams),
+    enabled,
+  });
+  const fiveStarRows = useMemo(() => (fiveStarQ.data?.data ?? []).map(toReviewRow), [fiveStarQ.data]);
+
+  // โน้ตภายใน — รีวิวในช่วงนี้ที่ร้านจดโน้ตไว้ (แทนส่วน "หัวข้อที่ถูกติ เทียบช่วงก่อนหน้า" · 2026-10-29)
+  const notesParams = {
+    has_note: 1 as const,
+    since: params.since,
+    until: params.until,
+    sort: "newest" as const,
+    limit: NOTES_LIMIT,
+    ...(productId ? { product_id: productId } : {}),
+  };
+  const notesQ = useQuery({
+    queryKey: [...REVIEWS_LIST_KEY, "notes", notesParams],
+    queryFn: () => reviewsService.list(notesParams),
+    enabled,
+  });
+  const noteRows = useMemo(() => (notesQ.data?.data ?? []).map(toReviewRow), [notesQ.data]);
 
   const stats = useMemo(() => (q.data ? toReviewStats(q.data, range, period) : null), [q.data, range, period]);
   const productRows = useMemo(() => (stats ? sortProductRows(stats.products, sort) : []), [stats, sort]);
@@ -86,6 +122,21 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
     range,
     /** ช่วงก่อนหน้า (แสดงในคำอธิบาย "เทียบกับ …") */
     prevRange: prev,
+
+   
+    // fiveStar: {
+    //   rows: fiveStarRows,
+    //   refetch: () => fiveStarQ.refetch(),
+    // },
+
+    /** โน้ตภายในของรีวิวในช่วงนี้ (ล่าสุดก่อน · สูงสุด NOTES_LIMIT) */
+    notes: {
+      rows: noteRows,
+      total: notesQ.data?.meta?.total ?? noteRows.length,
+      isLoading: enabled && notesQ.isPending,
+      isError: notesQ.isError,
+      refetch: () => notesQ.refetch(),
+    },
 
     /** สินค้าที่เลือก · undefined = ทั้งร้าน */
     productId,

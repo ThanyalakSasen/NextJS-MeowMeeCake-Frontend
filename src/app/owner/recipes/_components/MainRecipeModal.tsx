@@ -17,10 +17,6 @@ import { emptyRecipeForm, fromRecipe } from "../recipeForm";
 import { IngredientEditor, type IngredientOption } from "./IngredientEditor";
 import { StepEditor } from "./StepEditor";
 
-// หัวคอลัมน์ + ทุกแถวของสูตรย่อยใช้ชุดเดียวกัน · minmax(0, …) กันคอลัมน์ขยายตามชื่อสูตรยาว (ช่องจำนวนเยื้อง)
-// จำนวน 110px ให้พอทั้งตัวเลขและคำว่า "ชุด" (suffix) — เท่ากับช่องจำนวนของวัตถุดิบ (IngredientEditor)
-const COMPONENT_COLUMNS = "minmax(0, 1fr) 110px 24px";
-
 export interface RecipeSubmitValue extends RecipeFormValue {
   components: RecipeComponentRef[];
   ingredients: RecipeIngredientLine[];
@@ -117,14 +113,14 @@ export function MainRecipeModal({
         <p className="mb-3 text-sm font-semibold text-gray-500">{t("recipes.componentsUsedTitle")}</p>
         <div className="flex flex-col gap-2">
           {components.length > 0 && (
-            <div className="grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: COMPONENT_COLUMNS }}>
+            <div className="grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1fr 90px 24px" }}>
               <span>{t("filterLabel.component")}</span>
               <span>{t("filterLabel.batches")}</span>
               <span />
             </div>
           )}
           {components.map((ref, i) => (
-            <div key={i} className="grid gap-2 items-center" style={{ gridTemplateColumns: COMPONENT_COLUMNS }}>
+            <div key={i} className="grid gap-2 items-center" style={{ gridTemplateColumns: "1fr 90px 24px" }}>
               <Select
                 size="small"
                 aria-label={t("filterLabel.component")}

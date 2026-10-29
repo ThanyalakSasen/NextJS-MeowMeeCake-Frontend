@@ -7,12 +7,12 @@ import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats"
 import { DataTable, FilterToolbar, SearchInput, type Column, useStockStatusOptions, FilterField } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
 import { actionIcon } from "@/components/shared/actions";
+import { LOW_STOCK_THRESHOLD } from "./stockStatus";
 import type { StockProductRow, useProductStockViewModel } from "./useProductStockViewModel";
 import { StockProgressRow } from "./_components/StockProgressRow";
 import { StockActionModal } from "./_components/StockActionModal";
 import { BulkStockModal, StockAlertSection } from "@/components/shared/stock";
 import { LoadFailed } from "@/components/shared/feedback";
-import { LotLookupModal } from "@/components/shared/lots";
 
 type VM = ReturnType<typeof useProductStockViewModel>;
 
@@ -34,7 +34,7 @@ export function ProductStockView(vm: VM) {
     {
       key: "stock",
       title: t("productStock.colStock"),
-      render: (r) => <StockProgressRow qty={r.stock} unit={r.unit} threshold={r.threshold} />,
+      render: (r) => <StockProgressRow qty={r.stock} unit={r.unit} />,
     },
     {
       key: "status",
@@ -66,19 +66,8 @@ export function ProductStockView(vm: VM) {
       <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("productStock.ok_adjust")}</Button>
     </>
   );
-  // ประวัติแสดงได้แม้ไม่มีสิทธิ์ปรับสต็อก (stock_history.view แยกจาก stock.update)
-  const historyButton = (r: StockProductRow) => (
-    <Button size="small" icon={actionIcon("history", "small")} onClick={() => vm.openHistory(r)}>{t("productStock.history")}</Button>
-  );
-  const hasRowActions = vm.perm.update || vm.canViewHistory;
-  const rowButtons = (r: StockProductRow) => (
-    <>
-      {vm.perm.update && actionButtons(r)}
-      {vm.canViewHistory && historyButton(r)}
-    </>
-  );
-  const rowActions = hasRowActions
-    ? (r: StockProductRow) => <div className="flex justify-end gap-2">{rowButtons(r)}</div>
+  const rowActions = vm.perm.update
+    ? (r: StockProductRow) => <div className="flex justify-end gap-2">{actionButtons(r)}</div>
     : undefined;
 
   // จอ <1280px: การ์ดต่อแถวแทนตาราง (DataTable renderCard) — ข้อมูลชุดเดียวกับคอลัมน์ข้างบน
@@ -93,7 +82,7 @@ export function ProductStockView(vm: VM) {
           <StatusBadge group="stockStatus" value={r.status} />
         </div>
       </div>
-      <StockProgressRow qty={r.stock} unit={r.unit} threshold={r.threshold} />
+      <StockProgressRow qty={r.stock} unit={r.unit} />
       <dl className="m-0 grid grid-cols-2 gap-3 text-sm">
         <div>
           <dt className="text-gray-600">{t("productStock.colPrice")}</dt>
@@ -104,8 +93,8 @@ export function ProductStockView(vm: VM) {
           <dd className="m-0 font-medium text-brown-800">{formatCurrency(r.value, locale)}</dd>
         </div>
       </dl>
-      {hasRowActions && (
-        <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">{rowButtons(r)}</div>
+      {vm.perm.update && (
+        <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">{actionButtons(r)}</div>
       )}
     </div>
   );
@@ -114,21 +103,11 @@ export function ProductStockView(vm: VM) {
     <ListPageLayout
       title={t("productStock.title")}
       actions={
-        <>
-          <Button icon={actionIcon("scan")} onClick={vm.openLotLookup}>
-            {t("lots.lookup")}
+        vm.perm.update && (
+          <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
+            {t("bulkStock.open")}
           </Button>
-          {vm.canViewHistory && (
-            <Button icon={actionIcon("history")} onClick={() => vm.openHistory()}>
-              {t("productStock.history")}
-            </Button>
-          )}
-          {vm.perm.update && (
-            <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
-              {t("bulkStock.open")}
-            </Button>
-          )}
-        </>
+        )
       }
       toolbar={
         <FilterToolbar
@@ -179,7 +158,7 @@ export function ProductStockView(vm: VM) {
             <StatCard
               label={t("productStock.statLow")}
               value={vm.stats.low}
-              sub={t("productStock.statLowSub")}
+              sub={t("productStock.statLowSub", { n: LOW_STOCK_THRESHOLD })}
               tone="warn"
             />
             <StatCard
@@ -232,8 +211,6 @@ export function ProductStockView(vm: VM) {
         onClose={vm.closeAction}
         onSubmit={vm.onSubmit}
       />
-
-      {vm.lotLookupOpen && <LotLookupModal onClose={vm.closeLotLookup} />}
     </ListPageLayout>
   );
 }

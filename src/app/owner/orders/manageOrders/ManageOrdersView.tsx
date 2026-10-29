@@ -3,12 +3,13 @@
 // payment_status แสดงเป็น badge อ่านอย่างเดียว (แก้ตรง ๆ ไม่ได้ — backend จัดการผ่าน resource
 // Payments/verify เท่านั้น) · คอลัมน์ items/สลิปเอาออกจากตาราง (ต้องเรียก getById ต่อแถว ไม่คุ้ม
 // N+1 — ดูรายละเอียดเต็มได้ที่ drawer ผ่านปุ่ม "ดู")
+import { Tooltip } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import { Avatar, Button, LazySelect, Select, Tag } from "@/components/base";
+import { Avatar, Button, Select, Tag } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { DataTable, FilterToolbar, SearchInput, TypeTabBar, type Column, FilterField } from "@/components/shared/data";
-import { DetailModal, LazyTooltip, LoadFailed } from "@/components/shared/feedback";
+import { DetailModal, LoadFailed } from "@/components/shared/feedback";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { NOTICE_TAG, PAYMENT_STATUS_CONFIG } from "@/constants/enumConfig";
@@ -64,26 +65,19 @@ export function ManageOrdersView(vm: VM) {
       render: (o) => {
         if (vm.isFinalStatus(o.order_status)) return <StatusBadge group="orderStatus" value={o.order_status} />;
 
-        // ช่องเปลี่ยนสถานะมีทุกแถว (ตารางแจ้งเตือน + ตารางหลัก) — LazySelect/LazyTooltip สร้าง antd ตอนกด/ชี้ (TBT มือถือ)
         const paymentVerified = o.payment_status === "paid";
         const select = (
-          <LazySelect
+          <Select
             size="small"
             aria-label={t("filterLabel.changeOrderStatus", { orderNo: o.order_no })}
             value={o.order_status}
             disabled={!paymentVerified || !vm.perm.update}
             style={{ width: 140 }}
-            options={statusSelectOptions(o.order_status, o.order_type).map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
+            options={statusSelectOptions(o.order_status).map((s) => ({ value: s, label: t(`enums.orderStatus.${s}`) }))}
             onChange={(next) => vm.onStatusChange(o, next as OrderStatus)}
           />
         );
-        return paymentVerified ? (
-          select
-        ) : (
-          <LazyTooltip title={t("orders.statusLockedHint")}>
-            <span className="inline-block">{select}</span>
-          </LazyTooltip>
-        );
+        return paymentVerified ? select : <Tooltip title={t("orders.statusLockedHint")}>{select}</Tooltip>;
       },
     },
     {
@@ -103,11 +97,11 @@ export function ManageOrdersView(vm: VM) {
     <div className="flex justify-end gap-2">
       <ViewButton size="small" onClick={() => vm.onView(o)} />
       {vm.canMarkReady(o) && (
-        <LazyTooltip title={t("orders.markReadyHint")}>
+        <Tooltip title={t("orders.markReadyHint")}>
           <Button size="small" type="primary" icon={actionIcon("next", "small")} disabled={vm.changingStatus} onClick={() => vm.onMarkReady(o)}>
-            {t(o.order_type === "delivery" ? "orders.markReadyDelivery" : "orders.markReadyTakeaway")}
+            {t("orders.markReady")}
           </Button>
-        </LazyTooltip>
+        </Tooltip>
       )}
       {vm.perm.update && !vm.isFinalStatus(o.order_status) && (
         <Button size="small" danger icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancel(o)}>{t("orders.cancel")}</Button>
@@ -242,9 +236,6 @@ export function ManageOrdersView(vm: VM) {
             canMarkReady={vm.canMarkReady(vm.selectedOrder)}
             markingReady={vm.changingStatus}
             onMarkReady={() => vm.selectedOrder && vm.onMarkReady(vm.selectedOrder)}
-            canMarkShipped={vm.canMarkShipped(vm.selectedOrder)}
-            markingShipped={vm.markingShipped}
-            onMarkShipped={vm.onMarkShipped}
           />
         )}
       </DetailModal>

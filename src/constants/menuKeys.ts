@@ -15,7 +15,6 @@ export type MenuKey =
   | "finance_summary"
   | "products"
   | "stock"
-  | "stock_history"
   | "search_synonyms"
   | "orders"
   | "preorder"
@@ -46,7 +45,6 @@ export const ALL_MENU_KEYS: MenuKey[] = [
   "finance_summary",
   "products",
   "stock",
-  "stock_history",
   "search_synonyms",
   "orders",
   "preorder",
@@ -106,7 +104,6 @@ const ROUTE_MENU_MAP: { prefix: string; menuKey: MenuKey }[] = [
   { prefix: "/owner/finance/expenses", menuKey: "finance_expenses" },
   { prefix: "/owner/finance/summary", menuKey: "finance_summary" },
   { prefix: "/owner/products/productStock", menuKey: "stock" },
-  { prefix: "/owner/products/productHistory", menuKey: "stock_history" },
   { prefix: "/owner/products/search-synonyms", menuKey: "search_synonyms" },
   { prefix: "/owner/products", menuKey: "products" },
   { prefix: "/owner/orders/preOrderRound", menuKey: "preorder" },

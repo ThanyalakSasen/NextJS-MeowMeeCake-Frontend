@@ -1,17 +1,18 @@
 "use client";
 // ฟอร์มโซนค่าส่งเว็บ (ใน modal แก้ไข) — ชื่อโซน · ค่าส่ง · จังหวัด (เลือกจาก 77 จังหวัดเท่านั้น · จังหวัดที่อยู่โซนอื่นเลือกไม่ได้)
-// โซน D ไม่มีช่องจังหวัด — ใช้กับจังหวัดที่ไม่อยู่ในโซนอื่นทั้งหมด · code = null = โซนใหม่ (ต้องเลือกจังหวัด)
+// โซนจังหวัดอื่นทั้งหมด (isFallback) ไม่มีช่องจังหวัด — ใช้กับจังหวัดที่ไม่อยู่ในโซนอื่นทั้งหมด · code = null = โซนใหม่ (ต้องเลือกจังหวัด)
 import { useTranslations } from "next-intl";
 import { Input, InputNumber, Select } from "@/components/base";
 import { FormField } from "@/components/shared/form";
 import { THAI_PROVINCES } from "@/constants/thaiProvinces";
 import type { ShippingZoneCode } from "@/types/shippingZone";
-import { FALLBACK_ZONE, type ShippingZoneForm } from "../shippingZoneForm";
+import type { ShippingZoneForm } from "../shippingZoneForm";
 
 export function ShippingZoneFormFields({
-  code, form, errors, taken, onChange,
+  code, isFallback, form, errors, taken, onChange,
 }: {
   code: ShippingZoneCode | null;
+  isFallback: boolean;
   form: ShippingZoneForm;
   errors: Partial<Record<"zone_label" | "fee" | "provinces", string>>;
   /** จังหวัด → โซนอื่นที่ใช้อยู่ */
@@ -32,11 +33,19 @@ export function ShippingZoneFormFields({
       </FormField>
 
       <FormField label={t("shippingZones.fields.fee")} required error={errors.fee}>
-        <InputNumber className="!w-full sm:!w-48" min={0} step={10} precision={2} value={form.fee} suffix={t("common.currencySymbol")}
-          onChange={(v) => set("fee", typeof v === "number" ? v : 0)} />
+        <InputNumber className="!w-full sm:!w-48" type="number" min={0} step={10} precision={2} value={form.fee} suffix={t("common.currencySymbol")}
+          onChange={(v) => set("fee", typeof v === "number" ? v : 0)}  
+          onKeyDown={(e) => {
+            const allowedKeys = ["Backspace", "Delete", "Tab", "Escape", "Enter", "ArrowLeft", "ArrowRight", "."];
+            if (e.ctrlKey || e.metaKey || allowedKeys.includes(e.key)) {
+              return;
+            }
+            if (!/^[0-9]$/.test(e.key)) {
+              e.preventDefault();
+            }}}/>
       </FormField>
 
-      {code === FALLBACK_ZONE ? (
+      {isFallback ? (
         <p className="m-0 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">{t("shippingZones.fallbackHint")}</p>
       ) : (
         <>

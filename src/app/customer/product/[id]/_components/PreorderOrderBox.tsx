@@ -20,6 +20,7 @@ import { thaiDate } from "../../../preorder/lib/preorderDates";
 import { isRoundOpen, useNow } from "../../../preorder/lib/useNow";
 import { pickProblemText } from "../../../lib/pickProblemText";
 import CustomizationPicker from "./CustomizationPicker";
+import QtyInput from "@/components/customer/QtyInput";
 
 const btn =
   "h-[44px] rounded-xl px-3 text-sm font-bold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 ";
@@ -166,7 +167,8 @@ export default function PreorderOrderBox({
         <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-[#8C5A3C]/30 bg-white">
           <button type="button" onClick={() => setQty(quantity - 1)} disabled={disabled || quantity <= min} aria-label={tcart("decrease")}
             className="flex h-[34px] w-10 items-center justify-center text-lg font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">-</button>
-          <span className="w-12 text-center text-sm font-bold text-[#4A342E] sm:text-base">{quantity}</span>
+          <QtyInput value={quantity} min={min} max={max} onCommit={setQty} disabled={disabled} ariaLabel={tcart("quantity")}
+            className="h-[34px] w-12 text-sm font-bold text-[#4A342E] sm:text-base" />
           <button type="button" onClick={() => setQty(quantity + 1)} disabled={disabled || quantity >= max} aria-label={tcart("increase")}
             className="flex h-[34px] w-10 items-center justify-center text-lg font-bold text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40">+</button>
         </div>

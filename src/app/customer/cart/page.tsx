@@ -36,6 +36,7 @@ import {
 import { thaiDate } from "../preorder/lib/preorderDates";
 import { preorderSelectKey, useCartSelection } from "../lib/cartSelection";
 import BackButton from "../account/_components/BackButton";
+import QtyInput from "@/components/customer/QtyInput";
 
 export default function CartPage() {
   const t = useTranslations("shop.cart");
@@ -92,7 +93,11 @@ function CartContent() {
   const qtyMutation = useMutation({
     mutationFn: ({ id, qty }: { id: string; qty: number }) => shopCartService.updateQuantity(id, qty),
     onSuccess: refresh,
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("qtyFailed")),
+    // 409 = เกินสต็อก — แจ้งแบบข้อมูล ไม่ใช่กากบาทแดง (เหมือนตอนเพิ่มลงตะกร้า)
+    onError: (e) =>
+      isApiError(e) && e.status === 409
+        ? alert.info(e.message, { title: t("stockLimitTitle") })
+        : alert.error(isApiError(e) ? e.message : t("qtyFailed")),
   });
 
   const removeMutation = useMutation({
@@ -187,6 +192,12 @@ function CartContent() {
                     const issue = issues.get(item._id);
                     const busy = busyId === item._id;
                     const name = product ? localName(product.product_name_th, product.product_name_eng) : t("product");
+                    // สต็อกที่ยังเพิ่มได้ (รวมทุกแถวของสินค้าเดียวกัน) — ถึงเพดานแล้ว = ปิดปุ่ม + ขึ้นข้อความใต้ปุ่ม (แทนป๊อปอัป error จาก server)
+                    const pid = cartProductId(item);
+                    const info = pid ? stockOf(pid) : null;
+                    const stockLeft = info && info !== "missing" && info.stock != null ? info.stock : null;
+                    const inCart = pid ? cart.items.filter((x) => cartProductId(x) === pid).reduce((s, x) => s + x.quantity, 0) : item.quantity;
+                    const atMax = stockLeft != null && stockLeft > 0 && inCart >= stockLeft;
                     return (
                       <CartLine
                         key={item._id}
@@ -201,8 +212,11 @@ function CartContent() {
                         onToggle={() => sel.toggle(item._id)}
                         busy={busy}
                         issue={issue ? cartIssueText(issue, t) : null}
-                        decDisabled={busy || item.quantity <= 1}
-                        incDisabled={busy}
+                        decDisabled={busy || item.quantity <= 1 }
+                        incDisabled={busy || atMax}
+                        limitNote={atMax && !issue ? t("maxStockNote", { n: stockLeft }) : null}
+                        maxQty={stockLeft != null && stockLeft > 0 ? stockLeft - (inCart - item.quantity) : null}
+                        onSetQty={(n) => qtyMutation.mutate({ id: item._id, qty: n })}
                         onDec={() => qtyMutation.mutate({ id: item._id, qty: item.quantity - 1 })}
                         onInc={() => qtyMutation.mutate({ id: item._id, qty: item.quantity + 1 })}
                         onRemove={() => removeMutation.mutate(item._id)}
@@ -323,6 +337,9 @@ function PreorderSection({ basket, sel }: { basket: PreorderBasket; sel: ReturnT
             onToggle={() => sel.toggle(selKey)}
             decDisabled={it.quantity <= Math.max(1, it.min_qty)}
             incDisabled={it.quantity >= it.max_qty}
+            minQty={Math.max(1, it.min_qty)}
+            maxQty={it.max_qty}
+            onSetQty={(n) => updatePreorderBasketItem(basket.round_id, key, { quantity: n })}
             onDec={() => updatePreorderBasketItem(basket.round_id, key, { quantity: it.quantity - 1 })}
             onInc={() => updatePreorderBasketItem(basket.round_id, key, { quantity: it.quantity + 1 })}
             onRemove={() => removePreorderBasketItem(basket.round_id, key)}
@@ -405,6 +422,10 @@ function CartLine({
   issue = null,
   decDisabled,
   incDisabled,
+  limitNote = null,
+  minQty = 1,
+  maxQty = null,
+  onSetQty,
   onDec,
   onInc,
   onRemove,
@@ -423,6 +444,13 @@ function CartLine({
   issue?: string | null;
   decDisabled: boolean;
   incDisabled: boolean;
+  /** ข้อความใต้ปุ่มจำนวน เช่น "เพิ่มได้สูงสุด n ชิ้น (สต็อกเหลือเท่านี้)" */
+  limitNote?: string | null;
+  /** ขอบของจำนวนที่พิมพ์เองได้ — max null = ไม่จำกัด */
+  minQty?: number;
+  maxQty?: number | null;
+  /** พิมพ์จำนวนเอง (ยืนยันตอนออกจากช่อง/Enter) */
+  onSetQty: (n: number) => void;
   onDec: () => void;
   onInc: () => void;
   onRemove: () => void;
@@ -495,7 +523,15 @@ function CartLine({
             >
               −
             </button>
-            <span className="w-9 text-center text-sm font-bold tabular-nums text-[#4A342E]" aria-live="polite">{quantity}</span>
+            <QtyInput
+              value={quantity}
+              min={minQty}
+              max={maxQty}
+              onCommit={onSetQty}
+              disabled={busy}
+              ariaLabel={t("quantityOf", { name })}
+              className="h-9 w-10 rounded-lg text-sm font-bold tabular-nums text-[#4A342E]"
+            />
             <button
               type="button"
               onClick={onInc}
@@ -506,6 +542,7 @@ function CartLine({
               +
             </button>
           </div>
+          {limitNote && <p className="m-0 w-full text-xs font-medium text-amber-700 sm:order-last" role="status">{limitNote}</p>}
           <div className="text-right">
             <p className="m-0 text-base font-extrabold text-[#8C5A3C]">{baht(lineTotal)}</p>
             <p className="m-0 text-[11px] text-stone-500">{t("qtyTimesPrice", { qty: quantity, price: baht(unitPrice) })}</p>

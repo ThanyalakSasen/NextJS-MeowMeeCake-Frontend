@@ -20,7 +20,7 @@ import { useChatThread } from "@/hooks/useChatThread";
 import { LOGIN_PATH } from "@/constants/auth";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
-import type { ChatAttachment, ChatAttachmentKind } from "@/types/chat";
+import type { ChatAttachRef, ChatAttachment, ChatAttachmentKind, ChatMessage } from "@/types/chat";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
 import ChatComposer from "@/components/shared/chat/ChatComposer";
 import { shopChatUnreadKey } from "@/app/customer/lib/shopQueries";
@@ -131,6 +131,28 @@ function ChatBody({
       alert.error(isApiError(e) && e.status === 429 ? t("rateLimited") : isApiError(e) ? e.message : t("sendFailed")),
   });
 
+  // แก้ไข/ลบข้อความของตัวเอง — สำเร็จแล้วแทนที่ข้อความเดิมในรายการ (append รวมด้วย _id)
+  const failMsg = (e: unknown, fallback: string) =>
+    alert.error(isApiError(e) && e.status === 429 ? t("rateLimited") : isApiError(e) ? e.message : fallback);
+  const onEdit = async (m: ChatMessage, body: string, attach?: ChatAttachRef) => {
+    try {
+      thread.append(await shopChatService.edit(m._id, body, attach));
+      return true;
+    } catch (e) {
+      failMsg(e, t("editFailed"));
+      return false;
+    }
+  };
+  const onDelete = async (m: ChatMessage) => {
+    try {
+      thread.append(await shopChatService.remove(m._id));
+      return true;
+    } catch (e) {
+      failMsg(e, t("deleteFailed"));
+      return false;
+    }
+  };
+
   const AttachIcon = attachment?.kind === "preorder" ? Package : ReceiptText;
 
   return (
@@ -155,6 +177,9 @@ function ChatBody({
           messages={thread.messages}
           viewer="customer"
           attachmentHref={customerAttachmentHref}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          renderAttachPicker={(p) => <OrderPicker {...p} />}
           hasMore={thread.hasMore}
           loadingOlder={thread.loadingOlder}
           onLoadOlder={() => void thread.loadOlder()}

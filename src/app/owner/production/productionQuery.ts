@@ -5,14 +5,12 @@
 import { LIST_ALL } from "@/lib/http";
 
 export type TabKey = "plan" | "status" | "history";
-// แท็บ "status" ปิดไว้ก่อน (ผู้ใช้ยังไม่ต้องการ — โค้ดยังอยู่) · เปิดคืน: ใส่ "status" กลับหน้าสุด + DEFAULT_TAB/ลิงก์ ?id= กลับเป็น "status"
-// ?tab=status เดิม (บุ๊กมาร์ก/ลิงก์เก่า) ตกไปแท็บเริ่มต้นแทน
-const TAB_KEYS: TabKey[] = [/* "status", */ "plan", "history"];
-const DEFAULT_TAB: TabKey = "plan";
+const TAB_KEYS: TabKey[] = ["status", "plan", "history"];
+const DEFAULT_TAB: TabKey = "status";
 
-/** แท็บที่เปิดจาก ?tab= / ?id= — ลิงก์แจ้งเตือน (?id=) ไปแท็บแผนการผลิต (ป๊อปอัปรายละเอียดเปิดได้ทุกแท็บ) */
+/** แท็บที่เปิดจาก ?tab= / ?id= — ลิงก์แจ้งเตือน (?id=) ไปแท็บสถานะเสมอ แม้วันหลังเปลี่ยนแท็บเริ่มต้น */
 export function tabFrom(tab: string | null | undefined, id: string | null | undefined): TabKey {
-  return TAB_KEYS.includes(tab as TabKey) ? (tab as TabKey) : id ? "plan" : DEFAULT_TAB;
+  return TAB_KEYS.includes(tab as TabKey) ? (tab as TabKey) : id ? "status" : DEFAULT_TAB;
 }
 
 export const PRODUCTION_ORDERS_PARAMS = { limit: LIST_ALL };

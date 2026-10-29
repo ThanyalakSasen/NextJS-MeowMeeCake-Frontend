@@ -7,11 +7,9 @@ import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type {
   RawProductionOrder,
-  CompleteLotInput,
   ProductionOrderCreateInput,
   ProductionOrderFromRoundInput,
   ProductionFromRoundPreview,
-  ProductionStockCheck,
   ProductionOrderUpdateInput,
   ProductionOrderListParams,
 } from "@/types/productionOrder";
@@ -38,10 +36,6 @@ export const productionOrdersService = {
   previewFromRound: (roundId: string) =>
     http.get<ItemResponse<ProductionFromRoundPreview>>(`${BASE}/from-preorder-round`, { params: { round_id: roundId } }),
 
-  /** เช็ควัตถุดิบพอผลิตไหม ระหว่างกรอกฟอร์มสร้าง (ไม่บันทึกอะไร) — เทียบสต็อกวัตถุดิบตอนนี้ */
-  stockCheck: (items: { recipe_id: string; planned_qty: number }[]) =>
-    http.post<ItemResponse<ProductionStockCheck>>(`${BASE}/stock-check`, { items }),
-
   update: (id: string, body: ProductionOrderUpdateInput) =>
     http.patch<ItemResponse<RawProductionOrder>>(`${BASE}/${id}`, body),
 
@@ -57,8 +51,7 @@ export const productionOrdersService = {
     http.post<ItemResponse<RawProductionOrder>>(`${BASE}/${id}/start`, {}),
 
   /** in_progress → done — หักสต็อกวัตถุดิบของรายการที่ยังไม่ถูกหักให้ครบ */
-  /** lots = วันผลิต/วันหมดอายุของล็อตต่อรายการ (backend สร้างล็อตตอนปิดงาน — ไม่ส่ง = ค่าเริ่มต้น) */
-  complete: (id: string, body: { use_actual?: boolean; allowNegative?: boolean; lots?: CompleteLotInput[] } = {}) =>
+  complete: (id: string, body: { use_actual?: boolean; allowNegative?: boolean } = {}) =>
     http.post<ItemResponse<RawProductionOrder>>(`${BASE}/${id}/complete`, body),
 
   /** → cancelled — คืนสต็อกวัตถุดิบที่หักไปแล้ว (ถ้ามี) */

@@ -63,17 +63,33 @@ export function TabbedPageLayout({
           (align-items ของ flex column คือ stretch) ผิดจากหน้าอื่นที่แท็บหดตามเนื้อหา */}
       {/* แท็บเดียว = ไม่มีอะไรให้สลับ → ไม่แสดงแถบแท็บ (เหลือแค่ toolbar ถ้ามี) */}
       {(showTabs || active?.toolbar) && (
-        <div className="flex flex-wrap items-center gap-3">
-          {active?.toolbar}
-          {tabsAlign === "end" && <div className="flex-1" />}
-          {showTabs && (
-            <TypeTabBar
-              value={activeKey}
-              onChange={onChange}
-              options={items.map((i) => ({ value: i.key, label: i.label }))}
-            />
-          )}
-        </div>
+        tabsAlign === "end" ? (
+          // แท็บชิดขวา: ที่พอ = แถวเดียว (toolbar ซ้าย · แท็บขวา) · ที่ไม่พอ (มือถือ / จอใหญ่ที่ถูกบีบ) = แท็บขึ้นไปบรรทัดบนสุด ชิดซ้าย
+          // flex-wrap-reverse = บรรทัดที่ตกลงมา (แท็บ) ขึ้นไปอยู่ด้านบนแทนด้านล่าง · toolbar ครอบ div เดียวกัน ข้างในยังขึ้นบรรทัดปกติ
+          <div className="flex flex-wrap-reverse items-center gap-3">
+            {active?.toolbar && <div className="flex flex-wrap items-center gap-3">{active.toolbar}</div>}
+            {/* ตัวดันแท็บไปขวา — เฉพาะจอใหญ่ (มือถือ/ขนาดกลาง แท็บชิดซ้ายเสมอ) */}
+            <div className="hidden flex-1 lg:block" />
+            {showTabs && (
+              <TypeTabBar
+                value={activeKey}
+                onChange={onChange}
+                options={items.map((i) => ({ value: i.key, label: i.label }))}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            {active?.toolbar}
+            {showTabs && (
+              <TypeTabBar
+                value={activeKey}
+                onChange={onChange}
+                options={items.map((i) => ({ value: i.key, label: i.label }))}
+              />
+            )}
+          </div>
+        )
       )}
 
       {active?.children}

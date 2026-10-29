@@ -11,8 +11,7 @@ import type { useProductionViewModel } from "./useProductionViewModel";
 // แท็บ: antd Tabs วาดเฉพาะแท็บที่เปิด → โหลดแค่ chunk ของแท็บนั้น (เช่นเปิด ?tab=status ไม่ต้องโหลด Select/ตาราง
 // ของแท็บแผนการผลิต) · SSR ยังทำงาน · ลิ้นชัก/โมดัลไม่ render ฝั่ง server อยู่แล้ว (Portal ของ antd คืน null) จึงปิด SSR ได้
 const PlanTab = dynamic(() => import("./_components/PlanTab").then((m) => m.PlanTab));
-// แท็บสถานะการผลิต (บอร์ดลากการ์ด) — ปิดไว้ก่อนตามที่ผู้ใช้ขอ · เก็บโค้ดไว้ เปิดคืนได้ (ดู TAB_KEYS ใน productionQuery.ts ด้วย)
-// const StatusTab = dynamic(() => import("./_components/StatusTab").then((m) => m.StatusTab));
+const StatusTab = dynamic(() => import("./_components/StatusTab").then((m) => m.StatusTab));
 const HistoryTab = dynamic(() => import("./_components/HistoryTab").then((m) => m.HistoryTab));
 const ProductionOrderFormModal = dynamic(() => import("./_components/ProductionOrderFormModal").then((m) => m.ProductionOrderFormModal), { ssr: false });
 const CreateFromRoundModal = dynamic(() => import("./_components/CreateFromRoundModal").then((m) => m.CreateFromRoundModal), { ssr: false });
@@ -35,7 +34,7 @@ export function ProductionView(vm: VM) {
         activeKey={vm.activeTab}
         onChange={vm.setActiveTab}
         items={[
-          // { key: "status", label: t("production.tabStatus"), children: <StatusTab {...vm} /> },
+          { key: "status", label: t("production.tabStatus"), children: <StatusTab {...vm} /> },
           { key: "plan", label: t("production.tabPlan"), children: <PlanTab {...vm} /> },
           { key: "history", label: t("production.tabHistory"), children: <HistoryTab {...vm} /> },
         ]}

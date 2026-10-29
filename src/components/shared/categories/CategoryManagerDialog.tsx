@@ -15,6 +15,7 @@ import { EditButton, DeleteButton, actionIcon } from "@/components/shared/action
 import type { useCategoryManager } from "@/hooks/useCategoryManager";
 import type { useCategoryShipping } from "@/hooks/useCategoryShipping";
 import { CategoryShippingSwitch } from "./CategoryShippingSwitch";
+import { useStoreProvince } from "@/hooks/useStoreProvince";
 
 type Manager = ReturnType<typeof useCategoryManager>;
 type Shipping = ReturnType<typeof useCategoryShipping>;
@@ -37,6 +38,7 @@ export function CategoryManagerDialog({
   onClose: () => void;
 }) {
   const t = useTranslations();
+  const province = useStoreProvince();
   const { perm } = manager;
   const shippingById = useMemo(
     () => new Map((shipping?.items ?? []).map((s) => [s._id, s])),
@@ -158,7 +160,7 @@ export function CategoryManagerDialog({
           </ul>
         )}
 
-        {shipping && <p className="m-0 text-xs text-gray-500">{t("categories.shippingHint")}</p>}
+        {shipping && <p className="m-0 text-xs text-gray-500">{t("categories.shippingHint", { province })}</p>}
         <p className="m-0 text-xs text-gray-500">{t("categories.deleteHint")}</p>
       </div>
     </Modal>

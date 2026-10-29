@@ -77,7 +77,6 @@ function toProductionOrder(
         actual_qty: it.actual_qty ?? null,
         item_status: it.item_status,
         notes: it.notes ?? null,
-        shelf_life_days: typeof it.product_id === "object" && it.product_id ? (it.product_id.shelf_life_days ?? null) : null,
       };
     }),
   };
@@ -266,46 +265,42 @@ export function useProductionViewModel() {
   const [historyViewMode, setHistoryViewMode] = useState<HistoryViewMode>("month");
   const [historyDate, setHistoryDate] = useState<Dayjs>(() => dayjs());
 
-  // ตารางแสดงทุกใบตั้งแต่สร้าง (วางแผน/กำลังผลิต/เสร็จ/ยกเลิก) — ผู้ใช้ขอ 2026-10-29: สร้างใบแล้วเห็นในประวัติทันที
-  // วันที่ที่ใช้กรองช่วง: ใบที่เสร็จแล้ว = เวลาเสร็จ · ใบอื่น = วันที่ผลิตตามแผน · ใหม่สุดก่อน
-  const historyDateOf = (o: ProductionOrder) => (o.production_status === "done" && o.completed_at ? o.completed_at : o.production_date);
+  const doneOrders = useMemo(() => orders.filter((o) => o.production_status === "done"), [orders]);
   const historyRows = useMemo(
     () => {
       const [start, end] = getRangeStartEnd(historyViewMode, historyDate);
-      return orders
-        .filter((o) => {
-          const at = dayjs(historyDateOf(o));
-          return at.isValid() && !at.isBefore(start) && !at.isAfter(end);
-        })
-        .sort((a, b) => dayjs(historyDateOf(b)).valueOf() - dayjs(historyDateOf(a)).valueOf());
+      return doneOrders.filter((o) => {
+        if (!o.completed_at) return false;
+        const at = dayjs(o.completed_at);
+        return !at.isBefore(start) && !at.isAfter(end);
+      });
     },
-    [orders, historyViewMode, historyDate],
+    [doneOrders, historyViewMode, historyDate],
   );
-  // สถิติ/breakdown นับเฉพาะใบที่ผลิตเสร็จแล้วในช่วงที่เลือก — ใบที่ยังไม่ผลิตไม่มีจำนวนผลิตจริง/เวลาที่ใช้
-  const doneHistoryRows = useMemo(() => historyRows.filter((o) => o.production_status === "done"), [historyRows]);
 
+  // สถิติ/breakdown อิงตามช่วงที่เลือก (historyRows) ไม่ใช่ all-time — ให้ตรงกับตัวกรองวัน/เดือน/ปี
   // จำนวนนับจากที่ผลิตได้จริง (producedQty) ไม่ใช่ที่วางแผน
   const historyStats = useMemo(() => {
-    const totalQty = doneHistoryRows.reduce((s, o) => s + o.items.reduce((si, it) => si + producedQty(it), 0), 0);
-    const durations = doneHistoryRows.map(durationHours).filter((d): d is number => d !== null);
+    const totalQty = historyRows.reduce((s, o) => s + o.items.reduce((si, it) => si + producedQty(it), 0), 0);
+    const durations = historyRows.map(durationHours).filter((d): d is number => d !== null);
     const avgDuration = durations.length > 0 ? durations.reduce((s, d) => s + d, 0) / durations.length : 0;
-    return { allOrders: historyRows.length, totalOrders: doneHistoryRows.length, totalQty, avgDuration };
-  }, [historyRows, doneHistoryRows]);
+    return { totalOrders: historyRows.length, totalQty, avgDuration };
+  }, [historyRows]);
 
   const productBreakdown = useMemo(() => {
     const acc: Record<string, number> = {};
-    doneHistoryRows.forEach((o) => o.items.forEach((it) => {
+    historyRows.forEach((o) => o.items.forEach((it) => {
       const qty = producedQty(it);
       if (qty > 0) acc[it.product_name] = (acc[it.product_name] ?? 0) + qty;
     }));
     return Object.entries(acc).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [doneHistoryRows]);
+  }, [historyRows]);
 
   const teamBreakdown = useMemo(() => {
     const acc: Record<string, number> = {};
-    doneHistoryRows.forEach((o) => { if (o.assignee_name) acc[o.assignee_name] = (acc[o.assignee_name] ?? 0) + 1; });
+    historyRows.forEach((o) => { if (o.assignee_name) acc[o.assignee_name] = (acc[o.assignee_name] ?? 0) + 1; });
     return Object.entries(acc).sort((a, b) => b[1] - a[1]);
-  }, [doneHistoryRows]);
+  }, [historyRows]);
 
   // ── mutations ──
   const invalidate = () => qc.invalidateQueries({ queryKey: ["production-orders"] });
@@ -358,13 +353,12 @@ export function useProductionViewModel() {
       for (const [itemId, qty] of Object.entries(v.actuals)) {
         await productionOrdersService.updateItem(itemId, qty > 0 ? { actual_qty: qty } : { actual_qty: 0, item_status: "cancelled" });
       }
-      return productionOrdersService.complete(order._id, { use_actual: v.useActual, lots: v.lots });
+      return productionOrdersService.complete(order._id, { use_actual: v.useActual });
     },
     onSettled: () => {
       invalidate();
       qc.invalidateQueries({ queryKey: ["ingredients"] });
       qc.invalidateQueries({ queryKey: ["products"] });
-      qc.invalidateQueries({ queryKey: ["product-lots"] });
     },
   });
 

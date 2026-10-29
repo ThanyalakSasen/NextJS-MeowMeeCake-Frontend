@@ -21,16 +21,12 @@ import { ReplyBox } from "./ReplyBox";
 import { NoteBox } from "./NoteBox";
 
 const TEXT_PREVIEW = 200;
-const STATUSES: ReviewStatus[] = ["approved", "hidden", "pending"];
+// เอา "รออนุมัติ" (pending) ออกจากตัวเลือก (2026-10-29) — รีวิวเข้ามาแสดงทันที เลือกได้แค่ แสดงผล / ซ่อน
+const STATUSES: ReviewStatus[] = ["approved", "hidden"];
 const TOPIC_CLASS = {
   positive: "border-emerald-200 bg-emerald-50 text-emerald-700",
   negative: "border-rose-200 bg-rose-50 text-rose-700",
   neutral: "border-stone-200 bg-stone-50 text-stone-600",
-} as const;
-const SOURCE_CLASS = {
-  customer: "bg-emerald-50 text-emerald-700",
-  inferred: "bg-amber-50 text-amber-700",
-  model: "bg-indigo-50 text-indigo-700",
 } as const;
 
 export function ReviewCard({
@@ -82,11 +78,7 @@ export function ReviewCard({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            {r.analysis_source && (
-              <Tooltip title={t(`reviews.source.${r.analysis_source}Hint`)}>
-                <span className={`rounded px-1.5 py-0.5 text-[10px] ${SOURCE_CLASS[r.analysis_source]}`}>{t(`reviews.source.${r.analysis_source}`)}</span>
-              </Tooltip>
-            )}
+            {/* ป้ายที่มาของผลวิเคราะห์ (ลูกค้าเลือกเอง / ระบบอนุมาน / โมเดลวิเคราะห์) เอาออกทั้งหมดแล้ว (2026-10-29) */}
             <span
               className={`rounded px-1.5 py-0.5 text-[10px] ${
                 replied ? "bg-emerald-50 text-emerald-700" : r.rating <= 2 ? "bg-rose-50 text-rose-700" : "bg-gray-100 text-gray-500"

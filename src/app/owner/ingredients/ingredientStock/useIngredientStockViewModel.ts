@@ -21,6 +21,7 @@ import type { BulkStockItem, BulkStockLine, BulkStockMode } from "@/components/s
 
 export interface StockRow {
   _id: string;
+  sku: string;
   name: string;
   unitAbbr: string;
   currentStock: number;
@@ -33,6 +34,7 @@ export interface StockRow {
 
 export type ActionMode = IngredientTxnType; // "receive" | "use" | "adjust"
 
+const skuOf = (id: string) => `ING-${id.slice(-6).toUpperCase()}`;
 
 export function useIngredientStockViewModel() {
   const t = useTranslations();
@@ -54,6 +56,7 @@ export function useIngredientStockViewModel() {
   const rows = useMemo<StockRow[]>(() => {
     return (ingredientsQ.data?.data ?? []).map((i) => ({
       _id: i._id,
+      sku: skuOf(i._id),
       name: i.ingredient_name,
       unitAbbr: unitLabel(i.unit_id),
       currentStock: i.current_stock,
@@ -68,7 +71,7 @@ export function useIngredientStockViewModel() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      const matchSearch = !q || r.name.toLowerCase().includes(q);
+      const matchSearch = !q || r.name.toLowerCase().includes(q) || r.sku.toLowerCase().includes(q);
       const matchStatus = status === "all" || r.status === status;
       return matchSearch && matchStatus;
     });
@@ -119,7 +122,7 @@ export function useIngredientStockViewModel() {
   // ── ทำหลายรายการพร้อมกัน — ส่งทีละรายการ (backend ไม่มี bulk) · คืน error ของรายการที่ไม่สำเร็จให้ modal ──
   const [bulkOpen, setBulkOpen] = useState(false);
   const bulkItems = useMemo<BulkStockItem[]>(
-    () => rows.map((r) => ({ id: r._id, name: r.name, unit: r.unitAbbr, stock: r.currentStock, maxStock: r.maxStock })),
+    () => rows.map((r) => ({ id: r._id, name: r.name, unit: r.unitAbbr, stock: r.currentStock })),
     [rows],
   );
   const onBulkSubmit = async (m: BulkStockMode, lines: BulkStockLine[]) => {

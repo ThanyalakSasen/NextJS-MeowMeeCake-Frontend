@@ -12,7 +12,7 @@ import { ingredientCategoriesService } from "@/services/ingredientCategories";
 import { unitsService } from "@/services/units";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert } from "@/lib/alert";
-import { unitLabel } from "@/utils/unitContext";
+import { isIngredientUnit, unitLabel } from "@/utils/unitContext";
 import type { StockStatus } from "@/constants/enumConfig";
 import type { IngredientInput } from "@/types/ingredient";
 import { getIngredientStatus, stockPercent } from "./ingredientStatus";
@@ -21,6 +21,7 @@ import { isApiError } from "@/types/api";
 
 export interface IngredientRow {
   _id: string;
+  sku: string;
   name: string;
   categoryId: string;
   category: string;
@@ -38,6 +39,7 @@ export interface IngredientRow {
 
 type StatusFilter = "all" | StockStatus;
 
+const skuOf = (id: string) => `ING-${id.slice(-6).toUpperCase()}`;
 
 export function useIngredientsViewModel() {
   const t = useTranslations();
@@ -64,9 +66,9 @@ export function useIngredientsViewModel() {
   });
 
   const categories = categoriesQ.data?.data ?? [];
-  /** รายการหน่วยนับทั้งหมด — ให้ IngredientFormModal กรอง/ล็อกตามหมวดหมู่วัตถุดิบ */
+  /** เฉพาะหน่วยที่ตั้งไว้ว่าใช้กับวัตถุดิบ — ป้อนให้ Select ในฟอร์ม */
   const ingredientUnits = useMemo(
-    () => unitsQ.data?.data ?? [],
+    () => (unitsQ.data?.data ?? []).filter((u) => isIngredientUnit(u.usage_context)),
     [unitsQ.data],
   );
 
@@ -78,6 +80,7 @@ export function useIngredientsViewModel() {
       const unitId = refId(i.unit_id);
       return {
       _id: i._id,
+      sku: skuOf(i._id),
       name: i.ingredient_name,
       categoryId,
       category: (categoryId && catMap.get(categoryId)) || "",
@@ -99,7 +102,7 @@ export function useIngredientsViewModel() {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       const matchSearch =
-        !q || r.name.toLowerCase().includes(q) || r.supplier.toLowerCase().includes(q);
+        !q || r.name.toLowerCase().includes(q) || r.sku.toLowerCase().includes(q) || r.supplier.toLowerCase().includes(q);
       const matchCategory = categoryId === "all" || r.categoryId === categoryId;
       const matchStatus = status === "all" || r.status === status;
       return matchSearch && matchCategory && matchStatus;
@@ -119,12 +122,8 @@ export function useIngredientsViewModel() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["ingredients"] });
 
   const save = useMutation({
-    mutationFn: ({ id, body }: { id: string | null; body: IngredientInput }) => {
-      if (!id) return ingredientsService.create(body);
-      const patch: Partial<IngredientInput> = { ...body };
-      delete patch.current_stock;
-      return ingredientsService.update(id, patch);
-    },
+    mutationFn: ({ id, body }: { id: string | null; body: IngredientInput }) =>
+      id ? ingredientsService.update(id, body) : ingredientsService.create(body),
     onSuccess: (_res, vars) => {
       alert.success(vars.id ? t("ingredients.saved") : t("ingredients.added"));
       invalidate();

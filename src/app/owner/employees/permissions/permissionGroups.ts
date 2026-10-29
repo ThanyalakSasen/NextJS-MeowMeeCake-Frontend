@@ -34,7 +34,7 @@ export const PERMISSION_GROUPS: { sectionKey: SectionKey; menus: PermissionMenu[
   {
     sectionKey: "sectionProductsOrders",
     menus: [
-      { groupKey: "products", keys: ["products", "stock", "stock_history", "search_synonyms"] },
+      { groupKey: "products", keys: ["products", "stock", "search_synonyms"] },
       { groupKey: "ordersManage", keys: ["orders", "preorder", "payments"] },
       { groupKey: null, keys: ["pos"] },
       { groupKey: null, keys: ["chats"] },
@@ -132,7 +132,7 @@ const ROLE_TEMPLATES: Record<RoleTemplateKey, Partial<Record<MenuKey, string>>> 
   manager: {
     dashboard: "v",
     reports_sales: "v", reports_reviews: "vcu", finance_expenses: "vcu", finance_summary: "v",
-    products: "vcud", stock: "vu", stock_history: "v", search_synonyms: "vcud",
+    products: "vcud", stock: "vu", search_synonyms: "vcud",
     orders: "vcud", preorder: "vcud", pos: "vcud", payments: "vca", chats: "vc",
     pricing: "vcud", promotions: "vcud",
     production: "vcuda", ingredients: "vcud", ingredient_stock: "vcud", ingredient_history: "vcud", units: "vcud", recipes: "vcud",
@@ -147,7 +147,7 @@ const ROLE_TEMPLATES: Record<RoleTemplateKey, Partial<Record<MenuKey, string>>> 
   },
   // เปิด/เริ่ม/ปิดงานผลิต (production.approve = ตัดสต็อกวัตถุดิบ) · รับเข้า/เบิกวัตถุดิบ · ปรับสต็อกหลังอบ · ดูสูตร · ดูยอดพรีออเดอร์
   production: {
-    stock: "vu", stock_history: "v", preorder: "v",
+    stock: "vu", preorder: "v",
     production: "vcua", ingredients: "vu", ingredient_stock: "vu", ingredient_history: "vu", units: "v", recipes: "v",
   },
 };

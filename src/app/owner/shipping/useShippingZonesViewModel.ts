@@ -19,7 +19,7 @@ import { useLocalOnlyShipping } from "@/app/customer/hooks/useLocalOnlyShipping"
 import { catalogService } from "@/services/catalog";
 import { sortOptionsThai } from "@/lib/thaiSort";
 import {
-  EMPTY_SHIPPING_ZONE_FORM, provinceOwners, resolveShippingZone, toShippingZoneCreate, toShippingZoneForm, toShippingZoneUpdate,
+  EMPTY_SHIPPING_ZONE_FORM, fallbackZoneOf, provinceOwners, resolveShippingZone, toShippingZoneCreate, toShippingZoneForm, toShippingZoneUpdate,
   validateShippingZone,
   type ShippingZoneErrors, type ShippingZoneForm,
 } from "./shippingZoneForm";
@@ -46,7 +46,7 @@ export function useShippingZonesViewModel() {
 
   const save = useMutation({
     mutationFn: ({ code, form }: { code: ShippingZoneCode | null; form: ShippingZoneForm }) =>
-      code === null ? shippingZonesService.create(toShippingZoneCreate(form)) : shippingZonesService.update(code, toShippingZoneUpdate(code, form)),
+      code === null ? shippingZonesService.create(toShippingZoneCreate(form)) : shippingZonesService.update(code, toShippingZoneUpdate(code === fallbackZoneOf(zones)?.zone_code, form)),
     onSuccess: (zone, { code }) => {
       alert.success(t(code === null ? "shippingZones.added" : "shippingZones.saved", { code: zone.zone_code }));
       setEditing(null);
@@ -98,6 +98,8 @@ export function useShippingZonesViewModel() {
     zones,
 
     editing,
+    /** โซนจังหวัดอื่นทั้งหมด (ตัวอักษรสุดท้าย) — ไม่มีช่องจังหวัด · ลบไม่ได้ */
+    fallbackCode: fallbackZoneOf(zones)?.zone_code ?? null,
     /** จังหวัดที่อยู่โซนอื่นแล้ว → ปิดในตัวเลือก (backend ตอบ 409 ถ้าซ้ำ) */
     takenProvinces: editing ? provinceOwners(zones, editing.code) : new Map<string, ShippingZoneCode>(),
     openEdit: (z: ShippingZone) => {
@@ -127,7 +129,7 @@ export function useShippingZonesViewModel() {
     setCheckProducts,
     productOptions: sortOptionsThai(products.map((p) => ({ value: p._id, label: p.product_name_th }))),
     check,
-    /** จังหวัดร้าน (ขอบเขตของสินค้าที่ส่งทั่วประเทศไม่ได้) */
+   
     storeProvince,
   };
 }

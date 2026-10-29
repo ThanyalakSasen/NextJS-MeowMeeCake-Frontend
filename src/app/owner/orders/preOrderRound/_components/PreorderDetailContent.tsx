@@ -21,10 +21,7 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
   const { order } = vm;
   const isCancelled = order.order_status === "cancelled";
   const final = vm.isFinalOrderStatus(order.order_status);
-  const isDelivery = order.order_type === "delivery";
-  // แบบจัดส่ง: พร้อมส่งมอบ → สำเร็จ ผ่านปุ่ม "จัดส่งเรียบร้อยแล้ว" ใน DeliverySection เท่านั้น (บังคับกรอกขนส่ง/เลขพัสดุ)
-  const shipStep = isDelivery && order.order_status === "ready";
-  const next = shipStep ? null : vm.getNextOrderStatus(order.order_status);
+  const next = vm.getNextOrderStatus(order.order_status);
   const dueState = vm.paymentDueState(order);
   const payment = vm.selectedPayment;
 
@@ -64,35 +61,6 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
           refunding={vm.refunding}
           onRefund={vm.onRefund}
         />
-      )}
-
-      {/* จัดส่ง: ที่อยู่ + สถานะจัดส่ง/ขนส่ง/เลขพัสดุ — ไว้บนสุดถัดจากสถานะ (เดิมอยู่ใต้สลิป ต้องเลื่อนหาจนดูเหมือนไม่มี) */}
-      {order.order_type === "delivery" && (
-        <>
-          <Divider className="!my-0" />
-          {order.delivery_address && (
-            <div>
-              <p className="mb-1 text-sm font-medium text-gray-600">{t("preorderRound.deliveryAddress")}</p>
-              <p className="text-sm text-gray-800">
-                {order.delivery_address.recipient_name} · {order.delivery_address.recipient_phone}
-              </p>
-              <p className="text-sm text-gray-600">
-                {order.delivery_address.house_no} {order.delivery_address.sub_district} {order.delivery_address.district}{" "}
-                {order.delivery_address.province} {order.delivery_address.zip_code}
-              </p>
-            </div>
-          )}
-          <DeliverySection
-            key={order.updated_at}
-            info={order}
-            canUpdate={vm.perm.update && !isCancelled}
-            saving={vm.savingDelivery}
-            onSave={vm.onSaveDelivery}
-            canMarkShipped={vm.perm.update && shipStep}
-            markingShipped={vm.markingShipped}
-            onMarkShipped={vm.onMarkShipped}
-          />
-        </>
       )}
 
       <Divider className="!my-0" />
@@ -178,6 +146,35 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
         </>
       )}
 
+      {order.order_type === "delivery" && order.delivery_address && (
+        <>
+          <Divider className="!my-0" />
+          <div>
+            <p className="mb-1 text-sm font-medium text-gray-600">{t("preorderRound.deliveryAddress")}</p>
+            <p className="text-sm text-gray-800">
+              {order.delivery_address.recipient_name} · {order.delivery_address.recipient_phone}
+            </p>
+            <p className="text-sm text-gray-600">
+              {order.delivery_address.house_no} {order.delivery_address.sub_district} {order.delivery_address.district}{" "}
+              {order.delivery_address.province} {order.delivery_address.zip_code}
+            </p>
+          </div>
+        </>
+      )}
+
+      {order.order_type === "delivery" && (
+        <>
+          <Divider className="!my-0" />
+          <DeliverySection
+            key={order.updated_at}
+            info={order}
+            canUpdate={vm.perm.update && !isCancelled}
+            saving={vm.savingDelivery}
+            onSave={vm.onSaveDelivery}
+          />
+        </>
+      )}
+
       <Divider className="!my-0" />
 
       <div>
@@ -209,10 +206,8 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
           <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancelOrder(order)}>{t("orders.cancel")}</Button>
           {next && (
             <Button type="primary" size="small" icon={actionIcon("next", "small")} onClick={() => vm.onAdvanceOrderStatus(order)}>
-              {/* จ่ายแล้ว backend เลื่อนเป็น preparing ให้เอง — ขั้นถัดไปคือปุ่ม "พร้อมจัดส่ง" / "พร้อมรับที่หน้าร้าน" แบบหน้าจัดการคำสั่งซื้อ */}
-              {next === "ready"
-                ? t(isDelivery ? "orders.markReadyDelivery" : "orders.markReadyTakeaway")
-                : t("preorderRound.advanceTo", { status: t(`enums.orderStatus.${next}`) })}
+              {/* จ่ายแล้ว backend เลื่อนเป็น preparing ให้เอง — ขั้นถัดไปคือปุ่ม "สินค้าพร้อมแล้ว" แบบหน้าจัดการคำสั่งซื้อ */}
+              {next === "ready" ? t("orders.markReady") : t("preorderRound.advanceTo", { status: t(`enums.orderStatus.${next}`) })}
             </Button>
           )}
         </div>

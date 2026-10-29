@@ -14,7 +14,7 @@ export function ProductionStatusWidget({ items }: { items: DashboardProduction[]
     <section className="section-card dashboard-widget">
       <div className="section-card-header">
         <h2 className="section-card-title">{t("productionStatus")}</h2>
-        <Link href="/owner/production?tab=plan" className="section-card-link">
+        <Link href="/owner/production?tab=status" className="section-card-link">
           {t("viewAll")} →
         </Link>
       </div>
