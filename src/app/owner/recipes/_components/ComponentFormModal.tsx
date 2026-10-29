@@ -81,17 +81,18 @@ export function ComponentFormModal({
           </FormItem>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        {/* ป้ายสั้นบรรทัดเดียวทั้งแถว ช่องกรอกจึงตรงกัน — ต้นทุนมีคำอธิบายยาว แยกเป็นแถวเต็มแบบฟอร์มสูตรหลัก */}
+        <div className="grid grid-cols-2 gap-3">
           <FormItem name="yield_qty" label={t("recipes.fieldYieldQty")}>
             <InputNumber min={0} />
           </FormItem>
           <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, message: t("validation.required") }]}>
             <Select options={yieldUnitOptions} placeholder={t("recipes.selectUnit")} />
           </FormItem>
-          <FormItem name="estimated_cost_per_batch" label={t("recipes.fieldCost")} extra={t("recipes.costAutoHint")}>
-            <InputNumber min={0} step={0.01} placeholder={t("recipes.costAuto")} />
-          </FormItem>
         </div>
+        <FormItem name="estimated_cost_per_batch" label={t("recipes.fieldCost")} extra={t("recipes.costAutoHint")}>
+          <InputNumber min={0} step={0.01} placeholder={t("recipes.costAuto")} />
+        </FormItem>
 
         <Divider />
         <p className="mb-3 text-sm font-semibold text-gray-500">{t("recipes.ingredientsTitle")}</p>

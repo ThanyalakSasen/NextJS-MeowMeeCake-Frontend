@@ -1520,7 +1520,7 @@
     "fieldCategory": "หมวดหมู่",
     "ingredientsTitle": "วัตถุดิบ",
     "itemsCount": "{n} รายการ",
-    "fieldYieldQty": "ปริมาณผลผลิต (จำนวน)",
+    "fieldYieldQty": "ปริมาณผลผลิต",
     "fieldCost": "ต้นทุนประมาณ (฿/ชุด)",
     "costAuto": "คำนวณอัตโนมัติ",
     "costAutoHint": "เว้นว่างไว้ ระบบจะคำนวณจากราคาวัตถุดิบในสูตรให้ทุกครั้งที่บันทึก",

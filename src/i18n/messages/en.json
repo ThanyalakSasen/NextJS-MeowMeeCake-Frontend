@@ -1520,7 +1520,7 @@
     "fieldCategory": "Category",
     "ingredientsTitle": "Ingredients",
     "itemsCount": "{n} items",
-    "fieldYieldQty": "Yield (qty)",
+    "fieldYieldQty": "Yield",
     "fieldCost": "Est. Cost (฿/batch)",
     "costAuto": "Auto-calculated",
     "costAutoHint": "Leave blank to calculate from ingredient costs on every save",
