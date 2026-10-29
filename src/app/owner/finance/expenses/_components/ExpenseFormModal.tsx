@@ -70,7 +70,7 @@ export function ExpenseFormModal({
               { type: "number", min: 0.01, message: t("validation.positive") },
             ]}
           >
-            <InputNumber min={0} step={0.01} />
+            <InputNumber min={0} precision={0} />
           </FormItem>
           <FormItem name="payment_method" label={t("finance.fieldPaymentMethod")}>
             <Select options={sortOptionsThai(EXPENSE_PAYMENT_METHODS.map((p) => ({ value: p, label: t(`enums.expensePaymentMethod.${p}`) })))} />

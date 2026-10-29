@@ -100,7 +100,7 @@ export function RoundItemFormModal({
           />
         </FormItem>
         <FormItem name="price_override" label={t("preorderRound.fieldPriceOverride")} help={t("preorderRound.priceOverrideHint")}>
-          <InputNumber className="!w-full" min={0} placeholder={t("preorderRound.priceOverridePlaceholder")} />
+          <InputNumber precision={0} className="!w-full" min={0} placeholder={t("preorderRound.priceOverridePlaceholder")} />
         </FormItem>
         <div className="grid grid-cols-2 gap-3">
           <FormItem

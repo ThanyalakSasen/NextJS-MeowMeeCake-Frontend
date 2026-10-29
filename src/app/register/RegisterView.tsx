@@ -72,7 +72,8 @@ export function RegisterView(vm: VM) {
               className={`${fieldClass} text-center`} value={vm.form.birthDay}
               onChange={(e) => {
                 const v = e.target.value;
-                if (v === "" || (Number(v) >= 1 && Number(v) <= 31 && v.length <= 2)) vm.set("birthDay", v);
+                // ตัวเลขล้วน — type=number ยอมให้พิมพ์ "1." / "1e" ผ่านมาได้
+                if (v === "" || (/^\d{1,2}$/.test(v) && Number(v) >= 1 && Number(v) <= 31)) vm.set("birthDay", v);
               }} />
             <select aria-label={t("register.month")} className={fieldClass} value={vm.form.birthMonth}
               onChange={(e) => vm.set("birthMonth", e.target.value)}>
@@ -81,7 +82,7 @@ export function RegisterView(vm: VM) {
             </select>
             <input type="number" inputMode="numeric" aria-label={t("register.year")} placeholder={t("register.yearPlaceholder")}
               className={`${fieldClass} text-center`} value={vm.form.birthYear}
-              onChange={(e) => { if (e.target.value.length <= 4) vm.set("birthYear", e.target.value); }} />
+              onChange={(e) => { if (/^\d{0,4}$/.test(e.target.value)) vm.set("birthYear", e.target.value); }} />
           </div>
         </fieldset>
 

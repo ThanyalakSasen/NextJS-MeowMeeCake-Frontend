@@ -121,11 +121,11 @@ export function MainRecipeModal({
             <Select options={yieldUnitOptions} placeholder={t("recipes.selectUnit")} />
           </FormItem>
           <FormItem name="duration_minutes" label={t("recipes.fieldDuration")}>
-            <InputNumber min={0} />
+            <InputNumber precision={0} min={0} />
           </FormItem>
         </div>
         <FormItem name="estimated_cost_per_batch" label={t("recipes.fieldCost")} extra={t("recipes.costAutoHint")}>
-          <InputNumber min={0} step={0.01} placeholder={t("recipes.costAuto")} />
+          <InputNumber precision={0} min={0} placeholder={t("recipes.costAuto")} />
         </FormItem>
 
         <Divider />

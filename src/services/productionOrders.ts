@@ -8,6 +8,7 @@ import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type {
   RawProductionOrder,
   CompleteLotInput,
+  CreateProductionOrderItemInput,
   ProductionOrderCreateInput,
   ProductionOrderFromRoundInput,
   ProductionFromRoundPreview,
@@ -48,9 +49,20 @@ export const productionOrdersService = {
   remove: (id: string) =>
     http.delete<EmptyResponse>(`${BASE}/${id}`),
 
-  /** PATCH /admin/production-items/[id] — ใช้บันทึกจำนวนที่ผลิตได้จริงก่อนปิดงาน (actual_qty) · 0 = ยกเลิกรายการ */
-  updateItem: (itemId: string, body: { actual_qty?: number; item_status?: "cancelled" }) =>
-    http.patch<ItemResponse<unknown>>(`${ITEMS_BASE}/${itemId}`, body),
+  /** PATCH /admin/production-items/[id] — บันทึกจำนวนที่ผลิตได้จริงก่อนปิดงาน (actual_qty · 0 = ยกเลิกรายการ)
+   *  หรือแก้จำนวนที่วางแผน/หมายเหตุจากฟอร์มแก้ไขใบ */
+  updateItem: (
+    itemId: string,
+    body: { actual_qty?: number; item_status?: "cancelled"; planned_qty?: number; notes?: string | null },
+  ) => http.patch<ItemResponse<unknown>>(`${ITEMS_BASE}/${itemId}`, body),
+
+  /** เพิ่มรายการเข้าใบเดิม — backend รับเฉพาะใบที่ยัง planned/in_progress */
+  addItem: (orderId: string, body: CreateProductionOrderItemInput) =>
+    http.post<ItemResponse<unknown>>(`${BASE}/${orderId}/items`, body),
+
+  /** ลบรายการ (สิทธิ์ production.delete) — backend ไม่ยอมถ้าตัดวัตถุดิบของรายการนั้นไปแล้ว */
+  removeItem: (itemId: string) =>
+    http.delete<EmptyResponse>(`${ITEMS_BASE}/${itemId}`),
 
   /** planned → in_progress */
   start: (id: string) =>

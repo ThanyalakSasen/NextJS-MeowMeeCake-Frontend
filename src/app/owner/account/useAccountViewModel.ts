@@ -81,6 +81,7 @@ export function useAccountViewModel() {
   const [passwords, setPasswords] = useState(EMPTY_PASSWORDS);
   const passwordError = (() => {
     const { current, next, confirm } = passwords;
+    if (next && !next.trim()) return t("passwordBlank"); // ช่องว่างล้วน ยาวพอแต่ใช้เป็นรหัสผ่านไม่ได้
     if (next && (next.length < MIN_PASSWORD_LENGTH || next.length > MAX_PASSWORD))
       return t("passwordLength", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD });
     if (confirm && next !== confirm) return t("passwordMismatch");

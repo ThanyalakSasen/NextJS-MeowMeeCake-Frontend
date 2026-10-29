@@ -1346,6 +1346,10 @@
     "colExpiry": "Expires"
   },
   "production": {
+    "editTitle": "Edit Production Order {no}",
+    "itemsLockedHint": "Items can only be changed on manually created orders that haven't started — for this order you can edit the date, assignee and note only",
+    "updated": "Production order updated",
+    "updateFailed": "Failed to update production order",
     "productNoRecipe": "{name} (no recipe yet)",
     "noRecipeHint": "Products without a recipe can't be selected — add one on the Recipes page first (used to calculate and deduct ingredients)",
     "qtyRequired": "Enter a quantity for every selected product",
@@ -1817,6 +1821,7 @@
     "moreChanges": "and {n} more"
   },
   "myAccount": {
+    "passwordBlank": "Password can't be only spaces",
     "title": "My account",
     "tabProfile": "My details",
     "tabPassword": "Change password",
@@ -2673,6 +2678,7 @@
     "errTextLength": "\"{name}\": max characters must be 1–{max}"
   },
   "register": {
+    "errPasswordBlank": "Password can't be only spaces",
     "title": "Sign up",
     "subtitle": "Create an account to order and collect points",
     "fullname": "Full name",
@@ -3921,6 +3927,7 @@
       "scopeTip": "If your cart has even one item that delivers only within {area}, use a delivery address in {area} or switch to pickup"
     },
     "password": {
+      "blank": "Password can't be only spaces",
       "loginToChange": "Please log in to change your password",
       "hide": "Hide password",
       "show": "Show password",

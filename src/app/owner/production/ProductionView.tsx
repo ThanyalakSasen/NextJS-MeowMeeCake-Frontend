@@ -52,6 +52,22 @@ export function ProductionView(vm: VM) {
         />
       )}
 
+      {/* mount ใหม่ต่อใบ — ค่าเริ่มต้นของฟอร์มมาจากใบนั้น */}
+      {vm.editTarget && (
+        <ProductionOrderFormModal
+          key={vm.editTarget._id}
+          open
+          editTarget={vm.editTarget}
+          itemsEditable={vm.editItemsEditable}
+          canRemoveExisting={vm.perm.delete}
+          products={vm.productOptions}
+          staff={vm.staff}
+          saving={vm.editing}
+          onClose={vm.closeEdit}
+          onSubmit={vm.onEditSubmit}
+        />
+      )}
+
       {fromRoundUsed && (
         <CreateFromRoundModal
           open={vm.createFromRoundOpen}
@@ -87,6 +103,7 @@ export function ProductionView(vm: VM) {
               canComplete={vm.perm.approve}
               onAdvance={vm.onAdvanceStatus}
               onCancel={vm.onCancelOrder}
+              onEdit={vm.openEdit}
             />
           )}
         </DetailModal>

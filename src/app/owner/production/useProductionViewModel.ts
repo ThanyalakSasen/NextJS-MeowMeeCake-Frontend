@@ -38,11 +38,14 @@ import {
 /** โหมดดูประวัติการผลิต — ชุดเดียวกับหน้ารายงานยอดขาย (วัน/สัปดาห์/เดือน/ไตรมาส/ปี — utils/period) */
 export type HistoryViewMode = PeriodType;
 
+/** รายการในฟอร์มใบสั่งผลิต — item_id = รายการเดิมของใบ (โหมดแก้ไข) */
+export type ProductionOrderFormItem = CreateProductionOrderItemInput & { item_id?: string };
+
 export interface CreateProductionOrderValue {
   production_date: string;
   assigned_to: string | null;
   production_note: string | null;
-  items: CreateProductionOrderItemInput[];
+  items: ProductionOrderFormItem[];
 }
 
 /** raw ใบสั่งผลิตจาก backend → ProductionOrder ของหน้า (ใช้ทั้ง list และใบที่ดึงรายตัวจาก ?id=) */
@@ -108,13 +111,15 @@ export function useProductionViewModel() {
   // ฟอร์มสร้างใบสั่งผลิต — ประกาศก่อน query ด้านล่างที่ใช้เป็นตัวเลือกในฟอร์มเท่านั้น
   const [createOpen, setCreateOpen] = useState(false);
   const [createFromRoundOpen, setCreateFromRoundOpen] = useState(false);
-  const formOpen = createOpen || createFromRoundOpen;
+  // ใบที่กำลังแก้ (ฟอร์มเดียวกับตอนสร้าง)
+  const [editTarget, setEditTarget] = useState<ProductionOrder | null>(null);
+  const formOpen = createOpen || createFromRoundOpen || !!editTarget;
   // พนักงาน/role/สูตร/รอบที่ปิดแล้ว = ตัวเลือกในฟอร์มสร้างเท่านั้น — ดึงเมื่อเปิดฟอร์ม (เดิมดึงตอนเปิดหน้า 4 ก้อน
   // แต่ละก้อนมาถึงแล้วทั้งหน้าวาดใหม่อีกรอบระหว่างโหลด → TBT)
   // ทีมงานเท่านั้น (เจ้าของ+พนักงาน) — ชุดเดียวกับหน้าพนักงาน (แคชร่วม) · คนที่มีแค่สิทธิ์ผลิต backend ก็ให้เห็นแค่นี้
   const usersQ = useQuery({ queryKey: STAFF_KEY, queryFn: () => usersService.list(STAFF_PARAMS), enabled: formOpen });
   const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list(), enabled: formOpen });
-  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: LIST_ALL }), enabled: createOpen });
+  const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: LIST_ALL }), enabled: createOpen || !!editTarget });
   // รอบพรีออเดอร์ที่ "ปิดรับแล้ว" — ตัวเลือกตอนสร้างใบสั่งผลิตจากรอบ (เฉพาะที่ยังไม่มีใบสั่งผลิตอยู่)
   const closedRoundsQ = useQuery({
     queryKey: ["preorder-rounds", "closed"],
@@ -338,7 +343,7 @@ export function useProductionViewModel() {
         production_date: v.production_date,
         assigned_to: v.assigned_to,
         production_note: v.production_note,
-        items: v.items,
+        items: v.items.map((it) => ({ product_id: it.product_id, recipe_id: it.recipe_id, planned_qty: it.planned_qty, notes: it.notes })),
       }),
     onSuccess: () => {
       alert.success(t("production.created"));
@@ -359,6 +364,43 @@ export function useProductionViewModel() {
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("production.fromRoundCreateFailed")),
   });
+
+  /** แก้ใบ: หัวใบ → รายการเดิมที่เปลี่ยน → ลบรายการที่เอาออก → เพิ่มรายการใหม่ (ทีละคำขอ — backend ไม่มี endpoint รวม)
+   *  พลาดกลางทางแล้วบางส่วนถูกบันทึกไปแล้ว → invalidate ทั้งสองกรณีให้ฟอร์ม/ตารางเห็นสถานะจริง */
+  const editOrder = useMutation({
+    mutationFn: async ({ order, v, itemsEditable }: { order: ProductionOrder; v: CreateProductionOrderValue; itemsEditable: boolean }) => {
+      await productionOrdersService.update(order._id, {
+        production_date: v.production_date,
+        assigned_to: v.assigned_to,
+        production_note: v.production_note,
+      });
+      if (!itemsEditable) return;
+      const kept = new Map(v.items.filter((it) => it.item_id).map((it) => [it.item_id as string, it]));
+      for (const old of order.items) {
+        if (old.item_status === "cancelled") continue;
+        const it = kept.get(old._id);
+        if (!it) {
+          await productionOrdersService.removeItem(old._id);
+        } else if (it.planned_qty !== old.planned_qty || (it.notes ?? null) !== (old.notes ?? null)) {
+          await productionOrdersService.updateItem(old._id, { planned_qty: it.planned_qty, notes: it.notes ?? null });
+        }
+      }
+      for (const { item_id, ...it } of v.items) {
+        if (!item_id) await productionOrdersService.addItem(order._id, it);
+      }
+    },
+    onSuccess: () => {
+      alert.success(t("production.updated"));
+      invalidate();
+      setEditTarget(null);
+    },
+    onError: (e) => {
+      invalidate();
+      alert.error(isApiError(e) ? e.message : t("production.updateFailed"));
+    },
+  });
+  // แก้รายการได้เฉพาะใบสร้างเองที่ยังไม่เริ่มผลิต — ใบจากรอบพรีออเดอร์ยอดมาจากออเดอร์จริง / เริ่มผลิตแล้วอาจตัดวัตถุดิบไปแล้ว
+  const editItemsEditable = !!editTarget && editTarget.production_status === "planned" && editTarget.source_type === "manual";
 
   /** เปลี่ยนสถานะผ่าน sub-route เฉพาะทาง (start/complete/cancel) — PATCH ตรง ๆ ไม่มีผล (backend เพิกเฉย production_status) */
   const changeStatus = useMutation({
@@ -462,6 +504,13 @@ export function useProductionViewModel() {
     today, todayItems, todayOrderCount: todayOrders.length,
     createOpen, openCreate: () => setCreateOpen(true), closeCreate: () => setCreateOpen(false),
     onCreateSubmit, creating: createOrder.isPending,
+
+    editTarget, editItemsEditable,
+    openEdit: (o: ProductionOrder) => setEditTarget(o),
+    closeEdit: () => setEditTarget(null),
+    onEditSubmit: (v: CreateProductionOrderValue) =>
+      editTarget && editOrder.mutate({ order: editTarget, v, itemsEditable: editItemsEditable }),
+    editing: editOrder.isPending,
 
     closedRounds, roundsWithProduction, isClosedRoundsLoading: closedRoundsQ.isLoading,
     fromRoundId, setFromRoundId,

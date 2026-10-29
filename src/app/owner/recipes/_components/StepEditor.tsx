@@ -42,7 +42,7 @@ export function StepEditor({
               placeholder={t("recipes.stepDescriptionPlaceholder")}
             />
             <div className="flex items-center gap-2">
-              <InputNumber
+              <InputNumber precision={0}
                 size="small"
                 className="!w-28"
                 min={0}

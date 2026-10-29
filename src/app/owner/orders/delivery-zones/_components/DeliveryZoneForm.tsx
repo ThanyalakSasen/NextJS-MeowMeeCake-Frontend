@@ -29,7 +29,7 @@ export function DeliveryZoneForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField label={t("deliveryZones.fields.fee")} required error={errors.fee}>
-          <InputNumber className="!w-full" min={0} step={10} precision={2} value={form.fee} suffix={t("common.currencySymbol")}
+          <InputNumber className="!w-full" min={0} step={10} precision={0} value={form.fee} suffix={t("common.currencySymbol")}
             onChange={(v) => set("fee", typeof v === "number" ? v : 0)} />
         </FormField>
         <FormField label={t("deliveryZones.fields.sortOrder")} error={errors.sort_order}>

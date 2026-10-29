@@ -17,7 +17,7 @@ export function DiscountCell({
   const t = useTranslations();
 
   return (
-    <InputNumber
+    <InputNumber precision={0}
       size="small"
       min={0}
       max={100}

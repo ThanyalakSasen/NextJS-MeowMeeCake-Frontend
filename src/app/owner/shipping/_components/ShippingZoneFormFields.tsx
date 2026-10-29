@@ -32,7 +32,7 @@ export function ShippingZoneFormFields({
       </FormField>
 
       <FormField label={t("shippingZones.fields.fee")} required error={errors.fee}>
-        <InputNumber className="!w-full sm:!w-48" min={0} step={10} precision={2} value={form.fee} suffix={t("common.currencySymbol")}
+        <InputNumber className="!w-full sm:!w-48" min={0} step={10} precision={0} value={form.fee} suffix={t("common.currencySymbol")}
           onChange={(v) => set("fee", typeof v === "number" ? v : 0)} />
       </FormField>
 
