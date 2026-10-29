@@ -13,7 +13,6 @@ import { useOpenedOnce } from "@/hooks/useOpenedOnce";
 import { PROVINCE_OPTIONS } from "@/constants/thaiProvinces";
 import { formatCurrency } from "@/i18n/format";
 import type { useShippingZonesViewModel } from "./useShippingZonesViewModel";
-import { FALLBACK_ZONE } from "./shippingZoneForm";
 import { NOTICE_TAG, shippingZoneStyle } from "@/constants/enumConfig";
 
 // โมดัลแก้ไขโซน (antd Modal + ฟอร์ม) แยก chunk — โหลดเมื่อเปิดครั้งแรก (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
@@ -26,7 +25,7 @@ export function ShippingZonesView(vm: VM) {
   const modalUsed = useOpenedOnce(!!vm.editing);
   const locale = useLocale();
   const money = (n: number) => formatCurrency(n, locale);
-  const zoneD = vm.zones.find((z) => z.zone_code === FALLBACK_ZONE);
+  const fallback = vm.zones.find((z) => z.zone_code === vm.fallbackCode);
 
   return (
     <ListPageLayout title={t("shippingZones.title")} actions={<CategoryShippingButton />}>
@@ -41,7 +40,7 @@ export function ShippingZonesView(vm: VM) {
             <p className="m-0 mb-2 text-sm font-semibold text-brown-800">{t("shippingZones.how.title")}</p>
             <ol className="m-0 flex list-none flex-col gap-2 p-0">
               {[
-                t("shippingZones.how.step1", { d: zoneD ? money(zoneD.fee) : "—" }),
+                t("shippingZones.how.step1", { code: fallback?.zone_code ?? "—", d: fallback ? money(fallback.fee) : "—" }),
                 t("shippingZones.how.step2"),
                 t("shippingZones.how.step3", { province: vm.storeProvince }),
               ].map((text, i) => (
@@ -133,10 +132,10 @@ export function ShippingZonesView(vm: VM) {
                       <Tag color={shippingZoneStyle(z.zone_code).antColor} className="!m-0 font-bold">{z.zone_code}</Tag>
                       <span className="min-w-0 flex-1 font-semibold text-brown-800">{z.zone_label}</span>
                       <span className="text-lg font-bold text-brown-900">{money(z.fee)}</span>
-                      {(vm.perm.update || (vm.perm.delete && z.zone_code !== FALLBACK_ZONE)) && (
+                      {(vm.perm.update || (vm.perm.delete && z.zone_code !== vm.fallbackCode)) && (
                         <span className="flex gap-1">
                           {vm.perm.update && <EditButton size="small" onClick={() => vm.openEdit(z)} />}
-                          {vm.perm.delete && z.zone_code !== FALLBACK_ZONE && (
+                          {vm.perm.delete && z.zone_code !== vm.fallbackCode && (
                             <ConfirmDeletePopup title={t("shippingZones.deleteConfirm", { code: z.zone_code })} onConfirm={() => vm.onDelete(z)}>
                               <DeleteButton size="small" loading={vm.deletingCode === z.zone_code} />
                             </ConfirmDeletePopup>
@@ -144,7 +143,7 @@ export function ShippingZonesView(vm: VM) {
                         </span>
                       )}
                     </div>
-                    {z.zone_code === FALLBACK_ZONE ? (
+                    {z.zone_code === vm.fallbackCode ? (
                       <p className="m-0 flex flex-wrap items-center gap-2 text-sm text-gray-600">
                         <Tag color={NOTICE_TAG.catchAllZone} className="!m-0">{t("shippingZones.fallbackTag")}</Tag>
                         {t("shippingZones.fallbackHint")}

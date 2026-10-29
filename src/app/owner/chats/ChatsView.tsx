@@ -1,10 +1,12 @@
 "use client";
-// View ของแชทลูกค้า — ซ้าย: รายการห้อง (ค้นหา · เฉพาะที่ยังไม่อ่าน) · ขวา: ข้อความในห้อง + ช่องตอบ
+// View ของแชทลูกค้า — ซ้าย: รายการห้อง (ค้นหา · สลับ ทั้งหมด / ยังไม่ได้อ่าน) · ขวา: ข้อความในห้อง + ช่องตอบ
+// แต่ละห้อง: เวลาอยู่ท้ายข้อความล่าสุด · ปุ่ม … มุมขวาบน = เมนูลบแชท (สิทธิ์ chats.delete)
 // จอแคบ (<1024px): แสดงทีละฝั่ง — เลือกห้องแล้วเห็นห้อง มีปุ่มย้อนกลับไปรายการ
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeftIcon, ChatBubbleLeftRightIcon, EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/outline";
-import { Avatar, Switch } from "@/components/base";
+import { ArrowLeftIcon, ChatBubbleLeftRightIcon, EllipsisHorizontalIcon, EnvelopeIcon, PhoneIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Dropdown, Segmented } from "antd";
+import { Avatar } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { SearchInput } from "@/components/shared/data";
 import { LoadFailed } from "@/components/shared/feedback";
@@ -31,10 +33,16 @@ export function ChatsView(vm: VM) {
         <aside className={`w-full flex-col border-r border-stone-200 lg:flex lg:w-80 lg:shrink-0 ${vm.selectedId ? "hidden" : "flex"}`}>
           <div className="space-y-2 border-b border-stone-200 p-3">
             <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("searchCustomer")} className="!max-w-none" />
-            <label className="flex items-center gap-2 text-sm text-stone-600">
-              <Switch size="small" checked={vm.unreadOnly} onChange={vm.setUnreadOnly} />
-              {t("unreadOnly")}
-            </label>
+            <Segmented
+              block
+              value={vm.unreadOnly ? "unread" : "all"}
+              onChange={(v) => vm.setUnreadOnly(v === "unread")}
+              options={[
+                { value: "all", label: t("filterAll") },
+                { value: "unread", label: t("filterUnread") },
+              ]}
+              aria-label={t("filterLabel")}
+            />
           </div>
           <div className="flex-1 overflow-y-auto">
             {vm.listLoading ? (
@@ -50,7 +58,13 @@ export function ChatsView(vm: VM) {
             ) : (
               <ul className="m-0 list-none p-0">
                 {vm.conversations.map((c) => (
-                  <ConversationRow key={c._id} c={c} active={c._id === vm.selectedId} onClick={() => vm.select(c._id)} />
+                  <ConversationRow
+                    key={c._id}
+                    c={c}
+                    active={c._id === vm.selectedId}
+                    onClick={() => vm.select(c._id)}
+                    onDelete={vm.deleteConversation ? () => void vm.deleteConversation!(c) : undefined}
+                  />
                 ))}
               </ul>
             )}
@@ -109,6 +123,8 @@ export function ChatsView(vm: VM) {
                   hasMore={vm.thread.hasMore}
                   loadingOlder={vm.thread.loadingOlder}
                   onLoadOlder={() => void vm.thread.loadOlder()}
+                  onEdit={vm.editMessage}
+                  onDelete={vm.deleteMessage}
                 />
               )}
 
@@ -126,7 +142,18 @@ export function ChatsView(vm: VM) {
   );
 }
 
-function ConversationRow({ c, active, onClick }: { c: ChatConversation; active: boolean; onClick: () => void }) {
+function ConversationRow({
+  c,
+  active,
+  onClick,
+  onDelete,
+}: {
+  c: ChatConversation;
+  active: boolean;
+  onClick: () => void;
+  /** ไม่ส่ง = ไม่มีสิทธิ์ลบ → ไม่มีปุ่ม … */
+  onDelete?: () => void;
+}) {
   const t = useTranslations("chat");
   const locale = useLocale();
   const name = c.customer?.user_fullname || t("customer");
@@ -139,8 +166,9 @@ function ConversationRow({ c, active, onClick }: { c: ChatConversation; active: 
       : when.toLocaleDateString(loc, { day: "numeric", month: "short" })
     : "";
   const unread = c.staff_unread > 0;
+  // ปุ่ม … อยู่นอกปุ่มของแถว (ปุ่มซ้อนปุ่ม = HTML ผิด) — วางทับมุมขวาบนด้วย absolute
   return (
-    <li>
+    <li className="group relative">
       <button
         type="button"
         onClick={onClick}
@@ -151,15 +179,17 @@ function ConversationRow({ c, active, onClick }: { c: ChatConversation; active: 
       >
         <Avatar name={name} size={40} />
         <span className="min-w-0 flex-1">
-          <span className="flex items-baseline justify-between gap-2">
+          <span className={`flex items-baseline gap-2 ${onDelete ? "pr-7" : ""}`}>
             <span className={`truncate text-sm ${unread ? "font-bold text-stone-900" : "font-medium text-stone-800"}`}>{name}</span>
-            <span className="shrink-0 text-xs text-stone-500">{whenText}</span>
           </span>
-          <span className="flex items-center justify-between gap-2">
-            <span className={`truncate text-xs ${unread ? "font-semibold text-stone-800" : "text-stone-500"}`}>
+          <span className="flex items-center gap-2">
+            {/* ข้อความล่าสุด · เวลา (ต่อท้ายข้อความ) */}
+            <span className={`min-w-0 truncate text-xs ${unread ? "font-semibold text-stone-800" : "text-stone-500"}`}>
               {c.last_sender_type === "staff" ? `${t("youPrefix")} ` : ""}
               {c.last_message_preview}
             </span>
+            {whenText && <span className="shrink-0 text-xs text-stone-500">· {whenText}</span>}
+            <span className="flex-1" />
             {unread && (
               <span className="min-w-[1.25rem] shrink-0 rounded-full bg-red-500 px-1.5 text-center text-xs font-bold leading-5 text-white">
                 {c.staff_unread > 99 ? "99+" : c.staff_unread}
@@ -168,6 +198,28 @@ function ConversationRow({ c, active, onClick }: { c: ChatConversation; active: 
           </span>
         </span>
       </button>
+      {onDelete && (
+        <Dropdown
+          trigger={["click"]}
+          placement="bottomRight"
+          menu={{
+            items: [{ key: "delete", danger: true, icon: <TrashIcon className="h-4 w-4" />, label: t("deleteRoom") }],
+            onClick: ({ key, domEvent }) => {
+              domEvent.stopPropagation();
+              if (key === "delete") onDelete();
+            },
+          }}
+        >
+          <button
+            type="button"
+            aria-label={t("roomActions", { name })}
+            title={t("roomActions", { name })}
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+          >
+            <EllipsisHorizontalIcon className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </Dropdown>
+      )}
     </li>
   );
 }

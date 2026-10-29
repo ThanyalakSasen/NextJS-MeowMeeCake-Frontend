@@ -740,7 +740,7 @@
     "shippingScopeCategory": "Follow category",
     "shippingScopeCategoryIs": "Follow category ({scope})",
     "shippingScopeNationwide": "Ships to every province",
-    "shippingScopeProvince": "Ships only within the shop's province",
+    "shippingScopeProvince": "Ships only within {province}",
     "shippingScopeFailed": "Product saved, but the delivery setting failed — set it again on the edit page or the shipping page"
   },
   "productStock": {
@@ -2033,6 +2033,13 @@
     "photoAlt": "Review photo {n}"
   },
   "reviewsDashboard": {
+    "notesTitle": "Internal notes",
+    "notesHint": "Notes the shop wrote on reviews in this period (customers can't see them) · newest first · edit or remove notes in the Manage reviews tab",
+    "notesEmpty": "No internal notes in this period",
+    "notesCount": "{n} items",
+    "notesUpdated": "Noted {date}",
+    "notesMore": "Showing the latest {n} — see all in the Manage reviews tab",
+    "ratingItems": "<b>{n}</b> reviews",
     "total": "Total reviews",
     "avgRating": "Average rating",
     "ofFive": "out of 5",
@@ -2061,7 +2068,7 @@
     "vsPrevNone": "No reviews in the previous period",
     "points": "{n} pts",
     "categories": "By product category",
-    "categoriesHint": "Reviews and average rating per category (red bar = below 3★) · bad reviews (1–2★) · red chips = the category's most-criticised topics (count)",
+    "categoriesHint": "Review count and average per category · green chip = good reviews (4–5★) · red chip = bad reviews (1–2★) · bar length = review count (green = good · yellow = 3★ · red = bad) · chips below = topics customers praised (green) / criticised (red) in that category (review count) · categories with the most bad reviews first",
     "categoryNegative": "{n} negative",
     "issueChip": "{name} {n}",
     "noIssues": "No criticized topics",
@@ -2115,6 +2122,10 @@
     "droppingHint": "Average dropped by {d} stars or more vs the previous period · click for details",
     "droppingNone": "No products dropping",
     "needsReplyNone": "No bad reviews awaiting reply",
+    "fiveStar": "5-star customers",
+    "fiveStarHint": "Latest 5★ reviews in the selected period (latest {n})",
+    "fiveStarTotal": "{n} reviews total",
+    "fiveStarNone": "No 5★ reviews in this period yet",
     "replyInfo": "Share of reviews the shop has replied to — the badge is based on unanswered bad reviews (1–2 stars): none = good · 1–4 = watch · 5+ = bad · click the card to reply",
     "replySubPending": "{n} bad reviews waiting — click to reply →",
     "replySubDone": "Replied {n} of {total} reviews",
@@ -2138,7 +2149,10 @@
     "aspectTrendNew": "{n} complaints (none before)",
     "aspectTrendGone": "No complaints now (was {n})",
     "aspectTrendUp": "{n} more complaints (+{pct})",
-    "aspectTrendDown": "{n} fewer complaints (−{pct})"
+    "aspectTrendDown": "{n} fewer complaints (−{pct})",
+    "issueChipReviews": "{name} {n} reviews",
+    "categoryPositive": "Good {n}",
+    "praiseChipReviews": "{name} {n} reviews"
   },
   "reviewSettings": {
     "title": "Review topic settings",
@@ -2325,7 +2339,9 @@
       "hiddenBadge": "Hidden",
       "setMain": "Make main store",
       "mainUsesAddress": "The main storefront uses the store address and pin — the owner edits it",
-      "mainNoAddress": "Store address not filled in yet — click \"Edit\" and fill it in the main storefront entry"
+      "mainNoAddress": "Store address not filled in yet — click \"Edit\" and fill it in the main storefront entry",
+      "colHours": "Hours",
+      "colLocation": "Location / address"
     },
     "days": {
       "mon": "Mon",
@@ -2493,7 +2509,7 @@
     "saveFailed": "Failed to save category",
     "deleteFailed": "Failed to delete category",
     "inUse": "Cannot delete \"{name}\": {n} products still use this category",
-    "shippingHint": "Every province = customers anywhere can have it delivered · shop's province only = delivery only within the shop's province (pickup always possible) · * = not set yet, chosen from the category name"
+    "shippingHint": "Every province = customers anywhere can have it delivered · {province} only = delivery only within {province} (pickup always possible) · * = not set yet, chosen from the category name"
   },
   "trash": {
     "open": "Deleted items",
@@ -2601,7 +2617,9 @@
     "doneDetail": "We sent a verification link to {email}. Click it within 24 hours, then sign in.",
     "doneSpamHint": "Can’t find it? Check your spam folder.",
     "resending": "Sending...",
-    "goLogin": "Go to sign in"
+    "goLogin": "Go to sign in",
+    "allergySearchPlaceholder": "Search ingredients, e.g. milk, egg, nuts",
+    "allergyNoMatch": "No matching ingredient"
   },
   "deliveryZones": {
     "title": "Delivery Zones",
@@ -2663,7 +2681,7 @@
   "shippingZones": {
     "title": "Shipping fees (website orders)",
     "fallbackTag": "All other provinces",
-    "fallbackHint": "Automatically covers every province not in another zone — only the zone name and fee can be edited (can't be deleted)",
+    "fallbackHint": "Automatically covers every province not in another zone — only the zone name and fee can be edited (can't be deleted) · always the last letter — shifts automatically when zones are added or removed",
     "noProvinces": "No provinces in this zone yet",
     "moreProvinces": "+{n} provinces",
     "editTitle": "Edit zone {code}",
@@ -2700,10 +2718,10 @@
     "categories": {
       "button": "Product delivery areas",
       "title": "Which products can ship to other provinces",
-      "hint": "Switch on = ships to every province · off = ships only within the shop's province (customers can still pick up) · \"Whole category\" switches every item in the category at once · tap a category to set items one by one · * = not set yet, chosen from the category name · pre-order products always ship to every province",
+      "hint": "Switch on = ships to every province · off = ships only within {province} (customers can still pick up) · \"Whole category\" switches every item in the category at once · tap a category to set items one by one · * = not set yet, chosen from the category name · pre-order products always ship to every province",
       "empty": "No product categories yet",
       "nationwide": "Ships to every province",
-      "provinceOnly": "Shop's province only",
+      "provinceOnly": "{province} only",
       "autoHint": "Not set yet — chosen from the category name (e.g. sourdough = every province) · flip the switch to set it yourself",
       "toggleLabel": "Ships to every province: {name}",
       "saveFailed": "Could not save the category delivery setting"
@@ -2718,14 +2736,13 @@
       "noCategory": "No category",
       "statusAll": "All items ship to every province",
       "statusSome": "{on}/{n} items ship to every province",
-      "statusNone": "Every item: shop's province only",
+      "statusNone": "Every item: {province} only",
       "wholeCategory": "Whole category",
-      "custom": "Differs from category",
       "noProducts": "No products to set up yet"
     },
     "how": {
       "title": "How the shipping fee is calculated",
-      "step1": "We look at the province in the customer's delivery address and use that zone's fee — provinces in no zone use the zone D fee ({d})",
+      "step1": "We look at the province in the customer's delivery address and use that zone's fee — provinces in no zone use the zone {code} fee ({d})",
       "step2": "One fee per order, no matter how many items or how much it costs · store pickup = no fee · free shipping only when the customer uses a free-shipping coupon",
       "step3": "Some products ship only within {province} (e.g. fresh cakes with a short shelf life) — if the cart has even one, the customer must use an address in {province} or pick up at the shop · choose which products can ship to other provinces with the \"Product delivery areas\" button at the top right · pre-order products always ship everywhere"
     },
@@ -2828,7 +2845,11 @@
       "setDefaultAuto": "Set as default address (picked automatically at checkout)",
       "recipientHint": "Recipient name and phone are entered with each order",
       "editOnceHint": "Edits apply to this order only — your saved addresses are not changed",
-      "useOnce": "Use this address for this order"
+      "useOnce": "Use this address for this order",
+      "fieldRequired": "Please enter {field}",
+      "provinceInvalid": "Please pick a province from the list",
+      "provincePlaceholder": "Choose a province (type to search)",
+      "provinceNotFound": "No matching province"
     },
     "footer": {
       "fallbackAddress": "Mueang District, Nong Khai 43000",
@@ -2920,7 +2941,8 @@
       "added": "Added",
       "addToCart": "Add to cart",
       "localOnly": "{province} only",
-      "localOnlyHint": "Delivers within {province} province only (or pick up at the shop)"
+      "localOnlyHint": "Delivers within {province} province only (or pick up at the shop)",
+      "soldOut": "Sold out"
     },
     "pick": {
       "groupRequired": "Please choose {group}",
@@ -2982,7 +3004,11 @@
       "preorderPickup": "Pick up from {date}",
       "selectedOf": "{n}/{total} selected",
       "qtyTimesPrice": "{qty} × {price}",
-      "preorderPending": "You still have {n} pre-order item(s) waiting (ordered separately from ready-to-ship items)"
+      "preorderPending": "You still have {n} pre-order item(s) waiting (ordered separately from ready-to-ship items)",
+      "maxStockNote": "Max {n} — that's all we have in stock",
+      "quantity": "Quantity",
+      "quantityOf": "Quantity of {name}",
+      "stockLimitTitle": "Can't add more"
     },
     "orderStatus": {
       "pending": "Ordered",
@@ -3041,7 +3067,9 @@
       "buyAgainPartial": "Added {n} items · couldn't add: {failed}",
       "buyAgainDone": "Added {n} items to your cart",
       "loginToFavorite": "Please log in to save favorites",
-      "favoriteFailed": "Could not update favorites"
+      "favoriteFailed": "Could not update favorites",
+      "stockLimitTitle": "Your cart already has all we have",
+      "stockLimitNote": "You can review quantities in your cart"
     },
     "orders": {
       "allOrders": "All orders",
@@ -3134,7 +3162,7 @@
       },
       "back": "Back to previous page",
       "unpaidBy": "Not paid yet · by {date}",
-      "searchPlaceholder": "Search order number or product name",
+      "searchPlaceholder": "Search product name or the last 6 of the order code, e.g. MMC004",
       "emptySearch": "No results for \"{q}\"",
       "clearSearch": "Clear search"
     },
@@ -3173,7 +3201,7 @@
       "paidContactToCancel": "Paid — please contact the store to cancel",
       "preorder": "Pre-order",
       "reviewOnlyCompleted": "You can review once the pre-order is completed and paid",
-      "searchPlaceholder": "Search pre-order number or product name"
+      "searchPlaceholder": "Search product name or the last 6 of the pre-order code, e.g. MMC004"
     },
     "slip": {
       "minSec": "{mm}:{ss} min",
@@ -3335,7 +3363,9 @@
       "refundNameRequired": "Please enter the account name",
       "refundSaved": "Refund PromptPay account saved",
       "refundRemoved": "PromptPay account removed",
-      "refundSaveFailed": "Could not save the PromptPay account"
+      "refundSaveFailed": "Could not save the PromptPay account",
+      "allergySearchPlaceholder": "Search ingredients, e.g. milk, egg, nuts",
+      "allergyNoMatch": "No matching ingredient"
     },
     "favorites": {
       "loginToView": "Please log in to see your favorites",
@@ -3997,6 +4027,20 @@
       "allCancelled": "All bills cancelled",
       "paidShort": "Fully paid",
       "billTotal": "This bill"
+    },
+    "editDelivery": {
+      "button": "Change delivery / address",
+      "title": "Change delivery method / address",
+      "hint": "You can change this before paying · shipping and the amount due are recalculated · same order number",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "saved": "Updated · amount due ฿{total}",
+      "failed": "Could not update, please try again",
+      "noAddress": "No saved address yet",
+      "manageAddress": "Add address",
+      "pickupAtStore": "Pick up at the store",
+      "receiveTakeaway": "Delivery method: pick up at the store"
     }
   },
   "bulkStock": {
@@ -4074,6 +4118,30 @@
     "openFull": "Open full chat",
     "widgetClose": "Close chat",
     "openOrderPage": "Open order management page",
-    "noOrderPermission": "You don't have permission to view this order"
+    "noOrderPermission": "You don't have permission to view this order",
+    "editMessage": "Edit message",
+    "deleteMessage": "Delete message",
+    "editLabel": "Edit message",
+    "saveEdit": "Save",
+    "cancelEdit": "Cancel",
+    "edited": "Edited",
+    "deletedMessage": "This message was deleted",
+    "deleteConfirm": "Delete this message?",
+    "deleteNote": "The other side will see \"This message was deleted\" instead",
+    "editFailed": "Couldn't edit the message. Please try again",
+    "deleteFailed": "Couldn't delete the message. Please try again",
+    "moreActions": "Message options",
+    "attachedLabel": "Attached:",
+    "changeAttach": "Change",
+    "changeAttachTitle": "Pick another order instead",
+    "filterLabel": "Show chats",
+    "filterAll": "All",
+    "filterUnread": "Unread",
+    "roomActions": "Chat options for {name}",
+    "deleteRoom": "Delete chat",
+    "deleteRoomConfirm": "Remove the chat with {name} from the list?",
+    "deleteRoomNote": "Hides this chat from the back-office list · message history is kept and the customer still sees it · if the customer writes again, the chat comes back with its old history",
+    "deleteRoomDone": "Chat deleted",
+    "deleteRoomFailed": "Could not delete the chat, please try again"
   }
 }

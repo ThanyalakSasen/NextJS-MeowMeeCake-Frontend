@@ -53,6 +53,8 @@ export interface ReviewListParams extends ListParams {
   replied?: 0 | 1;
   read?: 0 | 1;
   has_media?: 0 | 1;
+  /** มีโน้ตภายในของร้าน */
+  has_note?: 0 | 1;
   order_kind?: "order" | "preorder";
   source?: "customer" | "inferred" | "model" | "none";
   since?: string;
@@ -94,7 +96,9 @@ export interface ReviewStatsItem {
 }
 export interface ReviewStatsCategory extends ReviewStatsItem {
   negative: number;
-  /** หัวข้อของหมวด เรียงที่ถูกติมากสุดก่อน (≤ 3) */
+  /** รีวิวดี (4–5 คะแนน) */
+  positive: number;
+  /** หัวข้อของหมวด: ถูกติมากสุด ≤ 3 + ถูกชมมากสุด ≤ 3 · เรียงที่ถูกติมากสุดก่อน */
   aspects: ReviewStatsAspect[];
 }
 export interface ReviewStatsProduct extends ReviewStatsItem {

@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────────────────────
 // ฟอร์ม + กติกาโซนค่าส่งเว็บ (BACKLOG4 F2) — สำเนากติกา backend schemas/shipping.ts + shippingService.updateShippingZone
 //   - จังหวัดต้องเป็นชื่อทางการใน 77 จังหวัด (หน้าเว็บให้เลือกจากรายการเท่านั้น)
-//   - จังหวัดหนึ่งอยู่ได้โซนเดียว · โซน D = จังหวัดที่เหลือทั้งหมด (ใส่จังหวัดไม่ได้ · ลบไม่ได้)
-//   - ค่าส่งคิดตามจังหวัดในที่อยู่ลูกค้า: ตรงกับโซนไหน → โซนนั้น · ไม่ตรง = โซน D (backend lib/shipping.ts computeShippingFee)
+//   - จังหวัดหนึ่งอยู่ได้โซนเดียว · โซนจังหวัดอื่นทั้งหมด (is_fallback · ตัวอักษรสุดท้ายเสมอ) = จังหวัดที่เหลือ (ใส่จังหวัดไม่ได้ · ลบไม่ได้)
+//   - ค่าส่งคิดตามจังหวัดในที่อยู่ลูกค้า: ตรงกับโซนไหน → โซนนั้น · ไม่ตรง = โซนจังหวัดอื่นทั้งหมด (backend lib/shipping.ts zoneForProvince)
 //   - เพิ่มโซนใหม่ได้ (2026-10-26) — ต้องเลือกจังหวัดอย่างน้อย 1 · รหัสโซน backend ตั้งให้
 // ─────────────────────────────────────────────────────────────
 import type { ShippingZone, ShippingZoneCode, ShippingZoneCreate, ShippingZoneUpdate } from "@/types/shippingZone";
@@ -16,8 +16,9 @@ export interface ShippingZoneForm {
 export type ShippingZoneErrorKey = "labelRequired" | "labelTooLong" | "feeInvalid" | "provincesRequired";
 export type ShippingZoneErrors = Partial<Record<"zone_label" | "fee" | "provinces", ShippingZoneErrorKey>>;
 
-/** โซนที่เหลือทั้งหมด — ไม่มีรายชื่อจังหวัด */
-export const FALLBACK_ZONE: ShippingZoneCode = "D";
+/** โซนจังหวัดอื่นทั้งหมด — backend ตั้ง is_fallback ให้ · ไม่มี flag (ข้อมูลเก่า) = โซนท้ายรายการ */
+export const fallbackZoneOf = (zones: ShippingZone[]): ShippingZone | null =>
+  zones.find((z) => z.is_fallback) ?? zones[zones.length - 1] ?? null;
 
 export const EMPTY_SHIPPING_ZONE_FORM: ShippingZoneForm = { zone_label: "", fee: 0, provinces: [] };
 
@@ -38,11 +39,11 @@ export function validateShippingZone(f: ShippingZoneForm, isNew = false): Shippi
   return e;
 }
 
-/** body ของ PATCH — โซน D ไม่ส่ง provinces · ตัดชื่อซ้ำ */
-export const toShippingZoneUpdate = (code: ShippingZoneCode, f: ShippingZoneForm): ShippingZoneUpdate => ({
+/** body ของ PATCH — โซนจังหวัดอื่นทั้งหมดไม่ส่ง provinces · ตัดชื่อซ้ำ */
+export const toShippingZoneUpdate = (isFallback: boolean, f: ShippingZoneForm): ShippingZoneUpdate => ({
   zone_label: f.zone_label.trim(),
   fee: f.fee,
-  ...(code === FALLBACK_ZONE ? {} : { provinces: [...new Set(f.provinces)] }),
+  ...(isFallback ? {} : { provinces: [...new Set(f.provinces)] }),
 });
 
 export const toShippingZoneCreate = (f: ShippingZoneForm): ShippingZoneCreate => ({
@@ -61,9 +62,6 @@ export function provinceOwners(zones: ShippingZone[], except: ShippingZoneCode |
 /** จังหวัดนี้คิดค่าส่งโซนไหน (เหมือน backend computeShippingFee) */
 export function resolveShippingZone(province: string, zones: ShippingZone[]): ShippingZone | null {
   const p = province.trim();
-  return (
-    (p && zones.find((z) => z.zone_code !== FALLBACK_ZONE && z.provinces.some((x) => x.trim() === p))) ||
-    zones.find((z) => z.zone_code === FALLBACK_ZONE) ||
-    null
-  );
+  const fallback = fallbackZoneOf(zones);
+  return (p && zones.find((z) => z !== fallback && z.provinces.some((x) => x.trim() === p))) || fallback;
 }

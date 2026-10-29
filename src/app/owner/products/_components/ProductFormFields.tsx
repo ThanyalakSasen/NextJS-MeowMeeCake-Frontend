@@ -2,6 +2,7 @@
 // ฟิลด์ของฟอร์มสินค้า — render ข้างใน <Form> (antd) เท่านั้น
 // <FormItem> จัดการ label + error + validation ให้เอง
 import { useTranslations } from "next-intl";
+import { useStoreProvince } from "@/hooks/useStoreProvince";
 import { useQuery } from "@tanstack/react-query";
 import { Radio } from "antd";
 import type { Rule } from "antd/es/form";
@@ -25,6 +26,7 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
   // ขอบเขตจัดส่งออเดอร์เว็บ — สิทธิ์ shipping (คนละเมนูกับสินค้า) · ไม่มี view = ไม่แสดงช่อง · ไม่มี update = ดูได้อย่างเดียว
   // "ตามหมวดหมู่" บอกค่าปัจจุบันของหมวดที่เลือก (useCategoryShipping — ชุดเดียวกับหน้าค่าจัดส่ง)
   const shipping = useCategoryShipping();
+  const province = useStoreProvince();
   const categoryId = Form.useWatch("category_id", form) as string | undefined;
   const catShipping = shipping.items.find((c) => c._id === categoryId);
 
@@ -70,12 +72,12 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
                 value: "category",
                 label: catShipping
                   ? t("products.shippingScopeCategoryIs", {
-                      scope: t(catShipping.ships_nationwide ? "shippingZones.categories.nationwide" : "shippingZones.categories.provinceOnly"),
+                      scope: t(catShipping.ships_nationwide ? "shippingZones.categories.nationwide" : "shippingZones.categories.provinceOnly", { province }),
                     })
                   : t("products.shippingScopeCategory"),
               },
               { value: "nationwide", label: t("products.shippingScopeNationwide") },
-              { value: "province", label: t("products.shippingScopeProvince") },
+              { value: "province", label: t("products.shippingScopeProvince", { province }) },
             ]}
           />
         </FormItem>

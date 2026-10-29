@@ -40,10 +40,19 @@ import {
  * (พรีออเดอร์ / สต็อกเป็น 0 หรือ null / is_visible === false)
  * หน้าที่นับจำนวนสินค้า (เช่น ตัวเลขหมวดหมู่) ควรกรองด้วยฟังก์ชันนี้ก่อน ตัวเลขจะได้ตรงกับบัตรที่แสดงจริง
  */
-export function isProductCardVisible(p: Pick<Product, "product_stock_quantity" | "is_preorder" | "is_visible">): boolean {
+export function isProductCardVisible(
+  p: Pick<Product, "product_stock_quantity" | "is_preorder" | "is_visible">,
+  /** includeSoldOut = แสดงสินค้าหมดด้วย (บัตรขึ้น "สินค้าหมด") — หน้าสินค้าทั้งหมด (2026-10-29) */
+  { includeSoldOut = false }: { includeSoldOut?: boolean } = {},
+): boolean {
+  if (p.is_preorder || p.is_visible === false) return false;
+  return includeSoldOut || !isProductSoldOut(p);
+}
+
+/** สต็อกเหลือ 0 (หรือไม่มีข้อมูลสต็อก) = สินค้าหมด */
+export function isProductSoldOut(p: Pick<Product, "product_stock_quantity">): boolean {
   const qty = p.product_stock_quantity;
-  const outOfStock = qty === null || qty === undefined || Number(qty) <= 0;
-  return !(outOfStock || p.is_preorder || p.is_visible === false);
+  return qty === null || qty === undefined || Number(qty) <= 0;
 }
 
 export function categoryNameOf(p: Pick<Product, "category_id">): string | undefined {
@@ -107,7 +116,10 @@ export default function ProductCard({
   showFavorite = true,
   allergenWarning: allergenWarningProp = null,
   priority = false,
+  allowSoldOut = false,
 }: {
+  /** แสดงบัตรสินค้าหมดด้วย (ป้าย "สินค้าหมด" · ปุ่มเพิ่มลงตะกร้ากดไม่ได้) — ไม่ส่ง = สินค้าหมดไม่แสดงบัตร */
+  allowSoldOut?: boolean;
   product: Product;
   showAddToCart?: boolean;
   showFavorite?: boolean;
@@ -125,7 +137,8 @@ export default function ProductCard({
   const isSuccess = status === "success";
   const [failedImg, setFailedImg] = useState<string | null>(null);
 
-  if (!isProductCardVisible(product)) return null;
+  if (!isProductCardVisible(product, { includeSoldOut: allowSoldOut })) return null;
+  const soldOut = isProductSoldOut(product);
 
   const categoryName = categoryNameOf(product);
   const imgSrc = resolveUploadUrl(product.product_img?.[0]);
@@ -145,7 +158,7 @@ export default function ProductCard({
             alt={product.product_name_eng || product.product_name_th}
             sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
             priority={priority}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${soldOut ? "grayscale opacity-60" : ""}`}
             onError={() => setFailedImg(imgSrc)}
           />
         ) : (
@@ -184,6 +197,11 @@ export default function ProductCard({
           </button>
         )}
 
+        {soldOut && (
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span className="rounded-full bg-stone-900/80 px-3 py-1 text-xs font-bold text-white shadow-md">{t("soldOut")}</span>
+          </span>
+        )}
         <AllergenBadge warning={allergenWarning} />
         <LocalOnlyBadge productId={product._id} category={product.category_id ?? null} isPreorder={product.is_preorder} />
       </div>
@@ -223,7 +241,7 @@ export default function ProductCard({
           {showAddToCart && (
             <button
               type="button"
-              disabled={isLoading || isSuccess}
+              disabled={isLoading || isSuccess || soldOut}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -233,7 +251,9 @@ export default function ProductCard({
                 isSuccess ? "!border-emerald-600 !bg-emerald-600 !text-white" : ""
               } disabled:cursor-not-allowed disabled:opacity-75`}
             >
-              {isLoading ? (
+              {soldOut ? (
+                t("soldOut")
+              ) : isLoading ? (
                 <>
                   <FaSpinner className="animate-spin text-xs" />
                   <span>{t("adding")}</span>
