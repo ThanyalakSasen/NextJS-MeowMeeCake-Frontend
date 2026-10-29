@@ -116,7 +116,10 @@ export function DeliverySection({
         <Input
           value={tracking}
           maxLength={MAX_TRACKING}
-          onChange={(e) => setTracking(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === " ") e.preventDefault();
+          }}
+          onChange={(e) => setTracking(e.target.value.replace(/\s/g, ""))}
           placeholder={t("orders.trackingPlaceholder")}
         />
       </label>
