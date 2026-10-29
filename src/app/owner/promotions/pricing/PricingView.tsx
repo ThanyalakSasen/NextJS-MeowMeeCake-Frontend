@@ -2,13 +2,12 @@
 // View ของ Pricing — ตารางแก้ราคา/ราคาลด/แสดงผลของสินค้าแบบ inline ทีละแถว
 import { useTranslations, useLocale } from "next-intl";
 import { CurrencyDollarIcon } from "@heroicons/react/24/solid";
-import { Button, Select, Switch, Tag } from "@/components/base";
+import { Button, Select, Switch } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
 import type { PricingRow, usePricingViewModel } from "./usePricingViewModel";
-import { tagColorFor } from "./pricingHelpers";
 import { PriceCell } from "./_components/PriceCell";
 import { DiscountCell } from "./_components/DiscountCell";
 import { LoadFailed } from "@/components/shared/feedback";
@@ -33,7 +32,8 @@ export function PricingView(vm: VM) {
     {
       key: "category",
       title: t("pricing.colCategory"),
-      render: (r) => <Tag color={tagColorFor(r.categoryId)}>{r.categoryName}</Tag>,
+      // ข้อความสีเทาเฉย ๆ ไม่มีกรอบ/พื้นสี
+      render: (r) => <span className="text-gray-700">{r.categoryName}</span>,
     },
     {
       key: "productType",
@@ -53,7 +53,7 @@ export function PricingView(vm: VM) {
     {
       key: "discount",
       title: t("pricing.colDiscount"),
-      render: (r) => <DiscountCell discount={r.discount} highlight={r.isDirty && r.discount !== null} onChange={(d) => vm.onChangeDiscount(r, d)} />,
+      render: (r) => <DiscountCell percent={r.discount} highlight={r.isDirty && r.discount !== null} onChange={(d) => vm.onChangeDiscount(r, d)} />,
     },
     {
       key: "is_visible",
