@@ -1702,6 +1702,7 @@
     "saved": "Employee saved",
     "saveFailed": "Could not save",
     "passwordHint": "At least 8 characters — used the first time this employee signs in",
+    "lastBeforeStart": "Last working date can’t be before the start date",
     "generatePassword": "Generate password",
     "statusLocked": "Locked",
     "lockedUntil": "Locked after too many failed sign-ins, until {time}",
@@ -1743,7 +1744,7 @@
       "counter": "Counter staff",
       "production": "Production"
     },
-    "templatePartial": "Created role \"{role}\" from the template, but left out permissions beyond your own in: {menus} — ask the owner to add them",
+    "templatePartial": "Created role \"{role}\", but left out permissions beyond your own in: {menus} — ask the owner to add them",
     "save": "Save permissions",
     "saveSuccess": "Saved permissions for {role}",
     "saveFailed": "Could not save permissions",
