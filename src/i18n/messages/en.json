@@ -1164,6 +1164,7 @@
     "payMethod": "Payment method",
     "newBill": "Start a new bill",
     "saveFailed": "Could not save the order",
+    "totalChanged": "The actual total is {total} (screen showed {shown}) — a price or promotion may have changed. Payment was not taken; check the new total and confirm again",
     "paymentPendingRetry": "Order {no} was created but payment failed ({reason}) — confirm payment again to charge the same order; no duplicate will be created",
     "abandonedOrderReason": "Auto-cancelled by POS — the bill was changed, cleared or held after the order was created but before payment succeeded",
     "abandonedOrderCancelFailed": "Could not cancel unpaid order {no} — please cancel it in Manage Orders to restore stock",
