@@ -4,7 +4,7 @@
 import type { Dayjs } from "dayjs";
 import { useTranslations, useLocale } from "next-intl";
 import { DatePicker } from "@/components/base";
-import { StatCard, StatCardsGrid, BreakdownList, StatusBadge } from "@/components/shared/stats";
+import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
 import { DataTable, TypeTabBar, type Column } from "@/components/shared/data";
 import { EmptyState } from "@/components/base";
 import { formatDate } from "@/i18n/format";
@@ -51,16 +51,7 @@ export function HistoryTab(vm: VM) {
       title: t("production.fieldDate"),
       render: (o) => <span className="text-gray-600">{formatDate(o.production_date, locale)}</span>,
     },
-    {
-      key: "status",
-      title: t("production.colStatus"),
-      render: (o) => <StatusBadge group="productionStatus" value={o.production_status} />,
-    },
-    {
-      key: "completed_at",
-      title: t("production.colCompletedAt"),
-      render: (o) => <span className="text-gray-600">{o.completed_at ? formatDate(o.completed_at, locale, { withTime: true }) : "—"}</span>,
-    },
+    // คอลัมน์ "สถานะ" + "เสร็จเมื่อ" เอาออก — ไม่มีขั้นอัปเดตสถานะการผลิตแล้ว · สถานะ/เวลาปิดงานยังดูได้ในป๊อปอัปรายละเอียด
     {
       key: "assignee",
       title: t("production.fieldAssignee"),

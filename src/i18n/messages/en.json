@@ -4157,7 +4157,7 @@
     "noExpiry": "No expiry",
     "lookup": "Scan lot",
     "lookupTitle": "Look up a lot",
-    "scanPlaceholder": "Scan the label barcode or type a lot number and press Enter",
+    "scanPlaceholder": "Scan the label barcode or type a lot / piece code and press Enter",
     "notFound": "Lot {no} not found",
     "colLot": "Lot no.",
     "colProduct": "Product",
@@ -4175,6 +4175,11 @@
       "expiring": "Expiring soon",
       "ok": "OK",
       "none": "No expiry"
-    }
+    },
+    "fromPiece": "From piece",
+    "piece": "Piece",
+    "pieceOf": "{n} of {total}",
+    "pieceHint": "Each label gets its own piece code (lot no.-piece no.); scanning it shows the production date, expiry and lot ·",
+    "piecesFailed": "Could not load piece codes, reopen this window ·"
   }
 }

@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 import { http } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
-import type { ProductLot, ProductLotListParams } from "@/types/productLot";
+import type { ProductLot, ProductLotListParams, ProductLotPiece } from "@/types/productLot";
 
 const BASE = "/admin/product-lots";
 
@@ -14,4 +14,8 @@ export const productLotsService = {
   /** สแกนบาร์โค้ดบนฉลาก → ข้อมูลล็อต · ไม่พบ = 404 */
   getByNo: (lotNo: string) =>
     http.get<ItemResponse<ProductLot>>(`${BASE}/${encodeURIComponent(lotNo.trim())}`).then((r) => r.data),
+
+  /** รหัสประจำชิ้นทั้งล็อตเรียงตามลำดับ (เก็บใน DB — พิมพ์ฉลาก 1 ดวงต่อชิ้น) · ล็อตเก่า backend สร้างให้ตอนเรียกครั้งแรก */
+  pieces: (lotNo: string) =>
+    http.get<ItemResponse<ProductLotPiece[]>>(`${BASE}/${encodeURIComponent(lotNo)}/pieces`).then((r) => r.data),
 };
