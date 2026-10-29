@@ -51,10 +51,10 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 max-w-3xl">
       <FormItem name="product_name_th" label={t("fields.product_name_th")} rules={required}>
-        <Input />
+        <Input maxLength={200} />
       </FormItem>
       <FormItem name="product_name_eng" label={t("fields.product_name_eng")} rules={required}>
-        <Input />
+        <Input maxLength={200} />
       </FormItem>
 
       <FormItem name="category_id" label={t("fields.category_id")} rules={required}>
@@ -155,7 +155,7 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
       )}
 
       <FormItem name="product_description" label={t("fields.product_description")} className="md:col-span-2">
-        <TextArea rows={3} />
+        <TextArea maxLength={2000} rows={3} />
       </FormItem>
 
       <FormItem name="product_img" label={t("fields.product_img")} className="md:col-span-2">

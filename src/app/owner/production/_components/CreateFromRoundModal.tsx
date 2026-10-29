@@ -168,7 +168,7 @@ export function CreateFromRoundModal({
           </FormItem>
         </div>
         <FormItem name="production_note" label={t("production.fieldNote")}>
-          <TextArea rows={2} placeholder={t("production.notePlaceholder")} />
+          <TextArea maxLength={1000} rows={2} placeholder={t("production.notePlaceholder")} />
         </FormItem>
       </Form>
     </Modal>

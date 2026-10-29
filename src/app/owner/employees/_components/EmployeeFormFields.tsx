@@ -56,7 +56,7 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 max-w-3xl">
       <FormItem name="user_fullname" label={t("fields.user_fullname")} rules={required}>
-        <Input />
+        <Input maxLength={120} />
       </FormItem>
       {/* เก็บแค่ตัวเลข — วาง "081-234-5678" ได้ */}
       <FormItem name="user_phone" label={t("fields.user_phone")} rules={phoneRule} normalize={(v?: string) => v?.replace(/\D/g, "").slice(0, 10)}>
@@ -69,7 +69,7 @@ export function EmployeeFormFields({ isEdit = false, currentRoleId }: { isEdit?:
         rules={emailRule}
         extra={isLinePlaceholderEmail(email) ? hint(<span className="text-amber-700">{t("employees.lineNoEmail")}</span>) : undefined}
       >
-        <Input />
+        <Input maxLength={254} />
       </FormItem>
       {!isEdit && (
         // FormItem นอก (ไม่มี name) = label + hint + error · ตัวใน noStyle ผูกค่า — วางปุ่มข้างช่องได้

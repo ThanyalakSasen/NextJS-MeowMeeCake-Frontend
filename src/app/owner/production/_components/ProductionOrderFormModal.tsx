@@ -218,7 +218,7 @@ export function ProductionOrderFormModal({
           </FormItem>
         </div>
         <FormItem name="production_note" label={t("production.fieldNote")}>
-          <TextArea rows={1} placeholder={t("production.notePlaceholder")} />
+          <TextArea maxLength={1000} rows={1} placeholder={t("production.notePlaceholder")} />
         </FormItem>
 
         <div className="flex items-center justify-between mb-2">
