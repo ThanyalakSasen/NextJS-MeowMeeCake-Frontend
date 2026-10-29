@@ -10,7 +10,7 @@
 import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
-import type { Dayjs } from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { userLogsService } from "@/services/userLogs";
 import { usersService } from "@/services/users";
 import { rolesService } from "@/services/roles";
@@ -136,7 +136,7 @@ export function useUserLogViewModel() {
         r.entity ? (t.has(`entities.${r.entity}`) ? t(`entities.${r.entity}`) : t("entities.fallback")) : "",
         r.ip_address ?? "",
       ]);
-      exportToCsv(`user-logs_${new Date().toISOString().slice(0, 10)}`, headers, body);
+      exportToCsv(`user-logs_${dayjs().format("YYYY-MM-DD")}`, headers, body);
       alert.success(t("systemLog.exportSuccess", { n: all.length }));
     } catch {
       alert.error(t("common.loadFailed"));

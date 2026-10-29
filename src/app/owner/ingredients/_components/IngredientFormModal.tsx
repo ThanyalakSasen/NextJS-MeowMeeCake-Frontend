@@ -2,7 +2,7 @@
 // เพิ่ม/แก้ไขวัตถุดิบ — antd Modal + base/Form
 import { useEffect } from "react";
 import { Modal } from "antd";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Form, FormItem, useAntForm, Input, InputNumber, Select } from "@/components/base";
 import type { IngredientInput } from "@/types/ingredient";
 import type { IngredientCategory } from "@/types/ingredientCategory";
@@ -10,6 +10,8 @@ import type { Unit } from "@/types/unit";
 import { modalButtonIcons } from "@/components/shared/actions";
 import type { IngredientRow } from "../useIngredientsViewModel";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { formatNumber } from "@/i18n/format";
+import { INGREDIENT_STOCK_MAX } from "@/components/shared/stock";
 
 interface FormValues {
   ingredient_name: string;
@@ -40,6 +42,7 @@ export function IngredientFormModal({
   onSave: (body: IngredientInput) => void;
 }) {
   const t = useTranslations();
+  const locale = useLocale();
   const [form] = useAntForm<FormValues>();
 
   useEffect(() => {
@@ -92,7 +95,7 @@ export function IngredientFormModal({
         <FormItem
           name="ingredient_name"
           label={t("ingredients.fieldName")}
-          rules={[{ required: true, message: t("validation.required") }]}
+          rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
         >
           <Input placeholder={t("ingredients.namePlaceholder")} />
         </FormItem>
@@ -101,7 +104,7 @@ export function IngredientFormModal({
           <FormItem
             name="ingredient_category_id"
             label={t("ingredients.fieldCategory")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
             <Select
               options={sortOptionsThai(categories.map((c) => ({ value: c._id, label: c.ingredient_category_name })))}
@@ -111,7 +114,7 @@ export function IngredientFormModal({
           <FormItem
             name="unit_id"
             label={t("ingredients.fieldUnit")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
             <Select
               options={sortOptionsThai(units.map((u) => ({ value: u._id, label: `${u.unit_name} (${u.unit_abbr})` })))}
@@ -125,13 +128,20 @@ export function IngredientFormModal({
           name="reorder_point"
           label={t("ingredients.fieldReorderPoint")}
           tooltip={t("ingredients.fieldReorderPointHint")}
-          rules={[{ required: true, message: t("validation.required") }]}
+          rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
         >
           <InputNumber min={0} />
         </FormItem>
         <div className="grid grid-cols-2 gap-3">
-          <FormItem name="current_stock" label={t("ingredients.fieldCurrentStock")}>
-            <InputNumber min={0} />
+          {/* backend รับปริมาณเฉพาะตอนสร้าง (ยอดยกมา) — แก้ไขแล้วส่งไปก็ถูกทิ้ง ต้องปรับผ่านหน้าสต็อกวัตถุดิบ (มีประวัติ) */}
+          <FormItem
+            name="current_stock"
+            label={t("ingredients.fieldCurrentStock")}
+            extra={editTarget ? t("ingredients.currentStockEditHint") : undefined}
+            // เฉพาะตอนสร้าง — ตอนแก้ไขช่องปิดอยู่ ยอดเดิมที่เกินเพดาน (ข้อมูลเก่า) ต้องไม่กันการบันทึกช่องอื่น
+            rules={editTarget ? [] : [{ type: "number", max: INGREDIENT_STOCK_MAX, message: t("validation.maxValue", { max: formatNumber(INGREDIENT_STOCK_MAX, locale) }) }]}
+          >
+            <InputNumber min={0} disabled={!!editTarget} />
           </FormItem>
           <FormItem name="max_stock" label={t("ingredients.fieldMaxStock")}>
             <InputNumber min={0} />

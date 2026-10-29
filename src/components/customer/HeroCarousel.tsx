@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { catalogService } from "@/services/catalog";
 import { resolveUploadUrl } from "@/lib/uploads";
+import { isSafeLink } from "@/lib/safeLink";
 import type { Banner } from "@/types/banner";
 import ShopImage from "./ShopImage";
 import { catalogBannersKey } from "@/app/customer/lib/catalogQueries";
@@ -76,7 +77,8 @@ export default function HeroCarousel() {
   return (
     <header className="w-full h-[280px] sm:h-[340px] md:h-[460px] relative overflow-hidden bg-[#4A342E] flex flex-col justify-end">
       <div className="absolute inset-0 w-full h-full z-0">
-        {current?.banner_link ? (
+        {/* ลิงก์ที่บันทึกไว้ก่อนมีการตรวจในฟอร์ม (javascript:/ไม่มี https://) = ไม่ทำเป็นลิงก์ */}
+        {current?.banner_link && isSafeLink(current.banner_link) ? (
           <Link href={current.banner_link} className="block w-full h-full">
             {image}
           </Link>

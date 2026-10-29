@@ -7,11 +7,14 @@ export function PriceCell({
   value,
   onChange,
   highlight,
+  invalid,
   ariaLabel,
 }: {
   value: number | null;
   onChange: (v: number | null) => void;
   highlight?: boolean;
+  /** ราคาในแถวนี้บันทึกไม่ได้ — กรอบแดง */
+  invalid?: boolean;
   /** ชื่อช่องสำหรับ screen reader (ไม่มี label ที่มองเห็นต่อช่อง — หัวคอลัมน์อยู่ไกล) */
   ariaLabel: string;
 }) {
@@ -22,11 +25,12 @@ export function PriceCell({
       aria-label={ariaLabel}
       onChange={(v) => onChange(v != null ? Number(v) : null)}
       min={0}
+      status={invalid ? "error" : undefined}
       prefix={t("common.currencySymbol")}
       placeholder="—"
       size="small"
       style={{ width: 120 }}
-      className={highlight ? "!border-blue-400 !bg-blue-50" : undefined}
+      className={highlight && !invalid ? "!border-blue-400 !bg-blue-50" : undefined}
     />
   );
 }

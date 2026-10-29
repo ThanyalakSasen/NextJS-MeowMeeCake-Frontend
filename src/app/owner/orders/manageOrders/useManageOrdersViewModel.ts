@@ -1,11 +1,11 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ Manage Orders — โหลดออเดอร์ทั้งหมด 1 ครั้ง แล้วกรอง/แบ่งหน้าฝั่ง client
+// ViewModel ของ Manage Orders — โหลดออเดอร์ (ที่ยังไม่ปิดงานครบทุกรายการ + ประวัติล่าสุด — ดู ordersQuery.ts) แล้วกรอง/แบ่งหน้าฝั่ง client
 // แท็บ delivery/takeaway = order_type จริงของ backend (orderModel.ts) — ไม่ใช่ ready/preorder
 // (พรีออเดอร์เป็นคนละ collection ทั้งหมด ยังไม่เชื่อมกับหน้านี้ — ดู types/order.ts หัวไฟล์)
 // การชำระเงิน (verify/reject) เป็นคนละ resource (Payments) ไม่ใช่ field ที่แก้ตรง ๆ บน order ได้
 // ─────────────────────────────────────────────────────────────
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
@@ -19,9 +19,9 @@ import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import { isAwaitingRefund, type DeliveryUpdateInput, type Order, type OrderType } from "@/types/order";
 import { isApiError } from "@/types/api";
 import { STATUS_SELECT_OPTIONS, isFinalStatus } from "./orderStatus";
-import { LIST_ALL } from "@/lib/http";
-import { ORDERS_KEY } from "./ordersQuery";
+import { ORDERS_KEY, fetchManageOrders, orderSearchKey } from "./ordersQuery";
 import { useMarkShipped } from "@/components/shared/orders";
+import dayjs from "dayjs";
 
 export function useManageOrdersViewModel() {
   const t = useTranslations();
@@ -59,10 +59,27 @@ export function useManageOrdersViewModel() {
 
   const ordersQ = useQuery({
     queryKey: ORDERS_KEY,
-    queryFn: () => ordersService.list({ limit: LIST_ALL }),
+    queryFn: () => fetchManageOrders(),
+  });
+  const olderHidden = ordersQ.data?.olderHidden ?? false;
+
+  // ออเดอร์ปิดงานแล้วที่เก่ากว่ารายการที่โหลดไว้ — ค้นเลขออเดอร์ที่ backend แล้วรวมเข้าตาราง (backend ค้นได้แค่เลขออเดอร์)
+  const [searchTerm, setSearchTerm] = useState("");
+  useEffect(() => {
+    const id = setTimeout(() => setSearchTerm(search.trim()), 300);
+    return () => clearTimeout(id);
+  }, [search]);
+  const remoteSearchQ = useQuery({
+    queryKey: orderSearchKey(activeTab, searchTerm),
+    queryFn: () => ordersService.list({ search: searchTerm, order_type: activeTab, limit: 50 }),
+    enabled: olderHidden && searchTerm.length >= 3,
   });
 
-  const all = useMemo(() => ordersQ.data?.data ?? [], [ordersQ.data]);
+  const all = useMemo(() => {
+    const loaded = ordersQ.data?.data ?? [];
+    const extra = (remoteSearchQ.data?.data ?? []).filter((o) => !loaded.some((x) => x._id === o._id));
+    return extra.length ? [...loaded, ...extra] : loaded;
+  }, [ordersQ.data, remoteSearchQ.data]);
   // ตัวเลขบนแท็บ = ออเดอร์ที่ยังต้องจัดการ (ไม่นับยกเลิก/สำเร็จ) · ยอดรวมทุกสถานะดูได้จาก "ทั้งหมด" ในตัวกรองสถานะ
   const isOpen = (o: Order) => o.order_status !== "cancelled" && o.order_status !== "completed";
   const deliveryCount = all.filter((o) => o.order_type === "delivery" && isOpen(o)).length;
@@ -277,7 +294,7 @@ export function useManageOrdersViewModel() {
       t(`enums.orderStatus.${o.order_status}`),
       t(`enums.paymentStatus.${o.payment_status}`),
     ]);
-    exportToCsv(`orders_${activeTab}_${new Date().toISOString().slice(0, 10)}`, headers, rows);
+    exportToCsv(`orders_${activeTab}_${dayjs().format("YYYY-MM-DD")}`, headers, rows);
     alert.success(t("orders.exportSuccess", { n: filtered.length }));
   };
 
@@ -298,6 +315,8 @@ export function useManageOrdersViewModel() {
     orders: paged,
     ordersForStats: typeOrders,
     total: filtered.length,
+    /** มีออเดอร์ปิดงานแล้วที่เก่ากว่าที่โหลดไว้ — บอกผู้ใช้ว่าค้นด้วยเลขออเดอร์ได้ */
+    olderHidden,
     deliveryCount, takeawayCount, awaitingRefundCount,
     alerts,
 

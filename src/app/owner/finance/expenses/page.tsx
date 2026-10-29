@@ -1,11 +1,11 @@
 import { HydrationBoundary } from "@tanstack/react-query";
 import { expensesService } from "@/services/expenses";
 import { reportsService } from "@/services/reports";
-import { LIST_ALL } from "@/lib/http";
 import { serverHttpAsUser } from "@/lib/serverAuth";
 import { prefetchPublic } from "@/app/customer/lib/prefetchPublic";
 import { bangkokMonthRangeIso } from "@/utils/period";
 import FinanceExpensesPage from "./FinanceExpensesPageClient";
+import { RECURRING_EXPENSES_KEY, RECURRING_EXPENSES_PARAMS, expensesRangeKey, expensesRangeParams } from "../expensesQuery";
 
 // บันทึกค่าใช้จ่าย — ดึงรายการค่าใช้จ่าย + รายรับเดือนนี้ฝั่ง server ด้วย cookie ของผู้ใช้ (no-store) ก่อนส่ง HTML
 // เดิมเนื้อหาขึ้นหลัง JS ทำงาน + ยิง API (Lighthouse มือถือ LCP 4.6 วิ) · query key ตรงกับ useFinanceExpensesViewModel ·
@@ -17,7 +17,8 @@ export default async function FinanceExpensesRoute() {
   const state = await prefetchPublic(
     h
       ? [
-          { queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: LIST_ALL }, h) },
+          { queryKey: [...expensesRangeKey(from, to)], queryFn: () => expensesService.list(expensesRangeParams(from, to), h) },
+          { queryKey: [...RECURRING_EXPENSES_KEY], queryFn: () => expensesService.list(RECURRING_EXPENSES_PARAMS, h) },
           {
             queryKey: ["reports", "revenue-by-channel", from, to],
             queryFn: () => reportsService.revenueByChannel({ date_from: from, date_to: to }, h),

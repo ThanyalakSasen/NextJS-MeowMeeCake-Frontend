@@ -6,6 +6,7 @@ import { serverHttpAsUser } from "@/lib/serverAuth";
 import { prefetchPublic } from "@/app/customer/lib/prefetchPublic";
 import { bangkokMonthRangeIso } from "@/utils/period";
 import SalesReportPage from "./SalesReportPageClient";
+import { TOP_PRODUCTS_LIMIT } from "./salesReport";
 
 // รายงานยอดขาย — ดึงข้อมูลเดือนนี้ฝั่ง server ด้วย cookie ของผู้ใช้ (no-store) ก่อนส่ง HTML
 // เดิมโหลดหลัง JS ทำงาน → การ์ดสรุป (LCP) ขึ้นช้า (Lighthouse มือถือ LCP 3.6 วิ)
@@ -20,7 +21,7 @@ export default async function SalesReportRoute() {
       ? [
           {
             queryKey: ["dashboard", "top-products", from, to],
-            queryFn: () => reportsService.topProducts({ limit: 50, date_from: from, date_to: to }, h),
+            queryFn: () => reportsService.topProducts({ limit: TOP_PRODUCTS_LIMIT, date_from: from, date_to: to }, h),
           },
           { queryKey: ["products"], queryFn: () => productsService.list({ limit: LIST_ALL }, h) },
         ]

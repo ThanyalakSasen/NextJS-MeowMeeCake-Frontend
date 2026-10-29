@@ -13,6 +13,7 @@ import { productsService } from "@/services/products";
 import { LIST_ALL } from "@/lib/http";
 import { unitsService } from "@/services/units";
 import { usersService } from "@/services/users";
+import { STAFF_KEY, STAFF_PARAMS } from "@/app/owner/employees/employeesQuery";
 import { rolesService } from "@/services/roles";
 import { recipesService } from "@/services/recipes";
 import { preorderRoundsService } from "@/services/preorderRounds";
@@ -110,7 +111,8 @@ export function useProductionViewModel() {
   const formOpen = createOpen || createFromRoundOpen;
   // พนักงาน/role/สูตร/รอบที่ปิดแล้ว = ตัวเลือกในฟอร์มสร้างเท่านั้น — ดึงเมื่อเปิดฟอร์ม (เดิมดึงตอนเปิดหน้า 4 ก้อน
   // แต่ละก้อนมาถึงแล้วทั้งหน้าวาดใหม่อีกรอบระหว่างโหลด → TBT)
-  const usersQ = useQuery({ queryKey: ["users"], queryFn: () => usersService.list({ limit: LIST_ALL }), enabled: formOpen });
+  // ทีมงานเท่านั้น (เจ้าของ+พนักงาน) — ชุดเดียวกับหน้าพนักงาน (แคชร่วม) · คนที่มีแค่สิทธิ์ผลิต backend ก็ให้เห็นแค่นี้
+  const usersQ = useQuery({ queryKey: STAFF_KEY, queryFn: () => usersService.list(STAFF_PARAMS), enabled: formOpen });
   const rolesQ = useQuery({ queryKey: ["roles"], queryFn: () => rolesService.list(), enabled: formOpen });
   const recipesQ = useQuery({ queryKey: ["recipes"], queryFn: () => recipesService.list({ limit: LIST_ALL }), enabled: createOpen });
   // รอบพรีออเดอร์ที่ "ปิดรับแล้ว" — ตัวเลือกตอนสร้างใบสั่งผลิตจากรอบ (เฉพาะที่ยังไม่มีใบสั่งผลิตอยู่)
@@ -215,6 +217,26 @@ export function useProductionViewModel() {
     done: orders.filter((o) => o.production_status === "done").length,
     cancelled: orders.filter((o) => o.production_status === "cancelled").length,
   }), [orders]);
+
+  // ── วันนี้ผลิตอะไรบ้าง (หัวแท็บแผนการผลิต) — แสดงอย่างเดียว ไม่มีปุ่มเลื่อนสถานะ (ผู้ใช้ขอ 2026-10-29) ──
+  // ใบที่วันผลิตตรงวันนี้และไม่ถูกยกเลิก · รวมจำนวนต่อสินค้า (สินค้าเดียวกันหลายใบ = บวกกัน) เรียงตามชื่อ
+  const [today] = useState<Dayjs>(() => dayjs());
+  const todayOrders = useMemo(
+    () => orders.filter((o) => o.production_status !== "cancelled" && dayjs(o.production_date).isSame(today, "day")),
+    [orders, today],
+  );
+  const todayItems = useMemo(() => {
+    const acc = new Map<string, { key: string; name: string; unit: string; qty: number; orderNos: string[] }>();
+    todayOrders.forEach((o) => o.items.forEach((it) => {
+      if (it.item_status === "cancelled") return;
+      const key = `${it.product_id}|${it.unit_abbr}`;
+      const row = acc.get(key) ?? { key, name: it.product_name, unit: it.unit_abbr, qty: 0, orderNos: [] };
+      row.qty += it.planned_qty;
+      if (!row.orderNos.includes(o.production_no)) row.orderNos.push(o.production_no);
+      acc.set(key, row);
+    }));
+    return [...acc.values()].sort((a, b) => thaiCompare(a.name, b.name));
+  }, [todayOrders]);
 
   // ── แท็บ 2: สถานะการผลิต — ดูทีละวันตาม production_date (ค่าเริ่มต้น = วันนี้) ──
   // ใบของวันก่อนที่ยังไม่ปิดงาน (รอดำเนินการ/กำลังผลิต) ค้างอยู่ในคอลัมน์เดิมทุกวันถัดไปจนกว่าจะเสร็จหรือถูกยกเลิก
@@ -437,6 +459,7 @@ export function useProductionViewModel() {
     statusFilter, setStatusFilter: (v: ProductionStatus | "all") => { setStatusFilter(v); setPage(1); },
     page, pageSize, setPagination: (p: number, ps: number) => { setPage(p); setPageSize(ps); },
     planRows, planTotal: planFiltered.length, stats,
+    today, todayItems, todayOrderCount: todayOrders.length,
     createOpen, openCreate: () => setCreateOpen(true), closeCreate: () => setCreateOpen(false),
     onCreateSubmit, creating: createOrder.isPending,
 

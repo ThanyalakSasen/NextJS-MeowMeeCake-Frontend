@@ -204,6 +204,7 @@ export function ManageOrdersView(vm: VM) {
           ))}
 
           {alertSections.length > 0 && <h2 className="m-0 -mb-2 text-base font-semibold text-brown-900">{t("orders.allOrdersTitle")}</h2>}
+          {vm.olderHidden && <p className="m-0 -mb-2 text-sm text-gray-500">{t("orders.olderHiddenNotice")}</p>}
           <DataTable
             columns={columns}
             rows={vm.orders}

@@ -27,6 +27,7 @@ import AccountSideMenu from "@/components/customer/AccountSideMenu";
 import { shopButton, shopButtonPrimary, shopInput, shopPage } from "@/components/customer/shopStyles";
 import { shopAllergenWarningsKey, shopEmailStatusKey, shopLineStatusKey, shopProfileKey } from "../lib/shopQueries";
 import { thaiCompare } from "@/lib/thaiSort";
+import dayjs from "dayjs";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^0\d{8,9}$/;
@@ -200,7 +201,7 @@ function ProfileSection({ profile, autoEdit = false }: { profile: ShopProfile; a
     name: p.user_fullname,
     phone: p.user_phone ?? "",
     birthday: p.user_birthdate ? p.user_birthdate.slice(0, 10) : "",
-    today: new Date().toISOString().slice(0, 10),
+    today: dayjs().format("YYYY-MM-DD"), // เวลาเครื่อง — toISOString (UTC) ก่อน 7 โมงเช้าได้วันของเมื่อวาน
   });
   // autoEdit (?edit=profile) = เปิดฟอร์มตั้งแต่แรก
   const [open, setOpen] = useState(autoEdit);

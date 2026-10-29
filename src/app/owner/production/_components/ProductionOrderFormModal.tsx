@@ -32,7 +32,8 @@ interface StaffOption { _id: string; user_fullname: string }
 interface ItemRow {
   key: string;
   product_id: string;
-  planned_qty: number;
+  /** null = ช่องว่าง (กำลังพิมพ์ใหม่) — เดิมแปลงเป็น 1 ทันที ช่องเด้งเป็น "1" กลางการพิมพ์ (ลบแล้วพิมพ์ 5 ได้ 15) */
+  planned_qty: number | null;
   notes: string;
 }
 
@@ -75,7 +76,7 @@ export function ProductionOrderFormModal({
   const recipeOf = (productId: string) => products.find((p) => p._id === productId)?.recipe_id;
   const checkItems = rows.flatMap((r) => {
     const recipe_id = recipeOf(r.product_id);
-    return recipe_id && r.planned_qty > 0 ? [{ recipe_id, planned_qty: r.planned_qty }] : [];
+    return recipe_id && r.planned_qty != null && r.planned_qty > 0 ? [{ recipe_id, planned_qty: r.planned_qty }] : [];
   });
   const checkKey = JSON.stringify(checkItems);
   const [debouncedKey, setDebouncedKey] = useState("[]");
@@ -95,7 +96,7 @@ export function ProductionOrderFormModal({
   stockQ.data?.items.forEach((it, i) => sent[i] && resultBySig.set(rowSig(sent[i].recipe_id, sent[i].planned_qty), it));
   const rowResult = (r: ItemRow) => {
     const recipeId = recipeOf(r.product_id);
-    return recipeId ? resultBySig.get(rowSig(recipeId, r.planned_qty)) : undefined;
+    return recipeId && r.planned_qty != null ? resultBySig.get(rowSig(recipeId, r.planned_qty)) : undefined;
   };
   // ผลรวมทุกแถวใช้ได้เฉพาะตอนผลตรงกับแถวปัจจุบันทั้งชุด
   const checkCurrent = !!stockQ.data && !stockQ.isPlaceholderData && debouncedKey === checkKey;
@@ -116,7 +117,12 @@ export function ProductionOrderFormModal({
 
   const handleOk = async () => {
     const v = await form.validateFields();
-    const validRows = rows.filter((r) => r.product_id && r.planned_qty > 0);
+    // เลือกสินค้าแล้วแต่จำนวนว่าง = บอก (ไม่ทิ้งแถวนั้นเงียบ ๆ)
+    if (rows.some((r) => r.product_id && !r.planned_qty)) {
+      alert.warning(t("production.qtyRequired"));
+      return;
+    }
+    const validRows = rows.filter((r): r is ItemRow & { planned_qty: number } => !!r.product_id && !!r.planned_qty);
     if (validRows.length === 0) {
       alert.warning(t("production.itemsRequired"));
       return;
@@ -162,7 +168,7 @@ export function ProductionOrderFormModal({
           <FormItem
             name="production_date"
             label={t("production.fieldDate")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
@@ -219,7 +225,8 @@ export function ProductionOrderFormModal({
                   min={1}
                   aria-label={t("filterLabel.quantity")}
                   value={row.planned_qty}
-                  onChange={(v) => updateRow(row.key, { planned_qty: Number(v) || 1 })}
+                  status={row.product_id && row.planned_qty == null ? "error" : undefined}
+                  onChange={(v) => updateRow(row.key, { planned_qty: v == null ? null : Number(v) })}
                   suffix={<span className="text-xs text-gray-500">{unit}</span>}
                 />
                 <Input

@@ -4,13 +4,17 @@
 // ─────────────────────────────────────────────────────────────
 import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
-import type { Expense, ExpenseInput, ExpenseListParams } from "@/types/expense";
+import type { Expense, ExpenseInput, ExpenseListParams, ExpenseSummary } from "@/types/expense";
 
 const BASE = "/admin/expenses";
 
 export const expensesService = {
   list: (params: ExpenseListParams = {}, h: HttpReader = http) =>
     h.getList<Expense>(BASE, { params }),
+
+  /** ยอดรวมตามหมวดในช่วงวันที่ — หน้าสรุปการเงินใช้แทนการโหลดทุกรายการมารวมเอง */
+  summary: async (params: { date_from?: string; date_to?: string } = {}, h: HttpReader = http): Promise<ExpenseSummary> =>
+    (await h.get<ItemResponse<ExpenseSummary>>(`${BASE}/summary`, { params })).data,
 
   get: (id: string) =>
     http.get<ItemResponse<Expense>>(`${BASE}/${id}`),

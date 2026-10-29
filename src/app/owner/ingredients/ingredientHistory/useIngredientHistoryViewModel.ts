@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { INGREDIENTS_KEY, INGREDIENTS_PARAMS, INGREDIENT_TXNS_KEY, INGREDIENT_TXNS_PARAMS } from "../ingredientsQuery";
+import { INGREDIENTS_KEY, INGREDIENTS_PARAMS, INGREDIENT_TXNS_KEY, INGREDIENT_TXNS_PARAMS, fetchIngredientTxns, ingredientTxnsByIngredientKey } from "../ingredientsQuery";
 import { ingredientTransactionsService } from "@/services/ingredientTransactions";
 import { ingredientsService } from "@/services/ingredients";
 import { usePermission } from "@/context/PermissionsContext";
@@ -16,6 +16,8 @@ import { unitLabel } from "@/utils/unitContext";
 export interface HistoryRow {
   _id: string;
   createdAt: string;
+  /** ใช้กรองตามวัตถุดิบ — กรองด้วยชื่อแล้ววัตถุดิบชื่อซ้ำกันประวัติปนกัน */
+  ingredientId: string;
   ingredientName: string;
   type: IngredientTxnType;
   quantity: number;
@@ -38,8 +40,16 @@ export function useIngredientHistoryViewModel() {
 
   const txnsQ = useQuery({
     queryKey: INGREDIENT_TXNS_KEY,
-    queryFn: () => ingredientTransactionsService.list(INGREDIENT_TXNS_PARAMS),
+    queryFn: () => fetchIngredientTxns(),
   });
+  const olderHidden = txnsQ.data?.olderHidden ?? false;
+  // เลือกวัตถุดิบตัวเดียว + รายการรวมโหลดไม่ครบ → ดึงประวัติของตัวนั้นจาก backend (ครบกว่า ไม่ตกหล่นรายการเก่า)
+  const byIngredientQ = useQuery({
+    queryKey: ingredientTxnsByIngredientKey(ingredientId),
+    queryFn: () => ingredientTransactionsService.list({ ...INGREDIENT_TXNS_PARAMS, ingredient_id: ingredientId }),
+    enabled: olderHidden && ingredientId !== "all",
+  });
+  const txns = (olderHidden && ingredientId !== "all" ? byIngredientQ.data?.data : undefined) ?? txnsQ.data?.data;
   const ingredientsQ = useQuery({
     queryKey: INGREDIENTS_KEY,
     queryFn: () => ingredientsService.list(INGREDIENTS_PARAMS),
@@ -54,9 +64,10 @@ export function useIngredientHistoryViewModel() {
         { name: i.ingredient_name, unit: unitLabel(i.unit_id) },
       ]),
     );
-    return (txnsQ.data?.data ?? [])
+    return (txns ?? [])
       .map((tx) => {
-        const ing = ingMap.get(refId(tx.ingredient_id));
+        const ingredientId = refId(tx.ingredient_id);
+        const ing = ingMap.get(ingredientId);
         const performedByName =
           typeof tx.performed_by === "object" && tx.performed_by ? tx.performed_by.user_fullname : null;
         return {
@@ -64,6 +75,7 @@ export function useIngredientHistoryViewModel() {
           // วันที่ทำรายการจริง (บันทึกย้อนหลังได้) — ข้อมูลเก่าไม่มีใช้เวลาที่บันทึก
           createdAt: tx.transaction_date ?? tx.created_at,
           expiryDate: tx.expiry_date ?? null,
+          ingredientId,
           ingredientName: ing?.name ?? "—",
           type: tx.type,
           quantity: tx.qty,
@@ -73,14 +85,10 @@ export function useIngredientHistoryViewModel() {
         };
       })
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }, [txnsQ.data, ingredientsQ.data]);
+  }, [txns, ingredientsQ.data]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const ingName =
-      ingredientId === "all"
-        ? null
-        : (ingredientsQ.data?.data ?? []).find((i) => i._id === ingredientId)?.ingredient_name ?? null;
     return rows.filter((r) => {
       const matchSearch =
         !q ||
@@ -88,24 +96,23 @@ export function useIngredientHistoryViewModel() {
         r.note.toLowerCase().includes(q) ||
         r.performedBy.toLowerCase().includes(q);
       const matchType = typeFilter === "all" || r.type === typeFilter;
-      const matchIng = ingName === null || r.ingredientName === ingName;
+      const matchIng = ingredientId === "all" || r.ingredientId === ingredientId;
       return matchSearch && matchType && matchIng;
     });
-  }, [rows, search, typeFilter, ingredientId, ingredientsQ.data]);
+  }, [rows, search, typeFilter, ingredientId]);
 
+  // ยอดจริงจาก backend — รายการที่โหลดอาจไม่ครบประวัติ (ดู fetchIngredientTxns)
   const stats = useMemo(
-    () => ({
-      total: rows.length,
-      receive: rows.filter((r) => r.type === "receive").length,
-      use: rows.filter((r) => r.type === "use").length,
-    }),
-    [rows],
+    () => ({ total: txnsQ.data?.total ?? 0, receive: txnsQ.data?.receive ?? 0, use: txnsQ.data?.use ?? 0 }),
+    [txnsQ.data],
   );
 
   return {
     perm,
     rows: filtered,
     stats,
+    /** รายการรวมแสดงเฉพาะล่าสุด — เลือกวัตถุดิบเพื่อดูประวัติครบของตัวนั้น */
+    olderHidden,
     ingredients,
     // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
     isLoading: txnsQ.isPending || ingredientsQ.isPending,

@@ -10,6 +10,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Form, FormItem, useAntForm, InputNumber, Input } from "@/components/base";
 import { formatNumber } from "@/i18n/format";
 import { modalButtonIcons } from "@/components/shared/actions";
+import { PRODUCT_STOCK_MAX } from "@/components/shared/stock";
 import type { StockActionMode, StockProductRow } from "../useProductStockViewModel";
 
 export function StockActionModal({
@@ -65,7 +66,8 @@ export function StockActionModal({
               name="value"
               label={t(mode === "adjust" ? "productStock.newStockLabel" : "productStock.qtyLabel", { unit: target.unit })}
               rules={[
-                { required: true, message: t("validation.required") },
+                { required: true, whitespace: true, message: t("validation.required") },
+                { type: "number", max: PRODUCT_STOCK_MAX, message: t("validation.maxValue", { max: formatNumber(PRODUCT_STOCK_MAX, locale) }) },
                 // เบิกเกินที่มี backend ปฏิเสธอยู่แล้ว — บอกก่อนส่ง
                 ...(mode === "use"
                   ? [{ type: "number" as const, max: target.stock, message: t("productStock.useExceeds", { qty: target.stock, unit: target.unit }) }]

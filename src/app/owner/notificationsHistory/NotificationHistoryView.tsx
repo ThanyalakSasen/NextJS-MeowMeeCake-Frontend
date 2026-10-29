@@ -155,6 +155,7 @@ export function NotificationHistoryView(vm: VM) {
             <StatCard label={t("enums.notificationType.warning")} value={vm.stats.warning} sub={t("notifications.statWarningSub")} tone="warn" />
             <StatCard label={t("enums.notificationType.error")} value={vm.stats.error} sub={t("notifications.statErrorSub")} tone="down" />
           </StatCardsGrid>
+          {vm.olderHidden && <p className="m-0 -mt-2 text-sm text-gray-500">{t("notifications.olderHiddenNotice")}</p>}
 
           <DataTable
             columns={columns}

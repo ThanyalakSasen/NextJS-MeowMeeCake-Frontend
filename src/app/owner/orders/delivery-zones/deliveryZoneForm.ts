@@ -5,6 +5,7 @@
 //   - ไม่มีโซนเปิดใช้ / ไม่ตรงโซนไหนและไม่มี catch-all = ค่าตั้งต้นจาก env ของ backend
 // ─────────────────────────────────────────────────────────────
 import type { DeliveryZone, DeliveryZoneInput } from "@/types/deliveryZone";
+import { isWholeSatang } from "@/app/owner/shipping/shippingZoneForm";
 
 export const EMPTY_ZONE_FORM: DeliveryZoneInput = {
   zone_name: "",
@@ -26,7 +27,7 @@ export function validateZone(f: DeliveryZoneInput): ZoneErrors {
   const name = f.zone_name.trim();
   if (!name) e.zone_name = "nameRequired";
   else if (name.length > 200) e.zone_name = "nameTooLong";
-  if (!Number.isFinite(f.fee) || f.fee < 0 || Math.round(f.fee * 100) !== f.fee * 100) e.fee = "feeInvalid";
+  if (!Number.isFinite(f.fee) || f.fee < 0 || !isWholeSatang(f.fee)) e.fee = "feeInvalid";
   // backend รับโซนไม่มีจังหวัดได้ แต่โซนแบบนั้นไม่มีวันถูกใช้ — กันไว้ที่หน้าเว็บ
   if (!f.is_catch_all && f.provinces.length === 0) e.provinces = "provincesRequired";
   if (!Number.isInteger(f.sort_order)) e.sort_order = "sortInvalid";

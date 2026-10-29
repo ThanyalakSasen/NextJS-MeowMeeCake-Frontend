@@ -1,7 +1,8 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ Finance Expenses — โหลด expenses ครั้งเดียว + รายรับของเดือนที่เลือก (ไว้โชว์คู่เทียบ)
-// filter/pagination ฝั่ง client ภายในเดือนที่เลือก (แพทเทิร์นเดียวกับ Production/Ingredient History)
+// ViewModel ของ Finance Expenses — ค่าใช้จ่ายของเดือนที่เลือก (backend กรองช่วงวันที่ — ดู expensesQuery.ts)
+// + รายจ่ายประจำทุกเดือน (แจ้งเตือนรอบถัดไป) + รายรับของเดือนที่เลือก (ไว้โชว์คู่เทียบ)
+// ค้นหา/หมวด/แบ่งหน้า ฝั่ง client ภายในเดือนที่เลือก
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,8 +19,8 @@ import type { Expense, ExpenseInput } from "@/types/expense";
 import { isApiError } from "@/types/api";
 import { toExpenseInput, type ExpenseFormValue } from "./expenseForm";
 import type { RecurringReminder } from "./_components/RecurringRemindersList";
-import { LIST_ALL } from "@/lib/http";
 import { getRangeStartEnd } from "@/utils/period";
+import { RECURRING_EXPENSES_KEY, RECURRING_EXPENSES_PARAMS, expensesRangeKey, expensesRangeParams } from "../expensesQuery";
 
 export function useFinanceExpensesViewModel() {
   const t = useTranslations();
@@ -27,23 +28,28 @@ export function useFinanceExpensesViewModel() {
   const qc = useQueryClient();
   const perm = usePermission("finance_expenses");
 
-  const expensesQ = useQuery({ queryKey: ["expenses"], queryFn: () => expensesService.list({ limit: LIST_ALL }) });
-  const expenses = useMemo(() => expensesQ.data?.data ?? [], [expensesQ.data]);
-
-  // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
-  const isLoading = expensesQ.isPending;
-  const isError = expensesQ.isError;
-  const refetch = () => expensesQ.refetch();
-
   const [selectedMonthDate, setSelectedMonthDate] = useState<Dayjs>(dayjs());
   const selectedMonth = selectedMonthDate.format("YYYY-MM");
+  const [monthStart, monthEnd] = useMemo(() => getRangeStartEnd("month", selectedMonthDate), [selectedMonthDate]);
+  const from = monthStart.toISOString();
+  const to = monthEnd.toISOString();
+
+  // ค่าใช้จ่ายของเดือนที่เลือก — backend กรองตามเวลาไทย (เดิม startsWith("YYYY-MM") บนเวลา UTC: ต้นเดือนก่อน 7 โมงตกไปเดือนก่อน)
+  const monthQ = useQuery({ queryKey: expensesRangeKey(from, to), queryFn: () => expensesService.list(expensesRangeParams(from, to)) });
+  const monthExpenses = useMemo(() => monthQ.data?.data ?? [], [monthQ.data]);
+  // รายจ่ายประจำทุกเดือน — การ์ดแจ้งเตือนรอบถัดไปไม่ขึ้นกับเดือนที่เลือก
+  const recurringQ = useQuery({ queryKey: RECURRING_EXPENSES_KEY, queryFn: () => expensesService.list(RECURRING_EXPENSES_PARAMS) });
+
+  // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
+  const isLoading = monthQ.isPending;
+  const isError = monthQ.isError;
+  const refetch = () => { void monthQ.refetch(); void recurringQ.refetch(); };
 
   // รายรับของเดือน — คิดที่ backend (ชำระแล้ว ออเดอร์ + พรีออเดอร์) query key เดียวกับหน้าสรุปกำไร-ขาดทุน ·
   // เดิมโหลดออเดอร์ทั้งร้าน (LIST_ALL) มารวมเองในเครื่อง = JSON ก้อนใหญ่ + งานหนักบน main thread (Lighthouse TBT)
-  const [monthStart, monthEnd] = useMemo(() => getRangeStartEnd("month", selectedMonthDate), [selectedMonthDate]);
   const revenueQ = useQuery({
-    queryKey: ["reports", "revenue-by-channel", monthStart.toISOString(), monthEnd.toISOString()],
-    queryFn: () => reportsService.revenueByChannel({ date_from: monthStart.toISOString(), date_to: monthEnd.toISOString() }),
+    queryKey: ["reports", "revenue-by-channel", from, to],
+    queryFn: () => reportsService.revenueByChannel({ date_from: from, date_to: to }),
   });
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | "all">("all");
@@ -51,11 +57,6 @@ export function useFinanceExpensesViewModel() {
   const [pageSize, setPageSize] = useState(10);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Expense | null>(null);
-
-  const monthExpenses = useMemo(
-    () => expenses.filter((e) => e.date.startsWith(selectedMonth)),
-    [expenses, selectedMonth],
-  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -85,7 +86,7 @@ export function useFinanceExpensesViewModel() {
   /** รายจ่ายประจำที่ยังไม่ถึงกำหนด — เลื่อนวันครบกำหนดไปเรื่อย ๆ ทีละเดือนจนกว่าจะถึงอนาคต */
   const recurringReminders: RecurringReminder[] = useMemo(() => {
     const today = dayjs();
-    return expenses
+    return (recurringQ.data?.data ?? [])
       .filter((e) => e.is_recurring)
       .map((e) => {
         let due = dayjs(e.date);
@@ -99,7 +100,7 @@ export function useFinanceExpensesViewModel() {
         };
       })
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  }, [expenses]);
+  }, [recurringQ.data]);
 
   // ── mutations ──
   const invalidate = () => qc.invalidateQueries({ queryKey: ["expenses"] });

@@ -14,12 +14,15 @@ import type { ProductKind } from "@/types/product";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
 import type { RecipeFormValue } from "../recipeForm";
 import { emptyRecipeForm, fromRecipe } from "../recipeForm";
-import { IngredientEditor, type IngredientOption } from "./IngredientEditor";
+import { IngredientEditor, hasQty, type EditableIngredientLine, type IngredientOption } from "./IngredientEditor";
 import { StepEditor } from "./StepEditor";
 
 // หัวคอลัมน์ + ทุกแถวของสูตรย่อยใช้ชุดเดียวกัน · minmax(0, …) กันคอลัมน์ขยายตามชื่อสูตรยาว (ช่องจำนวนเยื้อง)
 // จำนวน 110px ให้พอทั้งตัวเลขและคำว่า "ชุด" (suffix) — เท่ากับช่องจำนวนของวัตถุดิบ (IngredientEditor)
 const COMPONENT_COLUMNS = "minmax(0, 1fr) 110px 24px";
+
+/** quantity null = ช่องว่างระหว่างพิมพ์ (เดิมเด้งเป็น 1 ทันที) — ตรวจ > 0 ตอนบันทึก */
+type ComponentRow = Omit<RecipeComponentRef, "quantity"> & { quantity: number | null };
 
 export interface RecipeSubmitValue extends RecipeFormValue {
   components: RecipeComponentRef[];
@@ -50,19 +53,23 @@ export function MainRecipeModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<RecipeFormValue>();
-  const [components, setComponents] = useState<RecipeComponentRef[]>(editTarget?.components ?? []);
-  const [ingredients, setIngredients] = useState<RecipeIngredientLine[]>(editTarget?.ingredients ?? []);
+  const [components, setComponents] = useState<ComponentRow[]>(editTarget?.components ?? []);
+  const [ingredients, setIngredients] = useState<EditableIngredientLine[]>(editTarget?.ingredients ?? []);
   const [steps, setSteps] = useState<RecipeStep[]>(editTarget?.steps ?? []);
 
   const addComponentRef = () => setComponents((p) => [...p, { component_id: "", component_name: "", quantity: 1 }]);
   const removeComponentRef = (i: number) => setComponents((p) => p.filter((_, idx) => idx !== i));
-  const updateComponentRef = (i: number, patch: Partial<RecipeComponentRef>) =>
+  const updateComponentRef = (i: number, patch: Partial<ComponentRow>) =>
     setComponents((p) => p.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
 
   const handleOk = async () => {
     const v = await form.validateFields();
     if (components.some((c) => !c.component_id) || ingredients.some((i) => !i.ingredient_id)) {
       alert.warning(t("recipes.ingredientRequired"));
+      return;
+    }
+    if (!hasQty(components) || !hasQty(ingredients)) {
+      alert.warning(t("recipes.qtyRequired"));
       return;
     }
     // ต้นทุนส่งไปเฉพาะเมื่อผู้ใช้กรอกเอง — ไม่แตะช่องนี้ = ให้ backend คำนวณจากวัตถุดิบใหม่ทุกครั้งที่บันทึก
@@ -86,10 +93,10 @@ export function MainRecipeModal({
     >
       <Form form={form} layout="vertical" initialValues={editTarget ? fromRecipe(editTarget) : emptyRecipeForm}>
         <div className="grid grid-cols-2 gap-3">
-          <FormItem name="recipe_name" label={t("recipes.fieldRecipeName")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem name="recipe_name" label={t("recipes.fieldRecipeName")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Input placeholder={t("recipes.recipeNamePlaceholder")} />
           </FormItem>
-          <FormItem name="product_id" label={t("recipes.fieldProduct")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem name="product_id" label={t("recipes.fieldProduct")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Select
               disabled={!!editTarget}
               placeholder={t("recipes.selectProduct")}
@@ -99,10 +106,18 @@ export function MainRecipeModal({
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <FormItem name="yield_qty" label={t("recipes.fieldYieldQty")}>
+          {/* backend หารด้วยค่านี้ตอนหักวัตถุดิบ — ว่าง/0 = ปิดงานผลิตไม่ได้ (สูตรหลัก) หรือสูตรย่อยถูกข้ามไม่หักวัตถุดิบ */}
+          <FormItem
+            name="yield_qty"
+            label={t("recipes.fieldYieldQty")}
+            rules={[
+              { required: true, whitespace: true, message: t("validation.required") },
+              { type: "number", min: 0.01, message: t("validation.positive") },
+            ]}
+          >
             <InputNumber min={0} />
           </FormItem>
-          <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Select options={yieldUnitOptions} placeholder={t("recipes.selectUnit")} />
           </FormItem>
           <FormItem name="duration_minutes" label={t("recipes.fieldDuration")}>
@@ -148,7 +163,8 @@ export function MainRecipeModal({
                 min={1}
                 aria-label={t("filterLabel.batches")}
                 value={ref.quantity}
-                onChange={(v) => updateComponentRef(i, { quantity: Number(v) || 1 })}
+                status={ref.component_id && !ref.quantity ? "error" : undefined}
+                onChange={(v) => updateComponentRef(i, { quantity: v == null ? null : Number(v) })}
                 suffix={<span className="text-xs text-gray-500">{t("recipes.batch")}</span>}
               />
               <Button

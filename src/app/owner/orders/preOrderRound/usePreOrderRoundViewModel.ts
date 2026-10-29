@@ -28,7 +28,7 @@ import type { DeliveryUpdateInput, OrderType } from "@/types/order";
 import { formatCurrency } from "@/i18n/format";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 import { LIST_ALL } from "@/lib/http";
-import { PREORDERS_KEY, ROUNDS_KEY, tabFrom, type TabKey } from "./preorderQuery";
+import { PREORDERS_KEY, ROUNDS_KEY, fetchPreorders, preorderSearchKey, tabFrom, type TabKey } from "./preorderQuery";
 import { useRoundDashboardViewModel } from "./useRoundDashboardViewModel";
 import { useMarkShipped } from "@/components/shared/orders";
 
@@ -52,9 +52,10 @@ export function usePreOrderRoundViewModel() {
   // แท็บสรุปรอบ — โหลดเมื่อเปิดแท็บนี้ครั้งแรก
   const dashboard = useRoundDashboardViewModel(activeTab === "dashboard");
 
-  // พรีออเดอร์ทั้งหมด — ใช้ทั้งแท็บคำสั่งซื้อ และนับยอดค้างในรอบตอนยืนยันปิด/ยกเลิกรอบ
-  const preordersQ = useQuery({ queryKey: PREORDERS_KEY, queryFn: () => preordersService.list({ limit: LIST_ALL }) });
-  const preorders = useMemo(() => preordersQ.data?.data ?? [], [preordersQ.data]);
+  // พรีออเดอร์ (ที่ยังไม่ปิดงานครบทุกตัว + ล่าสุด) — ใช้ทั้งแท็บคำสั่งซื้อ และนับยอดค้างในรอบตอนยืนยันปิด/ยกเลิกรอบ · ดู fetchPreorders
+  const preordersQ = useQuery({ queryKey: PREORDERS_KEY, queryFn: () => fetchPreorders() });
+  const loadedPreorders = useMemo(() => preordersQ.data?.data ?? [], [preordersQ.data]);
+  const olderPreordersHidden = preordersQ.data?.olderHidden ?? false;
 
   // ══════════════════ แท็บ 1: รอบพรีออเดอร์ ══════════════════
   const roundsQ = useQuery({ queryKey: ROUNDS_KEY, queryFn: () => preorderRoundsService.list({ limit: LIST_ALL }) });
@@ -162,7 +163,7 @@ export function usePreOrderRoundViewModel() {
 
   /** ยอดพรีออเดอร์ที่ยังค้างในรอบ — บอกในกล่องยืนยันว่าปิด/ยกเลิกรอบแล้วจะกระทบกี่รายการ */
   const roundOrderCounts = (roundId: string) => {
-    const active = preorders.filter((o) => o.round_id === roundId && !isFinalOrderStatus(o.order_status));
+    const active = loadedPreorders.filter((o) => o.round_id === roundId && !isFinalOrderStatus(o.order_status));
     const paid = active.filter((o) => o.payment_status === "paid").length;
     return { active: active.length, paid, unpaid: active.length - paid };
   };
@@ -306,6 +307,22 @@ export function usePreOrderRoundViewModel() {
   const [orderPage, setOrderPage] = useState(1);
   const [orderPageSize, setOrderPageSize] = useState(10);
 
+  // พรีออเดอร์ปิดงานแล้วที่เก่ากว่ารายการที่โหลดไว้ — ค้นเลขพรีออเดอร์ที่ backend แล้วรวมเข้าตาราง (backend ค้นได้แค่เลขพรีออเดอร์)
+  const [orderSearchTerm, setOrderSearchTerm] = useState("");
+  useEffect(() => {
+    const id = setTimeout(() => setOrderSearchTerm(orderSearch.trim()), 300);
+    return () => clearTimeout(id);
+  }, [orderSearch]);
+  const remoteSearchQ = useQuery({
+    queryKey: preorderSearchKey(orderSearchTerm),
+    queryFn: () => preordersService.list({ search: orderSearchTerm, limit: 50 }),
+    enabled: olderPreordersHidden && orderSearchTerm.length >= 3,
+  });
+  const preorders = useMemo(() => {
+    const extra = (remoteSearchQ.data?.data ?? []).filter((o) => !loadedPreorders.some((x) => x._id === o._id));
+    return extra.length ? [...loadedPreorders, ...extra] : loadedPreorders;
+  }, [loadedPreorders, remoteSearchQ.data]);
+
   const ordersFiltered = useMemo(() => {
     const q = orderSearch.trim().toLowerCase();
     return preorders.filter((o) => {
@@ -322,12 +339,13 @@ export function usePreOrderRoundViewModel() {
     [ordersFiltered, orderPage, orderPageSize],
   );
 
+  // ทั้งหมด/สำเร็จ = ยอดจริงจาก backend (รายการที่โหลดอาจไม่ครบประวัติ) · รอ/กำลังทำ = สถานะเปิด โหลดครบเสมอ
   const orderStats = useMemo(() => ({
-    total: preorders.length,
-    pending: preorders.filter((o) => o.order_status === "pending").length,
-    inProgress: preorders.filter((o) => ["confirmed", "preparing", "ready"].includes(o.order_status)).length,
-    completed: preorders.filter((o) => o.order_status === "completed").length,
-  }), [preorders]);
+    total: preordersQ.data?.total ?? 0,
+    pending: loadedPreorders.filter((o) => o.order_status === "pending").length,
+    inProgress: loadedPreorders.filter((o) => ["confirmed", "preparing", "ready"].includes(o.order_status)).length,
+    completed: preordersQ.data?.completed ?? 0,
+  }), [preordersQ.data, loadedPreorders]);
 
   const roundOptions = useMemo(() => rounds.map((r) => ({ value: r._id, label: r.round_name })), [rounds]);
 
@@ -444,11 +462,20 @@ export function usePreOrderRoundViewModel() {
     );
   };
 
-  const onCancelOrder = (o: Preorder) => {
+  // ยกเลิกต้องยืนยัน + กรอกเหตุผลก่อนเสมอ (CancelOrderModal เดียวกับหน้าจัดการคำสั่งซื้อ) — เดิมกดปุ่มเดียวยกเลิกทันที
+  const [cancelTarget, setCancelTarget] = useState<Preorder | null>(null);
+  const onCancelOrder = (o: Preorder) => setCancelTarget(o);
+
+  const onConfirmCancelOrder = (reason: string) => {
+    const o = cancelTarget;
+    if (!o) return;
     changeOrderStatus.mutate(
-      { id: o._id, status: "cancelled" },
+      { id: o._id, status: "cancelled", reason },
       {
-        onSuccess: () => alert.success(t("preorderRound.orderCancelled", { no: o.preorder_no })),
+        onSuccess: () => {
+          alert.success(t("preorderRound.orderCancelled", { no: o.preorder_no }));
+          setCancelTarget(null);
+        },
         onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.orderCancelFailed")),
       },
     );
@@ -530,7 +557,7 @@ export function usePreOrderRoundViewModel() {
     orderRoundFilter, setOrderRoundFilter: (v: string) => { setOrderRoundFilterState(v); setOrderPage(1); },
     orderTypeFilter, setOrderTypeFilter: (v: OrderType | "all") => { setOrderTypeFilterState(v); setOrderPage(1); },
     orderPage, orderPageSize, setOrderPagination: (p: number, ps: number) => { setOrderPage(p); setOrderPageSize(ps); },
-    orderRows, orderTotal: ordersFiltered.length, orderStats, roundOptions,
+    orderRows, orderTotal: ordersFiltered.length, orderStats, roundOptions, olderPreordersHidden,
     isOrdersLoading: preordersQ.isPending, isOrdersError: preordersQ.isError, refetchOrders: () => preordersQ.refetch(),
 
     selectedOrder, orderDrawerOpen, isOrderDetailLoading: orderDetailQ.isLoading || paymentQ.isLoading,
@@ -544,5 +571,7 @@ export function usePreOrderRoundViewModel() {
 
     isFinalOrderStatus, getNextOrderStatus, paymentDueState,
     onAdvanceOrderStatus, onCancelOrder,
+    cancelTarget, onConfirmCancelOrder, closeCancelOrder: () => setCancelTarget(null),
+    cancellingOrder: changeOrderStatus.isPending,
   };
 }

@@ -17,6 +17,7 @@ import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { OrderType } from "@/types/order";
 import type { PaymentGroup, RoundCustomerLine, RoundCustomerOrder, RoundDashboardRow } from "@/types/preorderRoundDashboard";
+import dayjs from "dayjs";
 
 const PAGE_SIZE = 10;
 
@@ -123,7 +124,7 @@ export function useRoundDashboardViewModel(enabled: boolean) {
         ]),
       ),
     );
-    const date = new Date().toISOString().slice(0, 10);
+    const date = dayjs().format("YYYY-MM-DD");
     exportToCsv(`preorder-round_${data.round.round_name.replace(/[\\/:*?"<>|\s]+/g, "-")}_${date}`, headers, rows);
   };
 

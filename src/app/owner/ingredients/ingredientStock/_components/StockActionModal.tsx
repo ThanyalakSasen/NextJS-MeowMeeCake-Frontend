@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Form, FormItem, useAntForm, InputNumber, Input } from "@/components/base";
 import { formatNumber } from "@/i18n/format";
 import { modalButtonIcons } from "@/components/shared/actions";
+import { INGREDIENT_STOCK_MAX } from "@/components/shared/stock";
 import type { ActionMode, StockRow } from "../useIngredientStockViewModel";
 
 interface FormValues {
@@ -72,7 +73,10 @@ export function StockActionModal({
             <FormItem
               name="value"
               label={valueLabel}
-              rules={[{ required: true, message: t("validation.required") }]}
+              rules={[
+                { required: true, whitespace: true, message: t("validation.required") },
+                { type: "number", max: INGREDIENT_STOCK_MAX, message: t("validation.maxValue", { max: formatNumber(INGREDIENT_STOCK_MAX, locale) }) },
+              ]}
             >
               <InputNumber min={mode === "adjust" ? 0 : 0.01} step={1} />
             </FormItem>

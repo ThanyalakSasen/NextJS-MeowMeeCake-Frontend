@@ -31,6 +31,7 @@ import type { Product } from "@/types/product";
 import type { Promotion } from "@/types/promotion";
 import type { ProductCustomization } from "@/types/productCustomization";
 import type { PosMember, PosProduct } from "@/types/pos";
+import type { Order } from "@/types/order";
 import { nextRawInput, thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import {
   addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoLines, type CartLine,
@@ -322,7 +323,26 @@ export function usePOSViewModel() {
   const received = Number(receivedDigits || "0");
   const receivedShort = received < total;
 
+  // ── ออเดอร์ที่สร้างแล้วแต่รับเงินไม่สำเร็จ (ขั้น 1 ผ่าน ขั้น 2 ล้ม เช่นเน็ตหลุด) ──
+  // ออเดอร์นี้ตัดสต็อกไปแล้ว — กดยืนยันอีกครั้งต้องรับเงินใบเดิม ห้ามสร้างใบใหม่ (เดิมได้ออเดอร์ซ้ำ + ตัดสต็อกสองรอบ)
+  // signature = body ที่ใช้สร้าง → บิลถูกแก้ระหว่างนั้น (สินค้า/โปร/สมาชิก) ใบเดิมไม่ตรงกับบิลแล้ว ยกเลิกทิ้งแล้วสร้างใหม่
+  const pendingOrderRef = useRef<{ order: Order; signature: string } | null>(null);
+  /** ทิ้งออเดอร์ที่ค้างรับเงิน — ยกเลิกที่ backend (คืนสต็อก) · ยกเลิกไม่ได้ (ไม่มีสิทธิ์ orders.update ฯลฯ) = บอกเลขออเดอร์ให้ไปยกเลิกเอง */
+  const abandonPendingOrder = async () => {
+    const pending = pendingOrderRef.current;
+    pendingOrderRef.current = null;
+    if (!pending) return;
+    try {
+      await ordersService.updateStatus(pending.order._id, "cancelled", t("pos.abandonedOrderReason"));
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["products"] });
+    } catch {
+      alert.warning(t("pos.abandonedOrderCancelFailed", { no: pending.order.order_no }));
+    }
+  };
+
   const resetBill = () => {
+    void abandonPendingOrder();
     setCart([]);
     setSelectedPromoIds([]);
     setReceivedDigits("");
@@ -338,13 +358,22 @@ export function usePOSViewModel() {
       if (!userId) throw new Error("Guest customer account not found — run `npm run seed` on the backend");
 
       // 1) สร้างออเดอร์ — backend ตัดสต็อก + คำนวณ subtotal/ส่วนลดโปรโมชัน/total_amount ให้เองทั้งหมด
-      const orderRes = await ordersService.create(
-        buildOrderInput({ cart, userId, discount: 0, promotionIds: appliedPromos.map((e) => e.promotion._id) }),
-      );
-      const order = orderRes.data;
+      //    มีใบที่สร้างค้างไว้จากรอบก่อน (รับเงินไม่สำเร็จ) และบิลยังเหมือนเดิม → ใช้ใบเดิม
+      const input = buildOrderInput({ cart, userId, discount: 0, promotionIds: appliedPromos.map((e) => e.promotion._id) });
+      const signature = JSON.stringify(input);
+      if (pendingOrderRef.current && pendingOrderRef.current.signature !== signature) await abandonPendingOrder();
+      const order = pendingOrderRef.current?.order ?? (await ordersService.create(input)).data;
+      pendingOrderRef.current = { order, signature };
 
       // 2) รับเงิน + ปิดงานในคำขอเดียว (เงินสด/QR ที่เคาน์เตอร์ = จ่ายจริงแล้ว) — ยอดใช้ order.total_amount ของ backend
-      await posService.checkout(order._id);
+      try {
+        await posService.checkout(order._id);
+      } catch (e) {
+        // รอบก่อนรับเงินสำเร็จแล้วแต่คำตอบหาย → ยิงซ้ำได้ 409 "ชำระเงินแล้ว" — ดูสถานะจริงก่อนตัดสินว่าล้ม
+        const fresh = await ordersService.get(order._id).catch(() => null);
+        if (fresh?.data.payment_status !== "paid") throw e;
+      }
+      pendingOrderRef.current = null;
 
       const paid = method === "cash" ? cash : order.total_amount;
       return {
@@ -380,7 +409,13 @@ export function usePOSViewModel() {
       // ยอดขายหน้าร้าน (POS-) เข้ารายรับทันที — หน้าสรุปการเงินที่เปิดค้างไว้ต้องดึงใหม่
       qc.invalidateQueries({ queryKey: ["reports"] });
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("pos.saveFailed")),
+    onError: (e) => {
+      const reason = isApiError(e) ? e.message : t("pos.saveFailed");
+      const pending = pendingOrderRef.current;
+      // สร้างออเดอร์แล้วแต่รับเงินไม่สำเร็จ — บอกว่ากดอีกครั้งได้โดยไม่สร้างออเดอร์ซ้ำ
+      if (pending) alert.error(t("pos.paymentPendingRetry", { no: pending.order.order_no, reason }));
+      else alert.error(reason);
+    },
   });
 
   // ── คีย์แพด "รับเงินมา" ──

@@ -10,7 +10,7 @@ import { actionIcon } from "@/components/shared/actions";
 import type { StockProductRow, useProductStockViewModel } from "./useProductStockViewModel";
 import { StockProgressRow } from "./_components/StockProgressRow";
 import { StockActionModal } from "./_components/StockActionModal";
-import { BulkStockModal, StockAlertSection } from "@/components/shared/stock";
+import { BulkStockModal, StockAlertSection, PRODUCT_STOCK_MAX } from "@/components/shared/stock";
 import { LoadFailed } from "@/components/shared/feedback";
 import { LotLookupModal } from "@/components/shared/lots";
 
@@ -205,6 +205,7 @@ export function ProductStockView(vm: VM) {
         items={vm.bulkItems}
         initialIds={vm.alertRows.map((r) => r._id)}
         withNote
+        max={PRODUCT_STOCK_MAX}
         onClose={vm.closeBulk}
         onSubmit={vm.onBulkSubmit}
       />

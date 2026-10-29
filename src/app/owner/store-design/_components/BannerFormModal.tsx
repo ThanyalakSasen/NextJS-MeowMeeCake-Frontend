@@ -9,6 +9,7 @@ import type { Rule } from "antd/es/form";
 import type { Banner } from "@/types/banner";
 import { modalButtonIcons } from "@/components/shared/actions";
 import { emptyBannerForm, fromBanner, type BannerFormValue } from "../bannerForm";
+import { isSafeLink } from "@/lib/safeLink";
 
 export function BannerFormModal({
   open,
@@ -32,7 +33,12 @@ export function BannerFormModal({
     form.setFieldsValue(editTarget ? fromBanner(editTarget) : emptyBannerForm);
   }, [open, editTarget, form]);
 
-  const required: Rule[] = [{ required: true, message: t("validation.required") }];
+  const required: Rule[] = [{ required: true, whitespace: true, message: t("validation.required") }];
+  // ลิงก์ไปอยู่ใน href ของหน้าร้านตรง ๆ — ว่างได้ · ไม่ว่างต้องเป็น https://… หรือ /… (lib/safeLink)
+  const linkRule: Rule = {
+    validator: (_, v?: string) =>
+      !v?.trim() || isSafeLink(v) ? Promise.resolve() : Promise.reject(new Error(t("storeDesign.linkInvalid"))),
+  };
 
   const handleOk = async () => {
     const v = await form.validateFields();
@@ -73,7 +79,7 @@ export function BannerFormModal({
           <TextArea rows={3} maxLength={500} showCount placeholder={t("storeDesign.descriptionPlaceholder")} />
         </FormItem>
 
-        <FormItem name="banner_link" label={t("storeDesign.formLink")}>
+        <FormItem name="banner_link" label={t("storeDesign.formLink")} rules={[linkRule]}>
           <Input placeholder="https://..." />
         </FormItem>
 

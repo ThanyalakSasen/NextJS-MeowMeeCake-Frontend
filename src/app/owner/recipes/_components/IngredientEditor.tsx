@@ -11,6 +11,14 @@ import { actionIcon } from "@/components/shared/actions";
 // → แถวที่ชื่อยาวดันช่องจำนวนเยื้องจากแถวอื่น)
 const ROW_COLUMNS = "minmax(0, 1fr) 110px 24px";
 
+/** แถวระหว่างแก้ — quantity null = ช่องว่าง (กำลังพิมพ์ใหม่) · ฟอร์มตรวจ > 0 ก่อนบันทึก (hasQty)
+ *  เดิมแปลงช่องว่างเป็น 0 ทันที ช่องเด้งเป็น "0" กลางการพิมพ์ และบันทึกวัตถุดิบจำนวน 0 ได้ */
+export type EditableIngredientLine = Omit<RecipeIngredientLine, "quantity"> & { quantity: number | null };
+
+/** ทุกแถวมีจำนวน > 0 แล้ว → ส่งเข้า API ได้ */
+export const hasQty = <T extends { quantity: number | null }>(rows: T[]): rows is (T & { quantity: number })[] =>
+  rows.every((r) => r.quantity != null && r.quantity > 0);
+
 export interface IngredientOption {
   _id: string;
   name: string;
@@ -23,9 +31,9 @@ export function IngredientEditor({
   options,
   onChange,
 }: {
-  rows: RecipeIngredientLine[];
+  rows: EditableIngredientLine[];
   options: IngredientOption[];
-  onChange: (rows: RecipeIngredientLine[]) => void;
+  onChange: (rows: EditableIngredientLine[]) => void;
 }) {
   const t = useTranslations();
 
@@ -37,7 +45,7 @@ export function IngredientEditor({
       ? { ...r, ingredient_id: ingredientId, ingredient_name: opt?.name ?? "", unit_id: opt?.unit_id ?? "", unit_abbr: opt?.unit_abbr ?? "" }
       : r)));
   };
-  const updateQty = (i: number, qty: number) =>
+  const updateQty = (i: number, qty: number | null) =>
     onChange(rows.map((r, idx) => (idx === i ? { ...r, quantity: qty } : r)));
 
   return (
@@ -72,7 +80,8 @@ export function IngredientEditor({
             step={0.01}
             aria-label={t("filterLabel.quantity")}
             value={row.quantity}
-            onChange={(v) => updateQty(i, Number(v) || 0)}
+            status={row.ingredient_id && !row.quantity ? "error" : undefined}
+            onChange={(v) => updateQty(i, v == null ? null : Number(v))}
             suffix={<span className="text-xs text-gray-500">{row.unit_abbr}</span>}
           />
           <Button

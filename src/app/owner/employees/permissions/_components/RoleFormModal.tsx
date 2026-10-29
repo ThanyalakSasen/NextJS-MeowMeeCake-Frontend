@@ -27,7 +27,7 @@ export function RoleFormModal({
   const t = useTranslations();
   const [form] = useAntForm<AddRoleValues>();
 
-  const required: Rule[] = [{ required: true, message: t("validation.required") }];
+  const required: Rule[] = [{ required: true, whitespace: true, message: t("validation.required") }];
 
   const handleOk = async () => {
     const values = await form.validateFields();

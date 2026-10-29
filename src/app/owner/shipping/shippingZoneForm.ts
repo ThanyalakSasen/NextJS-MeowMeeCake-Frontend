@@ -27,13 +27,16 @@ export const toShippingZoneForm = (z: ShippingZone): ShippingZoneForm => ({
   provinces: [...z.provinces],
 });
 
+/** ทศนิยมไม่เกิน 2 ตำแหน่ง — เทียบแบบเผื่อค่าคลาดของทศนิยม (1.1 * 100 = 110.00000000000001 เดิมจึงถูกตีว่าไม่ถูกต้อง) */
+export const isWholeSatang = (n: number) => Math.abs(n * 100 - Math.round(n * 100)) < 1e-6;
+
 /** isNew = เพิ่มโซนใหม่ — ต้องมีจังหวัดอย่างน้อย 1 (โซนที่ไม่มีจังหวัดไม่มีผลอะไร) */
 export function validateShippingZone(f: ShippingZoneForm, isNew = false): ShippingZoneErrors {
   const e: ShippingZoneErrors = {};
   const label = f.zone_label.trim();
   if (!label) e.zone_label = "labelRequired";
   else if (label.length > 120) e.zone_label = "labelTooLong";
-  if (!Number.isFinite(f.fee) || f.fee < 0 || Math.round(f.fee * 100) !== f.fee * 100) e.fee = "feeInvalid";
+  if (!Number.isFinite(f.fee) || f.fee < 0 || !isWholeSatang(f.fee)) e.fee = "feeInvalid";
   if (isNew && f.provinces.length === 0) e.provinces = "provincesRequired";
   return e;
 }

@@ -126,7 +126,7 @@ export function CreateFromRoundModal({
         <FormItem
           name="round_id"
           label={t("production.fieldRound")}
-          rules={[{ required: true, message: t("validation.required") }]}
+          rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
         >
           <Select
             showSearch
@@ -155,7 +155,7 @@ export function CreateFromRoundModal({
           <FormItem
             name="production_date"
             label={t("production.fieldDate")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
             <DatePicker format="DD/MM/YYYY" className="w-full" />
           </FormItem>

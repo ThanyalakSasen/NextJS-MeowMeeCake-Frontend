@@ -43,12 +43,12 @@ export function PricingView(vm: VM) {
     {
       key: "basePrice",
       title: t("pricing.colBasePrice"),
-      render: (r) => <PriceCell ariaLabel={`${t("pricing.colBasePrice")} ${r.name}`} value={r.basePrice} onChange={(v) => vm.onChangeBasePrice(r, v)} highlight={r.isDirty} />,
+      render: (r) => <PriceCell ariaLabel={`${t("pricing.colBasePrice")} ${r.name}`} value={r.basePrice} onChange={(v) => vm.onChangeBasePrice(r, v)} highlight={r.isDirty} invalid={r.isDirty && r.basePrice <= 0} />,
     },
     {
       key: "salePrice",
       title: t("pricing.colSalePrice"),
-      render: (r) => <PriceCell ariaLabel={`${t("pricing.colSalePrice")} ${r.name}`} value={r.salePrice} onChange={(v) => vm.onChangeSalePrice(r, v)} highlight={r.isDirty && r.salePrice !== null} />,
+      render: (r) => <PriceCell ariaLabel={`${t("pricing.colSalePrice")} ${r.name}`} value={r.salePrice} onChange={(v) => vm.onChangeSalePrice(r, v)} highlight={r.isDirty && r.salePrice !== null} invalid={r.isDirty && r.isInvalid && r.basePrice > 0} />,
     },
     {
       key: "discount",

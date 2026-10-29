@@ -62,10 +62,11 @@ export function MemberCard({
               type="tel"
               inputMode="numeric"
               autoComplete="off"
-              maxLength={10}
               value={phone}
               disabled={disabled}
-              onChange={(e) => onPhoneChange(e.target.value)}
+              // เก็บแค่ตัวเลข 10 หลัก — ไม่ใช้ maxLength: เบราว์เซอร์ตัดก่อนถึง onChange และนับขีดด้วย
+              // (วาง "081-234-5678" เดิมเหลือ "081-234-56")
+              onChange={(e) => onPhoneChange(e.target.value.replace(/\D/g, "").slice(0, 10))}
               onPressEnter={onSubmit}
             />
             <Button onClick={onSubmit} loading={searching} disabled={disabled || !phone.trim()}>

@@ -1,7 +1,7 @@
 "use client";
 // ฟิลด์ของฟอร์มสินค้า — render ข้างใน <Form> (antd) เท่านั้น
 // <FormItem> จัดการ label + error + validation ให้เอง
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { Radio } from "antd";
 import type { Rule } from "antd/es/form";
@@ -11,11 +11,14 @@ import { unitsService } from "@/services/units";
 import { ProductImageUpload } from "./ProductImageUpload";
 import { useCategoryShipping } from "@/hooks/useCategoryShipping";
 import { sortOptionsThai } from "@/lib/thaiSort";
+import { formatNumber } from "@/i18n/format";
+import { PRODUCT_STOCK_MAX } from "@/components/shared/stock";
 import { PRODUCT_CATEGORIES_KEY, PRODUCT_UNITS_KEY, PRODUCT_UNITS_PARAMS } from "../productFormQuery";
 
 /** mode "edit": สต็อกโชว์อย่างเดียว (แก้ไม่ได้) — ปรับที่หน้าสต็อกสินค้าเท่านั้น (PUT …/stock) */
 export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit" }) {
   const t = useTranslations();
+  const locale = useLocale();
   // key ร่วมกับ page.tsx ของหน้าเพิ่ม/แก้ไขสินค้า (ดึงไว้ฝั่ง server แล้ว)
   const cats = useQuery({ queryKey: PRODUCT_CATEGORIES_KEY, queryFn: () => productCategoriesService.list() });
   const units = useQuery({ queryKey: PRODUCT_UNITS_KEY, queryFn: () => unitsService.list(PRODUCT_UNITS_PARAMS) });
@@ -28,14 +31,14 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
   const categoryId = Form.useWatch("category_id", form) as string | undefined;
   const catShipping = shipping.items.find((c) => c._id === categoryId);
 
-  const required: Rule[] = [{ required: true, message: t("validation.required") }];
+  const required: Rule[] = [{ required: true, whitespace: true, message: t("validation.required") }];
   const price: Rule[] = [
-    { required: true, message: t("validation.required") },
+    { required: true, whitespace: true, message: t("validation.required") },
     { type: "number", min: 0.01, message: t("validation.positive") },
   ];
   const requiredPositiveInt: Rule[] = [
-    { required: true, message: t("validation.required") },
-    { type: "number", min: 1, message: t("validation.positive") },
+    { required: true, whitespace: true, message: t("validation.required") },
+    { type: "integer", min: 1, message: t("validation.positive") },
   ];
   // sale_price ต้องน้อยกว่า product_price (validator ข้ามฟิลด์)
   const saleRule: Rule = ({ getFieldValue }) => ({
@@ -99,7 +102,11 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
           name="product_stock_quantity"
           label={t("fields.product_stock_quantity")}
           extra={mode === "edit" ? t("products.stockEditHint") : undefined}
-          rules={[{ type: "number", min: 0, message: t("validation.nonNegative") }]}
+          rules={[
+            { type: "number", min: 0, message: t("validation.nonNegative") },
+            // เฉพาะตอนสร้าง — ตอนแก้ไขช่องนี้ปิดอยู่ ถ้าสต็อกเดิมเกินเพดาน (ข้อมูลเก่า) จะบันทึกการแก้อย่างอื่นไม่ได้
+            ...(mode === "edit" ? [] : [{ type: "number" as const, max: PRODUCT_STOCK_MAX, message: t("validation.maxValue", { max: formatNumber(PRODUCT_STOCK_MAX, locale) }) }]),
+          ]}
         >
           <InputNumber min={0} precision={0} disabled={mode === "edit"} />
         </FormItem>
@@ -136,13 +143,13 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
       {isPreorder && (
         <div className="md:col-span-2 grid grid-cols-1 gap-x-4 gap-y-0 rounded-lg border border-gray-100 bg-gray-50 p-3 md:grid-cols-3">
           <FormItem name={["preorder_config", "min_order_qty"]} label={t("fields.min_order_qty")} rules={requiredPositiveInt}>
-            <InputNumber min={1} className="!w-full" />
+            <InputNumber min={1} precision={0} className="!w-full" />
           </FormItem>
           <FormItem name={["preorder_config", "max_order_qty"]} label={t("fields.max_order_qty")} rules={requiredPositiveInt}>
-            <InputNumber min={1} className="!w-full" />
+            <InputNumber min={1} precision={0} className="!w-full" />
           </FormItem>
           <FormItem name={["preorder_config", "lead_time_days"]} label={t("fields.lead_time_days")} rules={requiredPositiveInt}>
-            <InputNumber min={1} className="!w-full" />
+            <InputNumber min={1} precision={0} className="!w-full" />
           </FormItem>
         </div>
       )}

@@ -45,11 +45,27 @@ export function CouponFormModal({
       disabled: !p.stackable,
     }));
 
-  const required: Rule[] = [{ required: true, message: t("validation.required") }];
+  const required: Rule[] = [{ required: true, whitespace: true, message: t("validation.required") }];
   const percentMaxRule: Rule = ({ getFieldValue }) => ({
     validator(_, v) {
       if (getFieldValue("discountType") !== "Percentage" || v == null || v <= 100) return Promise.resolve();
       return Promise.reject(new Error(t("coupons.percentMax")));
+    },
+  });
+  // เปอร์เซ็นต์/จำนวนเงิน ต้องกรอกมากกว่า 0 — เดิมปล่อยว่างได้ แล้ว toInput ส่ง 0 (backend รับ) ได้คูปองที่ไม่ลดอะไรเลย
+  // ส่งฟรีไม่ใช้ค่านี้
+  const discountValueRule: Rule = ({ getFieldValue }) => ({
+    validator(_, v) {
+      if (getFieldValue("discountType") === "FreeShipping" || (v != null && v > 0)) return Promise.resolve();
+      return Promise.reject(new Error(t("coupons.discountValueRequired")));
+    },
+  });
+
+  // ต้องเปิดอย่างน้อย 1 ช่องทาง — เดิมปิดทั้งคู่แล้ว toInput แอบเปลี่ยนเป็นใช้ได้ทั้งสองช่องทาง
+  const channelRule: Rule = ({ getFieldValue }) => ({
+    validator(_, v) {
+      if (v || getFieldValue("chInstore")) return Promise.resolve();
+      return Promise.reject(new Error(t("coupons.channelRequired")));
     },
   });
 
@@ -97,7 +113,7 @@ export function CouponFormModal({
         </FormItem>
 
         <div className="grid grid-cols-2 gap-3">
-          <FormItem name="discountValue" label={t("coupons.fieldDiscountValue")} dependencies={["discountType"]} rules={[percentMaxRule]}>
+          <FormItem name="discountValue" label={t("coupons.fieldDiscountValue")} dependencies={["discountType"]} rules={[discountValueRule, percentMaxRule]}>
             <InputNumber min={0} placeholder={t("coupons.discountValuePlaceholder")} />
           </FormItem>
           <FormItem name="minOrder" label={t("coupons.fieldMinOrder")}>
@@ -165,7 +181,7 @@ export function CouponFormModal({
 
         {(scope === "product" || scope === "category") && (
           <FormItem name="minQuantity" label={t("coupons.fieldMinQuantity")} extra={t("coupons.minQuantityHint")}>
-            <InputNumber min={0} placeholder={t("coupons.noMinimumPlaceholder")} />
+            <InputNumber min={0} precision={0} placeholder={t("coupons.noMinimumPlaceholder")} />
           </FormItem>
         )}
 
@@ -175,7 +191,7 @@ export function CouponFormModal({
               <Switch />
             </FormItem>
             <span className="text-sm text-gray-600">{t("coupons.channelInstore")}</span>
-            <FormItem name="chOnline" valuePropName="checked" noStyle>
+            <FormItem name="chOnline" valuePropName="checked" dependencies={["chInstore"]} rules={[channelRule]} noStyle>
               <Switch />
             </FormItem>
             <span className="text-sm text-gray-600">{t("coupons.channelOnline")}</span>
@@ -218,10 +234,10 @@ export function CouponFormModal({
 
         <div className="grid grid-cols-2 gap-3">
           <FormItem name="usageLimit" label={t("coupons.fieldUsageLimit")}>
-            <InputNumber min={0} placeholder={t("coupons.unlimitedPlaceholder")} />
+            <InputNumber min={0} precision={0} placeholder={t("coupons.unlimitedPlaceholder")} />
           </FormItem>
           <FormItem name="perCustomer" label={t("coupons.fieldPerCustomer")}>
-            <InputNumber min={1} placeholder="1" />
+            <InputNumber min={1} precision={0} placeholder="1" />
           </FormItem>
         </div>
 

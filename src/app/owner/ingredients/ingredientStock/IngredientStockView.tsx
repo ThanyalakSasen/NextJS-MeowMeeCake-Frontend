@@ -12,7 +12,7 @@ import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
 import { actionIcon } from "@/components/shared/actions";
 import type { StockRow, useIngredientStockViewModel } from "./useIngredientStockViewModel";
 import { LoadFailed } from "@/components/shared/feedback";
-import { StockAlertSection } from "@/components/shared/stock";
+import { StockAlertSection, INGREDIENT_STOCK_MAX } from "@/components/shared/stock";
 
 // ฟอร์ม/โมดัลแยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
 const StockActionModal = dynamic(() => import("./_components/StockActionModal").then((m) => m.StockActionModal), { ssr: false });
@@ -134,6 +134,7 @@ export function IngredientStockView(vm: VM) {
           withNote
           withDates
           decimals={2}
+          max={INGREDIENT_STOCK_MAX}
           onClose={vm.closeBulk}
           onSubmit={vm.onBulkSubmit}
         />

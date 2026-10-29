@@ -70,14 +70,14 @@ export function UnitFormModal({
           <FormItem
             name="unit_name"
             label={t("units.fieldName")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
             <Input placeholder={t("units.namePlaceholder")} />
           </FormItem>
           <FormItem
             name="unit_abbr"
             label={t("units.fieldAbbr")}
-            rules={[{ required: true, message: t("validation.required") }]}
+            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
           >
             <Input placeholder={t("units.abbrPlaceholder")} />
           </FormItem>
@@ -86,7 +86,7 @@ export function UnitFormModal({
         <FormItem
           name="unit_type"
           label={t("units.fieldType")}
-          rules={[{ required: true, message: t("validation.required") }]}
+          rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
         >
           <Select
             placeholder={t("units.selectType")}
