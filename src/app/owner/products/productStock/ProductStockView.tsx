@@ -66,8 +66,19 @@ export function ProductStockView(vm: VM) {
       <Button size="small" icon={actionIcon("adjust", "small")} onClick={() => vm.openAction(r, "adjust")}>{t("productStock.ok_adjust")}</Button>
     </>
   );
-  const rowActions = vm.perm.update
-    ? (r: StockProductRow) => <div className="flex justify-end gap-2">{actionButtons(r)}</div>
+  // ประวัติแสดงได้แม้ไม่มีสิทธิ์ปรับสต็อก (stock_history.view แยกจาก stock.update)
+  const historyButton = (r: StockProductRow) => (
+    <Button size="small" icon={actionIcon("history", "small")} onClick={() => vm.openHistory(r)}>{t("productStock.history")}</Button>
+  );
+  const hasRowActions = vm.perm.update || vm.canViewHistory;
+  const rowButtons = (r: StockProductRow) => (
+    <>
+      {vm.perm.update && actionButtons(r)}
+      {vm.canViewHistory && historyButton(r)}
+    </>
+  );
+  const rowActions = hasRowActions
+    ? (r: StockProductRow) => <div className="flex justify-end gap-2">{rowButtons(r)}</div>
     : undefined;
 
   // จอ <1280px: การ์ดต่อแถวแทนตาราง (DataTable renderCard) — ข้อมูลชุดเดียวกับคอลัมน์ข้างบน
@@ -93,8 +104,8 @@ export function ProductStockView(vm: VM) {
           <dd className="m-0 font-medium text-brown-800">{formatCurrency(r.value, locale)}</dd>
         </div>
       </dl>
-      {vm.perm.update && (
-        <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">{actionButtons(r)}</div>
+      {hasRowActions && (
+        <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">{rowButtons(r)}</div>
       )}
     </div>
   );
@@ -107,6 +118,11 @@ export function ProductStockView(vm: VM) {
           <Button icon={actionIcon("scan")} onClick={vm.openLotLookup}>
             {t("lots.lookup")}
           </Button>
+          {vm.canViewHistory && (
+            <Button icon={actionIcon("history")} onClick={() => vm.openHistory()}>
+              {t("productStock.history")}
+            </Button>
+          )}
           {vm.perm.update && (
             <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
               {t("bulkStock.open")}

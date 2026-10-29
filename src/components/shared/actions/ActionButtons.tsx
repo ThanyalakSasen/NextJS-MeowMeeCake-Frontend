@@ -19,6 +19,7 @@ import {
   CheckBadgeIcon,
   CheckCircleIcon,
   CheckIcon,
+  ClockIcon,
   EyeIcon,
   FunnelIcon,
   MinusCircleIcon,
@@ -54,6 +55,7 @@ const ICONS = {
   off: MinusCircleIcon, // ปิดทั้งหมด
   print: PrinterIcon, // พิมพ์ (ฉลากบาร์โค้ด)
   scan: ViewfinderCircleIcon, // สแกนบาร์โค้ด
+  history: ClockIcon, // ดูประวัติ (สต็อก)
 } as const;
 
 export type ActionIconKind = keyof typeof ICONS;

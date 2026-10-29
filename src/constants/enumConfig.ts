@@ -128,6 +128,18 @@ export const INGREDIENT_TXN_CONFIG: Record<IngredientTxnType, { color: string; b
   adjust:  { color: "#b45309", bg: "#fef3c7", sign: "-" },
 };
 
+// ประวัติสต็อกสินค้า (backend ProductStockTransactions) — ทิศทางดูจาก delta (+/−) ไม่ใช่ type
+export type ProductStockTxnType = "receive" | "use" | "adjust" | "production" | "sale" | "sale_return";
+
+export const PRODUCT_STOCK_TXN_CONFIG: Record<ProductStockTxnType, { color: string; bg: string }> = {
+  receive:     { color: "#15803d", bg: "#dcfce7" },
+  use:         { color: "#be185d", bg: "#fce7f3" },
+  adjust:      { color: "#b45309", bg: "#fef3c7" },
+  production:  { color: "#6d28d9", bg: "#ede9fe" },
+  sale:        { color: "#1d4ed8", bg: "#dbeafe" },
+  sale_return: { color: "#0f766e", bg: "#ccfbf1" },
+};
+
 // ─── ช่องทางขาย / โปรโมชัน ───────────────────────────────────
 export type SalesChannel = "online" | "walkin";
 
