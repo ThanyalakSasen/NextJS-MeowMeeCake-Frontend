@@ -25,6 +25,16 @@ export interface ShopOrderItem {
   total_price: number;
 }
 
+/** PATCH /shop/{orders|preorders}/{id}/delivery — แก้วิธีรับ/ที่อยู่ของบิลที่ยังไม่ชำระ (ค่าส่ง/ยอดรวมคิดใหม่ฝั่ง server) */
+export interface EditDeliveryInput {
+  order_type: OrderType;
+  address_id?: string | null;
+  recipient_name?: string;
+  recipient_phone?: string;
+  pickup_location_id?: string | null;
+  pickup_date?: string | null;
+}
+
 export interface ShopOrder {
   _id: string;
   order_no: string;
@@ -188,6 +198,10 @@ export const shopOrdersService = {
     const res = await http.get<ItemResponse<any>>(`/shop/orders/${id}`);
     return toShopOrder(res.data);
   },
+
+  /** PATCH /shop/orders/{id}/delivery — ย้อนกลับไปแก้วิธีรับ/ที่อยู่ (ยังไม่ชำระ · ไม่ชำระรวม) · คืนออเดอร์หลังแก้ */
+  editDelivery: async (id: string, body: EditDeliveryInput): Promise<ShopOrder> =>
+    toShopOrder((await http.patch<ItemResponse<any>>(`/shop/orders/${encodeURIComponent(id)}/delivery`, body)).data),
 
   /**
    * POST /shop/orders/delivery-quote { province, product_ids?, preorder? } — ค่าส่งจากจังหวัด + ขอบเขตจัดส่งของสินค้า

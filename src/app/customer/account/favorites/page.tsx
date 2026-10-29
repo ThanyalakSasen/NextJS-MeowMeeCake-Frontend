@@ -4,13 +4,19 @@
 // API: GET /shop/favorites · DELETE /shop/favorites?productId= (ผ่าน useFavorites — cache เดียวกับปุ่มหัวใจในบัตรสินค้า)
 // ต่างจากต้นแบบ: ปุ่ม "หยิบใส่ตะกร้า" ใช้ได้จริง (ต้นแบบไม่มี onClick) · สินค้าพรีออเดอร์ = ปุ่ม "ดูสินค้า" (สั่งผ่าน flow พรีออเดอร์ D3)
 // · ชื่อ/รูปกดไปหน้าสินค้าได้
+// การ์ดเหมือนหน้าอื่น (2026-10-29): สินค้าปกติที่ยังเปิดขาย = ProductCard ตัวเดียวกับหน้าสินค้าทั้งหมด (ข้อมูลจาก catalog cache เดียวกัน)
+// · ตาราง productGrid เดียวกัน · สินค้าหมดขึ้น "สินค้าหมด" แบบเดียวกัน · พรีออเดอร์ / ปิดขายแล้ว = FavoriteCard หน้าตาเดียวกัน
 // ─────────────────────────────────────────────────────────────
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
 import { FaCheck, FaHeart, FaSpinner, FaStar } from "react-icons/fa";
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart } from "lucide-react";
+import { catalogService } from "@/services/catalog";
+import ProductCard, { isProductCardVisible } from "@/components/customer/ProductCard";
+import { CATALOG_PRODUCT_PARAMS, catalogProductsKey } from "../../lib/catalogQueries";
 import type { FavoriteItem } from "@/services/shopFavorites";
 import { resolveUploadUrl } from "@/lib/uploads";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
@@ -23,6 +29,7 @@ import {
   productCardImage,
   productCardSubtitle,
   productCardTitle,
+  productGrid,
   shopButton,
   shopPage,
 } from "@/components/customer/shopStyles";
@@ -45,6 +52,9 @@ function FavoritesContent() {
   const to = useTranslations("shop.orders");
   const favorites = useFavorites();
   const { query: q, items } = favorites;
+  // สินค้าปกติ — ใช้ข้อมูลเต็มจาก catalog (cache เดียวกับหน้าสินค้าทั้งหมด/หน้าแรก) เพื่อวาด ProductCard ตัวเดียวกัน
+  const catalogQ = useQuery({ queryKey: catalogProductsKey, queryFn: () => catalogService.products(CATALOG_PRODUCT_PARAMS) });
+  const productById = useMemo(() => new Map((catalogQ.data?.data ?? []).map((p) => [p._id, p])), [catalogQ.data]);
 
   return (
     <div className={shopPage}>
@@ -74,17 +84,22 @@ function FavoritesContent() {
                 <Link href="/customer/product" className={shopButton}>{t("shopNow")}</Link>
               </div>
             ) : (
-              // มือถือ 2 · จอกลาง 3 · จอใหญ่ (≥1280) 6 ต่อแถว
-              <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
-                {items.map((item) => (
-                  <FavoriteCard
-                    key={item.id}
-                    item={item}
-                    removing={favorites.pendingId === item.id}
-                    onRemove={() => void favorites.toggle(item.id)}
-                  />
-                ))}
-              </ul>
+              // ตารางเดียวกับหน้าสินค้าทั้งหมด (productGrid)
+              <div className={productGrid}>
+                {items.map((item) => {
+                  const product = productById.get(item.id);
+                  return product && isProductCardVisible(product, { includeSoldOut: true }) ? (
+                    <ProductCard key={item.id} product={product} allowSoldOut />
+                  ) : (
+                    <FavoriteCard
+                      key={item.id}
+                      item={item}
+                      removing={favorites.pendingId === item.id}
+                      onRemove={() => void favorites.toggle(item.id)}
+                    />
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
@@ -107,7 +122,6 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
   const names = localNames(item.name, item.nameeg);
 
   return (
-    <li className={item.inStock ? "" : "opacity-80"}>
       <Link href={href} className={productCardFrame}>
         <div className={productCardImage}>
           {img && !imgFailed ? (
@@ -115,7 +129,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
               src={img}
               alt={item.name}
               sizes="(min-width: 1280px) 16vw, (min-width: 640px) 33vw, 50vw"
-              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              className={`h-full w-full object-cover transition duration-300 group-hover:scale-105 ${item.inStock ? "" : "grayscale opacity-60"}`}
               onError={() => setImgFailed(true)}
             />
           ) : (
@@ -139,9 +153,9 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           </button>
 
           {!item.inStock && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
-              <span className="rounded-full bg-stone-900/80 px-3 py-1 text-xs font-bold text-white">{t("outOfStock")}</span>
-            </div>
+            <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <span className="rounded-full bg-stone-900/80 px-3 py-1 text-xs font-bold text-white shadow-md">{t("outOfStock")}</span>
+            </span>
           )}
           {item.is_preorder && item.inStock && (
             <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-[#4A342E] px-2 py-0.5 text-[11px] font-bold text-white">{t("preorder")}</span>
@@ -150,7 +164,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
 
         <div className={productCardBody}>
           <div className="min-w-0">
-            <h2 className={productCardTitle}>{names.primary}</h2>
+            <h3 className={productCardTitle}>{names.primary}</h3>
             <p className={productCardSubtitle}>{names.secondary || " "}</p>
           </div>
 
@@ -162,11 +176,11 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
                 </span>
                 {item.originalPrice ? <span className="text-xs text-stone-500 line-through">{baht(item.originalPrice)}</span> : null}
               </span>
-              {item.rating !== "-" && (
-                <span className="flex shrink-0 items-center gap-1 pb-0.5 text-xs font-medium text-stone-700">
-                  <FaStar className="text-amber-400" aria-hidden="true" /> {Number(item.rating).toFixed(1)}
-                </span>
-              )}
+              {/* ดาวแสดงทุกใบเหมือน ProductCard (ยังไม่มีรีวิว = 0.0) */}
+              <span className="flex shrink-0 items-center gap-1 pb-0.5 text-xs font-medium text-stone-700">
+                <FaStar className="text-amber-400" aria-hidden="true" />
+                <span>{item.rating === "-" ? "0.0" : Number(item.rating).toFixed(1)}</span>
+              </span>
             </div>
 
             {item.is_preorder ? (
@@ -180,22 +194,21 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
                   e.stopPropagation();
                   void quickAdd(item.id);
                 }}
-                className={`${productCardButton} ${status === "success" ? "!border-emerald-600 !bg-emerald-600 !text-white" : ""} disabled:cursor-not-allowed disabled:opacity-60`}
+                className={`${productCardButton} ${status === "success" ? "!border-emerald-600 !bg-emerald-600 !text-white" : ""} disabled:cursor-not-allowed disabled:opacity-75`}
               >
                 {!item.inStock ? (
                   t("soldOut")
                 ) : status === "loading" ? (
-                  <><FaSpinner className="animate-spin" /> {t("adding")}</>
+                  <><FaSpinner className="animate-spin text-xs" /> {t("adding")}</>
                 ) : status === "success" ? (
-                  <><FaCheck /> {t("added")}</>
+                  <><FaCheck className="text-xs" /> {t("added")}</>
                 ) : (
-                  <><ShoppingCart className="h-4 w-4" aria-hidden="true" /> {t("addToCart")}</>
+                  t("addToCart")
                 )}
               </button>
             )}
           </div>
         </div>
       </Link>
-    </li>
   );
 }

@@ -11,6 +11,7 @@ import { shopAddressesService, type ShopAddress, type ShopAddressInput } from "@
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { shopButton, shopButtonPrimary, shopInput } from "@/components/customer/shopStyles";
+import ProvinceSelect, { isThaiProvince } from "@/components/customer/ProvinceSelect";
 
 const ZIP_RE = /^\d{5}$/;
 
@@ -54,29 +55,55 @@ export default function CheckoutAddressForm(props: Props) {
     { key: "province", label: t("province"), max: 120 },
     { key: "zip_code", label: t("zipCode"), max: 5 },
   ];
-  const filled = fields.every((f) => String(form[f.key] ?? "").trim()) && ZIP_RE.test(form.zip_code.trim());
+  const [touched, setTouched] = useState<Set<string>>(new Set());
+  /** ข้อผิดพลาดรายช่อง — แสดงใต้ช่องนั้นหลังออกจากช่อง */
+  const fieldError = (f: (typeof fields)[number]): string | null => {
+    const v = String(form[f.key] ?? "").trim();
+    if (!v) return t("fieldRequired", { field: f.label });
+    if (f.key === "zip_code" && !ZIP_RE.test(v)) return t("zipInvalid");
+    if (f.key === "province" && !isThaiProvince(v)) return t("provinceInvalid");
+    return null;
+  };
+  const filled = fields.every((f) => !fieldError(f));
 
   return (
     <div className="space-y-3 rounded-xl border border-dashed border-[#8C5A3C]/30 bg-white p-4">
       {local && <p className="m-0 rounded-lg bg-[#FAF6F0] px-3 py-2 text-xs text-[#4A342E]">{t("editOnceHint")}</p>}
       <div className="grid gap-3 sm:grid-cols-2">
-        {fields.map((f) => (
-          <label key={f.key} className={`space-y-1 text-sm ${f.wide ? "sm:col-span-2" : ""}`}>
-            <span className="font-semibold">{f.label}</span>
-            <input
-              className={shopInput}
-              value={String(form[f.key] ?? "")}
-              maxLength={f.max}
-              inputMode={f.key === "zip_code" ? "numeric" : undefined}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  [f.key]: f.key === "zip_code" ? e.target.value.replace(/\D/g, "") : e.target.value,
-                }))
-              }
-            />
-          </label>
-        ))}
+        {fields.map((f) => {
+          const err = touched.has(f.key) ? fieldError(f) : null;
+          return (
+            <label key={f.key} className={`space-y-1 text-sm ${f.wide ? "sm:col-span-2" : ""}`}>
+              <span className="font-semibold">{f.label}</span>
+              {f.key === "province" ? (
+                <ProvinceSelect
+                  value={form.province}
+                  status={err ? "error" : undefined}
+                  onChange={(v) => {
+                    setForm((prev) => ({ ...prev, province: v }));
+                    setTouched((s) => new Set(s).add("province"));
+                  }}
+                />
+              ) : (
+                <input
+                  className={`${shopInput} ${err ? "!border-red-500" : ""}`}
+                  value={String(form[f.key] ?? "")}
+                  maxLength={f.max}
+                  inputMode={f.key === "zip_code" ? "numeric" : undefined}
+                  aria-invalid={!!err}
+                  onBlur={() => setTouched((s) => new Set(s).add(f.key))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      [f.key]: f.key === "zip_code" ? e.target.value.replace(/\D/g, "") : e.target.value,
+                    }))
+                  }
+                />
+              )}
+              {err && <span className="block text-xs text-red-600">{err}</span>}
+            </label>
+          );
+        })}
       </div>
       {!local && (
         <label className="flex items-center gap-2 text-sm">

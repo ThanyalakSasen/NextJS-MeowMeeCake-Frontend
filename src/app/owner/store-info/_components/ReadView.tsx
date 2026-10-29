@@ -79,8 +79,9 @@ export function PromptpayRead({ profile }: { profile: ProfileForm }) {
 }
 
 /**
- * หน้าร้านประจำสัปดาห์ — การ์ดเล็กต่อแห่ง: ชื่อ (+ หน้าร้านหลัก / ซ่อนอยู่) · วัน · เวลา · สถานที่ · แผนที่
- * address (เจ้าของร้าน) = ที่อยู่ร้านกับหน้าร้านหลักเป็นข้อมูลชุดเดียวกัน (2026-10-26) — หน้าร้านหลักแสดงที่อยู่ร้าน + หมุดแผนที่ของร้าน
+ * หน้าร้าน (ที่อยู่ร้าน · วัน-เวลาเปิด) — ตารางเดียว ทุกแห่งหน้าตาเหมือนกัน (2026-10-29 · เดิมเป็นการ์ดคนละแบบ)
+ * คอลัมน์: ชื่อสถานที่ (+ ป้ายหน้าร้านหลัก / ซ่อนอยู่) · วันที่เปิด · เวลาเปิด · ที่ตั้ง · แผนที่ · หน้าร้านหลักอยู่แถวแรก
+ * address (เจ้าของร้าน) = ที่ตั้งของหน้าร้านหลักคือที่อยู่ร้าน + หมุดแผนที่ของร้าน (ข้อมูลชุดเดียวกัน)
  */
 export function MarketsRead({ markets, address }: { markets: AdminWeeklyMarket[]; address?: StoreSettings }) {
   const t = useTranslations();
@@ -89,46 +90,62 @@ export function MarketsRead({ markets, address }: { markets: AdminWeeklyMarket[]
     ? `https://www.google.com/maps?q=${address.latitude},${address.longitude}`
     : "";
   if (markets.length === 0) return <p className="m-0 text-sm text-amber-700">{t("storeInfo.markets.empty")}</p>;
+  const rows = [...markets].sort((a, b) => Number(b.is_main) - Number(a.is_main));
+  const th = "px-3 py-2 text-left text-xs font-medium text-gray-500";
+  const td = "px-3 py-2.5 align-top text-sm text-gray-800";
   return (
-    <ul className="m-0 flex list-none flex-col gap-2 p-0">
-      {markets.map((m, i) => (
-        <li key={m._id ?? i} className={`rounded-lg border px-3 py-2.5 ${m.is_active ? "border-gray-200" : "border-dashed border-gray-200 bg-gray-50"}`}>
-          <p className="m-0 flex flex-wrap items-center gap-2 text-sm font-semibold text-brown-900">
-            {m.name}
-            {m.is_main && <span className="rounded-full bg-brown-800 px-2 py-0.5 text-xs font-semibold text-white">{t("storeInfo.markets.main")}</span>}
-            {!m.is_active && <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">{t("storeInfo.markets.hiddenBadge")}</span>}
-          </p>
-          <p className="m-0 mt-0.5 text-sm text-gray-800">
-            {DAY_ORDER.filter((d) => m.days.includes(d)).map((d) => t(`storeInfo.days.${d}`)).join(" · ")}
-            <span className="text-gray-500"> · </span>
-            {t("storeInfo.read.hours", { open: m.open_time, close: m.close_time })}
-          </p>
-          {(() => {
-            const location = m.is_main && address ? storeAddress : m.location;
-            const mapUrl = m.is_main && address ? storePin || m.map_url : m.map_url;
+    <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <table className="w-full min-w-[640px] border-collapse">
+        <thead className="bg-gray-50">
+          <tr className="border-b border-gray-200">
+            <th className={th}>{t("storeInfo.markets.name")}</th>
+            <th className={th}>{t("storeInfo.markets.days")}</th>
+            <th className={`${th} whitespace-nowrap`}>{t("storeInfo.markets.colHours")}</th>
+            <th className={th}>{t("storeInfo.markets.colLocation")}</th>
+            <th className={th}>
+              <span className="sr-only">{t("storeInfo.read.openMap")}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((m, i) => {
+            // หน้าร้านหลัก = ที่อยู่ร้านเลย (เจ้าของร้านเห็นที่อยู่) · พนักงาน / แห่งอื่น = สถานที่ที่กรอกไว้
+            const useStore = m.is_main && !!address;
+            const location = useStore ? storeAddress : m.location;
+            const mapUrl = useStore ? storePin || m.map_url : m.map_url;
             return (
-              <>
-                {m.is_main && address && !storeAddress ? (
-                  <p className="m-0 text-xs text-amber-700">{t("storeInfo.markets.mainNoAddress")}</p>
-                ) : (
-                  location && (
-                    <p className={`m-0 ${m.is_main && address ? "mt-1 text-sm text-gray-800" : "text-xs text-gray-600"}`}>
-                      {m.is_main && address && <span className="mr-1 text-gray-500">{t("storeInfo.address.title")}:</span>}
-                      {location}
-                    </p>
-                  )
-                )}
-                {mapUrl && (
-                  <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="mt-0.5 inline-flex items-center gap-1 text-xs text-brown-700 hover:underline">
-              <MapPinIcon className="h-3.5 w-3.5" aria-hidden="true" />
-              {t("storeInfo.read.openMap")}
-                  </a>
-                )}
-              </>
+              <tr key={m._id ?? i} className={`border-b border-gray-100 last:border-b-0 ${m.is_active ? "" : "bg-gray-50 text-gray-500"}`}>
+                <td className={td}>
+                  <span className="font-semibold text-brown-900">{m.name || t("storeInfo.notSet")}</span>
+                  <span className="mt-1 flex flex-wrap gap-1">
+                    {m.is_main && <span className="rounded-full bg-brown-800 px-2 py-0.5 text-xs font-semibold text-white">{t("storeInfo.markets.main")}</span>}
+                    {!m.is_active && <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">{t("storeInfo.markets.hiddenBadge")}</span>}
+                  </span>
+                </td>
+                <td className={td}>{DAY_ORDER.filter((d) => m.days.includes(d)).map((d) => t(`storeInfo.days.${d}`)).join(" · ")}</td>
+                <td className={`${td} whitespace-nowrap`}>{t("storeInfo.read.hours", { open: m.open_time, close: m.close_time })}</td>
+                <td className={`${td} break-words`}>
+                  {useStore && !storeAddress ? (
+                    <span className="text-xs text-amber-700">{t("storeInfo.markets.mainNoAddress")}</span>
+                  ) : (
+                    location || <span className="text-gray-500">—</span>
+                  )}
+                </td>
+                <td className={`${td} whitespace-nowrap`}>
+                  {mapUrl ? (
+                    <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-brown-700 hover:underline">
+                      <MapPinIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t("storeInfo.read.openMap")}
+                    </a>
+                  ) : (
+                    <span className="text-gray-500">—</span>
+                  )}
+                </td>
+              </tr>
             );
-          })()}
-        </li>
-      ))}
-    </ul>
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }

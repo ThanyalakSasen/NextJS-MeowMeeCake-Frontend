@@ -28,6 +28,8 @@ export function useBuyAgain() {
     if (pending || items.length === 0) return;
     setPending(true);
     const failed: string[] = [];
+    // ใส่ไม่ได้เพราะสต็อก (409 — ในตะกร้ามีครบแล้ว / เหลือไม่พอ) ไม่ใช่ข้อผิดพลาด
+    let stockOnly = true;
     let added = 0;
     for (const it of items) {
       const options = it.selected_options
@@ -47,6 +49,7 @@ export function useBuyAgain() {
         // ข้อความของ backend มักมีชื่อสินค้าอยู่แล้ว (เช่น ตัวเลือกถูกลบ) — ไม่ต่อชื่อซ้ำ
         const name = it.product_name || t("product");
         const msg = isApiError(e) ? e.message : "";
+        if (!(isApiError(e) && e.status === 409)) stockOnly = false;
         failed.push(!msg ? name : msg.includes(name) ? msg : `${name} (${msg})`);
       }
     }
@@ -56,7 +59,11 @@ export function useBuyAgain() {
     setPending(false);
 
     if (added === 0) {
-      alert.error(t("buyAgainNone", { failed: failed.join(" · ") }));
+      // ทุกรายการติดแค่สต็อก (เช่น ในตะกร้ามีครบแล้ว) = แจ้งแบบข้อมูล + พาไปตะกร้า · อื่น ๆ = ข้อผิดพลาดแบบเดิม (2026-10-29)
+      if (stockOnly) {
+        void alert.info(failed.join(" · "), { title: t("stockLimitTitle"), note: t("stockLimitNote") });
+        router.push("/customer/cart");
+      } else alert.error(t("buyAgainNone", { failed: failed.join(" · ") }));
       return;
     }
     if (failed.length) alert.warning(t("buyAgainPartial", { n: added, failed: failed.join(" · ") }));

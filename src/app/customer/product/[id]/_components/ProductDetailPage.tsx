@@ -43,6 +43,7 @@ import { Flame, ScrollText, Truck } from "lucide-react";
 
 const noopSubscribe = () => () => {};
 import ShopImage from "@/components/customer/ShopImage";
+import QtyInput from "@/components/customer/QtyInput";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -412,11 +413,20 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
                     >
                       -
                     </button>
-                    <span className="w-12 text-center font-bold text-sm sm:text-base text-[#4A342E]">{qty}</span>
+                    {/* พิมพ์จำนวนเองได้ (1 ถึงสต็อก) — ยืนยันตอนออกจากช่อง/Enter */}
+                    <QtyInput
+                      value={qty}
+                      max={Math.max(1, stock)}
+                      onCommit={setQty}
+                      disabled={isLoading || outOfStock}
+                      ariaLabel={tcart("quantity")}
+                      className="h-[34px] w-12 font-bold text-sm sm:text-base text-[#4A342E]"
+                    />
                     <button
                       type="button"
                       onClick={() => changeQty(1)}
                       disabled={isLoading || outOfStock || qty >= stock}
+                      title={!outOfStock && qty >= stock ? tcart("maxStockNote", { n: stock }) : undefined}
                       aria-label={tcart("increase")}
                       className="w-10 h-[34px] flex items-center justify-center font-bold text-lg text-[#8C5A3C] hover:bg-[#8C5A3C]/10 disabled:opacity-40 transition-colors"
                     >
@@ -439,7 +449,13 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
                           : t("addToCartPrice", { price: (price * qty).toLocaleString() })}
                   </button>
                 </div>
-                {!outOfStock && <p className="-mt-2 text-xs text-gray-500">{t("stockLeft", { n: stock.toLocaleString() })}</p>}
+                {/* กด + จนถึงสต็อก = ข้อความสีส้มบอกว่าเพิ่มไม่ได้แล้ว (แทนปุ่มที่เงียบ ๆ กดไม่ได้) */}
+                {!outOfStock &&
+                  (qty >= stock ? (
+                    <p className="-mt-2 text-xs font-medium text-amber-700" role="status">{tcart("maxStockNote", { n: stock.toLocaleString() })}</p>
+                  ) : (
+                    <p className="-mt-2 text-xs text-gray-500">{t("stockLeft", { n: stock.toLocaleString() })}</p>
+                  ))}
               </>
             )}
 

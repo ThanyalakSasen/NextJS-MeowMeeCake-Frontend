@@ -78,6 +78,8 @@ export interface ShippingZone {
   /** ว่าง = จังหวัดที่ไม่อยู่ในโซนอื่น */
   provinces: string[];
   fee: number;
+  /** โซนจังหวัดอื่นทั้งหมด (อยู่ท้ายสุดเสมอ) */
+  is_fallback?: boolean;
 }
 
 export interface StoreLogo {
