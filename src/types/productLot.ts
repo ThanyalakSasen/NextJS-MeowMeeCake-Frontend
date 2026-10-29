@@ -15,6 +15,9 @@ export interface ProductLot {
   /** รหัสสินค้า (pos-/pre-) */
   product_code: string | null;
   is_preorder: boolean;
+  /** ราคาปัจจุบันของสินค้า (บาท) — พิมพ์บนฉลาก · sale_price = ราคาลด (null = ไม่ลด) */
+  product_price: number | null;
+  sale_price: number | null;
   production_order_id: string;
   production_no: string | null;
   round_id: string | null;

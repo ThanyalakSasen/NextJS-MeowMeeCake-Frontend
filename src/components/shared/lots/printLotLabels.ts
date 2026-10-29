@@ -1,27 +1,45 @@
 // ─────────────────────────────────────────────────────────────
-// พิมพ์ฉลากบาร์โค้ดของล็อต — เครื่องพิมพ์สติ๊กเกอร์ (thermal) ผ่านหน้าต่างพิมพ์ของเบราว์เซอร์
-// 1 ดวง = 1 หน้า (@page ขนาดเท่าฉลาก ไม่มีขอบ) · บาร์โค้ด Code128 ของ lot_no (JsBarcode → SVG คมทุกความละเอียด)
-// บนฉลาก: ชื่อสินค้า · บาร์โค้ด · เลขล็อต · วันผลิต/วันหมดอายุ (เป็นตัวหนังสือ — ลูกค้าอ่านได้โดยไม่ต้องสแกน)
+// พิมพ์ฉลากบาร์โค้ดของล็อต — กระดาษสติ๊กเกอร์ A4 (เครื่องพิมพ์ธรรมดา) ผ่านหน้าต่างพิมพ์ของเบราว์เซอร์
+// 1 หน้า = 1 แผ่น A4 (@page ไม่มีขอบ) · วางดวงตามตำแหน่งจริงของแผ่น (SHEET_PRESETS) เป็นมม.
+// บาร์โค้ด Code128 สองอันแยกกัน (JsBarcode → SVG คมทุกความละเอียด):
+//   - รหัสสินค้า (pos-/pre-) — ยิงที่ POS ลงบิลได้เหมือนเดิม
+//   - เลขล็อต — ยิงที่ "สแกนล็อต" ดูวันผลิต/วันหมดอายุ/ใบสั่งผลิต
+// บนฉลาก: ชื่อร้าน · ชื่อสินค้า · ราคา · บาร์โค้ดสองอัน · วันผลิต/วันหมดอายุ (เป็นตัวหนังสือ — ลูกค้าอ่านได้โดยไม่ต้องสแกน)
 // ต้องเรียกจาก click handler ตรง ๆ — เปิดหน้าต่างก่อน await อย่างอื่น ไม่งั้นเบราว์เซอร์บล็อกป๊อปอัป
 // ─────────────────────────────────────────────────────────────
 import type { ProductLot } from "@/types/productLot";
 
-export const LABEL_SIZES = {
-  "50x30": { w: 50, h: 30 },
-  "40x30": { w: 40, h: 30 },
-  "60x40": { w: 60, h: 40 },
+/** แผ่นสติ๊กเกอร์ A4 ที่ขายทั่วไป — ขนาดดวง/ขอบบน-ซ้าย/ระยะห่างระหว่างดวง เป็นมม. */
+export const SHEET_PRESETS = {
+  "a4-21": { cols: 3, rows: 7, w: 70, h: 42.3, top: 0.15, left: 0, gapX: 0, gapY: 0 },
+  "a4-24": { cols: 3, rows: 8, w: 70, h: 37, top: 0.5, left: 0, gapX: 0, gapY: 0 },
+  "a4-21-margin": { cols: 3, rows: 7, w: 63.5, h: 38.1, top: 15.15, left: 7.2, gapX: 2.5, gapY: 0 },
 } as const;
-export type LabelSize = keyof typeof LABEL_SIZES;
+export type SheetPreset = keyof typeof SHEET_PRESETS;
+
+export const perSheet = (preset: SheetPreset) => SHEET_PRESETS[preset].cols * SHEET_PRESETS[preset].rows;
 
 export interface LabelTexts {
   produced: string;
   expires: string;
   noExpiry: string;
+  lot: string;
 }
 
 export interface LabelJob {
   lot: ProductLot;
   copies: number;
+}
+
+export interface PrintOptions {
+  preset: SheetPreset;
+  /** ดวงแรกที่จะพิมพ์บนแผ่นแรก (1 = มุมซ้ายบน) — ใช้แผ่นที่เหลือจากครั้งก่อนต่อได้ */
+  startAt: number;
+  locale: string;
+  storeName: string;
+  /** ราคา → ข้อความ (formatCurrency) */
+  price: (amount: number) => string;
+  texts: LabelTexts;
 }
 
 /** "2026-10-28" → "28/10/69" (th = พ.ศ.) / "28/10/26" */
@@ -31,54 +49,92 @@ export function labelDate(ymd: string, locale: string): string {
   return `${d}/${m}/${String(year).slice(-2)}`;
 }
 
+/** ราคาบนฉลาก = ราคาลดถ้ามี ไม่งั้นราคาปกติ · null = ไม่มีข้อมูลราคา */
+export const labelPrice = (lot: ProductLot): number | null => lot.sale_price ?? lot.product_price ?? null;
+
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 /** คืน false = เบราว์เซอร์บล็อกหน้าต่างพิมพ์ */
-export async function printLotLabels(jobs: LabelJob[], size: LabelSize, locale: string, texts: LabelTexts): Promise<boolean> {
-  const win = window.open("", "_blank", "width=480,height=640");
+export async function printLotLabels(jobs: LabelJob[], opts: PrintOptions): Promise<boolean> {
+  const win = window.open("", "_blank", "width=720,height=900");
   if (!win) return false;
 
   const { default: JsBarcode } = await import("jsbarcode");
-  const { w, h } = LABEL_SIZES[size];
+  const sheet = SHEET_PRESETS[opts.preset];
+  const slots = sheet.cols * sheet.rows;
+  const { texts, locale } = opts;
+
   const barcodes = new Map<string, string>();
-  for (const { lot } of jobs) {
-    if (barcodes.has(lot.lot_no)) continue;
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    JsBarcode(svg, lot.lot_no, { format: "CODE128", displayValue: false, margin: 0, height: 40, width: 2 });
-    // ยืดเต็มกว้างฉลาก (CSS) — อัตราส่วนแท่งต่อช่องว่างคงเดิม เครื่องยิงอ่านได้
-    svg.setAttribute("preserveAspectRatio", "none");
-    barcodes.set(lot.lot_no, svg.outerHTML);
-  }
+  const barcode = (value: string) => {
+    let svg = barcodes.get(value);
+    if (svg == null) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      // margin 10 = quiet zone 10 เท่าความกว้างแท่ง — ยืดเต็มกว้างดวงแล้วยังเหลือขอบว่างพอให้เครื่องยิงจับได้
+      JsBarcode(el, value, { format: "CODE128", displayValue: false, margin: 10, marginTop: 0, marginBottom: 0, height: 40, width: 2 });
+      el.setAttribute("preserveAspectRatio", "none");
+      svg = el.outerHTML;
+      barcodes.set(value, svg);
+    }
+    return svg;
+  };
 
   const label = (lot: ProductLot) => {
-    const dates = [
-      `${texts.produced} ${labelDate(lot.produced_date, locale)}`,
-      lot.expiry_date ? `${texts.expires} ${labelDate(lot.expiry_date, locale)}` : texts.noExpiry,
-    ].join(" · ");
-    return `<section class="label">
-  <div class="name">${escapeHtml(lot.product_name_th ?? "")}</div>
-  <div class="code">${barcodes.get(lot.lot_no)}</div>
-  <div class="no">${escapeHtml(lot.lot_no)}</div>
-  <div class="dates">${escapeHtml(dates)}</div>
-</section>`;
+    const price = labelPrice(lot);
+    const exp = lot.expiry_date ? `${texts.expires} ${labelDate(lot.expiry_date, locale)}` : texts.noExpiry;
+    return `<div class="top"><span class="store">${escapeHtml(opts.storeName)}</span>${
+      price != null ? `<span class="price">${escapeHtml(opts.price(price))}</span>` : ""
+    }</div>
+<div class="name">${escapeHtml(lot.product_name_th ?? "")}</div>
+${
+  lot.product_code
+    ? `<div class="code">${barcode(lot.product_code)}</div><div class="cap">${escapeHtml(lot.product_code)}</div>`
+    : ""
+}
+<div class="code">${barcode(lot.lot_no)}</div><div class="cap">${escapeHtml(`${texts.lot} ${lot.lot_no}`)}</div>
+<div class="dates"><span>${escapeHtml(`${texts.produced} ${labelDate(lot.produced_date, locale)}`)}</span><b>${escapeHtml(exp)}</b></div>`;
   };
-  const body = jobs.flatMap(({ lot, copies }) => Array.from({ length: copies }, () => label(lot))).join("\n");
+
+  // ดวงว่างช่วงต้นแผ่นแรก (startAt) แล้วต่อด้วยฉลากทุกดวง → ตัดเป็นแผ่นละ slots ดวง
+  const cells: (ProductLot | null)[] = [
+    ...Array.from({ length: Math.min(Math.max(opts.startAt, 1), slots) - 1 }, () => null),
+    ...jobs.flatMap(({ lot, copies }) => Array.from({ length: copies }, () => lot)),
+  ];
+  const pages: string[] = [];
+  for (let i = 0; i < cells.length; i += slots) {
+    const html = cells
+      .slice(i, i + slots)
+      .map((lot, k) => {
+        if (!lot) return "";
+        const x = sheet.left + (k % sheet.cols) * (sheet.w + sheet.gapX);
+        const y = sheet.top + Math.floor(k / sheet.cols) * (sheet.h + sheet.gapY);
+        return `<section class="label" style="left:${+x.toFixed(2)}mm;top:${+y.toFixed(2)}mm">${label(lot)}</section>`;
+      })
+      .join("\n");
+    pages.push(`<div class="sheet">${html}</div>`);
+  }
+
+  // ความสูงบาร์โค้ด — ที่เหลือจากตัวหนังสือ (~22 มม.) แบ่งสองอัน · ไม่เกิน 10 มม.
+  const codeH = Math.min(10, Math.max(6, (sheet.h - 22) / 2));
 
   win.document.write(`<!doctype html>
 <html><head><meta charset="utf-8"><title>${escapeHtml(jobs.map((j) => j.lot.lot_no).join(", "))}</title>
 <style>
-  @page { size: ${w}mm ${h}mm; margin: 0; }
+  @page { size: A4; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Sarabun", "Tahoma", sans-serif; color: #000; }
-  .label { width: ${w}mm; height: ${h}mm; padding: 1.5mm 2mm; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; page-break-after: always; break-after: page; }
-  .label:last-child { page-break-after: auto; break-after: auto; }
-  .name { font-size: ${h >= 40 ? 10 : 8.5}pt; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .code svg { display: block; width: 100%; height: ${h >= 40 ? 16 : 11}mm; }
-  .no { font-family: "Consolas", "Courier New", monospace; font-size: 8pt; text-align: center; letter-spacing: 0.5pt; line-height: 1; }
-  .dates { font-size: ${h >= 40 ? 8.5 : 7}pt; text-align: center; line-height: 1.1; white-space: nowrap; }
+  .sheet { position: relative; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; break-after: page; }
+  .sheet:last-child { page-break-after: auto; break-after: auto; }
+  .label { position: absolute; width: ${sheet.w}mm; height: ${sheet.h}mm; padding: 1.8mm 2.5mm; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+  .top { display: flex; justify-content: space-between; align-items: baseline; gap: 2mm; line-height: 1.1; }
+  .store { font-size: 6.5pt; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .price { font-size: 10pt; font-weight: 700; white-space: nowrap; }
+  .name { font-size: 8.5pt; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .code svg { display: block; width: 100%; height: ${codeH}mm; }
+  .cap { font-family: "Consolas", "Courier New", monospace; font-size: 6.5pt; text-align: center; letter-spacing: 0.4pt; line-height: 1; }
+  .dates { display: flex; justify-content: space-between; gap: 2mm; font-size: 7pt; line-height: 1.1; white-space: nowrap; }
 </style></head>
-<body>${body}</body></html>`);
+<body>${pages.join("\n")}</body></html>`);
   win.document.close();
   win.onafterprint = () => win.close();
   // รอ layout/ฟอนต์ก่อนสั่งพิมพ์
