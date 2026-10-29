@@ -58,7 +58,11 @@ export const productionOrdersService = {
 
   /** in_progress → done — หักสต็อกวัตถุดิบของรายการที่ยังไม่ถูกหักให้ครบ */
   /** lots = วันผลิต/วันหมดอายุของล็อตต่อรายการ (backend สร้างล็อตตอนปิดงาน — ไม่ส่ง = ค่าเริ่มต้น) */
-  complete: (id: string, body: { use_actual?: boolean; allowNegative?: boolean; lots?: CompleteLotInput[] } = {}) =>
+  /** actuals = จำนวนที่ผลิตได้จริงต่อรายการ (0 = ยกเลิกรายการ) — บันทึกพร้อมปิดงาน ทั้งใบสำเร็จหรือไม่เปลี่ยนอะไรเลย */
+  complete: (
+    id: string,
+    body: { use_actual?: boolean; allowNegative?: boolean; lots?: CompleteLotInput[]; actuals?: { item_id: string; actual_qty: number }[] } = {},
+  ) =>
     http.post<ItemResponse<RawProductionOrder>>(`${BASE}/${id}/complete`, body),
 
   /** → cancelled — คืนสต็อกวัตถุดิบที่หักไปแล้ว (ถ้ามี) */

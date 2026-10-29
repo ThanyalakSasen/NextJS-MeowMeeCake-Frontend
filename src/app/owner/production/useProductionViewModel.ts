@@ -375,13 +375,14 @@ export function useProductionViewModel() {
   // ปิดงานผลิต → เปิดหน้าต่างให้เลือกตัดวัตถุดิบตามจำนวนที่วางแผน / ที่ผลิตได้จริง ก่อนเรียก /complete
   const [completeTarget, setCompleteTarget] = useState<ProductionOrder | null>(null);
   const completeOrder = useMutation({
-    mutationFn: async ({ order, v }: { order: ProductionOrder; v: CompleteProductionValue }) => {
-      // ผลิตได้จริง: บันทึก actual_qty ทีละรายการก่อน (0 = ผลิตไม่ได้ → ยกเลิกรายการ ไม่ตัดวัตถุดิบ/ไม่เพิ่มสต็อก)
-      for (const [itemId, qty] of Object.entries(v.actuals)) {
-        await productionOrdersService.updateItem(itemId, qty > 0 ? { actual_qty: qty } : { actual_qty: 0, item_status: "cancelled" });
-      }
-      return productionOrdersService.complete(order._id, { use_actual: v.useActual, lots: v.lots });
-    },
+    // ผลิตได้จริงส่งไปพร้อมปิดงาน (0 = ผลิตไม่ได้ → ยกเลิกรายการ ไม่ตัดวัตถุดิบ/ไม่เพิ่มสต็อก)
+    // backend ทำทั้งใบหรือไม่ทำเลย — เดิม PATCH ทีละรายการก่อน ปิดงานพลาดแล้วรายการถูกยกเลิกค้างไว้
+    mutationFn: ({ order, v }: { order: ProductionOrder; v: CompleteProductionValue }) =>
+      productionOrdersService.complete(order._id, {
+        use_actual: v.useActual,
+        lots: v.lots,
+        actuals: Object.entries(v.actuals).map(([item_id, actual_qty]) => ({ item_id, actual_qty })),
+      }),
     onSettled: () => {
       invalidate();
       qc.invalidateQueries({ queryKey: ["ingredients"] });
