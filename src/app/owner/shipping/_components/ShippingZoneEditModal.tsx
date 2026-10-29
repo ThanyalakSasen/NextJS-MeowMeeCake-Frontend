@@ -27,6 +27,7 @@ export function ShippingZoneEditModal(vm: VM) {
       {vm.editing && (
         <ShippingZoneFormFields
           code={vm.editing.code}
+          isFallback={vm.editing.code !== null && vm.editing.code === vm.fallbackCode}
           form={vm.editing.form}
           errors={vm.errors}
           taken={vm.takenProvinces}

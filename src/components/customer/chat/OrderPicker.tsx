@@ -9,16 +9,11 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Package, ReceiptText } from "lucide-react";
 import { shopOrdersService } from "@/services/shopOrders";
 import { shopPreordersService } from "@/services/shopPreorders";
-import type { ChatAttachmentKind } from "@/types/chat";
+import type { ChatAttachRef, ChatAttachmentKind } from "@/types/chat";
 import ShopModal from "../ShopModal";
 import { baht } from "../shopStyles";
 
-export interface PickedOrder {
-  kind: ChatAttachmentKind;
-  id: string;
-  doc_no: string;
-  total_amount: number;
-}
+export type PickedOrder = ChatAttachRef;
 
 interface Row extends PickedOrder {
   status: string;

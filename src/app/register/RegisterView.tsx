@@ -9,6 +9,7 @@ import {
 } from "@/components/shared/layout/AuthBackdrop";
 import { LOGIN_PATH } from "@/constants/auth";
 import type { useRegisterViewModel } from "./useRegisterViewModel";
+import AllergySearch from "@/components/customer/AllergySearch";
 
 type VM = ReturnType<typeof useRegisterViewModel>;
 
@@ -124,11 +125,15 @@ export function RegisterView(vm: VM) {
 
           {vm.form.hasAllergy && (
             <div className="flex flex-col gap-3 rounded-2xl border border-stone-200/80 bg-stone-50/90 p-4 md:bg-stone-50/80">
-              <select className={fieldClass} value="" aria-label={t("register.allergyPick")}
-                onChange={(e) => vm.addAllergy(e.target.value)}>
-                <option value="" disabled>{t("register.allergyPick")}</option>
-                {vm.allergyOptions.map((name) => <option key={name} value={name}>{name}</option>)}
-              </select>
+              {/* ค้นหาวัตถุดิบที่แพ้ (2026-10-29 · เดิมเป็น dropdown ยาว) — พิมพ์แล้วกดเลือก · Enter = เพิ่มอันแรก */}
+              <AllergySearch
+                inputClassName={fieldClass}
+                options={vm.allergyOptions}
+                placeholder={t("register.allergySearchPlaceholder")}
+                ariaLabel={t("register.allergyPick")}
+                noMatchText={t("register.allergyNoMatch")}
+                onPick={vm.addAllergy}
+              />
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-stone-500">{t("register.allergyCount", { n: vm.form.allergies.length })}</span>
                 {vm.form.allergies.length > 0 && (

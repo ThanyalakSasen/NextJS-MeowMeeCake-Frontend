@@ -32,6 +32,7 @@ import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
 import { BuyAgainAfterReview } from "../../_components/BuyAgainButton";
 import BackButton from "../../_components/BackButton";
+import EditDeliveryButton, { canEditDelivery } from "../../_components/EditDeliveryButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../orderLabels";
 import { canReview } from "../../../hooks/useReviewedItems";
@@ -62,6 +63,7 @@ function OrderContent() {
   const isNew = useSearchParams().get("new") === "1";
   const router = useRouter();
   const tf = useTranslations("shop.flow");
+  const te = useTranslations("shop.editDelivery");
   const validId = isObjectId(id ?? "");
 
   const orderQ = useQuery({
@@ -102,6 +104,15 @@ function OrderContent() {
       </div>
     );
   }
+
+  // ย้อนกลับไปแก้วิธีรับ/ที่อยู่ (ยังไม่ชำระ · ยังไม่ส่งสลิป · ไม่ได้ชำระรวม)
+  const editDelivery = canEditDelivery(paymentQ.data) ? (
+    <EditDeliveryButton
+      bill={{ kind: "order", id: order._id, order_type: order.order_type, delivery_address: order.delivery_address }}
+      onSaved={refresh}
+      className={"inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[#8C5A3C]/25 bg-white px-3 text-xs font-semibold text-[#8C5A3C] hover:bg-[#FAF6F0]"}
+    />
+  ) : null;
 
   // สถานะรีวิว — อยู่บรรทัดเดียวกับสถานะจัดส่ง (ออเดอร์รับเองอยู่บรรทัดนัดรับ) · ยังรีวิวไม่ได้ = บอกเงื่อนไข (showReason)
   const showPickupRow = order.order_type === "takeaway" && !!(order.pickup_point_name || order.pickup_date);
@@ -240,7 +251,11 @@ function OrderContent() {
 
             {order.order_type === "delivery" && order.delivery_address && (
               <div className="border-t border-[#8C5A3C]/10 pt-4 text-sm">
-                <p className="mb-1 font-semibold">{t("deliveryAddress")}</p>
+                {/* ปุ่มแก้วิธีรับ/ที่อยู่ อยู่ขวาของหัวข้อที่อยู่จัดส่ง (ยังแก้ได้เท่านั้น) */}
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="m-0 font-semibold">{t("deliveryAddress")}</p>
+                  {editDelivery}
+                </div>
                 <p>
                   {order.delivery_address.recipient_name} · {order.delivery_address.recipient_phone}
                 </p>
@@ -248,6 +263,13 @@ function OrderContent() {
                   {order.delivery_address.house_no} {order.delivery_address.sub_district} {order.delivery_address.district}{" "}
                   {order.delivery_address.province} {order.delivery_address.zip_code}
                 </p>
+              </div>
+            )}
+            {/* รับเอง — ยังเปลี่ยนเป็นจัดส่งได้: ปุ่มอยู่ขวาของแถววิธีรับสินค้า */}
+            {order.order_type === "takeaway" && editDelivery && (
+              <div className="flex items-center justify-between gap-2 border-t border-[#8C5A3C]/10 pt-4 text-sm">
+                <p className="m-0 font-semibold">{te("receiveTakeaway")}</p>
+                {editDelivery}
               </div>
             )}
           </section>

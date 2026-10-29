@@ -32,7 +32,7 @@ export default function CustomerHomePage() {
   });
   const categoriesQ = useQuery({ queryKey: catalogCategoriesKey, queryFn: catalogService.categories });
 
-  const products = useMemo(() => (productsQ.data?.data ?? []).filter(isProductCardVisible), [productsQ.data]);
+  const products = useMemo(() => (productsQ.data?.data ?? []).filter((p) => isProductCardVisible(p)), [productsQ.data]);
 
   // หมวดที่มีสินค้าพร้อมขาย — สินค้ามากสุดก่อน · เท่ากัน = ก-ฮ (ซ่อนหมวดที่ไม่มีสินค้า)
   const categoryCards = useMemo(() => {

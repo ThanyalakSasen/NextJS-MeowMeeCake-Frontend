@@ -299,7 +299,7 @@ function MyCouponsTab({ coupons, loading, failed, onRedeem }: { coupons: MyCoupo
           <button type="button" onClick={onRedeem} className="text-sm font-semibold text-[#8C5A3C] hover:underline">{t("goRedeem")}</button>
         </div>
       ) : (
-        <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 xl:grid-cols-2">
+        <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 lg:grid-cols-2">
           {sorted.map((c) => (
             <li key={c._id}>
               <CouponCodeTicket
@@ -359,7 +359,7 @@ function RedeemTab({
       ) : sorted.length === 0 ? (
         <p className="rounded-xl border border-dashed border-stone-200 bg-stone-50 py-8 text-center text-sm text-stone-500">{t("noCatalog")}</p>
       ) : (
-        <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 xl:grid-cols-2">
+        <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 lg:grid-cols-2">
           {sorted.map((c) => {
             const ok = canRedeem(c);
             const busy = busyId === c._id;
@@ -383,7 +383,7 @@ function RedeemTab({
                       type="button"
                       onClick={() => onRedeem(c)}
                       disabled={!ok || busyId !== null}
-                      className="h-[40px] rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-sm font-bold text-[#4A342E] shadow-sm transition hover:bg-[#4A342E] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-500 disabled:shadow-none"
+                      className="h-[32px] rounded-lg border border-[#8C5A3C]/30 bg-white px-2.5 text-xs font-bold text-[#4A342E] shadow-sm transition hover:bg-[#4A342E] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-500 disabled:shadow-none"
                     >
                       {busy ? t("redeeming") : c.limit_reached ? t("limitReached") : ok ? t("redeem") : t("notEnough")}
                     </button>

@@ -63,7 +63,10 @@ export function useAddToCart() {
       return true;
     } catch (err) {
       setStatus("error");
-      alert.error(isApiError(err) ? err.message : t("addFailed"));
+      // 409 = สต็อกไม่พอ / ในตะกร้ามีครบแล้ว — ไม่ใช่ข้อผิดพลาด: แจ้งแบบข้อมูล (ไอคอน i สีฟ้า + หัวข้อของตัวเอง)
+      // แทนป๊อปอัปกากบาทแดง "ทำรายการไม่สำเร็จ" (2026-10-29)
+      if (isApiError(err) && err.status === 409) alert.info(err.message, { title: t("stockLimitTitle"), note: t("stockLimitNote") });
+      else alert.error(isApiError(err) ? err.message : t("addFailed"));
       setTimeout(() => setStatus("idle"), 2500);
       return false;
     }

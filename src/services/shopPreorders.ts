@@ -12,7 +12,7 @@ import type { ItemResponse } from "@/types/api";
 import type { DeliveryAddress, OrderType } from "@/types/order";
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 import type { CartCustomization } from "@/services/shopCart";
-import type { InlineDeliveryAddress } from "@/services/shopOrders";
+import type { EditDeliveryInput, InlineDeliveryAddress } from "@/services/shopOrders";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -219,6 +219,10 @@ export const shopPreordersService = {
   /** GET /shop/preorders/{id} — เฉพาะเจ้าของ (403 ถ้าไม่ใช่) */
   get: async (id: string): Promise<ShopPreorder> =>
     toShopPreorder((await http.get<ItemResponse<any>>(`/shop/preorders/${encodeURIComponent(id)}`)).data),
+
+  /** PATCH /shop/preorders/{id}/delivery — ย้อนกลับไปแก้วิธีรับ/ที่อยู่ (ยังไม่ชำระ · ไม่ชำระรวม) · คืนพรีออเดอร์หลังแก้ */
+  editDelivery: async (id: string, body: EditDeliveryInput): Promise<ShopPreorder> =>
+    toShopPreorder((await http.patch<ItemResponse<any>>(`/shop/preorders/${encodeURIComponent(id)}/delivery`, body)).data),
 
   /** POST /shop/preorders/{id}/cancel { reason? } — คืนโควตาในรอบ + คูปอง/แต้มให้ */
   cancel: async (id: string, reason?: string): Promise<void> => {
