@@ -66,6 +66,11 @@ export const SHIPPING_CARRIERS = [
 
 export type ShippingCarrier = (typeof SHIPPING_CARRIERS)[number];
 
+/** ขนส่งพัสดุที่มีเลขติดตาม — ต้องกรอกเลขพัสดุก่อน "จัดส่งเรียบร้อยแล้ว" · ไรเดอร์/ร้านส่งเอง/อื่น ๆ ไม่บังคับ
+ *  (ตรงกับ backend lib/shippingCarrier.ts TRACKED_CARRIERS) */
+const TRACKED_CARRIERS: readonly ShippingCarrier[] = ["thailand_post", "kerry", "flash", "jt", "ninjavan", "best", "scg"];
+export const carrierNeedsTracking = (c: ShippingCarrier) => TRACKED_CARRIERS.includes(c);
+
 // ─── การผลิต ─────────────────────────────────────────────────
 export type ProductionStatus = "planned" | "in_progress" | "done" | "cancelled";
 

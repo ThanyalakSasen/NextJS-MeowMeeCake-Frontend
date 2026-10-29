@@ -115,6 +115,15 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
           <InputNumber min={0} precision={0} placeholder="5" />
         </FormItem>
       )}
+      {/* อายุสินค้า — วันหมดอายุเริ่มต้นของล็อตตอนปิดงานผลิต (ทั้งปกติและพรีออเดอร์) */}
+      <FormItem
+        name="shelf_life_days"
+        label={t("fields.shelf_life_days")}
+        extra={t("products.shelfLifeHint")}
+        rules={[{ type: "integer", min: 1, message: t("products.shelfLifeInvalid") }]}
+      >
+        <InputNumber min={1} precision={0} />
+      </FormItem>
 
       <FormItem name="product_price" label={t("fields.product_price")} rules={price}>
         <InputNumber min={0} />

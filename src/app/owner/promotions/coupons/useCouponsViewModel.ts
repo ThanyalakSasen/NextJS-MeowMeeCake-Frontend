@@ -113,6 +113,8 @@ export function useCouponsViewModel() {
   return {
     perm,
     rows: filtered,
+    /** ทุกโปร (ไม่กรองแท็บ/ค้นหา) — ตัวเลือก "ใช้ร่วมได้กับโปร" ในฟอร์ม */
+    allPromotions: rows,
     counts,
     totalUsed,
     // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)

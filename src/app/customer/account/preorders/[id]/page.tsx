@@ -151,6 +151,9 @@ function PreorderDetailContent() {
               <p className="font-bold">{t("placed")}</p>
               <p className="text-sm">{t("placedHint")}</p>
             </div>
+            {!(p.payment_status === "paid" || p.has_payment) && p.order_status !== "cancelled" && (
+              <Link href={`/customer/account/preorders/${p._id}/success`} className={`${shopButton} shrink-0`}>{tf("payLaterBtn")}</Link>
+            )}
           </div>
         )}
 

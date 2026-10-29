@@ -3,15 +3,14 @@
 import { useLocale } from "next-intl";
 import { STOCK_STATUS_CONFIG } from "@/constants/enumConfig";
 import { formatNumber } from "@/i18n/format";
-import { getStockStatus, LOW_STOCK_THRESHOLD } from "../stockStatus";
+import { effectiveLowStockThreshold, getStockStatus } from "../stockStatus";
 
-/** สต็อกที่ทำให้แถบเต็ม 100% (ไม่มี max_stock ในสินค้า → ใช้ heuristic จากเกณฑ์สต็อกต่ำ) */
-const FULL_BAR_QTY = LOW_STOCK_THRESHOLD * 5;
-
-export function StockProgressRow({ qty, unit }: { qty: number; unit: string }) {
+export function StockProgressRow({ qty, unit, threshold }: { qty: number; unit: string; threshold?: number | null }) {
   const locale = useLocale();
-  const status = getStockStatus(qty);
-  const pct = Math.max(3, Math.min(100, (qty / FULL_BAR_QTY) * 100));
+  const status = getStockStatus(qty, threshold);
+  // แถบเต็ม 100% ที่ 5 เท่าของเกณฑ์ใกล้หมด (สินค้าไม่มี max_stock)
+  const fullBarQty = Math.max(effectiveLowStockThreshold(threshold) * 5, 1);
+  const pct = Math.max(3, Math.min(100, (qty / fullBarQty) * 100));
 
   return (
     <div className="flex flex-col gap-1">

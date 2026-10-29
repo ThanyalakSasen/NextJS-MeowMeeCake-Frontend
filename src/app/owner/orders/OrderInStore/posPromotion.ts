@@ -9,6 +9,7 @@
 // ที่โหลดมา · โปรสำหรับสมาชิก = ตั้ง audience "members" หรือจำกัดสิทธิ์ต่อลูกค้า (max_user_per_user): ไม่กรอกเบอร์สมาชิก
 // → เลือกไม่ได้ (backend ปฏิเสธบัญชี "ลูกค้าทั่วไป" · โปรจำกัดสิทธิ์ต่อคนนับที่บัญชีเดียว ใช้ครั้งเดียวก็เต็ม)
 // ซ้อนโปร: เลือกได้หลายตัวเมื่อทุกตัวตั้ง stackable (สูงสุด MAX_STACKED_PROMOTIONS) · แต่ละตัวคิดจากบิลเดียวกันแล้วรวม
+// stackable_with: ทุกคู่ต้องยอมกันทั้งสองฝั่ง (ว่าง = ยอมทุกโปรที่ stackable)
 // (กติกาเดียวกับ backend orderService) · โปรที่ไม่ได้ตั้ง stackable ใช้ได้ตัวเดียว
 // จำนวนที่สมาชิกใช้ไปแล้วเช็คฝั่ง client ไม่ได้ — backend ตรวจตอนสร้างออเดอร์
 // FreeShipping ตัดทิ้ง: ขายหน้าร้าน = takeaway ไม่มีค่าส่ง backend ปฏิเสธเสมอ
@@ -67,18 +68,29 @@ export function isMemberOnly(p: Promotion): boolean {
   return p.audience === "members" || p.max_user_per_user != null;
 }
 
+/** 2 โปรนี้อยู่บิลเดียวกันได้ไหม — กติกาเดียวกับ backend orderService: ทั้งคู่ stackable และ stackable_with
+ *  ของแต่ละฝั่งว่าง (ยอมทุกตัว) หรือมีอีกฝั่งอยู่ */
+export function canStack(a: Promotion, b: Promotion): boolean {
+  const allows = (x: Promotion, y: Promotion) => !x.stackable_with?.length || x.stackable_with.includes(y._id);
+  return a.stackable === true && b.stackable === true && allows(a, b) && allows(b, a);
+}
+
 /** backend รับ promotion_ids ได้ไม่เกินเท่านี้ (schemas/order.ts) */
 export const MAX_STACKED_PROMOTIONS = 5;
 
 /**
  * กดเลือก/ยกเลิกโปร 1 ตัว → รายการ id ที่เลือกใหม่
  * กดตัวที่เลือกอยู่ = เอาออก · ตัวใหม่ไม่ใช่ stackable หรือที่เลือกอยู่มีตัวที่ไม่ใช่ stackable = แทนที่ทั้งหมด ·
- * ทุกตัว stackable = เพิ่มต่อท้าย (เต็มแล้วไม่เพิ่ม)
+ * ตัวใหม่ใช้ร่วมกับตัวที่เลือกอยู่ไม่ได้ (stackable_with) = แทนที่ทั้งหมด เช่นกัน ·
+ * ทุกตัวใช้ร่วมกันได้ = เพิ่มต่อท้าย (เต็มแล้วไม่เพิ่ม)
  */
 export function togglePromoSelection(selected: string[], promo: Promotion, all: Promotion[]): string[] {
   if (selected.includes(promo._id)) return selected.filter((id) => id !== promo._id);
-  const stackable = (id: string) => all.find((p) => p._id === id)?.stackable === true;
-  if (!promo.stackable || selected.some((id) => !stackable(id))) return [promo._id];
+  const fits = (id: string) => {
+    const other = all.find((p) => p._id === id);
+    return other != null && canStack(promo, other);
+  };
+  if (!selected.every(fits)) return [promo._id];
   return selected.length >= MAX_STACKED_PROMOTIONS ? selected : [...selected, promo._id];
 }
 

@@ -27,6 +27,8 @@ export interface StockProductRow {
   unit: string;
   price: number;
   stock: number;
+  /** products.low_stock_threshold — null = ใช้ค่าเริ่มต้น 5 */
+  threshold: number | null;
   status: StockStatus;
   value: number;
 }
@@ -77,7 +79,8 @@ export function useProductStockViewModel() {
           unit: unitLabel(p.unit_id) || t("productStock.unitDefault"),
           price: p.product_price,
           stock,
-          status: getStockStatus(stock),
+          threshold: p.low_stock_threshold ?? null,
+          status: getStockStatus(stock, p.low_stock_threshold),
           value: stock * p.product_price,
         };
       });
@@ -130,6 +133,8 @@ export function useProductStockViewModel() {
 
   // ── ทำหลายรายการพร้อมกัน — ส่งทีละรายการ (backend ไม่มี bulk) · คืน error ของรายการที่ไม่สำเร็จให้ modal ──
   const [bulkOpen, setBulkOpen] = useState(false);
+  // สแกนบาร์โค้ดบนฉลากดูล็อต (วันผลิต/หมดอายุ/รอบผลิต) — ดูได้ทุกคนที่เข้าหน้านี้
+  const [lotLookupOpen, setLotLookupOpen] = useState(false);
   const bulkItems = useMemo<BulkStockItem[]>(
     () => rows.map((r) => ({ id: r._id, name: r.name, unit: r.unit, stock: r.stock })),
     [rows],
@@ -157,6 +162,7 @@ export function useProductStockViewModel() {
   return {
     perm,
     bulkOpen, openBulk: () => setBulkOpen(true), closeBulk: () => setBulkOpen(false), bulkItems, onBulkSubmit,
+    lotLookupOpen, openLotLookup: () => setLotLookupOpen(true), closeLotLookup: () => setLotLookupOpen(false),
     rows: filtered,
     alertRows,
     stats,

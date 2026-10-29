@@ -22,6 +22,10 @@ interface ItemRow {
   max_qty_total: number;
 }
 
+// หัวคอลัมน์ + ทุกแถวใช้ชุดเดียวกัน · minmax(0, …) กันคอลัมน์ขยายตามชื่อสินค้ายาว (fr เฉย ๆ ไม่หดต่ำกว่าเนื้อหา
+// → แถวที่ชื่อยาวดันช่องราคา/ขั้นต่ำ/โควตาเยื้องจากแถวอื่น)
+const ROW_COLUMNS = "minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 0.8fr) 24px";
+
 function emptyRow(): ItemRow {
   return { key: crypto.randomUUID(), product_id: "", price_override: null, min_order_qty: 1, max_qty_total: 10 };
 }
@@ -121,7 +125,7 @@ export function RoundFormModal({
 
         {/* หัวคอลัมน์ (อยู่เหนือแถว — เดิมอยู่ใต้รายการ) */}
         {rows.length > 0 && (
-          <div className="mb-1 grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 0.8fr 24px" }}>
+          <div className="mb-1 grid gap-2 text-xs text-gray-500" style={{ gridTemplateColumns: ROW_COLUMNS }}>
             <span>{t("preorderRound.colProduct")}</span>
             <span>{t("preorderRound.colPriceOverride")}</span>
             <span>{t("preorderRound.colMinQty")}</span>
@@ -132,9 +136,10 @@ export function RoundFormModal({
         {rows.map((row) => {
           const product = products.find((p) => p._id === row.product_id);
           return (
-            <div key={row.key} className="grid gap-2 mb-2 items-center" style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 0.8fr 24px" }}>
+            <div key={row.key} className="grid gap-2 mb-2 items-center" style={{ gridTemplateColumns: ROW_COLUMNS }}>
               <Select
                 size="small"
+                className="w-full min-w-0"
                 aria-label={t("preorderRound.colProduct")}
                 placeholder={t("preorderRound.selectProduct")}
                 value={row.product_id || undefined}

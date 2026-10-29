@@ -103,6 +103,9 @@ export function ChatOrderPopup({ attachment, onClose }: { attachment: ChatAttach
           canMarkReady={false}
           markingReady={false}
           onMarkReady={noop}
+          canMarkShipped={false}
+          markingShipped={false}
+          onMarkShipped={noop}
         />
       )}
       {kind === "preorder" && preorder && (
@@ -116,6 +119,7 @@ export function ChatOrderPopup({ attachment, onClose }: { attachment: ChatAttach
             paidPayment,
             verifyingPayment: false,
             savingDelivery: false,
+            markingShipped: false,
             refunding: false,
             isFinalOrderStatus,
             getNextOrderStatus,
@@ -125,6 +129,7 @@ export function ChatOrderPopup({ attachment, onClose }: { attachment: ChatAttach
             onApprovePayment: noop,
             onRejectPayment: noop,
             onSaveDelivery: noop,
+            onMarkShipped: noop,
             onRefund: noop,
           } as unknown as PreorderVM)}
           order={preorder}

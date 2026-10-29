@@ -2,7 +2,7 @@
 // แท็บ 1: แผนการผลิต / ใบสั่งผลิต — presentational ล้วน รับ props จาก useProductionViewModel
 import { useTranslations, useLocale } from "next-intl";
 import { Button, Select, Tag } from "@/components/base";
-import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
+import { StatCard, StatCardsGrid } from "@/components/shared/stats"; // StatusBadge — ใช้ตอนเปิดคอลัมน์สถานะกลับ
 import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { formatDate } from "@/i18n/format";
 import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
@@ -54,11 +54,12 @@ export function PlanTab(vm: VM) {
       title: t("production.fieldAssignee"),
       render: (o) => o.assignee_name ?? t("production.unassigned"),
     },
-    {
-      key: "status",
-      title: t("common.status"),
-      render: (o) => <StatusBadge group="productionStatus" value={o.production_status} />,
-    },
+    // ซ่อนคอลัมน์สถานะไว้ก่อน
+    // {
+    //   key: "status",
+    //   title: t("common.status"),
+    //   render: (o) => <StatusBadge group="productionStatus" value={o.production_status} />,
+    // },
   ];
 
   return (
@@ -67,9 +68,11 @@ export function PlanTab(vm: VM) {
         <p className="text-base text-gray-600">{t("production.planDescription", { n: vm.planTotal })}</p>
         {vm.perm.create && (
           <div className="flex items-center gap-2">
+            {/* ซ่อนปุ่ม "สร้างจากรอบพรีออเดอร์" ไว้ก่อน
             <Button icon={actionIcon("add")} onClick={vm.openCreateFromRound}>
               {t("production.createFromRound")}
             </Button>
+            */}
             <Button type="primary" icon={actionIcon("add")} onClick={vm.openCreate}>
               {t("production.createOrder")}
             </Button>

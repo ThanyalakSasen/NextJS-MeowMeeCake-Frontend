@@ -14,6 +14,7 @@ export function CouponFormModal({
   editTarget,
   productOptions,
   categoryOptions,
+  promotions,
   saving,
   onClose,
   onSubmit,
@@ -22,6 +23,8 @@ export function CouponFormModal({
   editTarget: Promotion | null;
   productOptions: { value: string; label: string }[];
   categoryOptions: { value: string; label: string }[];
+  /** โปรทั้งหมด — ตัวเลือก "ใช้ร่วมได้กับโปร" (ตัดตัวเองออก · ตัวที่ยังไม่เปิดใช้ร่วมเลือกไม่ได้) */
+  promotions: Promotion[];
   saving: boolean;
   onClose: () => void;
   onSubmit: (v: CouponFormValue) => void;
@@ -33,6 +36,14 @@ export function CouponFormModal({
   const scope: CouponScope = Form.useWatch("scope", form) ?? "all";
   const productIds: string[] = Form.useWatch("productIds", form) ?? [];
   const categoryIds: string[] = Form.useWatch("categoryIds", form) ?? [];
+  const stackable: boolean = Form.useWatch("stackable", form) ?? false;
+  const stackOptions = promotions
+    .filter((p) => p._id !== editTarget?._id)
+    .map((p) => ({
+      value: p._id,
+      label: `${p.promotion_code} · ${p.promotion_name}${p.stackable ? "" : ` ${t("coupons.stackWithNotStackable")}`}`,
+      disabled: !p.stackable,
+    }));
 
   const required: Rule[] = [{ required: true, message: t("validation.required") }];
   const percentMaxRule: Rule = ({ getFieldValue }) => ({
@@ -188,6 +199,18 @@ export function CouponFormModal({
             <span className="text-sm text-gray-600">{t("coupons.stackableLabel")}</span>
           </div>
         </FormItem>
+        {stackable && (
+          <FormItem name="stackWith" label={t("coupons.fieldStackWith")} extra={t("coupons.stackWithHint")}>
+            <Select
+              mode="multiple"
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder={t("coupons.stackWithPlaceholder")}
+              options={stackOptions}
+            />
+          </FormItem>
+        )}
 
         <FormItem name="dateRange" label={t("coupons.fieldDateRange")} extra={t("coupons.dateRangeHint")}>
           <RangePicker style={{ width: "100%" }} />

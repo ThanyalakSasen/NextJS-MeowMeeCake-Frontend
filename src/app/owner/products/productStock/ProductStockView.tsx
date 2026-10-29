@@ -7,12 +7,12 @@ import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats"
 import { DataTable, FilterToolbar, SearchInput, type Column, useStockStatusOptions, FilterField } from "@/components/shared/data";
 import { formatCurrency } from "@/i18n/format";
 import { actionIcon } from "@/components/shared/actions";
-import { LOW_STOCK_THRESHOLD } from "./stockStatus";
 import type { StockProductRow, useProductStockViewModel } from "./useProductStockViewModel";
 import { StockProgressRow } from "./_components/StockProgressRow";
 import { StockActionModal } from "./_components/StockActionModal";
 import { BulkStockModal, StockAlertSection } from "@/components/shared/stock";
 import { LoadFailed } from "@/components/shared/feedback";
+import { LotLookupModal } from "@/components/shared/lots";
 
 type VM = ReturnType<typeof useProductStockViewModel>;
 
@@ -34,7 +34,7 @@ export function ProductStockView(vm: VM) {
     {
       key: "stock",
       title: t("productStock.colStock"),
-      render: (r) => <StockProgressRow qty={r.stock} unit={r.unit} />,
+      render: (r) => <StockProgressRow qty={r.stock} unit={r.unit} threshold={r.threshold} />,
     },
     {
       key: "status",
@@ -82,7 +82,7 @@ export function ProductStockView(vm: VM) {
           <StatusBadge group="stockStatus" value={r.status} />
         </div>
       </div>
-      <StockProgressRow qty={r.stock} unit={r.unit} />
+      <StockProgressRow qty={r.stock} unit={r.unit} threshold={r.threshold} />
       <dl className="m-0 grid grid-cols-2 gap-3 text-sm">
         <div>
           <dt className="text-gray-600">{t("productStock.colPrice")}</dt>
@@ -103,11 +103,16 @@ export function ProductStockView(vm: VM) {
     <ListPageLayout
       title={t("productStock.title")}
       actions={
-        vm.perm.update && (
-          <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
-            {t("bulkStock.open")}
+        <>
+          <Button icon={actionIcon("scan")} onClick={vm.openLotLookup}>
+            {t("lots.lookup")}
           </Button>
-        )
+          {vm.perm.update && (
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
+              {t("bulkStock.open")}
+            </Button>
+          )}
+        </>
       }
       toolbar={
         <FilterToolbar
@@ -158,7 +163,7 @@ export function ProductStockView(vm: VM) {
             <StatCard
               label={t("productStock.statLow")}
               value={vm.stats.low}
-              sub={t("productStock.statLowSub", { n: LOW_STOCK_THRESHOLD })}
+              sub={t("productStock.statLowSub")}
               tone="warn"
             />
             <StatCard
@@ -211,6 +216,8 @@ export function ProductStockView(vm: VM) {
         onClose={vm.closeAction}
         onSubmit={vm.onSubmit}
       />
+
+      {vm.lotLookupOpen && <LotLookupModal onClose={vm.closeLotLookup} />}
     </ListPageLayout>
   );
 }

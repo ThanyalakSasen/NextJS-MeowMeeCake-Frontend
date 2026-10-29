@@ -28,6 +28,8 @@ import จาก `@/components/shared/actions`
 | `next` | `ArrowRightIcon` | ไปสถานะถัดไป |
 | `confirm` | `CheckCircleIcon` | ยืนยัน (รับเงิน POS) / เปิดสิทธิ์ทั้งหมด |
 | `off` | `MinusCircleIcon` | ปิดสิทธิ์ทั้งหมด |
+| `print` | `PrinterIcon` | พิมพ์ฉลากบาร์โค้ดของล็อต |
+| `scan` | `ViewfinderCircleIcon` | สแกนบาร์โค้ด (ค้นล็อต) |
 | `verify` | `CheckBadgeIcon` | ตรวจสอบ/อนุมัติสลิปชำระเงิน |
 | `reset` | `ArrowUturnLeftIcon` | รีเซ็ต |
 | `filter` | `FunnelIcon` | กรองรายการ |

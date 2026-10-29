@@ -120,15 +120,17 @@ export function IngredientFormModal({
           </FormItem>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        {/* ป้าย "เกณฑ์แจ้งเตือนวัตถุดิบขั้นต่ำ" ยาว — แยกเป็นแถวเต็มเอง ช่องปริมาณปัจจุบัน/สูงสุดในแถวเดียวกันจึงตรงกัน */}
+        <FormItem
+          name="reorder_point"
+          label={t("ingredients.fieldReorderPoint")}
+          tooltip={t("ingredients.fieldReorderPointHint")}
+          rules={[{ required: true, message: t("validation.required") }]}
+        >
+          <InputNumber min={0} />
+        </FormItem>
+        <div className="grid grid-cols-2 gap-3">
           <FormItem name="current_stock" label={t("ingredients.fieldCurrentStock")}>
-            <InputNumber min={0} />
-          </FormItem>
-          <FormItem
-            name="reorder_point"
-            label={t("ingredients.fieldReorderPoint")}
-            rules={[{ required: true, message: t("validation.required") }]}
-          >
             <InputNumber min={0} />
           </FormItem>
           <FormItem name="max_stock" label={t("ingredients.fieldMaxStock")}>
