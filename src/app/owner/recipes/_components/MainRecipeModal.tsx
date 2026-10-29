@@ -83,7 +83,7 @@ export function MainRecipeModal({
     // ต้นทุนส่งไปเฉพาะเมื่อผู้ใช้กรอกเอง — ไม่แตะช่องนี้ = ให้ backend คำนวณจากวัตถุดิบใหม่ทุกครั้งที่บันทึก
     // (ตอนแก้ไขสูตรช่องนี้มีค่าเดิมอยู่ ถ้าส่งค่าเดิมกลับไป ต้นทุนจะไม่ตามวัตถุดิบที่เปลี่ยน)
     const cost = form.isFieldTouched("estimated_cost_per_batch") ? v.estimated_cost_per_batch : null;
-    onSubmit({ ...v, estimated_cost_per_batch: cost, note: v.note?.trim() || undefined, components, ingredients, steps });
+    onSubmit({ ...v, estimated_cost_per_batch: cost, note: v.note?.trim() ?? "", components, ingredients, steps });
   };
 
   return (
