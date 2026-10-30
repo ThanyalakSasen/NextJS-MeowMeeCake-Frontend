@@ -37,7 +37,7 @@ import { nextRawInput, thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import {
   addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoLines, type CartLine,
 } from "./posCart";
-import { posPromotions, promotionsForProduct, evaluateAll, isScoped, togglePromoSelection } from "./posPromotion";
+import { posPromotions, promotionsForProduct, evaluateAll, isScoped, togglePromoSelection, MAX_STACKED_PROMOTIONS } from "./posPromotion";
 import {
   useHeldBills, saveHeldBills, newHeldBillId, MAX_HELD_BILLS, type HeldBill,
 } from "./posHeldBills";
@@ -569,6 +569,19 @@ export function usePOSViewModel() {
   }, []); // ตั้งใจว่างเปล่า — mount ครั้งเดียวเท่านั้น (ดูคำอธิบายเต็มด้านบน)
 
   const canPay = perm.create && cart.length > 0 && !checkout.isPending && !discountExceeds;
+  // เลือกโปรไว้แต่ใช้กับบิลนี้ไม่ได้แล้ว (การ์ดแดง) — ชำระได้ แต่ถามก่อน: ระบบตัดโปรนั้นทิ้ง ลูกค้าจ่ายเต็มราคา
+  // (เดิมเตือนแค่ในการ์ด พนักงานไม่ทันเห็น = ลูกค้าที่คิดว่าได้ส่วนลดได้ใบเสร็จเต็มราคา)
+  const stalePromoNames = selectedPromoIds
+    .filter((id) => !appliedPromos.some((e) => e.promotion._id === id))
+    .map((id) => promotions.find((p) => p._id === id)?.promotion_name ?? "")
+    .filter(Boolean);
+  const confirmStalePromos = async () =>
+    stalePromoNames.length === 0 ||
+    confirmAlert(t("pos.payWithoutStalePromoConfirm", { names: stalePromoNames.join(", ") }), {
+      title: t("pos.payWithoutStalePromoTitle"),
+      confirmText: t("pos.payWithoutStalePromo"),
+      cancelText: t("common.cancel"),
+    });
 
   // ── พักบิล ──
   const persistHeld = (bills: HeldBill[]) => {
@@ -670,7 +683,15 @@ export function usePOSViewModel() {
     discountExceeds,
     togglePromo: (id: string) => {
       const promo = promotions.find((p) => p._id === id);
-      if (promo) setSelectedPromoIds(togglePromoSelection(selectedPromoIds, promo, promotions));
+      if (!promo) return;
+      const stale = (pid: string) => !appliedPromos.some((e) => e.promotion._id === pid);
+      const next = togglePromoSelection(selectedPromoIds, promo, promotions, stale);
+      // เต็มเพดานแล้ว (ทุกตัวยังใช้ได้) — เดิมกดแล้วไม่เกิดอะไรขึ้นเลย
+      if (next === selectedPromoIds && !selectedPromoIds.includes(id)) {
+        alert.warning(t("pos.promoStackFull", { max: MAX_STACKED_PROMOTIONS }));
+        return;
+      }
+      setSelectedPromoIds(next);
     },
 
     // พักบิล
@@ -696,8 +717,20 @@ export function usePOSViewModel() {
     // ชำระเงิน
     canPay,
     payDialog,
-    openCash: () => { if (canPay) { setReceivedDigits(""); setPayDialog("cash"); } },
-    openQr: () => { if (canPay) setPayDialog("qr"); },
+    openCash: async () => {
+      if (!canPay || !(await confirmStalePromos())) return;
+      setReceivedDigits("");
+      setPayDialog("cash");
+    },
+    openQr: async () => {
+      if (canPay && (await confirmStalePromos())) setPayDialog("qr");
+    },
+    /** จากหน้าต่าง QR เปลี่ยนเป็นเงินสด — ยืนยันเรื่องโปรไปแล้วตอนเปิด QR ไม่ถามซ้ำ */
+    switchToCash: () => {
+      if (!canPay) return;
+      setReceivedDigits("");
+      setPayDialog("cash");
+    },
     closeDialog: () => { if (!checkout.isPending) setPayDialog(null); },
     received, receivedShort,
     pressKey,

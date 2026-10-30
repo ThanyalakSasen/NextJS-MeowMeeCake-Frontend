@@ -138,7 +138,7 @@ export function POSView(vm: VM) {
           submitting={vm.submitting}
           onClose={vm.closeDialog}
           onConfirmPaid={vm.confirmQr}
-          onSwitchToCash={vm.openCash}
+          onSwitchToCash={vm.switchToCash}
         />
       )}
       {doneUsed && <PaymentDoneModal open={vm.payDialog === "done"} done={vm.done} store={vm.store} onNewBill={vm.closeDialog} />}

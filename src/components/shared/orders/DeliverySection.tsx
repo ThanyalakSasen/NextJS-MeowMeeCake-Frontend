@@ -9,7 +9,7 @@
 // order completed → "ส่งสินค้าแล้ว") ไม่ต้องกดอีกปุ่ม (ผู้ใช้ขอ 2026-10-30) · ถามยืนยันก่อนเสมอ (แจ้งลูกค้าแล้วย้อนไม่ได้)
 // ยังกรอกไม่ครบ = บันทึกอย่างเดียว
 // ─────────────────────────────────────────────────────────────
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button, Input, TextArea, Select } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
@@ -52,6 +52,10 @@ export function DeliverySection({
   const [carrier, setCarrier] = useState<ShippingCarrier | null>(info.shipping_carrier);
   const [tracking, setTracking] = useState(info.tracking_no ?? "");
   const [note, setNote] = useState(info.delivered_note ?? "");
+  // หน้าต่างยืนยันจัดส่งเปิดอยู่ — ล็อกปุ่ม กันดับเบิลคลิกเปิดหน้าต่างซ้อน 2 อัน แล้วยืนยันทั้งคู่ = แจ้งลูกค้าซ้ำ
+  // ref กันคลิกที่มาก่อน re-render (state ยังเป็นค่าเก่าใน closure) · state ไว้ทำปุ่มเป็น disabled
+  const confirmingRef = useRef(false);
+  const [confirming, setConfirming] = useState(false);
 
   const changes: DeliveryUpdateInput = {};
   if (carrier !== info.shipping_carrier) changes.shipping_carrier = carrier;
@@ -168,8 +172,11 @@ export function DeliverySection({
             type="primary"
             icon={actionIcon("verify", "small")}
             loading={markingShipped}
-            disabled={saving || trackingTooLong}
+            disabled={saving || trackingTooLong || confirming}
             onClick={async () => {
+              if (confirmingRef.current) return;
+              confirmingRef.current = true;
+              setConfirming(true);
               // แจ้งลูกค้า + ปิดออเดอร์ทันที ย้อนไม่ได้ — ถามก่อน ให้เห็นขนส่ง/เลขพัสดุที่จะส่งไป (กันพิมพ์เลขผิด/กดพลาด)
               const carrierName = carrier ? t(`enums.shippingCarrier.${carrier}`) : "";
               const ok = await confirmAlert(t("orders.markShippedConfirm"), {
@@ -180,6 +187,8 @@ export function DeliverySection({
                 confirmText: t("orders.markShipped"),
                 cancelText: t("common.cancel"),
               });
+              confirmingRef.current = false;
+              setConfirming(false);
               if (ok) onMarkShipped(changes);
             }}
           >
