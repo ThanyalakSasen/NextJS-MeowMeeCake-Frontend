@@ -3,7 +3,7 @@
 // DTO ของ GET /reports/dashboard (docs/API_CONTRACT.md §4)
 // aggregate อ่านอย่างเดียว — backend คำนวณให้ frontend ไม่ประกอบเอง
 // ─────────────────────────────────────────────────────────────
-import type { OrderStatus, ProductionStatus } from "@/constants/enumConfig";
+import type { OrderStatus } from "@/constants/enumConfig";
 
 /** ตัวเลขสรุปหัวหน้า (stat cards) */
 export interface DashboardStats {
@@ -45,21 +45,11 @@ export interface DashboardTopProduct {
   percent: number;
 }
 
-export interface DashboardProduction {
-  _id: string;
-  production_no: string;
-  items_summary: string;
-  production_status: ProductionStatus;
-  /** ISO — วันกำหนดผลิต */
-  due_date: string;
-}
-
 export interface DashboardSummary {
   stats: DashboardStats;
   recent_orders: DashboardRecentOrder[];
   low_stock: DashboardLowStock[];
   top_products: DashboardTopProduct[];
-  production_status: DashboardProduction[];
   /** ISO — เวลาที่ backend คำนวณ snapshot นี้ */
   generated_at: string;
 }

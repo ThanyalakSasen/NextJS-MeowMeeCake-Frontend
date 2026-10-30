@@ -17,7 +17,6 @@ export function useDashboardViewModel() {
   const show = {
     orders: usePermission("orders").view,
     ingredients: usePermission("ingredients").view,
-    production: usePermission("production").view,
   };
   const financeSummary = usePermission("finance_summary").view;
   const financeExpenses = usePermission("finance_expenses").view;
@@ -57,7 +56,6 @@ export function useDashboardViewModel() {
     recentOrders: d?.recent_orders ?? [],
     lowStock: d?.low_stock ?? [],
     topProducts: d?.top_products ?? [],
-    productionStatus: d?.production_status ?? [],
     generatedAt: d?.generated_at,
     // isPending — render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
     isLoading: q.isPending,
