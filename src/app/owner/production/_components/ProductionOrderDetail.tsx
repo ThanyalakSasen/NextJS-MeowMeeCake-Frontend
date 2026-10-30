@@ -36,9 +36,10 @@ export function ProductionOrderDetail({
   const next = getNextStatus(order.production_status);
   const done = order.production_status === "done";
   // ใบจากรอบ: planned_qty = ผลรวมที่ลูกค้าสั่งในรอบ (backend รวมให้) — บอกที่มา + โควตาที่เปิดรับต่อรอบ
+  // รายการที่เพิ่มเองในใบ (ผลิตเพิ่ม ไม่มี round_item_id) ไม่ใช่ยอดลูกค้าสั่ง — ไม่ขึ้นบรรทัดนี้
   const fromRound = order.source_type === "preorder";
   const orderedLine = (it: ProductionOrder["items"][number]) => {
-    if (!fromRound) return null;
+    if (!fromRound || !it.from_round) return null;
     const quota = roundQuota?.get(it.product_id);
     return (
       <p className="text-xs text-gray-500">
@@ -106,7 +107,7 @@ export function ProductionOrderDetail({
               ) : done ? (
                 <div className="text-right">
                   <p className="text-sm font-medium text-brown-900">{producedQty(it)} {it.unit_abbr}</p>
-                  {producedQty(it) !== it.planned_qty && !fromRound && (
+                  {producedQty(it) !== it.planned_qty && !it.from_round && (
                     <p className="text-xs text-gray-500">{t("production.colPlanned")} {it.planned_qty} {it.unit_abbr}</p>
                   )}
                   {orderedLine(it)}

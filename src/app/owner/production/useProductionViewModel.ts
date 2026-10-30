@@ -81,6 +81,7 @@ function toProductionOrder(
         actual_qty: it.actual_qty ?? null,
         item_status: it.item_status,
         notes: it.notes ?? null,
+        from_round: !!it.round_item_id,
         shelf_life_days: typeof it.product_id === "object" && it.product_id ? (it.product_id.shelf_life_days ?? null) : null,
       };
     }),
