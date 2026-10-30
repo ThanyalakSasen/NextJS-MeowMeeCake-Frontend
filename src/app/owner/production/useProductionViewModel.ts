@@ -424,8 +424,16 @@ export function useProductionViewModel() {
   const completeOrder = useMutation({
     // ใบที่ยังไม่เริ่ม (planned) — backend ปิดงานได้จากสถานะกำลังผลิตเท่านั้น → เริ่มผลิตให้ก่อนตอนกดยืนยัน
     // (เปิดหน้าต่างแล้วกดยกเลิก = ใบยังเป็นรอดำเนินการเหมือนเดิม)
+    // order ในหน้าต่างเป็นค่าตอนเปิด — ครั้งก่อนเริ่มผลิตสำเร็จแต่ปิดงานพลาด กดซ้ำจะเริ่มซ้ำแล้วได้ 409
+    // ("in_progress → in_progress") → 409 ตอนเริ่ม = ข้ามไปปิดงานเลย (backend ตรวจสถานะจริงตอนปิดงานอีกที)
     mutationFn: async ({ order, v }: { order: ProductionOrder; v: CompleteProductionValue }) => {
-      if (order.production_status === "planned") await productionOrdersService.start(order._id);
+      if (order.production_status === "planned") {
+        try {
+          await productionOrdersService.start(order._id);
+        } catch (e) {
+          if (!(isApiError(e) && e.status === 409)) throw e;
+        }
+      }
       return productionOrdersService.complete(order._id, { use_actual: false, lots: v.lots });
     },
     onSettled: () => {
