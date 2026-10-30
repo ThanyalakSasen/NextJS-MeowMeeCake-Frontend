@@ -96,7 +96,13 @@ export function ProductionOrderDetail({
       )}
 
       <div>
-        <p className="text-sm font-semibold text-gray-500 mb-2">{t("production.itemsTitle", { n: order.items.length })}</p>
+        {/* ปุ่มแก้ไขอยู่ข้างหัวรายการสินค้า (ผู้ใช้ขอ 2026-10-30) — แก้ได้เฉพาะใบที่ยังไม่จบ */}
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="m-0 text-sm font-semibold text-gray-500">{t("production.itemsTitle", { n: order.items.length })}</p>
+          {canUpdate && !final && (
+            <Button size="small" icon={actionIcon("edit", "small")} onClick={() => onEdit(order)}>{t("common.edit")}</Button>
+          )}
+        </div>
         <div className="flex flex-col gap-2">
           {order.items.map((it, i) => (
             <div key={i} className="flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2">
@@ -131,10 +137,7 @@ export function ProductionOrderDetail({
       {(canUpdate || canComplete) && !final && (
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
           {canUpdate && (
-            <>
-              <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => onCancel(order)}>{t("production.cancelOrder")}</Button>
-              <Button size="small" icon={actionIcon("edit", "small")} onClick={() => onEdit(order)}>{t("common.edit")}</Button>
-            </>
+            <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => onCancel(order)}>{t("production.cancelOrder")}</Button>
           )}
           {/* ปิดงานผลิต = production.approve (backend) */}
           {canComplete && (
