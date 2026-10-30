@@ -350,13 +350,15 @@ export function shippingZoneStyle(code: string): StatusStyle {
 // ─── ป้ายที่ไม่ใช่ enum แต่ใช้ซ้ำหลายหน้า ────────────────────
 // อยู่ที่นี่เพราะความหมายเดียวกันต้องได้สีเดียวกันทุกหน้า — เดิมพิมพ์ชื่อสีซ้ำกันคนละไฟล์
 export const NOTICE_TAG: Record<
-  "awaitingRefund" | "slipOverdue" | "cancelled" | "catchAllZone" | "inactive" | "roleName" | "negativeFilter" | "missingRecipe",
+  "awaitingRefund" | "slipOverdue" | "carriedOver" | "cancelled" | "catchAllZone" | "inactive" | "roleName" | "negativeFilter" | "missingRecipe",
   AntColor
 > = {
   /** "รอคืนเงิน" — ตารางจัดการออเดอร์ · แท็บออเดอร์ของรอบพรีออเดอร์ */
   awaitingRefund: "warning",
   /** "สลิปรอตรวจเกินกำหนด" — ส่งสลิปแล้วแต่ร้านยังไม่ตรวจจนเลยกำหนดชำระ (ตารางจัดการออเดอร์) */
   slipOverdue: "error",
+  /** "ค้างจาก …" — ใบสั่งผลิตที่ยังไม่จบจากวันก่อน (การ์ดวันนี้ผลิตอะไรบ้าง) */
+  carriedOver: "warning",
   /** แถบ "ออเดอร์ถูกยกเลิก" ใน drawer รายละเอียด (ออเดอร์ + พรีออเดอร์) */
   cancelled: "error",
   /** โซน "จังหวัดอื่นทั้งหมด" — โซนค่าจัดส่ง (POS) · ค่าส่งหน้าร้านออนไลน์ */

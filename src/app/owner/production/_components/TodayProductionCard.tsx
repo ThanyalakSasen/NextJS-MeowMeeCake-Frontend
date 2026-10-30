@@ -10,7 +10,7 @@ import { Button, Card, EmptyState, Tag } from "@/components/base";
 import { actionIcon } from "@/components/shared/actions";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatDate, formatNumber } from "@/i18n/format";
-import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
+import { NOTICE_TAG, SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
 import type { useProductionViewModel } from "../useProductionViewModel";
 
@@ -93,7 +93,7 @@ export function TodayProductionCard({
                   </Tag>
                   {o.round_name && <span className="truncate text-xs text-gray-600">{o.round_name}</span>}
                   {carried && (
-                    <Tag color="warning" className="!m-0">
+                    <Tag color={NOTICE_TAG.carriedOver} className="!m-0">
                       {t("production.todayCarriedOver", { date: formatDate(o.production_date, locale) })}
                     </Tag>
                   )}
