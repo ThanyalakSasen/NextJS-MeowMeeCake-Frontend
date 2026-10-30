@@ -80,13 +80,15 @@ export const productsService = {
    * PUT /admin/products/{id}/stock { quantity } — ตั้งสต็อกเป็นจำนวนที่ระบุ (นับสต็อกจริงแล้วไม่ตรงระบบ)
    * สิทธิ์ stock.update · แจ้งเตือนสินค้าใกล้หมดเมื่อข้ามเกณฑ์ · สินค้าพรีออเดอร์/มีตัวเลือก backend ปฏิเสธ (409)
    */
-  setStock: (id: string, quantity: number, note?: string) =>
-    http.put<ItemResponse<Product>>(`${BASE}/${id}/stock`, { quantity, note }),
+  setStock: (id: string, quantity: number, note?: string, opts: { expected?: number; request_key?: string } = {}) =>
+    http.put<ItemResponse<Product>>(`${BASE}/${id}/stock`, { quantity, note, ...opts }),
 
   /** PATCH /admin/products/{id}/stock { delta } — ปรับด้วยส่วนต่าง (+ รับเข้า / − ตัดออก) แบบ atomic
-   *  note (ทั้ง PUT/PATCH) = หมายเหตุ — เก็บในประวัติสต็อกสินค้า (stockHistory) + บันทึกการทำงาน */
-  adjustStock: (id: string, delta: number, note?: string) =>
-    http.patch<ItemResponse<Product>>(`${BASE}/${id}/stock`, { delta, note }),
+   *  note (ทั้ง PUT/PATCH) = หมายเหตุ — เก็บในประวัติสต็อกสินค้า (stockHistory) + บันทึกการทำงาน
+   *  request_key (ทั้ง PUT/PATCH) = รหัสต่อการกด 1 ครั้ง — ส่งซ้ำหลัง timeout แล้ว backend คืนผลเดิม ไม่ปรับซ้ำ
+   *  expected (PUT) = ยอดที่เห็นตอนเปิดฟอร์ม — ยอดจริงเปลี่ยนไปแล้ว backend ตอบ 409 reason "STOCK_CHANGED" */
+  adjustStock: (id: string, delta: number, note?: string, request_key?: string) =>
+    http.patch<ItemResponse<Product>>(`${BASE}/${id}/stock`, { delta, note, request_key }),
 
   /**
    * GET /admin/products/stock-history — ประวัติสต็อกสินค้า ล่าสุดก่อน (stock_history.view หรือ stock.view)
