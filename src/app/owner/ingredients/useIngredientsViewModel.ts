@@ -140,10 +140,10 @@ export function useIngredientsViewModel() {
       alert.success(t("ingredients.deleted"));
       invalidate();
     },
-    // 409 = ยังมีสูตร/ส่วนประกอบใช้วัตถุดิบนี้อยู่ — backend ส่งรายชื่อสูตรมาในข้อความ → เตือน (ไม่ใช่ error)
+    // 409 = ยังมียอดคงเหลือ / ยังมีสูตรใช้อยู่ — backend บอกเหตุผล (ยอด/รายชื่อสูตร) ในข้อความ → เตือน (ไม่ใช่ error)
     onError: (e) =>
       isApiError(e) && e.status === 409
-        ? alert.warning(e.message, { title: t("ingredients.deleteInUseTitle") })
+        ? alert.warning(e.message, { title: t("ingredients.deleteBlockedTitle") })
         : alert.error(isApiError(e) ? e.message : t("ingredients.deleteFailed")),
   });
 
