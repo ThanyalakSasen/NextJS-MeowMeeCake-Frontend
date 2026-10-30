@@ -77,13 +77,13 @@ export function EditRoundModal({
           <Input maxLength={200} />
         </FormItem>
         <div className="grid grid-cols-3 gap-3">
-          <FormItem name="open_date" label={t("preorderRound.fieldOpenDate")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
+          <FormItem name="open_date" label={t("preorderRound.fieldOpenDate")} rules={[{ required: true, message: t("validation.required") }]}>
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="close_date" label={t("preorderRound.fieldCloseDate")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
+          <FormItem name="close_date" label={t("preorderRound.fieldCloseDate")} rules={[{ required: true, message: t("validation.required") }]}>
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="pickup_date" label={t("preorderRound.fieldPickupDate")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
+          <FormItem name="pickup_date" label={t("preorderRound.fieldPickupDate")} rules={[{ required: true, message: t("validation.required") }]}>
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
         </div>

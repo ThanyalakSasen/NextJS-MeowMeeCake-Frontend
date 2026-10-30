@@ -108,7 +108,7 @@ export function MainRecipeModal({
           <FormItem name="recipe_name" label={t("recipes.fieldRecipeName")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Input maxLength={120} placeholder={t("recipes.recipeNamePlaceholder")} />
           </FormItem>
-          <FormItem name="product_id" label={t("recipes.fieldProduct")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
+          <FormItem name="product_id" label={t("recipes.fieldProduct")} rules={[{ required: true, message: t("validation.required") }]}>
             <Select
               disabled={!!editTarget}
               placeholder={t("recipes.selectProduct")}
@@ -123,14 +123,14 @@ export function MainRecipeModal({
             name="yield_qty"
             label={t("recipes.fieldYieldQty")}
             rules={[
-              { required: true, whitespace: true, message: t("validation.required") },
+              { required: true, message: t("validation.required") },
               { type: "number", min: 0.01, message: t("validation.positive") },
               ...(yieldWhole ? [{ type: "integer" as const, message: t("ingredients.integerUnitOnly") }] : []),
             ]}
           >
             <InputNumber min={0} {...(yieldWhole ? { precision: 0 } : {})} />
           </FormItem>
-          <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
+          <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, message: t("validation.required") }]}>
             <Select options={yieldUnitOptions} placeholder={t("recipes.selectUnit")} />
           </FormItem>
           <FormItem name="duration_minutes" label={t("recipes.fieldDuration")}>

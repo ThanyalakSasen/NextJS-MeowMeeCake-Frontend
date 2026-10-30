@@ -52,10 +52,10 @@ export function ExpenseFormModal({
     >
       <Form form={form} layout="vertical" initialValues={editTarget ? fromExpense(editTarget) : emptyExpenseForm}>
         <div className="grid grid-cols-2 gap-3">
-          <FormItem name="date" label={t("finance.fieldDate")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
+          <FormItem name="date" label={t("finance.fieldDate")} rules={[{ required: true, message: t("validation.required") }]}>
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="category" label={t("finance.fieldCategory")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
+          <FormItem name="category" label={t("finance.fieldCategory")} rules={[{ required: true, message: t("validation.required") }]}>
             <Select options={sortOptionsThai(EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.expenseCategory.${c}`) })))} />
           </FormItem>
         </div>
@@ -69,7 +69,7 @@ export function ExpenseFormModal({
             name="amount"
             label={t("finance.fieldAmount")}
             rules={[
-              { required: true, whitespace: true, message: t("validation.required") },
+              { required: true, message: t("validation.required") },
               { type: "number", min: 0.01, message: t("validation.positive") },
               // เท่า backend (schemas/expense.ts EXPENSE_MAX) — กันพิมพ์ศูนย์เกินแล้วสรุปการเงินเพี้ยน
               { type: "number", max: EXPENSE_MAX, message: t("finance.amountMax", { max: EXPENSE_MAX }) },

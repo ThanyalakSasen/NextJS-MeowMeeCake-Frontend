@@ -174,7 +174,7 @@ export function IngredientFormModal({
           <FormItem
             name="ingredient_category_id"
             label={t("ingredients.fieldCategory")}
-            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+            rules={[{ required: true, message: t("validation.required") }]}
           >
             <Select
               options={sortOptionsThai(categories.map((c) => ({ value: c._id, label: c.ingredient_category_name })))}
@@ -184,7 +184,7 @@ export function IngredientFormModal({
           <FormItem
             name="unit_id"
             label={t("ingredients.fieldUnit")}
-            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+            rules={[{ required: true, message: t("validation.required") }]}
             extra={unitLocked ? t("ingredients.unitLockedHint") : undefined}
           >
             <Select

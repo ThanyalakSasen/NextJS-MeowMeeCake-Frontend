@@ -85,7 +85,7 @@ export function RoundItemFormModal({
         <FormItem
           name="product_id"
           label={t("preorderRound.colProduct")}
-          rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+          rules={[{ required: true, message: t("validation.required") }]}
         >
           <Select
             disabled={isEdit}
@@ -108,7 +108,7 @@ export function RoundItemFormModal({
             label={t("preorderRound.fieldMinOrderQty")}
             dependencies={["max_qty_total"]}
             rules={[
-              { required: true, whitespace: true, message: t("validation.required") },
+              { required: true, message: t("validation.required") },
               // ขั้นต่ำเกินโควตารวม = ไม่มีใครสั่งได้ (backend ปฏิเสธด้วย)
               ({ getFieldValue }) => ({
                 validator: (_r, min: number | null | undefined) => {
@@ -125,7 +125,7 @@ export function RoundItemFormModal({
           <FormItem
             name="max_qty_total"
             label={t("preorderRound.fieldMaxQtyTotal")}
-            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+            rules={[{ required: true, message: t("validation.required") }]}
           >
             <InputNumber className="!w-full" min={Math.max(1, item?.current_qty ?? 1)} precision={0} />
           </FormItem>
