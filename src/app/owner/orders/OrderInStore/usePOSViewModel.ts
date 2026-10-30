@@ -41,6 +41,7 @@ import { posPromotions, promotionsForProduct, evaluateAll, isScoped, togglePromo
 import {
   useHeldBills, saveHeldBills, newHeldBillId, MAX_HELD_BILLS, type HeldBill,
 } from "./posHeldBills";
+import { readDraftBill, saveDraftBill } from "./posDraftBill";
 import { EMPTY_SELECTION, hasCustomization, toSelection, type CartSelection, type Picked } from "@/lib/customizationSelection";
 import { LIST_ALL } from "@/lib/http";
 
@@ -360,6 +361,31 @@ export function usePOSViewModel() {
     }
   };
 
+  // ── บิลค้างอัตโนมัติ (posDraftBill.ts) — ออกไปหน้าอื่น/รีเฟรชแล้วกลับมา บิลยังอยู่ ──
+  const writeDraft = () =>
+    saveDraftBill({ cart, member, bahtPerPoint, promoIds: selectedPromoIds, pendingOrder: pendingOrderRef.current });
+  // โหลดคืนหลัง mount (ฝั่ง server ไม่มี localStorage — อ่านตอน render แรกจะ hydrate ไม่ตรง)
+  // draftReady = โหลดคืนแล้ว · ก่อนหน้านั้นห้ามเขียน ไม่งั้นบิลว่างตอน mount ทับบิลที่ค้างไว้
+  const [draftReady, setDraftReady] = useState(false);
+  useEffect(() => {
+    const d = readDraftBill();
+    if (d) {
+      // ซิงก์จากระบบภายนอก (localStorage) ครั้งเดียวหลัง mount — อ่านตอน render ไม่ได้ (ฝั่ง server ไม่มี storage)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCart(d.cart);
+      setMember(d.member);
+      setBahtPerPoint(d.bahtPerPoint);
+      setSelectedPromoIds(d.promoIds);
+      pendingOrderRef.current = d.pendingOrder;
+    }
+    setDraftReady(true);
+  }, []);
+  useEffect(() => {
+    if (draftReady) writeDraft();
+    // writeDraft อ่านค่าเดียวกับ dependency ด้านล่าง (+ ref) — ไม่ต้องผูกตัวฟังก์ชันที่เปลี่ยนทุก render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftReady, cart, member, bahtPerPoint, selectedPromoIds]);
+
   const resetBill = () => {
     void abandonPendingOrder();
     setCart([]);
@@ -384,6 +410,7 @@ export function usePOSViewModel() {
       if (pendingOrderRef.current && pendingOrderRef.current.signature !== signature) await abandonPendingOrder();
       const order = pendingOrderRef.current?.order ?? (await ordersService.create(input)).data;
       pendingOrderRef.current = { order, signature };
+      writeDraft(); // ออกจากหน้าแล้วกลับมา ต้องรับเงินใบเดิม ไม่สร้างใบซ้ำ
 
       // ยอดจริงไม่ตรงกับยอดที่แคชเชียร์รับเงิน/แสดง QR ไว้ → หยุดก่อนรับเงิน (ใบยังค้างไว้ กดอีกครั้งใช้ใบเดิม)
       // เดิมรับเงินผ่านไปเลย — ยอดจริงสูงกว่า = เงินขาดโดยไม่มีใครรู้ (เงินทอนถูกปัดเป็น 0)
