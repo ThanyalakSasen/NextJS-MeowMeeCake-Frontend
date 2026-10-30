@@ -1,6 +1,6 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// การ์ด "ตัวเลือกสินค้า" ในหน้าแก้สินค้า — presentational ล้วน (ข้อมูล/handler จาก useCustomizationEditor)
+// การ์ด "ตัวเลือกสินค้า" ในหน้าแก้/เพิ่มสินค้า — presentational ล้วน (ข้อมูล/handler จาก useCustomizationEditor)
 // UX ยกจาก FrontOffice src/app/components/products/ProductCustomizationEditor.tsx
 // ─────────────────────────────────────────────────────────────
 import { useTranslations } from "next-intl";
@@ -71,7 +71,11 @@ export function CustomizationEditor(vm: VM) {
             </ul>
           )}
 
-          {vm.canEdit && (
+          {/* หน้าเพิ่มสินค้า (standalone = false) ไม่มีปุ่มบันทึกของการ์ด — บันทึกพร้อมสินค้า */}
+          {!vm.standalone && vm.canEdit && (
+            <p className="m-0 border-t border-gray-100 pt-4 text-xs text-gray-500">{t("customization.savedWithProduct")}</p>
+          )}
+          {vm.standalone && vm.canEdit && (
             <div className="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
               <Button
                 type="primary"
