@@ -2,13 +2,13 @@
 // ไฟล์นี้ไม่มี "use client" — server เรียกได้
 //
 // เดิมโหลด 1,000 รายการล่าสุดก้อนเดียว — ร้านมีออเดอร์เกินนั้นแล้วออเดอร์เก่าที่ยังค้าง (รอตรวจสลิป/รอส่ง/รอคืนเงิน) หายจากหน้าเงียบ ๆ
-// ตอนนี้: ออเดอร์ที่ยังไม่ปิดงาน (ทุกสถานะก่อน completed) + ยกเลิกแล้วแต่ยังไม่คืนเงิน = โหลดครบเสมอ (ทีละสถานะ)
+// ตอนนี้: ออเดอร์ที่ยังไม่ปิดงาน (ทุกสถานะก่อน completed — คำขอเดียว) + ยกเลิกแล้วแต่ยังไม่คืนเงิน = โหลดครบเสมอ
 // + ออเดอร์ล่าสุด LIST_ALL รายการ (ส่วนใหญ่คือที่ปิดงานแล้ว — ประวัติ) · ปิดงานแล้วเก่ากว่านั้นไม่โหลด (olderHidden)
 // → หาได้ด้วยการค้นเลขออเดอร์ที่ backend (orderSearchKey)
 import { ordersService } from "@/services/orders";
 import { LIST_ALL, type HttpReader } from "@/lib/http";
 import { ORDER_STATUS_FLOW } from "@/constants/enumConfig";
-import type { Order } from "@/types/order";
+import { statusFilter, type Order } from "@/types/order";
 
 export const ORDERS_KEY = ["orders"] as const;
 
@@ -25,12 +25,13 @@ export interface ManageOrdersData {
 
 export async function fetchManageOrders(h?: HttpReader): Promise<ManageOrdersData> {
   const [open, refunds, recent] = await Promise.all([
-    Promise.all(OPEN_STATUSES.map((s) => ordersService.list({ order_status: s, limit: LIST_ALL }, h))),
+    // ทุกสถานะที่ยังไม่ปิดงานในคำขอเดียว (backend รับ order_status คั่นด้วย ,) — เดิมสถานะละคำขอ
+    ordersService.list({ order_status: statusFilter(OPEN_STATUSES), limit: LIST_ALL }, h),
     ordersService.list({ order_status: "cancelled", payment_status: "paid", limit: LIST_ALL }, h),
     ordersService.list({ limit: LIST_ALL }, h),
   ]);
   const byId = new Map<string, Order>();
-  for (const o of [...open.flatMap((r) => r.data), ...refunds.data, ...recent.data]) byId.set(o._id, o);
+  for (const o of [...open.data, ...refunds.data, ...recent.data]) byId.set(o._id, o);
   return {
     data: [...byId.values()].sort((a, b) => b.created_at.localeCompare(a.created_at)),
     olderHidden: recent.meta.total > recent.data.length,

@@ -98,10 +98,22 @@ export interface SalesByDay {
   series: { date: string; revenue: number; orders: number; channels?: Record<RevenueChannel, { revenue: number; orders: number }> }[];
 }
 
+/** รายรับ/รายจ่ายรวมต่อช่วง (บาท) — ลำดับเดียวกับ ranges ที่ส่งไป */
+export interface FinanceTrend {
+  buckets: { from: string; to: string; income: number; expense: number }[];
+}
+
 export const reportsService = {
   /** days = ย้อนหลังกี่วันนับจากตอนนี้ (backend clamp 1–180 · ตัดเป็นช่วง now − days×24 ชม.) — สิทธิ์ dashboard.view */
   salesByDay: async (days: number, h: HttpReader = http): Promise<SalesByDay> =>
     (await h.get<{ data: SalesByDay }>("/admin/dashboard/sales-by-day", { params: { days } })).data,
+
+  /** GET /admin/dashboard/finance-trend — รายรับ/รายจ่ายรวมต่อช่วง (ตารางเปรียบเทียบหน้าสรุปกำไร-ขาดทุน) ในคำขอเดียว
+   *  ranges = ช่วงต่อเนื่องเรียงเก่า→ใหม่ (สูงสุด 60) · เดิมยิง revenue-by-channel + expenses/summary ช่วงละ 2 คำขอ */
+  financeTrend: async (ranges: { from: string; to: string }[], h: HttpReader = http): Promise<FinanceTrend> =>
+    (await h.get<{ data: FinanceTrend }>("/admin/dashboard/finance-trend", {
+      params: { ranges: ranges.map((r) => `${r.from}|${r.to}`).join(",") },
+    })).data,
 
   revenueByChannel: async (
     params: { date_from?: string; date_to?: string } = {},

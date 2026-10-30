@@ -154,13 +154,17 @@ export interface ProductionOrderUpdateInput {
 }
 
 export interface ProductionOrderListParams extends ListParams {
-  production_status?: ProductionStatus;
+  /** หลายสถานะคั่นด้วย , ได้ (backend parseList) เช่น "planned,in_progress" */
+  production_status?: ProductionStatus | `${ProductionStatus},${string}`;
   source_type?: SourceType;
   round_id?: string;
   assigned_to?: string;
   search?: string;
   date_from?: string;
   date_to?: string;
+  /** ช่วงของแท็บประวัติ — ใบที่เสร็จแล้วนับตาม completed_at · ใบอื่นตาม production_date */
+  history_from?: string;
+  history_to?: string;
 }
 
 /** วัตถุดิบที่ไม่พอ — POST /admin/production-orders/stock-check (หน่วยตามสต็อกวัตถุดิบ ไม่แปลงหน่วย) */

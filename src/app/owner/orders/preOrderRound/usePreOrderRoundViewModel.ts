@@ -24,11 +24,11 @@ import { isApiError } from "@/types/api";
 import type { OrderStatus, RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound, CloseRoundResult, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
 import type { Preorder } from "@/types/preorder";
-import type { DeliveryUpdateInput, OrderType } from "@/types/order";
+import { statusFilter, type DeliveryUpdateInput, type OrderType } from "@/types/order";
 import { formatCurrency } from "@/i18n/format";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 import { LIST_ALL } from "@/lib/http";
-import { PREORDERS_KEY, ROUNDS_KEY, fetchPreorders, preorderSearchKey, tabFrom, type TabKey } from "./preorderQuery";
+import { OPEN_STATUSES, PREORDERS_KEY, ROUNDS_KEY, fetchPreorders, preorderSearchKey, tabFrom, type TabKey } from "./preorderQuery";
 import { useRoundDashboardViewModel } from "./useRoundDashboardViewModel";
 import { useMarkShipped } from "@/components/shared/orders";
 
@@ -161,11 +161,21 @@ export function usePreOrderRoundViewModel() {
   });
   const roundProduction = roundProductionQ.data?.data.find((p) => p.production_status !== "cancelled") ?? null;
 
-  /** ยอดพรีออเดอร์ที่ยังค้างในรอบ — บอกในกล่องยืนยันว่าปิด/ยกเลิกรอบแล้วจะกระทบกี่รายการ */
-  const roundOrderCounts = (roundId: string) => {
-    const active = loadedPreorders.filter((o) => o.round_id === roundId && !isFinalOrderStatus(o.order_status));
-    const paid = active.filter((o) => o.payment_status === "paid").length;
-    return { active: active.length, paid, unpaid: active.length - paid };
+  /** ยอดพรีออเดอร์ที่ยังค้างในรอบ — บอกในกล่องยืนยันว่าปิด/ยกเลิกรอบแล้วจะกระทบกี่รายการ
+   *  นับที่ backend (meta.total · limit 1) ไม่นับจากรายการที่โหลดไว้ ซึ่งมีเพดานจำนวน · ถามไม่สำเร็จ = นับจากที่โหลดไว้แทน */
+  const roundOrderCounts = async (roundId: string) => {
+    const open = { round_id: roundId, order_status: statusFilter(OPEN_STATUSES), limit: 1 };
+    try {
+      const [all, paidRes] = await Promise.all([
+        preordersService.list(open),
+        preordersService.list({ ...open, payment_status: "paid" }),
+      ]);
+      return { active: all.meta.total, paid: paidRes.meta.total, unpaid: all.meta.total - paidRes.meta.total };
+    } catch {
+      const active = loadedPreorders.filter((o) => o.round_id === roundId && !isFinalOrderStatus(o.order_status));
+      const paid = active.filter((o) => o.payment_status === "paid").length;
+      return { active: active.length, paid, unpaid: active.length - paid };
+    }
   };
 
   // ผลการปิดรอบล่าสุด (ใบสั่งผลิตที่ได้ · ยกเลิกคนไม่จ่ายกี่ราย) — โชว์ใน drawer ของรอบนั้นจนกว่าจะปิดหน้า
@@ -187,7 +197,7 @@ export function usePreOrderRoundViewModel() {
     const next = getNextRoundStatus(round.round_status);
     if (!next) return;
     if (next === "closed") {
-      const c = roundOrderCounts(round._id);
+      const c = await roundOrderCounts(round._id);
       const ok = await confirmAlert(t("preorderRound.closeConfirm", { unpaid: c.unpaid, paid: c.paid }), {
         title: t("preorderRound.closeConfirmTitle", { name: round.round_name }),
         confirmText: t("preorderRound.closeRound"),
@@ -208,7 +218,7 @@ export function usePreOrderRoundViewModel() {
   };
 
   const onCancelRound = async (round: PreorderRound) => {
-    const c = roundOrderCounts(round._id);
+    const c = await roundOrderCounts(round._id);
     const ok = await confirmAlert(t("preorderRound.cancelRoundConfirm", { active: c.active, paid: c.paid }), {
       title: t("preorderRound.cancelRoundConfirmTitle", { name: round.round_name }),
       confirmText: t("preorderRound.cancelRound"),

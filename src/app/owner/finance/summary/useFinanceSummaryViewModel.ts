@@ -12,7 +12,7 @@
 // ค่าใช้จ่ายดำเนินงาน (หมวดอื่น) เท่ากันทั้งสองแบบ — แบบตามสูตรไม่หักค่าวัตถุดิบที่ซื้อเข้าซ้ำ
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
 import { expensesService } from "@/services/expenses";
@@ -21,7 +21,7 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import { COGS_EXPENSE_CATEGORIES } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
-import { revenueKey, trendBuckets as buildTrendBuckets } from "./summaryRanges";
+import { financeTrendKey, revenueKey, trendBuckets as buildTrendBuckets } from "./summaryRanges";
 import { FIRST_EXPENSE_KEY, FIRST_EXPENSE_PARAMS, expenseSummaryKey } from "../expensesQuery";
 
 export interface PnLRow {
@@ -118,8 +118,7 @@ export function useFinanceSummaryViewModel() {
   }, [webIncome, posIncome, preorderIncome, otherIncome, totalIncome, totalCogs, grossProfit, totalOpex, netProfit, expenseByCategory, opexEntries, locale]);
 
   // ── ตารางเปรียบเทียบ — ตามช่วงเวลาที่เลือก (ช่วงของแต่ละแบบดู summaryRanges.trendBuckets) ──
-  // รายรับต่อช่วงจาก revenue-by-channel ช่วงละ 1 request (นับพรีออเดอร์ด้วย ตัวเลขชุดเดียวกับตาราง P&L)
-  // · รายจ่ายรวมจากรายการค่าใช้จ่ายที่วันที่อยู่ในช่วง
+  // รายรับ/รายจ่ายต่อช่วงจาก finance-trend (backend รวมให้ — ตัวเลขชุดเดียวกับ revenue-by-channel / expenses/summary)
   // ข้ามวันที่ที่อ่านไม่ได้ / ปีที่พิมพ์ผิด (เช่น 0202) — ไม่งั้นปีเป็น NaN (ตารางว่าง) หรือสร้างช่วงรายปีนับพันช่วง
   // ปีแรกที่มีค่าใช้จ่าย (ตารางรายปีเท่านั้น) — ขอรายการเก่าสุด 1 รายการ · ปีที่พิมพ์ผิด (ก่อน ค.ศ. 2000) ตัดด้วย date_from
   const firstExpenseQ = useQuery({
@@ -133,22 +132,16 @@ export function useFinanceSummaryViewModel() {
     () => buildTrendBuckets(period, selectedDate, firstExpenseYear),
     [period, selectedDate, firstExpenseYear],
   );
-  const trendQs = useQueries({
-    queries: trendBuckets.map((m) => ({
-      queryKey: revenueKey(m.from, m.to),
-      queryFn: () => reportsService.revenueByChannel({ date_from: m.from, date_to: m.to }),
-    })),
+  // ทุกช่วงในคำขอเดียว (finance-trend) — เดิมช่วงละ 2 คำขอ: รายวัน 31 วัน = 62 คำขอพร้อมกัน
+  const trendQ = useQuery({
+    queryKey: financeTrendKey(trendBuckets),
+    queryFn: () => reportsService.financeTrend(trendBuckets),
+    enabled: trendBuckets.length > 0,
   });
-  // null = ช่วงนั้นยังโหลดไม่เสร็จ/โหลดไม่สำเร็จ — เดิม ?? 0 ทำให้ตารางโชว์ 0 บาทเหมือนไม่มียอดจริง
-  const trendIncome = trendQs.map((q) => q.data?.total ?? null);
-  const trendExpenseQs = useQueries({
-    queries: trendBuckets.map((m) => ({
-      queryKey: expenseSummaryKey(m.from, m.to),
-      queryFn: () => expensesService.summary({ date_from: m.from, date_to: m.to }),
-    })),
-  });
-  const trendExpense = trendExpenseQs.map((q) => q.data?.total ?? null);
-  const trendFailed = trendQs.some((q) => q.isError) || trendExpenseQs.some((q) => q.isError);
+  // null = ยังโหลดไม่เสร็จ/โหลดไม่สำเร็จ — เดิม ?? 0 ทำให้ตารางโชว์ 0 บาทเหมือนไม่มียอดจริง
+  const trendIncome = trendBuckets.map((_, i) => trendQ.data?.buckets[i]?.income ?? null);
+  const trendExpense = trendBuckets.map((_, i) => trendQ.data?.buckets[i]?.expense ?? null);
+  const trendFailed = trendQ.isError;
   const trendIncomeKey = [...trendIncome, "|", ...trendExpense].join(",");
 
   const monthlyTrend = useMemo(() => {
@@ -203,9 +196,6 @@ export function useFinanceSummaryViewModel() {
 
     pnlRows, monthlyTrend, kpis,
     trendFailed,
-    refetchTrend: () => {
-      trendQs.forEach((q) => { if (q.isError) q.refetch(); });
-      trendExpenseQs.forEach((q) => { if (q.isError) q.refetch(); });
-    },
+    refetchTrend: () => void trendQ.refetch(),
   };
 }

@@ -26,7 +26,7 @@ import type { ProductionStatus } from "@/constants/enumConfig";
 import type { CompleteProductionValue } from "./_components/CompleteProductionModal";
 import { thaiCompare } from "@/lib/thaiSort";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
-import { PRODUCTION_ORDERS_KEY, PRODUCTION_ORDERS_PARAMS, PRODUCTION_PRODUCTS_KEY, PRODUCTION_PRODUCTS_PARAMS, PRODUCTION_UNITS_KEY, tabFrom, type TabKey } from "./productionQuery";
+import { PRODUCTION_ORDERS_KEY, PRODUCTION_PRODUCTS_KEY, fetchProductionOrders, productionHistoryKey, productionHistoryParams, PRODUCTION_PRODUCTS_PARAMS, PRODUCTION_UNITS_KEY, tabFrom, type TabKey } from "./productionQuery";
 import type {
   ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput,
 } from "@/types/productionOrder";
@@ -105,7 +105,7 @@ export function useProductionViewModel() {
 
   // ── shared data (โหลดครั้งเดียว ใช้ทั้ง 3 แท็บ) ──
   // ใบสั่งผลิต + สินค้า/หน่วย (เติมชื่อ/หน่วยให้รายการในใบ) — page.tsx ดึงไว้ฝั่ง server แล้ว (key ที่ productionQuery.ts)
-  const ordersQ = useQuery({ queryKey: PRODUCTION_ORDERS_KEY, queryFn: () => productionOrdersService.list(PRODUCTION_ORDERS_PARAMS) });
+  const ordersQ = useQuery({ queryKey: PRODUCTION_ORDERS_KEY, queryFn: () => fetchProductionOrders() });
   const productsQ = useQuery({ queryKey: PRODUCTION_PRODUCTS_KEY, queryFn: () => productsService.list(PRODUCTION_PRODUCTS_PARAMS) });
   const unitsQ = useQuery({ queryKey: PRODUCTION_UNITS_KEY, queryFn: () => unitsService.list() });
 
@@ -156,7 +156,7 @@ export function useProductionViewModel() {
   }, [recipesQ.data]);
 
   const orders: ProductionOrder[] = useMemo(
-    () => ((ordersQ.data?.data ?? []) as RawProductionOrder[]).map((o) => toProductionOrder(o, productsById)),
+    () => (ordersQ.data?.data ?? []).map((o) => toProductionOrder(o, productsById)),
     [ordersQ.data, productsById],
   );
 
@@ -304,17 +304,21 @@ export function useProductionViewModel() {
   // ตารางแสดงทุกใบตั้งแต่สร้าง (วางแผน/กำลังผลิต/เสร็จ/ยกเลิก) — ผู้ใช้ขอ 2026-10-29: สร้างใบแล้วเห็นในประวัติทันที
   // วันที่ที่ใช้กรองช่วง: ใบที่เสร็จแล้ว = เวลาเสร็จ · ใบอื่น = วันที่ผลิตตามแผน · ใหม่สุดก่อน
   const historyDateOf = (o: ProductionOrder) => (o.production_status === "done" && o.completed_at ? o.completed_at : o.production_date);
+  // backend กรองช่วงให้ (history_from/to — กติกาวันที่เดียวกับ historyDateOf) · เดิมกรองจากรายการ 1,000 ใบล่าสุด ช่วงเก่าไม่ครบ
+  const [historyStart, historyEnd] = useMemo(() => getRangeStartEnd(historyViewMode, historyDate), [historyViewMode, historyDate]);
+  const historyFrom = historyStart.toISOString();
+  const historyTo = historyEnd.toISOString();
+  const historyQ = useQuery({
+    queryKey: productionHistoryKey(historyFrom, historyTo),
+    queryFn: () => productionOrdersService.list(productionHistoryParams(historyFrom, historyTo)),
+    enabled: activeTab === "history",
+  });
   const historyRows = useMemo(
-    () => {
-      const [start, end] = getRangeStartEnd(historyViewMode, historyDate);
-      return orders
-        .filter((o) => {
-          const at = dayjs(historyDateOf(o));
-          return at.isValid() && !at.isBefore(start) && !at.isAfter(end);
-        })
-        .sort((a, b) => dayjs(historyDateOf(b)).valueOf() - dayjs(historyDateOf(a)).valueOf());
-    },
-    [orders, historyViewMode, historyDate],
+    () =>
+      (historyQ.data?.data ?? [])
+        .map((o) => toProductionOrder(o, productsById))
+        .sort((a, b) => dayjs(historyDateOf(b)).valueOf() - dayjs(historyDateOf(a)).valueOf()),
+    [historyQ.data, productsById],
   );
   // สถิติ/breakdown นับเฉพาะใบที่ผลิตเสร็จแล้วในช่วงที่เลือก — ใบที่ยังไม่ผลิตไม่มีจำนวนผลิตจริง/เวลาที่ใช้
   const doneHistoryRows = useMemo(() => historyRows.filter((o) => o.production_status === "done"), [historyRows]);
@@ -562,7 +566,8 @@ export function useProductionViewModel() {
     // แท็บ 3
     historyViewMode, setHistoryViewMode,
     historyDate, setHistoryDate,
-    historyRows, historyStats, productBreakdown, teamBreakdown,
+    historyRows, historyLoading: historyQ.isPending, historyError: historyQ.isError, refetchHistory: () => void historyQ.refetch(),
+    historyStats, productBreakdown, teamBreakdown,
 
     // รายละเอียด (ใช้ร่วม)
     selectedOrder, drawerOpen, selectedRoundQuota,

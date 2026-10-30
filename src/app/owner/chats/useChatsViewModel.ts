@@ -19,6 +19,7 @@ import type { ChatAttachment, ChatConversation, ChatMessage, ChatMessageQuery } 
 import { CHAT_UNREAD_KEY } from "@/components/shared/layout/ChatUnreadBadge";
 
 export const CHATS_LIST_KEY = ["admin", "chats", "list"] as const;
+const ROOM_PAGE = 50;
 
 /** ลิงก์หน้าคำสั่งซื้อในหลังร้าน (ตรงกับ backend lib/adminLinks.ts) */
 export const staffAttachmentHref = (a: Pick<ChatAttachment, "kind" | "ref_id">) =>
@@ -42,9 +43,17 @@ export function useChatsViewModel() {
     return () => clearTimeout(h);
   }, [search]);
 
+  // รายการห้องทีละ ROOM_PAGE ห้อง — "ดูห้องเพิ่มเติม" ขยายทีละหน้า (เดิมตายตัว 50 ห้อง ห้องที่เกินเห็นได้แค่ตอนค้นหา)
+  // เปลี่ยนคำค้น/ตัวกรอง = กลับไปหน้าแรก
+  const [roomLimit, setRoomLimit] = useState(ROOM_PAGE);
+  const [roomFilter, setRoomFilter] = useState({ debounced, unreadOnly });
+  if (roomFilter.debounced !== debounced || roomFilter.unreadOnly !== unreadOnly) {
+    setRoomFilter({ debounced, unreadOnly });
+    setRoomLimit(ROOM_PAGE);
+  }
   const listQ = useQuery({
-    queryKey: [...CHATS_LIST_KEY, debounced, unreadOnly],
-    queryFn: () => chatsService.list({ search: debounced || undefined, unread: unreadOnly || undefined, limit: 50 }),
+    queryKey: [...CHATS_LIST_KEY, debounced, unreadOnly, roomLimit],
+    queryFn: () => chatsService.list({ search: debounced || undefined, unread: unreadOnly || undefined, limit: roomLimit }),
     refetchInterval: 8_000,
     refetchIntervalInBackground: false,
     placeholderData: keepPreviousData,
@@ -143,6 +152,10 @@ export function useChatsViewModel() {
   return {
     perm,
     conversations: listQ.data?.data ?? [],
+    /** ยังมีห้องที่ไม่ได้โหลด (backend total มากกว่าที่แสดง) */
+    hasMoreRooms: (listQ.data?.meta.total ?? 0) > (listQ.data?.data.length ?? 0),
+    loadingMoreRooms: listQ.isFetching && roomLimit > (listQ.data?.data.length ?? 0),
+    loadMoreRooms: () => setRoomLimit((n) => n + ROOM_PAGE),
     listLoading: listQ.isPending,
     listError: listQ.isError,
     retryList: () => void listQ.refetch(),

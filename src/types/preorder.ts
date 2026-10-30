@@ -14,6 +14,7 @@
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
 import type { OrderStatus, PaymentStatus, RoundStatus } from "@/constants/enumConfig";
+import type { OrderStatusFilter } from "./order";
 import type { OrderType, DeliveryAddress, DeliveryInfo, RefundAccount } from "@/types/order";
 
 export interface PreorderItem {
@@ -65,7 +66,8 @@ export interface Preorder extends DeliveryInfo {
 export interface PreorderListParams extends ListParams {
   user_id?: string;
   round_id?: string;
-  order_status?: OrderStatus;
+  /** หลายสถานะคั่นด้วย , ได้ — ใช้ statusFilter() */
+  order_status?: OrderStatusFilter;
   payment_status?: PaymentStatus;
   order_type?: OrderType;
   date_from?: string;
