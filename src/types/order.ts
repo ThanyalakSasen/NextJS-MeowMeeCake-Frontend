@@ -160,8 +160,14 @@ export interface OrderInput {
   channel?: "online" | "instore";
 }
 
+/** ?order_status= ของรายการออเดอร์/พรีออเดอร์หลังร้าน — สถานะเดียว หรือหลายสถานะคั่นด้วย , (backend parseList) */
+export type OrderStatusFilter = OrderStatus | `${OrderStatus},${string}`;
+/** หลายสถานะ → ค่า ?order_status= ในคำขอเดียว */
+export const statusFilter = (statuses: readonly OrderStatus[]) => statuses.join(",") as OrderStatusFilter;
+
 export interface OrderListParams extends ListParams {
   order_type?: OrderType;
-  order_status?: OrderStatus;
+  /** หลายสถานะคั่นด้วย , ได้ — ใช้ statusFilter() */
+  order_status?: OrderStatusFilter;
   payment_status?: PaymentStatus;
 }

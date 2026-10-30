@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Dropdown, Segmented } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeftIcon, ChatBubbleLeftRightIcon, EllipsisHorizontalIcon, EnvelopeIcon, PhoneIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { Avatar } from "@/components/base";
+import { Avatar, Button } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { SearchInput } from "@/components/shared/data";
 import { LoadFailed } from "@/components/shared/feedback";
@@ -66,6 +66,13 @@ export function ChatsView(vm: VM) {
                     onDelete={vm.perm.delete ? () => vm.deleteConversation(c) : undefined}
                   />
                 ))}
+                {vm.hasMoreRooms && (
+                  <li className="p-3">
+                    <Button block size="small" loading={vm.loadingMoreRooms} onClick={vm.loadMoreRooms}>
+                      {t("loadMoreRooms")}
+                    </Button>
+                  </li>
+                )}
               </ul>
             )}
           </div>

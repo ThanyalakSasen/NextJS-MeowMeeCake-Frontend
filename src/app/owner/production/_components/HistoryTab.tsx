@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
 import { DataTable, PeriodSelector, type Column } from "@/components/shared/data";
 import { EmptyState } from "@/components/base";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import { ViewButton } from "@/components/shared/actions";
 import type { ProductionOrder } from "@/types/productionOrder";
@@ -88,7 +89,11 @@ export function HistoryTab(vm: VM) {
             />
           </div>
           */}
-          {vm.historyRows.length === 0 ? (
+          {vm.historyError ? (
+            <LoadFailed onRetry={vm.refetchHistory} />
+          ) : vm.historyLoading ? (
+            <LoadingSpin />
+          ) : vm.historyRows.length === 0 ? (
             <EmptyState description={t("production.historyEmpty")} />
           ) : (
             <DataTable

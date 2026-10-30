@@ -1,5 +1,4 @@
 import { HydrationBoundary } from "@tanstack/react-query";
-import { productionOrdersService } from "@/services/productionOrders";
 import { productsService } from "@/services/products";
 import { unitsService } from "@/services/units";
 import { serverHttpAsUser } from "@/lib/serverAuth";
@@ -7,10 +6,10 @@ import { prefetchPublic } from "@/app/customer/lib/prefetchPublic";
 import ProductionPage from "./ProductionPageClient";
 import {
   PRODUCTION_ORDERS_KEY,
-  PRODUCTION_ORDERS_PARAMS,
   PRODUCTION_PRODUCTS_KEY,
   PRODUCTION_PRODUCTS_PARAMS,
   PRODUCTION_UNITS_KEY,
+  fetchProductionOrders,
 } from "./productionQuery";
 
 // การผลิต — ดึงใบสั่งผลิต + สินค้า/หน่วย (เติมชื่อรายการในใบ) ฝั่ง server ด้วย cookie ของผู้ใช้ (no-store) ก่อนส่ง HTML
@@ -22,7 +21,7 @@ export default async function ProductionRoute() {
   const state = await prefetchPublic(
     h
       ? [
-          { queryKey: [...PRODUCTION_ORDERS_KEY], queryFn: () => productionOrdersService.list(PRODUCTION_ORDERS_PARAMS, h) },
+          { queryKey: [...PRODUCTION_ORDERS_KEY], queryFn: () => fetchProductionOrders(h) },
           { queryKey: [...PRODUCTION_PRODUCTS_KEY], queryFn: () => productsService.list(PRODUCTION_PRODUCTS_PARAMS, h) },
           { queryKey: [...PRODUCTION_UNITS_KEY], queryFn: () => unitsService.list({}, h) },
         ]

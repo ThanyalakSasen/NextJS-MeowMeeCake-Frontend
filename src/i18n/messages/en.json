@@ -4289,6 +4289,7 @@
     "filterUnread": "Unread",
     "filterLabel": "Show chats",
     "roomMenu": "Chat options",
+    "loadMoreRooms": "Show more chats",
     "deleteRoom": "Delete chat",
     "deleteRoomConfirm": "Remove the chat with {name} from the list?",
     "deleteRoomNote": "The history is kept — if the customer messages again, the chat comes back with its history",

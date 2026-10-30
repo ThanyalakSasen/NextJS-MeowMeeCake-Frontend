@@ -6,6 +6,7 @@ import { preordersService } from "@/services/preorders";
 import { LIST_ALL, type HttpReader } from "@/lib/http";
 import { ORDER_STATUS_FLOW } from "@/constants/enumConfig";
 import type { Preorder } from "@/types/preorder";
+import { statusFilter } from "@/types/order";
 
 export type TabKey = "rounds" | "dashboard" | "orders";
 export const TAB_KEYS: TabKey[] = ["dashboard", "rounds", "orders"];
@@ -27,7 +28,8 @@ export const ROUND_DASHBOARD_KEY = ["preorder-rounds", "dashboard"] as const;
 /** ค้นเลขพรีออเดอร์ที่ backend — backend ค้นได้แค่ preorder_no */
 export const preorderSearchKey = (term: string) => ["preorders", "search", term] as const;
 
-const OPEN_STATUSES = ORDER_STATUS_FLOW.filter((s) => s !== "completed");
+/** สถานะที่ยังไม่ปิดงาน (ก่อน completed) */
+export const OPEN_STATUSES = ORDER_STATUS_FLOW.filter((s) => s !== "completed");
 
 export interface PreordersData {
   data: Preorder[];
@@ -40,13 +42,14 @@ export interface PreordersData {
 
 export async function fetchPreorders(h?: HttpReader): Promise<PreordersData> {
   const [open, refunds, recent, completed] = await Promise.all([
-    Promise.all(OPEN_STATUSES.map((s) => preordersService.list({ order_status: s, limit: LIST_ALL }, h))),
+    // ทุกสถานะที่ยังไม่ปิดงานในคำขอเดียว (backend รับ order_status คั่นด้วย ,) — เดิมสถานะละคำขอ
+    preordersService.list({ order_status: statusFilter(OPEN_STATUSES), limit: LIST_ALL }, h),
     preordersService.list({ order_status: "cancelled", payment_status: "paid", limit: LIST_ALL }, h),
     preordersService.list({ limit: LIST_ALL }, h),
     preordersService.list({ order_status: "completed", limit: 1 }, h),
   ]);
   const byId = new Map<string, Preorder>();
-  for (const o of [...open.flatMap((r) => r.data), ...refunds.data, ...recent.data]) byId.set(o._id, o);
+  for (const o of [...open.data, ...refunds.data, ...recent.data]) byId.set(o._id, o);
   return {
     data: [...byId.values()].sort((a, b) => b.created_at.localeCompare(a.created_at)),
     olderHidden: recent.meta.total > recent.data.length,

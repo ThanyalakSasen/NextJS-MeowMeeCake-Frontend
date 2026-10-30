@@ -8,6 +8,10 @@ import { getMonthWeeks, getRangeStartEnd, type PeriodType } from "@/utils/period
 
 export const revenueKey = (from: string, to: string) => ["reports", "revenue-by-channel", from, to] as const;
 
+/** ตารางเปรียบเทียบทั้งชุด (คำขอเดียว) — ขึ้นต้น "expenses" ให้บันทึก/ลบค่าใช้จ่ายแล้ว invalidate ["expenses"] รีเฟรชตารางด้วย */
+export const financeTrendKey = (buckets: Pick<TrendBucket, "from" | "to">[]) =>
+  ["expenses", "trend", buckets.length, buckets[0]?.from ?? "", buckets[buckets.length - 1]?.to ?? ""] as const;
+
 export interface TrendBucket {
   key: string;
   start: Dayjs;
