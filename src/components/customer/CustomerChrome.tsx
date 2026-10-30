@@ -6,6 +6,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import ChatWidget from "./chat/ChatWidget";
 import ProfileSetupPrompt from "./ProfileSetupPrompt";
+import LiffAutoLogin from "./LiffAutoLogin";
 
 // route ที่ไม่ต้องแสดง Navbar/Footer (หน้าที่เปิดจากลิงก์ในอีเมล: ตั้งรหัสผ่านใหม่ · ยืนยันอีเมล)
 // usePathname() คืนเฉพาะ path ไม่รวม query string จึงครอบคลุม ?token=... ด้วย
@@ -34,6 +35,8 @@ export default function CustomerChrome({ children }: { children: React.ReactNode
       <ChatWidget />
       {/* สมัครด้วย Google/LINE ใหม่ — ป๊อปอัปชวนกรอกข้อมูลบัญชี (กรอกเลย / ไว้ภายหลัง) */}
       <ProfileSetupPrompt />
+      {/* เปิดจาก Rich Menu ใน LINE (LIFF) → ล็อกอินด้วยบัญชี LINE ให้อัตโนมัติ */}
+      <LiffAutoLogin />
     </div>
   );
 }

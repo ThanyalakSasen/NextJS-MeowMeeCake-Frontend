@@ -162,7 +162,17 @@ export async function loginWithGoogle(credential: string): Promise<CurrentUser> 
 }
 
 /**
- * URL เริ่มเข้าสู่ระบบด้วย LINE — ต้องพาเบราว์เซอร์ไปทั้งหน้า (window.location) ไม่ใช่ fetch
+ * POST /auth/line/liff { idToken } — ล็อกอินอัตโนมัติตอนเปิดหน้าร้านใน LINE (LIFF · src/lib/liff.ts)
+ * backend ให้ LINE ตรวจ id_token แล้วตั้ง cookie `session` (บัญชีเดียวกับปุ่ม "เข้าสู่ระบบด้วย LINE")
+ */
+export async function loginWithLiff(idToken: string): Promise<CurrentUser> {
+  // 401 = id_token หมดอายุ/ไม่ผ่าน ไม่ใช่ session หมดอายุ — ไม่เด้งไป /login (ลูกค้ายังดูหน้าร้านแบบ guest ได้)
+  await http.post("/auth/line/liff", { idToken }, { skipAuthRedirect: true });
+  return me();
+}
+
+/**
+ * URL เริ่มเข้าสู่ระบบด้วย LINE —ต้องพาเบราว์เซอร์ไปทั้งหน้า (window.location) ไม่ใช่ fetch
  * backend redirect ไปหน้ายินยอมของ LINE → ตั้ง cookie `session` → กลับมา /login/line (LINE_AUTH_RETURN_URL ของ backend)
  */
 export function lineLoginUrl(next: string | null): string {

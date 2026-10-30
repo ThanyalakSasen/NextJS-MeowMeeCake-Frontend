@@ -17,6 +17,7 @@ import FlowSteps from "@/components/customer/FlowSteps";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
 import { shopOrderKey, shopPreorderKey } from "../../lib/shopQueries";
 import { useOrderLabels } from "../purchases/orderLabels";
+import SendToLineChat from "./SendToLineChat";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -87,6 +88,20 @@ export default function OrderSuccess({ kind, id }: { kind: "order" | "preorder";
         ? t("slipSent")
         : t("awaitingPayment");
 
+  const method = d.order_type === "delivery" ? t("delivery") : t("pickup");
+  const pickup = d.order_type === "takeaway";
+  // สรุปที่ส่งเข้าแชท LINE (เปิดจาก LIFF) — แถวเดียวกับตารางด้านล่าง
+  const lineSummary = [
+    t(kind === "order" ? "lineOrder" : "linePreorder", { no: d.no }),
+    `${t("total")}: ${baht(d.total_amount)}`,
+    `${t("method")}: ${method}`,
+    pickup && d.pickup_date ? `${t("pickupDate")}: ${labels.pickupDate(d.pickup_date)}` : null,
+    pickup && d.pickup_point_name ? `${t("pickupPoint")}: ${d.pickup_point_name}` : null,
+    `${t("status")}: ${statusText}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   return shell(
     <>
       <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${cancelled ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>
@@ -103,9 +118,9 @@ export default function OrderSuccess({ kind, id }: { kind: "order" | "preorder";
 
       <dl className="m-0 space-y-2 rounded-xl bg-[#FAF6F0] p-4 text-left text-sm">
         <Row label={t("total")} value={<strong>{baht(d.total_amount)}</strong>} />
-        <Row label={t("method")} value={d.order_type === "delivery" ? t("delivery") : t("pickup")} />
-        {d.order_type === "takeaway" && d.pickup_date && <Row label={t("pickupDate")} value={<span className="font-semibold">{labels.pickupDate(d.pickup_date)}</span>} />}
-        {d.order_type === "takeaway" && d.pickup_point_name && <Row label={t("pickupPoint")} value={d.pickup_point_name} />}
+        <Row label={t("method")} value={method} />
+        {pickup && d.pickup_date && <Row label={t("pickupDate")} value={<span className="font-semibold">{labels.pickupDate(d.pickup_date)}</span>} />}
+        {pickup && d.pickup_point_name && <Row label={t("pickupPoint")} value={d.pickup_point_name} />}
         <Row label={t("orderedAt")} value={formatDate(d.created_at, locale, { withTime: true })} />
         <Row label={t("status")} value={statusText} />
       </dl>
@@ -116,6 +131,8 @@ export default function OrderSuccess({ kind, id }: { kind: "order" | "preorder";
           <p className="m-0 text-xs text-red-600">{t(kind === "order" ? "payDeadline" : "payDeadlinePreorder")}</p>
         </div>
       )}
+
+      {!cancelled && <SendToLineChat text={lineSummary} />}
 
       <div className="flex flex-col gap-3 pt-2 sm:flex-row">
         <Link href={base} className={`${shopButton} w-full sm:flex-1`}>{t("history")}</Link>
