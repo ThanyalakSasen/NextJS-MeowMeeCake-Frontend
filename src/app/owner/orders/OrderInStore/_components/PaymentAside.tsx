@@ -8,7 +8,7 @@ import { Button } from "@/components/base";
 import { color } from "@/theme";
 import { formatCurrency } from "@/i18n/format";
 import type { Promotion } from "@/types/promotion";
-import { canStack, isMemberOnly, type PromoBlock, type PromoEval } from "../posPromotion";
+import { canStack, isMemberOnly, type PromoEval } from "../posPromotion";
 
 export function PaymentAside({
   promotionsEnabled,
@@ -66,8 +66,12 @@ export function PaymentAside({
       ? t("pos.promoPercent", { n: p.discount_value })
       : t("pos.promoAmount", { amount: formatCurrency(p.discount_value, locale) });
 
-  // ใช้ร่วมกับโปรไหนได้ — บอกเป็นชื่อโปรในรายการนี้ (canStack: ทั้งคู่ stackable และ stackable_with ยอมกันทั้งสองฝั่ง)
-  const shown = promoEvals.map((ev) => ev.promotion);
+  // แสดงเฉพาะโปรที่ใช้กับบิลนี้ได้ตอนนี้ (ผู้ใช้ขอ 2026-10-30 — การ์ดยาวเกิน) · ที่ยังใช้ไม่ได้บอกแค่จำนวน
+  // (ครบยอด/เพิ่มสินค้า/กรอกเบอร์สมาชิกแล้วใช้ได้ = โผล่ขึ้นมาเอง)
+  const usable = promoEvals.filter((ev) => ev.eligible);
+  const hiddenCount = promoEvals.length - usable.length;
+  // ใช้ร่วมกับโปรไหนได้ — บอกเป็นชื่อโปรที่ใช้ได้ในบิลนี้ (canStack: ทั้งคู่ stackable และ stackable_with ยอมกันทั้งสองฝั่ง)
+  const shown = usable.map((ev) => ev.promotion);
   const stackText = (p: Promotion) => {
     if (!p.stackable) return t("pos.promoNotStackable");
     const names = shown.filter((o) => o._id !== p._id && canStack(p, o)).map((o) => o.promotion_name);
@@ -77,14 +81,6 @@ export function PaymentAside({
   const selectedPromos = shown.filter((o) => selectedPromoIds.includes(o._id));
   const willReplace = (p: Promotion) =>
     selectedPromos.length > 0 && !selectedPromoIds.includes(p._id) && !selectedPromos.every((o) => canStack(p, o));
-
-  const blockText = (b: PromoBlock) => {
-    switch (b.key) {
-      case "minAmount": return t("pos.promoBlock.minAmount", { min: formatCurrency(b.min, locale) });
-      case "minQty": return t("pos.promoBlock.minQty", { min: b.min, current: b.current });
-      default: return t(`pos.promoBlock.${b.key}`);
-    }
-  };
 
   return (
     <aside
@@ -101,21 +97,23 @@ export function PaymentAside({
             </p>
           )}
           {!hasItems && billPromotions.length === 0 && <p className="m-0 text-sm text-gray-500">{t("pos.promoHint")}</p>}
-          {hasItems && promoEvals.length > 0 && <p className="m-0 text-xs text-gray-500">{t("pos.promoStackHint")}</p>}
+          {hasItems && usable.length > 0 && <p className="m-0 text-xs text-gray-500">{t("pos.promoStackHint")}</p>}
+          {hasItems && promoEvals.length > 0 && usable.length === 0 && (
+            <p className="m-0 text-sm text-gray-500">{t("pos.promoNoneUsable")}</p>
+          )}
 
-          {promoEvals.map((ev) => {
+          {usable.map((ev) => {
             const p = ev.promotion;
-            const on = selectedPromoIds.includes(p._id) && ev.eligible;
+            const on = selectedPromoIds.includes(p._id);
             return (
               <button
                 key={p._id}
                 type="button"
-                disabled={!ev.eligible}
                 onClick={() => onTogglePromo(p._id)}
                 aria-pressed={on}
                 className={`flex min-h-[52px] items-center gap-2.5 rounded-xl border-2 px-3 py-2 text-left ${
                   on ? "border-success bg-green-50" : "border-gray-200 bg-white"
-                } ${ev.eligible ? "cursor-pointer text-brown-900" : "cursor-not-allowed text-gray-500"}`}
+                } cursor-pointer text-brown-900`}
               >
                 <span
                   aria-hidden="true"
@@ -132,24 +130,21 @@ export function PaymentAside({
                       <span className="rounded bg-green-100 px-1.5 text-[11px] font-semibold text-green-800">{t("pos.bestPromo")}</span>
                     )}
                   </span>
-                  {/* โปรสำหรับสมาชิก (จำกัดสิทธิ์ต่อลูกค้า) — ป้ายแดงเสมอ · ยังไม่กรอกเบอร์ = เลือกไม่ได้ + บอกให้กรอก */}
+                  {/* โปรสำหรับสมาชิก (จำกัดสิทธิ์ต่อลูกค้า) — แสดงเมื่อกรอกเบอร์สมาชิกแล้วเท่านั้น (ไม่งั้นใช้ไม่ได้ = ซ่อน) */}
                   {isMemberOnly(p) && <span className="text-xs font-semibold text-danger">{t("pos.promoMemberOnly")}</span>}
                   <span className={`text-xs ${p.stackable ? "text-green-700" : "text-gray-500"}`}>{stackText(p)}</span>
-                  {ev.eligible && willReplace(p) && <span className="text-xs text-amber-800">{t("pos.promoWillReplace")}</span>}
-                  <span
-                    className={`text-xs ${
-                      ev.eligible ? "text-gray-600" : ev.block?.key === "memberOnly" ? "text-danger" : "text-amber-800"
-                    }`}
-                  >
-                    {ev.eligible ? valueLabel(p) : ev.block && blockText(ev.block)}
-                  </span>
+                  {willReplace(p) && <span className="text-xs text-amber-800">{t("pos.promoWillReplace")}</span>}
+                  <span className="text-xs text-gray-600">{valueLabel(p)}</span>
                 </span>
                 <span className="text-sm font-semibold text-success tabular-nums">
-                  {ev.eligible ? `−${formatCurrency(ev.discount, locale)}` : ""}
+                  −{formatCurrency(ev.discount, locale)}
                 </span>
               </button>
             );
           })}
+          {hasItems && hiddenCount > 0 && usable.length > 0 && (
+            <p className="m-0 text-xs text-gray-500">{t("pos.promoHiddenCount", { n: hiddenCount })}</p>
+          )}
           {selectedPromoInvalid && <p className="m-0 text-xs text-danger">{t("pos.selectedPromoInvalid")}</p>}
           {discountExceeds && <p className="m-0 text-xs text-danger">{t("pos.promoDiscountExceeds")}</p>}
         </div>
