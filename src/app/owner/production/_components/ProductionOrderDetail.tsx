@@ -145,7 +145,7 @@ export function ProductionOrderDetail({
             <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => onCancel(order)}>{t("production.cancelOrder")}</Button>
           )}
           {canUpdate && order.production_status === "planned" && (
-            <Button size="small" icon={actionIcon("next", "small")} loading={starting} onClick={() => onStart(order)}>
+            <Button size="small" loading={starting} onClick={() => onStart(order)}>
               {t("production.startOrder")}
             </Button>
           )}
