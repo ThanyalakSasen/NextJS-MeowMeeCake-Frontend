@@ -8,7 +8,7 @@ import { Button } from "@/components/base";
 import { color } from "@/theme";
 import { formatCurrency } from "@/i18n/format";
 import type { Promotion } from "@/types/promotion";
-import { canStack, isMemberOnly, type PromoEval } from "../posPromotion";
+import { canStack, isMemberOnly, type PromoBlock, type PromoEval } from "../posPromotion";
 
 export function PaymentAside({
   promotionsEnabled,
@@ -69,7 +69,10 @@ export function PaymentAside({
   // แสดงเฉพาะโปรที่ใช้กับบิลนี้ได้ตอนนี้ (ผู้ใช้ขอ 2026-10-30 — การ์ดยาวเกิน) · ที่ยังใช้ไม่ได้บอกแค่จำนวน
   // (ครบยอด/เพิ่มสินค้า/กรอกเบอร์สมาชิกแล้วใช้ได้ = โผล่ขึ้นมาเอง)
   const usable = promoEvals.filter((ev) => ev.eligible);
-  const hiddenCount = promoEvals.length - usable.length;
+  // เลือกไว้แล้วแต่บิลเปลี่ยนจนใช้ไม่ได้ (ลบสินค้า/ลดจำนวน/ถอดสมาชิก) — ยังแสดงเป็นการ์ดแดงพร้อมเหตุผล ให้กดเอาออกได้
+  // (ซ่อนไปด้วย = คำเตือนค้าง ไม่มีที่ให้กดเอาออก แล้วบิลกลับมาเข้าเงื่อนไขก็ใช้โปรเองโดยไม่มีใครเห็น)
+  const listed = promoEvals.filter((ev) => ev.eligible || selectedPromoIds.includes(ev.promotion._id));
+  const hiddenCount = promoEvals.length - listed.length;
   // ใช้ร่วมกับโปรไหนได้ — บอกเป็นชื่อโปรที่ใช้ได้ในบิลนี้ (canStack: ทั้งคู่ stackable และ stackable_with ยอมกันทั้งสองฝั่ง)
   const shown = usable.map((ev) => ev.promotion);
   const stackText = (p: Promotion) => {
@@ -81,6 +84,14 @@ export function PaymentAside({
   const selectedPromos = shown.filter((o) => selectedPromoIds.includes(o._id));
   const willReplace = (p: Promotion) =>
     selectedPromos.length > 0 && !selectedPromoIds.includes(p._id) && !selectedPromos.every((o) => canStack(p, o));
+
+  const blockText = (b: PromoBlock) => {
+    switch (b.key) {
+      case "minAmount": return t("pos.promoBlock.minAmount", { min: formatCurrency(b.min, locale) });
+      case "minQty": return t("pos.promoBlock.minQty", { min: b.min, current: b.current });
+      default: return t(`pos.promoBlock.${b.key}`);
+    }
+  };
 
   return (
     <aside
@@ -102,9 +113,11 @@ export function PaymentAside({
             <p className="m-0 text-sm text-gray-500">{t("pos.promoNoneUsable")}</p>
           )}
 
-          {usable.map((ev) => {
+          {listed.map((ev) => {
             const p = ev.promotion;
             const on = selectedPromoIds.includes(p._id);
+            // เลือกไว้แต่ใช้ไม่ได้แล้ว — กดการ์ด = เอาออก
+            const stale = on && !ev.eligible;
             return (
               <button
                 key={p._id}
@@ -112,13 +125,13 @@ export function PaymentAside({
                 onClick={() => onTogglePromo(p._id)}
                 aria-pressed={on}
                 className={`flex min-h-[52px] items-center gap-2.5 rounded-xl border-2 px-3 py-2 text-left ${
-                  on ? "border-success bg-green-50" : "border-gray-200 bg-white"
+                  stale ? "border-danger bg-red-50" : on ? "border-success bg-green-50" : "border-gray-200 bg-white"
                 } cursor-pointer text-brown-900`}
               >
                 <span
                   aria-hidden="true"
                   className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-md border-2 text-sm font-bold text-white ${
-                    on ? "border-success bg-success" : "border-gray-400 bg-white"
+                    stale ? "border-danger bg-danger" : on ? "border-success bg-success" : "border-gray-400 bg-white"
                   }`}
                 >
                   {on && <CheckIcon className="h-3.5 w-3.5" strokeWidth={3} />}
@@ -134,15 +147,19 @@ export function PaymentAside({
                   {isMemberOnly(p) && <span className="text-xs font-semibold text-danger">{t("pos.promoMemberOnly")}</span>}
                   <span className={`text-xs ${p.stackable ? "text-green-700" : "text-gray-500"}`}>{stackText(p)}</span>
                   {willReplace(p) && <span className="text-xs text-amber-800">{t("pos.promoWillReplace")}</span>}
-                  <span className="text-xs text-gray-600">{valueLabel(p)}</span>
+                  {stale ? (
+                    <span className="text-xs text-danger">{ev.block ? blockText(ev.block) : t("pos.promoBlock.zero")}</span>
+                  ) : (
+                    <span className="text-xs text-gray-600">{valueLabel(p)}</span>
+                  )}
                 </span>
                 <span className="text-sm font-semibold text-success tabular-nums">
-                  −{formatCurrency(ev.discount, locale)}
+                  {stale ? "" : `−${formatCurrency(ev.discount, locale)}`}
                 </span>
               </button>
             );
           })}
-          {hasItems && hiddenCount > 0 && usable.length > 0 && (
+          {hasItems && hiddenCount > 0 && listed.length > 0 && (
             <p className="m-0 text-xs text-gray-500">{t("pos.promoHiddenCount", { n: hiddenCount })}</p>
           )}
           {selectedPromoInvalid && <p className="m-0 text-xs text-danger">{t("pos.selectedPromoInvalid")}</p>}

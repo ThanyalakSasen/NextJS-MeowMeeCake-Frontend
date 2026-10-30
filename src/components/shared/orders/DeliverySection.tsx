@@ -6,7 +6,8 @@
 // ส่งเฉพาะฟิลด์ที่เปลี่ยน · shipped_at/delivered_at backend ตั้งให้เองตามสถานะ (ไม่ต้องกรอก)
 // ไม่มีปุ่ม/dropdown เปลี่ยนสถานะจัดส่งตรง ๆ — flow: กำลังเตรียม → "พร้อมจัดส่ง" (order ready) → เลือกขนส่ง + กรอกเลขพัสดุ
 // ตอนพร้อมส่งมอบ: กรอกครบ (ขนส่ง + เลขพัสดุถ้าเป็นขนส่งพัสดุ) แล้วกดบันทึก = จัดส่งให้เลย (parent: delivery_status shipping +
-// order completed → "ส่งสินค้าแล้ว") ไม่ต้องกดอีกปุ่ม (ผู้ใช้ขอ 2026-10-30) · ยังกรอกไม่ครบ = บันทึกอย่างเดียว
+// order completed → "ส่งสินค้าแล้ว") ไม่ต้องกดอีกปุ่ม (ผู้ใช้ขอ 2026-10-30) · ถามยืนยันก่อนเสมอ (แจ้งลูกค้าแล้วย้อนไม่ได้)
+// ยังกรอกไม่ครบ = บันทึกอย่างเดียว
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -14,6 +15,7 @@ import { Button, Input, TextArea, Select } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
 import { actionIcon } from "@/components/shared/actions";
 import { formatDate } from "@/i18n/format";
+import { confirmAlert } from "@/lib/alert";
 import { SHIPPING_CARRIERS, carrierNeedsTracking, type ShippingCarrier } from "@/constants/enumConfig";
 import type { DeliveryInfo, DeliveryUpdateInput } from "@/types/order";
 
@@ -155,7 +157,19 @@ export function DeliverySection({
             icon={actionIcon("verify", "small")}
             loading={markingShipped}
             disabled={saving}
-            onClick={() => onMarkShipped(changes)}
+            onClick={async () => {
+              // แจ้งลูกค้า + ปิดออเดอร์ทันที ย้อนไม่ได้ — ถามก่อน ให้เห็นขนส่ง/เลขพัสดุที่จะส่งไป (กันพิมพ์เลขผิด/กดพลาด)
+              const carrierName = carrier ? t(`enums.shippingCarrier.${carrier}`) : "";
+              const ok = await confirmAlert(t("orders.markShippedConfirm"), {
+                title: t("orders.markShippedConfirmTitle"),
+                note: tracking.trim()
+                  ? t("orders.markShippedConfirmNote", { carrier: carrierName, tracking: tracking.trim() })
+                  : carrierName,
+                confirmText: t("orders.markShipped"),
+                cancelText: t("common.cancel"),
+              });
+              if (ok) onMarkShipped(changes);
+            }}
           >
             {t("orders.markShipped")}
           </Button>
