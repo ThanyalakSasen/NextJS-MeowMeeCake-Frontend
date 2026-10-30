@@ -106,6 +106,8 @@ export function ProductionView(vm: VM) {
               onAdvance={vm.onAdvanceStatus}
               onCancel={vm.onCancelOrder}
               onFinish={vm.onFinishOrder}
+              onStart={vm.onStartOrder}
+              starting={vm.startingId === vm.selectedOrder._id}
               onEdit={vm.openEdit}
             />
           )}

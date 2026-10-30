@@ -37,7 +37,15 @@ export function PlanTab(vm: VM) {
       ) : vm.isLoading ? (
         <LoadingSpin />
       ) : (
-        <TodayProductionCard today={vm.today} todayItems={vm.todayItems} todayOrders={vm.todayOrders} onView={vm.onView} />
+        <TodayProductionCard
+          today={vm.today}
+          todayItems={vm.todayItems}
+          todayOrders={vm.todayOrders}
+          onView={vm.onView}
+          canStart={vm.perm.update}
+          onStart={vm.onStartOrder}
+          startingId={vm.startingId}
+        />
       )}
     </div>
   );

@@ -224,11 +224,18 @@ export function useProductionViewModel() {
     cancelled: orders.filter((o) => o.production_status === "cancelled").length,
   }), [orders]);
 
-  // ── วันนี้ผลิตอะไรบ้าง (หัวแท็บแผนการผลิต) — แสดงอย่างเดียว ไม่มีปุ่มเลื่อนสถานะ (ผู้ใช้ขอ 2026-10-29) ──
-  // ใบที่วันผลิตตรงวันนี้และไม่ถูกยกเลิก · รวมจำนวนต่อสินค้า (สินค้าเดียวกันหลายใบ = บวกกัน) เรียงตามชื่อ
+  // ── วันนี้ผลิตอะไรบ้าง (หัวส่วนแผนการผลิต) ──
+  // เฉพาะใบที่ยังไม่จบ (รอดำเนินการ/กำลังผลิต) ที่วันผลิตเป็นวันนี้ หรือค้างมาจากวันก่อน — ปิดงานแล้ว = ออกจากการ์ดทันที
+  // ไปอยู่ที่ประวัติการผลิต · ยกเลิก = ไม่แสดง · ใบของวันหลังไม่โผล่ล่วงหน้า (ผู้ใช้ขอ 2026-10-30)
+  // รวมจำนวนต่อสินค้า (สินค้าเดียวกันหลายใบ = บวกกัน) เรียงตามชื่อ
   const [today] = useState<Dayjs>(() => dayjs());
   const todayOrders = useMemo(
-    () => orders.filter((o) => o.production_status !== "cancelled" && dayjs(o.production_date).isSame(today, "day")),
+    () =>
+      orders.filter(
+        (o) =>
+          (o.production_status === "planned" || o.production_status === "in_progress") &&
+          !dayjs(o.production_date).isAfter(today, "day"),
+      ),
     [orders, today],
   );
   const todayItems = useMemo(() => {
@@ -499,6 +506,9 @@ export function useProductionViewModel() {
   };
 
   const onCancelOrder = (order: ProductionOrder) => onChangeStatus(order, "cancelled");
+  /** ปุ่ม "เริ่มการผลิต" (การ์ดวันนี้ผลิต + ป๊อปอัป) — ใบรอดำเนินการ → กำลังผลิต */
+  const onStartOrder = (order: ProductionOrder) => onChangeStatus(order, "in_progress");
+  const startingId = changeStatus.isPending && changeStatus.variables?.next === "in_progress" ? changeStatus.variables.order._id : null;
   /** ปุ่ม "ผลิตเรียบร้อย" ในป๊อปอัปรายละเอียด — ใบรอดำเนินการ/กำลังผลิต → หน้าต่างปิดงาน (ตัดวัตถุดิบ + เพิ่มสต็อก + ล็อต) */
   const onFinishOrder = (order: ProductionOrder) => onChangeStatus(order, "done");
 
@@ -516,11 +526,15 @@ export function useProductionViewModel() {
     page, pageSize, setPagination: (p: number, ps: number) => { setPage(p); setPageSize(ps); },
     planRows, planTotal: planFiltered.length, stats,
     today, todayItems, todayOrderCount: todayOrders.length,
-    /** ใบสั่งผลิตของวันนี้ (การ์ด "วันนี้ผลิตอะไรบ้าง" แยกสินค้าตามใบ) — ตัดรายการที่ยกเลิก · เรียงเลขใบ */
+    /** ใบที่ต้องผลิตวันนี้ + ที่ค้างจากวันก่อน (การ์ด "วันนี้ผลิตอะไรบ้าง") — ตัดรายการที่ยกเลิก · ค้างนานสุดขึ้นก่อน แล้วเรียงเลขใบ */
     todayOrders: todayOrders
       .map((o) => ({ ...o, items: o.items.filter((it) => it.item_status !== "cancelled") }))
       .filter((o) => o.items.length > 0)
-      .sort((a, b) => a.production_no.localeCompare(b.production_no)),
+      .sort(
+        (a, b) =>
+          dayjs(a.production_date).startOf("day").valueOf() - dayjs(b.production_date).startOf("day").valueOf() ||
+          a.production_no.localeCompare(b.production_no),
+      ),
     createOpen, openCreate: () => setCreateOpen(true), closeCreate: () => setCreateOpen(false),
     onCreateSubmit, creating: createOrder.isPending,
 
@@ -560,7 +574,7 @@ export function useProductionViewModel() {
     isDetailLoading: drawerOpen && !selectedOrder && (ordersQ.isLoading || detailQ.isLoading),
 
     isFinalStatus, getNextStatus,
-    onChangeStatus, onAdvanceStatus, onCancelOrder, onFinishOrder,
+    onChangeStatus, onAdvanceStatus, onCancelOrder, onFinishOrder, onStartOrder, startingId,
     completeTarget, closeComplete: () => setCompleteTarget(null), onCompleteSubmit, completing: completeOrder.isPending,
   };
 }
