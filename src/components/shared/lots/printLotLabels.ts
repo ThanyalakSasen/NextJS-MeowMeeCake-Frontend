@@ -5,15 +5,20 @@
 //   - รหัสสินค้า (pos-/pre-) — ยิงที่ POS ลงบิลได้เหมือนเดิม
 //   - รหัสประจำชิ้น "<เลขล็อต>-<ลำดับชิ้น>" (เก็บใน DB — productLotsService.pieces) — ไม่ซ้ำกันทุกชิ้น · ยิงที่ "สแกนล็อต" ดูวันผลิต/วันหมดอายุ/ใบสั่งผลิต/ชิ้นที่
 // บนฉลาก: ชื่อร้าน · ชื่อสินค้า · ราคา · บาร์โค้ดสองอัน · วันผลิต/วันหมดอายุ (เป็นตัวหนังสือ — ลูกค้าอ่านได้โดยไม่ต้องสแกน)
+// ดวงเล็ก (compact — ติดถ้วยคัพเค้ก ฯลฯ ผู้ใช้ขอ 2026-10-30): ตัดชื่อร้าน + ตัวหนังสือใต้รหัสสินค้า · ชื่อ+ราคาบรรทัดเดียว
+//   บาร์โค้ดไม่เว้นขอบใน SVG (ขอบว่างให้สแกน = padding ซ้าย-ขวาของดวง 2 มม. ≈ 10 เท่าแท่ง) → แท่งกว้างสุดเท่าที่ดวงให้
 // ต้องเรียกจาก click handler ตรง ๆ — เปิดหน้าต่างก่อน await อย่างอื่น ไม่งั้นเบราว์เซอร์บล็อกป๊อปอัป
 // ─────────────────────────────────────────────────────────────
 import type { ProductLot } from "@/types/productLot";
 
 /** แผ่นสติ๊กเกอร์ A4 ที่ขายทั่วไป — ขนาดดวง/ขอบบน-ซ้าย/ระยะห่างระหว่างดวง เป็นมม. */
 export const SHEET_PRESETS = {
-  "a4-21": { cols: 3, rows: 7, w: 70, h: 42.3, top: 0.15, left: 0, gapX: 0, gapY: 0 },
-  "a4-24": { cols: 3, rows: 8, w: 70, h: 37, top: 0.5, left: 0, gapX: 0, gapY: 0 },
-  "a4-21-margin": { cols: 3, rows: 7, w: 63.5, h: 38.1, top: 15.15, left: 7.2, gapX: 2.5, gapY: 0 },
+  "a4-21": { cols: 3, rows: 7, w: 70, h: 42.3, top: 0.15, left: 0, gapX: 0, gapY: 0, compact: false },
+  "a4-24": { cols: 3, rows: 8, w: 70, h: 37, top: 0.5, left: 0, gapX: 0, gapY: 0, compact: false },
+  "a4-21-margin": { cols: 3, rows: 7, w: 63.5, h: 38.1, top: 15.15, left: 7.2, gapX: 2.5, gapY: 0, compact: false },
+  // ดวงเล็ก — แท่งบาร์โค้ดรหัสล็อต ≈ 0.29 มม. (40 ดวง) / ≈ 0.2 มม. (65 ดวง — ต้องเครื่องพิมพ์เลเซอร์ อิงก์เจ็ทซึมจนสแกนพลาด)
+  "a4-40": { cols: 4, rows: 10, w: 52.5, h: 29.7, top: 0, left: 0, gapX: 0, gapY: 0, compact: true },
+  "a4-65": { cols: 5, rows: 13, w: 38.1, h: 21.2, top: 10.7, left: 4.75, gapX: 2.5, gapY: 0, compact: true },
 } as const;
 export type SheetPreset = keyof typeof SHEET_PRESETS;
 
@@ -72,7 +77,7 @@ export async function printLotLabels(jobs: LabelJob[], opts: PrintOptions): Prom
     if (svg == null) {
       const el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       // margin 10 = quiet zone 10 เท่าความกว้างแท่ง — ยืดเต็มกว้างดวงแล้วยังเหลือขอบว่างพอให้เครื่องยิงจับได้
-      JsBarcode(el, value, { format: "CODE128", displayValue: false, margin: 10, marginTop: 0, marginBottom: 0, height: 40, width: 2 });
+      JsBarcode(el, value, { format: "CODE128", displayValue: false, margin: sheet.compact ? 0 : 10, marginTop: 0, marginBottom: 0, height: 40, width: 2 });
       el.setAttribute("preserveAspectRatio", "none");
       svg = el.outerHTML;
       barcodes.set(value, svg);
@@ -83,6 +88,14 @@ export async function printLotLabels(jobs: LabelJob[], opts: PrintOptions): Prom
   const label = (lot: ProductLot, code: string) => {
     const price = labelPrice(lot);
     const exp = lot.expiry_date ? `${texts.expires} ${labelDate(lot.expiry_date, locale)}` : texts.noExpiry;
+    if (sheet.compact) {
+      return `<div class="top"><span class="name">${escapeHtml(lot.product_name_th ?? "")}</span>${
+        price != null ? `<span class="price">${escapeHtml(opts.price(price))}</span>` : ""
+      }</div>
+${lot.product_code ? `<div class="code">${barcode(lot.product_code)}</div>` : ""}
+<div class="code">${barcode(code)}</div><div class="cap">${escapeHtml(code)}</div>
+<div class="dates"><span>${escapeHtml(`${texts.produced} ${labelDate(lot.produced_date, locale)}`)}</span><b>${escapeHtml(exp)}</b></div>`;
+    }
     return `<div class="top"><span class="store">${escapeHtml(opts.storeName)}</span>${
       price != null ? `<span class="price">${escapeHtml(opts.price(price))}</span>` : ""
     }</div>
@@ -115,8 +128,18 @@ ${
     pages.push(`<div class="sheet">${html}</div>`);
   }
 
-  // ความสูงบาร์โค้ด — ที่เหลือจากตัวหนังสือ (~22 มม.) แบ่งสองอัน · ไม่เกิน 10 มม.
-  const codeH = Math.min(10, Math.max(6, (sheet.h - 22) / 2));
+  // ความสูงบาร์โค้ด — ที่เหลือจากตัวหนังสือ (~22 มม. · ดวงเล็ก ~11 มม.) แบ่งสองอัน · ไม่เกิน 10 มม. (ดวงเล็ก 4.5–7 มม.)
+  const codeH = sheet.compact ? Math.min(7, Math.max(4.5, (sheet.h - 11) / 2)) : Math.min(10, Math.max(6, (sheet.h - 22) / 2));
+  // ดวงเล็ก: ตัวหนังสือเล็กลง · ขอบซ้าย-ขวา 2 มม. = ขอบว่างให้เครื่องสแกน (บาร์โค้ดไม่มีขอบในตัว)
+  const compactCss = sheet.compact
+    ? `
+  .label { padding: 1mm 2mm; }
+  .top { align-items: center; }
+  .name { font-size: 6.5pt; min-width: 0; }
+  .price { font-size: 7pt; }
+  .cap { font-size: 5pt; letter-spacing: 0.2pt; }
+  .dates { font-size: 5.5pt; gap: 1mm; }`
+    : "";
 
   win.document.write(`<!doctype html>
 <html><head><meta charset="utf-8"><title>${escapeHtml(jobs.map((j) => j.lot.lot_no).join(", "))}</title>
@@ -133,7 +156,7 @@ ${
   .name { font-size: 8.5pt; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .code svg { display: block; width: 100%; height: ${codeH}mm; }
   .cap { font-family: "Consolas", "Courier New", monospace; font-size: 6.5pt; text-align: center; letter-spacing: 0.4pt; line-height: 1; }
-  .dates { display: flex; justify-content: space-between; gap: 2mm; font-size: 7pt; line-height: 1.1; white-space: nowrap; }
+  .dates { display: flex; justify-content: space-between; gap: 2mm; font-size: 7pt; line-height: 1.1; white-space: nowrap; }${compactCss}
 </style></head>
 <body>${pages.join("\n")}</body></html>`);
   win.document.close();
