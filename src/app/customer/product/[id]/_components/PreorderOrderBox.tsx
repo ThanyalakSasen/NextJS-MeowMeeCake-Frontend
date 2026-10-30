@@ -104,6 +104,7 @@ export default function PreorderOrderBox({
       product_name_eng: roundItem.product.product_name_eng ?? null,
       product_img: productImg,
       unit_price: unit,
+      base_price: roundItem.current_price,
       quantity,
       min_qty: min,
       max_qty: max,

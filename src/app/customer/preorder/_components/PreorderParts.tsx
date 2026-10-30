@@ -224,6 +224,7 @@ function RoundAddButton({
       product_name_eng: p.product_name_eng ?? null,
       product_img: p.product_img[0] ?? "",
       unit_price: item.current_price,
+      base_price: item.current_price,
       quantity: min,
       min_qty: min,
       max_qty: max,
