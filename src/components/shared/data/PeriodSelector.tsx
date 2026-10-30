@@ -29,6 +29,7 @@ export function PeriodSelector({
   date,
   onDateChange,
   dayAsMonth = false,
+  periods = PERIOD_TYPES,
 }: {
   period: PeriodType;
   onPeriodChange: (p: PeriodType) => void;
@@ -36,6 +37,8 @@ export function PeriodSelector({
   onDateChange: (d: Dayjs) => void;
   /** โหมดรายวันให้เลือกเฉพาะเดือน (เช่น หน้าสรุปกำไร-ขาดทุน ที่ตารางรายวันแสดงตั้งแต่วันที่ 1 ของเดือนที่เลือก) */
   dayAsMonth?: boolean;
+  /** ชนิดช่วงที่ให้เลือก (ค่าเริ่มต้น = ทุกชนิด) เช่น สรุปรอบพรีออเดอร์ใช้แค่ เดือน/ไตรมาส/ปี */
+  periods?: PeriodType[];
 }) {
   const t = useTranslations("period");
   const locale = useLocale();
@@ -81,7 +84,7 @@ export function PeriodSelector({
       <TypeTabBar
         value={period}
         onChange={onPeriodChange}
-        options={PERIOD_TYPES.map((p) => ({ value: p, label: t(`type.${p}`) }))}
+        options={periods.map((p) => ({ value: p, label: t(`type.${p}`) }))}
       />
       {period === "week" ? (
         <>

@@ -958,7 +958,7 @@
     "tabOrders": "คำสั่งซื้อพรีออเดอร์",
     "moreItems": "+ อีก {n} รายการ",
     "dashboard": {
-      "statRounds": "รอบทั้งหมด",
+      "statRounds": "จำนวนรอบในช่วงนี้",
       "statOpen": "เปิดรับอยู่ {n} รอบ",
       "statRevenue": "ยอดขายรวม",
       "statRevenueSub": "ทุกรอบ ไม่รวมที่ยกเลิก",

@@ -2,6 +2,7 @@
 // ─────────────────────────────────────────────────────────────
 // ViewModel ของแท็บ "สรุปรอบ" (BACKLOG4 F4 · ต้นแบบ FrontOffice owner/preorders/rounds · backend Q-BE5 · Q-OWN3)
 //   - ตารางสรุปต่อรอบจาก /admin/preorder-rounds/dashboard (โหลดทุกรอบครั้งเดียว · กรอง/แบ่งหน้าฝั่ง client เหมือนแท็บรอบ)
+//   - เลือกช่วง รายเดือน/รายไตรมาส/รายปี — นับรอบตามวันเปิดรอบ · การ์ดสรุป + ตารางคิดเฉพาะรอบในช่วง (ผู้ใช้ขอ 2026-10-30)
 //   - กดรอบ → drawer: ยอดจอง/โควตาต่อสินค้า + รายชื่อลูกค้า (/admin/preorder-rounds/:id/customers — กรอง/ค้นหาที่ server)
 //     + ส่งออก CSV (1 แถวต่อ 1 รายการสินค้า)
 // สิทธิ์ preorder.view เหมือนทั้งหน้า · ประกอบเข้า usePreOrderRoundViewModel เป็น vm.dashboard
@@ -17,9 +18,11 @@ import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { OrderType } from "@/types/order";
 import type { PaymentGroup, RoundCustomerLine, RoundCustomerOrder, RoundDashboardRow } from "@/types/preorderRoundDashboard";
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
+import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 
 const PAGE_SIZE = 10;
+export const DASHBOARD_PERIODS: PeriodType[] = ["month", "quarter", "year"];
 
 /** ตัวเลือก + ข้อความพิเศษของรายการ เป็นบรรทัดสั้น ๆ — ใช้ทั้งลิ้นชักสรุปรอบและลิ้นชักคำสั่งซื้อ (PreorderItem) */
 export function lineExtras(
@@ -49,7 +52,18 @@ export function useRoundDashboardViewModel(enabled: boolean) {
     queryFn: () => preorderRoundsService.dashboard({ limit: LIST_ALL }),
     enabled,
   });
-  const rounds = useMemo(() => q.data?.data ?? [], [q.data]);
+  const allRounds = useMemo(() => q.data?.data ?? [], [q.data]);
+
+  // ── ช่วงเวลา: รอบที่ "วันเปิดรอบ" อยู่ในเดือน/ไตรมาส/ปีที่เลือก ──
+  const [period, setPeriodState] = useState<PeriodType>("month");
+  const [periodDate, setPeriodDateState] = useState<Dayjs>(() => dayjs());
+  const rounds = useMemo(() => {
+    const [start, end] = getRangeStartEnd(period, periodDate);
+    return allRounds.filter((r) => {
+      const d = dayjs(r.open_date);
+      return !d.isBefore(start) && !d.isAfter(end);
+    });
+  }, [allRounds, period, periodDate]);
 
   // ── ตัวกรอง + แบ่งหน้า (client) ──
   const [search, setSearchState] = useState("");
@@ -134,6 +148,16 @@ export function useRoundDashboardViewModel(enabled: boolean) {
     isError: q.isError,
     refetch: () => void q.refetch(),
     stats,
+    period,
+    setPeriod: (p: PeriodType) => {
+      setPeriodState(p);
+      setPage(1);
+    },
+    periodDate,
+    setPeriodDate: (d: Dayjs) => {
+      setPeriodDateState(d);
+      setPage(1);
+    },
     rows: filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     total: filtered.length,
     page,

@@ -4,12 +4,12 @@
 import { useLocale, useTranslations } from "next-intl";
 import { ProgressBar, Select } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
-import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
+import { DataTable, FilterToolbar, PeriodSelector, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { ViewButton } from "@/components/shared/actions";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { RoundDashboardRow } from "@/types/preorderRoundDashboard";
-import type { useRoundDashboardViewModel } from "../useRoundDashboardViewModel";
+import { DASHBOARD_PERIODS, type useRoundDashboardViewModel } from "../useRoundDashboardViewModel";
 import { LoadFailed } from "@/components/shared/feedback";
 
 type DVM = ReturnType<typeof useRoundDashboardViewModel>;
@@ -74,6 +74,11 @@ export function DashboardTab(vm: DVM) {
 
   return (
     <div className="flex flex-col gap-5">
+      {/* รายเดือน/รายไตรมาส/รายปี — การ์ดและตารางคิดเฉพาะรอบที่เปิดในช่วงนี้ */}
+      <div className="flex flex-wrap items-center gap-3">
+        <PeriodSelector periods={DASHBOARD_PERIODS} period={vm.period} onPeriodChange={vm.setPeriod} date={vm.periodDate} onDateChange={vm.setPeriodDate} />
+      </div>
+
       <StatCardsGrid>
         <StatCard label={t("preorderRound.dashboard.statRounds")} value={vm.stats.rounds} sub={t("preorderRound.dashboard.statOpen", { n: vm.stats.open })} />
         <StatCard label={t("preorderRound.dashboard.statRevenue")} value={money(vm.stats.revenue)} sub={t("preorderRound.dashboard.statRevenueSub")} tone="up" />
