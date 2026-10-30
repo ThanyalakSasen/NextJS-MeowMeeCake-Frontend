@@ -942,6 +942,7 @@
     "itemQtyRequired": "Enter the minimum per order and the quota for every selected product",
     "paymentDue": "Payment due",
     "paymentOverdue": "Payment overdue",
+    "advanceNeedsPayment": "Not paid yet — verify the slip before advancing the status",
     "rejectPayment": "Reject slip",
     "rejectPaymentConfirm": "Reject this slip? The customer can upload a new one, but if the payment deadline has passed the pre-order will be cancelled automatically.",
     "paymentRejected": "Rejected the slip for {no}",
