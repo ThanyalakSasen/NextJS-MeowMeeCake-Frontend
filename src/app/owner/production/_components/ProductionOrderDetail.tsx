@@ -18,6 +18,7 @@ export function ProductionOrderDetail({
   onAdvance,
   onCancel,
   onEdit,
+  onFinish,
 }: {
   order: ProductionOrder;
   /** ใบจากรอบพรีออเดอร์: product_id → โควตาที่เปิดรับต่อรอบ · null = ไม่ใช่ใบจากรอบ / ยังโหลดไม่เสร็จ */
@@ -28,6 +29,8 @@ export function ProductionOrderDetail({
   onAdvance: (o: ProductionOrder) => void;
   onCancel: (o: ProductionOrder) => void;
   onEdit: (o: ProductionOrder) => void;
+  /** ผลิตเรียบร้อย — เปิดหน้าต่างปิดงาน (ใบรอดำเนินการ: เริ่มผลิตให้ตอนยืนยัน) */
+  onFinish: (o: ProductionOrder) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -125,10 +128,20 @@ export function ProductionOrderDetail({
 
       {done && <ProductionLots orderId={order._id} />}
 
-      {canUpdate && !final && (
-        <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
-          <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => onCancel(order)}>{t("production.cancelOrder")}</Button>
-          <Button size="small" icon={actionIcon("edit", "small")} onClick={() => onEdit(order)}>{t("common.edit")}</Button>
+      {(canUpdate || canComplete) && !final && (
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
+          {canUpdate && (
+            <>
+              <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => onCancel(order)}>{t("production.cancelOrder")}</Button>
+              <Button size="small" icon={actionIcon("edit", "small")} onClick={() => onEdit(order)}>{t("common.edit")}</Button>
+            </>
+          )}
+          {/* ปิดงานผลิต = production.approve (backend) */}
+          {canComplete && (
+            <Button type="primary" size="small" icon={actionIcon("confirm", "small")} onClick={() => onFinish(order)}>
+              {t("production.finishOrder")}
+            </Button>
+          )}
           {/* ซ่อนปุ่มเลื่อนสถานะ (กำลังผลิต / เสร็จแล้ว) ไว้ก่อน
           {next && (next !== "done" || canComplete) && (
             <Button type="primary" size="small" onClick={() => onAdvance(order)}>

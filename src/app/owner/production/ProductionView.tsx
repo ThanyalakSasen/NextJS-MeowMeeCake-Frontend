@@ -105,6 +105,7 @@ export function ProductionView(vm: VM) {
               canComplete={vm.perm.approve}
               onAdvance={vm.onAdvanceStatus}
               onCancel={vm.onCancelOrder}
+              onFinish={vm.onFinishOrder}
               onEdit={vm.openEdit}
             />
           )}

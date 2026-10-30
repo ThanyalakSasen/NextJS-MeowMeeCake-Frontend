@@ -424,12 +424,16 @@ export function useProductionViewModel() {
   const completeOrder = useMutation({
     // ผลิตได้จริงส่งไปพร้อมปิดงาน (0 = ผลิตไม่ได้ → ยกเลิกรายการ ไม่ตัดวัตถุดิบ/ไม่เพิ่มสต็อก)
     // backend ทำทั้งใบหรือไม่ทำเลย — เดิม PATCH ทีละรายการก่อน ปิดงานพลาดแล้วรายการถูกยกเลิกค้างไว้
-    mutationFn: ({ order, v }: { order: ProductionOrder; v: CompleteProductionValue }) =>
-      productionOrdersService.complete(order._id, {
+    // ใบที่ยังไม่เริ่ม (planned) — backend ปิดงานได้จากสถานะกำลังผลิตเท่านั้น → เริ่มผลิตให้ก่อนตอนกดยืนยัน
+    // (เปิดหน้าต่างแล้วกดยกเลิก = ใบยังเป็นรอดำเนินการเหมือนเดิม)
+    mutationFn: async ({ order, v }: { order: ProductionOrder; v: CompleteProductionValue }) => {
+      if (order.production_status === "planned") await productionOrdersService.start(order._id);
+      return productionOrdersService.complete(order._id, {
         use_actual: v.useActual,
         lots: v.lots,
         actuals: Object.entries(v.actuals).map(([item_id, actual_qty]) => ({ item_id, actual_qty })),
-      }),
+      });
+    },
     onSettled: () => {
       invalidate();
       qc.invalidateQueries({ queryKey: ["ingredients"] });
@@ -493,6 +497,8 @@ export function useProductionViewModel() {
   };
 
   const onCancelOrder = (order: ProductionOrder) => onChangeStatus(order, "cancelled");
+  /** ปุ่ม "ผลิตเรียบร้อย" ในป๊อปอัปรายละเอียด — ใบรอดำเนินการ/กำลังผลิต → หน้าต่างปิดงาน (ตัดวัตถุดิบ + เพิ่มสต็อก + ล็อต) */
+  const onFinishOrder = (order: ProductionOrder) => onChangeStatus(order, "done");
 
   return {
     t, locale, perm,
@@ -552,7 +558,7 @@ export function useProductionViewModel() {
     isDetailLoading: drawerOpen && !selectedOrder && (ordersQ.isLoading || detailQ.isLoading),
 
     isFinalStatus, getNextStatus,
-    onChangeStatus, onAdvanceStatus, onCancelOrder,
+    onChangeStatus, onAdvanceStatus, onCancelOrder, onFinishOrder,
     completeTarget, closeComplete: () => setCompleteTarget(null), onCompleteSubmit, completing: completeOrder.isPending,
   };
 }
