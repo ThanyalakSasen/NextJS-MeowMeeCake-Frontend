@@ -76,7 +76,8 @@ export async function printLotLabels(jobs: LabelJob[], opts: PrintOptions): Prom
     let svg = barcodes.get(value);
     if (svg == null) {
       const el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      // margin 10 = quiet zone 10 เท่าความกว้างแท่ง — ยืดเต็มกว้างดวงแล้วยังเหลือขอบว่างพอให้เครื่องยิงจับได้
+      // margin 10 หน่วย = ขอบว่าง 5 เท่าความกว้างแท่ง (width 2) + padding ซ้าย-ขวาของดวง 2.5 มม. ≈ 10 เท่าขึ้นไปตามมาตรฐาน Code128
+      // ดวงเล็ก (compact) ไม่เว้นในตัว — ใช้ padding 2 มม. ของดวงเป็นขอบว่างแทน
       JsBarcode(el, value, { format: "CODE128", displayValue: false, margin: sheet.compact ? 0 : 10, marginTop: 0, marginBottom: 0, height: 40, width: 2 });
       el.setAttribute("preserveAspectRatio", "none");
       svg = el.outerHTML;
