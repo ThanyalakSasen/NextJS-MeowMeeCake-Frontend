@@ -898,6 +898,7 @@
     "markReadyDelivery": "Ready to ship",
     "markReadyTakeaway": "Ready for pickup",
     "awaitingRefund": "Awaiting refund",
+    "slipOverdue": "Slip review overdue",
     "awaitingRefundTitle": "Refund owed to customer",
     "awaitingRefundDetail": "The order was cancelled after payment — transfer {amount} back, then confirm below",
     "cancelReasonLabel": "Cancellation reason: {reason}",

@@ -898,6 +898,7 @@
     "markReadyDelivery": "พร้อมจัดส่ง",
     "markReadyTakeaway": "พร้อมรับที่หน้าร้าน",
     "awaitingRefund": "รอโอนคืน",
+    "slipOverdue": "สลิปรอตรวจเกินกำหนด",
     "awaitingRefundTitle": "รอโอนเงินคืนให้ลูกค้า",
     "awaitingRefundDetail": "ออเดอร์ถูกยกเลิกหลังชำระเงินแล้ว — โอนคืน {amount} ให้ลูกค้า แล้วกดยืนยันด้านล่าง",
     "cancelReasonLabel": "เหตุผลที่ยกเลิก: {reason}",
