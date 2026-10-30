@@ -19,6 +19,8 @@ export function ProductionOrderDetail({
   onCancel,
   onEdit,
   onFinish,
+  onStart,
+  starting,
 }: {
   order: ProductionOrder;
   /** ใบจากรอบพรีออเดอร์: product_id → โควตาที่เปิดรับต่อรอบ · null = ไม่ใช่ใบจากรอบ / ยังโหลดไม่เสร็จ */
@@ -31,6 +33,9 @@ export function ProductionOrderDetail({
   onEdit: (o: ProductionOrder) => void;
   /** ผลิตเรียบร้อย — เปิดหน้าต่างปิดงาน (ใบรอดำเนินการ: เริ่มผลิตให้ตอนยืนยัน) */
   onFinish: (o: ProductionOrder) => void;
+  /** เริ่มการผลิต — ใบรอดำเนินการ → กำลังผลิต */
+  onStart: (o: ProductionOrder) => void;
+  starting: boolean;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -138,6 +143,11 @@ export function ProductionOrderDetail({
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
           {canUpdate && (
             <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => onCancel(order)}>{t("production.cancelOrder")}</Button>
+          )}
+          {canUpdate && order.production_status === "planned" && (
+            <Button size="small" icon={actionIcon("next", "small")} loading={starting} onClick={() => onStart(order)}>
+              {t("production.startOrder")}
+            </Button>
           )}
           {/* ปิดงานผลิต = production.approve (backend) */}
           {canComplete && (

@@ -1,10 +1,13 @@
 "use client";
-// วันนี้ผลิตอะไรบ้าง — ใบสั่งผลิตที่วันผลิตตรงวันนี้ แยกเป็นการ์ดต่อใบ (สินค้าในใบนั้น + จำนวน) ให้เห็นว่าสินค้าไหนอยู่ใบไหน
+// วันนี้ผลิตอะไรบ้าง — ใบที่ยังไม่ปิดงานของวันนี้ + ที่ค้างจากวันก่อน (ป้าย "ค้างจาก …") แยกเป็นการ์ดต่อใบ (สินค้าในใบนั้น + จำนวน) ให้เห็นว่าสินค้าไหนอยู่ใบไหน
 // หัวการ์ดสรุปจำนวนใบ/สินค้าทั้งวัน · กดการ์ดใบ = เปิดรายละเอียดใบนั้น (แบบเดียวกับกดแถวในตาราง)
-// แสดงอย่างเดียว ไม่มีปุ่มเลื่อนสถานะ (ผู้ใช้ขอ 2026-10-29) · ข้อมูลจาก useProductionViewModel.todayOrders / todayItems
+// ใบรอดำเนินการมีปุ่ม "เริ่มการผลิต" ท้ายการ์ด (ผู้ใช้ขอ 2026-10-30) · ข้อมูลจาก useProductionViewModel.todayOrders / todayItems
+// การ์ดเป็น div role="button" (ไม่ใช่ <button>) เพราะมีปุ่มซ้อนข้างใน — ปุ่มเริ่มผลิต stopPropagation ไม่ให้เปิดป๊อปอัป
 // ใบที่มีสินค้าเกิน 3 รายการ แสดงแค่ 3 รายการแรก + "ดูเพิ่มเติมอีก n รายการ" (กดการ์ด = เปิดรายละเอียดเต็ม) — การ์ดสูงไม่ต่างกันมาก (ผู้ใช้ขอ 2026-10-30)
 import { useTranslations, useLocale } from "next-intl";
-import { Card, EmptyState, Tag } from "@/components/base";
+import dayjs from "dayjs";
+import { Button, Card, EmptyState, Tag } from "@/components/base";
+import { actionIcon } from "@/components/shared/actions";
 import { StatusBadge } from "@/components/shared/stats";
 import { formatDate, formatNumber } from "@/i18n/format";
 import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
@@ -20,7 +23,16 @@ export function TodayProductionCard({
   todayItems,
   todayOrders,
   onView,
-}: Pick<VM, "today" | "todayItems" | "todayOrders"> & { onView: (o: ProductionOrder) => void }) {
+  canStart,
+  onStart,
+  startingId,
+}: Pick<VM, "today" | "todayItems" | "todayOrders"> & {
+  onView: (o: ProductionOrder) => void;
+  /** สิทธิ์ production.update — ปุ่มเริ่มการผลิตของใบรอดำเนินการ */
+  canStart: boolean;
+  onStart: (o: ProductionOrder) => void;
+  startingId: string | null;
+}) {
   const t = useTranslations();
   const locale = useLocale();
 
@@ -44,11 +56,20 @@ export function TodayProductionCard({
           {todayOrders.map((o) => {
             const src = SOURCE_TYPE_CONFIG[o.source_type];
             const hidden = o.items.length - MAX_ITEMS;
+            const carried = dayjs(o.production_date).isBefore(today, "day");
             return (
-              <button
+              <div
                 key={o._id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => onView(o)}
+                onKeyDown={(e) => {
+                  if (e.target !== e.currentTarget) return;
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onView(o);
+                  }
+                }}
                 className="flex cursor-pointer flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left transition-colors hover:border-brown-400 hover:bg-brown-50/40"
               >
                 <div className="flex w-full items-start justify-between gap-2">
@@ -66,6 +87,11 @@ export function TodayProductionCard({
                     {t(`enums.sourceType.${o.source_type}`)}
                   </Tag>
                   {o.round_name && <span className="truncate text-xs text-gray-600">{o.round_name}</span>}
+                  {carried && (
+                    <Tag color="warning" className="!m-0">
+                      {t("production.carriedOver", { date: formatDate(o.production_date, locale) })}
+                    </Tag>
+                  )}
                   <span className="ml-auto text-xs text-gray-500">{t("production.itemsCount", { n: o.items.length })}</span>
                 </div>
 
@@ -84,7 +110,23 @@ export function TodayProductionCard({
                     </li>
                   )}
                 </ul>
-              </button>
+
+                {canStart && o.production_status === "planned" && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    block
+                    icon={actionIcon("next", "small")}
+                    loading={startingId === o._id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStart(o);
+                    }}
+                  >
+                    {t("production.startOrder")}
+                  </Button>
+                )}
+              </div>
             );
           })}
         </div>
