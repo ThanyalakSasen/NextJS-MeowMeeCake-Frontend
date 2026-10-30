@@ -13,6 +13,9 @@ import type { ExpenseFormValue } from "../expenseForm";
 import { emptyExpenseForm, fromExpense } from "../expenseForm";
 import { ReceiptUpload } from "./ReceiptUpload";
 
+/** ยอดสูงสุดต่อรายการ (บาท) — เท่า backend schemas/expense.ts EXPENSE_MAX */
+const EXPENSE_MAX = 10_000_000;
+
 export function ExpenseFormModal({
   open,
   editTarget,
@@ -68,6 +71,8 @@ export function ExpenseFormModal({
             rules={[
               { required: true, whitespace: true, message: t("validation.required") },
               { type: "number", min: 0.01, message: t("validation.positive") },
+              // เท่า backend (schemas/expense.ts EXPENSE_MAX) — กันพิมพ์ศูนย์เกินแล้วสรุปการเงินเพี้ยน
+              { type: "number", max: EXPENSE_MAX, message: t("finance.amountMax", { max: EXPENSE_MAX }) },
             ]}
           >
             <InputNumber min={0} precision={0} />

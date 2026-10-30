@@ -1859,6 +1859,7 @@
     "logsSearch": "ค้นหาการกระทำ..."
   },
   "finance": {
+    "amountMax": "จำนวนเงินต้องไม่เกิน {max, number} บาท",
     "expensesTitle": "บันทึกค่าใช้จ่าย",
     "expenseListTitle": "รายการค่าใช้จ่าย",
     "addExpense": "บันทึกรายการ",

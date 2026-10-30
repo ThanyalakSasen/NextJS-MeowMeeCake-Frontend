@@ -1859,6 +1859,7 @@
     "logsSearch": "Search actions..."
   },
   "finance": {
+    "amountMax": "Amount must not exceed {max, number} baht",
     "expensesTitle": "Expense Log",
     "expenseListTitle": "Expenses",
     "addExpense": "Log Expense",
