@@ -39,7 +39,7 @@ import { useRecipientContact } from "../hooks/useRecipientContact";
 import {
   pickupLocationsKey, preorderRoundKey, shopAddressesKey, shopCartKey, shopCouponsKey, shopOrdersKey, shopPointsKey, shopPreordersKey,
 } from "../lib/shopQueries";
-import { basketLineKey, removePreorderLines, selectedBaskets, usePreorderBaskets, type PreorderBasket } from "../preorder/lib/preorderBasket";
+import { basketLineKey, removePreorderLines, repriceBasket, selectedBaskets, usePreorderBaskets, type PreorderBasket } from "../preorder/lib/preorderBasket";
 import { useCartSelection } from "../lib/cartSelection";
 import { preorderPickupDates, thaiDate } from "../preorder/lib/preorderDates";
 import { isRoundOpen, useNow } from "../preorder/lib/useNow";
@@ -147,9 +147,9 @@ function CheckoutContent() {
   const cartQ = useQuery({ queryKey: shopCartKey, queryFn: shopCartService.get });
   const allBaskets = usePreorderBaskets();
   const sel = useCartSelection();
-  const baskets = selectedBaskets(allBaskets, sel.isSelected);
+  const pickedBaskets = selectedBaskets(allBaskets, sel.isSelected);
   const roundQs = useQueries({
-    queries: baskets.map((b) => ({ queryKey: preorderRoundKey(b.round_id), queryFn: () => shopPreordersService.round(b.round_id) })),
+    queries: pickedBaskets.map((b) => ({ queryKey: preorderRoundKey(b.round_id), queryFn: () => shopPreordersService.round(b.round_id) })),
   });
   const addressesQ = useQuery({ queryKey: shopAddressesKey, queryFn: shopAddressesService.list });
   // จุดรับ/คูปอง โหลดไม่สำเร็จ = แค่ไม่แสดงส่วนนั้น (ไม่กันการสั่งซื้อ)
@@ -164,6 +164,8 @@ function CheckoutContent() {
   const [promo, setPromo] = useState<{ code: string; billKey: string; discount: number; forKey: string } | null>(null);
   const [couponId, setCouponId] = useState<string | null>(null);
 
+  // ราคาในตะกร้าเก็บไว้ตอนใส่ — คิดใหม่จากราคาล่าสุดของรอบ ให้ยอดที่ยืนยันตรงกับบิลที่ backend สร้าง
+  const baskets = pickedBaskets.map((b, i) => repriceBasket(b, roundQs[i]?.data?.items));
   const addresses = addressesQ.data ?? [];
   const pickupAll = pickupQ.data ?? [];
   const cart = cartQ.data;

@@ -22,6 +22,9 @@ export interface PreorderBasketItem {
   product_img: string;
   /** ราคาต่อชิ้นรวมตัวเลือก (แสดงผล) */
   unit_price: number;
+  /** ราคาในรอบ (current_price ไม่รวมตัวเลือก) ตอนใส่ตะกร้า — หน้ายืนยันใช้คิดราคาใหม่เมื่อร้านแก้ราคาในรอบ
+   *  (repriceBasket) · ตะกร้าเก่าที่บันทึกก่อนมีฟิลด์นี้ = ไม่มี (แสดงราคาเดิม) */
+  base_price?: number;
   quantity: number;
   min_qty: number;
   /** สูงสุดที่สั่งได้ ณ ตอนเพิ่ม (โควตาเหลือ / ต่อคน) — server ตรวจซ้ำ */
@@ -121,7 +124,7 @@ export function addToPreorderBasket(round: Pick<PreorderBasket, "round_id" | "ro
   const items = existing
     ? base.items.map((it) =>
         it === existing
-          ? { ...it, quantity: Math.min(it.quantity + item.quantity, item.max_qty), max_qty: item.max_qty, unit_price: item.unit_price, special_request: item.special_request ?? it.special_request }
+          ? { ...it, quantity: Math.min(it.quantity + item.quantity, item.max_qty), max_qty: item.max_qty, unit_price: item.unit_price, base_price: item.base_price, special_request: item.special_request ?? it.special_request }
           : it,
       )
     : [...base.items, item];
@@ -140,6 +143,23 @@ function patchRound(roundId: string, fn: (items: PreorderBasketItem[]) => Preord
 export function removePreorderLines(lines: { roundId: string; keys: string[] }[]): void {
   const drop = new Map(lines.map((l) => [l.roundId, new Set(l.keys)]));
   save(readPreorderBaskets().map((b) => (drop.has(b.round_id) ? { ...b, items: b.items.filter((it) => !drop.get(b.round_id)!.has(basketLineKey(it))) } : b)));
+}
+
+/**
+ * ราคาปัจจุบันของรอบ — unit_price เก็บไว้ตอนใส่ตะกร้า แต่ตอนสั่ง backend คิดราคาของรอบ ณ ตอนนั้น (ร้านแก้ราคาในรอบได้)
+ * → ราคาใหม่ = current_price ล่าสุด + ส่วนของตัวเลือก (unit_price − base_price) · ไม่มี base_price / สินค้าไม่อยู่ในรอบแล้ว = ราคาเดิม
+ */
+export function repriceBasket(b: PreorderBasket, roundItems: { _id: string; current_price: number }[] | undefined): PreorderBasket {
+  if (!roundItems) return b;
+  const priceOf = new Map(roundItems.map((ri) => [ri._id, ri.current_price]));
+  return {
+    ...b,
+    items: b.items.map((it) => {
+      const current = priceOf.get(it.round_item_id);
+      if (current == null || it.base_price == null || current === it.base_price) return it;
+      return { ...it, unit_price: Math.round((current + it.unit_price - it.base_price) * 100) / 100, base_price: current };
+    }),
+  };
 }
 
 export function updatePreorderBasketItem(roundId: string, key: string, patch: Partial<Pick<PreorderBasketItem, "quantity" | "special_request">>): void {
