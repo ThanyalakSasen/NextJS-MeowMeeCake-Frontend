@@ -957,7 +957,7 @@
     "tabOrders": "Pre-order Orders",
     "moreItems": "+ {n} more",
     "dashboard": {
-      "statRounds": "All rounds",
+      "statRounds": "Rounds in this period",
       "statOpen": "{n} open now",
       "statRevenue": "Total sales",
       "statRevenueSub": "All rounds, excluding cancelled",
