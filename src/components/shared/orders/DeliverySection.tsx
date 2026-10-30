@@ -5,7 +5,8 @@
 // state ของฟอร์มเริ่มจาก info — parent ใส่ key={updated_at} ให้รีเซ็ตเองหลังบันทึก/ดึงข้อมูลใหม่
 // ส่งเฉพาะฟิลด์ที่เปลี่ยน · shipped_at/delivered_at backend ตั้งให้เองตามสถานะ (ไม่ต้องกรอก)
 // ไม่มีปุ่ม/dropdown เปลี่ยนสถานะจัดส่งตรง ๆ — flow: กำลังเตรียม → "พร้อมจัดส่ง" (order ready) → เลือกขนส่ง + กรอกเลขพัสดุ
-// แล้วบันทึก → ปุ่ม "จัดส่งเรียบร้อยแล้ว" (parent: delivery_status shipping + order completed) · ปุ่มนี้กดได้เมื่อบันทึกขนส่ง/เลขพัสดุแล้วเท่านั้น
+// ตอนพร้อมส่งมอบ: กรอกครบ (ขนส่ง + เลขพัสดุถ้าเป็นขนส่งพัสดุ) แล้วกดบันทึก = จัดส่งให้เลย (parent: delivery_status shipping +
+// order completed → "ส่งสินค้าแล้ว") ไม่ต้องกดอีกปุ่ม (ผู้ใช้ขอ 2026-10-30) · ยังกรอกไม่ครบ = บันทึกอย่างเดียว
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -33,10 +34,10 @@ export function DeliverySection({
   canUpdate: boolean;
   saving: boolean;
   onSave: (input: DeliveryUpdateInput) => void;
-  /** ออเดอร์อยู่สถานะพร้อมส่งมอบ (ready) + มีสิทธิ์ — โชว์ปุ่ม "จัดส่งเรียบร้อยแล้ว" */
+  /** ออเดอร์อยู่สถานะพร้อมส่งมอบ (ready) + มีสิทธิ์ — บันทึกตอนกรอกครบ = จัดส่ง + ปิดออเดอร์ */
   canMarkShipped: boolean;
   markingShipped: boolean;
-  onMarkShipped: () => void;
+  onMarkShipped: (changes: DeliveryUpdateInput) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -49,9 +50,10 @@ export function DeliverySection({
   if (tracking.trim() !== (info.tracking_no ?? "")) changes.tracking_no = tracking.trim() || null;
   if (note.trim() !== (info.delivered_note ?? "")) changes.delivered_note = note.trim() || null;
   const dirty = Object.keys(changes).length > 0;
-  // "จัดส่งเรียบร้อยแล้ว" ต้องมีขนส่งที่บันทึกแล้ว (+ เลขพัสดุ ถ้าเป็นขนส่งพัสดุ) — ค่าจาก info ไม่ใช่ฟอร์มที่ยังไม่บันทึก · ไม่มีการแก้ค้าง
-  const shipReady =
-    !!info.shipping_carrier && (!carrierNeedsTracking(info.shipping_carrier) || !!info.tracking_no) && !dirty;
+  // กรอกครบแล้ว (ขนส่ง + เลขพัสดุ ถ้าเป็นขนส่งพัสดุ) — ค่าในฟอร์ม · ตอนพร้อมส่งมอบ ปุ่มบันทึกจะจัดส่งให้เลย
+  // กดได้แม้ไม่มีการแก้ (ข้อมูลบันทึกไว้ก่อนแล้วแต่ยังไม่ได้ปิดออเดอร์)
+  const complete = !!carrier && (!carrierNeedsTracking(carrier) || !!tracking.trim());
+  const willShip = canMarkShipped && complete;
   // ลำดับตามรายการใน SHIPPING_CARRIERS (ขนส่งที่ใช้บ่อยก่อน · "ร้านจัดส่งเอง"/"อื่น ๆ" ท้ายสุด) — ไม่เรียง ก-ฮ
   const carrierOptions = SHIPPING_CARRIERS.map((c) => ({ value: c, label: t(`enums.shippingCarrier.${c}`) }));
 
@@ -137,36 +139,35 @@ export function DeliverySection({
       {times}
 
       <div className="flex items-center justify-between gap-3">
-        <p className="m-0 text-xs text-gray-500">{t("orders.deliveryNotifyHint")}</p>
-        <Button
-          size="small"
-          type="primary"
-          icon={actionIcon("save", "small")}
-          loading={saving}
-          disabled={!dirty}
-          onClick={() => onSave(changes)}
-        >
-          {t("orders.deliverySave")}
-        </Button>
-      </div>
-
-      {canMarkShipped && (
-        <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
-          <p className={`m-0 text-xs ${shipReady ? "text-gray-500" : "text-amber-700"}`}>
-            {shipReady ? t("orders.markShippedHint") : t("orders.markShippedNeedsInfo")}
-          </p>
+        <p className={`m-0 text-xs ${canMarkShipped && !complete ? "text-amber-700" : "text-gray-500"}`}>
+          {!canMarkShipped
+            ? t("orders.deliveryNotifyHint")
+            : complete ? t("orders.markShippedHint") : t("orders.markShippedNeedsInfo")}
+        </p>
+        {willShip ? (
           <Button
             size="small"
             type="primary"
             icon={actionIcon("verify", "small")}
             loading={markingShipped}
-            disabled={!shipReady || saving}
-            onClick={onMarkShipped}
+            disabled={saving}
+            onClick={() => onMarkShipped(changes)}
           >
             {t("orders.markShipped")}
           </Button>
-        </div>
-      )}
+        ) : (
+          <Button
+            size="small"
+            type="primary"
+            icon={actionIcon("save", "small")}
+            loading={saving}
+            disabled={!dirty || markingShipped}
+            onClick={() => onSave(changes)}
+          >
+            {t("orders.deliverySave")}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

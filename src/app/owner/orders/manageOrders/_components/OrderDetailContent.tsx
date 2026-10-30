@@ -56,10 +56,10 @@ export function OrderDetailContent({
   canMarkReady: boolean;
   markingReady: boolean;
   onMarkReady: () => void;
-  /** ออเดอร์จัดส่ง + พร้อมส่งมอบ + มีสิทธิ์ — ปุ่ม "จัดส่งเรียบร้อยแล้ว" ใน DeliverySection */
+  /** ออเดอร์จัดส่ง + พร้อมส่งมอบ + มีสิทธิ์ — บันทึกขนส่ง/เลขพัสดุครบ = จัดส่ง + ปิดออเดอร์ให้เอง (DeliverySection) */
   canMarkShipped: boolean;
   markingShipped: boolean;
-  onMarkShipped: () => void;
+  onMarkShipped: (changes: DeliveryUpdateInput) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();

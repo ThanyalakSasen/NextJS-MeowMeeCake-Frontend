@@ -501,7 +501,7 @@ export function usePreOrderRoundViewModel() {
 
   // "จัดส่งเรียบร้อยแล้ว" — ใช้ร่วมกับหน้าจัดการคำสั่งซื้อ (shared/orders/useMarkShipped)
   const { markShippedFor, markingShipped } = useMarkShipped(preordersService, invalidateOrders);
-  const onMarkShipped = () => selectedOrder && markShippedFor(selectedOrder, selectedOrder.preorder_no);
+  const onMarkShipped = (changes?: DeliveryUpdateInput) => selectedOrder && markShippedFor(selectedOrder, selectedOrder.preorder_no, changes);
 
   return {
     t, locale, perm,
