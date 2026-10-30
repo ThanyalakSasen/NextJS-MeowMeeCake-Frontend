@@ -11,6 +11,7 @@ import { formatDate, formatNumber, formatPercent } from "@/i18n/format";
 import type { useReviewDashboardViewModel } from "./useReviewDashboardViewModel";
 import { MIN_REVIEWS_FOR_LOW, type ProductSortKey, type ProductStat, type ReviewStats } from "./reviewStats";
 import type { ReviewStatsSummary } from "@/types/review";
+import { actionIcon } from "@/components/shared/actions";
 
 type VM = ReturnType<typeof useReviewDashboardViewModel>;
 
@@ -57,7 +58,7 @@ export function ReviewDashboardView({
           style={{ width: 260 }}
         />
         {vm.productId && (
-          <Button onClick={() => vm.setProductId(undefined)}>{t("reviewsDashboard.viewAllProducts")}</Button>
+          <Button icon={actionIcon("view")} onClick={() => vm.setProductId(undefined)}>{t("reviewsDashboard.viewAllProducts")}</Button>
         )}
       </div>
 

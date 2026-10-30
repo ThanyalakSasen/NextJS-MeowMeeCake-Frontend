@@ -93,10 +93,10 @@ export function ReplyBox({ rating, reply, suggestions, canEdit, onSave }: {
                 {t("reviews.reply.remove")}
               </Button>
             )}
-            <Button size="small" disabled={saving} onClick={() => setEditing(false)}>
+            <Button icon={actionIcon("cancel", "small")} size="small" disabled={saving} onClick={() => setEditing(false)}>
               {t("common.cancel")}
             </Button>
-            <Button size="small" type="primary" loading={saving} disabled={!text.trim()} onClick={() => void save(text)}>
+            <Button icon={actionIcon("save", "small")} size="small" type="primary" loading={saving} disabled={!text.trim()} onClick={() => void save(text)}>
               {t("reviews.reply.save")}
             </Button>
           </div>

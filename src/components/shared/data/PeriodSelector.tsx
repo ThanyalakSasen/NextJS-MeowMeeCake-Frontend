@@ -19,6 +19,7 @@ import {
   type PeriodType,
 } from "@/utils/period";
 import { TypeTabBar } from "./TypeTabBar";
+import { actionIcon } from "@/components/shared/actions";
 
 const ymd = (d: Dayjs) => d.format("YYYY-MM-DD");
 
@@ -152,7 +153,7 @@ export function PeriodSelector({
           />
         </div>
       )}
-      <Button disabled={isSamePeriod(effectivePeriod, date, dayjs())} onClick={() => onDateChange(dayjs())}>
+      <Button icon={actionIcon("calendar")} disabled={isSamePeriod(effectivePeriod, date, dayjs())} onClick={() => onDateChange(dayjs())}>
         {t(`current.${effectivePeriod}`)}
       </Button>
     </>

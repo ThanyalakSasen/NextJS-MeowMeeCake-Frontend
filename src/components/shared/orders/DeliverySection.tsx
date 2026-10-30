@@ -17,8 +17,10 @@ import { formatDate } from "@/i18n/format";
 import { SHIPPING_CARRIERS, carrierNeedsTracking, type ShippingCarrier } from "@/constants/enumConfig";
 import type { DeliveryInfo, DeliveryUpdateInput } from "@/types/order";
 
-/** ตรงกับ backend schemas/order.ts updateDeliveryBody */
-const MAX_TRACKING = 200;
+/** เลขพัสดุ: อังกฤษตัวพิมพ์ใหญ่ + ตัวเลข ไม่มีช่องว่าง สูงสุด 13 ตัว (เช่น TH12345678901 — ผู้ใช้ขอ 2026-10-30)
+ *  backend รับได้ยาวกว่า (200) — หน้าจอจำกัดเอง · หมายเหตุตรงกับ backend schemas/order.ts updateDeliveryBody */
+const MAX_TRACKING = 13;
+const normalizeTracking = (v: string) => v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, MAX_TRACKING);
 const MAX_NOTE = 1000;
 
 export function DeliverySection({
@@ -121,7 +123,9 @@ export function DeliverySection({
           onKeyDown={(e) => {
             if (e.key === " ") e.preventDefault();
           }}
-          onChange={(e) => setTracking(e.target.value.replace(/\s/g, ""))}
+          // พิมพ์ตัวเล็กก็ขึ้นเป็นตัวใหญ่ · ตัดภาษาไทย/สัญลักษณ์/ช่องว่างทิ้ง (รวมตอนวาง)
+          onChange={(e) => setTracking(normalizeTracking(e.target.value))}
+          style={{ textTransform: "uppercase" }}
           placeholder={t("orders.trackingPlaceholder")}
         />
       </label>

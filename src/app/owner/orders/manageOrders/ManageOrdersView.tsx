@@ -107,7 +107,7 @@ export function ManageOrdersView(vm: VM) {
       <ViewButton size="small" onClick={() => vm.onView(o)} />
       {vm.canMarkReady(o) && (
         <LazyTooltip title={t("orders.markReadyHint")}>
-          <Button size="small" type="primary" disabled={vm.changingStatus} onClick={() => vm.onMarkReady(o)}>
+          <Button icon={actionIcon("confirm", "small")} size="small" type="primary" disabled={vm.changingStatus} onClick={() => vm.onMarkReady(o)}>
             {t(o.order_type === "delivery" ? "orders.markReadyDelivery" : "orders.markReadyTakeaway")}
           </Button>
         </LazyTooltip>

@@ -72,7 +72,7 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
           <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancelRound(round)}>{t("preorderRound.cancelRound")}</Button>
           {next && (
-            <Button
+            <Button icon={actionIcon("next", "small")}
               type="primary"
               size="small"
              

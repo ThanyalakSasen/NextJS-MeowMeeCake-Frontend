@@ -9,7 +9,7 @@ import { Button, Input, Select } from "@/components/base";
 import { FormField } from "@/components/shared/form";
 import { ListPageLayout } from "@/components/shared/layout";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
-import { modalButtonIcons } from "@/components/shared/actions";
+import { modalButtonIcons, actionIcon } from "@/components/shared/actions";
 import type { useStoreInfoViewModel } from "./useStoreInfoViewModel";
 import { LOGO_TYPES, SOCIAL_KEYS, type SectionKey } from "./storeInfoForm";
 import { SectionCard } from "./_components/SectionCard";
@@ -26,7 +26,7 @@ export function StoreInfoView(vm: VM) {
   const p = vm.profile;
 
   const editButton = (section: SectionKey) => (
-    <Button size="small" onClick={() => vm.startEdit(section)} disabled={vm.editing !== null}>
+    <Button icon={actionIcon("edit", "small")} size="small" onClick={() => vm.startEdit(section)} disabled={vm.editing !== null}>
       {t("common.edit")}
     </Button>
   );

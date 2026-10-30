@@ -11,17 +11,20 @@ import { useTranslations } from "next-intl";
 import {
   AdjustmentsHorizontalIcon,
   ArrowDownTrayIcon,
+  ArrowLeftIcon,
   ArrowPathIcon,
   ArrowRightIcon,
   ArrowTopRightOnSquareIcon,
   ArrowUpTrayIcon,
   ArrowUturnLeftIcon,
+  CalendarDaysIcon,
   CheckBadgeIcon,
   CheckCircleIcon,
   CheckIcon,
   ClockIcon,
   EyeIcon,
   FunnelIcon,
+  MagnifyingGlassIcon,
   MinusCircleIcon,
   PencilSquareIcon,
   PrinterIcon,
@@ -56,6 +59,9 @@ const ICONS = {
   print: PrinterIcon, // พิมพ์ (ฉลากบาร์โค้ด)
   scan: ViewfinderCircleIcon, // สแกนบาร์โค้ด
   history: ClockIcon, // ดูประวัติ (สต็อก)
+  back: ArrowLeftIcon, // ย้อนกลับ
+  search: MagnifyingGlassIcon, // ค้นหา (สมาชิก POS)
+  calendar: CalendarDaysIcon, // กลับไปช่วงเวลาปัจจุบัน (วันนี้/เดือนนี้)
 } as const;
 
 export type ActionIconKind = keyof typeof ICONS;

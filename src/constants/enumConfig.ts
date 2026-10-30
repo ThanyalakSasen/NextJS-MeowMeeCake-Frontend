@@ -53,7 +53,8 @@ export const DELIVERY_STATUSES: DeliveryStatus[] = ["pending", "shipping", "deli
 
 export const DELIVERY_STATUS_CONFIG: Record<DeliveryStatus, StatusStyle> = {
   pending:   { color: "#b45309", antColor: "warning" },
-  shipping:  { color: "#1d4ed8", antColor: "processing" },
+  // หลังร้านแสดง 2 สถานะ: รอจัดส่ง / จัดส่งเรียบร้อยแล้ว (shipping = ส่งให้ขนส่งแล้ว — ผู้ใช้ขอ 2026-10-30) → สีเดียวกับ delivered
+  shipping:  { color: "#15803d", antColor: "success" },
   delivered: { color: "#15803d", antColor: "success" },
   failed:    { color: "#dc2626", antColor: "error" },
 };

@@ -5,6 +5,7 @@ import { Button, Card, PasswordInput } from "@/components/base";
 import { FormField } from "@/components/shared/form";
 import { LoadingSpin } from "@/components/shared/feedback";
 import type { useAccountViewModel } from "../useAccountViewModel";
+import { actionIcon } from "@/components/shared/actions";
 
 type VM = ReturnType<typeof useAccountViewModel>;
 
@@ -58,7 +59,7 @@ export function PasswordTab(vm: VM) {
             />
           </FormField>
           <div className="flex justify-end">
-            <Button type="primary" htmlType="submit" disabled={!vm.canChangePassword} loading={vm.changingPassword}>
+            <Button icon={actionIcon("save")} type="primary" htmlType="submit" disabled={!vm.canChangePassword} loading={vm.changingPassword}>
               {tm("tabPassword")}
             </Button>
           </div>

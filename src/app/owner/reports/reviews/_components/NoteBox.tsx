@@ -25,10 +25,10 @@ export function NoteBox({ note, canEdit, onSave }: {
         <p className="m-0 mb-1 text-[11px] text-yellow-800">{t("reviews.note.hint")}</p>
         <TextArea autoFocus rows={2} value={text} maxLength={MAX_NOTE} placeholder={t("reviews.note.placeholder")} onChange={(e) => setText(e.target.value)} />
         <div className="mt-2 flex justify-end gap-2">
-          <Button size="small" disabled={saving} onClick={() => setEditing(false)}>
+          <Button icon={actionIcon("cancel", "small")} size="small" disabled={saving} onClick={() => setEditing(false)}>
             {t("common.cancel")}
           </Button>
-          <Button
+          <Button icon={actionIcon("save", "small")}
             size="small"
             type="primary"
             loading={saving}
