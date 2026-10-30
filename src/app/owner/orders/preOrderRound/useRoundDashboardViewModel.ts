@@ -2,7 +2,8 @@
 // ─────────────────────────────────────────────────────────────
 // ViewModel ของแท็บ "สรุปรอบ" (BACKLOG4 F4 · ต้นแบบ FrontOffice owner/preorders/rounds · backend Q-BE5 · Q-OWN3)
 //   - ตารางสรุปต่อรอบจาก /admin/preorder-rounds/dashboard (โหลดทุกรอบครั้งเดียว · กรอง/แบ่งหน้าฝั่ง client เหมือนแท็บรอบ)
-//   - เลือกช่วง รายเดือน/รายไตรมาส/รายปี — นับรอบตามวันเปิดรอบ · การ์ดสรุป + ตารางคิดเฉพาะรอบในช่วง (ผู้ใช้ขอ 2026-10-30)
+//   - เลือกช่วง รายเดือน/รายไตรมาส/รายปี — รอบที่ช่วงรับจอง (เปิด → ปิดรับ) คาบเกี่ยวกับช่วงที่เลือก + รอบที่ยังเปิดอยู่
+//     (เปิดก่อนสิ้นช่วง) · การ์ดสรุป + ตารางคิดเฉพาะรอบในช่วง (ผู้ใช้ขอ 2026-10-30)
 //   - กดรอบ → drawer: ยอดจอง/โควตาต่อสินค้า + รายชื่อลูกค้า (/admin/preorder-rounds/:id/customers — กรอง/ค้นหาที่ server)
 //     + ส่งออก CSV (1 แถวต่อ 1 รายการสินค้า)
 // สิทธิ์ preorder.view เหมือนทั้งหน้า · ประกอบเข้า usePreOrderRoundViewModel เป็น vm.dashboard
@@ -54,14 +55,15 @@ export function useRoundDashboardViewModel(enabled: boolean) {
   });
   const allRounds = useMemo(() => q.data?.data ?? [], [q.data]);
 
-  // ── ช่วงเวลา: รอบที่ "วันเปิดรอบ" อยู่ในเดือน/ไตรมาส/ปีที่เลือก ──
+  // ── ช่วงเวลา: รอบที่รับจองอยู่ในเดือน/ไตรมาส/ปีที่เลือก ──
+  // เดิมนับเฉพาะวันเปิดรอบ — รอบที่เปิดเดือนก่อนแต่ยังรับจองอยู่ไม่โผล่ใน "เดือนนี้" (ค่าเริ่มต้น)
   const [period, setPeriodState] = useState<PeriodType>("month");
   const [periodDate, setPeriodDateState] = useState<Dayjs>(() => dayjs());
   const rounds = useMemo(() => {
     const [start, end] = getRangeStartEnd(period, periodDate);
     return allRounds.filter((r) => {
-      const d = dayjs(r.open_date);
-      return !d.isBefore(start) && !d.isAfter(end);
+      if (dayjs(r.open_date).isAfter(end)) return false;
+      return r.round_status === "open" || !dayjs(r.close_date).isBefore(start);
     });
   }, [allRounds, period, periodDate]);
 

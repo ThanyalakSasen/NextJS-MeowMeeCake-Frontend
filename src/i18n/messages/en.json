@@ -1381,6 +1381,8 @@
     "todayOrderCount": "From {n} production orders",
     "todayProductCount": "{n} products in total",
     "todayMoreItems": "View {n} more",
+    "todayMoreOrders": "Show {n} more orders",
+    "todayShowLess": "Show less",
     "todayEmpty": "Nothing scheduled for production today",
     "todayCarriedOver": "Carried over from {date}",
     "stockChecking": "Checking ingredients...",

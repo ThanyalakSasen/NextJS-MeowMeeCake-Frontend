@@ -18,6 +18,7 @@ import { rolesService } from "@/services/roles";
 import { recipesService } from "@/services/recipes";
 import { preorderRoundsService } from "@/services/preorderRounds";
 import { usePermission } from "@/context/PermissionsContext";
+import { useToday } from "@/hooks/useToday";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { refId } from "@/lib/refId";
@@ -228,7 +229,8 @@ export function useProductionViewModel() {
   // เฉพาะใบที่ยังไม่จบ (รอดำเนินการ/กำลังผลิต) ที่วันผลิตเป็นวันนี้ หรือค้างมาจากวันก่อน — ปิดงานแล้ว = ออกจากการ์ดทันที
   // ไปอยู่ที่ประวัติการผลิต · ยกเลิก = ไม่แสดง · ใบของวันหลังไม่โผล่ล่วงหน้า (ผู้ใช้ขอ 2026-10-30)
   // รวมจำนวนต่อสินค้า (สินค้าเดียวกันหลายใบ = บวกกัน) เรียงตามชื่อ
-  const [today] = useState<Dayjs>(() => dayjs());
+  // เปลี่ยนเองเมื่อข้ามเที่ยงคืน (เปิดหน้าค้างข้ามคืน การ์ด/ป้าย "ค้างจาก…" ไม่ค้างวันเก่า)
+  const today = useToday();
   const todayOrders = useMemo(
     () =>
       orders.filter(
