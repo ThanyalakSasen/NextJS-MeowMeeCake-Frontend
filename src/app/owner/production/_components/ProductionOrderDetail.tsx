@@ -150,8 +150,15 @@ export function ProductionOrderDetail({
             </Button>
           )}
           {/* ปิดงานผลิต = production.approve (backend) */}
+          {/* ยังไม่กดเริ่มการผลิต (รอดำเนินการ) = กดผลิตเรียบร้อยไม่ได้ — ต้องเริ่มก่อน (ผู้ใช้ขอ 2026-10-30) */}
           {canComplete && (
-            <Button type="primary" size="small" icon={actionIcon("confirm", "small")} onClick={() => onFinish(order)}>
+            <Button
+              type="primary"
+              size="small"
+              icon={actionIcon("confirm", "small")}
+              disabled={order.production_status === "planned"}
+              onClick={() => onFinish(order)}
+            >
               {t("production.finishOrder")}
             </Button>
           )}
