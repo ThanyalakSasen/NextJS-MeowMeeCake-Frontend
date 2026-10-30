@@ -33,11 +33,11 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
 
   const required: Rule[] = [{ required: true, whitespace: true, message: t("validation.required") }];
   const price: Rule[] = [
-    { required: true, whitespace: true, message: t("validation.required") },
+    { required: true, message: t("validation.required") },
     { type: "number", min: 0.01, message: t("validation.positive") },
   ];
   const requiredPositiveInt: Rule[] = [
-    { required: true, whitespace: true, message: t("validation.required") },
+    { required: true, message: t("validation.required") },
     { type: "integer", min: 1, message: t("validation.positive") },
   ];
   // sale_price ต้องน้อยกว่า product_price (validator ข้ามฟิลด์)

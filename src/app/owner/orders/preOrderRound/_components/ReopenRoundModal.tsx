@@ -57,7 +57,7 @@ export function ReopenRoundModal({
         <FormItem
           name="close_date"
           label={t("preorderRound.reopenCloseDate")}
-          rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+          rules={[{ required: true, message: t("validation.required") }]}
         >
           <DatePicker
             format="DD/MM/YYYY"

@@ -66,7 +66,7 @@ export function StockActionModal({
               name="value"
               label={t(mode === "adjust" ? "productStock.newStockLabel" : "productStock.qtyLabel", { unit: target.unit })}
               rules={[
-                { required: true, whitespace: true, message: t("validation.required") },
+                { required: true, message: t("validation.required") },
                 { type: "number", max: PRODUCT_STOCK_MAX, message: t("validation.maxValue", { max: formatNumber(PRODUCT_STOCK_MAX, locale) }) },
                 // เบิกเกินที่มี backend ปฏิเสธอยู่แล้ว — บอกก่อนส่ง
                 ...(mode === "use"

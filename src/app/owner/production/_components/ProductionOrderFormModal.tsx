@@ -205,7 +205,7 @@ export function ProductionOrderFormModal({
           <FormItem
             name="production_date"
             label={t("production.fieldDate")}
-            rules={[{ required: true, whitespace: true, message: t("validation.required") }]}
+            rules={[{ required: true, message: t("validation.required") }]}
           >
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>

@@ -92,7 +92,7 @@ export function ComponentFormModal({
           <FormItem name="component_name" label={t("recipes.fieldComponentName")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
             <Input maxLength={120} placeholder={t("recipes.componentNamePlaceholder")} />
           </FormItem>
-          <FormItem name="componentcategory_id" label={t("recipes.fieldCategory")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
+          <FormItem name="componentcategory_id" label={t("recipes.fieldCategory")} rules={[{ required: true, message: t("validation.required") }]}>
             <Select options={categoryOptions} />
           </FormItem>
         </div>
@@ -104,14 +104,14 @@ export function ComponentFormModal({
             name="yield_qty"
             label={t("recipes.fieldYieldQty")}
             rules={[
-              { required: true, whitespace: true, message: t("validation.required") },
+              { required: true, message: t("validation.required") },
               { type: "number", min: 0.01, message: t("validation.positive") },
               ...(yieldWhole ? [{ type: "integer" as const, message: t("ingredients.integerUnitOnly") }] : []),
             ]}
           >
             <InputNumber min={0} {...(yieldWhole ? { precision: 0 } : {})} />
           </FormItem>
-          <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, whitespace: true, message: t("validation.required") }]}>
+          <FormItem name="yield_unit_id" label={t("recipes.fieldYieldUnit")} rules={[{ required: true, message: t("validation.required") }]}>
             <Select options={yieldUnitOptions} placeholder={t("recipes.selectUnit")} />
           </FormItem>
         </div>
