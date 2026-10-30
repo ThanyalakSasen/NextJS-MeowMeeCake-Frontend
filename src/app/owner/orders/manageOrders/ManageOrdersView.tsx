@@ -89,11 +89,15 @@ export function ManageOrdersView(vm: VM) {
       key: "payment_status",
       title: t("orders.colPayment"),
       // ยกเลิก + ชำระแล้ว = ร้านยังต้องโอนคืน (ป้าย "ชำระแล้ว" เฉย ๆ ทำให้ดูเหมือนเรียบร้อย)
+      // ส่งสลิปแล้วแต่ยังไม่ตรวจจนเลยกำหนดชำระ → ป้ายแดงเพิ่ม (ออเดอร์ไม่มีสลิปที่เลยกำหนด backend ยกเลิกให้เอง)
       render: (o) =>
         isAwaitingRefund(o) ? (
           <Tag color={NOTICE_TAG.awaitingRefund}>{t("orders.awaitingRefund")}</Tag>
         ) : (
-          <StatusBadge group="paymentStatus" value={o.payment_status} />
+          <div className="flex flex-col items-center gap-1">
+            <StatusBadge group="paymentStatus" value={o.payment_status} />
+            {vm.isSlipOverdue(o) && <Tag color={NOTICE_TAG.slipOverdue}>{t("orders.slipOverdue")}</Tag>}
+          </div>
         ),
     },
   ];

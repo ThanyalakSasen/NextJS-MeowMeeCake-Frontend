@@ -127,6 +127,11 @@ export function useManageOrdersViewModel() {
     };
   }, [typeOrders, activeTab]);
   const awaitingRefundCount = typeOrders.filter(isAwaitingRefund).length;
+  // ส่งสลิปแล้วแต่ร้านยังไม่ตรวจจนเลยกำหนดชำระ — backend ไม่ยกเลิกออเดอร์ที่มีสลิป (ลูกค้าอาจโอนแล้ว) ร้านต้องตรวจเอง
+  // เทียบกับเวลาที่โหลดรายการ (dataUpdatedAt) ไม่ใช่ Date.now() ตอน render
+  const isSlipOverdue = (o: Order) =>
+    o.payment_status === "pending" && !!o.slip_pending_review && !!o.payment_due_at &&
+    Date.parse(o.payment_due_at) < ordersQ.dataUpdatedAt;
   // E5 ออเดอร์พร้อมส่งมอบ — เดิมมีแถบ "พร้อมส่งมอบ" แยก แต่ซ้ำกับกล่อง (delivery = ยังไม่ได้จัดส่ง / กำลังดำเนินการ ·
   // takeaway = กำลังดำเนินการ) จึงเอาออก · ลิงก์ ?status=ready ยังกรองได้เหมือนเดิม
 
@@ -319,7 +324,7 @@ export function useManageOrdersViewModel() {
     total: filtered.length,
     /** มีออเดอร์ปิดงานแล้วที่เก่ากว่าที่โหลดไว้ — บอกผู้ใช้ว่าค้นด้วยเลขออเดอร์ได้ */
     olderHidden,
-    deliveryCount, takeawayCount, awaitingRefundCount,
+    deliveryCount, takeawayCount, awaitingRefundCount, isSlipOverdue,
     alerts,
 
     // isPending (ไม่ใช่ isLoading) — หน้านี้ render ฝั่ง server ด้วย (OwnerLayout SSR_PAGES) ตอนนั้น isLoading = false
