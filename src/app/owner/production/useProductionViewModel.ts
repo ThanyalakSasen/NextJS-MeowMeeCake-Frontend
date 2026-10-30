@@ -419,20 +419,14 @@ export function useProductionViewModel() {
 
   const onCreateSubmit = (v: CreateProductionOrderValue) => createOrder.mutate(v);
 
-  // ปิดงานผลิต → เปิดหน้าต่างให้เลือกตัดวัตถุดิบตามจำนวนที่วางแผน / ที่ผลิตได้จริง ก่อนเรียก /complete
+  // ปิดงานผลิต → เปิดหน้าต่างวันผลิต/วันหมดอายุ ก่อนเรียก /complete (ตัดวัตถุดิบตามจำนวนที่วางแผนเสมอ)
   const [completeTarget, setCompleteTarget] = useState<ProductionOrder | null>(null);
   const completeOrder = useMutation({
-    // ผลิตได้จริงส่งไปพร้อมปิดงาน (0 = ผลิตไม่ได้ → ยกเลิกรายการ ไม่ตัดวัตถุดิบ/ไม่เพิ่มสต็อก)
-    // backend ทำทั้งใบหรือไม่ทำเลย — เดิม PATCH ทีละรายการก่อน ปิดงานพลาดแล้วรายการถูกยกเลิกค้างไว้
     // ใบที่ยังไม่เริ่ม (planned) — backend ปิดงานได้จากสถานะกำลังผลิตเท่านั้น → เริ่มผลิตให้ก่อนตอนกดยืนยัน
     // (เปิดหน้าต่างแล้วกดยกเลิก = ใบยังเป็นรอดำเนินการเหมือนเดิม)
     mutationFn: async ({ order, v }: { order: ProductionOrder; v: CompleteProductionValue }) => {
       if (order.production_status === "planned") await productionOrdersService.start(order._id);
-      return productionOrdersService.complete(order._id, {
-        use_actual: v.useActual,
-        lots: v.lots,
-        actuals: Object.entries(v.actuals).map(([item_id, actual_qty]) => ({ item_id, actual_qty })),
-      });
+      return productionOrdersService.complete(order._id, { use_actual: false, lots: v.lots });
     },
     onSettled: () => {
       invalidate();
