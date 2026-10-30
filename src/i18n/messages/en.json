@@ -1480,6 +1480,7 @@
     "completeNoPending": "All items have already been deducted",
     "actualZeroHint": "Enter 0 if none were produced — the item is cancelled and no ingredients are deducted",
     "completeSubmit": "Complete",
+    "finishOrder": "Mark as produced",
     "completeNeedsApprove": "Completing production requires the \"approve\" permission for Production — contact the owner",
     "lotDatesTitle": "Production / expiry dates (lots)",
     "lotDatesHint": "A lot with a barcode number is created for every item — expiry is calculated from the product's shelf life; adjust it to the real date or clear it if there is none",
