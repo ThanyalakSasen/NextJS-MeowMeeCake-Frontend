@@ -368,21 +368,23 @@ export function useProductionViewModel() {
   /** แก้ใบ: หัวใบ → รายการเดิมที่เปลี่ยน → ลบรายการที่เอาออก → เพิ่มรายการใหม่ (ทีละคำขอ — backend ไม่มี endpoint รวม)
    *  พลาดกลางทางแล้วบางส่วนถูกบันทึกไปแล้ว → invalidate ทั้งสองกรณีให้ฟอร์ม/ตารางเห็นสถานะจริง */
   const editOrder = useMutation({
-    mutationFn: async ({ order, v, itemsEditable }: { order: ProductionOrder; v: CreateProductionOrderValue; itemsEditable: boolean }) => {
+    mutationFn: async ({ order, v, itemsEditable, canAddItems }: { order: ProductionOrder; v: CreateProductionOrderValue; itemsEditable: boolean; canAddItems: boolean }) => {
       await productionOrdersService.update(order._id, {
         production_date: v.production_date,
         assigned_to: v.assigned_to,
         production_note: v.production_note,
       });
-      if (!itemsEditable) return;
-      const kept = new Map(v.items.filter((it) => it.item_id).map((it) => [it.item_id as string, it]));
-      for (const old of order.items) {
-        if (old.item_status === "cancelled") continue;
-        const it = kept.get(old._id);
-        if (!it) {
-          await productionOrdersService.removeItem(old._id);
-        } else if (it.planned_qty !== old.planned_qty || (it.notes ?? null) !== (old.notes ?? null)) {
-          await productionOrdersService.updateItem(old._id, { planned_qty: it.planned_qty, notes: it.notes ?? null });
+      if (!canAddItems) return;
+      if (itemsEditable) {
+        const kept = new Map(v.items.filter((it) => it.item_id).map((it) => [it.item_id as string, it]));
+        for (const old of order.items) {
+          if (old.item_status === "cancelled") continue;
+          const it = kept.get(old._id);
+          if (!it) {
+            await productionOrdersService.removeItem(old._id);
+          } else if (it.planned_qty !== old.planned_qty || (it.notes ?? null) !== (old.notes ?? null)) {
+            await productionOrdersService.updateItem(old._id, { planned_qty: it.planned_qty, notes: it.notes ?? null });
+          }
         }
       }
       for (const { item_id, ...it } of v.items) {
@@ -399,8 +401,10 @@ export function useProductionViewModel() {
       alert.error(isApiError(e) ? e.message : t("production.updateFailed"));
     },
   });
-  // แก้รายการได้เฉพาะใบสร้างเองที่ยังไม่เริ่มผลิต — ใบจากรอบพรีออเดอร์ยอดมาจากออเดอร์จริง / เริ่มผลิตแล้วอาจตัดวัตถุดิบไปแล้ว
+  // แก้รายการเดิมได้เฉพาะใบสร้างเองที่ยังไม่เริ่มผลิต — ใบจากรอบพรีออเดอร์ยอดมาจากออเดอร์จริง / เริ่มผลิตแล้วอาจตัดวัตถุดิบไปแล้ว
   const editItemsEditable = !!editTarget && editTarget.production_status === "planned" && editTarget.source_type === "manual";
+  // เพิ่มสินค้าใหม่ได้ทุกใบที่ยังไม่เริ่มผลิต — ใบจากรอบพรีออเดอร์ผลิตเพิ่มขายหน้าร้านได้ (รายการเดิมยังล็อก)
+  const editCanAddItems = !!editTarget && editTarget.production_status === "planned";
 
   /** เปลี่ยนสถานะผ่าน sub-route เฉพาะทาง (start/complete/cancel) — PATCH ตรง ๆ ไม่มีผล (backend เพิกเฉย production_status) */
   const changeStatus = useMutation({
@@ -506,11 +510,11 @@ export function useProductionViewModel() {
     createOpen, openCreate: () => setCreateOpen(true), closeCreate: () => setCreateOpen(false),
     onCreateSubmit, creating: createOrder.isPending,
 
-    editTarget, editItemsEditable,
+    editTarget, editItemsEditable, editCanAddItems,
     openEdit: (o: ProductionOrder) => setEditTarget(o),
     closeEdit: () => setEditTarget(null),
     onEditSubmit: (v: CreateProductionOrderValue) =>
-      editTarget && editOrder.mutate({ order: editTarget, v, itemsEditable: editItemsEditable }),
+      editTarget && editOrder.mutate({ order: editTarget, v, itemsEditable: editItemsEditable, canAddItems: editCanAddItems }),
     editing: editOrder.isPending,
 
     closedRounds, roundsWithProduction, isClosedRoundsLoading: closedRoundsQ.isLoading,

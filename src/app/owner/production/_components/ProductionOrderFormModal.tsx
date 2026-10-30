@@ -7,7 +7,8 @@
 // บอกวัตถุดิบที่ขาด คงเหลือ ต้องใช้ และผลิตได้สูงสุด · ไม่บล็อกการสร้าง (รับวัตถุดิบเข้าก่อนวันผลิตได้) แค่ถามยืนยันตอนกดสร้าง
 // query อยู่ที่นี่ไม่ใช่ ViewModel เพราะผูกกับแถวที่อยู่ใน state ของ modal นี้ (แบบเดียวกับ ReceiptUpload)
 // โหมดแก้ไข (editTarget): ผู้เรียก mount ใหม่ต่อใบ (key = id) — ค่าเริ่มต้นของฟอร์ม/แถวมาจากใบนั้น
-//   แถวเดิมเปลี่ยนสินค้าไม่ได้ (ลบแล้วเพิ่มใหม่แทน) · itemsEditable=false = แก้ได้แค่วันผลิต/ผู้รับผิดชอบ/หมายเหตุ
+//   แถวเดิมเปลี่ยนสินค้าไม่ได้ (ลบแล้วเพิ่มใหม่แทน) · itemsEditable=false = แถวเดิมล็อก
+//   canAddItems=true (ใบจากรอบพรีออเดอร์ที่ยังไม่เริ่ม) = เพิ่มแถวใหม่ได้ · false = แก้ได้แค่วันผลิต/ผู้รับผิดชอบ/หมายเหตุ
 // backend ยังเช็คซ้ำตอนปิดงานผลิต (consumeStock) เสมอ
 import { useEffect, useState } from "react";
 import { Modal } from "antd";
@@ -71,6 +72,7 @@ export function ProductionOrderFormModal({
   onSubmit,
   editTarget = null,
   itemsEditable = true,
+  canAddItems = itemsEditable,
   canRemoveExisting = true,
 }: {
   open: boolean;
@@ -83,6 +85,8 @@ export function ProductionOrderFormModal({
   editTarget?: ProductionOrder | null;
   /** แก้รายการสินค้าได้ไหม (ใบสร้างเองที่ยังไม่เริ่มผลิต) */
   itemsEditable?: boolean;
+  /** เพิ่มรายการใหม่ได้ไหม (ทุกใบที่ยังไม่เริ่มผลิต) — ค่าเริ่มต้นตาม itemsEditable */
+  canAddItems?: boolean;
   /** ลบรายการเดิมได้ไหม — backend ใช้สิทธิ์ production.delete */
   canRemoveExisting?: boolean;
 }) {
@@ -223,15 +227,17 @@ export function ProductionOrderFormModal({
 
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-gray-500">{t("production.itemsTitle", { n: rows.length })}</p>
-          {itemsEditable && (
+          {canAddItems && (
             <Button size="small" icon={actionIcon("add", "small")} onClick={() => setRows((p) => [...p, emptyRow()])}>
               {t("production.addItem")}
             </Button>
           )}
         </div>
-        {!itemsEditable && <p className="mb-2 text-xs text-gray-500">{t("production.itemsLockedHint")}</p>}
+        {!itemsEditable && (
+          <p className="mb-2 text-xs text-gray-500">{t(canAddItems ? "production.roundItemsLockedHint" : "production.itemsLockedHint")}</p>
+        )}
 
-        {itemsEditable && products.some((p) => !p.recipe_id) && (
+        {canAddItems && products.some((p) => !p.recipe_id) && (
           <p className="mb-2 text-xs text-gray-500">{t("production.noRecipeHint")}</p>
         )}
         {rows.length > 0 && (
@@ -245,6 +251,8 @@ export function ProductionOrderFormModal({
         {rows.map((row) => {
           const res = rowResult(row);
           const unit = products.find((p) => p._id === row.product_id)?.unit_abbr ?? "";
+          // แถวเดิมของใบที่แก้รายการไม่ได้ — แถวที่เพิ่มใหม่แก้/ลบได้เสมอ
+          const locked = !!row.itemId && !itemsEditable;
           return (
             <div key={row.key} className="mb-2">
               <div className="grid gap-2 items-center" style={{ gridTemplateColumns: ROW_COLUMNS }}>
@@ -254,7 +262,7 @@ export function ProductionOrderFormModal({
                   placeholder={t("production.selectProduct")}
                   value={row.product_id || undefined}
                   // แถวเดิมเปลี่ยนสินค้าไม่ได้ — ลบแถวแล้วเพิ่มใหม่แทน
-                  disabled={!itemsEditable || !!row.itemId}
+                  disabled={!!row.itemId}
                   onChange={(v) => updateRow(row.key, { product_id: v as string })}
                   showSearch
                   optionFilterProp="label"
@@ -278,7 +286,7 @@ export function ProductionOrderFormModal({
                   min={1}
                   aria-label={t("filterLabel.quantity")}
                   value={row.planned_qty}
-                  disabled={!itemsEditable}
+                  disabled={locked}
                   status={row.product_id && row.planned_qty == null ? "error" : undefined}
                   onChange={(v) => updateRow(row.key, { planned_qty: v == null ? null : Number(v) })}
                   suffix={<span className="text-xs text-gray-500">{unit}</span>}
@@ -287,13 +295,13 @@ export function ProductionOrderFormModal({
                   size="small"
                   aria-label={t("filterLabel.note")}
                   value={row.notes}
-                  disabled={!itemsEditable}
+                  disabled={locked}
                   onChange={(e) => updateRow(row.key, { notes: e.target.value })}
                   placeholder={t("production.itemNotePlaceholder")}
                 />
                 <RemoveRowButton
                   onClick={() => removeRow(row.key)}
-                  disabled={rows.length === 1 || !itemsEditable || (!!row.itemId && !canRemoveExisting)}
+                  disabled={rows.length === 1 || locked || (!!row.itemId && !canRemoveExisting)}
                 />
               </div>
               {res?.recipe_invalid && (
