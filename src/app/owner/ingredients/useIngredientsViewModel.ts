@@ -140,7 +140,11 @@ export function useIngredientsViewModel() {
       alert.success(t("ingredients.deleted"));
       invalidate();
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("ingredients.deleteFailed")),
+    // 409 = ยังมีสูตร/ส่วนประกอบใช้วัตถุดิบนี้อยู่ — backend ส่งรายชื่อสูตรมาในข้อความ → เตือน (ไม่ใช่ error)
+    onError: (e) =>
+      isApiError(e) && e.status === 409
+        ? alert.warning(e.message, { title: t("ingredients.deleteInUseTitle") })
+        : alert.error(isApiError(e) ? e.message : t("ingredients.deleteFailed")),
   });
 
   return {
