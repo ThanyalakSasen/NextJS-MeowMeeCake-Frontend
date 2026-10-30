@@ -82,7 +82,7 @@ export function PlanTab(vm: VM) {
       </div>
 
       {!vm.isLoading && !vm.isError && (
-        <TodayProductionCard today={vm.today} todayItems={vm.todayItems} todayOrderCount={vm.todayOrderCount} />
+        <TodayProductionCard today={vm.today} todayItems={vm.todayItems} todayOrders={vm.todayOrders} onView={vm.onView} />
       )}
 
       <StatCardsGrid>

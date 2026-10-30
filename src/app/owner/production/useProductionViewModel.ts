@@ -508,6 +508,11 @@ export function useProductionViewModel() {
     page, pageSize, setPagination: (p: number, ps: number) => { setPage(p); setPageSize(ps); },
     planRows, planTotal: planFiltered.length, stats,
     today, todayItems, todayOrderCount: todayOrders.length,
+    /** ใบสั่งผลิตของวันนี้ (การ์ด "วันนี้ผลิตอะไรบ้าง" แยกสินค้าตามใบ) — ตัดรายการที่ยกเลิก · เรียงเลขใบ */
+    todayOrders: todayOrders
+      .map((o) => ({ ...o, items: o.items.filter((it) => it.item_status !== "cancelled") }))
+      .filter((o) => o.items.length > 0)
+      .sort((a, b) => a.production_no.localeCompare(b.production_no)),
     createOpen, openCreate: () => setCreateOpen(true), closeCreate: () => setCreateOpen(false),
     onCreateSubmit, creating: createOrder.isPending,
 
