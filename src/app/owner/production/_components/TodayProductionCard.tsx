@@ -122,7 +122,6 @@ export function TodayProductionCard({
                     size="small"
                     block
                     className="!mt-auto"
-                    icon={actionIcon("next", "small")}
                     loading={startingId === o._id}
                     onClick={(e) => {
                       e.stopPropagation();
