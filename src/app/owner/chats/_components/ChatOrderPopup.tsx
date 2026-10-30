@@ -89,6 +89,7 @@ export function ChatOrderPopup({ attachment, onClose }: { attachment: ChatAttach
           order={order}
           payment={payment}
           // ดูอย่างเดียวในแชท — ทำรายการที่หน้าจัดการคำสั่งซื้อ
+          canViewPayment={paymentPerm.view}
           canApprovePayment={false}
           canRefundPayment={false}
           verifyingPayment={false}

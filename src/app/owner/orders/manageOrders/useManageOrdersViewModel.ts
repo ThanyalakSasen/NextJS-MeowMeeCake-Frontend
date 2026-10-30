@@ -139,7 +139,8 @@ export function useManageOrdersViewModel() {
   const paymentQ = useQuery({
     queryKey: ["payments", "by-order", selectedId],
     queryFn: () => paymentsService.listByOrder(selectedId as string),
-    enabled: !!selectedId && drawerOpen,
+    // GET /admin/payments = payments.view — ไม่มีสิทธิ์ไม่ยิง (ได้ 403 แล้วส่วนสลิปขึ้น "ยังไม่มีสลิป" ผิด ๆ)
+    enabled: !!selectedId && drawerOpen && paymentPerm.view,
   });
   const selectedOrder = detailQ.data?.data ?? null;
   const selectedPayment = paymentQ.data?.data[0] ?? null;
@@ -300,6 +301,7 @@ export function useManageOrdersViewModel() {
 
   return {
     perm,
+    canViewPayment: paymentPerm.view,
     canApprovePayment: paymentPerm.approve,
     /** คืนเงิน = payments.delete (ไม่ใช่ approve — คนยืนยันสลิปได้จะไม่ได้คืนเงินไปด้วย · Final-Backlog P7) */
     canRefundPayment: paymentPerm.delete,

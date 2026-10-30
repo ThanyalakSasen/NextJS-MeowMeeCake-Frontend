@@ -16,6 +16,7 @@ import { NOTICE_TAG } from "@/constants/enumConfig";
 export function OrderDetailContent({
   order,
   payment,
+  canViewPayment,
   canApprovePayment,
   canRefundPayment,
   verifyingPayment,
@@ -36,6 +37,8 @@ export function OrderDetailContent({
 }: {
   order: Order;
   payment: Payment | null;
+  /** payments.view — ไม่มีสิทธิ์ = ซ่อนส่วนสลิป (backend ตอบ 403 เดิมขึ้น "ยังไม่มีสลิป" ทั้งที่ลูกค้าแนบแล้ว) */
+  canViewPayment: boolean;
   canApprovePayment: boolean;
   /** payments.delete — ปุ่มยืนยันคืนเงิน */
   canRefundPayment: boolean;
@@ -185,54 +188,58 @@ export function OrderDetailContent({
         </>
       )}
 
-      <Divider className="!my-0" />
+      {canViewPayment && (
+        <>
+          <Divider className="!my-0" />
 
-      <div>
-        <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.paymentProof")}</p>
-        <GroupPaymentNote payment={payment} />
-        {payment?.slip_image_url ? (
-          <div className="flex items-center gap-3">
-            <SlipImage url={payment.slip_image_url} size={56} />
-            <div className="min-w-0 flex-1">
-              {/* ตัดสินจาก status ไม่ใช่ verified_at — สลิปที่ถูกปฏิเสธแล้วลูกค้าแนบใหม่ backend เปลี่ยนกลับเป็น
-                  pending แต่ verified_at ยังค้างค่าตอนปฏิเสธ (เดิมเลยไม่มีปุ่มให้ตรวจสลิปใหม่) */}
-              {payment.status === "pending" ? (
-                <>
-                  <p className="mb-1.5 text-sm font-medium text-amber-700">{t("orders.slipAwaitingReview")}</p>
-                  {canApprovePayment && (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        size="small"
-                        type="primary"
-                        icon={actionIcon("verify", "small")}
-                        loading={verifyingPayment}
-                        onClick={() => onVerifyPayment(payment._id)}
-                      >
-                        {t("orders.verifyPayment")}
-                      </Button>
-                      <Button
-                        size="small"
-                        danger
-                        icon={actionIcon("cancelAction", "small")}
-                        disabled={verifyingPayment}
-                        onClick={() => onRejectPayment(payment._id)}
-                      >
-                        {t("orders.rejectPayment")}
-                      </Button>
-                    </div>
+          <div>
+            <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.paymentProof")}</p>
+            <GroupPaymentNote payment={payment} />
+            {payment?.slip_image_url ? (
+              <div className="flex items-center gap-3">
+                <SlipImage url={payment.slip_image_url} size={56} />
+                <div className="min-w-0 flex-1">
+                  {/* ตัดสินจาก status ไม่ใช่ verified_at — สลิปที่ถูกปฏิเสธแล้วลูกค้าแนบใหม่ backend เปลี่ยนกลับเป็น
+                      pending แต่ verified_at ยังค้างค่าตอนปฏิเสธ (เดิมเลยไม่มีปุ่มให้ตรวจสลิปใหม่) */}
+                  {payment.status === "pending" ? (
+                    <>
+                      <p className="mb-1.5 text-sm font-medium text-amber-700">{t("orders.slipAwaitingReview")}</p>
+                      {canApprovePayment && (
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="small"
+                            type="primary"
+                            icon={actionIcon("verify", "small")}
+                            loading={verifyingPayment}
+                            onClick={() => onVerifyPayment(payment._id)}
+                          >
+                            {t("orders.verifyPayment")}
+                          </Button>
+                          <Button
+                            size="small"
+                            danger
+                            icon={actionIcon("cancelAction", "small")}
+                            disabled={verifyingPayment}
+                            onClick={() => onRejectPayment(payment._id)}
+                          >
+                            {t("orders.rejectPayment")}
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  ) : payment.status === "failed" ? (
+                    <p className="text-sm font-medium text-danger">{t("orders.slipRejected")}</p>
+                  ) : (
+                    <StatusBadge group="paymentStatus" value={payment.status} />
                   )}
-                </>
-              ) : payment.status === "failed" ? (
-                <p className="text-sm font-medium text-danger">{t("orders.slipRejected")}</p>
-              ) : (
-                <StatusBadge group="paymentStatus" value={payment.status} />
-              )}
-            </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600">{t("orders.noSlipYet")}</p>
+            )}
           </div>
-        ) : (
-          <p className="text-sm text-gray-600">{t("orders.noSlipYet")}</p>
-        )}
-      </div>
+        </>
+      )}
 
       <Divider className="!my-0" />
 
