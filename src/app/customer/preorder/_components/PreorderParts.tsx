@@ -217,7 +217,7 @@ function RoundAddButton({
       return;
     }
     const { min, max } = roundItemLimits(item);
-    addToPreorderBasket({ round_id: round._id, round_name: round.round_name, pickup_date: round.pickup_date }, {
+    const added = addToPreorderBasket({ round_id: round._id, round_name: round.round_name, pickup_date: round.pickup_date }, {
       round_item_id: item._id,
       product_id: p._id,
       product_name_th: p.product_name_th,
@@ -233,6 +233,11 @@ function RoundAddButton({
       options: [],
       option_text: null,
     });
+    if (!added) {
+      setStatus("idle");
+      alert.info(tp("basketAtMax", { n: max }));
+      return;
+    }
     setStatus("success");
     setTimeout(() => setStatus("idle"), 1500);
   };

@@ -117,7 +117,10 @@ export default function PreorderOrderBox({
           .join(" · ") || null,
     };
     // ตะกร้ารวม: เก็บได้หลายรอบ (ไม่ต้องล้างรอบเดิม) · อยู่หน้าเดิม — ไอคอนตะกร้าบน Navbar นับเพิ่มให้เห็น
-    addToPreorderBasket({ round_id: round._id, round_name: round.round_name, pickup_date: round.pickup_date }, item);
+    if (!addToPreorderBasket({ round_id: round._id, round_name: round.round_name, pickup_date: round.pickup_date }, item)) {
+      alert.info(ts("basketAtMax", { n: max }));
+      return;
+    }
     setShowProblems(false);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);

@@ -99,6 +99,17 @@ function PreorderDetailContent() {
   }
 
   const p = preorderQ.data;
+  // โหลดไม่สำเร็จเพราะเน็ต/เซิร์ฟเวอร์ (ไม่ใช่ 403/404) = ให้ลองใหม่ — เดิมขึ้น "ไม่พบพรีออเดอร์" ทั้งที่พรีออเดอร์มีอยู่
+  if (validId && !p && preorderQ.isError && !(isApiError(preorderQ.error) && [403, 404].includes(preorderQ.error.status))) {
+    return (
+      <div className={`${shopPage} flex items-center justify-center px-4`}>
+        <div className={`${shopCard} w-full max-w-md space-y-4 text-center`}>
+          <p className="font-semibold text-red-700">{t("loadOneFailed")}</p>
+          <button type="button" onClick={() => void preorderQ.refetch()} className={`${shopButton} w-full`}>{t("retry")}</button>
+        </div>
+      </div>
+    );
+  }
   if (!validId || !p) {
     return (
       <div className={`${shopPage} flex items-center justify-center px-4`}>

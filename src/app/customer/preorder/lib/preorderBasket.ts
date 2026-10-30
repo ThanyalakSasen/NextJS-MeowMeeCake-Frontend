@@ -114,13 +114,15 @@ export function clearPreorderBaskets(roundIds?: string[]): void {
   save(readPreorderBaskets().filter((b) => !drop.has(b.round_id)));
 }
 
-/** เพิ่มเข้ารายการของรอบนั้น (สร้างรอบใหม่ถ้ายังไม่มี) · ซ้ำ = รวมจำนวน ไม่เกิน max · เก็บได้หลายรอบพร้อมกัน */
-export function addToPreorderBasket(round: Pick<PreorderBasket, "round_id" | "round_name" | "pickup_date">, item: PreorderBasketItem): void {
+/** เพิ่มเข้ารายการของรอบนั้น (สร้างรอบใหม่ถ้ายังไม่มี) · ซ้ำ = รวมจำนวน ไม่เกิน max · เก็บได้หลายรอบพร้อมกัน
+ *  คืน false = ในตะกร้ามีครบจำนวนสูงสุดแล้ว จำนวนไม่เพิ่ม (ผู้เรียกต้องบอกลูกค้า ไม่ใช่ขึ้น "เพิ่มแล้ว") */
+export function addToPreorderBasket(round: Pick<PreorderBasket, "round_id" | "round_name" | "pickup_date">, item: PreorderBasketItem): boolean {
   const baskets = readPreorderBaskets();
   const current = baskets.find((b) => b.round_id === round.round_id);
   const base: PreorderBasket = current ? { ...current, ...round } : { ...round, items: [] };
   const key = basketLineKey(item);
   const existing = base.items.find((it) => basketLineKey(it) === key);
+  if (existing && existing.quantity >= item.max_qty) return false;
   const items = existing
     ? base.items.map((it) =>
         it === existing
@@ -133,6 +135,7 @@ export function addToPreorderBasket(round: Pick<PreorderBasket, "round_id" | "ro
   // เพิ่งใส่ = ตั้งใจจะสั่ง → ติ๊กเลือกเสมอ · key ของรายการพรีออเดอร์ซ้ำได้ (รอบ+สินค้า+ตัวเลือกเดิม) ถ้าเคยติ๊กออก
   // แล้วลบทิ้ง ใส่ใหม่จะค้างเป็น "ไม่เลือก" → หน้าตะกร้าปิดปุ่มสั่งซื้อ / หน้ายืนยันขึ้นว่าตะกร้าว่าง
   setSelected([preorderSelectKey(round.round_id, key)], true);
+  return true;
 }
 
 function patchRound(roundId: string, fn: (items: PreorderBasketItem[]) => PreorderBasketItem[]): void {
