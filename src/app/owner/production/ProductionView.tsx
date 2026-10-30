@@ -1,10 +1,10 @@
 "use client";
 // View ของ Production — JSX ล้วน รับ props จาก useProductionViewModel
-// 3 แท็บ (สถานะ · ค่าเริ่มต้น/แผนการผลิต/ประวัติ) sync กับ ?tab= ผ่าน TabbedPageLayout
+// หน้าเดียว: แผนการผลิต/ใบสั่งผลิต ด้านบน · ประวัติการผลิต ด้านล่าง (เดิมแยก 2 แท็บ ?tab=plan / ?tab=history)
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useOpenedOnce } from "@/hooks/useOpenedOnce";
-import { TabbedPageLayout } from "@/components/shared/layout";
+import { DashboardPageLayout } from "@/components/shared/layout";
 import type { useProductionViewModel } from "./useProductionViewModel";
 
 // โหลดเฉพาะส่วนที่เห็นตอนเปิดหน้า — ทุกแท็บ/ฟอร์ม/ลิ้นชักแยก chunk โหลดเมื่อใช้ครั้งแรก (เดิม import ทั้งหมดตั้งแต่แรก)
@@ -30,16 +30,17 @@ export function ProductionView(vm: VM) {
 
   return (
     <>
-      <TabbedPageLayout
-        title={t("production.title")}
-        activeKey={vm.activeTab}
-        onChange={vm.setActiveTab}
-        items={[
-          // { key: "status", label: t("production.tabStatus"), children: <StatusTab {...vm} /> },
-          { key: "plan", label: t("production.tabPlan"), children: <PlanTab {...vm} /> },
-          { key: "history", label: t("production.tabHistory"), children: <HistoryTab {...vm} /> },
-        ]}
-      />
+      <DashboardPageLayout title={t("production.title")}>
+        {/* แท็บสถานะการผลิต (StatusTab) ยังปิดไว้ */}
+        <section aria-labelledby="production-plan" className="flex flex-col gap-4">
+          <h2 id="production-plan" className="m-0 text-lg font-semibold text-brown-900">{t("production.tabPlan")}</h2>
+          <PlanTab {...vm} />
+        </section>
+        <section aria-labelledby="production-history" className="flex flex-col gap-4 border-t border-gray-200 pt-6">
+          <h2 id="production-history" className="m-0 text-lg font-semibold text-brown-900">{t("production.tabHistory")}</h2>
+          <HistoryTab {...vm} />
+        </section>
+      </DashboardPageLayout>
 
       {createUsed && (
         <ProductionOrderFormModal
