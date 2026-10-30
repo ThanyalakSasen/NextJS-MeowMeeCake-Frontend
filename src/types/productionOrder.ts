@@ -31,6 +31,8 @@ export interface RawProductionOrderItem {
   actual_qty?: number | null;
   item_status: ProductionItemStatus;
   notes?: string | null;
+  /** รายการที่มาจากรอบพรีออเดอร์ · null = เพิ่มเองในใบ */
+  round_item_id?: string | null;
 }
 
 /** มีเฉพาะ source_type === "preorder" — backend populate round_id ตอน GET/list */
@@ -64,6 +66,8 @@ export interface ProductionOrderItem {
   actual_qty?: number | null;
   item_status: ProductionItemStatus;
   notes?: string | null;
+  /** มาจากรอบพรีออเดอร์ (ยอดลูกค้าสั่ง) — false = เพิ่มเองในใบ (ผลิตเพิ่ม) */
+  from_round: boolean;
   /** อายุสินค้า (วัน) จาก product ที่ populate — วันหมดอายุเริ่มต้นของล็อตในหน้าปิดงาน · null = ไม่ตั้ง */
   shelf_life_days: number | null;
 }
