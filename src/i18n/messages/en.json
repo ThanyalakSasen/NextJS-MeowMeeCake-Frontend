@@ -1370,6 +1370,7 @@
     "qtyRequired": "Enter a quantity for every selected product",
     "todayTitle": "What to produce today · {date}",
     "todayOrderCount": "From {n} production orders",
+    "todayProductCount": "{n} products in total",
     "todayEmpty": "Nothing scheduled for production today",
     "stockChecking": "Checking ingredients...",
     "stockCheckFailed": "Could not check ingredients — you can still create the order; stock is checked again when production is completed",
