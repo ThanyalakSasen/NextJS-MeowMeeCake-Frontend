@@ -76,8 +76,43 @@ function flatKeys(obj, prefix = "") {
   return out;
 }
 
-const th = JSON.parse(readFileSync(join(SRC, "i18n/messages/th.json"), "utf8"));
-const en = JSON.parse(readFileSync(join(SRC, "i18n/messages/en.json"), "utf8"));
+const thText = readFileSync(join(SRC, "i18n/messages/th.json"), "utf8");
+const enText = readFileSync(join(SRC, "i18n/messages/en.json"), "utf8");
+const th = JSON.parse(thText);
+const en = JSON.parse(enText);
+
+// ── 3. key ซ้ำในหมวดเดียวกัน — JSON.parse เก็บตัวหลังเงียบ ๆ (ข้อความตัวแรกหายโดยไม่มีใครรู้ เคยเกิดกับ
+//    production.moreItems / carriedOver 2026-10-30) → สแกนข้อความดิบ นับ key ต่อ object ทีละชั้น ──
+function duplicateKeys(text) {
+  const dups = [];
+  const stack = []; // [{ path, keys:Set }] ของ object ที่เปิดอยู่
+  let lastKey = null;
+  let line = 1;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === "\n") line++;
+    else if (c === '"') {
+      let j = i + 1;
+      while (text[j] !== '"') j += text[j] === "\\" ? 2 : 1;
+      const str = JSON.parse(text.slice(i, j + 1));
+      let k = j + 1;
+      while (/\s/.test(text[k])) k++;
+      if (text[k] === ":" && stack.length) {
+        const top = stack[stack.length - 1];
+        if (top.keys.has(str)) dups.push(`${[...top.path, str].join(".")} (บรรทัด ${line})`);
+        top.keys.add(str);
+        lastKey = str;
+      }
+      i = j;
+    } else if (c === "{") {
+      const parent = stack[stack.length - 1];
+      stack.push({ path: parent ? [...parent.path, lastKey] : [], keys: new Set() });
+    } else if (c === "}") stack.pop();
+  }
+  return dups;
+}
+const dupTh = duplicateKeys(thText);
+const dupEn = duplicateKeys(enText);
 const thKeys = new Set(flatKeys(th));
 const enKeys = new Set(flatKeys(en));
 const missingInEn = [...thKeys].filter((k) => !enKeys.has(k));
@@ -100,6 +135,14 @@ if (missingInEn.length === 0 && missingInTh.length === 0) {
   failed = true;
   if (missingInEn.length) console.log(`✗ i18n: มีใน th.json แต่ไม่มีใน en.json (${missingInEn.length}): ${missingInEn.join(", ")}`);
   if (missingInTh.length) console.log(`✗ i18n: มีใน en.json แต่ไม่มีใน th.json (${missingInTh.length}): ${missingInTh.join(", ")}`);
+}
+
+if (dupTh.length === 0 && dupEn.length === 0) {
+  console.log("✓ i18n: ไม่มี key ซ้ำในหมวดเดียวกัน");
+} else {
+  failed = true;
+  if (dupTh.length) console.log(`✗ i18n: th.json มี key ซ้ำ (${dupTh.length}): ${dupTh.join(", ")}`);
+  if (dupEn.length) console.log(`✗ i18n: en.json มี key ซ้ำ (${dupEn.length}): ${dupEn.join(", ")}`);
 }
 
 process.exit(failed && STRICT ? 1 : 0);

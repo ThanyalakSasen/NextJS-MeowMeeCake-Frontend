@@ -76,7 +76,7 @@ export function DashboardTab(vm: DVM) {
     <div className="flex flex-col gap-5">
       {/* รายเดือน/รายไตรมาส/รายปี — การ์ดและตารางคิดเฉพาะรอบที่เปิดในช่วงนี้ */}
       <div className="flex flex-wrap items-center gap-3">
-        <PeriodSelector periods={DASHBOARD_PERIODS} period={vm.period} onPeriodChange={vm.setPeriod} date={vm.periodDate} onDateChange={vm.setPeriodDate} />
+        <PeriodSelector periods={DASHBOARD_PERIODS} allowFuture period={vm.period} onPeriodChange={vm.setPeriod} date={vm.periodDate} onDateChange={vm.setPeriodDate} />
       </div>
 
       <StatCardsGrid>

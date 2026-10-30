@@ -30,6 +30,7 @@ export function PeriodSelector({
   onDateChange,
   dayAsMonth = false,
   periods = PERIOD_TYPES,
+  allowFuture = false,
 }: {
   period: PeriodType;
   onPeriodChange: (p: PeriodType) => void;
@@ -39,6 +40,8 @@ export function PeriodSelector({
   dayAsMonth?: boolean;
   /** ชนิดช่วงที่ให้เลือก (ค่าเริ่มต้น = ทุกชนิด) เช่น สรุปรอบพรีออเดอร์ใช้แค่ เดือน/ไตรมาส/ปี */
   periods?: PeriodType[];
+  /** เลื่อน/เลือกช่วงในอนาคตได้ (เช่น รอบพรีออเดอร์ที่ตั้งเวลาเปิดไว้ล่วงหน้า) — รายงานทั่วไปปิดไว้ */
+  allowFuture?: boolean;
 }) {
   const t = useTranslations("period");
   const locale = useLocale();
@@ -74,8 +77,9 @@ export function PeriodSelector({
       ? Math.min(Math.floor((date.date() - 1) / 7), monthWeeks.length - 1)
       : 0;
 
-  const nextDisabled =
-    period === "week"
+  const nextDisabled = allowFuture
+    ? period === "week" && currentWeekIdx >= monthWeeks.length - 1
+    : period === "week"
       ? currentWeekIdx >= monthWeeks.length - 1
       : isSamePeriod(effectivePeriod, date, dayjs()) || shiftPeriod(effectivePeriod, date, 1).isAfter(dayjs(), "day");
 
@@ -143,7 +147,7 @@ export function PeriodSelector({
             format={labelOf}
             inputReadOnly
             allowClear={false}
-            disabledDate={(d) => d.isAfter(dayjs(), "day")}
+            disabledDate={allowFuture ? undefined : (d) => d.isAfter(dayjs(), "day")}
             onChange={(v) => { if (v && !Array.isArray(v)) onDateChange(v as Dayjs); }}
             style={{ width: 190 }}
             aria-label={t("pick")}
