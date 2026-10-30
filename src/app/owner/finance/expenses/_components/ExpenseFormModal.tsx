@@ -51,7 +51,7 @@ export function ExpenseFormModal({
       width={600}
       destroyOnHidden
     >
-      <Form form={form} layout="vertical" initialValues={editTarget ? fromExpense(editTarget) : emptyExpenseForm}>
+      <Form form={form} layout="vertical" initialValues={editTarget ? fromExpense(editTarget) : emptyExpenseForm()}>
         <div className="grid grid-cols-2 gap-3">
           <FormItem name="date" label={t("finance.fieldDate")} rules={[{ required: true, message: t("validation.required") }]}>
             <DatePicker

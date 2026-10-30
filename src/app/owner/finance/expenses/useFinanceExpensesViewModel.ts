@@ -11,6 +11,7 @@ import dayjs, { type Dayjs } from "dayjs";
 import { expensesService } from "@/services/expenses";
 import { reportsService } from "@/services/reports";
 import { usePermission } from "@/context/PermissionsContext";
+import { useToday } from "@/hooks/useToday";
 import { alert } from "@/lib/alert";
 import { exportToCsv, forceText } from "@/lib/exportCsv";
 import { formatDate } from "@/i18n/format";
@@ -83,24 +84,27 @@ export function useFinanceExpensesViewModel() {
   const monthIncome = revenueQ.data?.total ?? 0;
   const netProfit = monthIncome - monthTotal;
 
-  /** รายจ่ายประจำที่ยังไม่ถึงกำหนด — เลื่อนวันครบกำหนดไปเรื่อย ๆ ทีละเดือนจนกว่าจะถึงอนาคต */
+  /** รายจ่ายประจำที่ยังไม่ถึงกำหนด — วันครบกำหนดถัดไป = วันตั้งต้น + n เดือน (n น้อยสุดที่ไม่ก่อนวันนี้)
+   *  บวกจากวันตั้งต้นทุกครั้ง ไม่บวกต่อจากเดือนก่อน — เดิม 31 ม.ค. → 28 ก.พ. แล้วค้างวันที่ 28 ทุกเดือนหลังจากนั้น
+   *  today จาก useToday — เปิดหน้าค้างข้ามคืน กำหนดถัดไป/ป้ายใกล้ครบกำหนดเลื่อนตาม */
+  const today = useToday();
   const recurringReminders: RecurringReminder[] = useMemo(() => {
-    const today = dayjs();
     return (recurringQ.data?.data ?? [])
       .filter((e) => e.is_recurring)
       .map((e) => {
-        let due = dayjs(e.date);
-        while (due.isBefore(today, "day")) due = due.add(1, "month");
+        const start = dayjs(e.date);
+        let due = start;
+        for (let n = 1; due.isBefore(today, "day"); n++) due = start.add(n, "month");
         return {
           _id: e._id,
           description: e.description,
           dueDate: due.toISOString(),
           amount: e.amount,
-          isUrgent: due.diff(today, "day") <= 7,
+          isUrgent: due.startOf("day").diff(today, "day") <= 7,
         };
       })
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  }, [recurringQ.data]);
+  }, [recurringQ.data, today]);
 
   // ── mutations ──
   const invalidate = () => qc.invalidateQueries({ queryKey: ["expenses"] });

@@ -20,14 +20,16 @@ export interface ExpenseFormValue {
   is_recurring: boolean;
 }
 
-export const emptyExpenseForm: ExpenseFormValue = {
+/** ฟอร์มเปล่า — เป็นฟังก์ชัน (ไม่ใช่ค่าคงที่) ให้วันที่เป็น "วันนี้" ตอนเปิดฟอร์มจริง
+ *  เดิม dayjs() คำนวณครั้งเดียวตอนโหลดไฟล์ → เปิดแอปค้างข้ามคืนแล้วรายการใหม่ได้วันเมื่อวาน (อาจผิดเดือน) */
+export const emptyExpenseForm = (): ExpenseFormValue => ({
   date: dayjs(),
   description: "",
   category: EXPENSE_CATEGORIES[0],
   amount: null,
   payment_method: EXPENSE_PAYMENT_METHODS[0],
   is_recurring: false,
-};
+});
 
 /** Expense (จาก API) → ค่าเริ่มต้นของฟอร์มตอนแก้ไข */
 export function fromExpense(e: Expense): ExpenseFormValue {
