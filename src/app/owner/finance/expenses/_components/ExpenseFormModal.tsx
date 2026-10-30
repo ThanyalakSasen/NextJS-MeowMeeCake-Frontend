@@ -2,6 +2,7 @@
 // บันทึก/แก้ไขรายการค่าใช้จ่าย — antd Modal + base/Form
 // แก้ไข modal ต้องพึ่ง parent ส่ง key={editTarget?._id ?? "new"} มาบังคับ remount ทุกครั้งที่เปลี่ยนเป้าหมาย
 // (เหตุผลเต็มดู ComponentFormModal ของ Recipes)
+import dayjs from "dayjs";
 import { Modal } from "antd";
 import { sortOptionsThai } from "@/lib/thaiSort";
 import { useTranslations } from "next-intl";
@@ -53,7 +54,11 @@ export function ExpenseFormModal({
       <Form form={form} layout="vertical" initialValues={editTarget ? fromExpense(editTarget) : emptyExpenseForm}>
         <div className="grid grid-cols-2 gap-3">
           <FormItem name="date" label={t("finance.fieldDate")} rules={[{ required: true, message: t("validation.required") }]}>
-            <DatePicker format="DD/MM/YYYY" />
+            <DatePicker
+              format="DD/MM/YYYY"
+              allowClear={false}
+              disabledDate={(d) => d.isAfter(dayjs(), "day")}
+            />
           </FormItem>
           <FormItem name="category" label={t("finance.fieldCategory")} rules={[{ required: true, message: t("validation.required") }]}>
             <Select options={sortOptionsThai(EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(`enums.expenseCategory.${c}`) })))} />

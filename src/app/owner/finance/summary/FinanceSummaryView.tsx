@@ -35,7 +35,7 @@ export function FinanceSummaryView(vm: VM) {
   return (
     <DashboardPageLayout title={t("finance.summaryTitle")}>
       <div className="flex flex-wrap items-center gap-3">
-        <PeriodSelector period={vm.period} onPeriodChange={vm.setPeriod} date={vm.selectedDate} onDateChange={vm.setSelectedDate} />
+        <PeriodSelector dayAsMonth period={vm.period} onPeriodChange={vm.setPeriod} date={vm.selectedDate} onDateChange={vm.setSelectedDate} />
       </div>
 
       {vm.isLoading ? (
@@ -77,7 +77,17 @@ export function FinanceSummaryView(vm: VM) {
               {vm.trendFailed ? (
                 <LoadFailed onRetry={vm.refetchTrend} size="small" />
               ) : (
-                <DataTable inCard columns={trendColumns} rows={vm.monthlyTrend} pagination={false} />
+                <DataTable
+                  inCard
+                  scrollClassName={
+                    vm.monthlyTrend.length > 10
+                      ? "max-h-[40.75rem] overflow-y-auto [&_th]:sticky [&_th]:top-0 [&_th]:z-10 [&_th]:bg-white"
+                      : undefined
+                  }
+                  columns={trendColumns}
+                  rows={vm.monthlyTrend}
+                  pagination={false}
+                />
               )}
             </div>
 

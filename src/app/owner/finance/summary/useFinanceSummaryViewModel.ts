@@ -38,7 +38,11 @@ export function useFinanceSummaryViewModel() {
   const [period, setPeriod] = useState<PeriodType>("month");
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
-  const [rangeStart, rangeEnd] = useMemo(() => getRangeStartEnd(period, selectedDate), [period, selectedDate]);
+  // รายวันในหน้าสรุปกำไร-ขาดทุน เลือกเป็นรายเดือน (ตารางแสดงรายวันตั้งแต่วันที่ 1 ของเดือนนั้น)
+  const [rangeStart, rangeEnd] = useMemo(
+    () => getRangeStartEnd(period === "day" ? "month" : period, selectedDate),
+    [period, selectedDate],
+  );
   const rangeFrom = rangeStart.toISOString();
   const rangeTo = rangeEnd.toISOString();
 
@@ -178,12 +182,13 @@ export function useFinanceSummaryViewModel() {
   ];
 
   const periodLabel = useMemo(() => {
-    if (period === "day") return formatDate(selectedDate.toISOString(), locale);
     if (period === "week") return `${formatDate(rangeStart.toISOString(), locale)} – ${formatDate(rangeEnd.toISOString(), locale)}`;
     if (period === "quarter") return t("finance.quarterLabel", { n: selectedDate.quarter(), year: selectedDate.year() });
     if (period === "year") return String(selectedDate.year());
     return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "th-TH", { month: "long", year: "numeric" }).format(selectedDate.toDate());
   }, [period, selectedDate, rangeStart, rangeEnd, locale, t]);
+
+  const hasTrendData = monthlyTrend.some((r) => (r.income ?? 0) > 0 || (r.expense ?? 0) > 0);
 
   return {
     isLoading,
@@ -194,7 +199,7 @@ export function useFinanceSummaryViewModel() {
     rangeStart, rangeEnd, periodLabel,
 
     totalIncome, totalCogs, totalOpex, netProfit, orderCount, cogsMethods,
-    hasData: totalIncome > 0 || (summaryQ.data?.count ?? 0) > 0,
+    hasData: totalIncome > 0 || (summaryQ.data?.count ?? 0) > 0 || hasTrendData,
 
     pnlRows, monthlyTrend, kpis,
     trendFailed,

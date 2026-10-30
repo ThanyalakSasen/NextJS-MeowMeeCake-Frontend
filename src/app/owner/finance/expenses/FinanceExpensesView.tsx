@@ -1,5 +1,6 @@
 "use client";
 // View ของ Finance Expenses — JSX ล้วน รับ props จาก useFinanceExpensesViewModel
+import dayjs from "dayjs";
 import { useTranslations, useLocale } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { Button, DatePicker, Select, Tag } from "@/components/base";
@@ -112,6 +113,7 @@ export function FinanceExpensesView(vm: VM) {
                   picker="month"
                   value={vm.selectedMonthDate}
                   allowClear={false}
+                  disabledDate={(d) => d.isAfter(dayjs(), "month")}
                   onChange={(d) => { if (d && !Array.isArray(d)) vm.setSelectedMonthDate(d); }}
                   style={{ width: 180 }}
                 />

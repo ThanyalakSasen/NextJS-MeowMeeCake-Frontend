@@ -4,7 +4,7 @@
 // ต้องอยู่ไฟล์ที่ไม่มี "use client" — server เรียกฟังก์ชันจากไฟล์ client ไม่ได้
 // ─────────────────────────────────────────────────────────────
 import dayjs, { type Dayjs } from "dayjs";
-import { getRangeStartEnd, type PeriodType } from "@/utils/period";
+import { getMonthWeeks, getRangeStartEnd, type PeriodType } from "@/utils/period";
 
 export const revenueKey = (from: string, to: string) => ["reports", "revenue-by-channel", from, to] as const;
 
@@ -18,13 +18,37 @@ export interface TrendBucket {
 
 /**
  * ช่วงในตารางเปรียบเทียบ (ช่วงเก่าอยู่บน ใหม่อยู่ล่าง)
- * รายวัน = 7 วันย้อนจากวันที่เลือก · รายสัปดาห์ = 6 สัปดาห์ย้อนจากสัปดาห์ที่เลือก
+ * รายวัน = ทุกวันตั้งแต่วันที่ 1 ของเดือนที่เลือก (เดือนปัจจุบันแสดงถึงวันนี้)
+ * รายสัปดาห์ = ทุกสัปดาห์ในเดือนที่เลือก เริ่มตั้งแต่วันที่ 1 (1–7, 8–14, 15–21, 22–28, 29–สิ้นเดือน) ไม่ทะลุข้ามเดือน
  * รายเดือน = ม.ค. ถึงเดือนปัจจุบันของปีที่เลือก (ปีที่ผ่านไปแล้ว = ครบ ธ.ค.) · รายไตรมาส = Q1 ถึงไตรมาสปัจจุบัน แบบเดียวกัน
  *   — ไม่สร้างเดือน/ไตรมาสที่ยังไม่ถึง (เดิมได้แถวศูนย์ที่ดูเหมือนข้อมูลจริง + ยิง request เปล่า)
  * รายปี = ทุกปี ตั้งแต่ปีแรกที่มีค่าใช้จ่ายบันทึก (firstExpenseYear) หรือปีที่เลือก ถ้าเก่ากว่า ถึงปีปัจจุบัน (หรือปีที่เลือก ถ้าเลือกไกลกว่า)
  */
 export function trendBuckets(period: PeriodType, selectedDate: Dayjs, firstExpenseYear = Infinity): TrendBucket[] {
   const now = dayjs();
+  if (period === "day") {
+    const monthStart = selectedDate.startOf("month");
+    const daysInMonth = selectedDate.daysInMonth();
+    const lastDay =
+      selectedDate.isBefore(now, "month") ? daysInMonth
+      : selectedDate.isSame(now, "month") ? Math.min(now.date(), daysInMonth)
+      : daysInMonth;
+    return Array.from({ length: lastDay }, (_, i) => {
+      const d = monthStart.date(i + 1);
+      const from = d.startOf("day");
+      const to = d.endOf("day");
+      return { key: from.toISOString(), start: from, end: to, from: from.toISOString(), to: to.toISOString() };
+    });
+  }
+  if (period === "week") {
+    return getMonthWeeks(selectedDate).map((w) => ({
+      key: w.start.toISOString(),
+      start: w.start,
+      end: w.end,
+      from: w.start.toISOString(),
+      to: w.end.toISOString(),
+    }));
+  }
   const yearStart = selectedDate.startOf("year");
   // เดือนสุดท้าย (0–11) ของรายเดือน/รายไตรมาส — รวมเดือนที่เลือกเสมอ แม้เลือกล่วงหน้า
   const lastMonth =
@@ -32,9 +56,7 @@ export function trendBuckets(period: PeriodType, selectedDate: Dayjs, firstExpen
     : selectedDate.year() === now.year() ? Math.max(now.month(), selectedDate.month())
     : selectedDate.month();
   let anchors: Dayjs[];
-  if (period === "day") anchors = Array.from({ length: 7 }, (_, i) => selectedDate.subtract(6 - i, "day"));
-  else if (period === "week") anchors = Array.from({ length: 6 }, (_, i) => selectedDate.subtract(5 - i, "week"));
-  else if (period === "month") anchors = Array.from({ length: lastMonth + 1 }, (_, i) => yearStart.add(i, "month"));
+  if (period === "month") anchors = Array.from({ length: lastMonth + 1 }, (_, i) => yearStart.add(i, "month"));
   else if (period === "quarter") anchors = Array.from({ length: Math.floor(lastMonth / 3) + 1 }, (_, i) => yearStart.add(i * 3, "month"));
   else {
     const last = Math.max(now.year(), selectedDate.year());

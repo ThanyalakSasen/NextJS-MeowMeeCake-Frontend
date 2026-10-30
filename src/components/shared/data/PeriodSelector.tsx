@@ -7,9 +7,17 @@
 import { useLocale, useTranslations } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { Button, LazyDatePicker } from "@/components/base";
+import { Button, LazyDatePicker, Select } from "@/components/base";
 import { formatDayMonth } from "@/i18n/format";
-import { isSamePeriod, pickerTypeFor, PERIOD_TYPES, shiftPeriod, getRangeStartEnd, type PeriodType } from "@/utils/period";
+import {
+  getMonthWeeks,
+  getRangeStartEnd,
+  isSamePeriod,
+  PERIOD_TYPES,
+  pickerTypeFor,
+  shiftPeriod,
+  type PeriodType,
+} from "@/utils/period";
 import { TypeTabBar } from "./TypeTabBar";
 
 const ymd = (d: Dayjs) => d.format("YYYY-MM-DD");
@@ -19,30 +27,53 @@ export function PeriodSelector({
   onPeriodChange,
   date,
   onDateChange,
+  dayAsMonth = false,
 }: {
   period: PeriodType;
   onPeriodChange: (p: PeriodType) => void;
   date: Dayjs;
   onDateChange: (d: Dayjs) => void;
+  /** โหมดรายวันให้เลือกเฉพาะเดือน (เช่น หน้าสรุปกำไร-ขาดทุน ที่ตารางรายวันแสดงตั้งแต่วันที่ 1 ของเดือนที่เลือก) */
+  dayAsMonth?: boolean;
 }) {
   const t = useTranslations("period");
   const locale = useLocale();
   const intlLocale = locale === "en" ? "en-US" : "th-TH";
 
-  /** "30 ต.ค. 2569" · "26 ต.ค. – 1 พ.ย. 2569" · "ตุลาคม 2569" · "ไตรมาส 4/2569" · "2569" */
+  const effectivePeriod: PeriodType = dayAsMonth && period === "day" ? "month" : period;
+
+  const formatMonthLabel = (d: Dayjs): string =>
+    new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(d.toDate());
+
+  const formatWeekRange = (start: Dayjs, end: Dayjs): string => {
+    const sameYear = start.year() === end.year();
+    return `${formatDayMonth(ymd(start), locale, { withYear: !sameYear })} – ${formatDayMonth(ymd(end), locale, { withYear: true })}`;
+  };
+
+  /** "30 ต.ค. 2569" · "1 ต.ค. – 7 ต.ค. 2569" · "ตุลาคม 2569" · "ไตรมาส 4/2569" · "2569" */
   const labelOf = (d: Dayjs): string => {
-    if (period === "day") return formatDayMonth(ymd(d), locale, { withYear: true });
-    if (period === "week") {
+    if (effectivePeriod === "day") return formatDayMonth(ymd(d), locale, { withYear: true });
+    if (effectivePeriod === "week") {
       const [start, end] = getRangeStartEnd("week", d);
-      const sameYear = start.year() === end.year();
-      return `${formatDayMonth(ymd(start), locale, { withYear: !sameYear })} – ${formatDayMonth(ymd(end), locale, { withYear: true })}`;
+      return formatWeekRange(start, end);
     }
     // ปีเลขล้วน (Intl ภาษาไทยใส่ "พ.ศ." นำหน้า ทำให้ "ไตรมาส 4/พ.ศ. 2569") — ไทย = พ.ศ. (+543)
     const year = locale === "en" ? d.year() : d.year() + 543;
-    if (period === "quarter") return t("quarterLabel", { n: d.quarter(), year });
-    if (period === "year") return String(year);
-    return new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(d.toDate());
+    if (effectivePeriod === "quarter") return t("quarterLabel", { n: d.quarter(), year });
+    if (effectivePeriod === "year") return String(year);
+    return formatMonthLabel(d);
   };
+
+  const monthWeeks = period === "week" ? getMonthWeeks(date) : [];
+  const currentWeekIdx =
+    period === "week" && monthWeeks.length > 0
+      ? Math.min(Math.floor((date.date() - 1) / 7), monthWeeks.length - 1)
+      : 0;
+
+  const nextDisabled =
+    period === "week"
+      ? currentWeekIdx >= monthWeeks.length - 1
+      : isSamePeriod(effectivePeriod, date, dayjs()) || shiftPeriod(effectivePeriod, date, 1).isAfter(dayjs(), "day");
 
   return (
     <>
@@ -51,31 +82,78 @@ export function PeriodSelector({
         onChange={onPeriodChange}
         options={PERIOD_TYPES.map((p) => ({ value: p, label: t(`type.${p}`) }))}
       />
-      <div className="flex items-center gap-1">
-        <Button
-          icon={<ChevronLeftIcon className="h-4 w-4" />}
-          aria-label={t("prev")}
-          onClick={() => onDateChange(shiftPeriod(period, date, -1))}
-        />
-        {/* ปฏิทินโหลดเมื่อกด (base/LazyDatePicker) · format เป็นฟังก์ชัน = แสดงชื่อช่วง พิมพ์เองไม่ได้ (inputReadOnly) */}
-        <LazyDatePicker
-          picker={pickerTypeFor(period)}
-          value={date}
-          format={labelOf}
-          inputReadOnly
-          allowClear={false}
-          onChange={(v) => { if (v && !Array.isArray(v)) onDateChange(v as Dayjs); }}
-          style={{ width: period === "week" ? 230 : 190 }}
-          aria-label={t("pick")}
-        />
-        <Button
-          icon={<ChevronRightIcon className="h-4 w-4" />}
-          aria-label={t("next")}
-          onClick={() => onDateChange(shiftPeriod(period, date, 1))}
-        />
-      </div>
-      <Button disabled={isSamePeriod(period, date, dayjs())} onClick={() => onDateChange(dayjs())}>
-        {t(`current.${period}`)}
+      {period === "week" ? (
+        <>
+          <LazyDatePicker
+            picker="month"
+            value={date}
+            format={formatMonthLabel}
+            inputReadOnly
+            allowClear={false}
+            disabledDate={(d) => d.isAfter(dayjs(), "month")}
+            onChange={(v) => {
+              if (v && !Array.isArray(v)) onDateChange((v as Dayjs).startOf("month"));
+            }}
+            style={{ width: 175 }}
+            aria-label={t("pick")}
+          />
+          <div className="flex items-center gap-1">
+            <Button
+              icon={<ChevronLeftIcon className="h-4 w-4" />}
+              aria-label={t("prev")}
+              disabled={currentWeekIdx <= 0}
+              onClick={() => onDateChange(shiftPeriod("week", date, -1))}
+            />
+            <Select
+              value={currentWeekIdx}
+              onChange={(idx) => {
+                const target = monthWeeks[idx as number];
+                if (target) onDateChange(target.start);
+              }}
+              options={monthWeeks.map((w) => ({
+                value: w.index,
+                label: formatWeekRange(w.start, w.end),
+              }))}
+              style={{ minWidth: 215 }}
+              aria-label={t("pick")}
+            />
+            <Button
+              icon={<ChevronRightIcon className="h-4 w-4" />}
+              aria-label={t("next")}
+              disabled={nextDisabled}
+              onClick={() => onDateChange(shiftPeriod("week", date, 1))}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center gap-1">
+          <Button
+            icon={<ChevronLeftIcon className="h-4 w-4" />}
+            aria-label={t("prev")}
+            onClick={() => onDateChange(shiftPeriod(effectivePeriod, date, -1))}
+          />
+          {/* ปฏิทินโหลดเมื่อกด (base/LazyDatePicker) · format เป็นฟังก์ชัน = แสดงชื่อช่วง พิมพ์เองไม่ได้ (inputReadOnly) */}
+          <LazyDatePicker
+            picker={pickerTypeFor(effectivePeriod)}
+            value={date}
+            format={labelOf}
+            inputReadOnly
+            allowClear={false}
+            disabledDate={(d) => d.isAfter(dayjs(), "day")}
+            onChange={(v) => { if (v && !Array.isArray(v)) onDateChange(v as Dayjs); }}
+            style={{ width: 190 }}
+            aria-label={t("pick")}
+          />
+          <Button
+            icon={<ChevronRightIcon className="h-4 w-4" />}
+            aria-label={t("next")}
+            disabled={nextDisabled}
+            onClick={() => onDateChange(shiftPeriod(effectivePeriod, date, 1))}
+          />
+        </div>
+      )}
+      <Button disabled={isSamePeriod(effectivePeriod, date, dayjs())} onClick={() => onDateChange(dayjs())}>
+        {t(`current.${effectivePeriod}`)}
       </Button>
     </>
   );
