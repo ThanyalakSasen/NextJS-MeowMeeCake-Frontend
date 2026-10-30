@@ -10,7 +10,7 @@ import DashboardPage from "./DashboardPageClient";
 export default async function DashboardRoute() {
   const [user, h] = await Promise.all([currentUserOnServer(), serverHttpAsUser()]);
   const show = user
-    ? { orders: !!user.menuAccess.orders?.view, ingredients: !!user.menuAccess.ingredients?.view, production: !!user.menuAccess.production?.view }
+    ? { orders: !!user.menuAccess.orders?.view, ingredients: !!user.menuAccess.ingredients?.view }
     : null;
   const state = await prefetchPublic(
     show && h ? [{ queryKey: ["reports", "dashboard", show], queryFn: () => reportsService.dashboard(show, h) }] : [],

@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // src/services/reports.ts
 // ไม่มี endpoint /reports/dashboard เดียวจบ — backend แยกเป็นหลาย endpoint (dashboard/*, ingredients/
-// low-stock, orders, production-orders) ประกอบ DashboardSummary ที่นี่จุดเดียว (ViewModel ไม่ต้องรู้)
+// low-stock, orders) ประกอบ DashboardSummary ที่นี่จุดเดียว (ViewModel ไม่ต้องรู้)
 //
 // items_summary ("บราวนี่ ×2, เค้กอัลมอนด์ ×1"): ออเดอร์ล่าสุดขอ ?with_items=true · ใบสั่งผลิต backend แนบ items[] มาในรายการเสมอ
 // (ทั้งคู่เป็น query เดียวฝั่ง backend ไม่ใช่ N+1 — เดิมปล่อยว่างจนคอลัมน์ "รายการ" ว่างทุกแถว TC-ADM-12)
@@ -13,7 +13,6 @@ import type {
   DashboardLowStock,
   DashboardRecentOrder,
   DashboardTopProduct,
-  DashboardProduction,
 } from "@/types/dashboard";
 
 // ── shape ดิบเฉพาะจุดที่ dashboard ใช้ (ไม่ผ่าน Order/ProductionOrder DTO ที่ยังไม่ตรง backend) ──
@@ -39,13 +38,6 @@ interface RawOrder {
   order_status: string;
   user_id?: { user_fullname?: string } | string | null;
   items?: { product_snapshot?: { product_name_th?: string }; quantity: number }[];
-}
-interface RawProductionOrder {
-  _id: string;
-  production_no: string;
-  production_status: string;
-  production_date: string;
-  items?: { product_id?: { product_name_th?: string } | string | null; planned_qty: number; item_status?: string }[];
 }
 
 /** "บราวนี่ ×2, เค้กอัลมอนด์ ×1" — ข้ามแถวที่ไม่มีชื่อ */
@@ -136,17 +128,16 @@ export const reportsService = {
 
   /**
    * scope = widget ที่ผู้ใช้มีสิทธิ์ดู — ไม่มีสิทธิ์ = ไม่ยิง (คืนรายการว่าง) แทนที่ 403 ตัวเดียวจะทำให้ Promise.all ล้มทั้งหน้า
-   * overview / top-products ใช้ dashboard.view (หน้านี้กั้นไว้แล้ว) · ออเดอร์ล่าสุด = orders · วัตถุดิบใกล้หมด = ingredients ·
-   * สถานะการผลิต = production (Final-Backlog P11)
+   * overview / top-products ใช้ dashboard.view (หน้านี้กั้นไว้แล้ว) · ออเดอร์ล่าสุด = orders · วัตถุดิบใกล้หมด = ingredients
    */
   /** h = http client (ค่าเริ่มต้น http ปกติ) — ฝั่ง server ส่ง withConfig(cookie + no-store) เข้ามา (dashboard/page.tsx) */
   dashboard: async (
-    scope: { orders: boolean; ingredients: boolean; production: boolean },
+    scope: { orders: boolean; ingredients: boolean },
     h: HttpReader = http,
   ): Promise<{ data: DashboardSummary }> => {
     const today = bangkokTodayRangeUtc();
 
-    const [overviewToday, overviewAllTime, lowStockRes, topProductsRes, recentOrdersRes, productionRes] =
+    const [overviewToday, overviewAllTime, lowStockRes, topProductsRes, recentOrdersRes] =
       await Promise.all([
         h.get<{ data: RawOverview }>("/admin/dashboard/overview", { params: today }),
         h.get<{ data: RawOverview }>("/admin/dashboard/overview"),
@@ -160,9 +151,6 @@ export const reportsService = {
           params: { limit: 5 },
         }),
         scope.orders ? h.getList<RawOrder>("/admin/orders", { params: { limit: 5, with_items: true } }) : { data: [] as RawOrder[] },
-        scope.production
-          ? h.getList<RawProductionOrder>("/admin/production-orders", { params: { limit: 20 } })
-          : { data: [] as RawProductionOrder[] },
       ]);
 
     const lowStock: DashboardLowStock[] = lowStockRes.data.items.map((i) => ({
@@ -192,21 +180,6 @@ export const reportsService = {
       order_status: o.order_status as DashboardRecentOrder["order_status"],
     }));
 
-    const productionStatus: DashboardProduction[] = productionRes.data
-      .filter((p) => p.production_status === "planned" || p.production_status === "in_progress")
-      .slice(0, 5)
-      .map((p) => ({
-        _id: p._id,
-        production_no: p.production_no,
-        items_summary: summarize(
-          (p.items ?? [])
-            .filter((it) => it.item_status !== "cancelled")
-            .map((it) => ({ name: typeof it.product_id === "object" ? it.product_id?.product_name_th : undefined, qty: it.planned_qty })),
-        ),
-        production_status: p.production_status as DashboardProduction["production_status"],
-        due_date: p.production_date,
-      }));
-
     return {
       data: {
         stats: {
@@ -219,7 +192,6 @@ export const reportsService = {
         recent_orders: recentOrders,
         low_stock: lowStock,
         top_products: topProducts,
-        production_status: productionStatus,
         generated_at: new Date().toISOString(),
       },
     };
