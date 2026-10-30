@@ -102,8 +102,14 @@ const normalizePhone = (v: string) => v.replace(/[\s-]/g, "");
 
 /** ยอดที่ backend คิดไม่ตรงกับยอดที่แคชเชียร์รับเงินไว้ — หยุดก่อนรับเงิน */
 class TotalMismatchError extends Error {
-  constructor(readonly signature: string, readonly actual: number, readonly expected: number) {
+  readonly actual: number;
+  readonly subtotal: number;
+  readonly discount: number;
+  constructor(readonly signature: string, order: Order, readonly expected: number) {
     super("POS total mismatch");
+    this.actual = order.total_amount;
+    this.subtotal = order.subtotal;
+    this.discount = order.discount_amount ?? 0;
   }
 }
 
@@ -118,7 +124,7 @@ export function usePOSViewModel() {
   // ห้ามเก็บค่าที่แปลงแล้วแล้วแปลงซ้ำ: "-"/"/" จะถูกตีความเป็นปุ่ม 3/2 ของแป้นไทยอีกรอบ (ดู nextRawInput)
   const [queryRaw, setQueryRaw] = useState("");
   /** โปรที่เลือก — หลายตัวได้เมื่อทุกตัว stackable (togglePromoSelection) */
-  const [selectedPromoIds, setSelectedPromoIds] = useState<string[]>([]);
+  const [pickedPromoIds, setSelectedPromoIds] = useState<string[]>([]);
   /** บิลที่พักไว้ในเครื่องนี้ (localStorage — ฝั่ง server ว่าง) */
   const heldBills = useHeldBills();
   const [heldOpen, setHeldOpen] = useState(false);
@@ -164,6 +170,12 @@ export function usePOSViewModel() {
   const catalog = useMemo<PosProduct[]>(() => catalogQ.data?.data ?? [], [catalogQ.data]);
   const promotions = useMemo(() => posPromotions(promotionsQ.data?.data ?? []), [promotionsQ.data]);
   const promotionsEnabled = perm.view && !promotionsQ.isError;
+  // โปรที่เลือกไว้แต่ไม่อยู่ในรายการแล้ว (บิลพัก/บิลค้างจากก่อนโปรหมดอายุ/ถูกปิด) — ตัดทิ้ง เดิมค้างเป็นคำเตือน
+  // "ใช้ไม่ได้แล้ว" ตลอดโดยไม่มีการ์ดให้กดเอาออก และยังนับเป็นโปรที่เลือก (เพดาน/กติกาใช้ร่วม)
+  const selectedPromoIds = useMemo(
+    () => (promotionsQ.isSuccess ? pickedPromoIds.filter((id) => promotions.some((p) => p._id === id)) : pickedPromoIds),
+    [promotionsQ.isSuccess, pickedPromoIds, promotions],
+  );
 
   const promosOf = (productId: string, categoryId: string | null): Promotion[] =>
     promotionEnabledList(promotionsEnabled, promotionsForProduct(promotions, productId, categoryId));
@@ -337,8 +349,10 @@ export function usePOSViewModel() {
 
   // ยอดจริงจาก backend (order.total_amount) ของบิลนี้ เมื่อไม่ตรงกับที่หน้าจอคิด (ราคา/โปรเปลี่ยนหลังโหลดหน้า)
   // — ใช้แทน total ตอนรับเงิน · บิลเปลี่ยนแล้ว signature ไม่ตรง = กลับไปใช้ยอดที่หน้าจอคิด
-  const [serverTotal, setServerTotal] = useState<{ signature: string; amount: number } | null>(null);
-  const payable = serverTotal?.signature === billSignature ? serverTotal.amount : total;
+  // (เก็บยอดก่อนส่วนลด/ส่วนลดของ backend ด้วย — สรุปยอดบนจอต้องบวกลบลงตัวกับยอดที่รับจริง)
+  const [serverTotal, setServerTotal] = useState<{ signature: string; amount: number; subtotal: number; discount: number } | null>(null);
+  const serverMatch = serverTotal?.signature === billSignature ? serverTotal : null;
+  const payable = serverMatch ? serverMatch.amount : total;
 
   const received = Number(receivedDigits || "0");
   const receivedShort = received < payable;
@@ -414,7 +428,7 @@ export function usePOSViewModel() {
 
       // ยอดจริงไม่ตรงกับยอดที่แคชเชียร์รับเงิน/แสดง QR ไว้ → หยุดก่อนรับเงิน (ใบยังค้างไว้ กดอีกครั้งใช้ใบเดิม)
       // เดิมรับเงินผ่านไปเลย — ยอดจริงสูงกว่า = เงินขาดโดยไม่มีใครรู้ (เงินทอนถูกปัดเป็น 0)
-      if (Math.abs(order.total_amount - expected) >= 0.01) throw new TotalMismatchError(signature, order.total_amount, expected);
+      if (Math.abs(order.total_amount - expected) >= 0.01) throw new TotalMismatchError(signature, order, expected);
 
       // 2) รับเงิน + ปิดงานในคำขอเดียว (เงินสด/QR ที่เคาน์เตอร์ = จ่ายจริงแล้ว) — ยอดใช้ order.total_amount ของ backend
       try {
@@ -430,15 +444,27 @@ export function usePOSViewModel() {
       return {
         orderNo: order.order_no,
         paidAt: new Date().toISOString(),
-        lines: cart.map((c) => ({
-          name: c.name,
-          detail:
-            [c.variantLabel, ...c.options.map((o) => (o.text_value ? `${o.option_name}: ${o.text_value}` : o.option_name))]
-              .filter(Boolean)
-              .join(" · ") || null,
-          qty: c.qty,
-          price: c.price,
-        })),
+        // ใบเสร็จใช้รายการ+ราคาต่อหน่วยจริงของ backend (ราคาเปลี่ยนหลังโหลดหน้า = ยอดรวมกับรายการบวกกันลงตัว)
+        // ไม่มี items ในคำตอบ = ใช้บิลบนจอ
+        lines: order.items?.length
+          ? order.items.map((it) => ({
+              name: it.product_name,
+              detail:
+                [it.variant_name, ...(it.selected_options ?? []).map((o) => (o.text_value ? `${o.option_name}: ${o.text_value}` : o.option_name))]
+                  .filter(Boolean)
+                  .join(" · ") || null,
+              qty: it.quantity,
+              price: it.unit_price,
+            }))
+          : cart.map((c) => ({
+              name: c.name,
+              detail:
+                [c.variantLabel, ...c.options.map((o) => (o.text_value ? `${o.option_name}: ${o.text_value}` : o.option_name))]
+                  .filter(Boolean)
+                  .join(" · ") || null,
+              qty: c.qty,
+              price: c.price,
+            })),
         subtotal: order.subtotal,
         promotions: appliedPromos.map((e) => e.promotion.promotion_name),
         method,
@@ -462,7 +488,7 @@ export function usePOSViewModel() {
     },
     onError: (e) => {
       if (e instanceof TotalMismatchError) {
-        setServerTotal({ signature: e.signature, amount: e.actual });
+        setServerTotal({ signature: e.signature, amount: e.actual, subtotal: e.subtotal, discount: e.discount });
         alert.warning(t("pos.totalChanged", { total: formatCurrency(e.actual, locale), shown: formatCurrency(e.expected, locale) }));
         return;
       }
@@ -477,7 +503,10 @@ export function usePOSViewModel() {
   // ── คีย์แพด "รับเงินมา" ──
   const pressKey = (k: string) => {
     if (k === "back") setReceivedDigits((v) => v.slice(0, -1));
-    else setReceivedDigits((v) => (v.length >= MAX_RECEIVED_DIGITS ? v : (v === "0" ? "" : v) + k));
+    else setReceivedDigits((v) => {
+      const next = (v === "0" ? "" : v) + k;
+      return next.length > MAX_RECEIVED_DIGITS ? v : next; // "00" ต่อท้ายก็ห้ามเกินหลัก
+    });
   };
   const confirmCash = () => {
     if (receivedShort || checkout.isPending) return;
@@ -487,9 +516,11 @@ export function usePOSViewModel() {
   // ── คีย์บอร์ด: ยิงบาร์โค้ดได้จากทุกที่ + พิมพ์ตัวเลขในหน้าต่างรับเงินสด ──
   // ฟังก์ชันพวกนี้เปลี่ยน reference ทุก render — เก็บผ่าน ref ให้ effect ด้านล่าง mount แค่ครั้งเดียวได้จริง
   // (อัปเดต ref ใน effect เอง ห้ามเขียนตรงกลาง render — React จะ error "Cannot update ref during render")
-  const handlersRef = useRef({ submitQuery, pressKey, confirmCash, payDialog });
+  // modalOpen = หน้าต่างเลือกตัวเลือก/บิลที่พักเปิดอยู่ — ไม่ capture (เดิมยิงบาร์โค้ดตอนนั้นแล้วสินค้าลงบิลข้างหลังหน้าต่าง)
+  const modalOpen = !!picker || heldOpen;
+  const handlersRef = useRef({ submitQuery, pressKey, confirmCash, payDialog, modalOpen });
   useEffect(() => {
-    handlersRef.current = { submitQuery, pressKey, confirmCash, payDialog };
+    handlersRef.current = { submitQuery, pressKey, confirmCash, payDialog, modalOpen };
   });
 
   // ยิงบาร์โค้ดได้จากทุกที่ในหน้าโดยไม่ต้องคลิกช่องกรอกก่อน — เครื่องสแกนจริงพิมพ์เร็วมากแล้วปิดท้ายด้วย Enter เสมอ
@@ -519,7 +550,7 @@ export function usePOSViewModel() {
         else if (e.key === "Enter") { e.preventDefault(); h.confirmCash(); }
         return;
       }
-      if (h.payDialog) return;
+      if (h.payDialog || h.modalOpen) return;
       if (isTextEditable(document.activeElement)) return;
       if (e.key === "Enter") {
         const code = buffer;
@@ -609,7 +640,11 @@ export function usePOSViewModel() {
     onPickCancel: () => setPicker(null),
 
     // บิล
-    cart, itemCount, subtotal, discount, total,
+    cart, itemCount,
+    // ยอดจริงของ backend เมื่อคิดไม่ตรงกับหน้าจอ (serverTotal) — ไม่งั้นยอดที่หน้าจอคิด
+    subtotal: serverMatch?.subtotal ?? subtotal,
+    discount: serverMatch?.discount ?? discount,
+    total,
     /** ยอดที่ต้องรับจริง — ปกติ = total · ต่างเมื่อ backend คิดยอดบิลนี้ไม่ตรง (ดู serverTotal) */
     payable,
     promosOf,
@@ -635,7 +670,7 @@ export function usePOSViewModel() {
     discountExceeds,
     togglePromo: (id: string) => {
       const promo = promotions.find((p) => p._id === id);
-      if (promo) setSelectedPromoIds((cur) => togglePromoSelection(cur, promo, promotions));
+      if (promo) setSelectedPromoIds(togglePromoSelection(selectedPromoIds, promo, promotions));
     },
 
     // พักบิล
