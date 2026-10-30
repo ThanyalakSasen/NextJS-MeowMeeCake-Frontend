@@ -83,15 +83,23 @@ export const MAX_STACKED_PROMOTIONS = 5;
  * กดตัวที่เลือกอยู่ = เอาออก · ตัวใหม่ไม่ใช่ stackable หรือที่เลือกอยู่มีตัวที่ไม่ใช่ stackable = แทนที่ทั้งหมด ·
  * ตัวใหม่ใช้ร่วมกับตัวที่เลือกอยู่ไม่ได้ (stackable_with) = แทนที่ทั้งหมด เช่นกัน ·
  * ทุกตัวใช้ร่วมกันได้ = เพิ่มต่อท้าย (เต็มแล้วไม่เพิ่ม)
+ * stale = ตัวที่เลือกไว้แต่ใช้กับบิลนี้ไม่ได้แล้ว (การ์ดแดง) — เต็มเพดานเมื่อไร ตัดตัวพวกนี้ออกก่อนเพิ่มตัวใหม่
+ * (เดิมนับรวมในเพดาน: เลือกครบแล้วกดตัวใหม่ไม่เกิดอะไรขึ้นเลย)
  */
-export function togglePromoSelection(selected: string[], promo: Promotion, all: Promotion[]): string[] {
+export function togglePromoSelection(
+  selected: string[],
+  promo: Promotion,
+  all: Promotion[],
+  stale: (id: string) => boolean = () => false,
+): string[] {
   if (selected.includes(promo._id)) return selected.filter((id) => id !== promo._id);
   const fits = (id: string) => {
     const other = all.find((p) => p._id === id);
     return other != null && canStack(promo, other);
   };
   if (!selected.every(fits)) return [promo._id];
-  return selected.length >= MAX_STACKED_PROMOTIONS ? selected : [...selected, promo._id];
+  const kept = selected.length >= MAX_STACKED_PROMOTIONS ? selected.filter((id) => !stale(id)) : selected;
+  return kept.length >= MAX_STACKED_PROMOTIONS ? selected : [...kept, promo._id];
 }
 
 /** คิดโปรโมชัน 1 ตัวกับบิลปัจจุบัน — กติกาเดียวกับ discountEngine.computeDiscount() (ยกเว้นช่องทาง/ส่งฟรีที่กรองไปแล้ว)
