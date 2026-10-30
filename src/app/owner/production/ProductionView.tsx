@@ -59,6 +59,7 @@ export function ProductionView(vm: VM) {
           open
           editTarget={vm.editTarget}
           itemsEditable={vm.editItemsEditable}
+          canAddItems={vm.editCanAddItems}
           canRemoveExisting={vm.perm.delete}
           products={vm.productOptions}
           staff={vm.staff}

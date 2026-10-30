@@ -1355,7 +1355,8 @@
   },
   "production": {
     "editTitle": "Edit Production Order {no}",
-    "itemsLockedHint": "Items can only be changed on manually created orders that haven't started — for this order you can edit the date, assignee and note only",
+    "itemsLockedHint": "Items can only be changed on orders that haven't started — for this order you can edit the date, assignee and note only",
+    "roundItemsLockedHint": "Items from the pre-order round can't be changed or removed (they come from customer orders) — you can add other products to produce",
     "updated": "Production order updated",
     "updateFailed": "Failed to update production order",
     "productNoRecipe": "{name} (no recipe yet)",
