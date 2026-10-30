@@ -1202,6 +1202,8 @@
     "memberPointsEarned": "Points earned",
     "memberPointsValue": "+{n} points",
     "promoStackHint": "Promotions that combine can be selected together — each card shows which ones it combines with",
+    "promoNoneUsable": "No promotion applies to this bill yet",
+    "promoHiddenCount": "{n} more promotions don't apply yet (conditions not met, or a member phone is needed)",
     "promoStackWith": "Combines with: {names}",
     "promoStackNone": "Doesn't combine with any other promotion listed",
     "promoNotStackable": "Can't be combined (one promotion at a time)",
