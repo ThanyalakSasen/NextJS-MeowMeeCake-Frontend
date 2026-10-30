@@ -4034,7 +4034,12 @@
       "payNow": "Pay now (scan QR / attach slip)",
       "payDeadline": "Please pay and attach your slip within 30 minutes, or the order will be cancelled automatically",
       "payDeadlinePreorder": "Please pay and attach your slip within 30 minutes (and before the round closes), or it will be cancelled automatically",
-      "home": "Back to home"
+      "home": "Back to home",
+      "lineOrder": "Order #{no}",
+      "linePreorder": "Pre-order #{no}",
+      "sendToLine": "Send order summary to LINE chat",
+      "lineSent": "Sent to LINE chat",
+      "lineSendFailed": "Could not send to the chat. Please try again, or close and reopen this page from LINE."
     },
     "myReviews": {
       "loginToView": "Log in to see your reviews",
