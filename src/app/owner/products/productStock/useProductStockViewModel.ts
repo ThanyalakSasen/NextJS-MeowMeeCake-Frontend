@@ -5,13 +5,13 @@
 // รับเข้า/เบิกใช้ = PATCH /admin/products/:id/stock { delta } · ปรับยอด = PUT { quantity } (stock.update ทั้งคู่)
 // ทุกครั้ง backend บันทึกประวัติสต็อกสินค้าให้ (ผู้ทำ + หมายเหตุ) — ดูที่หน้า productHistory
 // ─────────────────────────────────────────────────────────────
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { productsService } from "@/services/products";
 import { usePermission } from "@/context/PermissionsContext";
-import { alert } from "@/lib/alert";
+import { alert, confirmAlert } from "@/lib/alert";
 import type { StockStatus } from "@/constants/enumConfig";
 import { getStockStatus } from "./stockStatus";
 import { refId } from "@/lib/refId";
@@ -120,20 +120,54 @@ export function useProductStockViewModel() {
     [rows],
   );
 
+  // ── กันปรับซ้ำ (เอกสารบั๊กข้อ 13) ──
+  // request_key ต่อ "คำขอเดียวกัน" (สินค้า + โหมด + จำนวน + หมายเหตุ + ยอดที่คาดไว้): ล้มแล้วกดใหม่ = key เดิม →
+  // ถ้ารอบก่อน backend ทำสำเร็จไปแล้ว (timeout แต่บันทึกแล้ว) ได้ผลเดิมคืน ไม่บวกซ้ำ · สำเร็จแล้วลบ key ทิ้ง (กดใหม่ = รายการใหม่)
+  // แก้จำนวนแล้วกดใหม่ = key ใหม่ (ไม่ได้ผลของจำนวนเก่ากลับมา)
+  const requestKeys = useRef(new Map<string, string>());
+  const sendStock = async (id: string, m: StockActionMode, value: number, note?: string, expected?: number) => {
+    const sig = JSON.stringify([id, m, value, note ?? "", expected ?? null]);
+    let key = requestKeys.current.get(sig);
+    if (!key) {
+      key = crypto.randomUUID();
+      requestKeys.current.set(sig, key);
+    }
+    const res =
+      m === "adjust"
+        ? await productsService.setStock(id, value, note, { expected, request_key: key })
+        : await productsService.adjustStock(id, m === "receive" ? value : -value, note, key);
+    requestKeys.current.delete(sig);
+    return res;
+  };
+
   // ผ่าน endpoint สต็อกโดยเฉพาะ (BACKLOG2 §15.2 ข้อ 5) — แจ้งเตือนสินค้าใกล้หมด · เช็คสิทธิ์ stock · บันทึก log ก่อน → หลัง
   // รับเข้า/เบิกใช้ใช้ส่วนต่างแบบ atomic (ไม่ทับยอดที่ขายไประหว่างเปิด modal) · เบิกเกินที่มี backend ปฏิเสธ
+  // ตั้งยอด: ส่งยอดที่เห็นตอนเปิด modal (expected) — POS ขายแทรกระหว่างนั้น backend ตอบ STOCK_CHANGED แล้วถามก่อนทับ
+  // force = ผู้ใช้ยืนยันแล้วว่าตั้งทับยอดใหม่ได้
   const submit = useMutation({
-    mutationFn: ({ row, m, value, note }: { row: StockProductRow; m: StockActionMode; value: number; note?: string }) => {
-      if (m === "receive") return productsService.adjustStock(row._id, value, note);
-      if (m === "use") return productsService.adjustStock(row._id, -value, note);
-      return productsService.setStock(row._id, value, note);
-    },
+    mutationFn: ({ row, m, value, note, force }: { row: StockProductRow; m: StockActionMode; value: number; note?: string; force?: boolean }) =>
+      sendStock(row._id, m, value, note, m === "adjust" && !force ? row.stock : undefined),
     onSuccess: (_r, vars) => {
       alert.success(t(`productStock.done_${vars.m}`, { name: vars.row.name }));
       qc.invalidateQueries({ queryKey: ["products"] });
       setTarget(null);
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("productStock.actionFailed")),
+    onError: async (e, vars) => {
+      if (isApiError(e) && e.reason === "STOCK_CHANGED") {
+        qc.invalidateQueries({ queryKey: ["products"] });
+        const ok = await confirmAlert(t("productStock.stockChangedConfirm", { value: vars.value }), {
+          title: t("productStock.stockChangedTitle"),
+          note: e.message,
+          confirmText: t("productStock.stockChangedOverwrite"),
+          cancelText: t("common.cancel"),
+        });
+        if (ok) submit.mutate({ ...vars, force: true });
+        return;
+      }
+      // คำขอเดิมยังค้าง/อาจบันทึกไปแล้ว — โหลดยอดใหม่ให้ตรวจก่อน (ไม่ลองซ้ำเอง)
+      if (isApiError(e) && e.reason === "STOCK_REQUEST_PENDING") qc.invalidateQueries({ queryKey: ["products"] });
+      alert.error(isApiError(e) ? e.message : t("productStock.actionFailed"));
+    },
   });
 
   // ── ทำหลายรายการพร้อมกัน — ส่งทีละรายการ (backend ไม่มี bulk) · คืน error ของรายการที่ไม่สำเร็จให้ modal ──
@@ -148,9 +182,8 @@ export function useProductStockViewModel() {
     const failed: Record<string, string> = {};
     for (const l of lines) {
       try {
-        if (m === "receive") await productsService.adjustStock(l.id, l.value, l.note);
-        else if (m === "use") await productsService.adjustStock(l.id, -l.value, l.note);
-        else await productsService.setStock(l.id, l.value, l.note);
+        // ตั้งยอด: ยอดที่แสดงในรายการตอนกดบันทึก (expected) — ขายแทรกแล้วรายการนั้นล้มพร้อมข้อความยอดปัจจุบัน
+        await sendStock(l.id, m, l.value, l.note, m === "adjust" ? bulkItems.find((it) => it.id === l.id)?.stock : undefined);
       } catch (e) {
         failed[l.id] = isApiError(e) ? e.message : t("productStock.actionFailed");
       }
