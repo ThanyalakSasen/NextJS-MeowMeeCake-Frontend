@@ -19,10 +19,14 @@ import { confirmAlert } from "@/lib/alert";
 import { SHIPPING_CARRIERS, carrierNeedsTracking, type ShippingCarrier } from "@/constants/enumConfig";
 import type { DeliveryInfo, DeliveryUpdateInput } from "@/types/order";
 
-/** เลขพัสดุ: อังกฤษตัวพิมพ์ใหญ่ + ตัวเลข ไม่มีช่องว่าง สูงสุด 13 ตัว (เช่น TH12345678901 — ผู้ใช้ขอ 2026-10-30)
- *  backend รับได้ยาวกว่า (200) — หน้าจอจำกัดเอง · หมายเหตุตรงกับ backend schemas/order.ts updateDeliveryBody */
-const MAX_TRACKING = 13;
-const normalizeTracking = (v: string) => v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, MAX_TRACKING);
+/** เลขพัสดุ: อังกฤษตัวพิมพ์ใหญ่ + ตัวเลข ไม่มีช่องว่าง (ผู้ใช้ขอ 2026-10-30)
+ *  เดิมตัดที่ 13 ตัวเงียบ ๆ (รวมตอนวาง) — ขนส่งอื่นนอกจากไปรษณีย์ไทยอาจยาวกว่า → ขยายเป็น 30 ตัว และไม่ตัดทิ้ง:
+ *  ยาวเกิน = ขึ้น error + บันทึกไม่ได้ (เห็นว่าวางเลขผิด) · backend รับได้ 200 (schemas/order.ts updateDeliveryBody) */
+const MAX_TRACKING = 30;
+const normalizeTracking = (v: string) => v.toUpperCase().replace(/[^A-Z0-9]/g, "");
+/** ไปรษณีย์ไทย (มาตรฐาน UPU S10): อักษร 2 + ตัวเลข 9 + TH = 13 ตัว เช่น EF123456789TH — ไม่ตรง = เตือน แต่ยังบันทึกได้
+ *  ขนส่งอื่นยังไม่ตรวจรูปแบบ (ยังไม่มีเลขจริงมาเทียบ) */
+const THAILAND_POST_TRACKING = /^[A-Z]{2}\d{9}TH$/;
 const MAX_NOTE = 1000;
 
 export function DeliverySection({
@@ -57,6 +61,9 @@ export function DeliverySection({
   // กรอกครบแล้ว (ขนส่ง + เลขพัสดุ ถ้าเป็นขนส่งพัสดุ) — ค่าในฟอร์ม · ตอนพร้อมส่งมอบ ปุ่มบันทึกจะจัดส่งให้เลย
   // กดได้แม้ไม่มีการแก้ (ข้อมูลบันทึกไว้ก่อนแล้วแต่ยังไม่ได้ปิดออเดอร์)
   const complete = !!carrier && (!carrierNeedsTracking(carrier) || !!tracking.trim());
+  const trackingNo = tracking.trim();
+  const trackingTooLong = trackingNo.length > MAX_TRACKING;
+  const trackingOffFormat = carrier === "thailand_post" && !!trackingNo && !THAILAND_POST_TRACKING.test(trackingNo);
   const willShip = canMarkShipped && complete;
   // ลำดับตามรายการใน SHIPPING_CARRIERS (ขนส่งที่ใช้บ่อยก่อน · "ร้านจัดส่งเอง"/"อื่น ๆ" ท้ายสุด) — ไม่เรียง ก-ฮ
   const carrierOptions = SHIPPING_CARRIERS.map((c) => ({ value: c, label: t(`enums.shippingCarrier.${c}`) }));
@@ -121,7 +128,7 @@ export function DeliverySection({
         <span className="text-gray-600">{t("orders.trackingNo")}</span>
         <Input
           value={tracking}
-          maxLength={MAX_TRACKING}
+          status={trackingTooLong ? "error" : trackingOffFormat ? "warning" : undefined}
           onKeyDown={(e) => {
             if (e.key === " ") e.preventDefault();
           }}
@@ -130,6 +137,11 @@ export function DeliverySection({
           style={{ textTransform: "uppercase" }}
           placeholder={t("orders.trackingPlaceholder")}
         />
+        {trackingTooLong ? (
+          <span className="text-xs text-red-600">{t("orders.trackingTooLong", { max: MAX_TRACKING })}</span>
+        ) : trackingOffFormat ? (
+          <span className="text-xs text-amber-700">{t("orders.trackingThaiPostFormat")}</span>
+        ) : null}
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-gray-600">{t("orders.deliveryNote")}</span>
@@ -156,7 +168,7 @@ export function DeliverySection({
             type="primary"
             icon={actionIcon("verify", "small")}
             loading={markingShipped}
-            disabled={saving}
+            disabled={saving || trackingTooLong}
             onClick={async () => {
               // แจ้งลูกค้า + ปิดออเดอร์ทันที ย้อนไม่ได้ — ถามก่อน ให้เห็นขนส่ง/เลขพัสดุที่จะส่งไป (กันพิมพ์เลขผิด/กดพลาด)
               const carrierName = carrier ? t(`enums.shippingCarrier.${carrier}`) : "";
@@ -179,7 +191,7 @@ export function DeliverySection({
             type="primary"
             icon={actionIcon("save", "small")}
             loading={saving}
-            disabled={!dirty || markingShipped}
+            disabled={!dirty || markingShipped || trackingTooLong}
             onClick={() => onSave(changes)}
           >
             {t("orders.deliverySave")}
