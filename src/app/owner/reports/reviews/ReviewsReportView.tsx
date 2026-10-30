@@ -1,7 +1,7 @@
 "use client";
 // หน้า "รายงานความคิดเห็น" — หน้าเดียว 2 แท็บ (?tab= sync กับ URL): แดชบอร์ด (สรุป · ค่าเริ่มต้น) · จัดการรีวิว (รายรีวิว)
 // เดิมแยกเป็น 2 เมนู/2 หน้า · ปุ่มตั้งค่าหัวข้อรีวิวอยู่มุมขวาบนร่วมกันทั้ง 2 แท็บ
-// แท็บชิดขวา · ช่วงเวลาของแท็บแดชบอร์ดอยู่ซ้ายในแถวเดียวกัน (แบบหน้ารายงานยอดขาย)
+// แท็บชิดขวาบนจอใหญ่ (มือถือ/จอกลาง = ชิดซ้ายบนสุด) · ช่วงเวลาของแท็บแดชบอร์ดอยู่ซ้ายในแถวเดียวกัน (แบบหน้ารายงานยอดขาย)
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
@@ -34,7 +34,7 @@ export function ReviewsReportView({
           <Button icon={<Cog6ToothIcon className="h-4 w-4" />}>{t("reviews.settingsLink")}</Button>
         </Link>
       }
-      tabsAlign="end"
+      tabsAlign="endLg"
       activeKey={tab}
       onChange={(k) => onTab(k as ReviewsTab)}
       items={[

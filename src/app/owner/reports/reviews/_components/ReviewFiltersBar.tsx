@@ -1,6 +1,7 @@
 "use client";
-// แถบกรองของหน้ารีวิว — dropdown 2 แถว (2026-10-26):
-//   แถว 1: ค้นข้อความ · หมวด · สินค้า · ดาว · เรียง   แถว 2: หัวข้อ (+ ชม/ติ) · รูป/วิดีโอ · ล้าง
+// แถบกรองของหน้ารีวิว — 2 แถว:
+//   แถว 1: ค้นข้อความ · เรียง (ตัวเรียงอยู่ที่เดิม มุมขวาบน)
+//   แถว 2 (ด้านล่าง): ตัวกรองอื่นทั้งหมด — หมวด · สินค้า · ดาว · หัวข้อ (+ ชม/ติ) · รูป/วิดีโอ · ล้าง
 // "ยังไม่ตอบ" จากทางลัดในแถบสรุปแสดงเป็นป้ายปิดได้
 import { useTranslations } from "next-intl";
 import { Button, Card, Select, Tag } from "@/components/base";
@@ -39,11 +40,22 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
 
   return (
     <Card className="flex flex-col gap-3 p-4">
-      {/* แถว 1: ค้นหา · หมวด · สินค้า · ดาว · เรียง */}
+      {/* แถว 1: ค้นหา · เรียง (คอลัมน์ขวาสุด — ตำแหน่งเดิม) */}
       <div className="grid grid-cols-2 items-end gap-3 md:grid-cols-5">
-        <div className="col-span-2 md:col-span-1">
+        <div className="col-span-2 md:col-span-4">
           {field(t("reviews.filter.search"), <SearchInput value={search} onChange={setSearch} placeholder={t("reviews.searchPlaceholder")} className="!max-w-none" />)}
         </div>
+        <div className="col-span-2 md:col-span-1">
+          {field(t("reviews.sortLabel"), (
+            <Select size="small" className="w-full" value={filters.sort}
+              options={SORTS.map((s) => ({ value: s, label: t(`reviews.sort.${s}`) }))}
+              onChange={(v: ReviewSort) => setFilter("sort", v)} />
+          ))}
+        </div>
+      </div>
+
+      {/* แถว 2: ตัวกรองอื่น — หมวด · สินค้า · ดาว · หัวข้อ (+ ชม/ติ) · รูป/วิดีโอ · ล้างตัวกรอง (ประเภทคำสั่งซื้อเป็นแท็บเหนือรายการ — ReviewsView) */}
+      <div className="grid grid-cols-2 items-end gap-3 border-t border-gray-100 pt-3 md:grid-cols-5">
         {field(t("reviews.filter.category"), (
           <Select size="small" showSearch optionFilterProp="label" value={filters.categoryId}
             options={[all(t("reviews.filter.allCategories")), ...categoryOptions]} onChange={(v: string) => setFilter("categoryId", v)} />
@@ -57,15 +69,6 @@ export function ReviewFiltersBar({ filters, setFilter, search, setSearch, onRese
             options={[{ value: 0, label: t("reviews.filter.allRatings") }, ...[5, 4, 3, 2, 1].map((n) => ({ value: n, label: t("reviews.filter.stars", { n }) }))]}
             onChange={(v: number) => setFilter("rating", v || null)} />
         ))}
-        {field(t("reviews.sortLabel"), (
-          <Select size="small" value={filters.sort}
-            options={SORTS.map((s) => ({ value: s, label: t(`reviews.sort.${s}`) }))}
-            onChange={(v: ReviewSort) => setFilter("sort", v)} />
-        ))}
-      </div>
-
-      {/* แถว 2: หัวข้อ (+ ชม/ติ) · รูป/วิดีโอ · ล้างตัวกรอง — ประเภทคำสั่งซื้อย้ายไปเป็นแท็บเหนือรายการ (ReviewsView) */}
-      <div className="grid grid-cols-2 items-end gap-3 md:grid-cols-5">
         {field(t("reviews.filter.aspect"), (
           <Select size="small" value={filters.aspectId}
             options={[all(t("reviews.filter.allAspects")), ...aspectOptions]} onChange={(v: string) => setFilter("aspectId", v)} />

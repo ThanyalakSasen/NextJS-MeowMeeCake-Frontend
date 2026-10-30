@@ -21,6 +21,9 @@ export const toWeeklyMarket = (m: any): AdminWeeklyMarket => ({
   close_time: m?.close_time ?? "",
   map_url: m?.map_url ?? "",
   is_active: m?.is_active !== false,
+  // เดิมไม่อ่าน is_main — โหลดหน้าใหม่แล้วไม่รู้ว่าแห่งไหนเป็นหน้าร้านหลัก (บันทึกครั้งถัดไปส่ง false ทุกแห่ง)
+  is_main: m?.is_main === true,
+  address: m?.address && typeof m.address === "object" ? toSettings(m.address) : null,
 });
 
 function toProfile(raw: any): AdminStoreProfile {

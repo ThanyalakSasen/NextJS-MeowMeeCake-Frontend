@@ -18,8 +18,11 @@ export interface FavoriteItem {
   originalPrice: number | null;
   /** path รูปแรก (ผ่าน resolveUploadUrl ก่อนแสดง) · "" = ไม่มีรูป */
   image: string;
-  /** ยังเปิดขาย (is_visible) — ไม่ได้ดูสต็อก */
+  /** ซื้อได้ตอนนี้ — เปิดขาย และสต็อก > 0 (พรีออเดอร์ไม่ดูสต็อก) */
   inStock: boolean;
+  /** id หมวด (ป้าย "ส่งเฉพาะ จ.…") — backend เก่า / รายการที่เพิ่งกดหัวใจยังไม่มี */
+  category_id?: string | null;
+  review_count?: number;
   /** คะแนนเฉลี่ยเป็นข้อความ · "-" = ยังไม่มีรีวิว */
   rating: string;
   is_preorder: boolean;

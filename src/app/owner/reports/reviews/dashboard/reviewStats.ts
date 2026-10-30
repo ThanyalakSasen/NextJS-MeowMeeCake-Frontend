@@ -39,11 +39,13 @@ export interface AspectTrend {
 export interface ProductRow extends ReviewStatsProduct {
   /** % รีวิวแย่ 0–100 */
   negativeRate: number;
+  /** % รีวิวเชิงบวก (4–5 ดาว) 0–100 */
+  positiveRate: number;
   /** คะแนนเฉลี่ยเทียบช่วงก่อนหน้า · null = ช่วงก่อนหน้าไม่มีรีวิว */
   avgDelta: number | null;
 }
 
-export type ProductSortKey = "count" | "avg" | "avgDelta" | "negativeRate" | "name";
+export type ProductSortKey = "count" | "avg" | "avgDelta" | "positiveRate" | "negativeRate" | "name";
 export interface ProductSort {
   key: ProductSortKey;
   dir: "asc" | "desc";
@@ -141,6 +143,7 @@ export function toReviewStats(raw: AdminReviewStats, range: [Dayjs, Dayjs], peri
     products: (raw.products ?? []).map((p) => ({
       ...p,
       negativeRate: p.count ? (p.negative / p.count) * 100 : 0,
+      positiveRate: p.count ? ((p.positive ?? 0) / p.count) * 100 : 0,
       avgDelta: p.prev_avg != null ? p.avg - p.prev_avg : null,
     })),
     unrepliedNegativeCount: raw.unreplied_negative_count,

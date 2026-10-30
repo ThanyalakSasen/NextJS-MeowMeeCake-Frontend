@@ -18,6 +18,9 @@ export interface AdminWeeklyMarket {
   is_active: boolean;
   /** หน้าร้านหลัก — มีได้ 1 แห่ง · backend จัดให้อยู่ลำดับแรกเสมอ */
   is_main?: boolean;
+  /** ที่อยู่แบบแยกช่อง + พิกัด (ช่องเดียวกับที่อยู่ร้าน) · null = รายการเก่าที่มีแค่ location ข้อความ
+   *  หน้าร้านหลัก: ที่อยู่นี้ = ที่อยู่ร้าน (/admin/store-settings) */
+  address?: StoreSettings | null;
 }
 
 export interface PhoneContact {

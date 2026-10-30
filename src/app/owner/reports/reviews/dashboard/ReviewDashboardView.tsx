@@ -8,6 +8,7 @@ import { PeriodSelector } from "@/components/shared/data";
 import { InfoTip, LazyTooltip, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { StatCard, StatCardsGrid, type StatCardStatus } from "@/components/shared/stats";
 import { formatDate, formatNumber, formatPercent } from "@/i18n/format";
+import type { ReviewRow } from "../reviewRow";
 import type { useReviewDashboardViewModel } from "./useReviewDashboardViewModel";
 import { MIN_REVIEWS_FOR_LOW, type ProductSortKey, type ProductStat, type ReviewStats } from "./reviewStats";
 import type { ReviewStatsSummary } from "@/types/review";
@@ -24,18 +25,19 @@ export function ReviewDashboardToolbar(vm: VM) {
  * onViewUnreplied = ไปแท็บจัดการรีวิว กรองรีวิวลบที่ยังไม่ตอบ
  * ปรับใหม่ให้อ่านง่าย (2026-10-26) — เรียงจากบนลงล่าง:
  *   1) กล่องสรุป 2 บรรทัด: ช่วงนี้เป็นยังไง + ต้องทำอะไร
- *   2) การ์ด 4 ใบ: จำนวนรีวิว · คะแนนเฉลี่ย · % รีวิวแย่ · % ตอบกลับแล้ว (เทียบช่วงก่อน + ป้ายดี/ควรระวัง/แย่)
+ *   2) การ์ด 3 ใบ: จำนวนรีวิว · คะแนนเฉลี่ย · % รีวิวแย่ (เทียบช่วงก่อน + ป้ายดี/ควรระวัง/แย่) — เอาการ์ด "ตอบกลับแล้ว" ออก
  *   3) ต้องทำ: รีวิวแย่ที่ยังไม่ตอบ · สินค้าที่คะแนนตก
- *   4) ลูกค้าพูดถึงอะไร: เรื่องที่ชม/ติ · ลูกค้าให้กี่ดาว
- *   5) แนวโน้มตามเวลา (จำนวนรีวิว + คะแนนเฉลี่ยแต่ละวัน/เดือน)
- *   6) สินค้า: รีวิวมากสุด · คะแนนต่ำสุด · ตารางคะแนนรายสินค้า (กดหัวคอลัมน์เรียง)
+ *   4) ลูกค้าชม/ติเรื่องอะไร · สรุปตามหมวดหมู่สินค้า — วางคู่กัน หน้าตาแถวเดียวกัน (MetricRow)
+ *   5) ลูกค้าให้กี่ดาว · โน้ตภายใน (แทน "หัวข้อที่ถูกติ เทียบช่วงก่อนหน้า")
+ *   6) สินค้า: รีวิวมากสุด · คะแนนต่ำสุด · ตารางคะแนนรายสินค้า (กดหัวคอลัมน์เรียง · ชื่อสินค้าแสดงเต็ม)
  * กล่องสรุปบอกช่วงวันที่ + ขอบเขต (ทั้งร้าน/สินค้าเดียว) · "ข้อมูลในหน้านี้คืออะไร" กางอ่านได้
- * เอาออก: สรุปตามหมวด · ตารางหัวข้อที่ถูกติเทียบช่วงก่อน · หัวส่วนยาว ๆ (ข้อมูลซ้ำ/อ่านยาก)
+ * เอาออก: การ์ดตอบกลับแล้ว · ตารางหัวข้อที่ถูกติเทียบช่วงก่อน · หัวส่วนยาว ๆ (ข้อมูลซ้ำ/อ่านยาก)
  */
 export function ReviewDashboardView({
   onViewUnreplied,
+  onViewNotes,
   ...vm
-}: VM & { onViewUnreplied: () => void }) {
+}: VM & { onViewUnreplied: () => void; onViewNotes?: () => void }) {
   const t = useTranslations();
   const td = useTranslations("reviewsDashboard");
   const locale = useLocale();
@@ -87,6 +89,19 @@ export function ReviewDashboardView({
                 to: formatDate(vm.range[1].toDate(), locale),
               })}
             </p>
+            {/* ดูสินค้าเดียว: หัวข้อที่ลูกค้าติบ่อยสุดของสินค้านี้ (ย้ายมาจากคอลัมน์ในตารางรายสินค้า) */}
+            {vm.selectedProduct && (
+              <p className="m-0 flex flex-wrap items-center gap-1.5 text-sm text-gray-700">
+                <span className="font-medium">{t("reviewsDashboard.colTopIssue")}:</span>
+                {vm.selectedProduct.top_issue ? (
+                  <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+                    {t("reviewsDashboard.issueChip", { name: vm.selectedProduct.top_issue.name, n: vm.selectedProduct.top_issue.count })}
+                  </span>
+                ) : (
+                  <span className="text-gray-500">{t("reviewsDashboard.noTopIssue")}</span>
+                )}
+              </p>
+            )}
             {s.previous && (
               <p className="m-0 text-xs text-gray-500">
                 {t("reviewsDashboard.comparedTo", {
@@ -106,16 +121,22 @@ export function ReviewDashboardView({
             {!vm.productId && <DroppingProducts s={s} onPick={vm.openProduct} />}
           </div>
 
-          {/* 4) ลูกค้าพูดถึงอะไร */}
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {/* 4) ลูกค้าชม/ติเรื่องอะไร · สรุปตามหมวดหมู่ — คู่กัน หน้าตาแถวเดียวกัน (ดูสินค้าเดียว = มีหมวดเดียว ไม่ต้องแสดงหมวด) */}
+          <div className={`grid grid-cols-1 gap-5 ${vm.productId ? "" : "lg:grid-cols-2"}`}>
             <Aspects s={s} />
-            <RatingDistribution s={s} />
+            {!vm.productId && <Categories s={s} />}
           </div>
 
-          {/* 5) เจาะลึก: หัวข้อที่ถูกติเทียบช่วงก่อน · สรุปตามหมวดหมู่ (แทนกราฟแนวโน้มตามเวลา — ดูสินค้าเดียว = มีหมวดเดียว ไม่ต้องแสดง) */}
-          <div className={`grid grid-cols-1 gap-5 ${vm.productId ? "" : "lg:grid-cols-2"}`}>
-            <AspectTrends s={s} />
-            {!vm.productId && <Categories s={s} />}
+          {/* 5) ลูกค้าให้กี่ดาว · โน้ตภายใน */}
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <RatingDistribution s={s} />
+            <InternalNotes
+              notes={vm.notes}
+              total={vm.notesTotal}
+              loading={vm.notesLoading}
+              error={vm.notesError}
+              onViewAll={onViewNotes}
+            />
           </div>
 
           {/* 6) รายสินค้า (ดูสินค้าเดียวอยู่ = ไม่ต้องมี) */}
@@ -240,7 +261,7 @@ export function kpiStatuses(
 
 const TONE_OF: Record<StatCardStatus, "up" | "warn" | "down"> = { good: "up", warn: "warn", bad: "down" };
 
-function Kpis({ s, onViewUnreplied }: { s: ReviewStats; onViewUnreplied: () => void }) {
+function Kpis({ s }: { s: ReviewStats; onViewUnreplied?: () => void }) {
   const t = useTranslations();
   const locale = useLocale();
   const pct = (n: number) => formatPercent(s.total ? (n / s.total) * 100 : 0, locale, 0);
@@ -250,8 +271,9 @@ function Kpis({ s, onViewUnreplied }: { s: ReviewStats; onViewUnreplied: () => v
   const st = kpiStatuses(s);
   const label = (x: StatCardStatus) => t(`reviewsDashboard.status.${x}`);
   return (
-    <StatCardsGrid cols={4}>
+    <StatCardsGrid cols={3}>
       <StatCard
+        wrapLabel
         label={t("reviewsDashboard.total")}
         info={t("reviewsDashboard.totalInfo")}
         value={formatNumber(s.total, locale)}
@@ -261,6 +283,7 @@ function Kpis({ s, onViewUnreplied }: { s: ReviewStats; onViewUnreplied: () => v
         extra={p && <VsPrev now={s.total} prev={p.total} prevTotal={p.total} higherIsBetter format={(n) => formatNumber(n, locale)} />}
       />
       <StatCard
+        wrapLabel
         label={t("reviewsDashboard.avgRating")}
         info={t("reviewsDashboard.avgInfo")}
         value={`★ ${s.avg != null ? s.avg.toFixed(2) : "—"}`}
@@ -271,6 +294,7 @@ function Kpis({ s, onViewUnreplied }: { s: ReviewStats; onViewUnreplied: () => v
         extra={p && <VsPrev now={s.avg} prev={p.avg} prevTotal={p.total} higherIsBetter format={(n) => n.toFixed(2)} />}
       />
       <StatCard
+        wrapLabel
         label={t("reviewsDashboard.negativeRate")}
         info={t("reviewsDashboard.negativeInfo")}
         value={pct(s.negative)}
@@ -289,21 +313,6 @@ function Kpis({ s, onViewUnreplied }: { s: ReviewStats; onViewUnreplied: () => v
             />
           )
         }
-      />
-      {/* ตอบกลับแล้ว (แทน "ยังไม่ได้อ่าน") — มีรีวิวแย่รอตอบ = กดการ์ดไปตอบ */}
-      <StatCard
-        label={t("reviewsDashboard.replyRate")}
-        info={t("reviewsDashboard.replyInfo")}
-        value={pct(s.replied)}
-        sub={
-          s.unrepliedNegativeCount
-            ? t("reviewsDashboard.replySubPending", { n: formatNumber(s.unrepliedNegativeCount, locale) })
-            : t("reviewsDashboard.replySubDone", { n: formatNumber(s.replied, locale), total: formatNumber(s.total, locale) })
-        }
-        tone={TONE_OF[st.replied]}
-        status={st.replied}
-        statusLabel={label(st.replied)}
-        onClick={s.unrepliedNegativeCount ? onViewUnreplied : undefined}
       />
     </StatCardsGrid>
   );
@@ -407,8 +416,7 @@ function RatingDistribution({ s }: { s: ReviewStats }) {
                     <div className={`h-full rounded-full ${g.bar}`} style={{ width: n ? `${Math.max(pct(n), 2)}%` : 0 }} />
                   </div>
                   <span className="text-right text-sm text-gray-800">
-                    <span className="font-semibold">{formatNumber(n, locale)}</span>{" "}
-                    <span className="text-xs text-gray-500">({formatPercent(pct(n), locale, 0)})</span>
+                    <span className="font-semibold">{t("reviewsDashboard.reviewsN", { n: formatNumber(n, locale) })}</span>
                   </span>
                 </li>
               );
@@ -435,6 +443,25 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+/**
+ * แถวเดียวกันของ "ลูกค้าชม/ติเรื่องอะไร" กับ "สรุปตามหมวดหมู่" — อ่านเหมือนกันทั้งสองกล่อง:
+ *   บรรทัดบน: ชื่อ (เต็ม ไม่ตัด) · ป้ายตัวเลขชิดขวา   แถบ: ยาวตามสัดส่วนเทียบแถวที่มากสุด   บรรทัดล่าง (ถ้ามี): ป้ายเพิ่มเติม
+ */
+function MetricRow({ name, chips, bar, footer }: { name: string; chips: React.ReactNode; bar: React.ReactNode; footer?: React.ReactNode }) {
+  return (
+    <li className="flex flex-col gap-1.5 border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+        <span className="min-w-0 flex-1 break-words font-medium text-gray-800">{name}</span>
+        <span className="flex shrink-0 flex-wrap items-center gap-1.5">{chips}</span>
+      </div>
+      {bar}
+      {footer && <div className="flex flex-wrap items-center gap-1.5 text-xs">{footer}</div>}
+    </li>
+  );
+}
+
+const CHIP = "rounded-full px-2 py-0.5 text-xs font-semibold";
+
 function Aspects({ s }: { s: ReviewStats }) {
   const t = useTranslations();
   // เรื่องที่ถูกติมากสุดก่อน (สิ่งที่ต้องแก้) แล้วตามด้วยเรื่องที่ถูกชม
@@ -449,22 +476,25 @@ function Aspects({ s }: { s: ReviewStats }) {
       ) : (
         <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {rows.map((a) => (
-            <li key={a.name} className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{a.name}</span>
-                <span className="shrink-0 rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
-                  {t("reviewsDashboard.likedN", { n: a.positive })}
-                </span>
-                <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">
-                  {t("reviewsDashboard.improveN", { n: a.negative })}
-                </span>
-              </div>
-              {/* แถบเดียว: เขียว = ชม · แดง = ติ · ความยาวตามจำนวนครั้งที่ถูกพูดถึง */}
-              <div className="flex h-2 overflow-hidden rounded-full bg-gray-100" style={{ width: `${((a.positive + a.negative) / max) * 100}%` }}>
-                <div className="h-full bg-success" style={{ width: `${(a.positive / (a.positive + a.negative)) * 100}%` }} />
-                <div className="h-full flex-1 bg-danger" />
-              </div>
-            </li>
+            <MetricRow
+              key={a.name}
+              name={a.name}
+              chips={
+                <>
+                  <span className={`${CHIP} bg-green-50 text-green-700`}>{t("reviewsDashboard.likedN", { n: a.positive })}</span>
+                  <span className={`${CHIP} bg-red-50 text-red-700`}>{t("reviewsDashboard.improveN", { n: a.negative })}</span>
+                </>
+              }
+              bar={
+                // แถบเดียว: เขียว = ชม · แดง = ติ · ความยาวตามจำนวนครั้งที่ถูกพูดถึง
+                <div className="h-2 rounded-full bg-gray-100">
+                  <div className="flex h-full overflow-hidden rounded-full" style={{ width: `${((a.positive + a.negative) / max) * 100}%` }}>
+                    <div className="h-full bg-success" style={{ width: `${(a.positive / (a.positive + a.negative)) * 100}%` }} />
+                    <div className="h-full flex-1 bg-danger" />
+                  </div>
+                </div>
+              }
+            />
           ))}
         </ul>
       )}
@@ -519,27 +549,26 @@ function ProductTable({ vm }: { vm: VM }) {
               <SortTh vm={vm} k="count" label={t("reviewsDashboard.colReviews")} className="w-20" />
               <SortTh vm={vm} k="avg" label={t("reviewsDashboard.colAvg")} className="w-20" />
               <SortTh vm={vm} k="avgDelta" label={t("reviewsDashboard.colAvgDelta")} className="w-28" />
+              <SortTh vm={vm} k="positiveRate" label={t("reviewsDashboard.colPositive")} className="w-28" />
               <SortTh vm={vm} k="negativeRate" label={t("reviewsDashboard.colNegative")} className="w-24" />
-              <th className="sticky top-0 z-10 w-40 bg-white py-2 pl-3 text-left text-xs font-medium text-gray-500">
-                {t("reviewsDashboard.colTopIssue")}
-              </th>
             </tr>
           </thead>
           <tbody>
             {rows.map((p) => (
               <tr key={p.id} onClick={() => pick(p.id)} className="cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-brown-50">
-                <td className="max-w-0 py-2 pr-3">
+                <td className="min-w-[10rem] py-2 pr-3">
+                  {/* ชื่อสินค้าเต็ม (ขึ้นบรรทัดใหม่ได้) — ไม่ตัด … */}
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       pick(p.id);
                     }}
-                    className="block w-full cursor-pointer truncate border-none bg-transparent p-0 text-left text-sm font-medium text-brown-800 hover:underline"
+                    className="block w-full cursor-pointer break-words border-none bg-transparent p-0 text-left text-sm font-medium text-brown-800 hover:underline"
                   >
                     {p.name || t("reviewsDashboard.unknownProduct")}
                   </button>
-                  {p.category_name && <span className="block truncate text-xs text-gray-500">{p.category_name}</span>}
+                  {p.category_name && <span className="block break-words text-xs text-gray-500">{p.category_name}</span>}
                 </td>
                 <td className="py-2 text-right text-gray-800">{formatNumber(p.count, locale)}</td>
                 <td className={`py-2 text-right font-medium ${p.avg < 3 ? "text-danger" : "text-gray-800"}`}>★ {p.avg.toFixed(1)}</td>
@@ -556,17 +585,11 @@ function ProductTable({ vm }: { vm: VM }) {
                     </span>
                   )}
                 </td>
+                <td className={`py-2 text-right ${p.positiveRate >= 75 ? "font-semibold text-green-700" : "text-gray-700"}`}>
+                  {formatPercent(p.positiveRate, locale, 0)}
+                </td>
                 <td className={`py-2 text-right ${p.negativeRate >= 25 ? "font-semibold text-danger" : "text-gray-700"}`}>
                   {formatPercent(p.negativeRate, locale, 0)}
-                </td>
-                <td className="max-w-0 py-2 pl-3">
-                  {p.top_issue ? (
-                    <span className="inline-block max-w-full truncate rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700">
-                      {t("reviewsDashboard.issueChip", { name: p.top_issue.name, n: p.top_issue.count })}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-gray-500">—</span>
-                  )}
                 </td>
               </tr>
             ))}
@@ -613,8 +636,9 @@ function NeedsReply({ s, onViewAll }: { s: ReviewStats; onViewAll: () => void })
 }
 
 /**
- * สรุปตามหมวดหมู่สินค้า (แทนกราฟแนวโน้มตามเวลา 2026-10-27) — จำนวนรีวิว · คะแนนเฉลี่ย · รีวิวแย่ · หัวข้อที่ถูกติบ่อยของหมวด
- * แถบ = สัดส่วนจำนวนรีวิวเทียบหมวดที่มากสุด · คะแนนเฉลี่ยต่ำกว่า 3 = สีแดง
+ * สรุปตามหมวดหมู่สินค้า — แถวหน้าตาเดียวกับ "ลูกค้าชม/ติเรื่องอะไร" (MetricRow):
+ *   ป้าย: จำนวนรีวิว · ★ คะแนนเฉลี่ย (ต่ำกว่า 3 = แดง) · รีวิวดี · รีวิวแย่
+ *   แถบ = จำนวนรีวิวเทียบหมวดที่มากสุด แบ่งสี ดี (เขียว) / กลาง (เทา) / แย่ (แดง) · บรรทัดล่าง = เรื่องที่ถูกชม และเรื่องที่ถูกติของหมวด
  */
 function Categories({ s }: { s: ReviewStats }) {
   const t = useTranslations();
@@ -629,28 +653,62 @@ function Categories({ s }: { s: ReviewStats }) {
         <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {rows.map((c) => {
             const issues = c.aspects.filter((a) => a.negative > 0);
+            const liked = c.liked_aspects ?? [];
+            const positive = c.positive ?? 0;
+            const low = c.avg < 3;
             return (
-              <li key={c.id || c.name} className="flex flex-col gap-1">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{c.name || t("reviewsDashboard.unknownCategory")}</span>
-                  <span className={`shrink-0 ${c.avg < 3 ? "text-danger" : "text-gray-600"}`}>
-                    {t("reviewsDashboard.productStat", { n: formatNumber(c.count, locale), avg: c.avg.toFixed(1) })}
-                  </span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-                  <div className={`h-full rounded-full ${c.avg < 3 ? "bg-danger" : "bg-brown-500"}`} style={{ width: `${(c.count / max) * 100}%` }} />
-                </div>
-                {(c.negative > 0 || issues.length > 0) && (
-                  <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                    {c.negative > 0 && <span className="text-gray-500">{t("reviewsDashboard.categoryNegative", { n: formatNumber(c.negative, locale) })}</span>}
-                    {issues.map((a) => (
-                      <span key={a.name} className="rounded-full bg-red-50 px-2 py-0.5 font-semibold text-red-700">
-                        {t("reviewsDashboard.issueChip", { name: a.name, n: a.negative })}
-                      </span>
-                    ))}
+              <MetricRow
+                key={c.id || c.name}
+                name={c.name || t("reviewsDashboard.unknownCategory")}
+                chips={
+                  <>
+                    <span className={`${CHIP} bg-brown-50 text-brown-700`}>{t("reviewsDashboard.reviewsN", { n: formatNumber(c.count, locale) })}</span>
+                    <span className={`${CHIP} ${low ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-800"}`}>★ {c.avg.toFixed(1)}</span>
+                    {positive > 0 && (
+                      <span className={`${CHIP} bg-green-50 text-green-700`}>{t("reviewsDashboard.categoryPositive", { n: formatNumber(positive, locale) })}</span>
+                    )}
+                    {c.negative > 0 && (
+                      <span className={`${CHIP} bg-red-50 text-red-700`}>{t("reviewsDashboard.categoryNegative", { n: formatNumber(c.negative, locale) })}</span>
+                    )}
+                  </>
+                }
+                bar={
+                  // ดี (เขียว) · กลาง (เทา) · แย่ (แดง) — ความยาวรวมตามจำนวนรีวิวของหมวด
+                  <div className="h-2 rounded-full bg-gray-100">
+                    <div className="flex h-full overflow-hidden rounded-full" style={{ width: `${(c.count / max) * 100}%` }}>
+                      <div className="h-full bg-success" style={{ width: `${(positive / c.count) * 100}%` }} />
+                      <div className="h-full flex-1 bg-gray-300" />
+                      <div className="h-full bg-danger" style={{ width: `${(c.negative / c.count) * 100}%` }} />
+                    </div>
                   </div>
-                )}
-              </li>
+                }
+                footer={
+                  (liked.length > 0 || issues.length > 0) && (
+                    <div className="flex w-full flex-col gap-1">
+                      {liked.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-gray-500">{t("reviewsDashboard.categoryLiked")}</span>
+                          {liked.map((a) => (
+                            <span key={a.name} className="rounded-full border border-green-200 bg-white px-2 py-0.5 font-medium text-green-700">
+                              {t("reviewsDashboard.issueChip", { name: a.name, n: a.positive })}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {issues.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-gray-500">{t("reviewsDashboard.categoryIssues")}</span>
+                          {issues.map((a) => (
+                            <span key={a.name} className="rounded-full border border-red-200 bg-white px-2 py-0.5 font-medium text-red-700">
+                              {t("reviewsDashboard.issueChip", { name: a.name, n: a.negative })}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+              />
             );
           })}
         </ul>
@@ -659,59 +717,58 @@ function Categories({ s }: { s: ReviewStats }) {
   );
 }
 
-/**
- * หัวข้อที่ถูกติ เทียบช่วงก่อนหน้า — เพิ่มขึ้นมากสุดก่อน
- * แต่ละหัวข้อ: บอกการเปลี่ยนแปลงเป็นคำ (ใหม่ · ไม่มีแล้ว · เพิ่ม/ลด กี่ครั้ง กี่ % · เท่าเดิม) + แถบเทียบ ช่วงก่อน (เทา) กับช่วงนี้ (แดง)
- */
-function AspectTrends({ s }: { s: ReviewStats }) {
+/** โน้ตภายในของรีวิวในช่วงนี้ (ล่าสุดก่อน) — สินค้า · ดาว · โน้ต · ผู้รีวิว/วันที่ · "ดูทั้งหมด" = ไปแท็บจัดการรีวิว */
+function InternalNotes({
+  notes,
+  total,
+  loading,
+  error,
+  onViewAll,
+}: {
+  notes: ReviewRow[];
+  total: number;
+  loading: boolean;
+  error: boolean;
+  onViewAll?: () => void;
+}) {
   const t = useTranslations();
   const locale = useLocale();
-  const rows = s.aspectTrends;
-  const max = Math.max(...(rows ?? []).flatMap((a) => [a.negative, a.prevNegative]), 1);
-  const change = (a: NonNullable<ReviewStats["aspectTrends"]>[number]) => {
-    if (a.delta === 0) return { tone: "text-gray-500", icon: "＝", text: t("reviewsDashboard.aspectTrendSameN", { n: a.negative }) };
-    if (a.prevNegative === 0) return { tone: "text-danger", icon: "▲", text: t("reviewsDashboard.aspectTrendNew", { n: a.negative }) };
-    if (a.negative === 0) return { tone: "text-green-700", icon: "▼", text: t("reviewsDashboard.aspectTrendGone", { n: a.prevNegative }) };
-    const p = formatPercent((Math.abs(a.delta) / a.prevNegative) * 100, locale, 0);
-    return a.delta > 0
-      ? { tone: "text-danger", icon: "▲", text: t("reviewsDashboard.aspectTrendUp", { n: a.delta, pct: p }) }
-      : { tone: "text-green-700", icon: "▼", text: t("reviewsDashboard.aspectTrendDown", { n: -a.delta, pct: p }) };
-  };
   return (
-    <Section title={t("reviewsDashboard.aspectTrend")} hint={t("reviewsDashboard.aspectTrendHint")}>
-      {rows === null ? (
-        <p className="py-4 text-center text-sm text-gray-500">{t("reviewsDashboard.vsPrevNone")}</p>
-      ) : rows.length === 0 ? (
-        <p className="py-4 text-center text-sm text-gray-500">{t("reviewsDashboard.aspectTrendEmpty")}</p>
+    <Section
+      title={t("reviewsDashboard.notes", { n: formatNumber(total, locale) })}
+      hint={t("reviewsDashboard.notesHint")}
+      action={
+        onViewAll && total > 0 ? (
+          <button
+            type="button"
+            onClick={onViewAll}
+            className="shrink-0 cursor-pointer border-none bg-transparent p-0 text-sm font-semibold text-brown-700 hover:underline"
+          >
+            {t("reviewsDashboard.viewAll")}
+          </button>
+        ) : undefined
+      }
+    >
+      {error ? (
+        <p className="py-4 text-center text-sm text-red-600">{t("reviewsDashboard.notesFailed")}</p>
+      ) : loading ? (
+        <LoadingSpin className="py-6" />
+      ) : notes.length === 0 ? (
+        <p className="py-4 text-center text-sm text-gray-500">{t("reviewsDashboard.notesEmpty")}</p>
       ) : (
-        <ul className="m-0 flex list-none flex-col gap-3 p-0">
-          {rows.map((a) => {
-            const c = change(a);
-            return (
-              <li key={a.name} className="flex flex-col gap-1.5 border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
-                <div className="flex items-start justify-between gap-3 text-sm">
-                  <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{a.name}</span>
-                  <span className={`shrink-0 text-right text-xs font-semibold ${c.tone}`}>
-                    <span aria-hidden>{c.icon} </span>
-                    {c.text}
-                  </span>
-                </div>
-                {/* ช่วงก่อน vs ช่วงนี้ — ความยาวเทียบกับหัวข้อที่ถูกติมากสุดในตาราง */}
-                <div className="grid items-center gap-x-2 gap-y-1 text-[11px] text-gray-500" style={{ gridTemplateColumns: "56px 1fr 24px" }}>
-                  <span>{t("reviewsDashboard.aspectTrendPrev")}</span>
-                  <div className="h-1.5 rounded-full bg-gray-100">
-                    <div className="h-full rounded-full bg-gray-400" style={{ width: `${(a.prevNegative / max) * 100}%` }} />
-                  </div>
-                  <span className="text-right">{a.prevNegative}</span>
-                  <span>{t("reviewsDashboard.aspectTrendNow")}</span>
-                  <div className="h-1.5 rounded-full bg-gray-100">
-                    <div className="h-full rounded-full bg-danger" style={{ width: `${(a.negative / max) * 100}%` }} />
-                  </div>
-                  <span className="text-right font-semibold text-gray-700">{a.negative}</span>
-                </div>
-              </li>
-            );
-          })}
+        <ul className="m-0 flex list-none flex-col p-0">
+          {notes.map((r) => (
+            <li key={r._id} className="flex flex-col gap-1 border-b border-gray-100 py-2.5 last:border-b-0">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
+                <span className={`font-semibold ${r.rating <= 2 ? "text-danger" : "text-amber-500"}`}>{"★".repeat(Math.round(r.rating))}</span>
+                <span className="min-w-0 flex-1 break-words font-medium text-brown-800">{r.productName || t("reviewsDashboard.unknownProduct")}</span>
+              </div>
+              <p className="m-0 whitespace-pre-line rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{r.internal_note?.text}</p>
+              <p className="m-0 text-xs text-gray-500">
+                {r.userName || t("reviews.customer")} · {formatDate(r.internal_note?.updated_at ?? r.created_at, locale)}
+              </p>
+            </li>
+          ))}
         </ul>
       )}
     </Section>

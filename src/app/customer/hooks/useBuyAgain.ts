@@ -4,6 +4,7 @@
 // ใส่ทุกรายการของออเดอร์ลงตะกร้าตามตัวเลือก/ออปชันเดิม (POST /shop/cart/items ทีละรายการ) → ไปหน้าตะกร้า
 // ราคา/สต็อกเป็นของปัจจุบัน (backend คิดใหม่) · รายการที่ใส่ไม่ได้ (ปิดขาย · ตัวเลือกถูกลบ · ฯลฯ) แจ้งชื่อ + เหตุผลจาก backend
 // สต็อกไม่พอไม่ตัดสินที่นี่ — หน้าตะกร้าแสดงป้าย "ซื้อไม่ได้" ต่อบรรทัดอยู่แล้ว (U6)
+// opts.redirect = ไปหน้าอื่นแทนตะกร้า (เช่น กลับไปแก้ที่อยู่/วิธีรับ = /customer/checkout) · opts.quiet = ไม่แจ้ง "ใส่ตะกร้าแล้ว"
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -24,8 +25,9 @@ export function useBuyAgain() {
   const router = useRouter();
   const qc = useQueryClient();
 
-  const buyAgain = async (items: ShopOrderItem[]) => {
-    if (pending || items.length === 0) return;
+  /** คืน true = ใส่ตะกร้าได้อย่างน้อย 1 รายการ (และไปหน้าถัดไปแล้ว) */
+  const buyAgain = async (items: ShopOrderItem[], opts: { redirect?: string; quiet?: boolean } = {}): Promise<boolean> => {
+    if (pending || items.length === 0) return false;
     setPending(true);
     const failed: string[] = [];
     let added = 0;
@@ -50,18 +52,24 @@ export function useBuyAgain() {
         failed.push(!msg ? name : msg.includes(name) ? msg : `${name} (${msg})`);
       }
     }
-    await qc.invalidateQueries({ queryKey: shopCartKey });
+    // ใส่ตะกร้าล่าสุดลง cache ก่อนเปลี่ยนหน้า — ไม่งั้นหน้าที่ไปถึง (ตะกร้า/ยืนยันคำสั่งซื้อ) เห็นตะกร้าเก่าที่ยังว่างแวบหนึ่ง
     const cart = await shopCartService.get().catch(() => null);
-    if (cart) setCount(cart.summary?.item_count ?? cart.items.length);
+    if (cart) {
+      qc.setQueryData(shopCartKey, cart);
+      setCount(cart.summary?.item_count ?? cart.items.length);
+    } else {
+      await qc.invalidateQueries({ queryKey: shopCartKey });
+    }
     setPending(false);
 
     if (added === 0) {
       alert.error(t("buyAgainNone", { failed: failed.join(" · ") }));
-      return;
+      return false;
     }
     if (failed.length) alert.warning(t("buyAgainPartial", { n: added, failed: failed.join(" · ") }));
-    else alert.success(t("buyAgainDone", { n: added }));
-    router.push("/customer/cart");
+    else if (!opts.quiet) alert.success(t("buyAgainDone", { n: added }));
+    router.push(opts.redirect ?? "/customer/cart");
+    return true;
   };
 
   return { buyAgain, pending };

@@ -1,10 +1,12 @@
 "use client";
-// View ของแชทลูกค้า — ซ้าย: รายการห้อง (ค้นหา · เฉพาะที่ยังไม่อ่าน) · ขวา: ข้อความในห้อง + ช่องตอบ
+// View ของแชทลูกค้า — ซ้าย: รายการห้อง (ค้นหา · ทั้งหมด/ยังไม่ได้อ่าน) · ขวา: ข้อความในห้อง + ช่องตอบ
+// แถวห้อง: ชื่อ + ปุ่ม "..." (ลบแชท) มุมขวาบน · ข้อความล่าสุด · เวลา ต่อท้ายข้อความล่าสุด
 // จอแคบ (<1024px): แสดงทีละฝั่ง — เลือกห้องแล้วเห็นห้อง มีปุ่มย้อนกลับไปรายการ
 import { useState } from "react";
+import { Dropdown, Segmented } from "antd";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowLeftIcon, ChatBubbleLeftRightIcon, EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/outline";
-import { Avatar, Switch } from "@/components/base";
+import { ArrowLeftIcon, ChatBubbleLeftRightIcon, EllipsisHorizontalIcon, EnvelopeIcon, PhoneIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Avatar } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { SearchInput } from "@/components/shared/data";
 import { LoadFailed } from "@/components/shared/feedback";
@@ -31,10 +33,16 @@ export function ChatsView(vm: VM) {
         <aside className={`w-full flex-col border-r border-stone-200 lg:flex lg:w-80 lg:shrink-0 ${vm.selectedId ? "hidden" : "flex"}`}>
           <div className="space-y-2 border-b border-stone-200 p-3">
             <SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("searchCustomer")} className="!max-w-none" />
-            <label className="flex items-center gap-2 text-sm text-stone-600">
-              <Switch size="small" checked={vm.unreadOnly} onChange={vm.setUnreadOnly} />
-              {t("unreadOnly")}
-            </label>
+            <Segmented
+              block
+              value={vm.unreadOnly ? "unread" : "all"}
+              onChange={(v) => vm.setUnreadOnly(v === "unread")}
+              options={[
+                { value: "all", label: t("filterAll") },
+                { value: "unread", label: t("filterUnread") },
+              ]}
+              aria-label={t("filterLabel")}
+            />
           </div>
           <div className="flex-1 overflow-y-auto">
             {vm.listLoading ? (
@@ -50,7 +58,13 @@ export function ChatsView(vm: VM) {
             ) : (
               <ul className="m-0 list-none p-0">
                 {vm.conversations.map((c) => (
-                  <ConversationRow key={c._id} c={c} active={c._id === vm.selectedId} onClick={() => vm.select(c._id)} />
+                  <ConversationRow
+                    key={c._id}
+                    c={c}
+                    active={c._id === vm.selectedId}
+                    onClick={() => vm.select(c._id)}
+                    onDelete={vm.perm.delete ? () => vm.deleteConversation(c) : undefined}
+                  />
                 ))}
               </ul>
             )}
@@ -109,11 +123,20 @@ export function ChatsView(vm: VM) {
                   hasMore={vm.thread.hasMore}
                   loadingOlder={vm.thread.loadingOlder}
                   onLoadOlder={() => void vm.thread.loadOlder()}
+                  onEditMessage={vm.perm.update ? vm.startEdit : undefined}
+                  onDeleteMessage={vm.perm.delete ? vm.deleteMessage : undefined}
+                  editingId={vm.editing?._id ?? null}
                 />
               )}
 
-              {vm.perm.create ? (
-                <ChatComposer onSend={vm.sendMessage} sending={vm.sending} disabled={vm.thread.status !== "ready"} />
+              {vm.perm.create || vm.editing ? (
+                <ChatComposer
+                  onSend={vm.sendMessage}
+                  sending={vm.sending}
+                  disabled={vm.thread.status !== "ready"}
+                  editing={vm.editing ? { key: vm.editing._id, text: vm.editing.body } : null}
+                  onCancelEdit={vm.cancelEdit}
+                />
               ) : (
                 <p className="m-0 border-t border-stone-200 bg-white px-4 py-3 text-center text-sm text-stone-500">{t("noReplyPermission")}</p>
               )}
@@ -126,7 +149,18 @@ export function ChatsView(vm: VM) {
   );
 }
 
-function ConversationRow({ c, active, onClick }: { c: ChatConversation; active: boolean; onClick: () => void }) {
+function ConversationRow({
+  c,
+  active,
+  onClick,
+  onDelete,
+}: {
+  c: ChatConversation;
+  active: boolean;
+  onClick: () => void;
+  /** ส่งมา = มีปุ่ม "..." → ลบแชท (chats.delete) */
+  onDelete?: () => void;
+}) {
   const t = useTranslations("chat");
   const locale = useLocale();
   const name = c.customer?.user_fullname || t("customer");
@@ -140,7 +174,8 @@ function ConversationRow({ c, active, onClick }: { c: ChatConversation; active: 
     : "";
   const unread = c.staff_unread > 0;
   return (
-    <li>
+    // ปุ่ม "..." อยู่นอกปุ่มแถว (ห้ามซ้อน button) — วางทับมุมขวาบนด้วย absolute
+    <li className="relative">
       <button
         type="button"
         onClick={onClick}
@@ -151,14 +186,16 @@ function ConversationRow({ c, active, onClick }: { c: ChatConversation; active: 
       >
         <Avatar name={name} size={40} />
         <span className="min-w-0 flex-1">
-          <span className="flex items-baseline justify-between gap-2">
-            <span className={`truncate text-sm ${unread ? "font-bold text-stone-900" : "font-medium text-stone-800"}`}>{name}</span>
-            <span className="shrink-0 text-xs text-stone-500">{whenText}</span>
+          <span className={`block truncate text-sm ${onDelete ? "pr-8" : ""} ${unread ? "font-bold text-stone-900" : "font-medium text-stone-800"}`}>
+            {name}
           </span>
           <span className="flex items-center justify-between gap-2">
-            <span className={`truncate text-xs ${unread ? "font-semibold text-stone-800" : "text-stone-500"}`}>
-              {c.last_sender_type === "staff" ? `${t("youPrefix")} ` : ""}
-              {c.last_message_preview}
+            <span className="flex min-w-0 items-baseline gap-1.5 text-xs">
+              <span className={`truncate ${unread ? "font-semibold text-stone-800" : "text-stone-500"}`}>
+                {c.last_sender_type === "staff" ? `${t("youPrefix")} ` : ""}
+                {c.last_message_preview}
+              </span>
+              {whenText && <span className="shrink-0 text-stone-500">· {whenText}</span>}
             </span>
             {unread && (
               <span className="min-w-[1.25rem] shrink-0 rounded-full bg-red-500 px-1.5 text-center text-xs font-bold leading-5 text-white">
@@ -168,6 +205,24 @@ function ConversationRow({ c, active, onClick }: { c: ChatConversation; active: 
           </span>
         </span>
       </button>
+      {onDelete && (
+        <Dropdown
+          trigger={["click"]}
+          placement="bottomRight"
+          menu={{
+            items: [{ key: "delete", danger: true, icon: <TrashIcon className="h-4 w-4" />, label: t("deleteRoom") }],
+            onClick: ({ key }) => key === "delete" && onDelete(),
+          }}
+        >
+          <button
+            type="button"
+            aria-label={t("roomMenu")}
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-200 hover:text-stone-800"
+          >
+            <EllipsisHorizontalIcon className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </Dropdown>
+      )}
     </li>
   );
 }

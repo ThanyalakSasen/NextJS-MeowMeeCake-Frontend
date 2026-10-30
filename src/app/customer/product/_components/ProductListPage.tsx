@@ -15,7 +15,7 @@ import { useTranslations } from "next-intl";
 import { FaFilter, FaSortAmountDown, FaTimes } from "react-icons/fa";
 import { catalogService } from "@/services/catalog";
 import { effectivePrice } from "@/lib/pricing";
-import ProductCard, { categoryNameOf, isProductCardVisible } from "@/components/customer/ProductCard";
+import ProductCard, { categoryNameOf, isProductListable, isSoldOut } from "@/components/customer/ProductCard";
 import { productGrid } from "@/components/customer/shopStyles";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { CATALOG_PRODUCT_PARAMS, catalogCategoriesKey, catalogProductsKey } from "../../lib/catalogQueries";
@@ -60,8 +60,9 @@ export default function ProductListPage({ query }: { query: string }) {
   // แล้วสลับเป็นกำลังโหลด → ข้อมูลจริง = หน้ากระโดด (Lighthouse CLS)
   const loading = productsQ.isPending;
 
-  // กรองสินค้าที่บัตรไม่แสดง (พรีออเดอร์ / หมดสต็อก / ซ่อน) ออกตั้งแต่ต้น — ตัวเลขจำนวนในหมวดจะได้ตรงกับบัตรที่เห็นจริง
-  const products = useMemo(() => (productsQ.data?.data ?? []).filter(isProductCardVisible), [productsQ.data]);
+  // กรองสินค้าที่บัตรไม่แสดง (พรีออเดอร์ / ซ่อน) ออกตั้งแต่ต้น — ตัวเลขจำนวนในหมวดจะได้ตรงกับบัตรที่เห็นจริง
+  // สินค้าหมดยังแสดง (บัตรขึ้นป้าย "สินค้าหมด") แต่เรียงไว้ท้ายสุดเสมอ ไม่ว่าเลือกเรียงแบบไหน
+  const products = useMemo(() => (productsQ.data?.data ?? []).filter(isProductListable), [productsQ.data]);
 
   // หมวดพร้อมจำนวนสินค้า — ซ่อนหมวดที่ไม่มีสินค้า เรียง ก-ฮ ("ทั้งหมด" อยู่บนสุดเสมอ)
   const categoryCards = useMemo(() => {
@@ -78,6 +79,9 @@ export default function ProductListPage({ query }: { query: string }) {
     let result = [...products];
     if (currentCategory !== ALL) result = result.filter((p) => categoryNameOf(p) === currentCategory);
     result.sort((a, b) => {
+      // สินค้าหมดไว้ท้ายเสมอ
+      const so = Number(isSoldOut(a)) - Number(isSoldOut(b));
+      if (so !== 0) return so;
       // เรียงตามราคาขายจริง (ราคาลดถ้ามี) ให้ตรงกับราคาที่แสดงบนบัตร
       if (sortBy === "price-asc") return effectivePrice(a) - effectivePrice(b);
       if (sortBy === "price-desc") return effectivePrice(b) - effectivePrice(a);
@@ -336,7 +340,7 @@ export default function ProductListPage({ query }: { query: string }) {
                 <h2 className="sr-only">{t("listHeading")}</h2>
                 {/* 2 ใบแรก = แถวแรกบนมือถือ (รูปใหญ่สุดเหนือขอบจอ — LCP) → โหลดก่อน */}
                 {visible.map((p, i) => (
-                  <ProductCard key={p._id} product={p} priority={i < 2} />
+                  <ProductCard key={p._id} product={p} priority={i < 2} showSoldOut />
                 ))}
               </div>
             ) : (

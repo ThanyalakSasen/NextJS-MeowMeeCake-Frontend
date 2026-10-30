@@ -413,6 +413,15 @@ function CheckoutContent() {
     );
   }
 
+  // ตะกร้ากำลังโหลดใหม่ (เช่น เพิ่งกลับมาแก้ที่อยู่ — ของเพิ่งใส่กลับลงตะกร้า) = รอ ไม่ขึ้น "ตะกร้าว่าง" แวบหนึ่ง
+  if (bills.length === 0 && cartQ.isFetching) {
+    return (
+      <div className={`${shopPage} flex items-center justify-center`}>
+        <ShopSpinner label={tc("loading")} />
+      </div>
+    );
+  }
+
   if (bills.length === 0) {
     // มีของในตะกร้าแต่ไม่ได้ติ๊กเลือกเลย — บอกให้กลับไปเลือก (เดิมขึ้น "ไม่มีสินค้าในตะกร้า" ลูกค้างง)
     const hasUnselected = (cart?.items.length ?? 0) > 0 || allBaskets.some((b) => b.items.length > 0);
@@ -566,11 +575,11 @@ function CheckoutContent() {
                 <h2 className="m-0 text-base font-bold text-[#4A342E]">{many ? t("recipientTitleMany") : t("recipientTitle")}</h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-1 text-sm">
-                    <span className="font-semibold">{t("recipientName")}</span>
+                    <span className="font-semibold">{t("recipientName")}<span className="ml-0.5 text-red-500" aria-hidden="true">*</span></span>
                     <input className={shopInput} value={recipientName} maxLength={200} onChange={(e) => setRecipientName(e.target.value)} />
                   </label>
                   <label className="space-y-1 text-sm">
-                    <span className="font-semibold">{t("recipientPhone")}</span>
+                    <span className="font-semibold">{t("recipientPhone")}<span className="ml-0.5 text-red-500" aria-hidden="true">*</span></span>
                     <input
                       className={shopInput}
                       inputMode="tel"

@@ -89,7 +89,8 @@
     "titleInfo": "Note",
     "titleConfirm": "Please confirm",
     "titleDelete": "Confirm delete",
-    "deleteIrreversible": "This can't be undone"
+    "deleteIrreversible": "This can't be undone",
+    "shopOk": "Got it"
   },
   "nav": {
     "sectionOverview": "Overview",
@@ -2203,7 +2204,7 @@
     "categories": "By product category",
     "categoriesHint": "Reviews and average rating per category (red bar = below 3★) · bad reviews (1–2★) · red chips = the category's most-criticised topics (count)",
     "categoryNegative": "{n} negative",
-    "issueChip": "{name} {n}",
+    "issueChip": "{name} {n} reviews",
     "noIssues": "No criticized topics",
     "unknownCategory": "(Unknown category)",
     "aspectTrend": "Criticized topics vs previous period",
@@ -2215,7 +2216,7 @@
     "productFilter": "All products",
     "viewAllProducts": "Show all products",
     "productTable": "Rating by product",
-    "productTableHint": "Every product reviewed in this period: reviews · average · change vs previous · % bad · top complaint — click a header to sort · click a product to open its dashboard · export to CSV",
+    "productTableHint": "Every product reviewed in this period: reviews · average · change vs previous · % positive (4–5★) · % negative (1–2★) — click a column to sort · click a product to open its dashboard (shows its most common complaint) · export to CSV",
     "colProduct": "Product",
     "colReviews": "Reviews",
     "colAvg": "★ Avg",
@@ -2278,7 +2279,17 @@
     "aspectTrendNew": "{n} complaints (none before)",
     "aspectTrendGone": "No complaints now (was {n})",
     "aspectTrendUp": "{n} more complaints (+{pct})",
-    "aspectTrendDown": "{n} fewer complaints (−{pct})"
+    "aspectTrendDown": "{n} fewer complaints (−{pct})",
+    "reviewsN": "{n} reviews",
+    "categoryIssues": "Complaints:",
+    "notes": "Internal notes ({n})",
+    "notesHint": "Notes the team wrote on reviews in this period (customers can't see them) — latest 5 · add or edit notes in the Manage tab",
+    "notesEmpty": "No internal notes in this period",
+    "notesFailed": "Couldn't load internal notes",
+    "categoryPositive": "Good {n}",
+    "categoryLiked": "Praised:",
+    "colPositive": "% positive",
+    "noTopIssue": "No complaints yet"
   },
   "reviewSettings": {
     "title": "Review topic settings",
@@ -2466,7 +2477,11 @@
       "hiddenBadge": "Hidden",
       "setMain": "Make main store",
       "mainUsesAddress": "The main storefront uses the store address and pin — the owner edits it",
-      "mainNoAddress": "Store address not filled in yet — click \"Edit\" and fill it in the main storefront entry"
+      "mainNoAddress": "Store address not filled in yet — click \"Edit\" and fill it in the main storefront entry",
+      "addressLabel": "Address",
+      "mainAddressHint": "The main storefront's address is the store address (used for the store's province and the Contact page) — set another storefront as main and its address becomes the store address",
+      "addressHint": "Address and coordinates of this spot (same fields as the main storefront) — if set as main, this becomes the store address",
+      "oldLocation": "Previous location: {location} — fill in the address fields below to match the other storefronts"
     },
     "days": {
       "mon": "Mon",
@@ -2748,7 +2763,9 @@
     "doneDetail": "We sent a verification link to {email}. Click it within 24 hours, then sign in.",
     "doneSpamHint": "Can’t find it? Check your spam folder.",
     "resending": "Sending...",
-    "goLogin": "Go to sign in"
+    "goLogin": "Go to sign in",
+    "allergySearch": "Search ingredients, e.g. peanut, milk, egg",
+    "allergyNoMatch": "No matching ingredient"
   },
   "deliveryZones": {
     "title": "Delivery Zones",
@@ -2830,7 +2847,8 @@
       "labelRequired": "Please enter a zone name",
       "labelTooLong": "Zone name must be 120 characters or fewer",
       "feeInvalid": "Fee must be 0 or more with at most 2 decimals",
-      "provincesRequired": "Pick at least 1 province"
+      "provincesRequired": "Pick at least 1 province",
+      "feeNumberOnly": "Numbers only, 0 or more"
     },
     "checker": {
       "title": "Try a shipping quote",
@@ -2847,13 +2865,14 @@
     "categories": {
       "button": "Product delivery areas",
       "title": "Which products can ship to other provinces",
-      "hint": "Switch on = ships to every province · off = ships only within the shop's province (customers can still pick up) · \"Whole category\" switches every item in the category at once · tap a category to set items one by one · * = not set yet, chosen from the category name · pre-order products always ship to every province",
+      "hint": "Switch on = ships to every province · off = ships only within {province} (customers can still pick up) · \"Whole category\" switches every item in the category at once · tap a category to set items one by one · * = not set yet, chosen from the category name · pre-order products always ship to every province",
       "empty": "No product categories yet",
       "nationwide": "Ships to every province",
       "provinceOnly": "Shop's province only",
       "autoHint": "Not set yet — chosen from the category name (e.g. sourdough = every province) · flip the switch to set it yourself",
       "toggleLabel": "Ships to every province: {name}",
-      "saveFailed": "Could not save the category delivery setting"
+      "saveFailed": "Could not save the category delivery setting",
+      "provinceOnlyIn": "{province} only"
     },
     "products": {
       "searchPlaceholder": "Search product name or code",
@@ -2865,14 +2884,13 @@
       "noCategory": "No category",
       "statusAll": "All items ship to every province",
       "statusSome": "{on}/{n} items ship to every province",
-      "statusNone": "Every item: shop's province only",
+      "statusNone": "Every item: {province} only",
       "wholeCategory": "Whole category",
-      "custom": "Differs from category",
       "noProducts": "No products to set up yet"
     },
     "how": {
       "title": "How the shipping fee is calculated",
-      "step1": "We look at the province in the customer's delivery address and use that zone's fee — provinces in no zone use the zone D fee ({d})",
+      "step1": "We look at the province in the customer's delivery address and use that zone's fee — provinces in no zone use the zone {fallback} fee ({d})",
       "step2": "One fee per order, no matter how many items or how much it costs · store pickup = no fee · free shipping only when the customer uses a free-shipping coupon",
       "step3": "Some products ship only within {province} (e.g. fresh cakes with a short shelf life) — if the cart has even one, the customer must use an address in {province} or pick up at the shop · choose which products can ship to other provinces with the \"Product delivery areas\" button at the top right · pre-order products always ship everywhere"
     },
@@ -2881,9 +2899,9 @@
     "add": "Add zone",
     "addTitle": "Add shipping zone",
     "added": "Zone {code} added",
-    "deleted": "Zone {code} deleted — its provinces now use the zone D fee",
+    "deleted": "Zone {code} deleted — its provinces now use the zone {fallback} fee",
     "deleteFailed": "Could not delete the zone",
-    "deleteConfirm": "Delete zone {code}? Its provinces will use the zone D fee instead (can't be undone)"
+    "deleteConfirm": "Delete zone {code}? Its provinces will use the zone {fallback} fee instead (can't be undone)"
   },
   "shop": {
     "nav": {
@@ -2975,7 +2993,11 @@
       "setDefaultAuto": "Set as default address (picked automatically at checkout)",
       "recipientHint": "Recipient name and phone are entered with each order",
       "editOnceHint": "Edits apply to this order only — your saved addresses are not changed",
-      "useOnce": "Use this address for this order"
+      "useOnce": "Use this address for this order",
+      "fieldRequired": "Please enter {field}",
+      "provinceRequired": "Please choose a province",
+      "provincePick": "Choose a province",
+      "provinceNoMatch": "No matching province"
     },
     "footer": {
       "fallbackAddress": "Mueang District, Nong Khai 43000",
@@ -3067,7 +3089,8 @@
       "added": "Added",
       "addToCart": "Add to cart",
       "localOnly": "{province} only",
-      "localOnlyHint": "Delivers within {province} province only (or pick up at the shop)"
+      "localOnlyHint": "Delivers within {province} province only (or pick up at the shop)",
+      "soldOut": "Sold out"
     },
     "pick": {
       "groupRequired": "Please choose {group}",
@@ -3129,7 +3152,11 @@
       "preorderPickup": "Pick up from {date}",
       "selectedOf": "{n}/{total} selected",
       "qtyTimesPrice": "{qty} × {price}",
-      "preorderPending": "You still have {n} pre-order item(s) waiting (ordered separately from ready-to-ship items)"
+      "preorderPending": "You still have {n} pre-order item(s) waiting (ordered separately from ready-to-ship items)",
+      "qtyMaxNote": "Only {n} left — that's the maximum",
+      "qtyMaxReached": "Can't add more — only {n} left",
+      "quantity": "Quantity",
+      "quantityOf": "Quantity of {name}"
     },
     "orderStatus": {
       "pending": "Ordered",
@@ -3281,9 +3308,10 @@
       },
       "back": "Back to previous page",
       "unpaidBy": "Not paid yet · by {date}",
-      "searchPlaceholder": "Search order number or product name",
+      "searchPlaceholder": "Search product name or order code, e.g. MMC004",
       "emptySearch": "No results for \"{q}\"",
-      "clearSearch": "Clear search"
+      "clearSearch": "Clear search",
+      "receiveMethod": "Delivery method / address"
     },
     "preorders": {
       "all": "All pre-orders",
@@ -3320,7 +3348,7 @@
       "paidContactToCancel": "Paid — please contact the store to cancel",
       "preorder": "Pre-order",
       "reviewOnlyCompleted": "You can review once the pre-order is completed and paid",
-      "searchPlaceholder": "Search pre-order number or product name",
+      "searchPlaceholder": "Search product name or pre-order code, e.g. MMC004",
       "loadOneFailed": "Couldn't load this pre-order",
       "retry": "Try again"
     },
@@ -3484,7 +3512,9 @@
       "refundNameRequired": "Please enter the account name",
       "refundSaved": "Refund PromptPay account saved",
       "refundRemoved": "PromptPay account removed",
-      "refundSaveFailed": "Could not save the PromptPay account"
+      "refundSaveFailed": "Could not save the PromptPay account",
+      "searchAllergy": "Search ingredients you're allergic to, e.g. peanut, milk, egg",
+      "allergyNoMatch": "No matching ingredient"
     },
     "favorites": {
       "loginToView": "Please log in to see your favorites",
@@ -3547,10 +3577,9 @@
       "notReceived": "Not yet",
       "completeProfile": "Complete your profile →",
       "howToUse": "Using points as a discount",
-      "rule100": "100 points = {amount} off at checkout (in steps of {step})",
-      "ruleMin": "You need at least {n} points to start redeeming",
-      "ruleMax": "Up to {percent}% of the subtotal per order",
-      "ruleExpiry": "Points expire {days} days after they're earned",
+      "rule100": "Convert points into a discount coupon in the \"Redeem\" tab — 100 points = {amount} off (in steps of {step} points)",
+      "ruleMin": "You need at least {n} points to start converting",
+      "ruleExpiry": "Points expire {days} days after you receive them — older points are used first",
       "redeemCoupons": "Redeem coupons",
       "have": "{n} points",
       "loadingCoupons": "Loading coupons...",
@@ -3594,7 +3623,10 @@
       "convertTitle": "Exchange points for a discount",
       "convertConfirm": "Use {points} points for a {baht} discount coupon?",
       "convertDone": "Done — the coupon is in \"My coupons\"",
-      "convertFailed": "Could not exchange points"
+      "convertFailed": "Could not exchange points",
+      "ruleCoupon": "You get 1 discount coupon in \"My coupons\", valid for {days} days",
+      "ruleCheckout": "At checkout, choose the coupon under \"My coupons\" — 1 coupon per order, can't be combined with a promo code",
+      "ruleNoReturn": "Coupons can't be turned back into points (if the order that used it is cancelled, the coupon is returned)"
     },
     "checkout": {
       "loginToOrder": "Please log in to place an order",
@@ -4041,7 +4073,14 @@
       "pay": "Pay / attach slip",
       "done": "Order placed",
       "payLaterBtn": "Pay later",
-      "backHome": "Back to home"
+      "backHome": "Back to home",
+      "editCheckout": "Change delivery method / address",
+      "editCheckoutConfirm": "This unpaid order will be cancelled and its items put back in your cart, so you can pick a new address or delivery method and order again",
+      "editCheckoutGo": "Go back and edit",
+      "editCheckoutStay": "Stay here",
+      "editCheckoutReason": "Customer went back to change address/delivery method",
+      "editCheckoutFailed": "Couldn't go back to edit. Please try again",
+      "editCheckoutBusy": "Going back to checkout..."
     },
     "success": {
       "notFound": "Order not found",
@@ -4232,7 +4271,28 @@
     "openFull": "Open full chat",
     "widgetClose": "Close chat",
     "openOrderPage": "Open order management page",
-    "noOrderPermission": "You don't have permission to view this order"
+    "noOrderPermission": "You don't have permission to view this order",
+    "messageMenu": "Message options",
+    "editMessage": "Edit",
+    "deleteMessage": "Delete message",
+    "edited": "Edited",
+    "editingMessage": "Editing message",
+    "cancelEdit": "Cancel",
+    "saveEdit": "Save changes",
+    "editFailed": "Couldn't edit the message. Please try again",
+    "deleteFailed": "Couldn't delete. Please try again",
+    "deleteMessageConfirm": "Delete this message?",
+    "deleteMessageNote": "The message will disappear from the chat for both sides",
+    "changeAttach": "Change",
+    "attachedNow": "Attached",
+    "filterAll": "All",
+    "filterUnread": "Unread",
+    "filterLabel": "Show chats",
+    "roomMenu": "Chat options",
+    "deleteRoom": "Delete chat",
+    "deleteRoomConfirm": "Remove the chat with {name} from the list?",
+    "deleteRoomNote": "The history is kept — if the customer messages again, the chat comes back with its history",
+    "roomDeleted": "Chat removed from the list"
   },
   "lots": {
     "printLabels": "Print labels",

@@ -1,7 +1,8 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // useChatThread — ข้อความในห้องแชท + ดึงข้อความใหม่แบบ polling (ใช้ทั้งหน้าร้านและหลังร้าน)
-// - โหลดครั้งแรก = ข้อความล่าสุด · ทุก POLL_MS ขอเฉพาะที่ใหม่กว่าข้อความล่าสุด (?after=) แล้วรวม (ตัดซ้ำด้วย _id)
+// - โหลดครั้งแรก = ข้อความล่าสุด · ทุก POLL_MS ขอที่ใหม่/เปลี่ยนหลัง updated_at ล่าสุดที่เห็น (?after=) แล้วรวม (ตัดซ้ำด้วย _id)
+//   ข้อความที่อีกฝั่งแก้ = แทนของเดิม · ที่ถูกลบ = เอาออก · ห้องถูกลบ (conversation null) = ล้างจอ
 // - แท็บถูกซ่อน = หยุด poll (กลับมาเห็นแท็บ = ดึงทันที) — ไม่ยิง backend ฟรี ๆ
 // - loadOlder = ข้อความเก่ากว่าอันแรก (?before=) · append = ใส่ข้อความที่เพิ่งส่งทันทีไม่ต้องรอ poll
 // key เปลี่ยน (เปลี่ยนห้อง) = เริ่มใหม่ · fetcher ต้องคงที่ต่อ key
@@ -40,9 +41,13 @@ export function useChatThread(
     fetcherRef.current = fetcher;
     onNewRef.current = onNewFromOther;
   });
-  useEffect(() => {
-    latestRef.current = messages.length ? messages[messages.length - 1].created_at : null;
-  }, [messages]);
+  /** cursor ของ polling = updated_at ล่าสุดที่เคยได้รับ (รวมข้อความที่ถูกลบ — ไม่อยู่ใน messages แล้ว) */
+  const bumpCursor = (list: ChatMessage[]) => {
+    for (const m of list) {
+      const at = m.updated_at ?? m.created_at;
+      if (!latestRef.current || at > latestRef.current) latestRef.current = at;
+    }
+  };
 
   useEffect(() => {
     if (!key) return;
@@ -57,11 +62,24 @@ export function useChatThread(
         if (cancelled) return;
         setConversation(res.conversation);
         if (initial) setHasMore(res.has_more);
+        bumpCursor(res.messages);
+        // ห้องถูกร้านลบ → ล้างข้อความเดิมบนจอ
+        if (!res.conversation) {
+          latestRef.current = null;
+          setMessages([]);
+          setStatus("ready");
+          return;
+        }
         setMessages((prev) => {
-          const merged = mergeChatMessages(prev, res.messages);
-          // มีข้อความใหม่จากอีกฝั่ง (ไม่ใช่รอบแรก) → ให้หน้าเรียก "อ่านแล้ว"
-          if (!initial && merged.length > prev.length) {
-            const fresh = res.messages.filter((m) => !prev.some((p) => p._id === m._id));
+          // polling คืนข้อความที่ "เปลี่ยน" ด้วย (แก้ไข/อ่านแล้ว) — ข้อความเก่ากว่าช่วงที่โหลดไว้และยังไม่อยู่บนจอ ไม่ต้องแทรก
+          // (ไม่งั้นข้อความเก่าโผล่บนสุดของห้องเอง · เลื่อนขึ้น "ดูข้อความก่อนหน้า" ก็ได้ฉบับล่าสุดอยู่แล้ว)
+          const oldest = prev[0]?.created_at;
+          const incoming =
+            initial || !oldest ? res.messages : res.messages.filter((m) => m.created_at >= oldest || prev.some((p) => p._id === m._id));
+          const merged = mergeChatMessages(prev, incoming);
+          // มีข้อความใหม่ (ไม่ใช่ที่แก้/ลบ) จากอีกฝั่ง (ไม่ใช่รอบแรก) → ให้หน้าเรียก "อ่านแล้ว"
+          if (!initial) {
+            const fresh = incoming.filter((m) => !m.deleted && !prev.some((p) => p._id === m._id));
             if (fresh.length) queueMicrotask(() => onNewRef.current?.());
           }
           return merged;
@@ -111,7 +129,10 @@ export function useChatThread(
     }
   }, [messages, loadingOlder]);
 
+  /** ใส่/แทนข้อความที่เพิ่งส่งหรือแก้ทันทีไม่ต้องรอ poll */
   const append = useCallback((m: ChatMessage) => setMessages((prev) => mergeChatMessages(prev, [m])), []);
+  /** เอาข้อความที่เพิ่งลบออกทันที */
+  const remove = useCallback((id: string) => setMessages((prev) => prev.filter((m) => m._id !== id)), []);
 
-  return { messages, conversation, hasMore, status, loadingOlder, loadOlder, append };
+  return { messages, conversation, hasMore, status, loadingOlder, loadOlder, append, remove };
 }

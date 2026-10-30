@@ -9,6 +9,7 @@ import {
 } from "@/components/shared/layout/AuthBackdrop";
 import { LOGIN_PATH } from "@/constants/auth";
 import type { useRegisterViewModel } from "./useRegisterViewModel";
+import SearchPicker from "@/components/customer/SearchPicker";
 
 type VM = ReturnType<typeof useRegisterViewModel>;
 
@@ -107,7 +108,7 @@ export function RegisterView(vm: VM) {
 
         {/* ประวัติแพ้อาหาร — ใช้เตือนตอนดูสินค้า (แนะนำสินค้า · ตรวจสารก่อภูมิแพ้) */}
         <div className="pt-1">
-          <span className={authLabelClass}>{t("register.allergy")}</span>
+          <span className={authLabelClass}>{t("register.allergy")}{vm.form.hasAllergy && req}</span>
           <div className="mb-3 mt-1 grid grid-cols-2 gap-2 rounded-xl bg-stone-100/50 p-1 md:bg-stone-100" role="radiogroup" aria-label={t("register.allergy")}>
             {([false, true] as const).map((v) => (
               <button key={String(v)} type="button" role="radio" aria-checked={vm.form.hasAllergy === v}
@@ -124,11 +125,15 @@ export function RegisterView(vm: VM) {
 
           {vm.form.hasAllergy && (
             <div className="flex flex-col gap-3 rounded-2xl border border-stone-200/80 bg-stone-50/90 p-4 md:bg-stone-50/80">
-              <select className={fieldClass} value="" aria-label={t("register.allergyPick")}
-                onChange={(e) => vm.addAllergy(e.target.value)}>
-                <option value="" disabled>{t("register.allergyPick")}</option>
-                {vm.allergyOptions.map((name) => <option key={name} value={name}>{name}</option>)}
-              </select>
+              {/* พิมพ์ค้นหาวัตถุดิบได้ (เดิมเป็น dropdown ยาว ต้องเลื่อนหา) */}
+              <SearchPicker
+                options={vm.allergyOptions}
+                onPick={vm.addAllergy}
+                placeholder={t("register.allergySearch")}
+                label={t("register.allergyPick")}
+                emptyText={t("register.allergyNoMatch")}
+                inputClassName={fieldClass}
+              />
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-stone-500">{t("register.allergyCount", { n: vm.form.allergies.length })}</span>
                 {vm.form.allergies.length > 0 && (

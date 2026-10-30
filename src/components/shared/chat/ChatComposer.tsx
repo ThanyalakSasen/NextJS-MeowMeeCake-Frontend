@@ -3,10 +3,11 @@
 // ช่องพิมพ์ข้อความแชท — Enter = ส่ง · Shift+Enter = ขึ้นบรรทัดใหม่ · สูงตามข้อความ (สูงสุด ~5 บรรทัด)
 // leading = ปุ่มเสริมด้านซ้าย (หน้าร้าน: แนบคำสั่งซื้อ) · above = ส่วนเหนือช่องพิมพ์ (ชิปคำสั่งซื้อที่เลือกไว้)
 // canSendEmpty = ส่งได้แม้ไม่มีข้อความ (มีคำสั่งซื้อแนบอยู่)
+// editing = โหมดแก้ข้อความ: ใส่ข้อความเดิมให้ในช่อง + แถบ "กำลังแก้ไขข้อความ" (ยกเลิกได้) · onSend ของหน้าเป็นคนบันทึกการแก้
 // ─────────────────────────────────────────────────────────────
 import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { SendHorizontal } from "lucide-react";
+import { Check, Pencil, SendHorizontal, X } from "lucide-react";
 
 export const CHAT_MAX_LENGTH = 1000;
 
@@ -17,7 +18,12 @@ export default function ChatComposer({
   leading,
   above,
   canSendEmpty = false,
+  editing = null,
+  onCancelEdit,
 }: {
+  /** กำลังแก้ข้อความ (key = id ข้อความ · text = ข้อความเดิม) */
+  editing?: { key: string; text: string } | null;
+  onCancelEdit?: () => void;
   /** คืน true = ส่งสำเร็จ (ล้างช่องพิมพ์) */
   onSend: (body: string) => Promise<boolean>;
   sending: boolean;
@@ -29,6 +35,17 @@ export default function ChatComposer({
   const t = useTranslations("chat");
   const [text, setText] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
+
+  // เริ่ม/เลิกแก้ข้อความ = เปลี่ยนข้อความในช่อง (ปรับ state ตอน prop เปลี่ยน — ไม่ setState ใน effect)
+  const editKey = editing?.key ?? null;
+  const [shownEditKey, setShownEditKey] = useState<string | null>(null);
+  if (shownEditKey !== editKey) {
+    setShownEditKey(editKey);
+    setText(editing ? editing.text : "");
+  }
+  useLayoutEffect(() => {
+    if (editKey) ref.current?.focus();
+  }, [editKey]);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -46,6 +63,20 @@ export default function ChatComposer({
 
   return (
     <div className="border-t border-[#8C5A3C]/10 bg-white px-3 py-2.5 sm:px-4">
+      {editing && (
+        <div className="mb-2 flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">
+          <Pencil size={14} aria-hidden="true" />
+          <span className="flex-1">{t("editingMessage")}</span>
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="flex h-7 items-center gap-1 rounded-full px-2 text-amber-800 hover:bg-amber-100"
+          >
+            <X size={14} aria-hidden="true" />
+            {t("cancelEdit")}
+          </button>
+        </div>
+      )}
       {above}
       <form
         className="flex items-end gap-2"
@@ -66,6 +97,11 @@ export default function ChatComposer({
           placeholder={t("placeholder")}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
+            if (e.key === "Escape" && editing) {
+              e.preventDefault();
+              onCancelEdit?.();
+              return;
+            }
             // ไม่ส่งระหว่างพิมพ์ภาษาที่ต้องประกอบตัวอักษร (IME)
             if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
@@ -77,11 +113,11 @@ export default function ChatComposer({
         <button
           type="submit"
           disabled={!ready}
-          aria-label={t("send")}
-          title={t("send")}
+          aria-label={editing ? t("saveEdit") : t("send")}
+          title={editing ? t("saveEdit") : t("send")}
           className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-[#4A342E] text-white shadow-md transition hover:bg-[#8C5A3C] active:scale-95 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:shadow-none"
         >
-          <SendHorizontal size={18} aria-hidden="true" />
+          {editing ? <Check size={18} aria-hidden="true" /> : <SendHorizontal size={18} aria-hidden="true" />}
         </button>
       </form>
       {text.length > CHAT_MAX_LENGTH * 0.9 && (

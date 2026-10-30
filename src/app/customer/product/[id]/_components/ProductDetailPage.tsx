@@ -10,6 +10,7 @@
 // ส่วนข้อมูล (2026-10-26): กล่อง "ข้อมูลสินค้า" (หมวด · หน่วย · ประเภท · การจัดส่ง · คงเหลือ) อยู่ใต้รูป · "รายละเอียดสินค้า" กับ
 //   "วิธีอุ่น / เก็บรักษา" เป็นหัวข้อเรียงกัน — เดิมเป็นปุ่มแท็บ 2 ปุ่ม ต้องกดสลับถึงจะเห็นอีกเรื่อง
 // ─────────────────────────────────────────────────────────────
+import QtyInput from "@/components/customer/QtyInput";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -412,7 +413,15 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
                     >
                       -
                     </button>
-                    <span className="w-12 text-center font-bold text-sm sm:text-base text-[#4A342E]">{qty}</span>
+                    {/* พิมพ์จำนวนเองได้ — ปรับให้อยู่ใน 1 ถึงสต็อกคงเหลือ */}
+                    <QtyInput
+                      value={qty}
+                      max={Math.max(1, stock)}
+                      onCommit={setQty}
+                      disabled={isLoading || outOfStock}
+                      label={tcart("quantity")}
+                      className="h-[34px] w-12 text-sm sm:text-base"
+                    />
                     <button
                       type="button"
                       onClick={() => changeQty(1)}
@@ -439,7 +448,12 @@ export default function ProductDetailPage({ roundParam }: { roundParam: string |
                           : t("addToCartPrice", { price: (price * qty).toLocaleString() })}
                   </button>
                 </div>
-                {!outOfStock && <p className="-mt-2 text-xs text-gray-500">{t("stockLeft", { n: stock.toLocaleString() })}</p>}
+                {!outOfStock && (
+                  // ถึงจำนวนสูงสุดแล้ว = บอกเหตุผลที่กด + ไม่ได้ (แทนข้อความสต็อกคงเหลือ)
+                  <p role="status" className={`-mt-2 text-xs ${qty >= stock ? "font-medium text-amber-700" : "text-gray-500"}`}>
+                    {qty >= stock ? tcart("qtyMaxNote", { n: stock.toLocaleString() }) : t("stockLeft", { n: stock.toLocaleString() })}
+                  </p>
+                )}
               </>
             )}
 

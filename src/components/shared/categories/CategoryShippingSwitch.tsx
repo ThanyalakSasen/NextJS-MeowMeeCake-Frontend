@@ -8,6 +8,7 @@ import { Tooltip } from "antd";
 import { useTranslations } from "next-intl";
 import { Switch } from "@/components/base";
 import type { CategoryShipping } from "@/types/shippingZone";
+import { useStoreProvince } from "@/hooks/useStoreProvince";
 
 export function CategoryShippingSwitch({
   item,
@@ -16,8 +17,11 @@ export function CategoryShippingSwitch({
   saving,
   onToggle,
   label,
+  province: provinceProp,
 }: {
-  /** ข้อความข้างสวิตช์ — ไม่ส่ง = "ส่งทั่วประเทศ" / "เฉพาะจังหวัดร้าน" ตามสถานะ */
+  /** ชื่อจังหวัดร้าน — ไม่ส่ง = ดึงจากที่อยู่ร้านเอง */
+  province?: string;
+  /** ข้อความข้างสวิตช์ — ไม่ส่ง = "ส่งทั่วประเทศ" / "ส่งเฉพาะใน จ.<จังหวัดร้าน>" ตามสถานะ */
   label?: string;
   item: CategoryShipping;
   /** สถานะที่แสดง — ไม่ส่ง = ค่าของหมวด · หน้า "จัดส่งนอกจังหวัด" ส่ง "มีสินค้าเปิดอย่างน้อย 1 ชิ้น" */
@@ -27,6 +31,8 @@ export function CategoryShippingSwitch({
   onToggle: (id: string, value: boolean) => void;
 }) {
   const t = useTranslations();
+  const storeProvince = useStoreProvince();
+  const province = provinceProp ?? storeProvince;
   return (
     <Tooltip title={item.ships_nationwide_auto ? t("shippingZones.categories.autoHint") : undefined}>
       <label className="flex shrink-0 items-center gap-1.5 text-xs text-gray-600">
@@ -38,7 +44,7 @@ export function CategoryShippingSwitch({
           onChange={(v) => onToggle(item._id, v)}
           aria-label={t("shippingZones.categories.toggleLabel", { name: item.product_category_name })}
         />
-        {label ?? (checked ? t("shippingZones.categories.nationwide") : t("shippingZones.categories.provinceOnly"))}
+        {label ?? (checked ? t("shippingZones.categories.nationwide") : t("shippingZones.categories.provinceOnlyIn", { province }))}
         {item.ships_nationwide_auto && <span className="text-gray-500">*</span>}
       </label>
     </Tooltip>

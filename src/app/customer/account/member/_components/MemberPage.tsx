@@ -30,6 +30,9 @@ import { couponLabel } from "../../../lib/couponLabel";
 import { formatDate as fmtDate } from "@/i18n/format";
 import { MEMBER_TABS, type MemberTab } from "./memberTabs";
 
+/** อายุคูปองที่แลกจากแต้ม (วัน) — ตรงกับ backend couponService.POINTS_COUPON_DAYS */
+const POINTS_COUPON_DAYS = 90;
+
 
 const card = "rounded-2xl border border-stone-100 bg-white p-5 shadow-sm sm:p-6";
 
@@ -299,7 +302,7 @@ function MyCouponsTab({ coupons, loading, failed, onRedeem }: { coupons: MyCoupo
           <button type="button" onClick={onRedeem} className="text-sm font-semibold text-[#8C5A3C] hover:underline">{t("goRedeem")}</button>
         </div>
       ) : (
-        <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 xl:grid-cols-2">
+        <ul className="m-0 grid list-none grid-cols-1 gap-2.5 p-0 md:grid-cols-2">
           {sorted.map((c) => (
             <li key={c._id}>
               <CouponCodeTicket
@@ -359,7 +362,7 @@ function RedeemTab({
       ) : sorted.length === 0 ? (
         <p className="rounded-xl border border-dashed border-stone-200 bg-stone-50 py-8 text-center text-sm text-stone-500">{t("noCatalog")}</p>
       ) : (
-        <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 xl:grid-cols-2">
+        <ul className="m-0 grid list-none grid-cols-1 gap-2.5 p-0 md:grid-cols-2">
           {sorted.map((c) => {
             const ok = canRedeem(c);
             const busy = busyId === c._id;
@@ -383,7 +386,7 @@ function RedeemTab({
                       type="button"
                       onClick={() => onRedeem(c)}
                       disabled={!ok || busyId !== null}
-                      className="h-[40px] rounded-xl border border-[#8C5A3C]/30 bg-white px-3 text-sm font-bold text-[#4A342E] shadow-sm transition hover:bg-[#4A342E] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-500 disabled:shadow-none"
+                      className="h-[32px] rounded-lg border border-[#8C5A3C]/30 bg-white px-2.5 text-xs font-bold text-[#4A342E] shadow-sm transition hover:bg-[#4A342E] hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-500 disabled:shadow-none"
                     >
                       {busy ? t("redeeming") : c.limit_reached ? t("limitReached") : ok ? t("redeem") : t("notEnough")}
                     </button>
@@ -469,10 +472,14 @@ function EarnTab({ p }: { p: MyPoints }) {
           <Award className="h-5 w-5 text-[#4A342E]" aria-hidden="true" /> {t("howToUse")}
         </h2>
         <ul className="m-0 list-none space-y-2 p-0 text-sm text-stone-600">
+          {/* ตรงกับวิธีใช้จริง: แลกแต้มเป็นคูปองที่แท็บ "แลกแต้ม" → เลือกคูปองตอนชำระเงิน (ไม่มีช่องกรอกแต้มในหน้าชำระเงินแล้ว
+              · แลกเป็นคูปองไม่มีเพดาน % ของยอด — backend pointsService.spendPointsForCoupon · คูปองใช้ได้ 90 วัน couponService.POINTS_COUPON_DAYS) */}
           {[
             t("rule100", { amount: baht(pointsToBaht(100, p.rules)), step: p.rules.REDEEM_STEP }),
             t("ruleMin", { n: p.rules.MIN_BALANCE_TO_REDEEM }),
-            t("ruleMax", { percent: Math.round(p.rules.MAX_REDEEM_RATIO * 100) }),
+            t("ruleCoupon", { days: POINTS_COUPON_DAYS }),
+            t("ruleCheckout"),
+            t("ruleNoReturn"),
             t("ruleExpiry", { days: p.rules.EXPIRY_DAYS }),
           ].map((text) => (
             <li key={text} className="flex items-start gap-2">

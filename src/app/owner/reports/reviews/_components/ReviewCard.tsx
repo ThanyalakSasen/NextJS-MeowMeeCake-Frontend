@@ -1,6 +1,6 @@
 "use client";
-// การ์ดรีวิว 1 รายการ — ป้าย "ใหม่" (ยังไม่อ่าน) + ปุ่มอ่านแล้ว · รูปสินค้า · ดาว/ลูกค้า/วันที่/เลขออเดอร์ · ป้ายที่มาผลวิเคราะห์ + ตอบแล้ว/ยัง ·
-// สถานะ (แสดง/ซ่อน/รออนุมัติ) · ปักหมุด · อ่านแล้ว · ข้อความ (ย่อ/อ่านเพิ่ม) · หัวข้อชอบ/ติ · แท็กภายใน · รูป/วิดีโอ ·
+// การ์ดรีวิว 1 รายการ — ป้าย "ใหม่" (ยังไม่อ่าน) + ปุ่มอ่านแล้ว · รูปสินค้า · ดาว/ลูกค้า/วันที่/เลขออเดอร์ · ป้ายตอบแล้ว/ยัง ·
+// สถานะ (แสดง/ซ่อน — เอาป้ายที่มาผลวิเคราะห์ และตัวเลือก "รออนุมัติ" ออก) · ปักหมุด · อ่านแล้ว · ข้อความ (ย่อ/อ่านเพิ่ม) · หัวข้อชอบ/ติ · แท็กภายใน · รูป/วิดีโอ ·
 // โน้ตภายใน · ตอบกลับ · ปุ่มแท็ก/รายละเอียด/ลบ — ปุ่มแก้ไขตามสิทธิ์ reports.update / delete
 import { useState } from "react";
 import { Image, Tooltip } from "antd";
@@ -21,16 +21,12 @@ import { ReplyBox } from "./ReplyBox";
 import { NoteBox } from "./NoteBox";
 
 const TEXT_PREVIEW = 200;
-const STATUSES: ReviewStatus[] = ["approved", "hidden", "pending"];
+/** ตัวเลือกสถานะ — ไม่มี "รออนุมัติ" แล้ว (รีวิวเก่าที่ค้างสถานะนี้ยังแสดงค่าเดิมได้ แต่เลือกกลับไม่ได้) */
+const STATUSES: ReviewStatus[] = ["approved", "hidden"];
 const TOPIC_CLASS = {
   positive: "border-emerald-200 bg-emerald-50 text-emerald-700",
   negative: "border-rose-200 bg-rose-50 text-rose-700",
   neutral: "border-stone-200 bg-stone-50 text-stone-600",
-} as const;
-const SOURCE_CLASS = {
-  customer: "bg-emerald-50 text-emerald-700",
-  inferred: "bg-amber-50 text-amber-700",
-  model: "bg-indigo-50 text-indigo-700",
 } as const;
 
 export function ReviewCard({
@@ -82,11 +78,6 @@ export function ReviewCard({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            {r.analysis_source && (
-              <Tooltip title={t(`reviews.source.${r.analysis_source}Hint`)}>
-                <span className={`rounded px-1.5 py-0.5 text-[10px] ${SOURCE_CLASS[r.analysis_source]}`}>{t(`reviews.source.${r.analysis_source}`)}</span>
-              </Tooltip>
-            )}
             <span
               className={`rounded px-1.5 py-0.5 text-[10px] ${
                 replied ? "bg-emerald-50 text-emerald-700" : r.rating <= 2 ? "bg-rose-50 text-rose-700" : "bg-gray-100 text-gray-500"
@@ -101,7 +92,11 @@ export function ReviewCard({
               value={r.status}
               disabled={!canUpdate}
               aria-label={t("reviews.statusLabel")}
-              options={STATUSES.map((s) => ({ value: s, label: t(`reviews.status.${s}`) }))}
+              options={(r.status === "pending" ? [...STATUSES, r.status] : STATUSES).map((s) => ({
+                value: s,
+                label: t(`reviews.status.${s}`),
+                disabled: s === "pending",
+              }))}
               onChange={(v: ReviewStatus) => onStatus(v)}
             />
             {canUpdate && (

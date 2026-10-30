@@ -4,13 +4,15 @@
 // API: GET /shop/favorites · DELETE /shop/favorites?productId= (ผ่าน useFavorites — cache เดียวกับปุ่มหัวใจในบัตรสินค้า)
 // ต่างจากต้นแบบ: ปุ่ม "หยิบใส่ตะกร้า" ใช้ได้จริง (ต้นแบบไม่มี onClick) · สินค้าพรีออเดอร์ = ปุ่ม "ดูสินค้า" (สั่งผ่าน flow พรีออเดอร์ D3)
 // · ชื่อ/รูปกดไปหน้าสินค้าได้
+// · การ์ดหน้าตาเดียวกับหน้าสินค้าทั้งหมด (ProductCard): กริด productGrid แถวละ 4 · ความกว้างหน้าเท่ากัน · สินค้าหมด = รูปเทา + ป้ายกลางรูป
+//   · ดาว + จำนวนรีวิวแสดงเสมอ (ยังไม่มีรีวิว = 0.0) · ป้ายแพ้อาหาร + ป้าย "ส่งเฉพาะ จ.…" เหมือนบัตรสินค้า
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useLocalName } from "@/app/customer/lib/localName";
 import { FaCheck, FaHeart, FaSpinner, FaStar } from "react-icons/fa";
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart } from "lucide-react";
 import type { FavoriteItem } from "@/services/shopFavorites";
 import { resolveUploadUrl } from "@/lib/uploads";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
@@ -23,9 +25,12 @@ import {
   productCardImage,
   productCardSubtitle,
   productCardTitle,
+  productGrid,
   shopButton,
   shopPage,
 } from "@/components/customer/shopStyles";
+import { AllergenBadge, LocalOnlyBadge } from "@/components/customer/ProductCard";
+import { useAllergenWarnings } from "../../hooks/useAllergenWarnings";
 import { useFavorites } from "../../hooks/useFavorites";
 import { useAddToCart } from "../../hooks/useAddToCart";
 import ShopImage from "@/components/customer/ShopImage";
@@ -48,8 +53,8 @@ function FavoritesContent() {
 
   return (
     <div className={shopPage}>
-      {/* กว้างกว่าหน้าบัญชีอื่น (1320px · ขอบแคบ) — ให้การ์ดแถวละ 6 บนจอใหญ่ไม่เล็กเกินไป */}
-      <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-5 px-[12px] sm:px-[16px] md:px-[24px] xl:px-[32px]">
+      {/* ความกว้างเดียวกับหน้าสินค้าทั้งหมด — การ์ดขนาดเท่ากัน */}
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-[20px] sm:px-[32px] md:px-[40px] xl:px-[64px]">
         <CustomerBreadcrumb items={[{ label: to("myAccount"), href: "/customer/account" }, { label: ta("favorites") }]} className="!mb-0" />
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
           <div className="flex min-w-0 flex-1 flex-col gap-5">
@@ -74,8 +79,8 @@ function FavoritesContent() {
                 <Link href="/customer/product" className={shopButton}>{t("shopNow")}</Link>
               </div>
             ) : (
-              // มือถือ 2 · จอกลาง 3 · จอใหญ่ (≥1280) 6 ต่อแถว
-              <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
+              // กริดเดียวกับหน้าสินค้าทั้งหมด (มือถือ 2 · จอกลาง 3 · จอใหญ่ 4)
+              <ul className={`m-0 list-none p-0 ${productGrid}`}>
                 {items.map((item) => (
                   <FavoriteCard
                     key={item.id}
@@ -102,20 +107,21 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
   const { names: localNames } = useLocalName();
   const { quickAdd, status } = useAddToCart();
   const [imgFailed, setImgFailed] = useState(false);
+  const allergenWarningOf = useAllergenWarnings();
   const href = `/customer/product/${item.id}`;
   const img = resolveUploadUrl(item.image);
   const names = localNames(item.name, item.nameeg);
 
   return (
-    <li className={item.inStock ? "" : "opacity-80"}>
+    <li>
       <Link href={href} className={productCardFrame}>
         <div className={productCardImage}>
           {img && !imgFailed ? (
             <ShopImage
               src={img}
               alt={item.name}
-              sizes="(min-width: 1280px) 16vw, (min-width: 640px) 33vw, 50vw"
-              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
+              className={`h-full w-full object-cover transition duration-300 group-hover:scale-105 ${item.inStock ? "" : "grayscale opacity-70"}`}
               onError={() => setImgFailed(true)}
             />
           ) : (
@@ -139,18 +145,24 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
           </button>
 
           {!item.inStock && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
-              <span className="rounded-full bg-stone-900/80 px-3 py-1 text-xs font-bold text-white">{t("outOfStock")}</span>
-            </div>
+            <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <span className="rounded-full bg-stone-900/75 px-3 py-1 text-xs font-bold text-white shadow-md sm:text-sm">{t("outOfStock")}</span>
+            </span>
           )}
-          {item.is_preorder && item.inStock && (
-            <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-[#4A342E] px-2 py-0.5 text-[11px] font-bold text-white">{t("preorder")}</span>
+          {item.is_preorder && item.inStock ? (
+            <span className="pointer-events-none absolute left-1 top-1 rounded-full bg-[#4A342E] px-2 py-0.5 text-[11px] font-bold text-white">{t("preorder")}</span>
+          ) : (
+            <AllergenBadge warning={allergenWarningOf(item.id)} />
+          )}
+          {/* ยังไม่รู้หมวด (รายการที่เพิ่งกดหัวใจ ก่อนโหลดใหม่) = ไม่แสดง — ไม่เดา */}
+          {item.category_id !== undefined && (
+            <LocalOnlyBadge productId={item.id} category={item.category_id} isPreorder={item.is_preorder} />
           )}
         </div>
 
         <div className={productCardBody}>
           <div className="min-w-0">
-            <h2 className={productCardTitle}>{names.primary}</h2>
+            <h3 className={productCardTitle}>{names.primary}</h3>
             <p className={productCardSubtitle}>{names.secondary || " "}</p>
           </div>
 
@@ -162,11 +174,12 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
                 </span>
                 {item.originalPrice ? <span className="text-xs text-stone-500 line-through">{baht(item.originalPrice)}</span> : null}
               </span>
-              {item.rating !== "-" && (
-                <span className="flex shrink-0 items-center gap-1 pb-0.5 text-xs font-medium text-stone-700">
-                  <FaStar className="text-amber-400" aria-hidden="true" /> {Number(item.rating).toFixed(1)}
-                </span>
-              )}
+              {/* ดาวแสดงเสมอเหมือนบัตรสินค้า — ยังไม่มีรีวิว = 0.0 */}
+              <span className="flex shrink-0 items-center gap-1 pb-0.5 text-xs font-medium text-stone-700">
+                <FaStar className="text-amber-400" aria-hidden="true" />
+                <span>{(item.rating === "-" ? 0 : Number(item.rating) || 0).toFixed(1)}</span>
+                {(item.review_count ?? 0) > 0 && <span className="text-stone-500">({item.review_count})</span>}
+              </span>
             </div>
 
             {item.is_preorder ? (
@@ -180,7 +193,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
                   e.stopPropagation();
                   void quickAdd(item.id);
                 }}
-                className={`${productCardButton} ${status === "success" ? "!border-emerald-600 !bg-emerald-600 !text-white" : ""} disabled:cursor-not-allowed disabled:opacity-60`}
+                className={`${productCardButton} ${status === "success" ? "!border-emerald-600 !bg-emerald-600 !text-white" : ""} disabled:cursor-not-allowed disabled:opacity-75`}
               >
                 {!item.inStock ? (
                   t("soldOut")
@@ -189,7 +202,7 @@ function FavoriteCard({ item, removing, onRemove }: { item: FavoriteItem; removi
                 ) : status === "success" ? (
                   <><FaCheck /> {t("added")}</>
                 ) : (
-                  <><ShoppingCart className="h-4 w-4" aria-hidden="true" /> {t("addToCart")}</>
+                  t("addToCart")
                 )}
               </button>
             )}

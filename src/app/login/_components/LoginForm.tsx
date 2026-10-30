@@ -198,6 +198,7 @@ function Form() {
       <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
         <label htmlFor="login-email" className={labelClass}>
           {t("auth.email")}
+          <span className="ml-0.5 text-red-500" aria-hidden="true">*</span>
         </label>
         <div className="relative w-full">
           <input
@@ -219,6 +220,7 @@ function Form() {
 
         <label htmlFor="login-password" className={labelClass}>
           {t("auth.password")}
+          <span className="ml-0.5 text-red-500" aria-hidden="true">*</span>
         </label>
         <div className="relative w-full">
           <input

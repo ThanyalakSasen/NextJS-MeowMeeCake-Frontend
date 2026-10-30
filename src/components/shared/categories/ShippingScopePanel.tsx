@@ -4,7 +4,7 @@
 //   บนสุด: สรุปทั้งร้าน (ส่งได้ทุกจังหวัด x · เฉพาะจังหวัดร้าน y) + ค้นหา · กรองหมวด (เอาตัวกรองขอบเขตจัดส่งออก 2026-10-26)
 //   แต่ละหมวด = การ์ด: ชื่อ + จำนวน + ป้ายสถานะ (ทุกรายการ / บางรายการ x/n / เฉพาะจังหวัดร้าน) + สวิตช์ "ทั้งหมวด"
 //     กดหัวการ์ดเพื่อกางสินค้า — กางได้ทีละหมวด (กางหมวดใหม่ หมวดเดิมย่อเอง) · สวิตช์ทั้งหมวด = ตั้งค่าหมวด + ล้างค่ารายสินค้า (useCategoryShipping.onToggleWholeCategory)
-//   แต่ละสินค้า = สวิตช์รายสินค้า กดแล้วบันทึกทันที (useProductShipping) · ป้าย "ตั้งแยกจากหมวด" = ค่าต่างจากหมวด
+//   แต่ละสินค้า = สวิตช์รายสินค้า กดแล้วบันทึกทันที (useProductShipping) · คำว่า "จังหวัดร้าน" แสดงเป็นชื่อจังหวัดจริงของที่อยู่ร้าน
 //   ไม่แสดงหมวดที่ไม่มีสินค้า (ทั้งในรายการและตัวเลือกกรองหมวด)
 // presentational · สิทธิ์ store_info (ไม่มี update = สวิตช์กดไม่ได้) · ค้นหา/กรองแล้วกางทุกหมวดที่มีสินค้าตรงเงื่อนไข
 // ─────────────────────────────────────────────────────────────
@@ -16,6 +16,7 @@ import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import type { useCategoryShipping } from "@/hooks/useCategoryShipping";
 import type { useProductShipping } from "@/hooks/useProductShipping";
 import type { CategoryShipping, ProductShipping } from "@/types/shippingZone";
+import { useStoreProvince } from "@/hooks/useStoreProvince";
 import { CategoryShippingSwitch } from "./CategoryShippingSwitch";
 
 type Cats = ReturnType<typeof useCategoryShipping>;
@@ -37,9 +38,8 @@ const PILL_ON = "bg-emerald-50 text-emerald-700";
 const PILL_SOME = "bg-amber-50 text-amber-700";
 const PILL_OFF = "bg-gray-100 text-gray-600";
 
-function ProductRow({ p, prods }: { p: ProductShipping; prods: Prods }) {
+function ProductRow({ p, prods, province }: { p: ProductShipping; prods: Prods; province: string }) {
   const t = useTranslations();
-  const custom = p.ships_nationwide !== null && p.ships_nationwide !== p.category_ships_nationwide;
   return (
     <li className="flex items-center gap-3 py-2.5 pl-10 pr-4">
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -48,13 +48,12 @@ function ProductRow({ p, prods }: { p: ProductShipping; prods: Prods }) {
           {p.is_preorder && (
             <span className={`${PILL} bg-brown-50 font-medium text-brown-700`}>{t("shippingZones.products.preorder")}</span>
           )}
-          {custom && <span className={`${PILL} bg-sky-50 font-medium text-sky-700`}>{t("shippingZones.products.custom")}</span>}
         </span>
         {p.product_code && <span className="truncate text-xs text-gray-500">{p.product_code}</span>}
       </span>
-      <label className="flex w-32 shrink-0 items-center justify-end gap-2 text-xs text-gray-600">
+      <label className="flex w-36 shrink-0 items-center justify-end gap-2 text-xs text-gray-600">
         <span className={p.effective_ships_nationwide ? "font-medium text-emerald-700" : ""}>
-          {p.effective_ships_nationwide ? t("shippingZones.categories.nationwide") : t("shippingZones.categories.provinceOnly")}
+          {p.effective_ships_nationwide ? t("shippingZones.categories.nationwide") : t("shippingZones.categories.provinceOnlyIn", { province })}
         </span>
         <Switch
           size="small"
@@ -69,7 +68,7 @@ function ProductRow({ p, prods }: { p: ProductShipping; prods: Prods }) {
   );
 }
 
-function GroupCard({ g, cats, prods }: { g: Group; cats: Cats; prods: Prods }) {
+function GroupCard({ g, cats, prods, province }: { g: Group; cats: Cats; prods: Prods; province: string }) {
   const t = useTranslations();
   const open = prods.isExpanded(g.id);
   const onCount = g.all.filter((p) => p.effective_ships_nationwide).length;
@@ -79,7 +78,7 @@ function GroupCard({ g, cats, prods }: { g: Group; cats: Cats; prods: Prods }) {
     onCount === g.all.length
       ? { tone: PILL_ON, text: t("shippingZones.products.statusAll") }
       : onCount === 0
-        ? { tone: PILL_OFF, text: t("shippingZones.products.statusNone") }
+        ? { tone: PILL_OFF, text: t("shippingZones.products.statusNone", { province }) }
         : { tone: PILL_SOME, text: t("shippingZones.products.statusSome", { on: onCount, n: g.all.length }) };
 
   return (
@@ -108,13 +107,14 @@ function GroupCard({ g, cats, prods }: { g: Group; cats: Cats; prods: Prods }) {
             saving={cats.savingId === g.cat._id}
             onToggle={cats.onToggleWholeCategory}
             label={t("shippingZones.products.wholeCategory")}
+            province={province}
           />
         )}
       </div>
       {open && (
         <ul className="m-0 flex list-none flex-col divide-y divide-gray-100 p-0">
           {g.products.map((p) => (
-            <ProductRow key={p._id} p={p} prods={prods} />
+            <ProductRow key={p._id} p={p} prods={prods} province={province} />
           ))}
         </ul>
       )}
@@ -124,6 +124,7 @@ function GroupCard({ g, cats, prods }: { g: Group; cats: Cats; prods: Prods }) {
 
 export function ShippingScopePanel({ cats, prods }: { cats: Cats; prods: Prods }) {
   const t = useTranslations();
+  const province = useStoreProvince();
 
   // หมวดที่มีสินค้าเท่านั้น — หมวดว่างไม่แสดง (ทั้งรายการและตัวเลือกกรอง)
   const known = new Set(cats.items.map((c) => c._id));
@@ -152,7 +153,7 @@ export function ShippingScopePanel({ cats, prods }: { cats: Cats; prods: Prods }
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="m-0 text-xs text-gray-500">{t("shippingZones.categories.hint")}</p>
+      <p className="m-0 text-xs text-gray-500">{t("shippingZones.categories.hint", { province })}</p>
 
       {n > 0 && (
         <div className="grid grid-cols-2 gap-2">
@@ -161,7 +162,7 @@ export function ShippingScopePanel({ cats, prods }: { cats: Cats; prods: Prods }
             <p className="m-0 text-lg font-bold text-emerald-800">{t("shippingZones.products.groupSummary", { n: on })}</p>
           </div>
           <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5">
-            <p className="m-0 text-xs text-gray-600">{t("shippingZones.categories.provinceOnly")}</p>
+            <p className="m-0 text-xs text-gray-600">{t("shippingZones.categories.provinceOnlyIn", { province })}</p>
             <p className="m-0 text-lg font-bold text-gray-800">{t("shippingZones.products.groupSummary", { n: n - on })}</p>
           </div>
         </div>
@@ -197,7 +198,7 @@ export function ShippingScopePanel({ cats, prods }: { cats: Cats; prods: Prods }
       ) : (
         <div className="flex max-h-[55vh] flex-col gap-2 overflow-y-auto">
           {groups.map((g) => (
-            <GroupCard key={g.id} g={g} cats={cats} prods={prods} />
+            <GroupCard key={g.id} g={g} cats={cats} prods={prods} province={province} />
           ))}
         </div>
       )}
