@@ -1,8 +1,8 @@
 "use client";
 // วันนี้ผลิตอะไรบ้าง — ใบที่ยังไม่ปิดงานของวันนี้ + ที่ค้างจากวันก่อน (ป้าย "ค้างจาก …") แยกเป็นการ์ดต่อใบ (สินค้าในใบนั้น + จำนวน) ให้เห็นว่าสินค้าไหนอยู่ใบไหน
 // หัวการ์ดสรุปจำนวนใบ/สินค้าทั้งวัน · กดการ์ดใบ = เปิดรายละเอียดใบนั้น (แบบเดียวกับกดแถวในตาราง)
-// ใบรอดำเนินการมีปุ่ม "เริ่มการผลิต" ท้ายการ์ด (ผู้ใช้ขอ 2026-10-30) · ข้อมูลจาก useProductionViewModel.todayOrders / todayItems
-// การ์ดเป็น div role="button" (ไม่ใช่ <button>) เพราะมีปุ่มซ้อนข้างใน — ปุ่มเริ่มผลิต stopPropagation ไม่ให้เปิดป๊อปอัป
+// ปุ่มท้ายการ์ด: รอดำเนินการ = "เริ่มการผลิต" · กำลังผลิต = "ผลิตเรียบร้อย" (เปิดหน้าต่างปิดงาน) (ผู้ใช้ขอ 2026-10-30) · ข้อมูลจาก useProductionViewModel.todayOrders / todayItems
+// ปุ่มชิดล่างการ์ดเสมอ (mt-auto — การ์ดในแถวเดียวกันสูงเท่ากัน ปุ่มจึงเรียงแนวเดียวกัน) · การ์ดเป็น div role="button" (ไม่ใช่ <button>) เพราะมีปุ่มซ้อนข้างใน — ปุ่มเริ่มผลิต stopPropagation ไม่ให้เปิดป๊อปอัป
 // ใบที่มีสินค้าเกิน 3 รายการ แสดงแค่ 3 รายการแรก + "ดูเพิ่มเติมอีก n รายการ" (กดการ์ด = เปิดรายละเอียดเต็ม) — การ์ดสูงไม่ต่างกันมาก (ผู้ใช้ขอ 2026-10-30)
 import { useTranslations, useLocale } from "next-intl";
 import dayjs from "dayjs";
@@ -26,12 +26,17 @@ export function TodayProductionCard({
   canStart,
   onStart,
   startingId,
+  canFinish,
+  onFinish,
 }: Pick<VM, "today" | "todayItems" | "todayOrders"> & {
   onView: (o: ProductionOrder) => void;
   /** สิทธิ์ production.update — ปุ่มเริ่มการผลิตของใบรอดำเนินการ */
   canStart: boolean;
   onStart: (o: ProductionOrder) => void;
   startingId: string | null;
+  /** สิทธิ์ production.approve — ปุ่มผลิตเรียบร้อยของใบกำลังผลิต (เปิดหน้าต่างปิดงาน) */
+  canFinish: boolean;
+  onFinish: (o: ProductionOrder) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -89,7 +94,7 @@ export function TodayProductionCard({
                   {o.round_name && <span className="truncate text-xs text-gray-600">{o.round_name}</span>}
                   {carried && (
                     <Tag color="warning" className="!m-0">
-                      {t("production.carriedOver", { date: formatDate(o.production_date, locale) })}
+                      {t("production.todayCarriedOver", { date: formatDate(o.production_date, locale) })}
                     </Tag>
                   )}
                   <span className="ml-auto text-xs text-gray-500">{t("production.itemsCount", { n: o.items.length })}</span>
@@ -116,6 +121,7 @@ export function TodayProductionCard({
                     type="primary"
                     size="small"
                     block
+                    className="!mt-auto"
                     icon={actionIcon("next", "small")}
                     loading={startingId === o._id}
                     onClick={(e) => {
@@ -124,6 +130,21 @@ export function TodayProductionCard({
                     }}
                   >
                     {t("production.startOrder")}
+                  </Button>
+                )}
+                {canFinish && o.production_status === "in_progress" && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    block
+                    className="!mt-auto"
+                    icon={actionIcon("confirm", "small")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFinish(o);
+                    }}
+                  >
+                    {t("production.finishOrder")}
                   </Button>
                 )}
               </div>

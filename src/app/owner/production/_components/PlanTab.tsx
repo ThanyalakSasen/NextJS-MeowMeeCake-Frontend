@@ -45,6 +45,8 @@ export function PlanTab(vm: VM) {
           canStart={vm.perm.update}
           onStart={vm.onStartOrder}
           startingId={vm.startingId}
+          canFinish={vm.perm.approve}
+          onFinish={vm.onFinishOrder}
         />
       )}
     </div>

@@ -1377,7 +1377,7 @@
     "todayProductCount": "รวม {n} สินค้า",
     "todayMoreItems": "ดูเพิ่มเติมอีก {n} รายการ",
     "todayEmpty": "วันนี้ไม่มีรายการที่ต้องผลิต",
-    "carriedOver": "ค้างจาก {date}",
+    "todayCarriedOver": "ค้างจาก {date}",
     "stockChecking": "กำลังเช็ควัตถุดิบ...",
     "stockCheckFailed": "เช็ควัตถุดิบไม่สำเร็จ — ยังสร้างใบสั่งผลิตได้ ระบบจะเช็คอีกครั้งตอนปิดงานผลิต",
     "stockShortRow": "ยังผลิตไม่ได้ — วัตถุดิบไม่พอ",
