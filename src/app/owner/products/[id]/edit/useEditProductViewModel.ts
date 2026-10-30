@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { productsService } from "@/services/products";
 import { usePermission } from "@/context/PermissionsContext";
@@ -11,9 +11,15 @@ import { isApiError } from "@/types/api";
 import { fromProduct, toUpdateInput, type ProductFormValue } from "../../productForm";
 import { productKey } from "../../productFormQuery";
 import { useShippingScopeSaver } from "../../useShippingScopeSaver";
+import type { useCustomizationEditor } from "./useCustomizationEditor";
 
-export function useEditProductViewModel() {
+/** customization = การ์ดตัวเลือกสินค้าใต้ฟอร์ม — ร่างที่ยังไม่ได้กดบันทึกของการ์ด บันทึกพร้อมกดบันทึกสินค้า
+ *  (เดิมกดบันทึกสินค้าแล้วออกจากหน้า ร่างตัวเลือกหายเงียบ ๆ) */
+export function useEditProductViewModel(
+  customization: Pick<ReturnType<typeof useCustomizationEditor>, "dirty" | "problems" | "saveFor">,
+) {
   const t = useTranslations();
+  const qc = useQueryClient();
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
 
@@ -38,9 +44,21 @@ export function useEditProductViewModel() {
     // ขอบเขตจัดส่งบันทึกแยก (endpoint ของเมนูจัดส่ง) เฉพาะเมื่อเปลี่ยนจากค่าเดิม
     mutationFn: async (v: ProductFormValue) => {
       await productsService.update(id, toUpdateInput(v));
-      return { shippingSaved: await saveShippingScope(id, v.shipping_scope, initialValues?.shipping_scope) };
+      const [shippingSaved, customizationSaved] = await Promise.all([
+        saveShippingScope(id, v.shipping_scope, initialValues?.shipping_scope),
+        customization.saveFor(id),
+      ]);
+      return { shippingSaved, customizationSaved };
     },
-    onSuccess: ({ shippingSaved }) => {
+    onSuccess: ({ shippingSaved, customizationSaved }) => {
+      // รายการ/หน้าแก้/POS/ตั้งราคา ใช้ข้อมูลสินค้าที่ cache ไว้ (สดอยู่ 30 วิ) — ให้ดึงใหม่
+      void qc.invalidateQueries({ queryKey: ["products"] });
+      void qc.invalidateQueries({ queryKey: productKey(id) });
+      // ตัวเลือกบันทึกไม่สำเร็จ — สินค้าบันทึกแล้ว อยู่หน้าเดิมให้กดบันทึกตัวเลือกอีกครั้ง (ร่างยังอยู่)
+      if (!customizationSaved) {
+        alert.warning(t("customization.saveFailed"));
+        return;
+      }
       if (shippingSaved) alert.success(t("products.saved"));
       else alert.warning(t("products.shippingScopeFailed"));
       router.push("/owner/products");
@@ -57,7 +75,13 @@ export function useEditProductViewModel() {
     // Form mount หลังโหลดเสร็จ → ใช้ initialValues ตรง ๆ ได้ ไม่ต้อง setFieldsValue
     initialValues,
     submitting: update.isPending,
-    onSubmit: (v: ProductFormValue) => update.mutate(v),
+    onSubmit: (v: ProductFormValue) => {
+      if (customization.dirty && customization.problems.length > 0) {
+        alert.warning(t("customization.fixBeforeSave"));
+        return;
+      }
+      update.mutate(v);
+    },
     onCancel: () => router.push("/owner/products"),
   };
 }

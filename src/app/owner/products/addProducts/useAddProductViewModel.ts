@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { productsService } from "@/services/products";
 import { usePermission } from "@/context/PermissionsContext";
@@ -16,6 +16,7 @@ import type { useCustomizationEditor } from "../[id]/edit/useCustomizationEditor
 export function useAddProductViewModel(customization: Pick<ReturnType<typeof useCustomizationEditor>, "problems" | "saveFor">) {
   const t = useTranslations();
   const router = useRouter();
+  const qc = useQueryClient();
 
   // OwnerLayout กั้นหน้าด้วย products.view เท่านั้น — หน้านี้ต้องมี products.create ด้วย
   // (backend: POST /admin/products ต้องการ products.create)
@@ -39,6 +40,8 @@ export function useAddProductViewModel(customization: Pick<ReturnType<typeof use
       return { id, shippingSaved, customizationSaved };
     },
     onSuccess: ({ id, shippingSaved, customizationSaved }) => {
+      // รายการสินค้า/POS/ตั้งราคา cache ไว้ (สดอยู่ 30 วิ) — สินค้าใหม่ต้องขึ้นทันที
+      void qc.invalidateQueries({ queryKey: ["products"] });
       if (!customizationSaved) {
         alert.warning(t("customization.saveAfterCreateFailed"));
         router.push(`/owner/products/${id}/edit`);
