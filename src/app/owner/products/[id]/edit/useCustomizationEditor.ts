@@ -1,8 +1,9 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
-// ViewModel ของ "ตัวเลือกสินค้า" ในหน้าแก้สินค้า (BACKLOG3-merge E1)
-// โหลดชุดปัจจุบัน → แก้ในหน่วยความจำ → บันทึกทั้งชุดด้วย PUT /admin/products/:id/customization
-// บันทึกแยกจากฟอร์มสินค้า (คนละ endpoint) · ดู = products.view · แก้ = products.update
+// ViewModel ของ "ตัวเลือกสินค้า" (BACKLOG3-merge E1) — ใช้ 2 หน้า:
+//  - หน้าแก้สินค้า (มี :id): โหลดชุดปัจจุบัน → แก้ในหน่วยความจำ → ปุ่มบันทึกของการ์ดเอง PUT /admin/products/:id/customization
+//  - หน้าเพิ่มสินค้า (ไม่มี :id): เริ่มว่าง แก้เป็นร่าง → หน้าเพิ่มสินค้าบันทึกให้หลังสร้างสินค้าแล้ว (saveFor) ไม่มีปุ่มบันทึกแยก
+// ดู = products.view · แก้ = products.update (หน้าเพิ่มต้องมี products.create ด้วย — กั้นที่หน้าแล้ว)
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useParams } from "next/navigation";
@@ -60,6 +61,8 @@ export function useCustomizationEditor() {
 
   return {
     canEdit: perm.update,
+    /** false = หน้าเพิ่มสินค้า — ไม่มีปุ่มบันทึกของการ์ด บันทึกพร้อมสินค้าผ่าน saveFor */
+    standalone: !!id,
     // isPending (ไม่ใช่ isLoading) — ตอน SSR ไม่มีข้อมูลจะเป็น "กำลังโหลด" ตรงกับ browser (หน้านี้ render ฝั่ง server)
     isLoading: !!id && q.isPending,
     isError: q.isError,
@@ -75,6 +78,16 @@ export function useCustomizationEditor() {
       save.mutate();
     },
     onDiscard: () => setDraft(null),
+    /** หน้าเพิ่มสินค้า: บันทึกร่างให้สินค้าที่เพิ่งสร้าง · ไม่ได้เพิ่มอะไร = ไม่ยิง (คืน true) */
+    saveFor: async (productId: string): Promise<boolean> => {
+      if (!dirty || (state.groups.length === 0 && state.options.length === 0)) return true;
+      try {
+        await productCustomizationService.save(productId, toInput(state));
+        return true;
+      } catch {
+        return false;
+      }
+    },
 
     // ── กลุ่ม ──
     addGroup: () => edit((s) => ({ ...s, groups: [...s.groups, emptyGroup()] })),

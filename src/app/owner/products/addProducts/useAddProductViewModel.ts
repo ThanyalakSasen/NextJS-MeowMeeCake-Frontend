@@ -10,8 +10,10 @@ import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import { emptyProductForm, toInput, type ProductFormValue } from "../productForm";
 import { useShippingScopeSaver } from "../useShippingScopeSaver";
+import type { useCustomizationEditor } from "../[id]/edit/useCustomizationEditor";
 
-export function useAddProductViewModel() {
+/** customization = ร่างตัวเลือกสินค้าจากการ์ดใต้ฟอร์ม — บันทึกให้หลังสร้างสินค้า */
+export function useAddProductViewModel(customization: Pick<ReturnType<typeof useCustomizationEditor>, "problems" | "saveFor">) {
   const t = useTranslations();
   const router = useRouter();
 
@@ -24,13 +26,24 @@ export function useAddProductViewModel() {
 
   const saveShippingScope = useShippingScopeSaver();
 
-  // สร้างสินค้าก่อน แล้วตั้งขอบเขตจัดส่ง (endpoint แยก) — ขั้นที่ 2 พลาด สินค้ายังถูกสร้าง แจ้งให้ไปตั้งที่หน้าค่าจัดส่ง
+  // สร้างสินค้าก่อน แล้วตั้งขอบเขตจัดส่ง + ตัวเลือกสินค้า (คนละ endpoint) — ขั้นหลังพลาด สินค้ายังถูกสร้าง
+  // ขอบเขตจัดส่งพลาด → แจ้งให้ไปตั้งที่หน้าค่าจัดส่ง · ตัวเลือกพลาด → เปิดหน้าแก้สินค้าให้เพิ่มต่อ
   const create = useMutation({
     mutationFn: async (v: ProductFormValue) => {
       const res = await productsService.create(toInput(v));
-      return { shippingSaved: await saveShippingScope(res.data._id, v.shipping_scope) };
+      const id = res.data._id;
+      const [shippingSaved, customizationSaved] = await Promise.all([
+        saveShippingScope(id, v.shipping_scope),
+        customization.saveFor(id),
+      ]);
+      return { id, shippingSaved, customizationSaved };
     },
-    onSuccess: ({ shippingSaved }) => {
+    onSuccess: ({ id, shippingSaved, customizationSaved }) => {
+      if (!customizationSaved) {
+        alert.warning(t("customization.saveAfterCreateFailed"));
+        router.push(`/owner/products/${id}/edit`);
+        return;
+      }
       if (shippingSaved) alert.success(t("products.saved"));
       else alert.warning(t("products.shippingScopeFailed"));
       router.push("/owner/products");
@@ -43,7 +56,14 @@ export function useAddProductViewModel() {
     allowed: perm.create,
     initialValues: emptyProductForm,
     submitting: create.isPending,
-    onSubmit: (v: ProductFormValue) => create.mutate(v), // antd Form ยิงมาหลัง validate ผ่านแล้ว
+    // antd Form ยิงมาหลัง validate ผ่านแล้ว · ตัวเลือกสินค้ายังกรอกไม่ครบ = ไม่สร้าง (รายการที่ผิดแสดงใต้การ์ดตัวเลือกแล้ว)
+    onSubmit: (v: ProductFormValue) => {
+      if (customization.problems.length > 0) {
+        alert.warning(t("customization.fixBeforeSave"));
+        return;
+      }
+      create.mutate(v);
+    },
     onCancel: () => router.push("/owner/products"),
   };
 }
