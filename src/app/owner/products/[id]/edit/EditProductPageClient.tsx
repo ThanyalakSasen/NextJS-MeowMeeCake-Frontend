@@ -4,7 +4,7 @@ import { EditProductView } from "./EditProductView";
 import { useCustomizationEditor } from "./useCustomizationEditor";
 
 export default function EditProductPage() {
-  const vm = useEditProductViewModel();
   const customization = useCustomizationEditor();
+  const vm = useEditProductViewModel(customization);
   return <EditProductView {...vm} customization={customization} />;
 }

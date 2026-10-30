@@ -46,8 +46,9 @@ type DraftPatch = Partial<Pick<PricingRow, "basePrice" | "salePrice" | "isVisibl
   percent?: number | null;
 };
 
-/** ราคาปกติต้อง > 0 · ราคาลดว่างได้ แต่ถ้ามีต้องน้อยกว่าราคาปกติ (ProductFormFields saleRule) */
-const isValidPrice = (base: number, sale: number | null) => base > 0 && (sale === null || sale < base);
+/** ราคาปกติต้อง > 0 · ราคาลดว่างได้ แต่ถ้ามีต้องมากกว่า 0 และน้อยกว่าราคาปกติ (ProductFormFields saleRule)
+ *  — ราคาลด 0 (ลด 100%) = ขายฟรี backend ยอม จึงกันไว้ที่นี่ */
+const isValidPrice = (base: number, sale: number | null) => base > 0 && (sale === null || (sale > 0 && sale < base));
 
 export function usePricingViewModel() {
   const t = useTranslations();
@@ -143,10 +144,12 @@ export function usePricingViewModel() {
 
   const invalidDirty = rows.filter((r) => r.isDirty && r.isInvalid);
 
+  // ยิงทีละสินค้า (ไม่มี bulk) — บางแถวพลาดได้: ล้าง draft เฉพาะแถวที่บันทึกแล้ว แถวที่พลาดค้างไว้ให้กดใหม่
+  // (เดิม Promise.all พลาดแถวเดียว = ไม่ล้าง draft เลย + ไม่โหลดใหม่ ทั้งที่แถวอื่นบันทึกไปแล้ว)
   const saveAll = useMutation({
     mutationFn: async () => {
       const ids = Object.keys(drafts);
-      await Promise.all(
+      const results = await Promise.allSettled(
         ids.map((id) => {
           const row = rows.find((r) => r._id === id);
           if (!row) return Promise.resolve();
@@ -157,11 +160,28 @@ export function usePricingViewModel() {
           });
         }),
       );
+      const saved = ids.filter((_, i) => results[i].status === "fulfilled");
+      const failed = ids.flatMap((id, i) => {
+        const r = results[i];
+        return r.status === "rejected" ? [{ id, reason: r.reason as unknown }] : [];
+      });
+      return { saved, failed };
     },
-    onSuccess: () => {
-      alert.success(t("pricing.saved", { n: dirtyCount }));
-      setDrafts({});
-      qc.invalidateQueries({ queryKey: ["products"] });
+    onSuccess: ({ saved, failed }) => {
+      setDrafts((prev) => {
+        const next = { ...prev };
+        for (const id of saved) delete next[id];
+        return next;
+      });
+      if (saved.length > 0) {
+        qc.invalidateQueries({ queryKey: ["products"] });
+        alert.success(t("pricing.saved", { n: saved.length }));
+      }
+      if (failed.length > 0) {
+        const names = failed.map((f) => rows.find((r) => r._id === f.id)?.name ?? f.id).join(", ");
+        const first = failed[0].reason;
+        alert.error(t("pricing.someFailed", { names, reason: isApiError(first) ? first.message : t("pricing.saveFailed") }));
+      }
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("pricing.saveFailed")),
   });

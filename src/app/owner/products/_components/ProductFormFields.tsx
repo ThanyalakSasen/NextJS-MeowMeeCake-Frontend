@@ -40,11 +40,22 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
     { required: true, message: t("validation.required") },
     { type: "integer", min: 1, message: t("validation.positive") },
   ];
-  // sale_price ต้องน้อยกว่า product_price (validator ข้ามฟิลด์)
+  // sale_price ต้องมากกว่า 0 และน้อยกว่า product_price (validator ข้ามฟิลด์) — 0 = ขายฟรี (backend ยอม) ไม่ลดราคาให้ปล่อยว่าง
   const saleRule: Rule = ({ getFieldValue }) => ({
     validator(_, v) {
-      if (v == null || v < getFieldValue("product_price")) return Promise.resolve();
+      if (v == null) return Promise.resolve();
+      if (v <= 0) return Promise.reject(new Error(t("products.salePositive")));
+      if (v < getFieldValue("product_price")) return Promise.resolve();
       return Promise.reject(new Error(t("products.saleLtPrice")));
+    },
+  });
+
+  // พรีออเดอร์: สูงสุดต่อคนต้องไม่น้อยกว่าขั้นต่ำ (backend ปฏิเสธด้วยชื่อฟิลด์ภาษาอังกฤษ)
+  const maxQtyRule: Rule = ({ getFieldValue }) => ({
+    validator(_, v) {
+      const min = getFieldValue(["preorder_config", "min_order_qty"]);
+      if (v == null || min == null || v >= min) return Promise.resolve();
+      return Promise.reject(new Error(t("products.maxLtMin")));
     },
   });
 
@@ -145,7 +156,12 @@ export function ProductFormFields({ mode = "create" }: { mode?: "create" | "edit
           <FormItem name={["preorder_config", "min_order_qty"]} label={t("fields.min_order_qty")} rules={requiredPositiveInt}>
             <InputNumber min={1} precision={0} className="!w-full" />
           </FormItem>
-          <FormItem name={["preorder_config", "max_order_qty"]} label={t("fields.max_order_qty")} rules={requiredPositiveInt}>
+          <FormItem
+            name={["preorder_config", "max_order_qty"]}
+            label={t("fields.max_order_qty")}
+            dependencies={[["preorder_config", "min_order_qty"]]}
+            rules={[...requiredPositiveInt, maxQtyRule]}
+          >
             <InputNumber min={1} precision={0} className="!w-full" />
           </FormItem>
           <FormItem name={["preorder_config", "lead_time_days"]} label={t("fields.lead_time_days")} rules={requiredPositiveInt}>

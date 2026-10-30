@@ -78,11 +78,14 @@ export function useCustomizationEditor() {
       save.mutate();
     },
     onDiscard: () => setDraft(null),
-    /** หน้าเพิ่มสินค้า: บันทึกร่างให้สินค้าที่เพิ่งสร้าง · ไม่ได้เพิ่มอะไร = ไม่ยิง (คืน true) */
+    /** บันทึกร่างพร้อมฟอร์มสินค้า (หน้าเพิ่ม = สินค้าที่เพิ่งสร้าง · หน้าแก้ = สินค้านี้) · ไม่ได้แก้ = ไม่ยิง (คืน true)
+     *  หน้าเพิ่มที่ร่างว่าง = ไม่ยิง · หน้าแก้ที่ลบจนว่าง = ต้องยิง (ล้างตัวเลือกเดิม) */
     saveFor: async (productId: string): Promise<boolean> => {
-      if (!dirty || (state.groups.length === 0 && state.options.length === 0)) return true;
+      if (!dirty || (!id && state.groups.length === 0 && state.options.length === 0)) return true;
       try {
-        await productCustomizationService.save(productId, toInput(state));
+        const saved = await productCustomizationService.save(productId, toInput(state));
+        qc.setQueryData(customizationKey(productId), saved);
+        setDraft(null);
         return true;
       } catch {
         return false;
