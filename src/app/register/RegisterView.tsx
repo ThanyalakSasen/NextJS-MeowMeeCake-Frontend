@@ -55,7 +55,7 @@ export function RegisterView(vm: VM) {
       <form onSubmit={(e) => void vm.submit(e)} className="flex flex-col gap-4" noValidate>
         <div>
           <label htmlFor="reg-name" className={authLabelClass}>{t("register.fullname")}{req}</label>
-          <input id="reg-name" className={`${fieldClass} mt-1`} autoComplete="name" value={vm.form.fullname}
+          <input id="reg-name" className={`${fieldClass} mt-1`} autoComplete="name" maxLength={120} value={vm.form.fullname}
             placeholder={t("register.fullnamePlaceholder")} onChange={(e) => vm.set("fullname", e.target.value)} />
         </div>
 
@@ -80,7 +80,7 @@ export function RegisterView(vm: VM) {
               <option value="" disabled>{t("register.month")}</option>
               {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
             </select>
-            <input type="number" inputMode="numeric" aria-label={t("register.year")} placeholder={t("register.yearPlaceholder")}
+            <input type="number" inputMode="numeric" min={1900} max={new Date().getFullYear()} aria-label={t("register.year")} placeholder={t("register.yearPlaceholder")}
               className={`${fieldClass} text-center`} value={vm.form.birthYear}
               onChange={(e) => { if (/^\d{0,4}$/.test(e.target.value)) vm.set("birthYear", e.target.value); }} />
           </div>
