@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useMemo, useState } from "react";
 import { thaiCompare } from "@/lib/thaiSort";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
 import { reportsService } from "@/services/reports";
 import { usePermission } from "@/context/PermissionsContext";
@@ -17,7 +17,7 @@ import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { revenueKey } from "@/app/owner/finance/summary/summaryRanges";
 import {
   enrichWithCategory, valueOf, CATEGORY_ALL, TOP_PRODUCTS_LIMIT,
-  type SalesMode, type SortDir, type ProductSalesStat,
+  salesTopProductsKey, type SalesMode, type SortDir, type ProductSalesStat,
 } from "./salesReport";
 
 export function useSalesReportViewModel() {
@@ -30,13 +30,16 @@ export function useSalesReportViewModel() {
   const [rangeStart, rangeEnd] = useMemo(() => getRangeStartEnd(period, selectedDate), [period, selectedDate]);
 
   const topProductsQ = useQuery({
-    queryKey: ["dashboard", "top-products", rangeStart.toISOString(), rangeEnd.toISOString()],
+    queryKey: salesTopProductsKey(mode, rangeStart.toISOString(), rangeEnd.toISOString()),
     queryFn: () =>
       reportsService.topProducts({
         limit: TOP_PRODUCTS_LIMIT,
         date_from: rangeStart.toISOString(),
         date_to: rangeEnd.toISOString(),
+        sort: mode,
       }),
+    // สลับโหมดแล้วยังเห็นตารางเดิมระหว่างโหลด (ไม่กระพริบเป็นหน้าว่าง)
+    placeholderData: keepPreviousData,
   });
   const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsService.list({ limit: LIST_ALL }) });
 

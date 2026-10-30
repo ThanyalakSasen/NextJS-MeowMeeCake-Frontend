@@ -166,7 +166,10 @@ export function useFinanceSummaryViewModel() {
   }, [trendBuckets, trendIncomeKey, period, locale]);
 
   // ── KPI ──
-  const daysInPeriod = Math.max(1, rangeEnd.diff(rangeStart, "day") + 1);
+  // ช่วงที่ยังไม่จบ (เดือนนี้ ฯลฯ) หารด้วยวันที่ผ่านมาแล้ว — เดิมหารด้วยทั้งช่วง วันที่ 5 ของเดือนก็หาร 31 ค่าเฉลี่ยต่ำกว่าจริงมาก
+  const now = dayjs();
+  const countedEnd = rangeEnd.isAfter(now) ? now : rangeEnd;
+  const daysInPeriod = Math.max(1, countedEnd.startOf("day").diff(rangeStart.startOf("day"), "day") + 1);
   const kpis = [
     { key: "margin", label: t("finance.kpiNetMargin"), value: totalIncome > 0 ? `${((netProfit / totalIncome) * 100).toFixed(1)}%` : "—" },
     { key: "avgRevenue", label: t("finance.kpiAvgRevenuePerDay"), value: formatCurrency(Math.round(totalIncome / daysInPeriod), locale) },

@@ -111,10 +111,10 @@ export const reportsService = {
     return res.data;
   },
 
-  /** GET /admin/dashboard/top-products — จัดอันดับตาม quantity_sold เสมอ (backend เรียงให้แบบนี้
-   *  เท่านั้น ไม่มีพารามิเตอร์ sort อื่น) จำกัดสูงสุด 50 รายการ (backend clamp) */
+  /** GET /admin/dashboard/top-products — จัดอันดับแล้วตัด limit (สูงสุด 50 · backend clamp)
+   *  sort = "qty" (ค่าเริ่มต้น · จำนวนชิ้น) | "revenue" (ยอดเงิน) — เกณฑ์ที่ใช้ตัด N อันดับแรก */
   topProducts: async (
-    params: { limit?: number; date_from?: string; date_to?: string } = {},
+    params: { limit?: number; date_from?: string; date_to?: string; sort?: "qty" | "revenue" } = {},
     h: HttpReader = http,
   ): Promise<TopProductRow[]> => {
     const res = await h.get<{ data: RawTopProductsResult }>("/admin/dashboard/top-products", { params });

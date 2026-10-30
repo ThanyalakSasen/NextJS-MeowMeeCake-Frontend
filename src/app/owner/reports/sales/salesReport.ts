@@ -11,6 +11,12 @@ import type { TopProductRow } from "@/services/reports";
 export const TOP_PRODUCTS_LIMIT = 50;
 
 export type SalesMode = "revenue" | "qty";
+
+/** query key ของ top-products ในหน้านี้ — page.tsx (prefetch) กับ ViewModel ต้องได้ key เดียวกัน
+ *  mode อยู่ใน key: backend ตัด N อันดับแรกตามเกณฑ์ของโหมด (เดิมตามจำนวนเสมอ โหมดยอดเงินจึงอาจขาดสินค้าราคาสูง) */
+export const salesTopProductsKey = (mode: SalesMode, from: string, to: string) =>
+  ["dashboard", "top-products", mode, from, to] as const;
+
 export type SortDir = "desc" | "asc";
 export const CATEGORY_ALL = "all";
 
