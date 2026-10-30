@@ -1,26 +1,17 @@
 "use client";
 // View ของ Sales Report — JSX ล้วน รับ props จาก useSalesReportViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { DatePicker, EmptyState } from "@/components/base";
+import { EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { TypeTabBar, SortDropdown } from "@/components/shared/data";
+import { PeriodSelector, TypeTabBar, SortDropdown } from "@/components/shared/data";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatCurrency, formatNumber } from "@/i18n/format";
-import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import type { useSalesReportViewModel } from "./useSalesReportViewModel";
 import { CATEGORY_ALL, TOP_PRODUCTS_LIMIT, colorForCategory, type SalesMode } from "./salesReport";
 import { ProductBarRow } from "./_components/ProductBarRow";
 
 type VM = ReturnType<typeof useSalesReportViewModel>;
-
-const PERIOD_LABEL_KEY: Record<PeriodType, "finance.periodDay" | "finance.periodWeek" | "finance.periodMonth" | "finance.periodQuarter" | "finance.periodYear"> = {
-  day: "finance.periodDay",
-  week: "finance.periodWeek",
-  month: "finance.periodMonth",
-  quarter: "finance.periodQuarter",
-  year: "finance.periodYear",
-};
 
 export function SalesReportView(vm: VM) {
   const t = useTranslations();
@@ -29,18 +20,7 @@ export function SalesReportView(vm: VM) {
   return (
     <DashboardPageLayout title={t("salesReport.title")}>
       <div className="flex flex-wrap items-center gap-3">
-        <TypeTabBar
-          value={vm.period}
-          onChange={vm.setPeriod}
-          options={PERIOD_TYPES.map((p) => ({ value: p, label: t(PERIOD_LABEL_KEY[p]) }))}
-        />
-        <DatePicker
-          picker={pickerTypeFor(vm.period)}
-          value={vm.selectedDate}
-          onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
-          style={{ width: 180 }}
-          aria-label={t("filterLabel.period")}
-        />
+        <PeriodSelector period={vm.period} onPeriodChange={vm.setPeriod} date={vm.selectedDate} onDateChange={vm.setSelectedDate} />
         <div className="flex-1" />
         <TypeTabBar<SalesMode>
           value={vm.mode}

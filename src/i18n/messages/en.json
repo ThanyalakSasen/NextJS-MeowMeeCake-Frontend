@@ -36,6 +36,14 @@
     "viewGrid": "Grid view",
     "viewTable": "Table view"
   },
+  "period": {
+    "type": { "day": "Daily", "week": "Weekly", "month": "Monthly", "quarter": "Quarterly", "year": "Yearly" },
+    "current": { "day": "Today", "week": "This week", "month": "This month", "quarter": "This quarter", "year": "This year" },
+    "prev": "Previous period",
+    "next": "Next period",
+    "pick": "Choose period",
+    "quarterLabel": "Q{n} {year}"
+  },
   "filterLabel": {
     "role": "Role",
     "status": "Status",

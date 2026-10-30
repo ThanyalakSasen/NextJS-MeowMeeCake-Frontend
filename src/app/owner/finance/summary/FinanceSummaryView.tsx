@@ -1,26 +1,17 @@
 "use client";
 // View ของ Finance P&L — JSX ล้วน รับ props จาก useFinanceSummaryViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { DatePicker, EmptyState } from "@/components/base";
+import { EmptyState } from "@/components/base";
 import { DashboardPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
-import { DataTable, TypeTabBar, type Column } from "@/components/shared/data";
+import { DataTable, PeriodSelector, type Column } from "@/components/shared/data";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatCurrency } from "@/i18n/format";
 import type { useFinanceSummaryViewModel } from "./useFinanceSummaryViewModel";
-import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import { PLStatementTable } from "./_components/PLStatementTable";
 
 type VM = ReturnType<typeof useFinanceSummaryViewModel>;
 type TrendRow = VM["monthlyTrend"][number];
-
-const PERIOD_LABEL_KEY: Record<PeriodType, "finance.periodDay" | "finance.periodWeek" | "finance.periodMonth" | "finance.periodQuarter" | "finance.periodYear"> = {
-  day: "finance.periodDay",
-  week: "finance.periodWeek",
-  month: "finance.periodMonth",
-  quarter: "finance.periodQuarter",
-  year: "finance.periodYear",
-};
 
 export function FinanceSummaryView(vm: VM) {
   const t = useTranslations();
@@ -44,18 +35,7 @@ export function FinanceSummaryView(vm: VM) {
   return (
     <DashboardPageLayout title={t("finance.summaryTitle")}>
       <div className="flex flex-wrap items-center gap-3">
-        <TypeTabBar
-          value={vm.period}
-          onChange={vm.setPeriod}
-          options={PERIOD_TYPES.map((p) => ({ value: p, label: t(PERIOD_LABEL_KEY[p]) }))}
-        />
-        <DatePicker
-          picker={pickerTypeFor(vm.period)}
-          value={vm.selectedDate}
-          onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
-          style={{ width: 180 }}
-          aria-label={t("filterLabel.period")}
-        />
+        <PeriodSelector period={vm.period} onPeriodChange={vm.setPeriod} date={vm.selectedDate} onDateChange={vm.setSelectedDate} />
       </div>
 
       {vm.isLoading ? (

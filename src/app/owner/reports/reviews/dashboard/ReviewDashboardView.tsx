@@ -3,48 +3,20 @@
 // (กราฟเป็นแถบ HTML แบบเดียวกับรายงานยอดขาย — ไม่มีไลบรารีกราฟ) · ข้อมูลจาก GET /admin/reviews/stats
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
-import { Button, Card, DatePicker, EmptyState, LazyDatePicker, Select, type DatePickerProps } from "@/components/base";
-import { TypeTabBar } from "@/components/shared/data";
+import { Button, Card, EmptyState, Select } from "@/components/base";
+import { PeriodSelector } from "@/components/shared/data";
 import { InfoTip, LazyTooltip, LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { StatCard, StatCardsGrid, type StatCardStatus } from "@/components/shared/stats";
 import { formatDate, formatNumber, formatPercent } from "@/i18n/format";
-import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import type { useReviewDashboardViewModel } from "./useReviewDashboardViewModel";
 import { MIN_REVIEWS_FOR_LOW, type ProductSortKey, type ProductStat, type ReviewStats } from "./reviewStats";
 import type { ReviewStatsSummary } from "@/types/review";
 
 type VM = ReturnType<typeof useReviewDashboardViewModel>;
 
-const PERIOD_LABEL_KEY: Record<PeriodType, "finance.periodDay" | "finance.periodWeek" | "finance.periodMonth" | "finance.periodQuarter" | "finance.periodYear"> = {
-  day: "finance.periodDay",
-  week: "finance.periodWeek",
-  month: "finance.periodMonth",
-  quarter: "finance.periodQuarter",
-  year: "finance.periodYear",
-};
-
-const PeriodPicker = (props: DatePickerProps) =>
-  props.picker === "week" ? <DatePicker {...props} /> : <LazyDatePicker {...props} />;
-
-/** ตัวเลือกช่วงเวลา (รายวัน…รายปี + วันที่) — วางแถวเดียวกับแท็บของหน้า ผ่าน toolbar ของ TabbedPageLayout */
+/** ตัวเลือกช่วงเวลา (PeriodSelector) — วางแถวเดียวกับแท็บของหน้า ผ่าน toolbar ของ TabbedPageLayout */
 export function ReviewDashboardToolbar(vm: VM) {
-  const t = useTranslations();
-  return (
-    <>
-      <TypeTabBar
-        value={vm.period}
-        onChange={vm.setPeriod}
-        options={PERIOD_TYPES.map((p) => ({ value: p, label: t(PERIOD_LABEL_KEY[p]) }))}
-      />
-      {/* ปฏิทินโหลดเมื่อกด (base/LazyDatePicker — DatePicker ของ antd หนักตอน hydrate) · รายสัปดาห์ใช้ตัวจริง (รูปแบบ wo ต้องใช้ plugin ของ picker) */}
-      <PeriodPicker
-        picker={pickerTypeFor(vm.period)}
-        value={vm.selectedDate}
-        onChange={(v) => { if (v && !Array.isArray(v)) vm.setSelectedDate(v); }}
-        style={{ width: 180 }}
-      />
-    </>
-  );
+  return <PeriodSelector period={vm.period} onPeriodChange={vm.setPeriod} date={vm.selectedDate} onDateChange={vm.setSelectedDate} />;
 }
 
 /**

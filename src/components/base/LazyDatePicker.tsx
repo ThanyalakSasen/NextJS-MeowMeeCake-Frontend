@@ -38,6 +38,8 @@ export function LazyDatePicker(props: DatePickerProps) {
 
   const format = typeof props.format === "string" ? props.format : DEFAULT_FORMAT[props.picker ?? "date"] ?? "YYYY-MM-DD";
   const value = props.value ? dayjs(props.value as dayjs.ConfigType) : null;
+  // format เป็นฟังก์ชัน (เช่น ชื่อช่วงภาษาไทยของ PeriodSelector) — ใช้ฟังก์ชันเดียวกับตอนโหลดแล้ว ปุ่มกับช่องจริงจึงแสดงเหมือนกัน
+  const show = (d: dayjs.Dayjs) => (typeof props.format === "function" ? props.format(d) : d.format(format));
   const placeholder = (typeof props.placeholder === "string" && props.placeholder) || locale?.DatePicker?.lang.placeholder || "";
   const activate = () => {
     void (loaded ? Promise.resolve(loaded) : loadPicker()).then((m) => setPicker(() => m.DatePicker));
@@ -47,6 +49,7 @@ export function LazyDatePicker(props: DatePickerProps) {
     <button
       type="button"
       id={props.id}
+      aria-label={props["aria-label"]}
       disabled={props.disabled}
       onClick={activate}
       onPointerEnter={() => void loadPicker()}
@@ -54,7 +57,7 @@ export function LazyDatePicker(props: DatePickerProps) {
       className="flex h-[40px] w-full items-center justify-between gap-2 rounded-lg border border-[#e4dad1] bg-white px-[11px] text-left transition-colors hover:border-brown-800 focus-visible:border-brown-800 disabled:cursor-not-allowed disabled:bg-gray-50"
     >
       <span className={value?.isValid() ? "truncate" : "truncate text-gray-500"}>
-        {value?.isValid() ? value.format(format) : placeholder}
+        {value?.isValid() ? show(value) : placeholder}
       </span>
       <CalendarIcon className="h-4 w-4 shrink-0 text-gray-500" aria-hidden="true" />
     </button>

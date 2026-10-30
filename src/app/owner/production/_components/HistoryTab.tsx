@@ -1,33 +1,21 @@
 "use client";
 // แท็บ 3: ประวัติการผลิต — อ่านอย่างเดียว (สร้าง/แก้ที่แท็บแผน+สถานะ) · ทุกใบตั้งแต่สร้าง พร้อมป้ายสถานะ
 // รายการสินค้าของแต่ละใบไม่อยู่ในตาราง — กด "ดู" เปิดป๊อปอัปรายละเอียด (ProductionOrderDetail) ที่ลิสต์ครบทุกรายการ
-import type { Dayjs } from "dayjs";
 import { useTranslations, useLocale } from "next-intl";
-import { DatePicker } from "@/components/base";
 import { StatCard, StatCardsGrid, BreakdownList } from "@/components/shared/stats";
-import { DataTable, TypeTabBar, type Column } from "@/components/shared/data";
+import { DataTable, PeriodSelector, type Column } from "@/components/shared/data";
 import { EmptyState } from "@/components/base";
 import { formatDate } from "@/i18n/format";
 import { ViewButton } from "@/components/shared/actions";
-import { pickerTypeFor, PERIOD_TYPES, type PeriodType } from "@/utils/period";
 import type { ProductionOrder } from "@/types/productionOrder";
 import type { useProductionViewModel } from "../useProductionViewModel";
 import { PrintLotLabelsButton } from "./PrintLotLabelsButton";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
-// ตัวเลือกช่วงเวลา — แท็บ วัน/สัปดาห์/เดือน/ไตรมาส/ปี + DatePicker เหมือนหน้ารายงานยอดขาย (SalesReportView)
-const PERIOD_LABEL_KEY: Record<PeriodType, "finance.periodDay" | "finance.periodWeek" | "finance.periodMonth" | "finance.periodQuarter" | "finance.periodYear"> = {
-  day: "finance.periodDay",
-  week: "finance.periodWeek",
-  month: "finance.periodMonth",
-  quarter: "finance.periodQuarter",
-  year: "finance.periodYear",
-};
-
 // แบบเดิม (dropdown รายวัน/รายเดือน/รายปี เหนือตาราง) — เก็บไว้เผื่อกลับมาใช้ ดู JSX ที่คอมเมนต์ไว้ในตัวคอมโพเนนต์
-// กลับมาใช้: เอาคอมเมนต์ออกทั้งสองที่ + import { Select } จาก "@/components/base" + import type { HistoryViewMode } จาก "../useProductionViewModel"
-// + ลบแถว TypeTabBar ด้านบน
+// กลับมาใช้: เอาคอมเมนต์ออกทั้งสองที่ + import { Select, DatePicker } จาก "@/components/base" + import type { Dayjs } จาก "dayjs" + import type { HistoryViewMode } จาก "../useProductionViewModel"
+// + ลบแถว PeriodSelector ด้านบน
 // (setHistoryViewMode รับ "day" | "month" | "year" ได้อยู่แล้ว — เป็นส่วนหนึ่งของ PeriodType)
 // const VIEW_MODES: HistoryViewMode[] = ["day", "month", "year"];
 // // antd DatePicker picker prop ใช้ชื่อเดียวกับ dayjs unit พอดี (day → "date")
@@ -71,19 +59,7 @@ export function HistoryTab(vm: VM) {
       <p className="text-base text-gray-600">{t("production.historyDescription", { n: vm.historyStats.allOrders, done: vm.historyStats.totalOrders })}</p>
 
       <div className="flex flex-wrap items-center gap-3">
-        <TypeTabBar
-          value={vm.historyViewMode}
-          onChange={vm.setHistoryViewMode}
-          options={PERIOD_TYPES.map((p) => ({ value: p, label: t(PERIOD_LABEL_KEY[p]) }))}
-        />
-        <DatePicker
-          picker={pickerTypeFor(vm.historyViewMode)}
-          value={vm.historyDate}
-          onChange={(v) => { if (v && !Array.isArray(v)) vm.setHistoryDate(v as Dayjs); }}
-          allowClear={false}
-          style={{ width: 180 }}
-          aria-label={t("filterLabel.period")}
-        />
+        <PeriodSelector period={vm.historyViewMode} onPeriodChange={vm.setHistoryViewMode} date={vm.historyDate} onDateChange={vm.setHistoryDate} />
       </div>
 
       <StatCardsGrid cols={3}>
