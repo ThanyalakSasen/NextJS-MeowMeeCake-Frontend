@@ -1381,6 +1381,8 @@
     "todayOrderCount": "จากใบสั่งผลิต {n} ใบ",
     "todayProductCount": "รวม {n} สินค้า",
     "todayMoreItems": "ดูเพิ่มเติมอีก {n} รายการ",
+    "todayMoreOrders": "แสดงอีก {n} ใบ",
+    "todayShowLess": "แสดงน้อยลง",
     "todayEmpty": "วันนี้ไม่มีรายการที่ต้องผลิต",
     "todayCarriedOver": "ค้างจาก {date}",
     "stockChecking": "กำลังเช็ควัตถุดิบ...",
