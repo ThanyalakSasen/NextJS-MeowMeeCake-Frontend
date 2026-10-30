@@ -15,7 +15,7 @@ export function RecentOrdersWidget({ orders }: { orders: DashboardRecentOrder[] 
       <div className="section-card-header">
         <h2 className="section-card-title">{t("recentOrders")}</h2>
         <Link href="/owner/orders/manageOrders" className="section-card-link">
-          {t("viewAll")} →
+          {t("viewAll")}
         </Link>
       </div>
 

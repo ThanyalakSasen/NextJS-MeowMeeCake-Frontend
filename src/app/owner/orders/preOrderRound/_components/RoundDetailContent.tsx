@@ -75,7 +75,7 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
             <Button
               type="primary"
               size="small"
-              icon={actionIcon("next", "small")}
+             
               loading={vm.changingRoundStatus}
               onClick={() => vm.onAdvanceRoundStatus(round)}
             >
