@@ -3304,7 +3304,9 @@
       "paidContactToCancel": "Paid — please contact the store to cancel",
       "preorder": "Pre-order",
       "reviewOnlyCompleted": "You can review once the pre-order is completed and paid",
-      "searchPlaceholder": "Search pre-order number or product name"
+      "searchPlaceholder": "Search pre-order number or product name",
+      "loadOneFailed": "Couldn't load this pre-order",
+      "retry": "Try again"
     },
     "slip": {
       "minSec": "{mm}:{ss} min",
@@ -3723,7 +3725,8 @@
       "reapplyCode": "Items, quantity or address changed — please apply code {code} again",
       "removeCode": "Remove code",
       "basketMulti": "Pre-orders in cart: <b>{rounds} rounds</b> · {n} items · {amount}",
-      "roundNotOpenShort": "Not open yet"
+      "roundNotOpenShort": "Not open yet",
+      "basketAtMax": "Your cart already has the maximum ({n})"
     },
     "products": {
       "all": "All",
