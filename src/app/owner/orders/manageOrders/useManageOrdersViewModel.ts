@@ -276,7 +276,7 @@ export function useManageOrdersViewModel() {
   const { markShippedFor, markingShipped } = useMarkShipped(ordersService, invalidate);
   const canMarkShipped = (order: Order) =>
     perm.update && order.order_type === "delivery" && order.order_status === "ready";
-  const onMarkShipped = () => selectedOrder && markShippedFor(selectedOrder, selectedOrder.order_no);
+  const onMarkShipped = (changes?: DeliveryUpdateInput) => selectedOrder && markShippedFor(selectedOrder, selectedOrder.order_no, changes);
 
   const onExport = () => {
     if (filtered.length === 0) {
