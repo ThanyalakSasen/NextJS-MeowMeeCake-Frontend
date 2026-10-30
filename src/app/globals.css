@@ -989,8 +989,9 @@ body {
   @apply px-5 py-4 text-center text-sm font-semibold text-gray-600 whitespace-nowrap;
 }
 
+/* ข้อมูลอยู่กลางทุกคอลัมน์ ตรงกับหัวตาราง · คอลัมน์ไหนต้องชิดซ้าย/ขวา ส่ง align ใน Column */
 .data-table td {
-  @apply px-5 py-4 text-gray-700 border-b border-gray-100;
+  @apply px-5 py-4 text-center text-gray-700 border-b border-gray-100;
 }
 
 .data-table tbody tr:last-child td {

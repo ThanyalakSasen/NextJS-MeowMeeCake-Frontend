@@ -63,7 +63,6 @@ export function DashboardTab(vm: DVM) {
       key: "revenue",
       title: t("preorderRound.dashboard.colRevenue"),
       width: 150,
-      align: "right",
       render: (r) => (
         <div>
           <p className="m-0 font-semibold text-brown-800">{money(r.total_revenue)}</p>

@@ -38,7 +38,7 @@ export function LowStockWidget({ items }: { items: DashboardLowStock[] }) {
 
       <div className="section-card-footer">
         <Link href="/owner/ingredients/ingredientStock" className="section-card-link">
-          {t("manageIngredientStock")} →
+          {t("manageIngredientStock")}
         </Link>
       </div>
     </section>

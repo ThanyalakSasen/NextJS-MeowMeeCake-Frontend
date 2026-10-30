@@ -52,7 +52,6 @@ export function IngredientStockView(vm: VM) {
     {
       key: "reorder",
       title: t("ingredientStock.colReorder"),
-      align: "right",
       render: (r) => `${formatNumber(r.reorderPoint, locale)} ${r.unitAbbr}`,
     },
     {

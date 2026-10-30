@@ -44,13 +44,11 @@ export function ProductStockView(vm: VM) {
     {
       key: "price",
       title: t("productStock.colPrice"),
-      align: "right",
       render: (r) => formatCurrency(r.price, locale),
     },
     {
       key: "value",
       title: t("productStock.colValue"),
-      align: "right",
       render: (r) => formatCurrency(r.value, locale),
     },
   ];

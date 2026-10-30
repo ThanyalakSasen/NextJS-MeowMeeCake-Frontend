@@ -208,7 +208,7 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
         <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
           <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancelOrder(order)}>{t("orders.cancel")}</Button>
           {next && (
-            <Button type="primary" size="small" icon={actionIcon("next", "small")} onClick={() => vm.onAdvanceOrderStatus(order)}>
+            <Button type="primary" size="small" onClick={() => vm.onAdvanceOrderStatus(order)}>
               {/* จ่ายแล้ว backend เลื่อนเป็น preparing ให้เอง — ขั้นถัดไปคือปุ่ม "พร้อมจัดส่ง" / "พร้อมรับที่หน้าร้าน" แบบหน้าจัดการคำสั่งซื้อ */}
               {next === "ready"
                 ? t(isDelivery ? "orders.markReadyDelivery" : "orders.markReadyTakeaway")

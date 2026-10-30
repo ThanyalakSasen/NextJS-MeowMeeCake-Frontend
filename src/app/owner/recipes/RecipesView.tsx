@@ -126,7 +126,6 @@ function ComponentsTab(vm: VM) {
     {
       key: "cost",
       title: t("recipes.fieldCost"),
-      align: "right",
       render: (c) => <span className="font-semibold text-brown-900">฿{c.estimated_cost_per_batch}</span>,
     },
     {

@@ -130,7 +130,7 @@ export function ProductionOrderDetail({
           <Button size="small" icon={actionIcon("edit", "small")} onClick={() => onEdit(order)}>{t("common.edit")}</Button>
           {/* ซ่อนปุ่มเลื่อนสถานะ (กำลังผลิต / เสร็จแล้ว) ไว้ก่อน
           {next && (next !== "done" || canComplete) && (
-            <Button type="primary" size="small" icon={actionIcon("next", "small")} onClick={() => onAdvance(order)}>
+            <Button type="primary" size="small" onClick={() => onAdvance(order)}>
               {t("production.advanceTo", { status: t(`enums.productionStatus.${next}`) })}
             </Button>
           )}

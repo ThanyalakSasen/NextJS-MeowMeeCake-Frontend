@@ -60,7 +60,6 @@ export function FinanceExpensesView(vm: VM) {
     {
       key: "amount",
       title: t("finance.fieldAmount"),
-      align: "right",
       render: (e) => <span className="font-semibold text-red-500">-{formatCurrency(e.amount, locale)}</span>,
     },
     {

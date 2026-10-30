@@ -53,13 +53,11 @@ export function IngredientsView(vm: VM) {
     {
       key: "reorder",
       title: t("ingredients.colReorder"),
-      align: "right",
       render: (r) => `${formatNumber(r.reorderPoint, locale)} ${r.unitAbbr}`,
     },
     {
       key: "cost",
       title: t("ingredients.colCost"),
-      align: "right",
       render: (r) => formatCurrency(r.costPerUnit, locale, { decimals: 2 }),
     },
     { key: "supplier", title: t("ingredients.colSupplier"), render: (r) => r.supplier || "—" },
