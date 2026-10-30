@@ -24,7 +24,10 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
   const isDelivery = order.order_type === "delivery";
   // แบบจัดส่ง: พร้อมส่งมอบ → สำเร็จ ผ่านปุ่ม "จัดส่งเรียบร้อยแล้ว" ใน DeliverySection เท่านั้น (บังคับกรอกขนส่ง/เลขพัสดุ)
   const shipStep = isDelivery && order.order_status === "ready";
-  const next = shipStep ? null : vm.getNextOrderStatus(order.order_status);
+  // ยังไม่ชำระ = เลื่อนสถานะไม่ได้ (backend ตอบ 409) — ยืนยันสลิปแล้ว backend เลื่อนเป็น preparing ให้เอง
+  // เดิมกดเลื่อนพรีออเดอร์ที่ยังไม่จ่ายไปจนสำเร็จได้ → ไม่ถูกยกเลิกอัตโนมัติ ไม่นับรายรับ ไม่เข้าใบผลิต
+  const paid = order.payment_status === "paid";
+  const next = shipStep || !paid ? null : vm.getNextOrderStatus(order.order_status);
   const dueState = vm.paymentDueState(order);
   const payment = vm.selectedPayment;
 
@@ -199,13 +202,21 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
 
       <Divider className="!my-0" />
 
+      {/* ยอดสินค้า/ค่าส่ง/ส่วนลด — เดิมโชว์แค่ยอดสุทธิ ไม่ตรงกับผลรวมรายการเมื่อมีค่าส่งหรือส่วนลด */}
+      <div className="flex flex-col gap-1.5 text-sm">
+        <AmountRow label={t("orders.subtotal")} value={order.subtotal} locale={locale} />
+        {order.delivery_fee > 0 && <AmountRow label={t("orders.deliveryFee")} value={order.delivery_fee} locale={locale} />}
+        {order.discount_amount > 0 && <AmountRow label={t("orders.discount")} value={-order.discount_amount} locale={locale} />}
+      </div>
+
       <div className="flex items-center justify-between">
         <span className="font-medium text-gray-700">{t("orders.totalLabel")}</span>
         <span className="text-lg font-bold text-brown-800">{formatCurrency(order.total_amount, locale)}</span>
       </div>
 
       {vm.perm.update && !final && (
-        <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
+          {!paid && <p className="m-0 mr-auto text-xs text-gray-500">{t("preorderRound.advanceNeedsPayment")}</p>}
           <Button danger size="small" icon={actionIcon("cancelAction", "small")} onClick={() => vm.onCancelOrder(order)}>{t("orders.cancel")}</Button>
           {next && (
             <Button type="primary" size="small" onClick={() => vm.onAdvanceOrderStatus(order)}>
@@ -217,6 +228,15 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function AmountRow({ label, value, locale }: { label: string; value: number; locale: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-gray-600">{label}</span>
+      <span className="text-gray-800">{formatCurrency(value, locale)}</span>
     </div>
   );
 }
