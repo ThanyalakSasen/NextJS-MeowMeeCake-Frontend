@@ -64,7 +64,11 @@ export function useProductsViewModel() {
       alert.success(t("products.deleted"));
       invalidate();
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("products.deleteFailed")),
+    // 409 = ยังมีของในสต็อก — backend บอกจำนวนในข้อความ → เตือน (ไม่ใช่ error)
+    onError: (e) =>
+      isApiError(e) && e.status === 409
+        ? alert.warning(e.message, { title: t("products.deleteBlockedTitle") })
+        : alert.error(isApiError(e) ? e.message : t("products.deleteFailed")),
   });
 
   return {
