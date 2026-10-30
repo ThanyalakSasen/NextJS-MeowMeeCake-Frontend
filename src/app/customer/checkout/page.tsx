@@ -111,6 +111,8 @@ interface BillDraft {
   basket: PreorderBasket | null;
   round: StorefrontRoundDetail | null;
   roundLoading: boolean;
+  /** โหลดรอบไม่สำเร็จ — สั่งบิลนี้ไม่ได้ (ตรวจรอบเปิด/สินค้าในรอบไม่ได้) ต้องบอกลูกค้า ไม่ใช่ปุ่มกดไม่ได้เฉย ๆ */
+  roundError: boolean;
 }
 
 interface BillConfig {
@@ -193,6 +195,7 @@ function CheckoutContent() {
       basket: null,
       round: null,
       roundLoading: false,
+      roundError: false,
     });
   }
   baskets.forEach((b, i) => {
@@ -220,6 +223,7 @@ function CheckoutContent() {
       basket: b,
       round: roundQs[i]?.data ?? null,
       roundLoading: !!roundQs[i]?.isLoading,
+      roundError: !!roundQs[i]?.isError && !roundQs[i]?.data,
     });
   });
 
@@ -762,8 +766,9 @@ function BillCard({
         </div>
       </div>
 
-      {(p.roundClosed || p.missing.length > 0 || !p.qtyOk) && (
+      {(bill.roundError || p.roundClosed || p.missing.length > 0 || !p.qtyOk) && (
         <div className="space-y-2 border-b border-[#8C5A3C]/10 px-4 py-3 sm:px-5">
+          {bill.roundError && <p className="m-0 rounded-xl bg-red-50 p-3 text-sm text-red-700">{tp("roundFailed")}</p>}
           {p.roundClosed && bill.basket && <p className="m-0 rounded-xl bg-red-50 p-3 text-sm text-red-700">{tp("roundClosed", { round: bill.basket.round_name })}</p>}
           {p.missing.length > 0 && (
             <p className="m-0 rounded-xl bg-red-50 p-3 text-sm text-red-700">
