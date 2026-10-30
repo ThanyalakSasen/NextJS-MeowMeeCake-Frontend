@@ -1,67 +1,18 @@
 "use client";
-// แท็บ 1: แผนการผลิต / ใบสั่งผลิต — presentational ล้วน รับ props จาก useProductionViewModel
-import { useTranslations, useLocale } from "next-intl";
-import { Button, Select, Tag } from "@/components/base";
-import { StatCard, StatCardsGrid } from "@/components/shared/stats"; // StatusBadge — ใช้ตอนเปิดคอลัมน์สถานะกลับ
-import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
-import { formatDate } from "@/i18n/format";
-import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
-import type { ProductionStatus } from "@/constants/enumConfig";
-import type { ProductionOrder } from "@/types/productionOrder";
-import { EditButton, ViewButton, actionIcon } from "@/components/shared/actions";
+// ส่วนบน: แผนการผลิต / ใบสั่งผลิต — presentational ล้วน รับ props จาก useProductionViewModel
+// ปุ่มสร้างใบสั่งผลิต + การ์ด "วันนี้ผลิตอะไรบ้าง" (แยกตามใบ) · เอาสถิติ/ตัวกรอง/ตารางใบสั่งผลิตออก (ผู้ใช้ขอ 2026-10-30)
+// ใบทั้งหมดดูได้ที่ส่วนประวัติการผลิตด้านล่าง · แก้ใบได้จากป๊อปอัปรายละเอียด (กดการ์ด/แถว)
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/base";
+import { actionIcon } from "@/components/shared/actions";
 import type { useProductionViewModel } from "../useProductionViewModel";
-import { LoadFailed } from "@/components/shared/feedback";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { TodayProductionCard } from "./TodayProductionCard";
 
 type VM = ReturnType<typeof useProductionViewModel>;
 
 export function PlanTab(vm: VM) {
   const t = useTranslations();
-  const locale = useLocale();
-
-  const columns: Column<ProductionOrder>[] = [
-    {
-      key: "production_no",
-      title: t("production.colNo"),
-      render: (o) => (
-        <div>
-          <p className="font-medium text-brown-900 font-mono">{o.production_no}</p>
-          <p className="text-sm text-gray-600">{formatDate(o.production_date, locale)}</p>
-        </div>
-      ),
-    },
-    {
-      key: "source_type",
-      title: t("production.fieldSourceType"),
-      render: (o) => {
-        const cfg = SOURCE_TYPE_CONFIG[o.source_type];
-        return (
-          <div>
-            <Tag style={{ background: cfg.bg, color: cfg.color, borderColor: "transparent" }}>
-              {t(`enums.sourceType.${o.source_type}`)}
-            </Tag>
-            {o.round_name && <p className="mt-1 text-sm text-gray-600">{o.round_name}</p>}
-          </div>
-        );
-      },
-    },
-    {
-      key: "items",
-      title: t("production.colItems"),
-      render: (o) => <span className="text-gray-700">{t("production.itemsCount", { n: o.items.length })}</span>,
-    },
-    {
-      key: "assignee",
-      title: t("production.fieldAssignee"),
-      render: (o) => o.assignee_name ?? t("production.unassigned"),
-    },
-    // ซ่อนคอลัมน์สถานะไว้ก่อน
-    // {
-    //   key: "status",
-    //   title: t("common.status"),
-    //   render: (o) => <StatusBadge group="productionStatus" value={o.production_status} />,
-    // },
-  ];
 
   return (
     <div className="flex flex-col gap-5">
@@ -81,58 +32,12 @@ export function PlanTab(vm: VM) {
         )}
       </div>
 
-      {!vm.isLoading && !vm.isError && (
-        <TodayProductionCard today={vm.today} todayItems={vm.todayItems} todayOrders={vm.todayOrders} onView={vm.onView} />
-      )}
-
-      <StatCardsGrid>
-        <StatCard label={t("common.all")} value={vm.stats.total} />
-        <StatCard label={t("enums.productionStatus.planned")} value={vm.stats.planned} />
-        <StatCard label={t("enums.productionStatus.in_progress")} value={vm.stats.in_progress} tone="warn" />
-        <StatCard label={t("enums.productionStatus.done")} value={vm.stats.done} tone="up" />
-      </StatCardsGrid>
-
-      <FilterToolbar
-        left={<SearchInput value={vm.search} onChange={vm.setSearch} placeholder={t("production.searchPlaceholder")} />}
-        // ตัวกรองชิดขวา (ช่องค้นหา/แท็บอยู่ซ้าย) — แบบเดียวกับหน้าพนักงาน
-        right={
-          <>
-            <FilterField label={t("filterLabel.productionStatus")} minWidth={160}>
-              <Select
-                value={vm.statusFilter}
-                onChange={(v) => vm.setStatusFilter(v as ProductionStatus | "all")}
-                options={[
-                  { value: "all", label: t("common.all") },
-                  ...(["planned", "in_progress", "done", "cancelled"] as ProductionStatus[]).map((s) => ({
-                    value: s,
-                    label: t(`enums.productionStatus.${s}`),
-                  })),
-                ]}
-              />
-            </FilterField>
-          </>
-        }
-      />
-
       {vm.isError ? (
         <LoadFailed onRetry={vm.refetch} />
+      ) : vm.isLoading ? (
+        <LoadingSpin />
       ) : (
-        <DataTable
-          columns={columns}
-          rows={vm.planRows}
-          loading={vm.isLoading}
-          emptyText={t("production.empty")}
-          onRowClick={vm.onView}
-          actions={(o) => (
-            <>
-              <ViewButton size="small" onClick={() => vm.onView(o)} />
-              {vm.perm.update && !vm.isFinalStatus(o.production_status) && (
-                <EditButton size="small" onClick={() => vm.openEdit(o)} />
-              )}
-            </>
-          )}
-          pagination={{ page: vm.page, pageSize: vm.pageSize, total: vm.planTotal, onChange: vm.setPagination }}
-        />
+        <TodayProductionCard today={vm.today} todayItems={vm.todayItems} todayOrders={vm.todayOrders} onView={vm.onView} />
       )}
     </div>
   );
