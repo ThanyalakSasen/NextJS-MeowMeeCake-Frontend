@@ -8,7 +8,7 @@ import { Button } from "@/components/base";
 import { color } from "@/theme";
 import { formatCurrency } from "@/i18n/format";
 import type { Promotion } from "@/types/promotion";
-import { isMemberOnly, type PromoBlock, type PromoEval } from "../posPromotion";
+import { canStack, isMemberOnly, type PromoBlock, type PromoEval } from "../posPromotion";
 
 export function PaymentAside({
   promotionsEnabled,
@@ -66,6 +66,18 @@ export function PaymentAside({
       ? t("pos.promoPercent", { n: p.discount_value })
       : t("pos.promoAmount", { amount: formatCurrency(p.discount_value, locale) });
 
+  // ใช้ร่วมกับโปรไหนได้ — บอกเป็นชื่อโปรในรายการนี้ (canStack: ทั้งคู่ stackable และ stackable_with ยอมกันทั้งสองฝั่ง)
+  const shown = promoEvals.map((ev) => ev.promotion);
+  const stackText = (p: Promotion) => {
+    if (!p.stackable) return t("pos.promoNotStackable");
+    const names = shown.filter((o) => o._id !== p._id && canStack(p, o)).map((o) => o.promotion_name);
+    return names.length > 0 ? t("pos.promoStackWith", { names: names.join(", ") }) : t("pos.promoStackNone");
+  };
+  // เลือกตัวนี้แล้วโปรที่เลือกอยู่จะหลุด (togglePromoSelection แทนที่ทั้งหมดเมื่อใช้ร่วมกันไม่ได้)
+  const selectedPromos = shown.filter((o) => selectedPromoIds.includes(o._id));
+  const willReplace = (p: Promotion) =>
+    selectedPromos.length > 0 && !selectedPromoIds.includes(p._id) && !selectedPromos.every((o) => canStack(p, o));
+
   const blockText = (b: PromoBlock) => {
     switch (b.key) {
       case "minAmount": return t("pos.promoBlock.minAmount", { min: formatCurrency(b.min, locale) });
@@ -122,7 +134,8 @@ export function PaymentAside({
                   </span>
                   {/* โปรสำหรับสมาชิก (จำกัดสิทธิ์ต่อลูกค้า) — ป้ายแดงเสมอ · ยังไม่กรอกเบอร์ = เลือกไม่ได้ + บอกให้กรอก */}
                   {isMemberOnly(p) && <span className="text-xs font-semibold text-danger">{t("pos.promoMemberOnly")}</span>}
-                  {p.stackable && <span className="text-xs text-gray-500">{t("pos.promoStackable")}</span>}
+                  <span className={`text-xs ${p.stackable ? "text-green-700" : "text-gray-500"}`}>{stackText(p)}</span>
+                  {ev.eligible && willReplace(p) && <span className="text-xs text-amber-800">{t("pos.promoWillReplace")}</span>}
                   <span
                     className={`text-xs ${
                       ev.eligible ? "text-gray-600" : ev.block?.key === "memberOnly" ? "text-danger" : "text-amber-800"
