@@ -301,7 +301,10 @@ export function useProductionViewModel() {
 
   // ── แท็บ 3: ประวัติการผลิต — เลือกช่วงแบบเดียวกับหน้ารายงานยอดขาย (วัน/สัปดาห์/เดือน/ไตรมาส/ปี) ──
   const [historyViewMode, setHistoryViewMode] = useState<HistoryViewMode>("month");
-  const [historyDate, setHistoryDate] = useState<Dayjs>(() => dayjs());
+  // ยังไม่ได้เลือกเอง (null) = ตามวันนี้ (useToday) — เปิดหน้าค้างข้ามวัน/เดือน ช่วงเริ่มต้นเลื่อนตาม ไม่ค้างช่วงตอนเปิดหน้า
+  // เลือกวันเองแล้ว = คงค่าที่เลือก
+  const [pickedHistoryDate, setHistoryDate] = useState<Dayjs | null>(null);
+  const historyDate = pickedHistoryDate ?? today;
 
   // ตารางแสดงทุกใบตั้งแต่สร้าง (วางแผน/กำลังผลิต/เสร็จ/ยกเลิก) — ผู้ใช้ขอ 2026-10-29: สร้างใบแล้วเห็นในประวัติทันที
   // วันที่ที่ใช้กรองช่วง: ใบที่เสร็จแล้ว = เวลาเสร็จ · ใบอื่น = วันที่ผลิตตามแผน · ใหม่สุดก่อน

@@ -508,9 +508,17 @@ export function usePOSViewModel() {
       return next.length > MAX_RECEIVED_DIGITS ? v : next; // "00" ต่อท้ายก็ห้ามเกินหลัก
     });
   };
+  // กันกดยืนยันรับเงินซ้ำ (เงินสด/QR) — ref ไม่ใช่ checkout.isPending: ดับเบิลคลิกก่อน re-render ทั้งสองคลิกเห็น isPending = false
+  // แล้วสร้างออเดอร์ 2 ใบ (pendingOrderRef ยังว่างตอนคลิกที่สอง) · ปลดล็อกเมื่อคำขอจบ (สำเร็จ/ล้ม)
+  const payingRef = useRef(false);
+  const pay = (vars: { method: PaymentMethod; received: number; expected: number }) => {
+    if (payingRef.current || checkout.isPending) return;
+    payingRef.current = true;
+    checkout.mutate(vars, { onSettled: () => { payingRef.current = false; } });
+  };
   const confirmCash = () => {
-    if (receivedShort || checkout.isPending) return;
-    checkout.mutate({ method: "cash", received, expected: payable });
+    if (receivedShort) return;
+    pay({ method: "cash", received, expected: payable });
   };
 
   // ── คีย์บอร์ด: ยิงบาร์โค้ดได้จากทุกที่ + พิมพ์ตัวเลขในหน้าต่างรับเงินสด ──
@@ -736,7 +744,7 @@ export function usePOSViewModel() {
     pressKey,
     pickCash: (amount: number) => setReceivedDigits(String(Math.ceil(amount))),
     confirmCash,
-    confirmQr: () => checkout.mutate({ method: "qr", received: payable, expected: payable }),
+    confirmQr: () => pay({ method: "qr", received: payable, expected: payable }),
     submitting: checkout.isPending,
     done,
     store: storeQ.data ?? null,
