@@ -149,8 +149,8 @@ export function AspectsTab({ vm }: { vm: VM }) {
                       onChange={(e) => vm.setRenaming({ ...renaming, th: e.target.value })} onPressEnter={vm.saveRename} />
                     <Input size="small" style={{ maxWidth: 200 }} value={renaming.eng} maxLength={50} placeholder={t("reviewSettings.aspects.nameEng")}
                       onChange={(e) => vm.setRenaming({ ...renaming, eng: e.target.value })} onPressEnter={vm.saveRename} />
-                    <Button size="small" type="primary" onClick={vm.saveRename}>{t("common.save")}</Button>
-                    <Button size="small" onClick={() => vm.setRenaming(null)}>{t("common.cancel")}</Button>
+                    <Button icon={actionIcon("save", "small")} size="small" type="primary" onClick={vm.saveRename}>{t("common.save")}</Button>
+                    <Button icon={actionIcon("cancel", "small")} size="small" onClick={() => vm.setRenaming(null)}>{t("common.cancel")}</Button>
                   </span>
                 ) : (
                   <span className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -189,7 +189,7 @@ export function AspectsTab({ vm }: { vm: VM }) {
                   {a.aspect_name_th}
                 </span>
                 {vm.perm.update && (
-                  <Button size="small" disabled={!vm.canAddAspect} onClick={() => vm.onRestoreAspect(a)}>
+                  <Button icon={actionIcon("reset", "small")} size="small" disabled={!vm.canAddAspect} onClick={() => vm.onRestoreAspect(a)}>
                     {t("reviewSettings.aspects.restore")}
                   </Button>
                 )}

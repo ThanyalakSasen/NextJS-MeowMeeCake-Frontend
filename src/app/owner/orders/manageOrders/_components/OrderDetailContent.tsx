@@ -92,7 +92,7 @@ export function OrderDetailContent({
       {canMarkReady && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="m-0 text-sm text-gray-600">{t("orders.markReadyHint")}</p>
-          <Button type="primary" size="small" loading={markingReady} onClick={onMarkReady}>
+          <Button icon={actionIcon("confirm", "small")} type="primary" size="small" loading={markingReady} onClick={onMarkReady}>
             {t(order.order_type === "delivery" ? "orders.markReadyDelivery" : "orders.markReadyTakeaway")}
           </Button>
         </div>

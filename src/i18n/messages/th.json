@@ -663,8 +663,8 @@
     },
     "deliveryStatus": {
       "pending": "รอจัดส่ง",
-      "shipping": "กำลังจัดส่ง",
-      "delivered": "ส่งถึงแล้ว",
+      "shipping": "จัดส่งเรียบร้อยแล้ว",
+      "delivered": "จัดส่งเรียบร้อยแล้ว",
       "failed": "จัดส่งไม่สำเร็จ"
     },
     "shippingCarrier": {
@@ -1691,6 +1691,7 @@
     "recipeSaveFailed": "บันทึกสูตรไม่สำเร็จ",
     "recipeDeleted": "ลบสูตรเรียบร้อยแล้ว",
     "recipeDeleteFailed": "ลบสูตรไม่สำเร็จ",
+    "recipeDeleteBlockedTitle": "ลบสูตรนี้ยังไม่ได้",
     "componentSaved": "แก้ไขสูตรส่วนประกอบเรียบร้อยแล้ว",
     "componentAdded": "สร้างสูตรส่วนประกอบเรียบร้อยแล้ว",
     "componentSaveFailed": "บันทึกสูตรส่วนประกอบไม่สำเร็จ",

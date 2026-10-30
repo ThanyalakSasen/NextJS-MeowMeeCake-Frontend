@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/base";
 import { formatCurrency, formatDate } from "@/i18n/format";
 import { heldBillItemCount, heldBillSubtotal, type HeldBill } from "../posHeldBills";
+import { actionIcon } from "@/components/shared/actions";
 
 export function HeldBillsModal({
   open,
@@ -42,10 +43,10 @@ export function HeldBillsModal({
                   {b.member && ` · ${b.member.user_fullname}`}
                 </span>
               </div>
-              <Button type="primary" onClick={() => onResume(b)}>
+              <Button icon={actionIcon("next")} type="primary" onClick={() => onResume(b)}>
                 {t("pos.resumeBill")}
               </Button>
-              <Button danger onClick={() => onDelete(b)}>
+              <Button icon={actionIcon("delete")} danger onClick={() => onDelete(b)}>
                 {t("pos.deleteHeld")}
               </Button>
             </li>

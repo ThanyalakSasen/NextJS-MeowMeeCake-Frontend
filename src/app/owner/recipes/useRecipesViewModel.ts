@@ -230,7 +230,11 @@ export function useRecipesViewModel() {
   const deleteRecipe = useMutation({
     mutationFn: (id: string) => recipesService.remove(id),
     onSuccess: () => { alert.success(t("recipes.recipeDeleted")); invalidateRecipes(); },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("recipes.recipeDeleteFailed")),
+    // 409 = สูตรยังอยู่ในใบสั่งผลิตที่ยังไม่เสร็จ — backend บอกเลขใบในข้อความ → เตือน (ไม่ใช่ error)
+    onError: (e) =>
+      isApiError(e) && e.status === 409
+        ? alert.warning(e.message, { title: t("recipes.recipeDeleteBlockedTitle") })
+        : alert.error(isApiError(e) ? e.message : t("recipes.recipeDeleteFailed")),
   });
 
   const onSaveRecipe = (v: RecipeSubmitValue) => {

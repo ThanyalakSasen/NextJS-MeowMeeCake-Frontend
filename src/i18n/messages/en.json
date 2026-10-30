@@ -663,8 +663,8 @@
     },
     "deliveryStatus": {
       "pending": "Awaiting shipment",
-      "shipping": "Shipping",
-      "delivered": "Delivered",
+      "shipping": "Shipped",
+      "delivered": "Shipped",
       "failed": "Delivery failed"
     },
     "shippingCarrier": {
@@ -1691,6 +1691,7 @@
     "recipeSaveFailed": "Failed to save recipe",
     "recipeDeleted": "Recipe deleted",
     "recipeDeleteFailed": "Failed to delete recipe",
+    "recipeDeleteBlockedTitle": "This recipe can’t be deleted yet",
     "componentSaved": "Sub-recipe updated",
     "componentAdded": "Sub-recipe created",
     "componentSaveFailed": "Failed to save sub-recipe",

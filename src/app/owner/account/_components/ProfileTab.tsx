@@ -7,6 +7,7 @@ import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import { isLinePlaceholderEmail } from "@/lib/lineAccount";
 import type { useAccountViewModel } from "../useAccountViewModel";
+import { actionIcon } from "@/components/shared/actions";
 
 type VM = ReturnType<typeof useAccountViewModel>;
 
@@ -38,10 +39,10 @@ export function ProfileTab(vm: VM) {
         <div className="flex shrink-0 items-center gap-2">
           {vm.editing ? (
             <>
-              <Button size="small" onClick={vm.cancelEdit} disabled={vm.savingProfile}>
+              <Button icon={actionIcon("cancel", "small")} size="small" onClick={vm.cancelEdit} disabled={vm.savingProfile}>
                 {t("common.cancel")}
               </Button>
-              <Button
+              <Button icon={actionIcon("save", "small")}
                 size="small"
                 type="primary"
                 onClick={vm.onSaveProfile}
@@ -52,7 +53,7 @@ export function ProfileTab(vm: VM) {
               </Button>
             </>
           ) : (
-            <Button size="small" onClick={vm.startEdit}>
+            <Button icon={actionIcon("edit", "small")} size="small" onClick={vm.startEdit}>
               {t("common.edit")}
             </Button>
           )}

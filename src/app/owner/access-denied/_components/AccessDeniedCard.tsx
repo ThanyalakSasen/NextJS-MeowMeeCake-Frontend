@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { NoSymbolIcon } from "@heroicons/react/24/solid";
 import { Button } from "@/components/base";
+import { actionIcon } from "@/components/shared/actions";
 
 export function AccessDeniedCard() {
   const t = useTranslations();
@@ -14,7 +15,7 @@ export function AccessDeniedCard() {
         </div>
         <h1 className="text-lg font-semibold text-brown-900">{t("accessDenied.title")}</h1>
         <p className="mt-2 text-sm leading-relaxed text-gray-500">{t("accessDenied.description")}</p>
-        <Button type="primary" href="/owner/dashboard" className="mt-5">
+        <Button icon={actionIcon("back")} type="primary" href="/owner/dashboard" className="mt-5">
           {t("accessDenied.back")}
         </Button>
       </div>

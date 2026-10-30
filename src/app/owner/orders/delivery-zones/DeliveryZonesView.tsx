@@ -150,7 +150,7 @@ export function DeliveryZonesView(vm: VM) {
                       {z.zone_name} · {money(z.fee)}
                     </span>
                     {vm.perm.update && (
-                      <Button size="small" loading={vm.restoringId === z._id} onClick={() => vm.onRestore(z)}>
+                      <Button icon={actionIcon("reset", "small")} size="small" loading={vm.restoringId === z._id} onClick={() => vm.onRestore(z)}>
                         {t("deliveryZones.restore")}
                       </Button>
                     )}

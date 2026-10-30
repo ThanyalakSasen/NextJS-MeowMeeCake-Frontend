@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button, Input } from "@/components/base";
 import type { PosMember } from "@/types/pos";
 import type { MemberLookup } from "../usePOSViewModel";
+import { actionIcon } from "@/components/shared/actions";
 
 export function MemberCard({
   phone,
@@ -69,7 +70,7 @@ export function MemberCard({
               onChange={(e) => onPhoneChange(e.target.value.replace(/\D/g, "").slice(0, 10))}
               onPressEnter={onSubmit}
             />
-            <Button onClick={onSubmit} loading={searching} disabled={disabled || !phone.trim()}>
+            <Button icon={actionIcon("search")} onClick={onSubmit} loading={searching} disabled={disabled || !phone.trim()}>
               {t("pos.memberSearch")}
             </Button>
           </div>

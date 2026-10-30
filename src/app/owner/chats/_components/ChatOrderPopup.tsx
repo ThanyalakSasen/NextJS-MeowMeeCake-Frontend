@@ -21,6 +21,7 @@ import { PreorderDetailContent } from "@/app/owner/orders/preOrderRound/_compone
 import { getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "@/app/owner/orders/preOrderRound/preorderStatus";
 import type { usePreOrderRoundViewModel } from "@/app/owner/orders/preOrderRound/usePreOrderRoundViewModel";
 import { staffAttachmentHref } from "../useChatsViewModel";
+import { actionIcon } from "@/components/shared/actions";
 
 type PreorderVM = ReturnType<typeof usePreOrderRoundViewModel>;
 const noop = () => undefined;
@@ -72,9 +73,9 @@ export function ChatOrderPopup({ attachment, onClose }: { attachment: ChatAttach
       footer={
         attachment && (
           <div className="flex justify-end gap-2">
-            <Button onClick={onClose}>{t("common.close")}</Button>
+            <Button icon={actionIcon("cancel")} onClick={onClose}>{t("common.close")}</Button>
             <Link href={staffAttachmentHref(attachment)}>
-              <Button type="primary">{t("chat.openOrderPage")}</Button>
+              <Button icon={actionIcon("external")} type="primary">{t("chat.openOrderPage")}</Button>
             </Link>
           </div>
         )
