@@ -43,8 +43,9 @@ export function TabbedPageLayout({
   activeKey: string;
   onChange: (key: string) => void;
   items: TabbedPageLayoutItem[];
-  /** "end" = แท็บชิดขวา (แบบหน้ารายงานยอดขาย: ตัวกรองซ้าย · สวิตช์ขวา) */
-  tabsAlign?: "start" | "end";
+  /** "end" = แท็บชิดขวา (แบบหน้ารายงานยอดขาย: ตัวกรองซ้าย · สวิตช์ขวา)
+   *  "endLg" = ชิดขวาเฉพาะจอใหญ่ (lg ขึ้นไป) · จอมือถือ/กลาง แท็บอยู่ซ้ายสุดก่อน toolbar */
+  tabsAlign?: "start" | "end" | "endLg";
   /** ซ่อนแถบแท็บ — เมื่อสลับแท็บจากที่อื่นแทน (เช่น เมนูย่อยใน Sidebar ของหน้ารอบพรีออเดอร์) */
   hideTabBar?: boolean;
 }) {
@@ -63,15 +64,23 @@ export function TabbedPageLayout({
           (align-items ของ flex column คือ stretch) ผิดจากหน้าอื่นที่แท็บหดตามเนื้อหา */}
       {/* แท็บเดียว = ไม่มีอะไรให้สลับ → ไม่แสดงแถบแท็บ (เหลือแค่ toolbar ถ้ามี) */}
       {(showTabs || active?.toolbar) && (
-        <div className="flex flex-wrap items-center gap-3">
-          {active?.toolbar}
+        <div className={`flex flex-wrap items-center gap-3 ${tabsAlign === "endLg" ? "lg:flex-nowrap lg:items-start" : ""}`}>
+          {/* endLg: toolbar ห่อในกล่องที่ขึ้นบรรทัดใหม่ได้เอง — จอใหญ่ที่บีบแล้วตัวควบคุมไม่ดันแท็บลงไปอยู่บรรทัดล่าง */}
+          {tabsAlign === "endLg" ? (
+            active?.toolbar && <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">{active.toolbar}</div>
+          ) : (
+            active?.toolbar
+          )}
           {tabsAlign === "end" && <div className="flex-1" />}
+          {tabsAlign === "endLg" && !active?.toolbar && <div className="hidden flex-1 lg:block" />}
           {showTabs && (
-            <TypeTabBar
-              value={activeKey}
-              onChange={onChange}
-              options={items.map((i) => ({ value: i.key, label: i.label }))}
-            />
+            <div className={tabsAlign === "endLg" ? "order-first w-full lg:order-none lg:w-auto lg:shrink-0" : "contents"}>
+              <TypeTabBar
+                value={activeKey}
+                onChange={onChange}
+                options={items.map((i) => ({ value: i.key, label: i.label }))}
+              />
+            </div>
           )}
         </div>
       )}

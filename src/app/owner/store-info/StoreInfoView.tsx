@@ -1,7 +1,7 @@
 "use client";
 // View ของ "ข้อมูลร้าน" (BACKLOG4 E2) — เจ้าของร้าน: 4 หัวข้อ · พนักงาน: เฉพาะหน้าร้านประจำสัปดาห์ (ตามสิทธิ์ store_info)
 // การ์ดแสดงข้อมูลอ่านง่ายเสมอ (ReadView.tsx) · กด "แก้ไข" ที่หัวการ์ด = เปิดป๊อปอัพฟอร์มของหัวข้อนั้น (2026-10-26) — แก้ได้ครั้งละหัวข้อ
-// ที่อยู่ร้านกับหน้าร้านหลักเป็นข้อมูลชุดเดียวกัน — ช่องที่อยู่ + พิกัดอยู่ในรายการหน้าร้านหลัก (WeeklyMarketsEditor · mainAddress)
+// ทุกหน้าร้านมีช่องที่อยู่ + พิกัดเหมือนกัน (WeeklyMarketsEditor) · ที่อยู่ของหน้าร้านหลัก = ที่อยู่ร้าน
 import { Modal } from "antd";
 import ShopImage from "@/components/customer/ShopImage";
 import { useTranslations } from "next-intl";
@@ -13,7 +13,6 @@ import { modalButtonIcons, actionIcon } from "@/components/shared/actions";
 import type { useStoreInfoViewModel } from "./useStoreInfoViewModel";
 import { LOGO_TYPES, SOCIAL_KEYS, type SectionKey } from "./storeInfoForm";
 import { SectionCard } from "./_components/SectionCard";
-import { StoreAddressFields } from "./_components/StoreAddressFields";
 import { WeeklyMarketsEditor } from "./_components/WeeklyMarketsEditor";
 import { ContactRead, GeneralRead, MarketsRead, PromptpayRead } from "./_components/ReadView";
 
@@ -105,7 +104,14 @@ export function StoreInfoView(vm: VM) {
     promptpay: () => (
       <div className="flex flex-col gap-4">
         <FormField label={t("storeInfo.promptpay.id")} error={vm.fieldError("promptpay_id")}>
-          <Input maxLength={20} value={p.promptpay_id} inputMode="numeric" placeholder="0812345678" onChange={(e) => vm.setProfileField("promptpay_id", e.target.value)} />
+          {/* ตัวเลขเท่านั้น (เบอร์ 10 หลัก / เลขบัตร-ภาษี 13 หลัก) — ตัดตัวอื่นทิ้งทั้งตอนพิมพ์และวาง */}
+          <Input
+            maxLength={13}
+            value={p.promptpay_id}
+            inputMode="numeric"
+            placeholder="0812345678"
+            onChange={(e) => vm.setProfileField("promptpay_id", e.target.value.replace(/\D/g, "").slice(0, 13))}
+          />
           <span className="text-xs text-gray-500">{t("storeInfo.promptpay.idHint")}</span>
         </FormField>
         <FormField label={t("storeInfo.promptpay.accountName")} required={!!p.promptpay_id.trim()} error={vm.fieldError("promptpay_account_name")}>
@@ -128,19 +134,11 @@ export function StoreInfoView(vm: VM) {
         onAdd={vm.addMarket}
         onRemove={(i) => void vm.removeMarket(i)}
         onSetMain={vm.setMainMarket}
-        mainAddress={
-          vm.isOwner ? (
-            <StoreAddressFields
-              address={vm.address}
-              editable
-              onField={vm.setAddressField}
-              onCoordinates={vm.setCoordinates}
-              onResolveShortLink={vm.resolveMapLink}
-              fieldError={vm.fieldError}
-              embedded
-            />
-          ) : undefined
-        }
+        canEditAddress={vm.canEditMarketAddress}
+        onAddressField={vm.setMarketAddressField}
+        onCoordinates={vm.setMarketCoordinates}
+        onResolveShortLink={vm.resolveMapLink}
+        fieldError={vm.fieldError}
       />
     ),
   };
@@ -154,7 +152,7 @@ export function StoreInfoView(vm: VM) {
 
   const marketsCard = (
     <SectionCard title={marketsTitle} description={t("storeInfo.markets.description")} actions={editButton("markets")}>
-      <MarketsRead markets={vm.markets} address={vm.isOwner ? vm.address : undefined} />
+      <MarketsRead markets={vm.markets} />
     </SectionCard>
   );
 

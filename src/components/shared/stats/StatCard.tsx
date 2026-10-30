@@ -27,7 +27,10 @@ export function StatCard({
   status,
   statusLabel,
   onClick,
+  wrapLabel = false,
 }: {
+  /** true = ชื่อการ์ดขึ้นบรรทัดใหม่ได้ (เห็นข้อความครบบนจอแคบ) แทนการตัด … */
+  wrapLabel?: boolean;
   /** บรรทัดเพิ่มใต้ sub (เช่น เทียบกับช่วงก่อนหน้า) */
   extra?: React.ReactNode;
   label: string;
@@ -45,7 +48,7 @@ export function StatCard({
     <>
       <div className="flex items-start justify-between gap-2">
         <p className="m-0 flex min-w-0 items-center gap-1 text-sm text-gray-600">
-          <span className="truncate">{label}</span>
+          <span className={wrapLabel ? "break-words" : "truncate"}>{label}</span>
           {/* relative z-10 = อยู่เหนือปุ่มที่คลุมการ์ด (onClick) — ชี้/กด ⓘ ได้โดยไม่ไปกดการ์ด */}
           {info && <InfoTip text={info} className="relative z-10" />}
         </p>

@@ -32,7 +32,9 @@ import OrderTimeline from "../../_components/OrderTimeline";
 import OrderItemThumb from "../../_components/OrderItemThumb";
 import { BuyAgainAfterReview } from "../../_components/BuyAgainButton";
 import BackButton from "../../_components/BackButton";
+import EditCheckoutButton from "../../_components/EditCheckoutButton";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
+import { formatStoreAddress } from "../../../lib/storeFormat";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../orderLabels";
 import { canReview } from "../../../hooks/useReviewedItems";
 import ShopSpinner from "@/components/customer/ShopSpinner";
@@ -106,6 +108,10 @@ function OrderContent() {
   // สถานะรีวิว — อยู่บรรทัดเดียวกับสถานะจัดส่ง (ออเดอร์รับเองอยู่บรรทัดนัดรับ) · ยังรีวิวไม่ได้ = บอกเงื่อนไข (showReason)
   const showPickupRow = order.order_type === "takeaway" && !!(order.pickup_point_name || order.pickup_date);
   const showDeliveryRow = order.order_type === "delivery" && !!order.delivery_status && order.order_status !== "cancelled";
+  // แก้วิธีรับ/ที่อยู่ได้ระหว่างรอชำระ (ยังไม่ชำระ · ยังไม่ส่งสลิป · ร้านยังไม่รับออเดอร์)
+  const canEditCheckout =
+    order.order_status === "pending" && order.payment_status !== "paid" && !order.has_payment && canCustomerCancel(order);
+  const addr = order.delivery_address;
   const reviewStatus = (
     <ReviewLink
       kind="order"
@@ -198,6 +204,34 @@ function OrderContent() {
               </div>
             </div>
 
+            {/* วิธีรับสินค้า / ที่อยู่จัดส่ง — ปุ่มแก้ไขชิดขวา (ระหว่างรอชำระ) */}
+            {order.order_status !== "cancelled" && (
+              <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">
+                <div className="min-w-0 flex-1">
+                  <p className="mb-1 font-semibold">{t("receiveMethod")}</p>
+                  {order.order_type === "takeaway" ? (
+                    <p className="text-gray-600">
+                      {t("pickupAtStore")}
+                      {order.pickup_point_name ? ` · ${order.pickup_point_name}` : ""}
+                      {order.pickup_date ? ` · ${labels.pickupDate(order.pickup_date)}` : ""}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-gray-600">{t("delivery")}</p>
+                      {addr && (
+                        <p className="mt-0.5 text-gray-600">
+                          {[addr.recipient_name, addr.recipient_phone].filter(Boolean).join(" · ")}
+                          {addr.recipient_name || addr.recipient_phone ? <br /> : null}
+                          {formatStoreAddress(addr)}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+                {canEditCheckout && <EditCheckoutButton orderId={order._id} items={order.items} compact />}
+              </div>
+            )}
+
             {showPickupRow && (
               <div className="flex items-center justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">
                 <div className="min-w-0">
@@ -265,7 +299,7 @@ function OrderContent() {
           )}
         </div>
 
-        {/* ขั้นชำระเงิน (เพิ่งสั่ง · ยังไม่ส่งสลิป) — ชำระภายหลัง (ไปหน้าสั่งซื้อสำเร็จ) / กลับหน้าหลัก */}
+        {/* ขั้นชำระเงิน (เพิ่งสั่ง · ยังไม่ส่งสลิป) — ย้อนกลับไปแก้ที่อยู่/วิธีรับ · ชำระภายหลัง (ไปหน้าสั่งซื้อสำเร็จ) / กลับหน้าหลัก */}
         {isNew && !(order.payment_status === "paid" || order.has_payment) && order.order_status !== "cancelled" ? (
           <div className="flex flex-wrap justify-center gap-2">
             <Link href={`/customer/account/purchases/${order._id}/success`} className={shopButton}>{tf("payLaterBtn")}</Link>

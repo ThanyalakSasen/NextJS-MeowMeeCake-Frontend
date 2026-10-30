@@ -38,7 +38,7 @@ function PasswordInput({ label, value, onChange, autoComplete }: { label: string
   const [show, setShow] = useState(false);
   return (
     <label className="block space-y-1 text-sm">
-      <span className="block font-semibold text-stone-700">{label}</span>
+      <span className="block font-semibold text-stone-700">{label}<span className="ml-0.5 text-red-500" aria-hidden="true">*</span></span>
       <span className="relative flex items-center">
         <input type={show ? "text" : "password"} autoComplete={autoComplete} maxLength={MAX_PASSWORD} value={value}
           onChange={(e) => onChange(e.target.value)} className={`${shopInput} pr-11`} />

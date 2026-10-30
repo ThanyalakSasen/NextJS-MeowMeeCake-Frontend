@@ -4,6 +4,7 @@
 // - รายการห้อง: GET /admin/chats ทุก 8 วิ (ห้องที่มีข้อความใหม่ขึ้นบนสุดเอง) · ค้นหาชื่อ/เบอร์/อีเมล · เฉพาะที่ยังไม่อ่าน
 // - ห้องที่เลือก sync กับ ?id= (ลิงก์จากแจ้งเตือน "แชทใหม่จากลูกค้า" เปิดห้องนั้นตรง ๆ) · ข้อความใหม่ทุก 4 วิ (useChatThread)
 // - เปิดห้อง / มีข้อความใหม่ระหว่างเปิด = อ่านแล้ว · ตอบได้เมื่อมี chats.create
+// - ข้อความของร้าน: แก้ไข (chats.update) / ลบ (chats.delete) · ลบห้องแชทของลูกค้าทั้งห้อง (chats.delete — ปุ่ม "..." ในรายการห้อง)
 // ─────────────────────────────────────────────────────────────
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -12,9 +13,9 @@ import { useTranslations } from "next-intl";
 import { chatsService } from "@/services/chats";
 import { usePermission } from "@/context/PermissionsContext";
 import { useChatThread } from "@/hooks/useChatThread";
-import { alert } from "@/lib/alert";
+import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
-import type { ChatAttachment, ChatMessageQuery } from "@/types/chat";
+import type { ChatAttachment, ChatConversation, ChatMessage, ChatMessageQuery } from "@/types/chat";
 import { CHAT_UNREAD_KEY } from "@/components/shared/layout/ChatUnreadBadge";
 
 export const CHATS_LIST_KEY = ["admin", "chats", "list"] as const;
@@ -73,6 +74,63 @@ export function useChatsViewModel() {
     if (unreadOnOpen > 0) markRead();
   }, [unreadOnOpen, markRead]);
 
+  // ── แก้ไข / ลบข้อความของร้าน ──
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
+  // เปลี่ยนห้อง = เลิกแก้ (ปรับ state ตอน prop เปลี่ยน)
+  const [editRoom, setEditRoom] = useState(selectedId);
+  if (editRoom !== selectedId) {
+    setEditRoom(selectedId);
+    setEditing(null);
+  }
+  const saveEdit = useMutation({
+    mutationFn: ({ id, body }: { id: string; body: string }) => chatsService.editMessage(selectedId!, id, body),
+    onSuccess: (msg) => {
+      thread.append(msg);
+      setEditing(null);
+      void qc.invalidateQueries({ queryKey: CHATS_LIST_KEY });
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("editFailed")),
+  });
+
+  const deleteMessage = async (m: ChatMessage) => {
+    if (!selectedId) return;
+    const ok = await confirmAlert(t("deleteMessageConfirm"), {
+      title: t("deleteMessage"),
+      note: t("deleteMessageNote"),
+      confirmText: t("deleteMessage"),
+      cancelText: t("cancelEdit"),
+      variant: "delete",
+    });
+    if (!ok) return;
+    try {
+      await chatsService.removeMessage(selectedId, m._id);
+      thread.remove(m._id);
+      if (editing?._id === m._id) setEditing(null);
+      refreshCounts();
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("deleteFailed"));
+    }
+  };
+
+  const deleteConversation = async (c: ChatConversation) => {
+    const ok = await confirmAlert(t("deleteRoomConfirm", { name: c.customer?.user_fullname || t("customer") }), {
+      title: t("deleteRoom"),
+      note: t("deleteRoomNote"),
+      confirmText: t("deleteRoom"),
+      cancelText: t("cancelEdit"),
+      variant: "delete",
+    });
+    if (!ok) return;
+    try {
+      await chatsService.removeConversation(c._id);
+      alert.success(t("roomDeleted"));
+      if (selectedId === c._id) select(null);
+      refreshCounts();
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("deleteFailed"));
+    }
+  };
+
   const send = useMutation({
     mutationFn: (body: string) => chatsService.send(selectedId!, body),
     onSuccess: (msg) => {
@@ -95,10 +153,16 @@ export function useChatsViewModel() {
     selectedId,
     select,
     thread,
-    sending: send.isPending,
+    editing,
+    startEdit: (m: ChatMessage) => setEditing(m),
+    cancelEdit: () => setEditing(null),
+    deleteMessage: (m: ChatMessage) => void deleteMessage(m),
+    deleteConversation: (c: ChatConversation) => void deleteConversation(c),
+    sending: send.isPending || saveEdit.isPending,
     sendMessage: async (body: string) => {
       try {
-        await send.mutateAsync(body);
+        if (editing) await saveEdit.mutateAsync({ id: editing._id, body });
+        else await send.mutateAsync(body);
         return true;
       } catch {
         return false;

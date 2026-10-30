@@ -13,11 +13,21 @@ export interface ShippingZoneForm {
   provinces: string[];
 }
 
-export type ShippingZoneErrorKey = "labelRequired" | "labelTooLong" | "feeInvalid" | "provincesRequired";
+export type ShippingZoneErrorKey = "labelRequired" | "labelTooLong" | "feeInvalid" | "feeNumberOnly" | "provincesRequired";
 export type ShippingZoneErrors = Partial<Record<"zone_label" | "fee" | "provinces", ShippingZoneErrorKey>>;
 
 /** โซนที่เหลือทั้งหมด — ไม่มีรายชื่อจังหวัด */
 export const FALLBACK_ZONE: ShippingZoneCode = "D";
+
+/**
+ * ตัวอักษรที่แสดงของโซน — โซน "จังหวัดอื่นทั้งหมด" (เก็บใน DB เป็น D) แสดงเป็นตัวถัดจากโซนสุดท้ายเสมอ
+ * เช่น A,B,C → D · A,B,C,E → F · โซนอื่นแสดงตามรหัสจริง (ไม่เปลี่ยนข้อมูลใน DB)
+ */
+export function displayZoneCode(code: string, zones: Pick<ShippingZone, "zone_code">[]): string {
+  if (code !== FALLBACK_ZONE) return code;
+  const last = zones.reduce((m, z) => (z.zone_code !== FALLBACK_ZONE && z.zone_code.charCodeAt(0) > m ? z.zone_code.charCodeAt(0) : m), 64);
+  return last >= 90 ? code : String.fromCharCode(last + 1);
+}
 
 export const EMPTY_SHIPPING_ZONE_FORM: ShippingZoneForm = { zone_label: "", fee: 0, provinces: [] };
 
@@ -36,7 +46,9 @@ export function validateShippingZone(f: ShippingZoneForm, isNew = false): Shippi
   const label = f.zone_label.trim();
   if (!label) e.zone_label = "labelRequired";
   else if (label.length > 120) e.zone_label = "labelTooLong";
-  if (!Number.isFinite(f.fee) || f.fee < 0 || !isWholeSatang(f.fee)) e.fee = "feeInvalid";
+  // ช่องค่าส่ง: ตัวเลขเท่านั้น และห้ามน้อยกว่า 0 (ว่าง = NaN)
+  if (typeof f.fee !== "number" || !Number.isFinite(f.fee) || f.fee < 0) e.fee = "feeNumberOnly";
+  else if (!isWholeSatang(f.fee)) e.fee = "feeInvalid";
   if (isNew && f.provinces.length === 0) e.provinces = "provincesRequired";
   return e;
 }

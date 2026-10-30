@@ -34,7 +34,7 @@ function PasswordField({
   const [show, setShow] = useState(false);
   return (
     <label className="mb-5 block text-left">
-      <span className="mb-1.5 block text-sm font-semibold text-[#4a342e]">{label}</span>
+      <span className="mb-1.5 block text-sm font-semibold text-[#4a342e]">{label}<span className="ml-0.5 text-red-500" aria-hidden="true">*</span></span>
       <span className="relative flex items-center">
         <input
           type={show ? "text" : "password"}

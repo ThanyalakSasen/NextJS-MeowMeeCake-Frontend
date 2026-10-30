@@ -32,8 +32,18 @@ export function ShippingZoneFormFields({
       </FormField>
 
       <FormField label={t("shippingZones.fields.fee")} required error={errors.fee}>
-        <InputNumber className="!w-full sm:!w-48" min={0} step={10} precision={0} value={form.fee} suffix={t("common.currencySymbol")}
-          onChange={(v) => set("fee", typeof v === "number" ? v : 0)} />
+        {/* ตัวเลขเท่านั้น · ห้ามติดลบ (precision 0 = base InputNumber กันตัวอักษร/ลบ/ทศนิยม) · ลบจนว่าง = แจ้งเตือน ไม่แอบใส่ 0 */}
+        <InputNumber
+          className="!w-full sm:!w-48"
+          min={0}
+          step={10}
+          precision={0}
+          inputMode="numeric"
+          value={Number.isFinite(form.fee) ? form.fee : null}
+          suffix={t("common.currencySymbol")}
+          status={errors.fee ? "error" : undefined}
+          onChange={(v) => set("fee", typeof v === "number" && v >= 0 ? v : Number.NaN)}
+        />
       </FormField>
 
       {code === FALLBACK_ZONE ? (

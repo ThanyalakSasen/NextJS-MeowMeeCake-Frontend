@@ -49,6 +49,7 @@ export const EMPTY_SETTINGS: StoreSettings = {
 
 export const NEW_MARKET: AdminWeeklyMarket = {
   name: "", location: "", days: [], open_time: "17:00", close_time: "22:00", map_url: "", is_active: true, is_main: false,
+  address: { ...EMPTY_SETTINGS },
 };
 
 export function profileToForm(p: AdminStoreProfile): ProfileForm {
@@ -137,7 +138,35 @@ export function validateMarkets(markets: AdminWeeklyMarket[]): FieldError | null
   return null;
 }
 
-/** ค่าที่ส่ง — ตัดช่องว่าง · วันเรียงจันทร์→อาทิตย์ · คง _id เดิม · ส่ง is_main เสมอ (ไม่ส่ง = backend ใช้ค่าเดิม) */
+// ── ที่อยู่ของหน้าร้านแต่ละแห่ง (ช่องเดียวกับที่อยู่ร้าน) ──
+const addressFilled = (a: StoreSettings) => ADDRESS_FIELDS.every((k) => a[k].trim());
+const addressEmpty = (a: StoreSettings) => ADDRESS_FIELDS.every((k) => !a[k].trim()) && a.latitude == null && a.longitude == null;
+
+/** ที่อยู่ของหน้าร้านแห่งนี้ (รายการเก่าที่ยังไม่มี = ช่องว่าง) */
+export const marketAddressOf = (m: AdminWeeklyMarket): StoreSettings => m.address ?? EMPTY_SETTINGS;
+
+/** หน้าร้านหลักใช้ที่อยู่ร้าน (store-settings) เป็นที่อยู่ — ใส่ให้ตอนเปิดแก้/แสดง ให้ตรงกับที่บันทึกจริง */
+export function withStoreAddress(markets: AdminWeeklyMarket[], settings: StoreSettings): AdminWeeklyMarket[] {
+  return markets.map((m) => (m.is_main ? { ...m, address: { ...settings } } : m));
+}
+
+/** ช่องผิดของที่อยู่หน้าร้าน — key = "m<ลำดับ>.<ช่อง>" · หน้าร้านหลักต้องครบ (= ที่อยู่ร้าน) · แห่งอื่นกรอกบ้าง = ต้องครบ · ว่างทั้งหมดได้ (รายการเก่า) */
+export function validateMarketAddresses(markets: AdminWeeklyMarket[], requireMain: boolean): FormErrors {
+  const e: FormErrors = {};
+  markets.forEach((m, i) => {
+    const a = marketAddressOf(m);
+    if (m.is_main ? !requireMain : addressEmpty(a)) return;
+    for (const [k, v] of Object.entries(validateAddress(a))) e[`m${i}.${k}`] = v;
+  });
+  return e;
+}
+
+const trimAddress = (a: StoreSettings): StoreSettings => ({
+  ...a,
+  ...Object.fromEntries(ADDRESS_FIELDS.map((k) => [k, a[k].trim()])),
+});
+
+/** ค่าที่ส่ง — ตัดช่องว่าง · วันเรียงจันทร์→อาทิตย์ · คง _id เดิม · ส่ง is_main เสมอ (ไม่ส่ง = backend ใช้ค่าเดิม) · ที่อยู่ว่างทั้งหมด = null */
 export function marketsPayload(markets: AdminWeeklyMarket[]): AdminWeeklyMarket[] {
   return markets.map((m) => ({
     ...(m._id ? { _id: m._id } : {}),
@@ -149,6 +178,7 @@ export function marketsPayload(markets: AdminWeeklyMarket[]): AdminWeeklyMarket[
     map_url: m.map_url.trim(),
     is_active: m.is_active,
     is_main: m.is_main === true,
+    address: m.address && !addressEmpty(m.address) ? trimAddress(m.address) : null,
   }));
 }
 
@@ -160,15 +190,19 @@ function storeMapUrl(a: StoreSettings): string {
 }
 
 /**
- * หน้าร้านหลักใช้ที่อยู่ร้าน (ด้านบนของการ์ด) เลย — ไม่ต้องกรอกที่ตั้ง/ลิงก์แผนที่ซ้ำ (2026-10-26)
- * ที่ตั้ง = ที่อยู่ร้าน · ลิงก์แผนที่ = จากพิกัดร้าน (ไม่มีพิกัด = คงลิงก์เดิมไว้)
+ * ทุกหน้าร้าน: ที่ตั้ง (ข้อความที่ลูกค้าเห็นที่หน้าติดต่อเรา/จุดรับ) = ที่อยู่แยกช่องที่กรอกครบ · ลิงก์แผนที่ = จากพิกัด
+ * ที่อยู่ยังไม่ครบ (รายการเก่า) = คงที่ตั้ง/ลิงก์เดิมไว้
  */
-export function syncMainMarket(markets: AdminWeeklyMarket[], address: StoreSettings): AdminWeeklyMarket[] {
-  // ยังกรอกที่อยู่ไม่ครบ (หรือพนักงานที่ไม่เห็นที่อยู่ร้าน) = ไม่แตะ
-  if (ADDRESS_FIELDS.some((k) => !address[k].trim())) return markets;
-  const location = formatStoreAddress(address).slice(0, 200);
-  return markets.map((m) => (m.is_main ? { ...m, location, map_url: storeMapUrl(address) || m.map_url } : m));
+export function syncMarketLocations(markets: AdminWeeklyMarket[]): AdminWeeklyMarket[] {
+  return markets.map((m) => {
+    const a = m.address;
+    if (!a || !addressFilled(a)) return m;
+    return { ...m, location: formatStoreAddress(a).slice(0, 200), map_url: storeMapUrl(a) || m.map_url };
+  });
 }
+
+/** ลิงก์แผนที่ของหน้าร้าน (แสดงในการ์ด) — พิกัดก่อน · ไม่มี = ลิงก์ที่บันทึกไว้ */
+export const marketMapUrl = (m: AdminWeeklyMarket): string => (m.address ? storeMapUrl(m.address) : "") || m.map_url;
 
 /** ตรวจไฟล์โลโก้ — คืน key ของ error หรือ null */
 export function logoError(file: File): string | null {

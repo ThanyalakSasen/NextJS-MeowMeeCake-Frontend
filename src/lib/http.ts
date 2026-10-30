@@ -192,8 +192,13 @@ export type HttpReader = Pick<typeof http, "get" | "getList">;
  * ⚠️ ข้อมูลรายคนต้อง no-store เสมอ — ค่าเริ่มต้นฝั่ง server แคช 60 วิ (สำหรับ /catalog/* สาธารณะ)
  */
 export function withConfig(extra: AxiosRequestConfig): HttpReader {
+  // cache: "no-store" + ค่าเริ่มต้นของ client ฝั่ง server (next.revalidate 60) = Next เตือน "only one should be specified"
+  // (axios รวม fetchOptions ของ instance กับของ request) → no-store คู่กับ revalidate 0 ซึ่ง Next ถือว่าไม่ขัดกัน
+  const fo = extra.fetchOptions as { cache?: string; next?: object } | undefined;
+  const fetchOptions = fo?.cache === "no-store" ? { ...fo, next: { ...fo.next, revalidate: 0 } } : fo;
   const merge = (c?: AxiosRequestConfig): AxiosRequestConfig => ({
     ...extra,
+    ...(fetchOptions ? { fetchOptions } : {}),
     ...c,
     headers: { ...(extra.headers as object), ...(c?.headers as object) },
   });

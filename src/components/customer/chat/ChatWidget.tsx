@@ -67,7 +67,7 @@ export default function ChatWidget() {
           role="dialog"
           aria-modal="false"
           aria-label={t("pageTitle")}
-          className="fixed inset-0 z-[65] flex flex-col overflow-hidden bg-white shadow-2xl sm:inset-auto sm:bottom-24 sm:right-5 sm:w-[380px] sm:rounded-2xl sm:border sm:border-[#8C5A3C]/20"
+          className="fixed inset-0 z-[65] flex flex-col overflow-hidden bg-white shadow-2xl sm:inset-auto sm:bottom-24 sm:right-5 sm:w-[460px] lg:w-[520px] sm:rounded-2xl sm:border sm:border-[#8C5A3C]/20"
         >
           <div className="flex items-center gap-3 bg-[#4A342E] px-4 py-3 text-white">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">

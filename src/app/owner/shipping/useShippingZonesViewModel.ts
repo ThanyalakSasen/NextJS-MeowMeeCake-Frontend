@@ -19,7 +19,7 @@ import { useLocalOnlyShipping } from "@/app/customer/hooks/useLocalOnlyShipping"
 import { catalogService } from "@/services/catalog";
 import { sortOptionsThai } from "@/lib/thaiSort";
 import {
-  EMPTY_SHIPPING_ZONE_FORM, provinceOwners, resolveShippingZone, toShippingZoneCreate, toShippingZoneForm, toShippingZoneUpdate,
+  EMPTY_SHIPPING_ZONE_FORM, FALLBACK_ZONE, displayZoneCode, provinceOwners, resolveShippingZone, toShippingZoneCreate, toShippingZoneForm, toShippingZoneUpdate,
   validateShippingZone,
   type ShippingZoneErrors, type ShippingZoneForm,
 } from "./shippingZoneForm";
@@ -48,7 +48,7 @@ export function useShippingZonesViewModel() {
     mutationFn: ({ code, form }: { code: ShippingZoneCode | null; form: ShippingZoneForm }) =>
       code === null ? shippingZonesService.create(toShippingZoneCreate(form)) : shippingZonesService.update(code, toShippingZoneUpdate(code, form)),
     onSuccess: (zone, { code }) => {
-      alert.success(t(code === null ? "shippingZones.added" : "shippingZones.saved", { code: zone.zone_code }));
+      alert.success(t(code === null ? "shippingZones.added" : "shippingZones.saved", { code: displayZoneCode(zone.zone_code, zones) }));
       setEditing(null);
       refresh();
     },
@@ -66,7 +66,7 @@ export function useShippingZonesViewModel() {
   const remove = useMutation({
     mutationFn: (code: ShippingZoneCode) => shippingZonesService.remove(code),
     onSuccess: (_r, code) => {
-      alert.success(t("shippingZones.deleted", { code }));
+      alert.success(t("shippingZones.deleted", { code: displayZoneCode(code, zones), fallback: displayZoneCode(FALLBACK_ZONE, zones) }));
       refresh();
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("shippingZones.deleteFailed")),
@@ -98,6 +98,8 @@ export function useShippingZonesViewModel() {
     zones,
 
     editing,
+    /** ตัวอักษรที่แสดงของโซน (โซนจังหวัดอื่นทั้งหมด = ตัวสุดท้าย) */
+    showCode: (code: string) => displayZoneCode(code, zones),
     /** จังหวัดที่อยู่โซนอื่นแล้ว → ปิดในตัวเลือก (backend ตอบ 409 ถ้าซ้ำ) */
     takenProvinces: editing ? provinceOwners(zones, editing.code) : new Map<string, ShippingZoneCode>(),
     openEdit: (z: ShippingZone) => {

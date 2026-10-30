@@ -27,7 +27,13 @@ export interface ChatMessage {
   body: string;
   attachment: ChatAttachment | null;
   read_at: string | null;
+  /** แก้ไขล่าสุดเมื่อไร (null = ไม่เคยแก้) */
+  edited_at: string | null;
+  /** true = ถูกลบแล้ว (มาจาก polling — เอาออกจากจอ) */
+  deleted: boolean;
   created_at: string;
+  /** เวลาเปลี่ยนล่าสุด (ส่ง/แก้/ลบ/อ่านแล้ว) — cursor ของ polling ?after= */
+  updated_at: string;
 }
 
 export interface ChatCustomer {
@@ -72,10 +78,18 @@ export interface SendChatInput {
   preorder_id?: string;
 }
 
-/** รวมข้อความใหม่เข้ากับของเดิม — ตัดตัวซ้ำด้วย _id แล้วเรียงตามเวลา (polling ?after= คืนข้อความเวลาเท่ากันซ้ำได้) */
+/** แก้ข้อความ — ลูกค้าเปลี่ยน/เอาออกคำสั่งซื้อที่แนบได้ · ร้านแก้ได้แค่ body */
+export interface EditChatInput extends SendChatInput {
+  remove_attachment?: boolean;
+}
+
+/** รวมข้อความใหม่เข้ากับของเดิม — ตัดตัวซ้ำด้วย _id (ตัวใหม่แทนตัวเดิม = เห็นที่แก้ไข) · ที่ถูกลบเอาออก · เรียงตามเวลา */
 export function mergeChatMessages(prev: ChatMessage[], next: ChatMessage[]): ChatMessage[] {
   if (next.length === 0) return prev;
   const byId = new Map(prev.map((m) => [m._id, m]));
-  for (const m of next) byId.set(m._id, m);
+  for (const m of next) {
+    if (m.deleted) byId.delete(m._id);
+    else byId.set(m._id, m);
+  }
   return [...byId.values()].sort((a, b) => a.created_at.localeCompare(b.created_at) || a._id.localeCompare(b._id));
 }

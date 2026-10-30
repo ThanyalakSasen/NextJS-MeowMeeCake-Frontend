@@ -34,7 +34,7 @@ const PAGE_SIZE = 10;
 /** ปุ่มรีวิวอยู่แถวเดียวกับปุ่มอื่น จึงจัดกึ่งกลางแนวตั้งแทน self-start (เหมือนประวัติพรีออเดอร์) */
 const REVIEW_PILL_INLINE = REVIEW_PILL.replace("self-start", "self-center");
 const actionLink =
-  "whitespace-nowrap rounded-xl border border-[#8C5A3C]/30 bg-white px-4 py-2 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white";
+  "inline-flex items-center justify-center whitespace-nowrap rounded-xl border border-[#8C5A3C]/30 bg-white px-4 py-2 text-xs font-bold text-[#4A342E] shadow-md shadow-[#4A342E]/20 transition-all duration-200 hover:bg-[#4A342E] hover:text-white";
 
 export default function PurchasesPage() {
   const t = useTranslations("shop.orders");
@@ -194,8 +194,9 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
         )}
       </div>
 
+      {/* ข้อมูลซ้ายหดได้ (min-w-0 flex-1) · ปุ่มขวาอยู่แถวเดียวไม่ถูกบีบจนซ้อนกัน (จอกลาง) — จอแคบปุ่มลงบรรทัดใหม่ชิดขวา */}
       <div className="flex flex-col justify-between gap-3 border-t border-stone-100 pt-4 sm:flex-row sm:items-center">
-        <div className="space-y-0.5">
+        <div className="min-w-0 flex-1 space-y-0.5">
           <p className="m-0 text-xs text-stone-500">{order.order_type === "takeaway" ? t("takeaway") : t("delivery")}</p>
           {order.order_type === "takeaway" && (order.pickup_date || order.pickup_point_name) && (
             <p className="m-0 text-xs text-stone-700">
@@ -221,7 +222,7 @@ function OrderCard({ order, detail }: { order: ShopOrder; detail: ShopOrder | nu
           )}
         </div>
         {/* ปุ่มรีวิวอยู่แถวเดียวกับปุ่มอื่น — ตำแหน่งเดียวกับประวัติพรีออเดอร์ */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 lg:flex-nowrap">
           <ReviewLink kind="order" doc={order} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={REVIEW_PILL_INLINE} reviewedClassName={REVIEWED_PILL} />
           {/* สำเร็จแล้ว = ซื้ออีกครั้งหลังรีวิวครบเท่านั้น · ยกเลิกแล้ว = แสดงเลย */}
           {detail && <BuyAgainAfterReview order={order} items={detail.items} className={actionLink} />}

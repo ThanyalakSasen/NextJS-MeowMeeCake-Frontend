@@ -179,8 +179,9 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
         )}
       </div>
 
+      {/* ข้อมูลซ้ายหดได้ (min-w-0 flex-1) · ปุ่มขวาอยู่แถวเดียวไม่ถูกบีบจนซ้อนกัน (จอกลาง) — จอแคบปุ่มลงบรรทัดใหม่ชิดขวา */}
       <div className="flex flex-col justify-between gap-3 border-t border-stone-100 pt-4 sm:flex-row sm:items-center">
-        <div className="space-y-0.5">
+        <div className="min-w-0 flex-1 space-y-0.5">
           <p className="m-0 text-xs text-stone-500">
             {p.order_type === "takeaway"
               ? `${p.pickup_date ? t("pickupOn", { date: labels.pickupDate(p.pickup_date) }) : p.round ? t("pickupFrom", { date: thaiDate(p.round.pickup_date, false, locale) }) : t("pickupSelf")}${p.pickup_point_name ? ` · ${p.pickup_point_name}` : ""}`
@@ -197,7 +198,7 @@ function PreorderCard({ preorder: p, detail }: { preorder: ShopPreorder; detail:
           ) : null}
           {p.order_status === "cancelled" && p.payment_status === "paid" && <span className="block text-xs font-medium text-amber-600">{to("awaitRefund")}</span>}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 lg:flex-nowrap">
           <ReviewLink kind="preorder" doc={p} itemIds={detail?.items.map((it) => it._id)} href={`${href}/review`} className={REVIEW_PILL_INLINE} reviewedClassName={REVIEWED_PILL} />
           <Link href={href} className={actionLink}>{to("viewDetail")}</Link>
         </div>

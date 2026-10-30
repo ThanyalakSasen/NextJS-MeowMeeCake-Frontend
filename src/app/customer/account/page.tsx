@@ -8,6 +8,7 @@
 //   บัญชีที่สมัครด้วย LINE แล้วไม่มีอีเมล: POST /shop/me/email (ตั้งอีเมลจริง + ส่งลิงก์ยืนยัน)
 //   บัญชีพร้อมเพย์รับเงินคืน: PATCH /shop/me { refund_promptpay_id/name } — เว้นว่างเลข = ลบ (BACKLOG4 U9 · backend Q-BE12)
 // ─────────────────────────────────────────────────────────────
+import SearchPicker from "@/components/customer/SearchPicker";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -270,7 +271,7 @@ function ProfileSection({ profile, autoEdit = false }: { profile: ShopProfile; a
       >
         <div className="flex flex-col gap-3 text-sm">
           <label className="space-y-1">
-            <span className="block font-semibold text-stone-700">{t("fullName")}</span>
+            <span className="block font-semibold text-stone-700">{t("fullName")}<span className="ml-0.5 text-red-500" aria-hidden="true">*</span></span>
             <input className={shopInput} maxLength={120} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </label>
           <label className="space-y-1">
@@ -444,7 +445,7 @@ function LineSection({ authProvider }: { authProvider: ShopProfile["auth_provide
   );
 }
 
-// ── วัตถุดิบที่แพ้ — เพิ่ม/ลบแล้วบันทึกทันที ──
+// ── วัตถุดิบที่แพ้ — ค้นหาแล้วเพิ่ม / ลบ บันทึกทันที ──
 function AllergySection({ profile }: { profile: ShopProfile }) {
   const t = useTranslations("shop.account");
   const tc = useTranslations("shop.common");
@@ -465,11 +466,18 @@ function AllergySection({ profile }: { profile: ShopProfile }) {
     <section className={section}>
       <h2 className="m-0 text-base font-bold text-stone-900">{t("allergies")}</h2>
       <p className="m-0 mb-4 mt-1 text-xs text-stone-500">{t("allergyHint")}</p>
-      <select className={`${shopInput} mb-3 max-w-sm`} value="" disabled={save.isPending} aria-label={t("addAllergy")}
-        onChange={(e) => e.target.value && save.mutate([...list, e.target.value])}>
-        <option value="" disabled>{ingredientsQ.isLoading ? tc("loadingDots") : t("addAllergyOption")}</option>
-        {options.map((n) => <option key={n} value={n}>{n}</option>)}
-      </select>
+      <div className="mb-3 max-w-sm">
+        <SearchPicker
+          options={options}
+          loading={ingredientsQ.isLoading}
+          disabled={save.isPending}
+          onPick={(n) => save.mutate([...list, n])}
+          placeholder={ingredientsQ.isLoading ? tc("loadingDots") : t("searchAllergy")}
+          label={t("addAllergy")}
+          emptyText={t("allergyNoMatch")}
+          inputClassName={`${shopInput} w-full`}
+        />
+      </div>
       {list.length === 0 ? (
         <p className="m-0 rounded-xl border border-dashed border-stone-300 px-3 py-4 text-center text-xs text-stone-500">{t("noAllergies")}</p>
       ) : (

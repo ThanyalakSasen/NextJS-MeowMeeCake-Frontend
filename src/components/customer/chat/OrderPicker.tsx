@@ -2,6 +2,7 @@
 // ─────────────────────────────────────────────────────────────
 // ป๊อปอัพเลือกคำสั่งซื้อ/พรีออเดอร์ของตัวเองเพื่อแนบในแชท — 2 แท็บ · 20 รายการล่าสุดของแต่ละแบบ (ใหม่สุดก่อน)
 // โหลดเมื่อเปิดป๊อปอัพครั้งแรกเท่านั้น (cache ร่วมกับหน้าประวัติไม่ได้ — คนละ params)
+// selectedId = คำสั่งซื้อที่แนบอยู่ตอนแก้ข้อความ (ไฮไลต์ให้เห็นว่าอันไหนแนบอยู่ — เลือกอันอื่นแทนได้)
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -27,7 +28,17 @@ interface Row extends PickedOrder {
 
 const PICK_LIMIT = 20;
 
-export default function OrderPicker({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (o: PickedOrder) => void }) {
+export default function OrderPicker({
+  open,
+  onClose,
+  onPick,
+  selectedId = null,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onPick: (o: PickedOrder) => void;
+  selectedId?: string | null;
+}) {
   const t = useTranslations("chat");
   const ts = useTranslations("shop.orderStatus");
   const locale = useLocale();
@@ -102,11 +113,17 @@ export default function OrderPicker({ open, onClose, onPick }: { open: boolean; 
                 <button
                   type="button"
                   onClick={() => onPick({ kind: r.kind, id: r.id, doc_no: r.doc_no, total_amount: r.total_amount })}
-                  className="flex w-full items-center gap-3 rounded-xl border border-[#8C5A3C]/15 bg-white px-3 py-2.5 text-left transition hover:border-[#8C5A3C]/40 hover:bg-[#FAF6F0]"
+                  aria-current={r.id === selectedId ? "true" : undefined}
+                  className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition hover:border-[#8C5A3C]/40 hover:bg-[#FAF6F0] ${
+                    r.id === selectedId ? "border-[#8C5A3C] bg-[#FAF6F0]" : "border-[#8C5A3C]/15 bg-white"
+                  }`}
                 >
                   <Icon size={20} className="shrink-0 text-[#8C5A3C]" aria-hidden="true" />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold text-[#4A342E]">{r.doc_no}</span>
+                    <span className="block truncate text-sm font-bold text-[#4A342E]">
+                      {r.doc_no}
+                      {r.id === selectedId && <span className="ml-2 text-xs font-semibold text-[#8C5A3C]">{t("attachedNow")}</span>}
+                    </span>
                     <span className="block text-xs text-stone-500">
                       {dateOf(r.created_at)} · {ts(r.status as Parameters<typeof ts>[0])}
                     </span>

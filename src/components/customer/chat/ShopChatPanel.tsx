@@ -5,22 +5,23 @@
 // - ปุ่ม 🧾 = เลือกคำสั่งซื้อ/พรีออเดอร์ของตัวเองแนบในแชท (ป๊อปอัพ OrderPicker) · ส่งได้ทั้งแนบอย่างเดียวหรือแนบ + ข้อความ
 // - initialAttach (?order= / ?preorder= จากหน้ารายละเอียดคำสั่งซื้อ) = เลือกแนบไว้ให้ก่อน
 // - เปิดอยู่ + มีข้อความใหม่จากร้าน = อ่านแล้วทันที (ตัวเลขบน Navbar หาย)
+// - ข้อความของตัวเอง: ปุ่ม "..." → แก้ไข (ช่องพิมพ์เข้าโหมดแก้ · เปลี่ยน/เอาออกคำสั่งซื้อที่แนบได้ — เปิดรายการคำสั่งซื้อให้เลือกแทน) / ลบ
 // ─────────────────────────────────────────────────────────────
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, Package, ReceiptText, X } from "lucide-react";
+import { MessageCircle, Package, RefreshCw, ReceiptText, X } from "lucide-react";
 import { shopChatService } from "@/services/shopChat";
 import { shopOrdersService } from "@/services/shopOrders";
 import { shopPreordersService } from "@/services/shopPreorders";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { useChatThread } from "@/hooks/useChatThread";
 import { LOGIN_PATH } from "@/constants/auth";
-import { alert } from "@/lib/alert";
+import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
-import type { ChatAttachment, ChatAttachmentKind } from "@/types/chat";
+import type { ChatAttachment, ChatAttachmentKind, ChatMessage, EditChatInput } from "@/types/chat";
 import ChatMessageList from "@/components/shared/chat/ChatMessageList";
 import ChatComposer from "@/components/shared/chat/ChatComposer";
 import { shopChatUnreadKey } from "@/app/customer/lib/shopQueries";
@@ -117,6 +118,58 @@ function ChatBody({
     setInitialDismissed(true);
   };
 
+  // ── แก้ไขข้อความของตัวเอง ──
+  // editAttach: คำสั่งซื้อที่จะแนบหลังแก้ (เริ่มจากของเดิม · null = เอาออก)
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
+  const [editAttach, setEditAttach] = useState<PickedOrder | null>(null);
+  const startEdit = (m: ChatMessage) => {
+    setEditing(m);
+    const a = m.attachment;
+    setEditAttach(a ? { kind: a.kind, id: a.ref_id, doc_no: a.doc_no, total_amount: a.total_amount } : null);
+    // ข้อความที่มีแต่คำสั่งซื้อแนบ = เปิดรายการคำสั่งซื้อให้เลือกอันใหม่แทนทันที
+    if (a && !m.body) setPickerOpen(true);
+  };
+  const cancelEdit = () => {
+    setEditing(null);
+    setEditAttach(null);
+  };
+
+  const saveEdit = useMutation({
+    mutationFn: ({ id, body, original }: { id: string; body: string; original: ChatAttachment | null }) => {
+      const input: EditChatInput = { body };
+      if (!editAttach) {
+        if (original) input.remove_attachment = true;
+      } else if (!original || original.ref_id !== editAttach.id || original.kind !== editAttach.kind) {
+        if (editAttach.kind === "order") input.order_id = editAttach.id;
+        else input.preorder_id = editAttach.id;
+      }
+      return shopChatService.edit(id, input);
+    },
+    onSuccess: (msg) => {
+      thread.append(msg);
+      cancelEdit();
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("editFailed")),
+  });
+
+  const deleteMessage = async (m: ChatMessage) => {
+    const ok = await confirmAlert(t("deleteMessageConfirm"), {
+      title: t("deleteMessage"),
+      note: t("deleteMessageNote"),
+      confirmText: t("deleteMessage"),
+      cancelText: t("cancelEdit"),
+      variant: "delete",
+    });
+    if (!ok) return;
+    try {
+      await shopChatService.remove(m._id);
+      thread.remove(m._id);
+      if (editing?._id === m._id) cancelEdit();
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("deleteFailed"));
+    }
+  };
+
   const send = useMutation({
     mutationFn: (body: string) =>
       shopChatService.send({
@@ -131,7 +184,9 @@ function ChatBody({
       alert.error(isApiError(e) && e.status === 429 ? t("rateLimited") : isApiError(e) ? e.message : t("sendFailed")),
   });
 
-  const AttachIcon = attachment?.kind === "preorder" ? Package : ReceiptText;
+  // โหมดแก้ไข = ชิปแสดงคำสั่งซื้อของข้อความที่แก้ (เปลี่ยนได้) แทนชิปของข้อความใหม่
+  const chip = editing ? editAttach : attachment;
+  const AttachIcon = chip?.kind === "preorder" ? Package : ReceiptText;
 
   return (
     <div className={`flex flex-col overflow-hidden bg-[#FAF6F0]/50 ${compact ? "" : "rounded-2xl border border-[#8C5A3C]/15"}`}>
@@ -158,6 +213,9 @@ function ChatBody({
           hasMore={thread.hasMore}
           loadingOlder={thread.loadingOlder}
           onLoadOlder={() => void thread.loadOlder()}
+          onEditMessage={startEdit}
+          onDeleteMessage={(m) => void deleteMessage(m)}
+          editingId={editing?._id ?? null}
           empty={
             <div className="m-auto max-w-xs py-8 text-center">
               <MessageCircle className="mx-auto mb-2 h-8 w-8 text-[#8C5A3C]/60" aria-hidden="true" />
@@ -169,12 +227,15 @@ function ChatBody({
       )}
 
       <ChatComposer
-        sending={send.isPending}
+        sending={send.isPending || saveEdit.isPending}
         disabled={thread.status !== "ready"}
-        canSendEmpty={!!attachment}
+        canSendEmpty={!!chip}
+        editing={editing ? { key: editing._id, text: editing.body } : null}
+        onCancelEdit={cancelEdit}
         onSend={async (body) => {
           try {
-            await send.mutateAsync(body);
+            if (editing) await saveEdit.mutateAsync({ id: editing._id, body, original: editing.attachment });
+            else await send.mutateAsync(body);
             return true;
           } catch {
             return false;
@@ -193,16 +254,26 @@ function ChatBody({
           </button>
         }
         above={
-          attachment && (
+          chip && (
             <div className="mb-2 flex items-center gap-2 rounded-xl border border-[#8C5A3C]/20 bg-[#FAF6F0] px-3 py-2 text-sm">
               <AttachIcon size={16} className="shrink-0 text-[#8C5A3C]" aria-hidden="true" />
               <span className="min-w-0 flex-1 truncate">
-                <span className="font-semibold">{attachment.doc_no}</span>
-                <span className="text-stone-500"> · {baht(attachment.total_amount)}</span>
+                <span className="font-semibold">{chip.doc_no}</span>
+                <span className="text-stone-500"> · {baht(chip.total_amount)}</span>
               </span>
+              {editing && (
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen(true)}
+                  className="flex h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-semibold text-[#8C5A3C] hover:bg-white"
+                >
+                  <RefreshCw size={14} aria-hidden="true" />
+                  {t("changeAttach")}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={clearAttachment}
+                onClick={editing ? () => setEditAttach(null) : clearAttachment}
                 aria-label={t("removeAttach")}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-stone-500 hover:bg-white"
               >
@@ -217,9 +288,11 @@ function ChatBody({
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         onPick={(o) => {
-          setPicked(o);
+          if (editing) setEditAttach(o);
+          else setPicked(o);
           setPickerOpen(false);
         }}
+        selectedId={editing ? editAttach?.id ?? null : null}
       />
     </div>
   );

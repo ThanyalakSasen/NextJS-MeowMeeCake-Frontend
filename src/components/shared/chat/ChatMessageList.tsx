@@ -4,11 +4,12 @@
 // viewer = ฝั่งที่กำลังดู: ข้อความของฝั่งตัวเองอยู่ขวา (สีน้ำตาล) · อีกฝั่งอยู่ซ้าย (สีขาว)
 // คั่นด้วยวันที่ · ข้อความล่าสุดของฝั่งตัวเองที่อีกฝั่งอ่านแล้วขึ้น "อ่านแล้ว"
 // เลื่อนลงล่างสุดเองเมื่อมีข้อความใหม่ — ยกเว้นผู้ใช้เลื่อนขึ้นไปอ่านของเก่าอยู่ (ไม่กระชากจอ)
+// ข้อความของฝั่งตัวเองมีปุ่ม "..." (ข้างเวลา) → แก้ไข / ลบ (ส่ง onEditMessage / onDeleteMessage มา = เปิดใช้) · แก้แล้วขึ้น "แก้ไขแล้ว"
 // ─────────────────────────────────────────────────────────────
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Package, ReceiptText } from "lucide-react";
+import { MoreHorizontal, Package, Pencil, ReceiptText, Trash2 } from "lucide-react";
 import type { ChatAttachment, ChatMessage, ChatSenderType } from "@/types/chat";
 
 const baht = (n: number) => `฿${n.toLocaleString("th-TH", { maximumFractionDigits: 2 })}`;
@@ -27,7 +28,16 @@ export default function ChatMessageList({
   onLoadOlder,
   empty,
   className = "",
+  onEditMessage,
+  onDeleteMessage,
+  editingId = null,
 }: {
+  /** ส่งมา = ข้อความของฝั่งตัวเองมีเมนู "แก้ไข" */
+  onEditMessage?: (m: ChatMessage) => void;
+  /** ส่งมา = ข้อความของฝั่งตัวเองมีเมนู "ลบ" (หน้ายืนยันเอง) */
+  onDeleteMessage?: (m: ChatMessage) => void;
+  /** ข้อความที่กำลังแก้อยู่ (ไฮไลต์) */
+  editingId?: string | null;
   messages: ChatMessage[];
   viewer: ChatSenderType;
   /** ลิงก์ไปหน้ารายละเอียดของคำสั่งซื้อที่แนบ (ต่างกันระหว่างหน้าร้าน/หลังร้าน) */
@@ -98,7 +108,11 @@ export default function ChatMessageList({
               <span className="mx-auto my-2 rounded-full bg-stone-100 px-3 py-0.5 text-xs text-stone-600">{day(m.created_at)}</span>
             )}
             <div className={`flex items-end gap-1.5 ${mine ? "flex-row-reverse" : ""} ${grouped ? "" : "mt-1.5"}`}>
-              <div className={`flex max-w-[80%] flex-col gap-1.5 sm:max-w-[70%] ${mine ? "items-end" : "items-start"}`}>
+              <div
+                className={`flex max-w-[80%] flex-col gap-1.5 sm:max-w-[70%] ${mine ? "items-end" : "items-start"} ${
+                  editingId === m._id ? "rounded-2xl ring-2 ring-[#8C5A3C]/40 ring-offset-2" : ""
+                }`}
+              >
                 {m.attachment && (
                   <AttachmentCard
                     a={m.attachment}
@@ -117,8 +131,19 @@ export default function ChatMessageList({
                   </p>
                 )}
               </div>
-              <span className="shrink-0 pb-0.5 text-[11px] leading-tight text-stone-500">
-                {m._id === lastReadMine && <span className="block">{t("read")}</span>}
+              <span className={`flex shrink-0 flex-col pb-0.5 text-[11px] leading-tight text-stone-500 ${mine ? "items-end" : "items-start"}`}>
+                {mine && (onEditMessage || onDeleteMessage) && (
+                  <MessageMenu
+                    onEdit={onEditMessage ? () => onEditMessage(m) : undefined}
+                    onDelete={onDeleteMessage ? () => onDeleteMessage(m) : undefined}
+                  />
+                )}
+                {/* ป้ายสถานะแสดงแค่อันเดียว: อ่านแล้ว (ถ้ามี) มาก่อน · ไม่งั้นแก้ไขแล้ว */}
+                {m._id === lastReadMine ? (
+                  <span className="block">{t("read")}</span>
+                ) : (
+                  m.edited_at && <span className="block">{t("edited")}</span>
+                )}
                 {time(m.created_at)}
               </span>
             </div>
@@ -126,6 +151,75 @@ export default function ChatMessageList({
         );
       })}
     </div>
+  );
+}
+
+/** ปุ่ม "..." ของข้อความตัวเอง → แก้ไข / ลบ (ปิดเมื่อคลิกนอกเมนูหรือกด Esc) */
+function MessageMenu({ onEdit, onDelete }: { onEdit?: () => void; onDelete?: () => void }) {
+  const t = useTranslations("chat");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  const item = "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition";
+  return (
+    <span ref={ref} className="relative mb-0.5">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label={t("messageMenu")}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex h-6 w-6 items-center justify-center rounded-full text-stone-500 transition hover:bg-stone-200 hover:text-stone-800"
+      >
+        <MoreHorizontal size={16} aria-hidden="true" />
+      </button>
+      {open && (
+        <span role="menu" className="absolute bottom-7 right-0 z-20 flex w-32 flex-col rounded-xl border border-stone-200 bg-white p-1 shadow-lg">
+          {onEdit && (
+            <button
+              type="button"
+              role="menuitem"
+              className={`${item} text-stone-700 hover:bg-stone-100`}
+              onClick={() => {
+                setOpen(false);
+                onEdit();
+              }}
+            >
+              <Pencil size={14} aria-hidden="true" />
+              {t("editMessage")}
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              role="menuitem"
+              className={`${item} text-red-600 hover:bg-red-50`}
+              onClick={() => {
+                setOpen(false);
+                onDelete();
+              }}
+            >
+              <Trash2 size={14} aria-hidden="true" />
+              {t("deleteMessage")}
+            </button>
+          )}
+        </span>
+      )}
+    </span>
   );
 }
 

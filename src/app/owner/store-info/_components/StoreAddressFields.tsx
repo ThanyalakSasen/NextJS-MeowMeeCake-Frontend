@@ -8,15 +8,17 @@ import type { StoreSettings } from "@/types/storeAdmin";
 import { ADDRESS_FIELDS } from "../storeInfoForm";
 import { CoordinateInput } from "./CoordinateInput";
 
-export function StoreAddressFields({ address, editable, onField, onCoordinates, onResolveShortLink, fieldError, embedded = false }: {
+export function StoreAddressFields({ address, editable, onField, onCoordinates, onResolveShortLink, fieldError, embedded = false, required = true }: {
   address: StoreSettings;
   editable: boolean;
   onField: <K extends keyof StoreSettings>(key: K, value: StoreSettings[K]) => void;
   onCoordinates: (lat: number | null, lng: number | null) => void;
   onResolveShortLink: (url: string) => Promise<{ lat: number; lng: number }>;
   fieldError: (name: string) => string | undefined;
-  /** อยู่ในฟอร์มหน้าร้านหลัก — ไม่มีหัวข้อ "ที่อยู่ร้าน" แยก (ที่อยู่ = ที่ตั้งหน้าร้านหลัก) */
+  /** อยู่ในการ์ดหน้าร้าน — ไม่มีหัวข้อ "ที่อยู่ร้าน" แยก */
   embedded?: boolean;
+  /** แสดงเครื่องหมายบังคับกรอก (หน้าร้านหลัก = ที่อยู่ร้าน ต้องครบ) */
+  required?: boolean;
 }) {
   const t = useTranslations();
   return (
@@ -30,7 +32,7 @@ export function StoreAddressFields({ address, editable, onField, onCoordinates, 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {ADDRESS_FIELDS.map((key) => (
           <div key={key} className={key === "house_no" ? "sm:col-span-2" : undefined}>
-            <FormField label={t(`storeInfo.address.${key}`)} required error={fieldError(key)}>
+            <FormField label={t(`storeInfo.address.${key}`)} required={required} error={fieldError(key)}>
               <Input
                 value={address[key]}
                 disabled={!editable}

@@ -16,22 +16,14 @@ import { isApiError } from "@/types/api";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import AccountSideMenu from "@/components/customer/AccountSideMenu";
-import { shopButton, shopButtonPrimary, shopInput, shopPage } from "@/components/customer/shopStyles";
+import { shopButton, shopButtonPrimary, shopPage } from "@/components/customer/shopStyles";
+import { ADDRESS_FIELDS, AddressInputs, useAddressErrors, useTouched } from "@/components/customer/AddressInputs";
 import { shopAddressesKey } from "../../lib/shopQueries";
 import { formatStoreAddress } from "../../lib/storeFormat";
 
-const ZIP_RE = /^\d{5}$/;
 type Form = Required<ShopAddressInput>;
 const EMPTY: Form = { house_no: "", sub_district: "", district: "", province: "", zip_code: "", is_default: false };
-
-/** labelKey/placeholderKey = i18n shop.address (placeholder ไม่มี key = ใช้ label) */
-const FIELDS: { key: Exclude<keyof Form, "is_default">; labelKey: "houseNoFull" | "subDistrict" | "district" | "province" | "zipCode"; placeholderKey?: "houseNoPlaceholder"; placeholder?: string; max: number; wide?: boolean }[] = [
-  { key: "house_no", labelKey: "houseNoFull", placeholderKey: "houseNoPlaceholder", max: 200, wide: true },
-  { key: "sub_district", labelKey: "subDistrict", max: 120 },
-  { key: "district", labelKey: "district", max: 120 },
-  { key: "province", labelKey: "province", max: 120 },
-  { key: "zip_code", labelKey: "zipCode", placeholder: "40000", max: 5 },
-];
+// ช่องกรอก + แจ้งเตือนใต้ช่อง + จังหวัดแบบเลือกจาก 77 จังหวัด: components/customer/AddressInputs
 
 const addressText = (a: ShopAddress) => formatStoreAddress(a);
 
@@ -52,11 +44,18 @@ function AddressBookContent() {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: shopAddressesKey, queryFn: shopAddressesService.list });
   const [editing, setEditing] = useState<{ id: string | null; form: Form } | null>(null);
+  const touched = useTouched();
+  const errorsOf = useAddressErrors();
+  /** เปิดฟอร์ม (เพิ่ม/แก้) = ล้างแจ้งเตือนของรอบก่อน */
+  const openForm = (id: string | null, form: Form) => {
+    touched.reset();
+    setEditing({ id, form });
+  };
   const refresh = () => qc.invalidateQueries({ queryKey: shopAddressesKey });
 
   const save = useMutation({
     mutationFn: ({ id, form }: { id: string | null; form: Form }) => {
-      const body = { ...form, ...Object.fromEntries(FIELDS.map((f) => [f.key, form[f.key].trim()])) } as Form;
+      const body = { ...form, ...Object.fromEntries(ADDRESS_FIELDS.map((f) => [f.key, form[f.key].trim()])) } as Form;
       return id ? shopAddressesService.update(id, body) : shopAddressesService.create(body);
     },
     onSuccess: (_r, v) => {
@@ -96,13 +95,8 @@ function AddressBookContent() {
 
   const addresses = q.data ?? [];
   const form = editing?.form ?? EMPTY;
-  const problem = !editing
-    ? null
-    : FIELDS.some((f) => !form[f.key].trim())
-      ? t("fillAll")
-      : !ZIP_RE.test(form.zip_code.trim())
-        ? t("zipInvalid")
-        : null;
+  const errors = editing ? errorsOf(form) : {};
+  const hasErrors = Object.keys(errors).length > 0;
   const setField = (key: keyof Form, value: string | boolean) =>
     setEditing((e) => (e ? { ...e, form: { ...e.form, [key]: value } } : e));
 
@@ -118,7 +112,7 @@ function AddressBookContent() {
                 <MapPin className="h-6 w-6 text-[#4A342E]" aria-hidden="true" />
                 {t("title")}
               </h1>
-              <button type="button" className={`${shopButtonPrimary} self-start sm:self-auto`} onClick={() => setEditing({ id: null, form: { ...EMPTY, is_default: addresses.length === 0 } })}>
+              <button type="button" className={`${shopButtonPrimary} self-start sm:self-auto`} onClick={() => openForm(null, { ...EMPTY, is_default: addresses.length === 0 })}>
                 <Plus className="h-4 w-4" /> {t("addNew")}
               </button>
             </header>
@@ -152,7 +146,7 @@ function AddressBookContent() {
                         </button>
                       )}
                       <button type="button" aria-label={t("editAria")} className={`${shopButton} !px-3 text-xs`}
-                        onClick={() => setEditing({ id: a._id, form: { house_no: a.house_no, sub_district: a.sub_district, district: a.district, province: a.province, zip_code: a.zip_code, is_default: a.is_default } })}>
+                        onClick={() => openForm(a._id, { house_no: a.house_no, sub_district: a.sub_district, district: a.district, province: a.province, zip_code: a.zip_code, is_default: a.is_default })}>
                         <Pencil className="h-3.5 w-3.5" /> {t("edit")}
                       </button>
                       <button type="button" aria-label={t("deleteAria")} disabled={remove.isPending} onClick={() => void onDelete(a)}
@@ -172,31 +166,32 @@ function AddressBookContent() {
         open={!!editing}
         title={editing?.id ? t("editTitle") : t("addNew")}
         onCancel={() => setEditing(null)}
-        onOk={() => editing && !problem && save.mutate(editing)}
+        onOk={() => {
+          // กดบันทึกตอนยังกรอกไม่ครบ = แสดงแจ้งเตือนใต้ทุกช่องที่ผิด
+          if (!editing) return;
+          if (hasErrors) return touched.revealAll();
+          save.mutate(editing);
+        }}
         okText={save.isPending ? tc("saving") : t("saveBtn")}
         cancelText={tc("cancel")}
-        okButtonProps={{ disabled: !!problem || save.isPending }}
+        okButtonProps={{ disabled: save.isPending }}
         destroyOnHidden
       >
         <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-          {FIELDS.map((f) => (
-            <label key={f.key} className={`space-y-1 ${f.wide ? "sm:col-span-2" : ""}`}>
-              <span className="block text-xs font-semibold text-stone-600">{t(f.labelKey)}</span>
-              <input
-                className={shopInput}
-                value={form[f.key]}
-                maxLength={f.max}
-                placeholder={f.placeholderKey ? t(f.placeholderKey) : (f.placeholder ?? t(f.labelKey))}
-                inputMode={f.key === "zip_code" ? "numeric" : undefined}
-                onChange={(e) => setField(f.key, f.key === "zip_code" ? e.target.value.replace(/\D/g, "") : e.target.value)}
-              />
-            </label>
-          ))}
+          <div className="sm:col-span-2">
+            <AddressInputs
+              values={form}
+              onChange={setField}
+              errors={errors}
+              visible={touched.visible}
+              onTouch={touched.touch}
+              housePlaceholder={t("houseNoPlaceholder")}
+            />
+          </div>
           <label className="flex items-center gap-2 sm:col-span-2">
             <input type="checkbox" className="h-4 w-4 accent-[#4A342E]" checked={form.is_default} onChange={(e) => setField("is_default", e.target.checked)} />
             {t("setDefaultAuto")}
           </label>
-          {problem && <p className="m-0 text-xs text-red-600 sm:col-span-2">{problem}</p>}
           <p className="m-0 text-xs text-stone-500 sm:col-span-2">{t("recipientHint")}</p>
         </div>
       </Modal>

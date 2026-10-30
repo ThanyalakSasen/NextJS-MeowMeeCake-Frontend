@@ -6,8 +6,8 @@
 // ─────────────────────────────────────────────────────────────
 import { useTranslations } from "next-intl";
 import { MapPinIcon } from "@heroicons/react/24/outline";
-import type { AdminWeeklyMarket, StoreSettings } from "@/types/storeAdmin";
-import { DAY_ORDER, SOCIAL_KEYS, type ProfileForm } from "../storeInfoForm";
+import type { AdminWeeklyMarket } from "@/types/storeAdmin";
+import { DAY_ORDER, SOCIAL_KEYS, marketMapUrl, type ProfileForm } from "../storeInfoForm";
 import type { StaffOption } from "../useStoreInfoViewModel";
 import { formatStoreAddress } from "@/app/customer/lib/storeFormat";
 
@@ -79,56 +79,48 @@ export function PromptpayRead({ profile }: { profile: ProfileForm }) {
 }
 
 /**
- * หน้าร้านประจำสัปดาห์ — การ์ดเล็กต่อแห่ง: ชื่อ (+ หน้าร้านหลัก / ซ่อนอยู่) · วัน · เวลา · สถานที่ · แผนที่
- * address (เจ้าของร้าน) = ที่อยู่ร้านกับหน้าร้านหลักเป็นข้อมูลชุดเดียวกัน (2026-10-26) — หน้าร้านหลักแสดงที่อยู่ร้าน + หมุดแผนที่ของร้าน
+ * หน้าร้านประจำสัปดาห์ — การ์ดหน้าตาเดียวกันทุกแห่ง: ชื่อ (+ หน้าร้านหลัก / ซ่อนอยู่) · วัน · เวลา · ที่อยู่ · แผนที่
+ * ที่อยู่ = ที่อยู่แยกช่องที่กรอกไว้ (หน้าร้านหลัก = ที่อยู่ร้าน) · รายการเก่าที่ยังไม่มี = ที่ตั้งแบบข้อความเดิม
  */
-export function MarketsRead({ markets, address }: { markets: AdminWeeklyMarket[]; address?: StoreSettings }) {
+export function MarketsRead({ markets }: { markets: AdminWeeklyMarket[] }) {
   const t = useTranslations();
-  const storeAddress = address ? formatStoreAddress(address) : "";
-  const storePin = address?.latitude != null && address.longitude != null
-    ? `https://www.google.com/maps?q=${address.latitude},${address.longitude}`
-    : "";
   if (markets.length === 0) return <p className="m-0 text-sm text-amber-700">{t("storeInfo.markets.empty")}</p>;
   return (
     <ul className="m-0 flex list-none flex-col gap-2 p-0">
-      {markets.map((m, i) => (
-        <li key={m._id ?? i} className={`rounded-lg border px-3 py-2.5 ${m.is_active ? "border-gray-200" : "border-dashed border-gray-200 bg-gray-50"}`}>
-          <p className="m-0 flex flex-wrap items-center gap-2 text-sm font-semibold text-brown-900">
-            {m.name}
-            {m.is_main && <span className="rounded-full bg-brown-800 px-2 py-0.5 text-xs font-semibold text-white">{t("storeInfo.markets.main")}</span>}
-            {!m.is_active && <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">{t("storeInfo.markets.hiddenBadge")}</span>}
-          </p>
-          <p className="m-0 mt-0.5 text-sm text-gray-800">
-            {DAY_ORDER.filter((d) => m.days.includes(d)).map((d) => t(`storeInfo.days.${d}`)).join(" · ")}
-            <span className="text-gray-500"> · </span>
-            {t("storeInfo.read.hours", { open: m.open_time, close: m.close_time })}
-          </p>
-          {(() => {
-            const location = m.is_main && address ? storeAddress : m.location;
-            const mapUrl = m.is_main && address ? storePin || m.map_url : m.map_url;
-            return (
-              <>
-                {m.is_main && address && !storeAddress ? (
-                  <p className="m-0 text-xs text-amber-700">{t("storeInfo.markets.mainNoAddress")}</p>
-                ) : (
-                  location && (
-                    <p className={`m-0 ${m.is_main && address ? "mt-1 text-sm text-gray-800" : "text-xs text-gray-600"}`}>
-                      {m.is_main && address && <span className="mr-1 text-gray-500">{t("storeInfo.address.title")}:</span>}
-                      {location}
-                    </p>
-                  )
-                )}
-                {mapUrl && (
-                  <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="mt-0.5 inline-flex items-center gap-1 text-xs text-brown-700 hover:underline">
-              <MapPinIcon className="h-3.5 w-3.5" aria-hidden="true" />
-              {t("storeInfo.read.openMap")}
-                  </a>
-                )}
-              </>
-            );
-          })()}
-        </li>
-      ))}
+      {markets.map((m, i) => {
+        const full = m.address ? formatStoreAddress(m.address) : "";
+        const where = full || m.location;
+        const mapUrl = marketMapUrl(m);
+        return (
+          <li key={m._id ?? i} className={`rounded-lg border px-3 py-2.5 ${m.is_active ? "border-gray-200" : "border-dashed border-gray-200 bg-gray-50"}`}>
+            <p className="m-0 flex flex-wrap items-center gap-2 text-sm font-semibold text-brown-900">
+              {m.name}
+              {m.is_main && <span className="rounded-full bg-brown-800 px-2 py-0.5 text-xs font-semibold text-white">{t("storeInfo.markets.main")}</span>}
+              {!m.is_active && <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">{t("storeInfo.markets.hiddenBadge")}</span>}
+            </p>
+            <dl className="m-0 mt-1">
+              <ReadRow label={t("storeInfo.markets.days")}>
+                {DAY_ORDER.filter((d) => m.days.includes(d)).map((d) => t(`storeInfo.days.${d}`)).join(" · ")}
+                <span className="text-gray-500"> · </span>
+                {t("storeInfo.read.hours", { open: m.open_time, close: m.close_time })}
+              </ReadRow>
+              <ReadRow label={m.is_main ? t("storeInfo.address.title") : t("storeInfo.markets.addressLabel")}>
+                {where ? (
+                  <>
+                    {where}
+                    {mapUrl && (
+                      <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="ml-2 inline-flex items-center gap-1 text-xs font-normal text-brown-700 hover:underline">
+                        <MapPinIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                        {t("storeInfo.read.openMap")}
+                      </a>
+                    )}
+                  </>
+                ) : null}
+              </ReadRow>
+            </dl>
+          </li>
+        );
+      })}
     </ul>
   );
 }

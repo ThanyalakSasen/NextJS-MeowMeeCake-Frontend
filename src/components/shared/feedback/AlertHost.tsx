@@ -2,12 +2,16 @@
 // ─────────────────────────────────────────────────────────────
 // AlertHost — ตัวแสดง modal ของ alert.* / confirmAlert (src/lib/alert.ts) · วางไว้ใน providers.tsx จุดเดียว
 // แสดงหัวคิวทีละอัน · ทุกประเภทต้องกดปุ่มปิดเอง · สี/ไอคอนต่อประเภทอยู่ใน KIND_STYLE ด้านล่าง
+// หน้าร้าน (ลูกค้า): แจ้ง "ไม่สำเร็จ" แบบนุ่มลง — ไอคอน ! สีเหลืองอำพัน แทนกากบาทแดง (ดูเหมือนระบบพัง)
+//   และไม่มีหัวข้อกลาง ๆ ("ทำรายการไม่สำเร็จ") — ใช้ข้อความที่บอกปัญหาจริงเป็นหัวข้อเลย (เช่น "ตอนนี้มีเค้กไข่อยู่ในตะกร้าแล้ว 17 ชิ้น…")
 // ─────────────────────────────────────────────────────────────
 import { useState, useSyncExternalStore } from "react";
 import { Modal } from "antd";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   CheckCircleIcon,
+  ExclamationCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
   QuestionMarkCircleIcon,
@@ -20,6 +24,9 @@ import { alertStore, type AlertKind, type AlertRequest } from "@/lib/alert";
 
 type TitleKey = "titleSuccess" | "titleError" | "titleWarning" | "titleInfo" | "titleConfirm" | "titleDelete";
 
+/** หน้าที่ลูกค้าใช้ — แจ้ง error แบบสุภาพ (ไม่ใช่กากบาทแดง) */
+const isShopPath = (p: string | null) => !!p && /^\/(customer|login|register)(\/|$)/.test(p);
+
 const KIND_STYLE: Record<AlertKind, { Icon: typeof CheckCircleIcon; ring: string; icon: string; titleKey: TitleKey }> = {
   success: { Icon: CheckCircleIcon, ring: "bg-green-50", icon: "text-green-600", titleKey: "titleSuccess" },
   error: { Icon: XCircleIcon, ring: "bg-red-50", icon: "text-red-600", titleKey: "titleError" },
@@ -29,7 +36,10 @@ const KIND_STYLE: Record<AlertKind, { Icon: typeof CheckCircleIcon; ring: string
 };
 
 /** confirm แบบ danger / ลบ ใช้สีแดง — confirm ธรรมดาใช้โทนน้ำตาลของแบรนด์ */
-function styleOf(a: AlertRequest) {
+function styleOf(a: AlertRequest, shop: boolean) {
+  if (shop && a.kind === "error") {
+    return { Icon: ExclamationCircleIcon, ring: "bg-amber-50", icon: "text-amber-600", titleKey: "titleError" as const };
+  }
   if (a.kind !== "confirm") return KIND_STYLE[a.kind];
   if (a.variant === "delete") return { Icon: TrashIcon, ring: "bg-red-50", icon: "text-red-600", titleKey: "titleDelete" as const };
   if (a.danger) return { ...KIND_STYLE.confirm, Icon: ExclamationTriangleIcon, ring: "bg-red-50", icon: "text-red-600" };
@@ -39,6 +49,7 @@ function styleOf(a: AlertRequest) {
 export function AlertHost() {
   const t = useTranslations();
   const current = useSyncExternalStore(alertStore.subscribe, alertStore.current, () => null);
+  const shop = isShopPath(usePathname());
 
   // เก็บอันล่าสุดไว้แสดงระหว่าง animation ปิด (current เป็น null ทันทีที่กดปิด) — ปรับ state ระหว่าง render
   // แบบมีเงื่อนไข (แพทเทิร์นที่ React แนะนำแทน useEffect)
@@ -48,7 +59,7 @@ export function AlertHost() {
   const a = current ?? shown;
   if (!a) return null;
 
-  const style = styleOf(a);
+  const style = styleOf(a, shop);
   const isConfirm = a.kind === "confirm";
   const close = (confirmed: boolean) => { if (current) alertStore.close(current.id, confirmed); };
 
@@ -72,8 +83,15 @@ export function AlertHost() {
         <span className={`flex h-14 w-14 items-center justify-center rounded-full ${style.ring}`}>
           <style.Icon className={`h-8 w-8 ${style.icon}`} aria-hidden />
         </span>
-        <h3 className="text-lg font-semibold text-brown-900">{a.title ?? t(`alert.${style.titleKey}`)}</h3>
-        <p className="whitespace-pre-line text-sm text-gray-600">{a.text}</p>
+        {shop && a.kind === "error" && !a.title ? (
+          // ข้อความปัญหาเป็นหัวข้อเลย — ลูกค้ารู้ทันทีว่าติดอะไร
+          <h3 className="whitespace-pre-line text-base font-semibold leading-relaxed text-brown-900">{a.text}</h3>
+        ) : (
+          <>
+            <h3 className="text-lg font-semibold text-brown-900">{a.title ?? t(`alert.${style.titleKey}`)}</h3>
+            <p className="whitespace-pre-line text-sm text-gray-600">{a.text}</p>
+          </>
+        )}
         {a.note && <p className="text-sm text-gray-500">{a.note}</p>}
 
         <div className="mt-3 flex w-full justify-center gap-2">
@@ -94,8 +112,14 @@ export function AlertHost() {
             </>
           ) : (
             // autoFocus: กด Enter ปิดได้ทันที (ไม่ต้องเอื้อมเมาส์ — เช่นหน้า POS)
-            <Button type="primary" icon={actionIcon("save")} onClick={() => close(true)} autoFocus className="min-w-28">
-              {t("common.ok")}
+            <Button
+              type="primary"
+              icon={shop ? undefined : actionIcon("save")}
+              onClick={() => close(true)}
+              autoFocus
+              className={shop ? "min-w-32 !rounded-xl !bg-[#4A342E] hover:!bg-[#8C5A3C]" : "min-w-28"}
+            >
+              {shop ? t("alert.shopOk") : t("common.ok")}
             </Button>
           )}
         </div>

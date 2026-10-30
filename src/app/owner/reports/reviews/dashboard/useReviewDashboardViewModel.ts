@@ -13,6 +13,10 @@ import { reviewsService } from "@/services/reviews";
 import { sortByThai } from "@/lib/thaiSort";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { REVIEW_FILTER_OPTIONS_KEY, REVIEW_STATS_KEY } from "../reviewsQuery";
+import { toReviewRow } from "../reviewRow";
+
+/** จำนวนโน้ตภายในล่าสุดที่แสดงบนแดชบอร์ด */
+const NOTES_LIMIT = 5;
 import { bucketUnitFor, previousRange, sortProductRows, toReviewStats, type ProductSort, type ProductSortKey } from "./reviewStats";
 
 /** until ของ backend เป็น $lt → ส่งต้นช่วงถัดไป (ครอบมิลลิวินาทีสุดท้ายของ endOf) */
@@ -50,6 +54,22 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
   });
   const products = optionsQ.data?.products ?? [];
 
+  // โน้ตภายในของรีวิวในช่วงนี้ (แทนส่วน "หัวข้อที่ถูกติ เทียบช่วงก่อนหน้า") — ล่าสุดก่อน
+  const notesParams = {
+    has_note: 1 as const,
+    since: params.since,
+    until: params.until,
+    sort: "newest" as const,
+    limit: NOTES_LIMIT,
+    ...(productId ? { product_id: productId } : {}),
+  };
+  const notesQ = useQuery({
+    queryKey: ["admin", "reviews", "dashboard-notes", notesParams],
+    queryFn: () => reviewsService.list(notesParams),
+    enabled,
+  });
+  const notes = useMemo(() => (notesQ.data?.data ?? []).map(toReviewRow), [notesQ.data]);
+
   const stats = useMemo(() => (q.data ? toReviewStats(q.data, range, period) : null), [q.data, range, period]);
   const productRows = useMemo(() => (stats ? sortProductRows(stats.products, sort) : []), [stats, sort]);
 
@@ -61,7 +81,7 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
       [
         t("reviewsDashboard.colProduct"), t("reviewsDashboard.csvCategory"), t("reviewsDashboard.colReviews"),
         t("reviewsDashboard.csvAvg"), t("reviewsDashboard.csvPrevAvg"), t("reviewsDashboard.csvAvgDelta"),
-        t("reviewsDashboard.csvNegative"), t("reviewsDashboard.colNegative"), t("reviewsDashboard.colTopIssue"),
+        t("reviewsDashboard.colPositive"), t("reviewsDashboard.csvNegative"), t("reviewsDashboard.colNegative"), t("reviewsDashboard.colTopIssue"),
       ],
       productRows.map((p) => [
         p.name,
@@ -70,6 +90,7 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
         p.avg.toFixed(2),
         p.prev_avg != null ? p.prev_avg.toFixed(2) : "",
         p.avgDelta != null ? p.avgDelta.toFixed(2) : "",
+        p.positiveRate.toFixed(1),
         p.negative,
         p.negativeRate.toFixed(1),
         p.top_issue ? `${p.top_issue.name} (${p.top_issue.count})` : "",
@@ -94,6 +115,8 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
 
     /** ตาราง "วิเคราะห์รายสินค้า" (เรียงแล้ว) */
     productRows,
+    /** สินค้าที่เลือกดูอยู่ (แดชบอร์ดรายสินค้า) — ใช้แสดง "หัวข้อที่ติบ่อยสุด" ของสินค้านี้ */
+    selectedProduct: productId ? (stats?.products.find((p) => p.id === productId) ?? null) : null,
     onExportProducts: exportProducts,
     /** เปิดแดชบอร์ดของสินค้า (จากตาราง/อันดับสินค้า) — เลื่อนกลับขึ้นบนให้เห็นตัวเลขของสินค้านั้น */
     openProduct: (id: string) => {
@@ -111,5 +134,11 @@ export function useReviewDashboardViewModel({ enabled = true }: { enabled?: bool
     isError: q.isError,
     refetch: () => q.refetch(),
     stats,
+
+    /** รีวิวที่มีโน้ตภายใน (ล่าสุด NOTES_LIMIT รายการ) */
+    notes,
+    notesTotal: notesQ.data?.meta.total ?? 0,
+    notesLoading: enabled && notesQ.isPending,
+    notesError: notesQ.isError,
   };
 }

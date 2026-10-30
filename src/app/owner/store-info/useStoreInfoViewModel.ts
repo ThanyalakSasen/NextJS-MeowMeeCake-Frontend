@@ -6,6 +6,8 @@
 // พนักงาน: เฉพาะหน้าร้านประจำสัปดาห์ ตามสิทธิ์ store_info (ส่วนอื่น backend ให้ owner เท่านั้น)
 // ดูอย่างเดียวก่อนเสมอ — กด "แก้ไข" ทีละหัวข้อ (แก้ได้ครั้งละหัวข้อ) · บันทึกส่งเฉพาะ field ของหัวข้อนั้น · เตือนก่อนทิ้งที่ยังไม่บันทึก
 // หน้าร้านประจำสัปดาห์บันทึกผ่าน /admin/weekly-markets ทั้ง owner และพนักงาน (backend กันแก้ชนกัน — 409)
+// ทุกหน้าร้านมีช่องที่อยู่เหมือนกัน · ที่อยู่ของหน้าร้านหลัก = ที่อยู่ร้าน (owner บันทึกไป /admin/store-settings ด้วย)
+//   ตั้งแห่งไหนเป็นหน้าร้านหลัก = ที่อยู่ของแห่งนั้นกลายเป็นที่อยู่ร้านตอนบันทึก · พนักงานแก้ที่อยู่หน้าร้านหลักไม่ได้ (ไม่มีสิทธิ์ที่อยู่ร้าน)
 // บันทึกแล้วล้าง cache ของหน้าร้าน (ติดต่อเรา · ค่าส่ง · Footer · โลโก้ · จุดรับ) ในแท็บเดียวกันด้วย
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useMemo, useState } from "react";
@@ -28,7 +30,7 @@ import { storeInfoKey, storeLogoKey } from "@/app/customer/lib/catalogQueries";
 import { thaiCompare } from "@/lib/thaiSort";
 import {
   DAY_ORDER, EMPTY_PROFILE, EMPTY_SETTINGS, NEW_MARKET, logoError, marketsPayload, profilePayload, profileToForm, sameValue,
-  sectionChanged, syncMainMarket, validateAddress, validateMarkets, validateProfile,
+  marketAddressOf, sectionChanged, syncMarketLocations, validateMarketAddresses, validateMarkets, validateProfile, withStoreAddress,
   type FieldError, type FormErrors, type ProfileForm, type SectionKey,
 } from "./storeInfoForm";
 import { MARKETS_KEY, PROFILE_KEY, SETTINGS_KEY } from "./storeInfoQuery";
@@ -77,22 +79,31 @@ export function useStoreInfoViewModel() {
   // ── แก้ไขทีละหัวข้อ ──
   const [editing, setEditing] = useState<SectionKey | null>(null);
   const [profile, setProfile] = useState<ProfileForm>(EMPTY_PROFILE);
-  const [address, setAddress] = useState<StoreSettings>(EMPTY_SETTINGS);
   const [markets, setMarkets] = useState<AdminWeeklyMarket[]>([]);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [marketsError, setMarketsError] = useState<FieldError | null>(null);
 
-  // หน้าร้านหลักใช้ที่อยู่ร้าน — เจ้าของร้านเท่านั้นที่เห็นที่อยู่ (พนักงานบันทึกตามที่มีอยู่)
-  const marketsToSave = isOwner ? syncMainMarket(markets, address) : markets;
+  // หน้าร้านที่บันทึก (มุมมองของหน้านี้): owner = หน้าร้านหลักใช้ที่อยู่ร้าน · พนักงาน = ตามที่ backend ส่งมา
+  const savedMarketsView = useMemo(
+    () => (isOwner ? withStoreAddress(savedMarkets, savedSettings) : savedMarkets),
+    [isOwner, savedMarkets, savedSettings],
+  );
+  // ที่ตั้ง/ลิงก์แผนที่ของทุกแห่งมาจากที่อยู่แยกช่อง (ครบแล้ว)
+  const marketsToSave = syncMarketLocations(markets);
+  /** ที่อยู่ร้านใหม่ = ที่อยู่ของหน้าร้านหลักในร่าง (owner) */
+  const mainDraft = markets.find((m) => m.is_main);
+  const storeAddressDraft = mainDraft ? marketAddressOf(mainDraft) : savedSettings;
 
   const dirty = (() => {
     if (editing === null) return false;
     if (editing === "markets") {
-      // เทียบกับค่าเดิมที่ sync แล้วด้วย — ไม่งั้นแค่เปิดแก้ (ที่ตั้งเดิมยังไม่ตรงที่อยู่ร้าน) ก็ขึ้นเตือน "ยังไม่บันทึก"
-      const savedSynced = isOwner ? syncMainMarket(savedMarkets, savedSettings) : savedMarkets;
-      return !sameValue(marketsPayload(marketsToSave), marketsPayload(savedSynced)) || (isOwner && !sameValue(address, savedSettings));
+      // เทียบกับค่าเดิมที่ sync แล้วด้วย — ไม่งั้นแค่เปิดแก้ (ที่ตั้งเดิมยังไม่ตรงที่อยู่) ก็ขึ้นเตือน "ยังไม่บันทึก"
+      return (
+        !sameValue(marketsPayload(marketsToSave), marketsPayload(syncMarketLocations(savedMarketsView))) ||
+        (isOwner && !sameValue(storeAddressDraft, savedSettings))
+      );
     }
     return sectionChanged(editing, profile, savedProfile) || (editing === "general" && logoFile !== null);
   })();
@@ -115,8 +126,7 @@ export function useStoreInfoViewModel() {
 
   const resetDrafts = () => {
     setProfile(savedProfile);
-    setAddress(savedSettings);
-    setMarkets(savedMarkets);
+    setMarkets(savedMarketsView);
     setLogoFile(null);
     setLogoPreview(null);
     setErrors({});
@@ -151,12 +161,13 @@ export function useStoreInfoViewModel() {
   const save = useMutation({
     mutationFn: async (section: SectionKey) => {
       if (section === "markets") {
-        // ที่อยู่ร้านก่อน — ที่ตั้งหน้าร้านหลักคัดลอกจากที่อยู่นี้ · เดิมบันทึกหน้าร้านก่อน ถ้าที่อยู่บันทึกไม่ผ่าน
-        // หน้าร้านหลักได้ที่อยู่ใหม่ไปแล้วแต่ที่อยู่ร้านยังเป็นของเดิม (ลำดับนี้ หน้าร้านล้ม = เปิดแก้ครั้งหน้า sync ให้เอง)
-        if (isOwner && !sameValue(address, savedSettings)) {
-          qc.setQueryData(SETTINGS_KEY, await storeAdminService.updateSettings(address));
+        // ที่อยู่ร้านก่อน (= ที่อยู่ของหน้าร้านหลัก) · ถ้าที่อยู่บันทึกไม่ผ่าน หน้าร้านยังไม่ถูกแตะ
+        // (หน้าร้านล้มทีหลัง = เปิดแก้ครั้งหน้า หน้าร้านหลักได้ที่อยู่ร้านใหม่ให้เอง — withStoreAddress)
+        if (isOwner && !sameValue(storeAddressDraft, savedSettings)) {
+          qc.setQueryData(SETTINGS_KEY, await storeAdminService.updateSettings(storeAddressDraft));
         }
         if (!sameValue(marketsPayload(marketsToSave), marketsPayload(savedMarkets))) {
+          // บันทึกที่อยู่ของหน้าร้านหลักลงรายการด้วย (ตรงกับที่อยู่ร้าน)
           qc.setQueryData(MARKETS_KEY, await storeAdminService.updateWeeklyMarkets(marketsPayload(marketsToSave)));
         }
         return;
@@ -185,7 +196,8 @@ export function useStoreInfoViewModel() {
     if (!section) return;
     if (section === "markets") {
       const mErr = validateMarkets(marketsToSave);
-      const aErr = isOwner ? validateAddress(address) : {};
+      // หน้าร้านหลักต้องกรอกที่อยู่ครบ (owner — เป็นที่อยู่ร้าน) · แห่งอื่นกรอกแล้วต้องครบ
+      const aErr = validateMarketAddresses(marketsToSave, isOwner);
       setMarketsError(mErr);
       setErrors(aErr);
       if (mErr || Object.keys(aErr).length > 0) return void alert.error(t("storeInfo.checkFields"));
@@ -203,8 +215,14 @@ export function useStoreInfoViewModel() {
   // ── ฟิลด์ ──
   const setProfileField = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) => setProfile((p) => ({ ...p, [key]: value }));
   const setSocial = (key: SocialKey, value: string) => setProfile((p) => ({ ...p, social_links: { ...p.social_links, [key]: value } }));
-  const setAddressField = <K extends keyof StoreSettings>(key: K, value: StoreSettings[K]) => setAddress((a) => ({ ...a, [key]: value }));
-  const setCoordinates = (latitude: number | null, longitude: number | null) => setAddress((a) => ({ ...a, latitude, longitude }));
+  // ที่อยู่ของหน้าร้านลำดับ i (ช่องเดียวกับที่อยู่ร้าน) — แก้แล้วล้างแจ้งเตือนของช่องนั้น
+  const setMarketAddress = (i: number, patch: Partial<StoreSettings>) => {
+    setMarkets((ms) => ms.map((m, j) => (j === i ? { ...m, address: { ...marketAddressOf(m), ...patch } } : m)));
+    setErrors((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !Object.keys(patch).some((p) => k === `m${i}.${p}`))));
+  };
+  const setMarketAddressField = <K extends keyof StoreSettings>(i: number, key: K, value: StoreSettings[K]) =>
+    setMarketAddress(i, { [key]: value } as Partial<StoreSettings>);
+  const setMarketCoordinates = (i: number, latitude: number | null, longitude: number | null) => setMarketAddress(i, { latitude, longitude });
 
   const pickLogo = async (raw: File) => {
     // ชนิดไฟล์ผิดไม่ต้องย่อ · ที่เหลือย่อก่อนตรวจขนาด (รูปมือถือ 5–15 MB ย่อแล้วผ่าน)
@@ -240,12 +258,14 @@ export function useStoreInfoViewModel() {
     setMarketField(i, "is_active", active);
   };
   const addMarket = () => setMarkets((ms) => [...ms, { ...NEW_MARKET }]);
-  /** ตั้งเป็นหน้าร้านหลัก (แห่งเดียว) แล้วย้ายขึ้นลำดับแรก — ตรงกับที่ backend บันทึก */
-  const setMainMarket = (i: number) =>
+  /** ตั้งเป็นหน้าร้านหลัก (แห่งเดียว) แล้วย้ายขึ้นลำดับแรก — ตรงกับที่ backend บันทึก · ที่อยู่ของแห่งนี้จะเป็นที่อยู่ร้านตอนบันทึก */
+  const setMainMarket = (i: number) => {
+    setErrors({}); // ลำดับเปลี่ยน — แจ้งเตือนรายช่อง (m<ลำดับ>.*) เดิมไม่ตรงแล้ว
     setMarkets((ms) => {
       const next = ms.map((m, j) => ({ ...m, is_main: j === i }));
       return [next[i], ...next.filter((_, j) => j !== i)];
     });
+  };
   const removeMarket = async (i: number) => {
     if (isLastActive(i)) return void alert.warning(t("storeInfo.markets.lastActive"));
     const name = markets[i]?.name.trim();
@@ -295,12 +315,15 @@ export function useStoreInfoViewModel() {
     logoSrc: (editing === "general" && logoPreview) || savedLogoSrc,
     pickLogo,
 
-    address: editing === "markets" ? address : savedSettings,
-    setAddressField,
-    setCoordinates,
+    /** ที่อยู่ร้าน (= ที่อยู่ของหน้าร้านหลัก) — แสดงในโหมดดู */
+    address: savedSettings,
+    setMarketAddressField,
+    setMarketCoordinates,
     resolveMapLink: storeAdminService.resolveMapLink,
+    /** แก้ที่อยู่ของหน้าร้านนี้ได้ไหม — หน้าร้านหลัก = ที่อยู่ร้าน (เจ้าของร้านเท่านั้น) */
+    canEditMarketAddress: (m: AdminWeeklyMarket) => canEditMarket(m) && (isOwner || !m.is_main),
 
-    markets: editing === "markets" ? markets : savedMarkets,
+    markets: editing === "markets" ? markets : savedMarketsView,
     marketsError: errorText(marketsError),
     canCreateMarket: editing === "markets" && canCreateMarket,
     canEditMarket,

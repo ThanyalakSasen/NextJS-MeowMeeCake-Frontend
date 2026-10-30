@@ -19,7 +19,7 @@ export default function ChatPage({ initialAttach }: { initialAttach: { kind: Cha
 
   return (
     <div className={shopPage}>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-[12px] sm:px-[24px]">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-[12px] sm:px-[24px]">
         <CustomerBreadcrumb items={[{ label: t("pageTitle") }]} className="!mb-0" />
         <h1 className="m-0 text-2xl font-extrabold text-[#4A342E] sm:text-3xl">{t("pageTitle")}</h1>
         <ShopChatPanel storeName={storeName} heightClass="h-[60vh] min-h-[22rem]" initialAttach={initialAttach} />
