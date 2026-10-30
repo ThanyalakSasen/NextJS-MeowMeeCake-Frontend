@@ -18,6 +18,16 @@ export function getRangeStartEnd(period: PeriodType, picker: Dayjs): [Dayjs, Day
   return [picker.startOf("year"), picker.endOf("year")];
 }
 
+/** เลื่อนไปช่วงก่อนหน้า (-1) / ถัดไป (1) ตามชนิดช่วง · quarter ใช้ plugin quarterOfYear */
+export function shiftPeriod(period: PeriodType, date: Dayjs, step: 1 | -1): Dayjs {
+  return period === "quarter" ? date.add(step, "quarter") : date.add(step, period);
+}
+
+/** a กับ b อยู่ในช่วงเดียวกันไหม (เช่น เดือนเดียวกัน) — ใช้ปิดปุ่ม "เดือนนี้" เมื่ออยู่ช่วงปัจจุบันแล้ว */
+export function isSamePeriod(period: PeriodType, a: Dayjs, b: Dayjs): boolean {
+  return getRangeStartEnd(period, a)[0].isSame(getRangeStartEnd(period, b)[0]);
+}
+
 /** antd <DatePicker picker=...> ที่สอดคล้องกับ period ที่เลือก */
 export function pickerTypeFor(period: PeriodType): "date" | "week" | "month" | "quarter" | "year" {
   return period === "day" ? "date" : period;
