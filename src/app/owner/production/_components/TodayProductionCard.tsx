@@ -2,6 +2,7 @@
 // วันนี้ผลิตอะไรบ้าง — ใบสั่งผลิตที่วันผลิตตรงวันนี้ แยกเป็นการ์ดต่อใบ (สินค้าในใบนั้น + จำนวน) ให้เห็นว่าสินค้าไหนอยู่ใบไหน
 // หัวการ์ดสรุปจำนวนใบ/สินค้าทั้งวัน · กดการ์ดใบ = เปิดรายละเอียดใบนั้น (แบบเดียวกับกดแถวในตาราง)
 // แสดงอย่างเดียว ไม่มีปุ่มเลื่อนสถานะ (ผู้ใช้ขอ 2026-10-29) · ข้อมูลจาก useProductionViewModel.todayOrders / todayItems
+// ใบที่มีสินค้าเกิน 3 รายการ แสดงแค่ 3 รายการแรก + "ดูเพิ่มเติมอีก n รายการ" (กดการ์ด = เปิดรายละเอียดเต็ม) — การ์ดสูงไม่ต่างกันมาก (ผู้ใช้ขอ 2026-10-30)
 import { useTranslations, useLocale } from "next-intl";
 import { Card, EmptyState, Tag } from "@/components/base";
 import { StatusBadge } from "@/components/shared/stats";
@@ -11,6 +12,8 @@ import type { ProductionOrder } from "@/types/productionOrder";
 import type { useProductionViewModel } from "../useProductionViewModel";
 
 type VM = ReturnType<typeof useProductionViewModel>;
+
+const MAX_ITEMS = 3;
 
 export function TodayProductionCard({
   today,
@@ -40,6 +43,7 @@ export function TodayProductionCard({
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {todayOrders.map((o) => {
             const src = SOURCE_TYPE_CONFIG[o.source_type];
+            const hidden = o.items.length - MAX_ITEMS;
             return (
               <button
                 key={o._id}
@@ -66,7 +70,7 @@ export function TodayProductionCard({
                 </div>
 
                 <ul className="m-0 flex w-full list-none flex-col divide-y divide-gray-100 rounded-lg bg-gray-50 p-0">
-                  {o.items.map((it) => (
+                  {o.items.slice(0, MAX_ITEMS).map((it) => (
                     <li key={it._id} className="flex items-center justify-between gap-3 px-3 py-2">
                       <span className="min-w-0 truncate text-sm text-gray-800">{it.product_name}</span>
                       <span className="shrink-0 text-sm font-semibold tabular-nums text-brown-900">
@@ -74,6 +78,11 @@ export function TodayProductionCard({
                       </span>
                     </li>
                   ))}
+                  {hidden > 0 && (
+                    <li className="px-3 py-2 text-center text-xs font-medium text-brown-700">
+                      {t("production.todayMoreItems", { n: hidden })}
+                    </li>
+                  )}
                 </ul>
               </button>
             );
