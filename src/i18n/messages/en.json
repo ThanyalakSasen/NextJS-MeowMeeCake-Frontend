@@ -1377,7 +1377,7 @@
     "todayProductCount": "{n} products in total",
     "todayMoreItems": "View {n} more",
     "todayEmpty": "Nothing scheduled for production today",
-    "carriedOver": "Carried over from {date}",
+    "todayCarriedOver": "Carried over from {date}",
     "stockChecking": "Checking ingredients...",
     "stockCheckFailed": "Could not check ingredients — you can still create the order; stock is checked again when production is completed",
     "stockShortRow": "Cannot be produced yet — not enough ingredients",
