@@ -105,7 +105,7 @@ export function DeliveryZonesView(vm: VM) {
                       </span>
                     ),
                 },
-                { key: "fee", title: t("deliveryZones.fields.fee"), width: 110, align: "right", render: (z) => money(z.fee) },
+                { key: "fee", title: t("deliveryZones.fields.fee"), width: 110, render: (z) => money(z.fee) },
                 {
                   key: "active",
                   title: t("deliveryZones.fields.active"),

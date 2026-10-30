@@ -42,7 +42,6 @@ export function IngredientHistoryView(vm: VM) {
     {
       key: "quantity",
       title: t("ingredientHistory.colQty"),
-      align: "right",
       render: (r) => {
         const cfg = INGREDIENT_TXN_CONFIG[r.type];
         const prefix = r.type === "receive" ? "+" : r.type === "use" ? "−" : "";

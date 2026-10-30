@@ -43,7 +43,7 @@ export function ManageOrdersView(vm: VM) {
       key: "customer",
       title: t("orders.colCustomer"),
       render: (o) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <Avatar name={o.customer_name} size={28} />
           <div>
             <p className="font-medium text-brown-800">{o.customer_name}</p>
@@ -55,7 +55,6 @@ export function ManageOrdersView(vm: VM) {
     {
       key: "total_amount",
       title: t("orders.colTotal"),
-      align: "right",
       render: (o) => formatCurrency(o.total_amount, locale),
     },
     {

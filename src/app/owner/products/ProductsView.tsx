@@ -30,10 +30,10 @@ export function ProductsView(vm: VM) {
     { key: "product_name_th", title: t("products.colName") },
     { key: "is_preorder", title: t("products.colType"), render: (p) => t(`enums.productType.${productKindOf(p)}`) },
     {
-      key: "product_price", title: t("products.colPrice"), align: "right",
+      key: "product_price", title: t("products.colPrice"),
       render: (p) => formatCurrency(p.sale_price ?? p.product_price, locale),
     },
-    { key: "product_stock_quantity", title: t("products.colStock"), align: "right", render: (p) => p.product_stock_quantity ?? "—" },
+    { key: "product_stock_quantity", title: t("products.colStock"), render: (p) => p.product_stock_quantity ?? "—" },
     { key: "avg_rating", title: t("products.colRating"), render: (p) => <RatingDisplay rating={p.avg_rating} count={p.review_count} /> },
     {
       key: "is_visible", title: t("products.colVisible"), align: "center",

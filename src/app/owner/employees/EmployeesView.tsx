@@ -31,7 +31,7 @@ export function EmployeesView(vm: VM) {
       key: "name",
       title: t("employees.colName"),
       render: (r) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <Avatar name={r.name} size={28} />
           <span className="font-medium text-brown-800">{r.name}</span>
         </div>
@@ -55,7 +55,7 @@ export function EmployeesView(vm: VM) {
       key: "status",
       title: t("employees.colStatus"),
       render: (r) => (
-        <div className="flex flex-wrap items-center gap-1">
+        <div className="flex flex-wrap items-center justify-center gap-1">
           <Tag color={EMPLOYEE_WORKING_CONFIG[r.working ? "working" : "left"].antColor} className="!m-0">
             {r.working ? t("employees.statusWorking") : t("employees.statusLeft")}
           </Tag>
