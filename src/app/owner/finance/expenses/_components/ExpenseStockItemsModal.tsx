@@ -5,11 +5,12 @@
 // ราคารวมของที่ผูกต้องไม่เกินยอดค่าใช้จ่าย (บิลอาจมีของที่ไม่เข้าสต็อก จึงน้อยกว่าได้) — backend ตรวจซ้ำ
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
+import dayjs, { type Dayjs } from "dayjs";
 import { Modal } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { Button, InputNumber, Select, Spinner } from "@/components/base";
+import { Button, InputNumber, RangePicker, Select, Spinner } from "@/components/base";
 import { actionIcon } from "@/components/shared/actions";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
@@ -21,8 +22,10 @@ import type { Expense } from "@/types/expense";
 import type { IngredientTransaction } from "@/types/ingredientTransaction";
 import { unitLabel } from "@/utils/unitContext";
 
-/** รายการรับเข้าที่ยังไม่ผูกบิล — ล่าสุดก่อน */
-const UNLINKED_PARAMS = { type: "receive" as const, expense_id: "none", limit: 200 };
+/** รายการรับเข้าที่ยังไม่ผูกบิลในช่วงวันที่ที่เลือก — ล่าสุดก่อน · ค่าเริ่มต้น ±30 วันรอบวันที่ของค่าใช้จ่าย
+ *  (เดิมดึง 200 รายการล่าสุดของทั้งร้าน — บิลเก่ากว่านั้นหารายการมาผูกไม่เจอ) */
+const UNLINKED_LIMIT = 200;
+const AROUND_DAYS = 30;
 export const stockItemsKey = (id: string) => ["expenses", id, "stock-items"] as const;
 
 const nameOf = (x: IngredientTransaction) => (typeof x.ingredient_id === "object" ? x.ingredient_id.ingredient_name : "");
@@ -150,11 +153,23 @@ function LinkSection({
   const t = useTranslations();
   const locale = useLocale();
   const [lines, setLines] = useState<LinkLine[]>([newLine()]);
-  const candidatesQ = useQuery({
-    queryKey: ["ingredient-transactions", "unlinked"],
-    queryFn: () => ingredientTransactionsService.list(UNLINKED_PARAMS),
+  const [range, setRange] = useState<[Dayjs, Dayjs]>(() => {
+    const d = dayjs(expense.date);
+    const end = d.add(AROUND_DAYS, "day");
+    return [d.subtract(AROUND_DAYS, "day").startOf("day"), (end.isAfter(dayjs()) ? dayjs() : end).endOf("day")];
   });
-  const candidates = candidatesQ.data?.data ?? [];
+  const from = range[0].startOf("day").toISOString();
+  const to = range[1].endOf("day").toISOString();
+  const candidatesQ = useQuery({
+    queryKey: ["ingredient-transactions", "unlinked", from, to],
+    queryFn: () =>
+      ingredientTransactionsService.list({ type: "receive", expense_id: "none", date_from: from, date_to: to, limit: UNLINKED_LIMIT }),
+  });
+  // รายการที่เลือกไว้แล้วต้องยังอยู่ในตัวเลือก แม้เปลี่ยนช่วงวันที่ (ไม่งั้น Select โชว์เป็น id)
+  const [picked, setPicked] = useState<Map<string, IngredientTransaction>>(new Map());
+  const fetched = candidatesQ.data?.data ?? [];
+  const candidates = [...fetched, ...[...picked.values()].filter((p) => !fetched.some((x) => x._id === p._id))];
+  const more = (candidatesQ.data?.meta.total ?? 0) > fetched.length;
 
   const used = new Set(lines.map((l) => l.id).filter(Boolean));
   const filled = lines.filter((l) => l.id);
@@ -188,6 +203,17 @@ function LinkSection({
     <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
       <p className="m-0 text-sm font-semibold text-brown-900">{t("purchase.linkTitle")}</p>
       <p className="m-0 text-xs text-gray-500">{t("purchase.linkHint")}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-gray-600">{t("purchase.linkRange")}</span>
+        <RangePicker
+          format="DD/MM/YYYY"
+          allowClear={false}
+          value={range}
+          disabledDate={(d) => d.isAfter(dayjs(), "day")}
+          onChange={(v) => v?.[0] && v[1] && setRange([v[0], v[1]])}
+        />
+        {more && <span className="text-xs text-amber-700">{t("purchase.linkRangeMore", { n: UNLINKED_LIMIT })}</span>}
+      </div>
       {lines.map((l) => (
         <div key={l.key} className="grid items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) 9rem 2rem" }}>
           <Select
@@ -196,7 +222,11 @@ function LinkSection({
             loading={candidatesQ.isPending}
             placeholder={t("purchase.selectReceive")}
             value={l.id ?? undefined}
-            onChange={(v) => update(l.key, { id: v as string })}
+            onChange={(v) => {
+              const x = candidates.find((c) => c._id === v);
+              if (x) setPicked((m) => new Map(m).set(x._id, x));
+              update(l.key, { id: v as string });
+            }}
             options={candidates.map((x) => ({ value: x._id, label: label(x), disabled: used.has(x._id) && x._id !== l.id }))}
             notFoundContent={t("purchase.noUnlinked")}
             className="w-full"

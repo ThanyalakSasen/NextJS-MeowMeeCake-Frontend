@@ -44,4 +44,7 @@ export interface IngredientTransactionListParams extends ListParams {
   type?: IngredientTxnType;
   /** "none" = เฉพาะรายการที่ยังไม่ผูกบิลซื้อ */
   expense_id?: string;
+  /** ISO — กรองตามวันที่ทำรายการ (transaction_date) รวมขอบ */
+  date_from?: string;
+  date_to?: string;
 }
