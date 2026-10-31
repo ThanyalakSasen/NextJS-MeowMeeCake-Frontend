@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 import { Modal } from "antd";
 import { sortOptionsThai } from "@/lib/thaiSort";
 import { useTranslations } from "next-intl";
-import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DatePicker, Switch } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, TextArea, InputNumber, Select, DatePicker, Switch } from "@/components/base";
 import { EXPENSE_CATEGORIES, EXPENSE_PAYMENT_METHODS } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
 import { modalButtonIcons } from "@/components/shared/actions";
@@ -32,6 +32,8 @@ export function ExpenseFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<ExpenseFormValue>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   const handleOk = async () => {
     const v = await form.validateFields();
@@ -46,6 +48,7 @@ export function ExpenseFormModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons(editTarget ? "save" : "add")}
+      okButtonProps={{ ...modalButtonIcons(editTarget ? "save" : "add").okButtonProps, disabled: !valid }}
       okText={editTarget ? t("common.save") : t("finance.addExpense")}
       cancelText={t("common.cancel")}
       width={600}

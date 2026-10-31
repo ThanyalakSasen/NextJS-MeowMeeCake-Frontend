@@ -1,7 +1,8 @@
 "use client";
 import { useTranslations } from "next-intl";
 import { Card, Form, EmptyState } from "@/components/base";
-import { SaveButton, CancelButton } from "@/components/shared/actions";
+import { CancelButton } from "@/components/shared/actions";
+import { FormSaveButton } from "@/components/shared/form";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { ProductFormFields } from "../../_components/ProductFormFields";
 import type { useEditProductViewModel } from "./useEditProductViewModel";
@@ -25,7 +26,7 @@ export function EditProductView(
         <Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}>
           <ProductFormFields mode="edit" />
           <FormActions>
-            <SaveButton type="primary" htmlType="submit" loading={vm.submitting} />
+            <FormSaveButton loading={vm.submitting} />
             <CancelButton onClick={vm.onCancel} />
           </FormActions>
         </Form>

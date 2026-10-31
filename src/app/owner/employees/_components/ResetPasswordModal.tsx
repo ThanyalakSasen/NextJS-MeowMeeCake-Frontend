@@ -7,7 +7,7 @@
 import { Modal } from "antd";
 import type { Rule } from "antd/es/form";
 import { useTranslations } from "next-intl";
-import { Form, FormItem, useAntForm, PasswordInput } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, PasswordInput } from "@/components/base";
 import { modalButtonIcons } from "@/components/shared/actions";
 import { MIN_PASSWORD_LENGTH } from "@/constants/auth";
 
@@ -24,6 +24,8 @@ export function ResetPasswordModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   const passwordRules: Rule[] = [
     { required: true, whitespace: true, message: t("validation.required") },
@@ -54,6 +56,7 @@ export function ResetPasswordModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons("save")}
+      okButtonProps={{ ...modalButtonIcons("save").okButtonProps, disabled: !valid }}
       okText={t("common.save")}
       cancelText={t("common.cancel")}
       destroyOnHidden

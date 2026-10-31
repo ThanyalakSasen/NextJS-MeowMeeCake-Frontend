@@ -22,6 +22,7 @@ export function ShippingZoneEditModal(vm: VM) {
       okText={t("common.save")}
       cancelText={t("common.cancel")}
       {...modalButtonIcons(isNew ? "add" : "save")}
+      okButtonProps={{ ...modalButtonIcons(isNew ? "add" : "save").okButtonProps, disabled: !vm.canSave }}
       destroyOnHidden
     >
       {vm.editing && (

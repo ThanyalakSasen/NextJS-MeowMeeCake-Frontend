@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import { Modal } from "antd";
 import type { Rule } from "antd/es/form";
 import { useTranslations, useLocale } from "next-intl";
-import { Form, FormItem, useAntForm, Input, InputNumber, Select } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, InputNumber, Select } from "@/components/base";
 import type { IngredientInput } from "@/types/ingredient";
 import type { IngredientCategory } from "@/types/ingredientCategory";
 import type { Unit } from "@/types/unit";
@@ -55,6 +55,8 @@ export function IngredientFormModal({
   const t = useTranslations();
   const locale = useLocale();
   const [form] = useAntForm<FormValues>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
   const watchedCategoryId = Form.useWatch("ingredient_category_id", form);
   const watchedName = Form.useWatch("ingredient_name", form);
   const watchedUnitId = Form.useWatch("unit_id", form);
@@ -157,6 +159,7 @@ export function IngredientFormModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons(editTarget ? "save" : "add")}
+      okButtonProps={{ ...modalButtonIcons(editTarget ? "save" : "add").okButtonProps, disabled: !valid }}
       okText={editTarget ? t("common.save") : t("ingredients.addIngredient")}
       cancelText={t("common.cancel")}
       destroyOnHidden

@@ -1,7 +1,8 @@
 "use client";
 import { useTranslations } from "next-intl";
 import { Card, Form, EmptyState } from "@/components/base";
-import { SaveButton, CancelButton } from "@/components/shared/actions";
+import { CancelButton } from "@/components/shared/actions";
+import { FormSaveButton } from "@/components/shared/form";
 import { LoadingSpin } from "@/components/shared/feedback";
 import { EmployeeFormFields } from "../_components/EmployeeFormFields";
 import type { useEditEmployeeViewModel } from "./useEditEmployeeViewModel";
@@ -21,7 +22,7 @@ export function EditEmployeeView(vm: ReturnType<typeof useEditEmployeeViewModel>
         <Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}>
           <EmployeeFormFields isEdit currentRoleId={vm.initialValues.role_id} />
           <FormActions>
-            <SaveButton type="primary" htmlType="submit" loading={vm.submitting} />
+            <FormSaveButton loading={vm.submitting} />
             <CancelButton onClick={vm.onCancel} />
           </FormActions>
         </Form>

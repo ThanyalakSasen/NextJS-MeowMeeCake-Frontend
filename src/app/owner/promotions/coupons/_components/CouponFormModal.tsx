@@ -2,7 +2,7 @@
 // เพิ่ม/แก้ไขคูปอง — antd Modal + base/Form
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { Form, FormItem, useAntForm, Input, InputNumber, Select, Switch, RangePicker, Divider } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, InputNumber, Select, Switch, RangePicker, Divider } from "@/components/base";
 import type { Rule } from "antd/es/form";
 import type { Promotion } from "@/types/promotion";
 import { modalButtonIcons } from "@/components/shared/actions";
@@ -31,6 +31,8 @@ export function CouponFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<CouponFormValue>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   const discountType = Form.useWatch("discountType", form);
   const scope: CouponScope = Form.useWatch("scope", form) ?? "all";
@@ -82,6 +84,7 @@ export function CouponFormModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons(editTarget ? "save" : "add")}
+      okButtonProps={{ ...modalButtonIcons(editTarget ? "save" : "add").okButtonProps, disabled: !valid }}
       okText={editTarget ? t("common.save") : t("coupons.addCoupon")}
       cancelText={t("common.cancel")}
       width={480}

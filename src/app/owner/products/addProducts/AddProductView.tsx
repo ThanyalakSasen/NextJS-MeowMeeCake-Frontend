@@ -1,6 +1,6 @@
 "use client";
 import { useTranslations } from "next-intl";
-import { Card, Form, useAntForm } from "@/components/base";
+import { Card, Form, useAntForm, useFormValid } from "@/components/base";
 import { SaveButton, CancelButton } from "@/components/shared/actions";
 import { ProductFormFields } from "../_components/ProductFormFields";
 import { CustomizationEditor } from "../[id]/edit/_components/CustomizationEditor";
@@ -13,6 +13,8 @@ export function AddProductView(
 ) {
   const t = useTranslations();
   const [form] = useAntForm();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
   if (!vm.allowed) return null; // กำลังเด้งไป access-denied
   return (
     <FormPageLayout title={t("nav.productsAdd")}>
@@ -26,7 +28,7 @@ export function AddProductView(
       {vm.customization.canEdit && <CustomizationEditor {...vm.customization} />}
       {/* ปุ่มอยู่ใต้การ์ดตัวเลือก — กรอกครบทั้งสองการ์ดแล้วกดบันทึกครั้งเดียว (submit ฟอร์มผ่าน form.submit) */}
       <FormActions>
-        <SaveButton type="primary" loading={vm.submitting} onClick={() => form.submit()} />
+        <SaveButton type="primary" loading={vm.submitting} disabled={!valid} onClick={() => form.submit()} />
         <CancelButton onClick={vm.onCancel} />
       </FormActions>
     </FormPageLayout>

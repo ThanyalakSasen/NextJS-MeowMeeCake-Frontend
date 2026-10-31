@@ -82,8 +82,8 @@ export function useStoreInfoViewModel() {
   const [markets, setMarkets] = useState<AdminWeeklyMarket[]>([]);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  /** แจ้งเตือนที่ไม่ได้มาจากค่าในฟอร์ม (ไฟล์โลโก้ผิดชนิด/ใหญ่เกิน) — ที่เหลือตรวจสดจากร่าง (liveErrors) */
   const [errors, setErrors] = useState<FormErrors>({});
-  const [marketsError, setMarketsError] = useState<FieldError | null>(null);
 
   // หน้าร้านที่บันทึก (มุมมองของหน้านี้): owner = หน้าร้านหลักใช้ที่อยู่ร้าน · พนักงาน = ตามที่ backend ส่งมา
   const savedMarketsView = useMemo(
@@ -130,7 +130,6 @@ export function useStoreInfoViewModel() {
     setLogoFile(null);
     setLogoPreview(null);
     setErrors({});
-    setMarketsError(null);
   };
 
   const startEdit = (section: SectionKey) => {
@@ -191,21 +190,23 @@ export function useStoreInfoViewModel() {
     },
   });
 
+  // ตรวจสดทุกครั้งที่แก้ — ขึ้นเตือนใต้ช่องทันทีที่กรอกผิด/ว่าง และปุ่มบันทึกกดไม่ได้จนกว่าจะถูกครบ (ผู้ใช้ขอ 2026-10-31)
+  // หน้าร้าน: หน้าร้านหลักต้องกรอกที่อยู่ครบ (owner — เป็นที่อยู่ร้าน) · แห่งอื่นกรอกแล้วต้องครบ
+  const liveErrors: FormErrors =
+    editing === null
+      ? {}
+      : editing === "markets"
+        ? validateMarketAddresses(marketsToSave, isOwner)
+        : validateProfile(editing, profile);
+  const marketsError = editing === "markets" ? validateMarkets(marketsToSave) : null;
+  const allErrors: FormErrors = { ...liveErrors, ...errors };
+  const canSave = editing !== null && !marketsError && Object.keys(allErrors).length === 0;
+
   const onSave = () => {
     const section = editing;
     if (!section) return;
-    if (section === "markets") {
-      const mErr = validateMarkets(marketsToSave);
-      // หน้าร้านหลักต้องกรอกที่อยู่ครบ (owner — เป็นที่อยู่ร้าน) · แห่งอื่นกรอกแล้วต้องครบ
-      const aErr = validateMarketAddresses(marketsToSave, isOwner);
-      setMarketsError(mErr);
-      setErrors(aErr);
-      if (mErr || Object.keys(aErr).length > 0) return void alert.error(t("storeInfo.checkFields"));
-    } else {
-      const pErr = validateProfile(section, profile);
-      setErrors(pErr);
-      if (Object.keys(pErr).length > 0) return void alert.error(t("storeInfo.checkFields"));
-    }
+    // ปุ่มถูก disable อยู่แล้วถ้ายังผิด — กันไว้อีกชั้น (เช่น กด Enter)
+    if (!canSave) return void alert.error(t("storeInfo.checkFields"));
     // ไม่ได้แก้อะไร แต่ที่ตั้งหน้าร้านหลักยังไม่ตรงที่อยู่ร้าน → บันทึกให้ตรงด้วย
     const mainOutOfSync = section === "markets" && !sameValue(marketsPayload(marketsToSave), marketsPayload(savedMarkets));
     if (!dirty && !mainOutOfSync) return setEditing(null);
@@ -218,7 +219,6 @@ export function useStoreInfoViewModel() {
   // ที่อยู่ของหน้าร้านลำดับ i (ช่องเดียวกับที่อยู่ร้าน) — แก้แล้วล้างแจ้งเตือนของช่องนั้น
   const setMarketAddress = (i: number, patch: Partial<StoreSettings>) => {
     setMarkets((ms) => ms.map((m, j) => (j === i ? { ...m, address: { ...marketAddressOf(m), ...patch } } : m)));
-    setErrors((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !Object.keys(patch).some((p) => k === `m${i}.${p}`))));
   };
   const setMarketAddressField = <K extends keyof StoreSettings>(i: number, key: K, value: StoreSettings[K]) =>
     setMarketAddress(i, { [key]: value } as Partial<StoreSettings>);
@@ -243,7 +243,6 @@ export function useStoreInfoViewModel() {
 
   const setMarketField = <K extends keyof AdminWeeklyMarket>(i: number, key: K, value: AdminWeeklyMarket[K]) => {
     setMarkets((ms) => ms.map((m, j) => (j === i ? { ...m, [key]: value } : m)));
-    setMarketsError(null);
   };
   const toggleMarketDay = (i: number, day: WeekDay) =>
     setMarkets((ms) =>
@@ -260,7 +259,6 @@ export function useStoreInfoViewModel() {
   const addMarket = () => setMarkets((ms) => [...ms, { ...NEW_MARKET }]);
   /** ตั้งเป็นหน้าร้านหลัก (แห่งเดียว) แล้วย้ายขึ้นลำดับแรก — ตรงกับที่ backend บันทึก · ที่อยู่ของแห่งนี้จะเป็นที่อยู่ร้านตอนบันทึก */
   const setMainMarket = (i: number) => {
-    setErrors({}); // ลำดับเปลี่ยน — แจ้งเตือนรายช่อง (m<ลำดับ>.*) เดิมไม่ตรงแล้ว
     setMarkets((ms) => {
       const next = ms.map((m, j) => ({ ...m, is_main: j === i }));
       return [next[i], ...next.filter((_, j) => j !== i)];
@@ -306,6 +304,7 @@ export function useStoreInfoViewModel() {
     startEdit,
     cancelEdit,
     onSave,
+    canSave,
 
     profile: shownProfile,
     systemEmail: profileQ.data?.system_email ?? "",
@@ -335,6 +334,6 @@ export function useStoreInfoViewModel() {
     addMarket,
     removeMarket,
 
-    fieldError: (name: string) => errorText(errors[name]),
+    fieldError: (name: string) => errorText(allErrors[name]),
   };
 }

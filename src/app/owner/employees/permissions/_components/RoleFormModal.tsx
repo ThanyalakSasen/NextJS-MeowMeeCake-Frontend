@@ -2,7 +2,7 @@
 // Modal เพิ่มตำแหน่ง (Role) ใหม่ — เริ่มจากแม่แบบ (P6) หรือคัดลอกสิทธิ์จาก role เดิม (เลือกได้อย่างเดียว)
 import { useTranslations } from "next-intl";
 import { Modal } from "antd";
-import { Form, FormItem, useAntForm, Input, Select } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, Select } from "@/components/base";
 import type { Rule } from "antd/es/form";
 import type { Role } from "@/types/role";
 import { modalButtonIcons } from "@/components/shared/actions";
@@ -26,6 +26,8 @@ export function RoleFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<AddRoleValues>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   const required: Rule[] = [{ required: true, whitespace: true, message: t("validation.required") }];
 
@@ -40,6 +42,7 @@ export function RoleFormModal({
       open={open}
       title={t("permissions.addRole")}
       {...modalButtonIcons("add")}
+      okButtonProps={{ ...modalButtonIcons("add").okButtonProps, disabled: !valid }}
       okText={t("common.create")}
       cancelText={t("common.cancel")}
       onOk={handleOk}

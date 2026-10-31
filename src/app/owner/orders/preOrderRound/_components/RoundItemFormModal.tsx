@@ -4,7 +4,7 @@
 import { useEffect } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { Form, FormItem, useAntForm, InputNumber, Select, Switch } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, InputNumber, Select, Switch } from "@/components/base";
 import type { Product } from "@/types/product";
 import type { PreorderRound, PreorderRoundItem, RoundItemInput } from "@/types/preorderRound";
 import { modalButtonIcons } from "@/components/shared/actions";
@@ -37,6 +37,8 @@ export function RoundItemFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<FormValues>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
   const isEdit = !!item;
 
   useEffect(() => {
@@ -76,6 +78,7 @@ export function RoundItemFormModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons("save")}
+      okButtonProps={{ ...modalButtonIcons("save").okButtonProps, disabled: !valid }}
       okText={t("common.save")}
       cancelText={t("common.cancel")}
       width={480}

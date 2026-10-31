@@ -4,13 +4,13 @@
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import type { Dayjs } from "dayjs";
-import { Form, FormItem, useAntForm, Input, InputNumber, Select, DatePicker, Button } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import { formatCurrency } from "@/i18n/format";
 import type { Product } from "@/types/product";
 import type { CreateRoundInput, RoundItemInput } from "@/types/preorderRound";
 import { actionIcon, modalButtonIcons } from "@/components/shared/actions";
-import { roundDatesError, roundDatesPayload } from "./roundDates";
+import { notBeforeRule, roundDatesError, roundDatesPayload } from "./roundDates";
 import { useEditableRows, RemoveRowButton } from "@/components/shared/form";
 import { sortOptionsThai } from "@/lib/thaiSort";
 
@@ -53,7 +53,16 @@ export function RoundFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<FormValues>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
   const { rows, setRows, updateRow, removeRow } = useEditableRows<ItemRow>([]);
+  // แถวสินค้า (อยู่นอก antd Form) — เลือกสินค้าแล้วต้องมีขั้นต่ำ/โควตา และขั้นต่ำไม่เกินโควตา · เตือนใต้รายการทันที
+  const picked = rows.filter((r) => r.product_id);
+  const rowsIssue = picked.some((r) => !r.min_order_qty || !r.max_qty_total)
+    ? "preorderRound.itemQtyRequired"
+    : picked.some((r) => r.min_order_qty! > r.max_qty_total!)
+      ? "preorderRound.minExceedsMax"
+      : null;
 
   const handleAfterClose = () => {
     form.resetFields();
@@ -67,15 +76,9 @@ export function RoundFormModal({
       alert.warning(t(err));
       return;
     }
-    // เลือกสินค้าแล้วแต่ขั้นต่ำ/โควตาว่าง = บอก (ไม่ทิ้งแถวนั้นเงียบ ๆ)
-    const picked = rows.filter((r) => r.product_id);
-    if (picked.some((r) => !r.min_order_qty || !r.max_qty_total)) {
-      alert.warning(t("preorderRound.itemQtyRequired"));
-      return;
-    }
-    // ขั้นต่ำเกินโควตารวม = ไม่มีใครสั่งได้ (backend ปฏิเสธด้วย)
-    if (picked.some((r) => r.min_order_qty! > r.max_qty_total!)) {
-      alert.warning(t("preorderRound.minExceedsMax"));
+    // ปุ่มถูก disable อยู่แล้วถ้าแถวไม่ครบ — กันไว้อีกชั้น (เช่น กด Enter)
+    if (rowsIssue) {
+      alert.warning(t(rowsIssue));
       return;
     }
     const items: RoundItemInput[] = picked.map((r) => ({
@@ -99,6 +102,7 @@ export function RoundFormModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons("add")}
+      okButtonProps={{ ...modalButtonIcons("add").okButtonProps, disabled: !valid || !!rowsIssue }}
       okText={t("common.create")}
       cancelText={t("common.cancel")}
       width={680}
@@ -118,10 +122,20 @@ export function RoundFormModal({
           <FormItem name="open_date" label={t("preorderRound.fieldOpenDate")} rules={[{ required: true, message: t("validation.required") }]}>
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="close_date" label={t("preorderRound.fieldCloseDate")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem
+            name="close_date"
+            label={t("preorderRound.fieldCloseDate")}
+            dependencies={["open_date"]}
+            rules={[{ required: true, message: t("validation.required") }, notBeforeRule("open_date", t("preorderRound.openBeforeCloseRequired"))]}
+          >
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="pickup_date" label={t("preorderRound.fieldPickupDate")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem
+            name="pickup_date"
+            label={t("preorderRound.fieldPickupDate")}
+            dependencies={["close_date"]}
+            rules={[{ required: true, message: t("validation.required") }, notBeforeRule("close_date", t("preorderRound.pickupAfterCloseRequired"))]}
+          >
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
         </div>
@@ -196,6 +210,11 @@ export function RoundFormModal({
             </div>
           );
         })}
+        {rowsIssue && (
+          <p role="alert" className="m-0 mt-2 text-sm text-red-500">
+            {t(rowsIssue)}
+          </p>
+        )}
       </Form>
     </Modal>
   );

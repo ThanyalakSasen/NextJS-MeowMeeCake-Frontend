@@ -15,7 +15,7 @@ import { Modal } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
-import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, DatePicker, Button } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, TextArea, InputNumber, Select, DatePicker, Button } from "@/components/base";
 import { alert, confirmAlert } from "@/lib/alert";
 import { formatNumber } from "@/i18n/format";
 import { productionOrdersService } from "@/services/productionOrders";
@@ -94,8 +94,18 @@ export function ProductionOrderFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<FormValues>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
   const locale = useLocale();
   const { rows, setRows, updateRow, removeRow } = useEditableRows<ItemRow>(editTarget ? rowsOf(editTarget) : [emptyRow()]);
+  // แถวสินค้า (อยู่นอก antd Form) — เตือนใต้รายการทันที · ยังไม่ได้เลือกสินค้าเลย = แค่ปิดปุ่ม ไม่ขึ้นตัวแดงตั้งแต่เปิด
+  const rowsIssue = rows.some((r) => r.product_id && !r.planned_qty)
+    ? "production.qtyRequired"
+    : rows.some((r) => r.product_id && !r.recipe_id)
+      ? "production.recipeRequired"
+      : !rows.some((r) => r.product_id && r.planned_qty)
+        ? "production.itemsRequired"
+        : null;
 
   // ── เช็ควัตถุดิบ: แถวที่เลือกสินค้าแล้ว → หน่วงก่อนยิง (พิมพ์จำนวนรัว ๆ ไม่ยิงทุกตัวอักษร)
   // สูตรของแถวอยู่ในแถวเอง (row.recipe_id) — รายการเดิมใช้สูตรที่ผูกไว้ในใบ
@@ -143,21 +153,12 @@ export function ProductionOrderFormModal({
 
   const handleOk = async () => {
     const v = await form.validateFields();
-    // เลือกสินค้าแล้วแต่จำนวนว่าง = บอก (ไม่ทิ้งแถวนั้นเงียบ ๆ)
-    if (rows.some((r) => r.product_id && !r.planned_qty)) {
-      alert.warning(t("production.qtyRequired"));
-      return;
-    }
-    // สินค้าหลายสูตรยังไม่ได้เลือกสูตร = บอก (เดิมหยิบสูตรแรกให้เงียบ ๆ)
-    if (rows.some((r) => r.product_id && !r.recipe_id)) {
-      alert.warning(t("production.recipeRequired"));
+    // ปุ่มถูก disable อยู่แล้วถ้าแถวไม่ครบ — กันไว้อีกชั้น (เช่น กด Enter)
+    if (rowsIssue) {
+      alert.warning(t(rowsIssue));
       return;
     }
     const validRows = rows.filter((r): r is ItemRow & { planned_qty: number } => !!r.product_id && !!r.planned_qty);
-    if (validRows.length === 0) {
-      alert.warning(t("production.itemsRequired"));
-      return;
-    }
     // วัตถุดิบไม่พอ (ที่รู้แล้ว) — ถามก่อน ไม่บล็อก: ร้านอาจรับวัตถุดิบเข้าก่อนวันผลิต
     const knownShort = validRows.some((r) => rowResult(r)?.can_produce === false) || totalShort.length > 0;
     if (knownShort) {
@@ -192,6 +193,7 @@ export function ProductionOrderFormModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons(editTarget ? "save" : "add")}
+      okButtonProps={{ ...modalButtonIcons(editTarget ? "save" : "add").okButtonProps, disabled: !valid || !!rowsIssue }}
       okText={editTarget ? t("common.save") : t("production.createSubmit")}
       cancelText={t("common.cancel")}
       width={640}
@@ -356,6 +358,11 @@ export function ProductionOrderFormModal({
           );
         })}
 
+        {rowsIssue !== "production.itemsRequired" && rowsIssue && (
+          <p role="alert" className="m-0 mt-2 text-sm text-red-500">
+            {t(rowsIssue)}
+          </p>
+        )}
         {totalShort.length > 0 && (
           <div role="alert" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
             <p className="m-0 font-semibold">{t("production.stockShortTotal")}</p>
