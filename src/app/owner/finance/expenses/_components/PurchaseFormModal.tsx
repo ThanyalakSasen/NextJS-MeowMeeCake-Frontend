@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
-import { Modal } from "antd";
+import { Checkbox, Modal } from "antd";
 import { useLocale, useTranslations } from "next-intl";
 import { TrashIcon } from "@heroicons/react/24/outline";
 import { Button, DatePicker, Form, FormItem, Input, InputNumber, Select, TextArea, useAntForm, useFormValid } from "@/components/base";
@@ -32,6 +32,8 @@ interface HeaderValue {
   description?: string;
   note?: string;
   receipt_url?: string;
+  /** ตั้งต้นทุนวัตถุดิบ (cost_per_unit) เป็นราคาต่อหน่วยของบิลนี้ */
+  update_cost: boolean;
 }
 
 interface Line {
@@ -135,6 +137,7 @@ function Body({
       description: v.description?.trim() || undefined,
       note: v.note?.trim() || undefined,
       receipt_url: v.receipt_url || null,
+      update_cost: v.update_cost,
       items: filled.map((l) => ({
         ingredient_id: l.id as string,
         qty: l.qty as number,
@@ -153,7 +156,7 @@ function Body({
       <Form
         form={form}
         layout="vertical"
-        initialValues={{ date: dayjs(), category: PURCHASE_CATEGORIES[0], payment_method: EXPENSE_PAYMENT_METHODS[0] }}
+        initialValues={{ date: dayjs(), category: PURCHASE_CATEGORIES[0], payment_method: EXPENSE_PAYMENT_METHODS[0], update_cost: true }}
       >
         <div className="grid grid-cols-2 gap-x-3 md:grid-cols-4">
           <FormItem name="date" label={t("purchase.fieldDate")} rules={[{ required: true, message: t("validation.required") }]}>
@@ -267,6 +270,12 @@ function Body({
             </p>
           )}
         </div>
+
+        {/* ต้นทุนวัตถุดิบ = ราคาซื้อล่าสุด (ผู้ใช้ขอ 2026-10-31) — ใช้คิดมูลค่าสต็อก + ต้นทุนสูตรตอนบันทึกสูตรครั้งถัดไป */}
+        <FormItem name="update_cost" valuePropName="checked" className="!mb-0 mt-3">
+          <Checkbox>{t("purchase.updateCost")}</Checkbox>
+        </FormItem>
+        <p className="m-0 ml-6 text-xs text-gray-500">{t("purchase.updateCostHint")}</p>
 
         <div className="mt-4 grid grid-cols-1 gap-x-3 md:grid-cols-2">
           <FormItem name="note" label={t("finance.fieldNote")}>

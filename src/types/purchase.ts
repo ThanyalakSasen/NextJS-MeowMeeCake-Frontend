@@ -34,6 +34,8 @@ export interface PurchaseInput {
   receipt_url?: string | null;
   /** เลขที่บิล — เก็บที่รายการรับเข้าทุกแถว */
   po_ref?: string;
+  /** ตั้งต้นทุนวัตถุดิบ (cost_per_unit) เป็นราคาต่อหน่วยของบิลนี้ (line_total / qty · ข้ามรายการราคา 0) — ค่าเริ่มต้น true */
+  update_cost?: boolean;
   items: PurchaseItemInput[];
 }
 

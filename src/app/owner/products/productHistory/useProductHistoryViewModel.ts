@@ -28,8 +28,29 @@ export interface ProductHistoryRow {
   note: string;
   refType: ProductStockTransaction["ref_type"];
   refNo: string | null;
-  /** null = ระบบ / ลูกค้าสั่งเอง */
-  performedBy: string | null;
+  by: PerformedBy;
+}
+
+/**
+ * ผู้ทำรายการ — customer = ลูกค้าเจ้าของออเดอร์ทำเอง (สั่งซื้อ · ยกเลิกเอง) · staff = พนักงาน/เจ้าของร้าน
+ * system = ระบบทำเอง (เช่น ยกเลิกอัตโนมัติเมื่อเลยกำหนดชำระ) — name = ลูกค้าของออเดอร์ (ถ้ามี)
+ */
+export type PerformedBy =
+  | { kind: "customer"; name: string }
+  | { kind: "staff"; name: string }
+  | { kind: "system"; name: string | null };
+
+function performedBy(tx: ProductStockTransaction): PerformedBy {
+  const customer = tx.ref_customer;
+  const actor = tx.performed_by;
+  if (actor) {
+    return customer && actor._id === customer._id
+      ? { kind: "customer", name: customer.user_fullname }
+      : { kind: "staff", name: actor.user_fullname };
+  }
+  // ตัดสต็อกตอนสร้างออเดอร์ไม่บันทึกผู้ทำ — ออเดอร์เป็นของลูกค้าคนนั้น
+  if (customer && tx.type === "sale") return { kind: "customer", name: customer.user_fullname };
+  return { kind: "system", name: customer?.user_fullname ?? null };
 }
 
 type DateRange = [Dayjs, Dayjs] | null;
@@ -47,7 +68,7 @@ function toRow(tx: ProductStockTransaction): ProductHistoryRow {
     note: tx.note ?? "",
     refType: tx.ref_type,
     refNo: tx.ref_no,
-    performedBy: tx.performed_by?.user_fullname ?? null,
+    by: performedBy(tx),
   };
 }
 

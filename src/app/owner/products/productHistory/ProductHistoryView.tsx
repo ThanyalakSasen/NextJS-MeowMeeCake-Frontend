@@ -51,6 +51,15 @@ export function ProductHistoryView(vm: VM) {
         ? t(`productHistory.ref_${r.refType}`, { no: "—" })
         : t("productHistory.refManual");
 
+  const byText = ({ by }: ProductHistoryRow) =>
+    by.kind === "customer"
+      ? t("productHistory.byCustomer", { name: by.name })
+      : by.kind === "staff"
+        ? by.name
+        : by.name
+          ? t("productHistory.bySystemForCustomer", { name: by.name })
+          : t("productHistory.bySystem");
+
   const columns: Column<ProductHistoryRow>[] = [
     { key: "time", title: t("productHistory.colTime"), render: (r) => formatDate(r.createdAt, locale, { withTime: true }) },
     { key: "product", title: t("productHistory.colProduct"), render: (r) => <span className="font-medium text-brown-800">{r.productName}</span> },
@@ -59,7 +68,7 @@ export function ProductHistoryView(vm: VM) {
     { key: "balance", title: t("productHistory.colBalance"), render: balance },
     { key: "source", title: t("productHistory.colSource"), render: source },
     { key: "note", title: t("productHistory.colNote"), render: (r) => r.note || "—" },
-    { key: "by", title: t("productHistory.colBy"), render: (r) => r.performedBy ?? t("productHistory.bySystem") },
+    { key: "by", title: t("productHistory.colBy"), render: (r) => byText(r) },
   ];
 
   // จอ <1280px: การ์ดต่อแถว
@@ -77,7 +86,7 @@ export function ProductHistoryView(vm: VM) {
         {balance(r)}
       </div>
       <p className="m-0 text-sm text-gray-600">
-        {source(r)} · {r.performedBy ?? t("productHistory.bySystem")}
+        {source(r)} · {byText(r)}
       </p>
       {r.note && <p className="m-0 text-sm text-gray-700">{r.note}</p>}
     </div>
