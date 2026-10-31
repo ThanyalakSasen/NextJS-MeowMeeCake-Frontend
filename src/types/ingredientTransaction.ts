@@ -19,6 +19,12 @@ export interface IngredientTransaction {
   /** วันหมดอายุของล็อตที่รับเข้า (type "receive") */
   expiry_date?: string | null;
   performed_by?: string | { _id: string; user_fullname: string; email: string };
+  /** เลขที่บิล/ใบสั่งซื้อ (ถ้ามี) */
+  po_ref?: string | null;
+  /** บิลซื้อ (ค่าใช้จ่าย) ที่รายการรับเข้านี้มาจาก — list populate เป็น object · null = ยังไม่ผูก */
+  expense_id?: string | { _id: string; description: string; date: string; vendor?: string; amount: number } | null;
+  /** ราคารวมของรายการนี้ในบิล (บาท) — มีเมื่อผูกบิลแล้ว */
+  line_total?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -26,7 +32,7 @@ export interface IngredientTransaction {
 /** body ตอน create — ref field ต้องเป็น string id */
 export type IngredientTransactionInput = Omit<
   IngredientTransaction,
-  "_id" | "created_at" | "updated_at" | "ingredient_id" | "unit_id" | "performed_by"
+  "_id" | "created_at" | "updated_at" | "ingredient_id" | "unit_id" | "performed_by" | "expense_id" | "line_total"
 > & {
   ingredient_id: string;
   unit_id?: string;
@@ -36,4 +42,6 @@ export type IngredientTransactionInput = Omit<
 export interface IngredientTransactionListParams extends ListParams {
   ingredient_id?: string;
   type?: IngredientTxnType;
+  /** "none" = เฉพาะรายการที่ยังไม่ผูกบิลซื้อ */
+  expense_id?: string;
 }

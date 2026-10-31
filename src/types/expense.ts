@@ -20,11 +20,15 @@ export interface Expense {
   receipt_url?: string | null;
   /** รายจ่ายประจำ (ค่าเช่า/ค่าไฟ ฯลฯ) — frontend คำนวณวันครบกำหนดรอบถัดไปจาก date + 1 เดือน */
   is_recurring: boolean;
+  /** จำนวนรายการรับเข้าสต็อกวัตถุดิบที่ผูกกับค่าใช้จ่ายนี้ (บันทึกการซื้อ / ผูกย้อนหลัง) — backend คำนวณให้ */
+  linked_count?: number;
+  /** ราคารวมของรายการรับเข้าที่ผูกไว้ (บาท) — ยอดค่าใช้จ่ายต้องไม่น้อยกว่านี้ */
+  linked_total?: number;
   created_at: string;
   updated_at: string;
 }
 
-export type ExpenseInput = Omit<Expense, "_id" | "created_at" | "updated_at">;
+export type ExpenseInput = Omit<Expense, "_id" | "created_at" | "updated_at" | "linked_count" | "linked_total">;
 
 export interface ExpenseListParams extends ListParams {
   category?: ExpenseCategory;

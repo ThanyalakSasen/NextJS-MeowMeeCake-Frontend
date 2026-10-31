@@ -81,6 +81,9 @@ export function ExpenseFormModal({
               { type: "number", min: 0.01, message: t("validation.positive") },
               // เท่า backend (schemas/expense.ts EXPENSE_MAX) — กันพิมพ์ศูนย์เกินแล้วสรุปการเงินเพี้ยน
               { type: "number", max: EXPENSE_MAX, message: t("finance.amountMax", { max: EXPENSE_MAX }) },
+              ...(editTarget?.linked_total
+                ? [{ type: "number" as const, min: editTarget.linked_total, message: t("purchase.amountBelowLinked", { total: editTarget.linked_total }) }]
+                : []),
             ]}
           >
             <InputNumber min={0} precision={0} />
