@@ -44,7 +44,8 @@
     "prev": "Previous period",
     "next": "Next period",
     "pick": "Choose period",
-    "quarterLabel": "Q{n} {year}"
+    "quarterLabel": "Q{n} {year}",
+    "quarterCell": "Q{n}"
   },
   "filterLabel": {
     "role": "Role",

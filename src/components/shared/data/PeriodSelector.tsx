@@ -145,6 +145,14 @@ export function PeriodSelector({
             picker={pickerTypeFor(effectivePeriod)}
             value={date}
             format={labelOf}
+            // ช่องเลือกไตรมาสของ antd เขียน Q1–Q4 → ชื่อเต็มตามภาษาของผู้ใช้ ("ไตรมาส 1" · ผู้ใช้ขอ 2026-10-31)
+            cellRender={(current, info) =>
+              info.type === "quarter" && dayjs.isDayjs(current) ? (
+                <div className="ant-picker-cell-inner">{t("quarterCell", { n: current.quarter() })}</div>
+              ) : (
+                info.originNode
+              )
+            }
             inputReadOnly
             allowClear={false}
             disabledDate={allowFuture ? undefined : (d) => d.isAfter(dayjs(), "day")}
