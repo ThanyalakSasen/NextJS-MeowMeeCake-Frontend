@@ -3,10 +3,11 @@
 // ExpenseStockItemsModal — ค่าใช้จ่ายใบนี้ซื้ออะไรเข้าสต็อกบ้าง (วัตถุดิบ · จำนวน · ราคารวม · ราคาต่อหน่วย)
 // + ผูกรายการรับเข้าเดิม (บันทึกก่อนมีบันทึกการซื้อ) ย้อนหลัง / ยกเลิกการผูก — ผู้ใช้ขอ 2026-10-31
 // ราคารวมของที่ผูกต้องไม่เกินยอดค่าใช้จ่าย (บิลอาจมีของที่ไม่เข้าสต็อก จึงน้อยกว่าได้) — backend ตรวจซ้ำ
+// ผูกแล้วอัปเดตต้นทุนวัตถุดิบได้ (ผู้ใช้ขอ 2026-10-31) — backend ตั้งเฉพาะเมื่อเป็นราคาซื้อล่าสุด ผูกบิลเก่าไม่ทับราคาใหม่
 // ─────────────────────────────────────────────────────────────
 import { useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
-import { Modal } from "antd";
+import { Checkbox, Modal } from "antd";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { TrashIcon } from "@heroicons/react/24/outline";
@@ -67,6 +68,7 @@ function Body({ expense, canEdit }: { expense: Expense; canEdit: boolean }) {
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ["expenses"] });
     void qc.invalidateQueries({ queryKey: ["ingredient-transactions"] });
+    void qc.invalidateQueries({ queryKey: ["ingredients"] });
   };
   const onError = (e: unknown) => alert.error(isApiError(e) ? e.message : t("purchase.linkFailed"));
 
@@ -153,6 +155,7 @@ function LinkSection({
   const t = useTranslations();
   const locale = useLocale();
   const [lines, setLines] = useState<LinkLine[]>([newLine()]);
+  const [updateCost, setUpdateCost] = useState(true);
   const [range, setRange] = useState<[Dayjs, Dayjs]>(() => {
     const d = dayjs(expense.date);
     const end = d.add(AROUND_DAYS, "day");
@@ -186,9 +189,11 @@ function LinkSection({
       expensesService.linkStockItems(
         expense._id,
         filled.map((l) => ({ transaction_id: l.id as string, line_total: l.total as number })),
+        updateCost,
       ),
-    onSuccess: () => {
-      alert.success(t("purchase.linked"));
+    onSuccess: (res) => {
+      const n = res.data.cost_updated;
+      alert.success(n > 0 ? t("purchase.linkedCostUpdated", { n }) : t("purchase.linked"));
       setLines([newLine()]);
       onLinked();
     },
@@ -250,6 +255,10 @@ function LinkSection({
         </div>
       ))}
       {issue && <p role="alert" className="m-0 text-sm text-red-500">{issue}</p>}
+      <Checkbox checked={updateCost} onChange={(e) => setUpdateCost(e.target.checked)}>
+        {t("purchase.linkUpdateCost")}
+      </Checkbox>
+      <p className="m-0 ml-6 text-xs text-gray-500">{t("purchase.linkUpdateCostHint")}</p>
       <div className="flex justify-between gap-2">
         <Button size="small" icon={actionIcon("add", "small")} onClick={() => setLines((ls) => [...ls, newLine()])}>
           {t("purchase.addLine")}

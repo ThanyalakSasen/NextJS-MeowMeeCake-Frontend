@@ -34,8 +34,9 @@ export const expensesService = {
     (await http.get<ItemResponse<IngredientTransaction[]>>(`${BASE}/${id}/stock-items`)).data,
 
   /** ผูกรายการรับเข้าเดิมย้อนหลัง — ราคารวมของที่ผูกทั้งหมดต้องไม่เกินยอดค่าใช้จ่าย (backend ตรวจ) */
-  linkStockItems: (id: string, links: { transaction_id: string; line_total: number }[]) =>
-    http.post<ItemResponse<{ linked: number }>>(`${BASE}/${id}/stock-items`, { links }),
+  /** update_cost — ตั้งต้นทุนวัตถุดิบจากราคาที่ผูก (เฉพาะที่เป็นราคาซื้อล่าสุด) · cost_updated = จำนวนวัตถุดิบที่ตั้งต้นทุน */
+  linkStockItems: (id: string, links: { transaction_id: string; line_total: number }[], updateCost = true) =>
+    http.post<ItemResponse<{ linked: number; cost_updated: number }>>(`${BASE}/${id}/stock-items`, { links, update_cost: updateCost }),
 
   /** ยกเลิกการผูก (สต็อกไม่เปลี่ยน) */
   unlinkStockItem: (id: string, transactionId: string) =>
