@@ -13,7 +13,7 @@ import { usePermission } from "@/context/PermissionsContext";
 import { CURRENT_USER_KEY, useCurrentUser } from "@/hooks/useCurrentUser";
 import { alert, confirmAlert } from "@/lib/alert";
 import type { MenuKey } from "@/constants/menuKeys";
-import type { PermissionInput } from "@/types/permission";
+import type { RolePermissionRow } from "@/types/permission";
 import type { RoleInput, RoleType } from "@/types/role";
 import { isApiError } from "@/types/api";
 import {
@@ -113,36 +113,19 @@ export function usePermissionsViewModel() {
   };
 
   // ── persist ──
-  const createPerm = useMutation({ mutationFn: (b: PermissionInput) => permissionsService.create(b) });
-  const updatePerm = useMutation({
-    mutationFn: ({ id, b }: { id: string; b: Partial<PermissionInput> }) => permissionsService.update(id, b),
+  const saveRole = useMutation({
+    mutationFn: ({ roleId, rows }: { roleId: string; rows: RolePermissionRow[] }) => permissionsService.saveRole(roleId, rows),
   });
 
-  // แถวที่มีอยู่แล้ว: PATCH เฉพาะช่องที่เปลี่ยน — backend ตรวจทุก flag ที่ส่งมาเป็น true กับสิทธิ์ของผู้ทำ
-  // ถ้าส่งครบ 5 ช่อง คนที่ไม่ใช่ owner จะแก้แถวที่มีช่องเกินตัวเองไม่ได้เลย แม้แค่จะถอนสิทธิ์ (P4)
-  // id ของแถวอ่านจากข้อมูล server ล่าสุดก่อน (ไม่ใช่จาก overrides) — บันทึกล้มกลางทางแล้วกดบันทึกซ้ำ
-  // แถวที่สร้างไปแล้วรอบก่อนจะถูก PATCH แทนการสร้างซ้ำ (เดิมได้ 409 "มีสิทธิ์ของบทบาท+เมนูนี้แล้ว" ค้างตลอด)
+  // บันทึกทั้งบทบาทในคำขอเดียว (เอกสารบั๊กข้อ 12) — เดิม POST/PATCH ทีละเมนู ล้มกลางทาง = บทบาทได้สิทธิ์ไปบางเมนู
+  // backend ตรวจทุกแถว (รวมเพดานสิทธิ์ของผู้ทำ) ก่อนเขียน · เทียบกับข้อมูลจริงเองว่าแถวไหนสร้าง/flag ไหนเปลี่ยน
+  // (แถวเดิมแก้เฉพาะ flag ที่เปลี่ยน — คนที่ไม่ใช่ owner ถอนสิทธิ์แถวที่มีช่องเกินตัวเองได้ P4)
+  // ส่งเฉพาะเมนูที่มีแถวอยู่แล้วหรือเปิดอย่างน้อย 1 ช่อง — เมนูว่างที่ไม่เคยมีแถว ไม่ต้องส่ง
   async function persistRows(roleId: string, rows: RolePerms): Promise<void> {
-    for (const key of PERM_MENU_KEYS) {
-      const row = rows[key];
-      const server = serverByRole[roleId]?.[key];
-      const id = server?.id ?? row.id;
-      const payload = {
-        can_view: row.can_view, can_create: row.can_create, can_update: row.can_update,
-        can_delete: row.can_delete, can_approve: row.can_approve,
-      };
-      if (id) {
-        const changed = Object.fromEntries(PERM_FIELDS.filter((f) => !server?.id || server[f] !== row[f]).map((f) => [f, row[f]]));
-        if (Object.keys(changed).length) await updatePerm.mutateAsync({ id, b: changed });
-      } else if (rowHasAny(row)) {
-        await createPerm.mutateAsync({
-          role_id: roleId,
-          menu_key: key,
-          granted_by: user?.id ?? null,
-          ...payload,
-        });
-      }
-    }
+    const body = PERM_MENU_KEYS.filter((key) => serverByRole[roleId]?.[key]?.id || rows[key].id || rowHasAny(rows[key])).map(
+      (key) => ({ menu_key: key, ...Object.fromEntries(PERM_FIELDS.map((f) => [f, rows[key][f]])) }),
+    );
+    if (body.length) await saveRole.mutateAsync({ roleId, rows: body });
   }
 
   /**

@@ -18,6 +18,7 @@ import { firstPermittedPath } from "@/lib/landingPath";
 import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
+import { TimezoneBanner } from "./TimezoneBanner";
 
 const noopSubscribe = () => () => {};
 
@@ -175,6 +176,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
         <div className="layout-main">
           <Navbar user={user} onLogout={handleLogout} onToggleSidebar={() => setDrawerOpen((p) => !p)} />
+          <TimezoneBanner />
           {/* user มาจาก server แล้ว (src/lib/serverAuth.ts) → โครงหน้า (sidebar/navbar) อยู่ใน HTML แรก
               เนื้อหาหน้า: SSR_PAGES render ฝั่ง server ด้วย · หน้าอื่น render หลัง hydrate (ระหว่างนั้นว่าง — เดิมใส่วงหมุน
               แล้วพอหน้าขึ้นวงหมุนถูกดันลง = CLS 0.22 · ว่างไว้ไม่มีอะไรให้ขยับ) */}

@@ -29,7 +29,7 @@ import { thaiCompare } from "@/lib/thaiSort";
 import { getRangeStartEnd, type PeriodType } from "@/utils/period";
 import { PRODUCTION_ORDERS_KEY, PRODUCTION_PRODUCTS_KEY, fetchProductionOrders, productionHistoryKey, productionHistoryParams, PRODUCTION_PRODUCTS_PARAMS, PRODUCTION_UNITS_KEY, tabFrom, type TabKey } from "./productionQuery";
 import type {
-  ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput,
+  ProductionOrder, RawProductionOrder, CreateProductionOrderItemInput, ProductionOrderFromRoundInput, ProductionOrderEditInput,
 } from "@/types/productionOrder";
 import {
   isFinalStatus, getNextStatus, durationHours, producedQty,
@@ -147,12 +147,15 @@ export function useProductionViewModel() {
     return map;
   }, [productsQ.data, unitsQ.data]);
 
-  /** product_id → recipe_id ตัวแรกที่พบ (backend บังคับทุก production item ต้องผูก recipe_id จริง) */
-  const recipeByProduct = useMemo(() => {
-    const map = new Map<string, string>();
+  /** product_id → สูตรทั้งหมดของสินค้านั้น (backend บังคับทุก production item ต้องผูก recipe_id จริง)
+   *  เดิมเก็บแค่สูตรแรกที่เจอ — สินค้าหลายสูตรได้สูตรแรกเงียบ ๆ ตัดวัตถุดิบผิดสูตร (ข้อ 15) · ตอนนี้ฟอร์มให้เลือกเมื่อมีมากกว่า 1 */
+  const recipesByProduct = useMemo(() => {
+    const map = new Map<string, { _id: string; name: string }[]>();
     (recipesQ.data?.data ?? []).forEach((r) => {
-      if (r.product_id && !map.has(r.product_id)) map.set(r.product_id, r._id);
+      if (!r.product_id) return;
+      map.set(r.product_id, [...(map.get(r.product_id) ?? []), { _id: r._id, name: r.recipe_name }]);
     });
+    map.forEach((list) => list.sort((a, b) => thaiCompare(a.name, b.name)));
     return map;
   }, [recipesQ.data]);
 
@@ -161,7 +164,7 @@ export function useProductionViewModel() {
     [ordersQ.data, productsById],
   );
 
-  /** ตัวเลือกสินค้าตอนสร้างใบสั่งผลิต — สินค้าทุกตัว (ปกติ + พรีออเดอร์) · ยังไม่มีสูตร = recipe_id null
+  /** ตัวเลือกสินค้าตอนสร้างใบสั่งผลิต — สินค้าทุกตัว (ปกติ + พรีออเดอร์) · ยังไม่มีสูตร = recipes ว่าง
    *  ฟอร์มแสดงแต่เลือกไม่ได้ (backend บังคับ recipe_id ต่อแถว — ใช้ตัดวัตถุดิบตอนผลิตเสร็จ) · เดิมซ่อนไปเลย ผู้ใช้ไม่รู้ว่าหายเพราะอะไร */
   const productOptions = useMemo(() => (
     (productsQ.data?.data ?? [])
@@ -169,10 +172,10 @@ export function useProductionViewModel() {
         _id: p._id,
         name: productsById.get(p._id)?.name ?? p.product_name_th,
         unit_abbr: productsById.get(p._id)?.unit_abbr ?? "",
-        recipe_id: recipeByProduct.get(p._id) ?? null,
+        recipes: recipesByProduct.get(p._id) ?? [],
       }))
       .sort((a, b) => thaiCompare(a.name, b.name))
-  ), [productsQ.data, recipeByProduct, productsById]);
+  ), [productsQ.data, recipesByProduct, productsById]);
 
   /** พนักงานที่มอบหมายงานผลิตได้ — active + ไม่ใช่ role ลูกค้า */
   const staff = useMemo(() => {
@@ -382,31 +385,33 @@ export function useProductionViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("production.fromRoundCreateFailed")),
   });
 
-  /** แก้ใบ: หัวใบ → รายการเดิมที่เปลี่ยน → ลบรายการที่เอาออก → เพิ่มรายการใหม่ (ทีละคำขอ — backend ไม่มี endpoint รวม)
-   *  พลาดกลางทางแล้วบางส่วนถูกบันทึกไปแล้ว → invalidate ทั้งสองกรณีให้ฟอร์ม/ตารางเห็นสถานะจริง */
+  /** แก้ใบ: หัวใบ + ลบ/แก้/เพิ่มรายการ ส่งในคำขอเดียว (PUT /edit) — เดิมยิงทีละคำขอ พลาดกลางทาง = ใบเหลือครึ่ง ๆ กลาง ๆ (ข้อ 12)
+   *  backend ตรวจทั้งหมดก่อนเขียน · ล้มเหลวก็ invalidate ให้ฟอร์ม/ตารางเห็นสถานะจริง */
   const editOrder = useMutation({
-    mutationFn: async ({ order, v, itemsEditable, canAddItems }: { order: ProductionOrder; v: CreateProductionOrderValue; itemsEditable: boolean; canAddItems: boolean }) => {
-      await productionOrdersService.update(order._id, {
+    mutationFn: ({ order, v, itemsEditable, canAddItems }: { order: ProductionOrder; v: CreateProductionOrderValue; itemsEditable: boolean; canAddItems: boolean }) => {
+      const items: NonNullable<ProductionOrderEditInput["items"]> = { remove: [], update: [], add: [] };
+      if (canAddItems) {
+        if (itemsEditable) {
+          const kept = new Map(v.items.filter((it) => it.item_id).map((it) => [it.item_id as string, it]));
+          for (const old of order.items) {
+            if (old.item_status === "cancelled") continue;
+            const it = kept.get(old._id);
+            if (!it) items.remove.push(old._id);
+            else if (it.planned_qty !== old.planned_qty || (it.notes ?? null) !== (old.notes ?? null)) {
+              items.update.push({ item_id: old._id, planned_qty: it.planned_qty, notes: it.notes ?? null });
+            }
+          }
+        }
+        for (const { item_id, ...it } of v.items) {
+          if (!item_id) items.add.push({ product_id: it.product_id, recipe_id: it.recipe_id, planned_qty: it.planned_qty, notes: it.notes });
+        }
+      }
+      return productionOrdersService.saveEdit(order._id, {
         production_date: v.production_date,
         assigned_to: v.assigned_to,
         production_note: v.production_note,
+        ...(items.remove.length || items.update.length || items.add.length ? { items } : {}),
       });
-      if (!canAddItems) return;
-      if (itemsEditable) {
-        const kept = new Map(v.items.filter((it) => it.item_id).map((it) => [it.item_id as string, it]));
-        for (const old of order.items) {
-          if (old.item_status === "cancelled") continue;
-          const it = kept.get(old._id);
-          if (!it) {
-            await productionOrdersService.removeItem(old._id);
-          } else if (it.planned_qty !== old.planned_qty || (it.notes ?? null) !== (old.notes ?? null)) {
-            await productionOrdersService.updateItem(old._id, { planned_qty: it.planned_qty, notes: it.notes ?? null });
-          }
-        }
-      }
-      for (const { item_id, ...it } of v.items) {
-        if (!item_id) await productionOrdersService.addItem(order._id, it);
-      }
     },
     onSuccess: () => {
       alert.success(t("production.updated"));

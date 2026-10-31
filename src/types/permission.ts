@@ -22,6 +22,11 @@ export interface Permission {
 
 export type PermissionInput = Omit<Permission, "_id" | "created_at" | "updated_at">;
 
+/** 1 เมนูใน PUT /admin/permissions/role/{roleId} — flag ที่ไม่ส่ง = คงเดิม */
+export type RolePermissionRow = { menu_key: MenuKey } & Partial<
+  Pick<Permission, "can_view" | "can_create" | "can_update" | "can_delete" | "can_approve">
+>;
+
 export interface PermissionListParams extends ListParams {
   role_id?: string;
 }

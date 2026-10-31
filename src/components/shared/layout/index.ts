@@ -2,6 +2,7 @@ export { AuthLayout } from "./AuthLayout";
 export { default as OwnerLayout } from "./OwnerLayout";
 export { Sidebar } from "./Sidebar";
 export { Navbar } from "./Navbar";
+export { TimezoneBanner } from "./TimezoneBanner";
 export { MenuGroupItem } from "./MenuGroupItem";
 export { BreadcrumbTrail } from "./BreadcrumbTrail";
 export { NotificationDropdown } from "./NotificationDropdown";

@@ -153,6 +153,16 @@ export interface ProductionOrderUpdateInput {
   production_note?: string | null;
 }
 
+/** body ตอน PUT /admin/production-orders/[id]/edit — หัวใบ + ลบ/แก้/เพิ่มรายการในคำขอเดียว (ตรวจทั้งหมดก่อนเขียน)
+ *  มีรายการที่ลบ = ต้องมีสิทธิ์ production.delete ด้วย */
+export interface ProductionOrderEditInput extends ProductionOrderUpdateInput {
+  items?: {
+    remove: string[];
+    update: { item_id: string; planned_qty: number; notes: string | null }[];
+    add: CreateProductionOrderItemInput[];
+  };
+}
+
 export interface ProductionOrderListParams extends ListParams {
   /** หลายสถานะคั่นด้วย , ได้ (backend parseList) เช่น "planned,in_progress" */
   production_status?: ProductionStatus | `${ProductionStatus},${string}`;
