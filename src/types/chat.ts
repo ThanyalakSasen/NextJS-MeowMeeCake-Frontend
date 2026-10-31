@@ -67,6 +67,8 @@ export interface ChatThread {
 export interface ChatMessageQuery {
   /** ISO — ข้อความตั้งแต่เวลานี้ (polling) */
   after?: string;
+  /** _id ของข้อความที่ updated_at = after — ใช้คู่กับ after ให้ cursor ขยับได้แม้ข้อความเวลาเดียวกันเกิน limit (เอกสารบั๊กข้อ 17) */
+  after_id?: string;
   /** ISO — ข้อความเก่ากว่านี้ (ดูย้อนหลัง) */
   before?: string;
   limit?: number;

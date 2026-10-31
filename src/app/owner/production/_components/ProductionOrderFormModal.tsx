@@ -2,7 +2,7 @@
 // สร้างใบสั่งผลิต — antd Modal + base/Form · รายการสินค้าเป็นแถวไดนามิก (state ในตัว คล้าย
 // IngredientFormModal/StockActionModal — ยังไม่ซับซ้อนพอต้องแยก ViewModel ของตัวเอง)
 // รายการสินค้า = ทุกตัว (useProductionViewModel.productOptions) · ตัวที่ยังไม่มีสูตรแสดงแต่เลือกไม่ได้
-// (backend บังคับ recipe_id ต่อแถว)
+// (backend บังคับ recipe_id ต่อแถว) · สินค้าที่มีหลายสูตร = ต้องเลือกสูตรในแถวนั้น (เดิมหยิบสูตรแรกเงียบ ๆ — ข้อ 15)
 // เช็ควัตถุดิบพอไหมทันทีที่เลือกสินค้า/แก้จำนวน (POST /production-orders/stock-check · หน่วง 400ms) — แถวที่ไม่พอขึ้นกล่องแดง
 // บอกวัตถุดิบที่ขาด คงเหลือ ต้องใช้ และผลิตได้สูงสุด · ไม่บล็อกการสร้าง (รับวัตถุดิบเข้าก่อนวันผลิตได้) แค่ถามยืนยันตอนกดสร้าง
 // query อยู่ที่นี่ไม่ใช่ ViewModel เพราะผูกกับแถวที่อยู่ใน state ของ modal นี้ (แบบเดียวกับ ReceiptUpload)
@@ -29,7 +29,7 @@ import { sortOptionsThai } from "@/lib/thaiSort";
 // → แถวที่ชื่อยาวดันช่องจำนวน/หมายเหตุเยื้องจากแถวอื่น) · จำนวน 110px ให้พอทั้งตัวเลขและหน่วย (suffix)
 const ROW_COLUMNS = "minmax(0, 1.4fr) 110px minmax(0, 1fr) 24px";
 
-interface ProductOption { _id: string; name: string; unit_abbr: string; recipe_id: string | null }
+interface ProductOption { _id: string; name: string; unit_abbr: string; recipes: { _id: string; name: string }[] }
 interface StaffOption { _id: string; user_fullname: string }
 
 interface ItemRow {
@@ -37,20 +37,22 @@ interface ItemRow {
   /** รายการเดิมของใบ (โหมดแก้ไข) — ไม่มี = แถวใหม่ */
   itemId?: string;
   product_id: string;
+  /** สูตรของแถว — "" = ยังไม่ได้เลือก (สินค้าหลายสูตร) · แถวเดิมใช้สูตรที่ผูกไว้ในใบ (สูตรของสินค้าอาจถูกลบ/เปลี่ยนไปแล้ว) */
+  recipe_id: string;
   /** null = ช่องว่าง (กำลังพิมพ์ใหม่) — เดิมแปลงเป็น 1 ทันที ช่องเด้งเป็น "1" กลางการพิมพ์ (ลบแล้วพิมพ์ 5 ได้ 15) */
   planned_qty: number | null;
   notes: string;
 }
 
 function emptyRow(): ItemRow {
-  return { key: crypto.randomUUID(), product_id: "", planned_qty: 1, notes: "" };
+  return { key: crypto.randomUUID(), product_id: "", recipe_id: "", planned_qty: 1, notes: "" };
 }
 
 /** แถวเริ่มต้นของโหมดแก้ไข — รายการที่ยกเลิกแล้วไม่นำมาแสดง */
 const rowsOf = (o: ProductionOrder): ItemRow[] =>
   o.items
     .filter((it) => it.item_status !== "cancelled")
-    .map((it) => ({ key: it._id, itemId: it._id, product_id: it.product_id, planned_qty: it.planned_qty, notes: it.notes ?? "" }));
+    .map((it) => ({ key: it._id, itemId: it._id, product_id: it.product_id, recipe_id: it.recipe_id, planned_qty: it.planned_qty, notes: it.notes ?? "" }));
 
 const STOCK_CHECK_DEBOUNCE_MS = 400;
 type StockCheckRow = ProductionStockCheck["items"][number];
@@ -96,12 +98,11 @@ export function ProductionOrderFormModal({
   const { rows, setRows, updateRow, removeRow } = useEditableRows<ItemRow>(editTarget ? rowsOf(editTarget) : [emptyRow()]);
 
   // ── เช็ควัตถุดิบ: แถวที่เลือกสินค้าแล้ว → หน่วงก่อนยิง (พิมพ์จำนวนรัว ๆ ไม่ยิงทุกตัวอักษร)
-  // รายการเดิมใช้สูตรที่ผูกไว้ในใบ (สูตรของสินค้าอาจถูกลบ/เปลี่ยนไปแล้ว)
-  const existingRecipe = new Map((editTarget?.items ?? []).map((it) => [it.product_id, it.recipe_id]));
-  const recipeOf = (productId: string) => existingRecipe.get(productId) ?? products.find((p) => p._id === productId)?.recipe_id;
+  // สูตรของแถวอยู่ในแถวเอง (row.recipe_id) — รายการเดิมใช้สูตรที่ผูกไว้ในใบ
+  const recipesOf = (productId: string) => products.find((p) => p._id === productId)?.recipes ?? [];
   const checkItems = rows.flatMap((r) => {
-    const recipe_id = recipeOf(r.product_id);
-    return recipe_id && r.planned_qty != null && r.planned_qty > 0 ? [{ recipe_id, planned_qty: r.planned_qty }] : [];
+    const recipe_id = r.recipe_id;
+    return r.product_id && recipe_id && r.planned_qty != null && r.planned_qty > 0 ? [{ recipe_id, planned_qty: r.planned_qty }] : [];
   });
   const checkKey = JSON.stringify(checkItems);
   const [debouncedKey, setDebouncedKey] = useState("[]");
@@ -120,7 +121,7 @@ export function ProductionOrderFormModal({
   const resultBySig = new Map<string, StockCheckRow>();
   stockQ.data?.items.forEach((it, i) => sent[i] && resultBySig.set(rowSig(sent[i].recipe_id, sent[i].planned_qty), it));
   const rowResult = (r: ItemRow) => {
-    const recipeId = recipeOf(r.product_id);
+    const recipeId = r.recipe_id;
     return recipeId && r.planned_qty != null ? resultBySig.get(rowSig(recipeId, r.planned_qty)) : undefined;
   };
   // ผลรวมทุกแถวใช้ได้เฉพาะตอนผลตรงกับแถวปัจจุบันทั้งชุด
@@ -147,6 +148,11 @@ export function ProductionOrderFormModal({
       alert.warning(t("production.qtyRequired"));
       return;
     }
+    // สินค้าหลายสูตรยังไม่ได้เลือกสูตร = บอก (เดิมหยิบสูตรแรกให้เงียบ ๆ)
+    if (rows.some((r) => r.product_id && !r.recipe_id)) {
+      alert.warning(t("production.recipeRequired"));
+      return;
+    }
     const validRows = rows.filter((r): r is ItemRow & { planned_qty: number } => !!r.product_id && !!r.planned_qty);
     if (validRows.length === 0) {
       alert.warning(t("production.itemsRequired"));
@@ -166,7 +172,7 @@ export function ProductionOrderFormModal({
     const items: ProductionOrderFormItem[] = validRows.map((r) => ({
       item_id: r.itemId,
       product_id: r.product_id,
-      recipe_id: recipeOf(r.product_id) as string,
+      recipe_id: r.recipe_id,
       planned_qty: r.planned_qty,
       notes: r.notes.trim() || null,
     }));
@@ -237,7 +243,7 @@ export function ProductionOrderFormModal({
           <p className="mb-2 text-xs text-gray-500">{t(canAddItems ? "production.roundItemsLockedHint" : "production.itemsLockedHint")}</p>
         )}
 
-        {canAddItems && products.some((p) => !p.recipe_id) && (
+        {canAddItems && products.some((p) => !p.recipes.length) && (
           <p className="mb-2 text-xs text-gray-500">{t("production.noRecipeHint")}</p>
         )}
         {rows.length > 0 && (
@@ -251,6 +257,13 @@ export function ProductionOrderFormModal({
         {rows.map((row) => {
           const res = rowResult(row);
           const unit = products.find((p) => p._id === row.product_id)?.unit_abbr ?? "";
+          const recipes = recipesOf(row.product_id);
+          // แถวเดิมที่ผูกสูตรซึ่งไม่อยู่ในรายการแล้ว (ถูกลบ) — แสดงเป็น "สูตรเดิม" ไม่ขึ้นเป็น id
+          const recipeGone = !!row.recipe_id && !recipes.some((r) => r._id === row.recipe_id);
+          const recipeOptions = [
+            ...recipes.map((r) => ({ value: r._id, label: r.name })),
+            ...(recipeGone ? [{ value: row.recipe_id, label: t("production.recipeRemoved") }] : []),
+          ];
           // แถวเดิมของใบที่แก้รายการไม่ได้ — แถวที่เพิ่มใหม่แก้/ลบได้เสมอ
           const locked = !!row.itemId && !itemsEditable;
           return (
@@ -263,17 +276,21 @@ export function ProductionOrderFormModal({
                   value={row.product_id || undefined}
                   // แถวเดิมเปลี่ยนสินค้าไม่ได้ — ลบแถวแล้วเพิ่มใหม่แทน
                   disabled={!!row.itemId}
-                  onChange={(v) => updateRow(row.key, { product_id: v as string })}
+                  // สูตรเดียว = เลือกให้เลย · หลายสูตร = ว่างไว้ให้เลือกเอง
+                  onChange={(v) => {
+                    const list = recipesOf(v as string);
+                    updateRow(row.key, { product_id: v as string, recipe_id: list.length === 1 ? list[0]._id : "" });
+                  }}
                   showSearch
                   optionFilterProp="label"
                   // มีสูตรขึ้นก่อน (เรียง ก-ฮ) · ยังไม่มีสูตรต่อท้าย เลือกไม่ได้
                   options={[
-                    ...sortOptionsThai(products.filter((p) => p.recipe_id).map((p) => ({
+                    ...sortOptionsThai(products.filter((p) => p.recipes.length).map((p) => ({
                       value: p._id,
                       label: p.name,
                       disabled: rows.some((r) => r.key !== row.key && r.product_id === p._id),
                     }))),
-                    ...sortOptionsThai(products.filter((p) => !p.recipe_id).map((p) => ({
+                    ...sortOptionsThai(products.filter((p) => !p.recipes.length).map((p) => ({
                       value: p._id,
                       label: t("production.productNoRecipe", { name: p.name }),
                       disabled: true,
@@ -304,6 +321,23 @@ export function ProductionOrderFormModal({
                   disabled={rows.length === 1 || locked || (!!row.itemId && !canRemoveExisting)}
                 />
               </div>
+              {row.product_id && (recipes.length > 1 || (!!row.itemId && recipeGone)) && (
+                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                  <span className="shrink-0">{t("production.recipeLabel")}</span>
+                  <Select
+                    size="small"
+                    className="min-w-0 flex-1"
+                    aria-label={t("production.recipeLabel")}
+                    placeholder={t("production.selectRecipe")}
+                    value={row.recipe_id || undefined}
+                    // แถวเดิมเปลี่ยนสูตรไม่ได้ (backend แก้ได้แค่จำนวน/หมายเหตุ) — ลบแถวแล้วเพิ่มใหม่แทน
+                    disabled={!!row.itemId}
+                    status={!row.recipe_id ? "warning" : undefined}
+                    onChange={(v) => updateRow(row.key, { recipe_id: v as string })}
+                    options={recipeOptions}
+                  />
+                </div>
+              )}
               {res?.recipe_invalid && (
                 <p role="alert" className="m-0 mt-1 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700">
                   {t("production.stockRecipeInvalid")}

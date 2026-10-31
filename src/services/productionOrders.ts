@@ -14,6 +14,7 @@ import type {
   ProductionFromRoundPreview,
   ProductionStockCheck,
   ProductionOrderUpdateInput,
+  ProductionOrderEditInput,
   ProductionOrderListParams,
 } from "@/types/productionOrder";
 
@@ -45,6 +46,10 @@ export const productionOrdersService = {
 
   update: (id: string, body: ProductionOrderUpdateInput) =>
     http.patch<ItemResponse<RawProductionOrder>>(`${BASE}/${id}`, body),
+
+  /** บันทึกใบทั้งใบ (หัวใบ + ลบ/แก้/เพิ่มรายการ) ในคำขอเดียว — ผิดจุดเดียว = ไม่มีอะไรถูกบันทึก (เอกสารบั๊กข้อ 12) */
+  saveEdit: (id: string, body: ProductionOrderEditInput) =>
+    http.put<ItemResponse<RawProductionOrder>>(`${BASE}/${id}/edit`, body),
 
   remove: (id: string) =>
     http.delete<EmptyResponse>(`${BASE}/${id}`),

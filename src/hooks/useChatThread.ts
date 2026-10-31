@@ -1,7 +1,9 @@
 "use client";
 // ─────────────────────────────────────────────────────────────
 // useChatThread — ข้อความในห้องแชท + ดึงข้อความใหม่แบบ polling (ใช้ทั้งหน้าร้านและหลังร้าน)
-// - โหลดครั้งแรก = ข้อความล่าสุด · ทุก POLL_MS ขอที่ใหม่/เปลี่ยนหลัง updated_at ล่าสุดที่เห็น (?after=) แล้วรวม (ตัดซ้ำด้วย _id)
+// - โหลดครั้งแรก = ข้อความล่าสุด · ทุก POLL_MS ขอที่ใหม่/เปลี่ยนหลัง (updated_at, _id) ล่าสุดที่เห็น (?after=&after_id=) แล้วรวม (ตัดซ้ำด้วย _id)
+//   cursor เป็นคู่ — เดิมใช้เวลาอย่างเดียว ข้อความเวลาเดียวกันเกิน 30 (กดอ่านแล้วทีเดียว) ได้ 30 ตัวเดิมทุกรอบ = ค้าง (ข้อ 17)
+//   รอบไหนได้ has_more = ยังมีต่อ → ขอต่อทันทีไม่รอรอบหน้า
 //   ข้อความที่อีกฝั่งแก้ = แทนของเดิม · ที่ถูกลบ = เอาออก · ห้องถูกลบ (conversation null) = ล้างจอ
 // - แท็บถูกซ่อน = หยุด poll (กลับมาเห็นแท็บ = ดึงทันที) — ไม่ยิง backend ฟรี ๆ
 // - loadOlder = ข้อความเก่ากว่าอันแรก (?before=) · append = ใส่ข้อความที่เพิ่งส่งทันทีไม่ต้องรอ poll
@@ -37,18 +39,20 @@ export function useChatThread(
   }
 
   // ค่าล่าสุดสำหรับ interval (ไม่ให้ effect เริ่มใหม่ทุกครั้งที่ข้อความเปลี่ยน)
-  const latestRef = useRef<string | null>(null);
+  const latestRef = useRef<{ at: string; id: string } | null>(null);
   const fetcherRef = useRef(fetcher);
   const onNewRef = useRef(onNewFromOther);
   useEffect(() => {
     fetcherRef.current = fetcher;
     onNewRef.current = onNewFromOther;
   });
-  /** cursor ของ polling = updated_at ล่าสุดที่เคยได้รับ (รวมข้อความที่ถูกลบ — ไม่อยู่ใน messages แล้ว) */
+  /** cursor ของ polling = (updated_at, _id) ล่าสุดที่เคยได้รับ (รวมข้อความที่ถูกลบ — ไม่อยู่ใน messages แล้ว)
+   *  เวลาเท่ากันเทียบ _id (ObjectId hex ยาวเท่ากัน เทียบ string ได้) — ลำดับเดียวกับ backend */
   const bumpCursor = (list: ChatMessage[]) => {
     for (const m of list) {
       const at = m.updated_at ?? m.created_at;
-      if (!latestRef.current || at > latestRef.current) latestRef.current = at;
+      const cur = latestRef.current;
+      if (!cur || at > cur.at || (at === cur.at && m._id > cur.id)) latestRef.current = { at, id: m._id };
     }
   };
 
@@ -60,15 +64,19 @@ export function useChatThread(
     let busy = false;
     latestRef.current = null;
 
-    const load = async (initial: boolean) => {
-      if (busy && !initial) return;
+    // has_more ของรอบ poll = ยังมีข้อความใหม่ค้าง → ขอต่อทันที (จำกัดรอบ กันวนไม่จบถ้า backend ตอบแปลก)
+    const MAX_CATCH_UP = 5;
+    const load = async (initial: boolean, round = 0): Promise<void> => {
+      if (busy && !initial && round === 0) return;
       busy = true;
+      let more = false;
       try {
-        const after = initial ? undefined : latestRef.current ?? undefined;
-        const res = await fetcherRef.current(after ? { after } : {});
+        const cursor = initial ? null : latestRef.current;
+        const res = await fetcherRef.current(cursor ? { after: cursor.at, after_id: cursor.id } : {});
         if (cancelled) return;
         setConversation(res.conversation);
         if (initial) setHasMore(res.has_more);
+        else more = res.has_more && res.messages.length > 0;
         bumpCursor(res.messages);
         // ห้องถูกร้านลบ → ล้างข้อความเดิมบนจอ
         if (!res.conversation) {
@@ -96,6 +104,10 @@ export function useChatThread(
         if (!cancelled && initial) setStatus("error");
       } finally {
         busy = false;
+      }
+      if (more && !cancelled && round < MAX_CATCH_UP) {
+        busy = true;
+        await load(false, round + 1);
       }
     };
 
