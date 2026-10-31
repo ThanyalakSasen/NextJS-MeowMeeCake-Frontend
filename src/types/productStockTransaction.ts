@@ -27,6 +27,8 @@ export interface ProductStockTransaction {
   ref_no: string | null;
   /** null = ระบบ / ลูกค้าสั่งเอง */
   performed_by: { _id: string; user_fullname: string; email: string } | null;
+  /** ลูกค้าเจ้าของออเดอร์ (ref_type "order") */
+  ref_customer: { _id: string; user_fullname: string } | null;
   created_at: string;
 }
 
