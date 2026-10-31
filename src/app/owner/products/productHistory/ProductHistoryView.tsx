@@ -30,7 +30,8 @@ export function ProductHistoryView(vm: VM) {
   };
 
   const deltaText = (r: ProductHistoryRow) => (
-    <span className={`font-semibold ${r.delta > 0 ? "text-green-700" : r.delta < 0 ? "text-pink-700" : "text-gray-600"}`}>
+    // จำนวน + หน่วยบรรทัดเดียว (เดิมคอลัมน์แคบแล้ว "ชิ้น" ตกบรรทัด)
+    <span className={`whitespace-nowrap font-semibold ${r.delta > 0 ? "text-green-700" : r.delta < 0 ? "text-pink-700" : "text-gray-600"}`}>
       {r.delta > 0 ? "+" : r.delta < 0 ? "−" : "±"}
       {formatNumber(Math.abs(r.delta), locale)} <span className="font-normal text-gray-600">{r.unit}</span>
     </span>

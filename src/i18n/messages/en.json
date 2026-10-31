@@ -4376,11 +4376,13 @@
       "stockIngredient": "Use up or adjust the balance to 0 first",
       "preorders": "Orders and production stay as they are — deletable once produced (ready) or cancelled",
       "production": "Complete or cancel the production order first",
-      "closeRound": "Already booked — stop selling in this round; existing orders are still produced"
+      "closeRound": "Already booked — stop selling in this round; existing orders are still produced",
+      "releasePreorders": "Pending orders and this round's production stay — they can still be made and delivered; only new bookings for this product stop"
     },
     "action": {
       "remove_from_round": "Remove from round",
       "close_round_item": "Remove from round",
+      "release_preorders": "Remove from pre-order round",
       "unlink_recipe": "Unlink",
       "unlink_component": "Unlink",
       "unlink_product": "Unlink product and delete",
@@ -4389,6 +4391,9 @@
     "confirmUnlinkProduct": "Product “{label}” will have no recipe left. Delete this recipe?",
     "actionDone": "Done",
     "actionFailed": "Action failed",
+    "deleteAll": "Delete all",
+    "confirmAll": "Fix all {n} items automatically and delete? (pending orders and production stay)",
+    "deleteAllUnavailable": "Some items must be fixed manually first — Delete all isn't available",
     "deleted": "Deleted"
   },
   "purchase": {

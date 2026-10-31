@@ -9,6 +9,7 @@ export type BlockerKind = "stock" | "round" | "preorders" | "production" | "reci
 export type BlockerAction =
   | "remove_from_round"
   | "close_round_item"
+  | "release_preorders"
   | "unlink_recipe"
   | "unlink_component"
   | "unlink_product"
