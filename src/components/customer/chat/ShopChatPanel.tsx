@@ -212,6 +212,7 @@ function ChatBody({
           attachmentHref={customerAttachmentHref}
           hasMore={thread.hasMore}
           loadingOlder={thread.loadingOlder}
+          olderFailed={thread.olderFailed}
           onLoadOlder={() => void thread.loadOlder()}
           onEditMessage={startEdit}
           onDeleteMessage={(m) => void deleteMessage(m)}

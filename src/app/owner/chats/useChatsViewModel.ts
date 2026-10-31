@@ -6,7 +6,7 @@
 // - เปิดห้อง / มีข้อความใหม่ระหว่างเปิด = อ่านแล้ว · ตอบได้เมื่อมี chats.create
 // - ข้อความของร้าน: แก้ไข (chats.update) / ลบ (chats.delete) · ลบห้องแชทของลูกค้าทั้งห้อง (chats.delete — ปุ่ม "..." ในรายการห้อง)
 // ─────────────────────────────────────────────────────────────
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -76,6 +76,15 @@ export function useChatsViewModel() {
 
   const fetcher = useCallback((q: ChatMessageQuery) => chatsService.thread(selectedId!, q), [selectedId]);
   const thread = useChatThread(selectedId, fetcher, { onNewFromOther: markRead });
+  // ห้องที่เปิดอยู่ "ตอนนี้" — ส่ง/แก้ข้อความแล้วสลับห้องก่อนคำตอบกลับ เดิม append ลงห้องใหม่ ค้างจนรีเฟรช
+  // ใส่ลงจอเฉพาะเมื่อข้อความเป็นของห้องที่เปิดอยู่ (ห้องเดิมได้เองตอนเปิดกลับ — โหลดใหม่จาก backend)
+  const selectedRef = useRef(selectedId);
+  useEffect(() => {
+    selectedRef.current = selectedId;
+  }, [selectedId]);
+  const appendHere = (msg: Parameters<typeof thread.append>[0]) => {
+    if (msg.conversation_id === selectedRef.current) thread.append(msg);
+  };
 
   // เปิดห้องที่มีข้อความค้างอ่าน → อ่านแล้ว
   const unreadOnOpen = thread.conversation?.staff_unread ?? 0;
@@ -94,7 +103,7 @@ export function useChatsViewModel() {
   const saveEdit = useMutation({
     mutationFn: ({ id, body }: { id: string; body: string }) => chatsService.editMessage(selectedId!, id, body),
     onSuccess: (msg) => {
-      thread.append(msg);
+      appendHere(msg);
       setEditing(null);
       void qc.invalidateQueries({ queryKey: CHATS_LIST_KEY });
     },
@@ -143,7 +152,7 @@ export function useChatsViewModel() {
   const send = useMutation({
     mutationFn: (body: string) => chatsService.send(selectedId!, body),
     onSuccess: (msg) => {
-      thread.append(msg);
+      appendHere(msg);
       refreshCounts();
     },
     onError: (e) => alert.error(isApiError(e) ? e.message : t("sendFailed")),
