@@ -17,9 +17,10 @@ export const deleteBlockersService = {
   list: (entity: DeleteBlockerEntity, id: string) =>
     http.get<ItemResponse<DeleteBlocker[]>>(`${BASE[entity]}/${id}/delete-blockers`).then((r) => r.data),
   remove: (entity: DeleteBlockerEntity, id: string) => http.delete<EmptyResponse>(`${BASE[entity]}/${id}`),
-  /** สินค้า: ยังไม่มีคนจอง = เอาออกจากรอบ · จองแล้ว = ปิดการขายในรอบ (ออเดอร์เดิมยังผลิตต่อ) */
-  releaseRound: (productId: string, roundItemId: string) =>
-    http.post(`/admin/products/${productId}/release-round`, { round_item_id: roundItemId }),
+  /** สินค้า: ยังไม่มีคนจอง = เอาออกจากรอบ · จองแล้ว = ปิดการขายในรอบ (ออเดอร์เดิมยังผลิตต่อ)
+   *  keepOrders = มีออเดอร์ค้าง — ยกเลิกสินค้าในรอบ (ออเดอร์/ใบผลิตของรอบยังอยู่) แล้วลบสินค้าได้ */
+  releaseRound: (productId: string, roundItemId: string, keepOrders = false) =>
+    http.post(`/admin/products/${productId}/release-round`, { round_item_id: roundItemId, ...(keepOrders ? { keep_orders: true } : {}) }),
   /** วัตถุดิบ: เอาออกจากสูตร/ส่วนประกอบ */
   unlinkIngredient: (ingredientId: string, kind: "recipe" | "component", refId: string) =>
     http.post(`/admin/ingredients/${ingredientId}/unlink`, { kind, ref_id: refId }),
