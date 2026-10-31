@@ -5,7 +5,7 @@ import { Select } from "@/components/base";
 import { ListPageLayout } from "@/components/shared/layout";
 import { StatCard, StatCardsGrid } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
-import { formatDate, formatNumber } from "@/i18n/format";
+import { formatCurrency, formatDate, formatNumber } from "@/i18n/format";
 import { INGREDIENT_TXN_CONFIG } from "@/constants/enumConfig";
 import type { HistoryRow, useIngredientHistoryViewModel } from "./useIngredientHistoryViewModel";
 import { LoadFailed } from "@/components/shared/feedback";
@@ -57,6 +57,24 @@ export function IngredientHistoryView(vm: VM) {
       key: "expiry",
       title: t("ingredientHistory.colExpiry"),
       render: (r) => (r.expiryDate ? formatDate(r.expiryDate, locale) : "—"),
+    },
+    {
+      // บิลซื้อที่รายการรับเข้านี้มาจาก (บันทึกการซื้อ / ผูกย้อนหลังที่หน้าค่าใช้จ่าย)
+      key: "purchase",
+      title: t("purchase.colBill"),
+      render: (r) =>
+        r.purchase ? (
+          <div className="min-w-[8rem]">
+            <p className="m-0 line-clamp-1 text-sm text-brown-900" title={r.purchase.description}>{r.purchase.description}</p>
+            <p className="m-0 text-xs text-gray-500">
+              {[formatDate(r.purchase.date, locale), r.purchase.vendor, r.purchase.lineTotal != null ? formatCurrency(r.purchase.lineTotal, locale) : ""]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
+        ) : (
+          "—"
+        ),
     },
     { key: "note", title: t("ingredientHistory.colNote"), render: (r) => r.note || "—" },
     { key: "by", title: t("ingredientHistory.colBy"), render: (r) => r.performedBy },

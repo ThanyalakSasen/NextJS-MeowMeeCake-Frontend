@@ -10,6 +10,8 @@ import { INGREDIENTS_KEY, INGREDIENTS_PARAMS } from "../ingredientsQuery";
 import { useTranslations } from "next-intl";
 import { ingredientsService } from "@/services/ingredients";
 import { ingredientTransactionsService } from "@/services/ingredientTransactions";
+import { purchasesService } from "@/services/purchases";
+import type { PurchaseInput } from "@/types/purchase";
 import { usePermission } from "@/context/PermissionsContext";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { alert } from "@/lib/alert";
@@ -39,6 +41,10 @@ export function useIngredientStockViewModel() {
   const qc = useQueryClient();
   // ingredients ไม่ใช่ stock — API ของหน้านี้ตรวจ ingredients.* (Final-Backlog P2)
   const perm = usePermission("ingredient_stock");
+  // บันทึกการซื้อ = รับเข้าสต็อก + สร้างค่าใช้จ่าย — ต้องมีสิทธิ์ทั้งสองเมนู (backend ตรวจเหมือนกัน)
+  const financePerm = usePermission("finance_expenses");
+  const canPurchase = perm.update && financePerm.create;
+  const [purchaseOpen, setPurchaseOpen] = useState(false);
   const { user } = useCurrentUser();
 
   const [search, setSearch] = useState("");
@@ -149,8 +155,27 @@ export function useIngredientStockViewModel() {
     return failed;
   };
 
+  const savePurchase = useMutation({
+    mutationFn: (body: PurchaseInput) => purchasesService.create(body),
+    onSuccess: (res) => {
+      alert.success(t("purchase.saved", { n: res.data.transactions.length }));
+      qc.invalidateQueries({ queryKey: ["ingredients"] });
+      qc.invalidateQueries({ queryKey: ["ingredient-transactions"] });
+      qc.invalidateQueries({ queryKey: ["expenses"] });
+      setPurchaseOpen(false);
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("purchase.saveFailed")),
+  });
+
   return {
     perm,
+    canPurchase,
+    purchaseOpen,
+    openPurchase: () => setPurchaseOpen(true),
+    closePurchase: () => setPurchaseOpen(false),
+    ingredients: ingredientsQ.data?.data ?? [],
+    onPurchase: (body: PurchaseInput) => savePurchase.mutate(body),
+    purchasing: savePurchase.isPending,
     bulkOpen, openBulk: () => setBulkOpen(true), closeBulk: () => setBulkOpen(false), bulkItems, onBulkSubmit,
     rows: filtered,
     alertRows,

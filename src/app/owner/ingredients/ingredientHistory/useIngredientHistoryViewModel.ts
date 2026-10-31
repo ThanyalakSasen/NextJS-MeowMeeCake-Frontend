@@ -26,6 +26,8 @@ export interface HistoryRow {
   /** วันหมดอายุของล็อตที่รับเข้า (null = ไม่ได้ระบุ) */
   expiryDate: string | null;
   performedBy: string;
+  /** บิลซื้อ (ค่าใช้จ่าย) ที่รายการรับเข้านี้มาจาก — null = ไม่ได้ผูก */
+  purchase: { description: string; date: string; vendor: string; lineTotal: number | null } | null;
 }
 
 type TypeFilter = "all" | IngredientTxnType;
@@ -82,6 +84,10 @@ export function useIngredientHistoryViewModel() {
           unitAbbr: ing?.unit ?? "",
           note: tx.note ?? "",
           performedBy: performedByName ?? "—",
+          purchase:
+            tx.expense_id && typeof tx.expense_id === "object"
+              ? { description: tx.expense_id.description, date: tx.expense_id.date, vendor: tx.expense_id.vendor ?? "", lineTotal: tx.line_total ?? null }
+              : null,
         };
       })
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));

@@ -16,6 +16,10 @@ import { StockAlertSection, INGREDIENT_STOCK_MAX } from "@/components/shared/sto
 
 // ฟอร์ม/โมดัลแยก chunk — โหลดเมื่อเปิดครั้งแรก ไม่ต้อง parse/รันตอนเปิดหน้า (โมดัลไม่ render ฝั่ง server อยู่แล้ว)
 const StockActionModal = dynamic(() => import("./_components/StockActionModal").then((m) => m.StockActionModal), { ssr: false });
+const PurchaseFormModal = dynamic(
+  () => import("@/app/owner/finance/expenses/_components/PurchaseFormModal").then((m) => m.PurchaseFormModal),
+  { ssr: false },
+);
 const BulkStockModal = dynamic(() => import("@/components/shared/stock/BulkStockModal").then((m) => m.BulkStockModal), { ssr: false });
 
 type VM = ReturnType<typeof useIngredientStockViewModel>;
@@ -24,6 +28,7 @@ export function IngredientStockView(vm: VM) {
   const t = useTranslations();
   const bulkUsed = useOpenedOnce(vm.bulkOpen);
   const actionUsed = useOpenedOnce(!!vm.target);
+  const purchaseUsed = useOpenedOnce(vm.purchaseOpen);
   const locale = useLocale();
 
   const columns: Column<StockRow>[] = [
@@ -76,11 +81,19 @@ export function IngredientStockView(vm: VM) {
     <ListPageLayout
       title={t("ingredientStock.title")}
       actions={
-        vm.perm.update && (
-          <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
-            {t("bulkStock.open")}
-          </Button>
-        )
+        <>
+          {/* บิลซื้อ: รับเข้าสต็อก + ค่าใช้จ่าย 1 ใบ ผูกถึงกัน (หน้าค่าใช้จ่ายมีปุ่มเดียวกัน) */}
+          {vm.canPurchase && (
+            <Button icon={actionIcon("receive")} onClick={vm.openPurchase}>
+              {t("purchase.open")}
+            </Button>
+          )}
+          {vm.perm.update && (
+            <Button type="primary" icon={actionIcon("add")} onClick={vm.openBulk}>
+              {t("bulkStock.open")}
+            </Button>
+          )}
+        </>
       }
       toolbar={
         <FilterToolbar
@@ -136,6 +149,17 @@ export function IngredientStockView(vm: VM) {
           max={INGREDIENT_STOCK_MAX}
           onClose={vm.closeBulk}
           onSubmit={vm.onBulkSubmit}
+        />
+      )}
+
+      {purchaseUsed && (
+        <PurchaseFormModal
+          open={vm.purchaseOpen}
+          ingredients={vm.ingredients}
+          initialIds={vm.alertRows.map((r) => r._id)}
+          saving={vm.purchasing}
+          onClose={vm.closePurchase}
+          onSubmit={vm.onPurchase}
         />
       )}
 

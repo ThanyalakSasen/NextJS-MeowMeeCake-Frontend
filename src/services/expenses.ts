@@ -5,6 +5,7 @@
 import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type { Expense, ExpenseInput, ExpenseListParams, ExpenseSummary } from "@/types/expense";
+import type { IngredientTransaction } from "@/types/ingredientTransaction";
 
 const BASE = "/admin/expenses";
 
@@ -27,6 +28,18 @@ export const expensesService = {
 
   remove: (id: string) =>
     http.delete<EmptyResponse>(`${BASE}/${id}`),
+
+  /** รายการรับเข้าสต็อกวัตถุดิบที่ผูกกับค่าใช้จ่ายนี้ (populate วัตถุดิบ/หน่วย) */
+  stockItems: async (id: string): Promise<IngredientTransaction[]> =>
+    (await http.get<ItemResponse<IngredientTransaction[]>>(`${BASE}/${id}/stock-items`)).data,
+
+  /** ผูกรายการรับเข้าเดิมย้อนหลัง — ราคารวมของที่ผูกทั้งหมดต้องไม่เกินยอดค่าใช้จ่าย (backend ตรวจ) */
+  linkStockItems: (id: string, links: { transaction_id: string; line_total: number }[]) =>
+    http.post<ItemResponse<{ linked: number }>>(`${BASE}/${id}/stock-items`, { links }),
+
+  /** ยกเลิกการผูก (สต็อกไม่เปลี่ยน) */
+  unlinkStockItem: (id: string, transactionId: string) =>
+    http.delete<EmptyResponse>(`${BASE}/${id}/stock-items/${transactionId}`),
 
   /**
    * POST /admin/expenses/receipts — อัปโหลดรูปใบเสร็จจริง (multipart · JPEG/PNG/WEBP/AVIF ≤ 5 MB · สิทธิ์ reports.create)

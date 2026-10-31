@@ -9,6 +9,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations, useLocale } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
 import { expensesService } from "@/services/expenses";
+import { ingredientsService } from "@/services/ingredients";
+import { purchasesService } from "@/services/purchases";
+import type { PurchaseInput } from "@/types/purchase";
+import { INGREDIENTS_KEY, INGREDIENTS_PARAMS } from "../../ingredients/ingredientsQuery";
 import { reportsService } from "@/services/reports";
 import { usePermission } from "@/context/PermissionsContext";
 import { useToday } from "@/hooks/useToday";
@@ -28,6 +32,9 @@ export function useFinanceExpensesViewModel() {
   const locale = useLocale();
   const qc = useQueryClient();
   const perm = usePermission("finance_expenses");
+  // บันทึกการซื้อ = สร้างค่าใช้จ่าย + รับเข้าสต็อกวัตถุดิบ — ต้องมีสิทธิ์ทั้งสองเมนู (backend ตรวจเหมือนกัน)
+  const stockPerm = usePermission("ingredient_stock");
+  const canPurchase = perm.create && stockPerm.update;
 
   const [selectedMonthDate, setSelectedMonthDate] = useState<Dayjs>(dayjs());
   const selectedMonth = selectedMonthDate.format("YYYY-MM");
@@ -58,6 +65,15 @@ export function useFinanceExpensesViewModel() {
   const [pageSize, setPageSize] = useState(10);
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Expense | null>(null);
+  const [purchaseOpen, setPurchaseOpen] = useState(false);
+  /** ค่าใช้จ่ายที่เปิดดูรายการรับเข้าสต็อก (ExpenseStockItemsModal) */
+  const [itemsTarget, setItemsTarget] = useState<Expense | null>(null);
+  // รายชื่อวัตถุดิบ — โหลดเมื่อเปิดฟอร์มบันทึกการซื้อครั้งแรก (query key เดียวกับหน้าวัตถุดิบ)
+  const ingredientsQ = useQuery({
+    queryKey: INGREDIENTS_KEY,
+    queryFn: () => ingredientsService.list(INGREDIENTS_PARAMS),
+    enabled: purchaseOpen,
+  });
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -121,6 +137,18 @@ export function useFinanceExpensesViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("finance.saveFailed")),
   });
 
+  const savePurchase = useMutation({
+    mutationFn: (body: PurchaseInput) => purchasesService.create(body),
+    onSuccess: (res) => {
+      alert.success(t("purchase.saved", { n: res.data.transactions.length }));
+      invalidate();
+      void qc.invalidateQueries({ queryKey: INGREDIENTS_KEY });
+      void qc.invalidateQueries({ queryKey: ["ingredient-transactions"] });
+      setPurchaseOpen(false);
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("purchase.saveFailed")),
+  });
+
   const deleteExpense = useMutation({
     mutationFn: (id: string) => expensesService.remove(id),
     onSuccess: () => { alert.success(t("finance.deleted")); invalidate(); },
@@ -173,5 +201,16 @@ export function useFinanceExpensesViewModel() {
     saving: saveExpense.isPending,
     onDelete: (id: string) => deleteExpense.mutate(id),
     onExport,
+
+    canPurchase,
+    purchaseOpen,
+    openPurchase: () => setPurchaseOpen(true),
+    closePurchase: () => setPurchaseOpen(false),
+    ingredients: ingredientsQ.data?.data ?? [],
+    onPurchase: (body: PurchaseInput) => savePurchase.mutate(body),
+    purchasing: savePurchase.isPending,
+    itemsTarget,
+    openItems: (e: Expense) => setItemsTarget(e),
+    closeItems: () => setItemsTarget(null),
   };
 }

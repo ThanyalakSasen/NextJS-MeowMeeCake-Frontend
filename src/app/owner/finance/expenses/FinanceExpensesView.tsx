@@ -12,15 +12,21 @@ import { formatCurrency, formatDate } from "@/i18n/format";
 import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/constants/enumConfig";
 import type { ExpenseCategory } from "@/constants/enumConfig";
 import type { Expense } from "@/types/expense";
+import { PURCHASE_CATEGORIES } from "@/types/purchase";
 import { DeleteButton, EditButton, actionIcon } from "@/components/shared/actions";
 import type { useFinanceExpensesViewModel } from "./useFinanceExpensesViewModel";
 import { ExpenseFormModal } from "./_components/ExpenseFormModal";
+import { PurchaseFormModal } from "./_components/PurchaseFormModal";
+import { ExpenseStockItemsModal } from "./_components/ExpenseStockItemsModal";
 import { ReceiptThumb } from "./_components/ReceiptThumb";
 import { RecurringRemindersList } from "./_components/RecurringRemindersList";
 import { sortOptionsThai } from "@/lib/thaiSort";
 import { RestoreDeletedButton } from "@/components/shared/restore";
 
 type VM = ReturnType<typeof useFinanceExpensesViewModel>;
+
+/** หมวดที่เป็นของเข้าสต็อก (เท่าหมวดของบิลซื้อ) — แถวที่ยังไม่ผูกมีปุ่มผูกรายการรับเข้าย้อนหลัง */
+const isStockCategory = (c: ExpenseCategory) => (PURCHASE_CATEGORIES as readonly string[]).includes(c);
 
 export function FinanceExpensesView(vm: VM) {
   const t = useTranslations();
@@ -64,6 +70,24 @@ export function FinanceExpensesView(vm: VM) {
       render: (e) => <span className="font-semibold text-red-500">-{formatCurrency(e.amount, locale)}</span>,
     },
     {
+      // บิลซื้อที่ผูกกับการรับวัตถุดิบเข้าสต็อก — กดดูว่าซื้ออะไร กี่หน่วย ราคาเท่าไร / ผูกย้อนหลัง
+      key: "stock",
+      title: t("purchase.colStockItems"),
+      align: "center",
+      render: (e) =>
+        (e.linked_count ?? 0) > 0 ? (
+          <Button size="small" type="link" icon={actionIcon("receive", "small")} onClick={() => vm.openItems(e)}>
+            {t("purchase.itemsCount", { n: e.linked_count ?? 0 })}
+          </Button>
+        ) : vm.perm.update && isStockCategory(e.category) ? (
+          <Button size="small" type="link" icon={actionIcon("link", "small")} onClick={() => vm.openItems(e)}>
+            {t("purchase.linkShort")}
+          </Button>
+        ) : (
+          <span className="text-gray-300">—</span>
+        ),
+    },
+    {
       key: "receipt",
       title: t("finance.fieldReceipt"),
       align: "center",
@@ -86,6 +110,11 @@ export function FinanceExpensesView(vm: VM) {
           <Button icon={<ArrowDownTrayIcon className="h-4 w-4" />} onClick={vm.onExport}>
             {t("common.export")}
           </Button>
+          {vm.canPurchase && (
+            <Button icon={actionIcon("receive")} onClick={vm.openPurchase}>
+              {t("purchase.open")}
+            </Button>
+          )}
           {vm.perm.create && (
             <Button type="primary" icon={actionIcon("add")} onClick={vm.openAdd}>
               {t("finance.addExpense")}
@@ -225,6 +254,16 @@ export function FinanceExpensesView(vm: VM) {
         onClose={vm.closeForm}
         onSubmit={vm.onSave}
       />
+      {vm.canPurchase && (
+        <PurchaseFormModal
+          open={vm.purchaseOpen}
+          ingredients={vm.ingredients}
+          saving={vm.purchasing}
+          onClose={vm.closePurchase}
+          onSubmit={vm.onPurchase}
+        />
+      )}
+      <ExpenseStockItemsModal expense={vm.itemsTarget} canEdit={vm.perm.update} onClose={vm.closeItems} />
     </ListPageLayout>
   );
 }
