@@ -129,6 +129,7 @@ export function ChatsView(vm: VM) {
                   onOpenAttachment={setOpenAttachment}
                   hasMore={vm.thread.hasMore}
                   loadingOlder={vm.thread.loadingOlder}
+                  olderFailed={vm.thread.olderFailed}
                   onLoadOlder={() => void vm.thread.loadOlder()}
                   onEditMessage={vm.perm.update ? vm.startEdit : undefined}
                   onDeleteMessage={vm.perm.delete ? vm.deleteMessage : undefined}

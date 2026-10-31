@@ -22,6 +22,8 @@ export function useChatThread(
   const [hasMore, setHasMore] = useState(false);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [loadingOlder, setLoadingOlder] = useState(false);
+  /** โหลดข้อความก่อนหน้ารอบล่าสุดไม่สำเร็จ — ปุ่มบอกให้ลองใหม่ (เดิมไม่มี catch: กดแล้วเงียบ) */
+  const [olderFailed, setOlderFailed] = useState(false);
 
   // เปลี่ยนห้อง = ล้างของห้องเดิมระหว่าง render (แนวทาง React "adjusting state when a prop changes" — ไม่ setState ใน effect)
   const [shownKey, setShownKey] = useState(key);
@@ -31,6 +33,7 @@ export function useChatThread(
     setConversation(null);
     setHasMore(false);
     setStatus("loading");
+    setOlderFailed(false);
   }
 
   // ค่าล่าสุดสำหรับ interval (ไม่ให้ effect เริ่มใหม่ทุกครั้งที่ข้อความเปลี่ยน)
@@ -53,9 +56,13 @@ export function useChatThread(
     if (!key) return;
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | null = null;
+    // คำขอรอบก่อนยังไม่จบ = ข้ามรอบนี้ — เดิม interval 4 วิยิงซ้อนกันตอน backend ช้า (คำตอบเก่ามาทีหลังทับของใหม่)
+    let busy = false;
     latestRef.current = null;
 
     const load = async (initial: boolean) => {
+      if (busy && !initial) return;
+      busy = true;
       try {
         const after = initial ? undefined : latestRef.current ?? undefined;
         const res = await fetcherRef.current(after ? { after } : {});
@@ -87,6 +94,8 @@ export function useChatThread(
         setStatus("ready");
       } catch {
         if (!cancelled && initial) setStatus("error");
+      } finally {
+        busy = false;
       }
     };
 
@@ -120,10 +129,13 @@ export function useChatThread(
     const first = messages[0];
     if (!first || loadingOlder) return;
     setLoadingOlder(true);
+    setOlderFailed(false);
     try {
       const res = await fetcherRef.current({ before: first.created_at });
       setHasMore(res.has_more);
       setMessages((prev) => mergeChatMessages(prev, res.messages));
+    } catch {
+      setOlderFailed(true);
     } finally {
       setLoadingOlder(false);
     }
@@ -134,5 +146,5 @@ export function useChatThread(
   /** เอาข้อความที่เพิ่งลบออกทันที */
   const remove = useCallback((id: string) => setMessages((prev) => prev.filter((m) => m._id !== id)), []);
 
-  return { messages, conversation, hasMore, status, loadingOlder, loadOlder, append, remove };
+  return { messages, conversation, hasMore, status, loadingOlder, olderFailed, loadOlder, append, remove };
 }

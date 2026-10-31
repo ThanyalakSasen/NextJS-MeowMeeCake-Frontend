@@ -25,6 +25,7 @@ export default function ChatMessageList({
   onOpenAttachment,
   hasMore,
   loadingOlder,
+  olderFailed,
   onLoadOlder,
   empty,
   className = "",
@@ -46,6 +47,8 @@ export default function ChatMessageList({
   onOpenAttachment?: (a: ChatAttachment) => void;
   hasMore?: boolean;
   loadingOlder?: boolean;
+  /** โหลดข้อความก่อนหน้าไม่สำเร็จ — ปุ่มเปลี่ยนเป็น "ลองใหม่" */
+  olderFailed?: boolean;
   onLoadOlder?: () => void;
   /** แสดงเมื่อยังไม่มีข้อความ */
   empty?: React.ReactNode;
@@ -91,9 +94,11 @@ export default function ChatMessageList({
           type="button"
           onClick={onLoadOlder}
           disabled={loadingOlder}
-          className="mx-auto mb-2 rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-600 hover:bg-stone-50 disabled:opacity-60"
+          className={`mx-auto mb-2 rounded-full border bg-white px-3 py-1 text-xs font-medium hover:bg-stone-50 disabled:opacity-60 ${
+            olderFailed ? "border-red-200 text-red-600" : "border-stone-200 text-stone-600"
+          }`}
         >
-          {loadingOlder ? t("loadingOlder") : t("loadOlder")}
+          {loadingOlder ? t("loadingOlder") : olderFailed ? t("loadOlderFailed") : t("loadOlder")}
         </button>
       )}
       {messages.length === 0 && empty}

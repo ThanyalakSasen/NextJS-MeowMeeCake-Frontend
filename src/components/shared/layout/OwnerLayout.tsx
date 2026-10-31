@@ -15,7 +15,7 @@ import { confirmAlert } from "@/lib/alert";
 import { ACCESS_DENIED_PATH, CUSTOMER_HOME_PATH, LOGIN_PATH } from "@/constants/auth";
 import { resolveMenuKey } from "@/constants/menuKeys";
 import { firstPermittedPath } from "@/lib/landingPath";
-import { LoadingSpin } from "@/components/shared/feedback";
+import { LoadFailed, LoadingSpin } from "@/components/shared/feedback";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
 
@@ -71,7 +71,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations();
-  const { user, isLoading, isError } = useCurrentUser();
+  const { user, isLoading, isError, loadFailed, refetch } = useCurrentUser();
   // false ตอน render ฝั่ง server + รอบ hydrate (ค่าเดียวกัน) → true หลัง hydrate
   const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -140,6 +140,15 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   useIdleTimeout({ enabled: !!user, onWarn, onTimeout });
 
   // denied: ไม่ render เนื้อหาหน้านั้นเลยระหว่างรอ redirect (กัน flash + กันหน้ายิง API ที่จะได้ 403)
+  // โหลดผู้ใช้ครั้งแรกไม่สำเร็จด้วย error ที่ไม่ใช่ session หมด (เน็ต/backend ตื่นช้า) — ให้ลองใหม่ ไม่เด้งไป login
+  if (loadFailed && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadFailed onRetry={() => void refetch()} />
+      </div>
+    );
+  }
+
   if (isLoading || !user || denied || isCustomer) {
     return (
       <div className="min-h-screen flex items-center justify-center">

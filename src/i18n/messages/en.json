@@ -4249,6 +4249,7 @@
     "loadFailed": "Couldn't load messages. Please refresh.",
     "loadOlder": "Load earlier messages",
     "loadingOlder": "Loading...",
+    "loadOlderFailed": "Couldn’t load earlier messages — tap to retry",
     "read": "Read",
     "emptyTitle": "Start chatting with {store}",
     "emptyHint": "Ask about products, party cakes, or attach an order to check its status",
