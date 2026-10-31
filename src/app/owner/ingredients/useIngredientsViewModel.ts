@@ -134,17 +134,16 @@ export function useIngredientsViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("ingredients.saveFailed")),
   });
 
+  const [deleteBlockedId, setDeleteBlockedId] = useState<string | null>(null);
   const remove = useMutation({
     mutationFn: (id: string) => ingredientsService.remove(id),
     onSuccess: () => {
       alert.success(t("ingredients.deleted"));
       invalidate();
     },
-    // 409 = ยังมียอดคงเหลือ / ยังมีสูตรใช้อยู่ — backend บอกเหตุผล (ยอด/รายชื่อสูตร) ในข้อความ → เตือน (ไม่ใช่ error)
-    onError: (e) =>
-      isApiError(e) && e.status === 409
-        ? alert.warning(e.message, { title: t("ingredients.deleteBlockedTitle") })
-        : alert.error(isApiError(e) ? e.message : t("ingredients.deleteFailed")),
+    // 409 = ยังลบไม่ได้ (ติดเงื่อนไข) → modal รายการเหตุผล + ปุ่มแก้ทีละข้อ (DeleteBlockersModal · ผู้ใช้ขอ 2026-10-31)
+    onError: (e, id) =>
+      isApiError(e) && e.status === 409 ? setDeleteBlockedId(id) : alert.error(isApiError(e) ? e.message : t("ingredients.deleteFailed")),
   });
 
   return {
@@ -169,6 +168,8 @@ export function useIngredientsViewModel() {
     closeForm: () => { setFormOpen(false); setEditTarget(null); },
     onSave: (body: IngredientInput) => save.mutate({ id: editTarget?._id ?? null, body }),
     onDelete: (id: string) => remove.mutate(id),
+    deleteBlockedId,
+    closeDeleteBlocked: () => setDeleteBlockedId(null),
     saving: save.isPending,
   };
 }
