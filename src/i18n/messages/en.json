@@ -4449,6 +4449,9 @@
     "linkTotalRequired": "Enter a line total for every selected item",
     "linkExceeds": "Total exceeds the remaining expense amount ({remaining})",
     "linked": "Items linked",
+    "linkedCostUpdated": "Items linked · updated cost of {n} ingredient(s)",
+    "linkUpdateCost": "Update ingredient cost from the linked prices",
+    "linkUpdateCostHint": "Uses this unit price as the new cost only when it is the latest purchase of that ingredient — linking an older bill leaves the current cost unchanged",
     "linkSubmit": "Link {n} items"
   }
 }
