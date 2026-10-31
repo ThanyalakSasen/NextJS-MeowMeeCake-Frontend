@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { Form, FormItem, useAntForm, Input, TextArea, InputNumber, Select, Divider, Button } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, TextArea, InputNumber, Select, Divider, Button } from "@/components/base";
 import { alert } from "@/lib/alert";
 import type { Recipe, RecipeComponentRef } from "@/types/recipe";
 import type { RecipeIngredientLine, RecipeStep } from "@/types/recipeShared";
@@ -54,6 +54,9 @@ export function MainRecipeModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<RecipeFormValue>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
+  // รายการวัตถุดิบ/ส่วนประกอบ + ขั้นตอน (อยู่นอก antd Form) — เตือนใต้ฟอร์มทันที
   // หน่วยของจำนวนที่ได้ต่อสูตรเป็นหน่วยนับ (ชิ้น/ถาด …) → จำนวนเต็มเท่านั้น
   const yieldUnitId = Form.useWatch("yield_unit_id", form);
   const yieldWhole = isIntegerOnlyUnit(yieldUnitOptions.find((o) => o.value === yieldUnitId)?.label);
@@ -66,22 +69,22 @@ export function MainRecipeModal({
   const updateComponentRef = (i: number, patch: Partial<ComponentRow>) =>
     setComponents((p) => p.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
 
+  const rowsIssue =
+    components.some((c) => !c.component_id) || ingredients.some((i) => !i.ingredient_id)
+      ? "recipes.ingredientRequired"
+      : !hasQty(components) || !hasQty(ingredients)
+        ? "recipes.qtyRequired"
+        : !wholeUnitsOk(ingredients)
+          ? "recipes.wholeUnitRequired"
+          : stepsTooLong(steps)
+            ? "recipes.stepsTooLong"
+            : null;
+
   const handleOk = async () => {
     const v = await form.validateFields();
-    if (components.some((c) => !c.component_id) || ingredients.some((i) => !i.ingredient_id)) {
-      alert.warning(t("recipes.ingredientRequired"));
-      return;
-    }
-    if (!hasQty(components) || !hasQty(ingredients)) {
-      alert.warning(t("recipes.qtyRequired"));
-      return;
-    }
-    if (!wholeUnitsOk(ingredients)) {
-      alert.warning(t("recipes.wholeUnitRequired"));
-      return;
-    }
-    if (stepsTooLong(steps)) {
-      alert.warning(t("recipes.stepsTooLong"));
+    // ปุ่มถูก disable อยู่แล้วถ้ารายการไม่ครบ — กันไว้อีกชั้น (เช่น กด Enter)
+    if (rowsIssue || !hasQty(components) || !hasQty(ingredients)) {
+      alert.warning(t(rowsIssue ?? "recipes.qtyRequired"));
       return;
     }
     // ต้นทุนส่งไปเฉพาะเมื่อผู้ใช้กรอกเอง — ไม่แตะช่องนี้ = ให้ backend คำนวณจากวัตถุดิบใหม่ทุกครั้งที่บันทึก
@@ -98,6 +101,7 @@ export function MainRecipeModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons(editTarget ? "save" : "add")}
+      okButtonProps={{ ...modalButtonIcons(editTarget ? "save" : "add").okButtonProps, disabled: !valid || !!rowsIssue }}
       okText={editTarget ? t("common.save") : t("recipes.addRecipe")}
       cancelText={t("common.cancel")}
       width={640}
@@ -200,6 +204,11 @@ export function MainRecipeModal({
         <Divider />
         <p className="mb-3 text-sm font-semibold text-gray-500">{t("recipes.stepsTitle")}</p>
         <StepEditor steps={steps} onChange={setSteps} />
+        {rowsIssue && (
+          <p role="alert" className="m-0 mt-2 text-sm text-red-500">
+            {t(rowsIssue)}
+          </p>
+        )}
 
         <Divider />
         <FormItem name="note" label={t("recipes.fieldNote")}>

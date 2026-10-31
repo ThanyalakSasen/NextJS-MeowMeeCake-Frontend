@@ -3,7 +3,7 @@
 // ชื่อซ้ำกับตำแหน่งอื่นกันไว้ก่อนส่ง · backend ตรวจซ้ำอีกชั้น (409)
 import { useTranslations } from "next-intl";
 import { Modal } from "antd";
-import { Form, FormItem, useAntForm, Input } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input } from "@/components/base";
 import type { Rule } from "antd/es/form";
 import type { Role } from "@/types/role";
 import { modalButtonIcons } from "@/components/shared/actions";
@@ -27,6 +27,8 @@ export function RenameRoleModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<{ role_name: string }>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   const rules: Rule[] = [
     { required: true, whitespace: true, message: t("validation.required") },
@@ -49,6 +51,7 @@ export function RenameRoleModal({
       open={!!role}
       title={t("permissions.renameRoleTitle")}
       {...modalButtonIcons("save")}
+      okButtonProps={{ ...modalButtonIcons("save").okButtonProps, disabled: !valid }}
       okText={t("common.save")}
       cancelText={t("common.cancel")}
       confirmLoading={saving}

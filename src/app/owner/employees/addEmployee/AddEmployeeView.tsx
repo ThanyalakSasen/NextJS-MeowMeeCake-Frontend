@@ -1,7 +1,8 @@
 "use client";
 import { useTranslations } from "next-intl";
 import { Card, Form } from "@/components/base";
-import { SaveButton, CancelButton } from "@/components/shared/actions";
+import { CancelButton } from "@/components/shared/actions";
+import { FormSaveButton } from "@/components/shared/form";
 import { EmployeeFormFields } from "../_components/EmployeeFormFields";
 import type { useAddEmployeeViewModel } from "./useAddEmployeeViewModel";
 import { FormActions, FormPageLayout } from "@/components/shared/layout";
@@ -16,7 +17,7 @@ export function AddEmployeeView(vm: ReturnType<typeof useAddEmployeeViewModel>) 
         <Form layout="vertical" initialValues={vm.initialValues} onFinish={vm.onSubmit}>
           <EmployeeFormFields />
           <FormActions>
-            <SaveButton type="primary" htmlType="submit" loading={vm.submitting} />
+            <FormSaveButton loading={vm.submitting} />
             <CancelButton onClick={vm.onCancel} />
           </FormActions>
         </Form>

@@ -4,6 +4,7 @@
 //   open = ต้นวัน · close = สิ้นวัน (23:59:59) · pickup = สิ้นวันเหมือน close → ระยะ close→pickup เป็นจำนวนวันเต็ม
 //   (backend ตรวจ pickup − close ≥ lead_time_days ของสินค้า)
 import type { Dayjs } from "dayjs";
+import type { FormRule } from "antd";
 
 export function roundDatesPayload(v: { open_date: Dayjs; close_date: Dayjs; pickup_date: Dayjs }) {
   return {
@@ -19,3 +20,14 @@ export function roundDatesError(v: { open_date: Dayjs; close_date: Dayjs; pickup
   if (v.pickup_date.isBefore(v.close_date, "day")) return "preorderRound.pickupAfterCloseRequired" as const;
   return null;
 }
+
+/** rule ของช่องวันที่ — ไม่ก่อนช่อง after (เทียบระดับวัน) · ใส่คู่กับ dependencies={[after]} ให้ตรวจใหม่เมื่อช่องนั้นเปลี่ยน
+ *  ขึ้นเตือนใต้ช่องทันทีที่เลือกผิดลำดับ (เดิมเตือนตอนกดบันทึก — ผู้ใช้ขอ 2026-10-31) */
+export const notBeforeRule =
+  (after: "open_date" | "close_date", message: string): FormRule =>
+  ({ getFieldValue }) => ({
+    validator: (_, value?: Dayjs | null) => {
+      const prev = getFieldValue(after) as Dayjs | undefined;
+      return !value || !prev || !value.isBefore(prev, "day") ? Promise.resolve() : Promise.reject(new Error(message));
+    },
+  });

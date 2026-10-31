@@ -206,6 +206,7 @@ export function StoreInfoView(vm: VM) {
         cancelText={t("common.cancel")}
         mask={{ closable: false }}
         {...modalButtonIcons("save")}
+        okButtonProps={{ ...modalButtonIcons("save").okButtonProps, disabled: !vm.canSave }}
         destroyOnHidden
       >
         {vm.editing && forms[vm.editing]()}

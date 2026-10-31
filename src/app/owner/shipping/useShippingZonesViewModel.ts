@@ -24,6 +24,7 @@ import {
   type ShippingZoneErrors, type ShippingZoneForm,
 } from "./shippingZoneForm";
 import { SHIPPING_ZONES_KEY as KEY } from "./shippingQuery";
+import { changedKeys, touchedOnly } from "@/components/shared/form";
 
 
 export function useShippingZonesViewModel() {
@@ -42,7 +43,11 @@ export function useShippingZonesViewModel() {
 
   // ── เพิ่ม/แก้ไข (modal) — code = null คือเพิ่มโซนใหม่ ──
   const [editing, setEditing] = useState<{ code: ShippingZoneCode | null; form: ShippingZoneForm } | null>(null);
-  const [errors, setErrors] = useState<ShippingZoneErrors>({});
+  // ตรวจสดทุกครั้งที่แก้ — เตือนใต้ช่องที่แตะแล้วทันที · ปุ่มบันทึกกดได้เมื่อถูกครบ (ผู้ใช้ขอ 2026-10-31)
+  const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
+  const liveErrors: ShippingZoneErrors = editing ? validateShippingZone(editing.form, editing.code === null) : {};
+  const errors = touchedOnly(liveErrors, touched);
+  const canSave = !!editing && Object.keys(liveErrors).length === 0;
 
   const save = useMutation({
     mutationFn: ({ code, form }: { code: ShippingZoneCode | null; form: ShippingZoneForm }) =>
@@ -57,9 +62,9 @@ export function useShippingZonesViewModel() {
 
   const onSave = () => {
     if (!editing) return;
-    const errs = validateShippingZone(editing.form, editing.code === null);
-    setErrors(errs);
-    if (Object.keys(errs).length === 0) save.mutate(editing);
+    // ปุ่มถูก disable อยู่แล้วถ้ายังผิด — กันไว้อีกชั้น (เช่น กด Enter): โชว์เตือนทุกช่อง
+    if (!canSave) return setTouched(new Set(Object.keys(liveErrors)));
+    save.mutate(editing);
   };
 
   // ── ลบโซน (ยกเว้นโซน D) — จังหวัดของโซนที่ลบไปใช้ค่าส่งโซน D ──
@@ -103,24 +108,28 @@ export function useShippingZonesViewModel() {
     /** จังหวัดที่อยู่โซนอื่นแล้ว → ปิดในตัวเลือก (backend ตอบ 409 ถ้าซ้ำ) */
     takenProvinces: editing ? provinceOwners(zones, editing.code) : new Map<string, ShippingZoneCode>(),
     openEdit: (z: ShippingZone) => {
-      setErrors({});
+      setTouched(new Set());
       setEditing({ code: z.zone_code, form: toShippingZoneForm(z) });
     },
     openAdd: () => {
-      setErrors({});
+      setTouched(new Set());
       setEditing({ code: null, form: { ...EMPTY_SHIPPING_ZONE_FORM } });
     },
     onDelete: (z: ShippingZone) => remove.mutate(z.zone_code),
     deletingCode: remove.isPending ? remove.variables : null,
     closeEdit: () => setEditing(null),
     setForm: (form: ShippingZoneForm) => {
+      if (editing) {
+        const keys = changedKeys(editing.form, form);
+        setTouched((s) => new Set([...s, ...keys]));
+      }
       setEditing((e) => (e ? { ...e, form } : e));
-      setErrors({});
     },
     errors: Object.fromEntries(
       Object.entries(errors).map(([k, v]) => [k, t(`shippingZones.errors.${v}` as Parameters<typeof t>[0])]),
     ) as Partial<Record<keyof ShippingZoneErrors, string>>,
     saving: save.isPending,
+    canSave,
     onSave,
 
     checkProvince,

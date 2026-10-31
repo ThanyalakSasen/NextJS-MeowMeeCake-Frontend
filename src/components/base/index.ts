@@ -15,7 +15,7 @@ export { LazySelect } from "./LazySelect";
 export { Avatar, initialsOf } from "./Avatar";
 export { ProgressBar } from "./ProgressBar";
 export { Card } from "./Card";
-export { Form, FormItem, useAntForm } from "./Form";
+export { Form, FormItem, useAntForm, useFormValid } from "./Form";
 export { Logo } from "./Logo";
 export { EmptyState } from "./EmptyState";
 export { LocaleSwitcher } from "./LocaleSwitcher";

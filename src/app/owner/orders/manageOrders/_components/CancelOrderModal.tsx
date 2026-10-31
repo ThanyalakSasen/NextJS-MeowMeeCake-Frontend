@@ -5,7 +5,7 @@
 // ใช้กับพรีออเดอร์ด้วย (kind="preorder") — พรีออเดอร์ที่ชำระแล้ว backend บันทึกคืนเงินให้อัตโนมัติตอนยกเลิก ข้อความเตือนจึงต่างกัน
 import { Modal } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { Form, FormItem, useAntForm, TextArea } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, TextArea } from "@/components/base";
 import { modalButtonIcons } from "@/components/shared/actions";
 import { formatCurrency } from "@/i18n/format";
 import type { Order } from "@/types/order";
@@ -27,6 +27,8 @@ export function CancelOrderModal({
   const t = useTranslations();
   const locale = useLocale();
   const [form] = useAntForm<{ reason: string }>();
+  // ปุ่มยืนยันกดได้เมื่อทุกช่องผ่าน rules — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   const isPreorder = kind === "preorder";
   const no = !order ? "" : "preorder_no" in order ? order.preorder_no : order.order_no;
@@ -44,7 +46,7 @@ export function CancelOrderModal({
       onOk={handleOk}
       confirmLoading={saving}
       cancelButtonProps={modalButtonIcons("cancelAction").cancelButtonProps}
-      okButtonProps={{ ...modalButtonIcons("cancelAction").okButtonProps, danger: true }}
+      okButtonProps={{ ...modalButtonIcons("cancelAction").okButtonProps, danger: true, disabled: !valid }}
       okText={t("orders.cancel")}
       cancelText={t("orders.keepOrder")}
       destroyOnHidden

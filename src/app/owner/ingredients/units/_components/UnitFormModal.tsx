@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Modal, Checkbox } from "antd";
 import { useTranslations } from "next-intl";
-import { Form, FormItem, useAntForm, Input, Select } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, Select } from "@/components/base";
 import { UNIT_TYPES, isIngredientUnit, isProductUnit } from "@/utils/unitContext";
 import { getUnitTypeLockedContext } from "@/constants/ingredientCategoryUnits";
 import type { Unit } from "@/types/unit";
@@ -28,6 +28,8 @@ export function UnitFormModal({
   const t = useTranslations();
   const tUnitType = useTranslations("enums.unitType");
   const [form] = useAntForm<UnitFormValues>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
   const watchedUnitType = Form.useWatch("unit_type", form);
   const lockedContext = getUnitTypeLockedContext(watchedUnitType);
 
@@ -76,6 +78,7 @@ export function UnitFormModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons(editTarget ? "save" : "add")}
+      okButtonProps={{ ...modalButtonIcons(editTarget ? "save" : "add").okButtonProps, disabled: !valid }}
       okText={editTarget ? t("common.save") : t("units.addUnit")}
       cancelText={t("common.cancel")}
       destroyOnHidden

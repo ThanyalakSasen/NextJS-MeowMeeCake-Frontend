@@ -5,11 +5,11 @@ import { useEffect } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
-import { Form, FormItem, useAntForm, Input, DatePicker } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, DatePicker } from "@/components/base";
 import { alert } from "@/lib/alert";
 import type { PreorderRound, UpdateRoundInput } from "@/types/preorderRound";
 import { modalButtonIcons } from "@/components/shared/actions";
-import { roundDatesError, roundDatesPayload } from "./roundDates";
+import { notBeforeRule, roundDatesError, roundDatesPayload } from "./roundDates";
 
 interface FormValues {
   round_name: string;
@@ -33,6 +33,8 @@ export function EditRoundModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<FormValues>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   useEffect(() => {
     if (open) {
@@ -63,6 +65,7 @@ export function EditRoundModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons("save")}
+      okButtonProps={{ ...modalButtonIcons("save").okButtonProps, disabled: !valid }}
       okText={t("common.save")}
       cancelText={t("common.cancel")}
       width={520}
@@ -80,10 +83,20 @@ export function EditRoundModal({
           <FormItem name="open_date" label={t("preorderRound.fieldOpenDate")} rules={[{ required: true, message: t("validation.required") }]}>
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="close_date" label={t("preorderRound.fieldCloseDate")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem
+            name="close_date"
+            label={t("preorderRound.fieldCloseDate")}
+            dependencies={["open_date"]}
+            rules={[{ required: true, message: t("validation.required") }, notBeforeRule("open_date", t("preorderRound.openBeforeCloseRequired"))]}
+          >
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
-          <FormItem name="pickup_date" label={t("preorderRound.fieldPickupDate")} rules={[{ required: true, message: t("validation.required") }]}>
+          <FormItem
+            name="pickup_date"
+            label={t("preorderRound.fieldPickupDate")}
+            dependencies={["close_date"]}
+            rules={[{ required: true, message: t("validation.required") }, notBeforeRule("close_date", t("preorderRound.pickupAfterCloseRequired"))]}
+          >
             <DatePicker format="DD/MM/YYYY" />
           </FormItem>
         </div>

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Modal } from "antd";
 import { useTranslations, useLocale } from "next-intl";
-import { Form, FormItem, useAntForm, InputNumber, Input } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, InputNumber, Input } from "@/components/base";
 import { formatNumber } from "@/i18n/format";
 import { modalButtonIcons } from "@/components/shared/actions";
 import { INGREDIENT_STOCK_MAX } from "@/components/shared/stock";
@@ -39,6 +39,8 @@ export function StockActionModal({
   const t = useTranslations();
   const locale = useLocale();
   const [form] = useAntForm<FormValues>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   useEffect(() => {
     if (!target) return;
@@ -67,6 +69,7 @@ export function StockActionModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons(mode)}
+      okButtonProps={{ ...modalButtonIcons(mode).okButtonProps, disabled: !valid }}
       okText={t(`ingredientStock.ok_${mode}`)}
       cancelText={t("common.cancel")}
       destroyOnHidden

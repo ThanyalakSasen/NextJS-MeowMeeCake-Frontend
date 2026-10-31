@@ -21,6 +21,7 @@ export function DeliveryZoneEditModal(vm: VM) {
       okText={t("common.save")}
       cancelText={t("common.cancel")}
       {...modalButtonIcons("save")}
+      okButtonProps={{ ...modalButtonIcons("save").okButtonProps, disabled: !vm.canSave }}
       destroyOnHidden
     >
       {vm.editing && <DeliveryZoneForm form={vm.editing.form} errors={vm.errors} otherCatchAll={vm.otherCatchAll} onChange={vm.setForm} />}

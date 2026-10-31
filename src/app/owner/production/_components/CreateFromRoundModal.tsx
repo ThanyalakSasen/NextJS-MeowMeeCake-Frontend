@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Modal } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
-import { Form, FormItem, useAntForm, TextArea, Select, DatePicker, Tag } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, TextArea, Select, DatePicker, Tag } from "@/components/base";
 import { LoadFailed } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { PreorderRound } from "@/types/preorderRound";
@@ -60,6 +60,8 @@ export function CreateFromRoundModal({
   const t = useTranslations();
   const locale = useLocale();
   const [form] = useAntForm<FormValues>();
+  // ปุ่มสร้างกดได้เมื่อทุกช่องผ่าน rules — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   useEffect(() => {
     if (open) form.resetFields();
@@ -115,7 +117,7 @@ export function CreateFromRoundModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...buttons}
-      okButtonProps={{ ...buttons.okButtonProps, disabled: !canCreate }}
+      okButtonProps={{ ...buttons.okButtonProps, disabled: !canCreate || !valid }}
       okText={t("production.createSubmit")}
       cancelText={t("common.cancel")}
       width={640}

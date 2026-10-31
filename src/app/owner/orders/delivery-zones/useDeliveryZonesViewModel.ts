@@ -13,6 +13,7 @@ import { DELIVERY_FEE_OVERVIEW_KEY as OVERVIEW_KEY, DELIVERY_ZONES_KEY as KEY } 
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { DeliveryZone, DeliveryZoneInput } from "@/types/deliveryZone";
+import { changedKeys, touchedOnly } from "@/components/shared/form";
 import {
   EMPTY_ZONE_FORM, activeZones, cleanZoneInput, duplicateProvinces, resolveZone, toZoneForm, validateZone, type ZoneErrors,
 } from "./deliveryZoneForm";
@@ -38,7 +39,11 @@ export function useDeliveryZonesViewModel() {
 
   // ── เพิ่ม/แก้ไข (modal เดียว · id null = เพิ่ม) ──
   const [editing, setEditing] = useState<{ id: string | null; form: DeliveryZoneInput } | null>(null);
-  const [errors, setErrors] = useState<ZoneErrors>({});
+  // ตรวจสดทุกครั้งที่แก้ — เตือนใต้ช่องที่แตะแล้วทันที · ปุ่มบันทึกกดได้เมื่อถูกครบ (ผู้ใช้ขอ 2026-10-31)
+  const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
+  const liveErrors: ZoneErrors = editing ? validateZone(cleanZoneInput(editing.form)) : {};
+  const errors = touchedOnly(liveErrors, touched);
+  const canSave = !!editing && Object.keys(liveErrors).length === 0;
 
   const save = useMutation({
     mutationFn: ({ id, body }: { id: string | null; body: DeliveryZoneInput }) =>
@@ -77,10 +82,9 @@ export function useDeliveryZonesViewModel() {
 
   const onSave = () => {
     if (!editing) return;
-    const body = cleanZoneInput(editing.form);
-    const errs = validateZone(body);
-    setErrors(errs);
-    if (Object.keys(errs).length === 0) save.mutate({ id: editing.id, body });
+    // ปุ่มถูก disable อยู่แล้วถ้ายังผิด — กันไว้อีกชั้น (เช่น กด Enter): โชว์เตือนทุกช่อง
+    if (!canSave) return setTouched(new Set(Object.keys(liveErrors)));
+    save.mutate({ id: editing.id, body: cleanZoneInput(editing.form) });
   };
 
   // ── ตรวจว่าจังหวัดไหนใช้โซนอะไร ──
@@ -110,23 +114,27 @@ export function useDeliveryZonesViewModel() {
     /** โซนอื่นที่เป็น catch-all อยู่ — เปิด catch-all ที่โซนนี้แล้ว backend จะปลดโซนนั้นให้เอง */
     otherCatchAll: editing && currentCatchAll && currentCatchAll._id !== editing.id ? currentCatchAll.zone_name : null,
     openAdd: () => {
-      setErrors({});
+      setTouched(new Set());
       const nextOrder = live.length ? Math.max(...live.map((z) => z.sort_order)) + 1 : 1;
       setEditing({ id: null, form: { ...EMPTY_ZONE_FORM, sort_order: nextOrder } });
     },
     openEdit: (z: DeliveryZone) => {
-      setErrors({});
+      setTouched(new Set());
       setEditing({ id: z._id, form: toZoneForm(z) });
     },
     closeEdit: () => setEditing(null),
     setForm: (form: DeliveryZoneInput) => {
+      if (editing) {
+        const keys = changedKeys(editing.form, form);
+        setTouched((s) => new Set([...s, ...keys]));
+      }
       setEditing((e) => (e ? { ...e, form } : e));
-      setErrors({});
     },
     errors: Object.fromEntries(
       Object.entries(errors).map(([k, v]) => [k, t(`deliveryZones.errors.${v}` as Parameters<typeof t>[0])]),
     ) as Partial<Record<keyof ZoneErrors, string>>,
     saving: save.isPending,
+    canSave,
     onSave,
 
     checkProvince,

@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
 import dayjs, { type Dayjs } from "dayjs";
-import { Form, FormItem, useAntForm, DatePicker } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, DatePicker } from "@/components/base";
 import type { PreorderRound } from "@/types/preorderRound";
 import { modalButtonIcons } from "@/components/shared/actions";
 
@@ -24,6 +24,8 @@ export function ReopenRoundModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<{ close_date: Dayjs }>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
   const pickup = dayjs(round.pickup_date);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export function ReopenRoundModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons("save")}
+      okButtonProps={{ ...modalButtonIcons("save").okButtonProps, disabled: !valid }}
       okText={t("preorderRound.reopenRound")}
       cancelText={t("common.cancel")}
       width={440}

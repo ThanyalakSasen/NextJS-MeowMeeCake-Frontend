@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Modal } from "antd";
 import { useTranslations } from "next-intl";
-import { Form, FormItem, useAntForm, Input, TextArea, Switch, RangePicker } from "@/components/base";
+import { Form, FormItem, useAntForm, useFormValid, Input, TextArea, Switch, RangePicker } from "@/components/base";
 import { BannerImageUpload } from "./BannerImageUpload";
 import type { Rule } from "antd/es/form";
 import type { Banner } from "@/types/banner";
@@ -26,6 +26,8 @@ export function BannerFormModal({
 }) {
   const t = useTranslations();
   const [form] = useAntForm<BannerFormValue>();
+  // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
+  const valid = useFormValid(form);
 
   useEffect(() => {
     if (!open) return;
@@ -53,6 +55,7 @@ export function BannerFormModal({
       onOk={handleOk}
       confirmLoading={saving}
       {...modalButtonIcons(editTarget ? "save" : "add")}
+      okButtonProps={{ ...modalButtonIcons(editTarget ? "save" : "add").okButtonProps, disabled: !valid }}
       okText={editTarget ? t("common.save") : t("storeDesign.addBanner")}
       cancelText={t("common.cancel")}
       destroyOnHidden
