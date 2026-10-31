@@ -44,7 +44,8 @@
     "prev": "ช่วงก่อนหน้า",
     "next": "ช่วงถัดไป",
     "pick": "เลือกช่วงเวลา",
-    "quarterLabel": "ไตรมาส {n}/{year}"
+    "quarterLabel": "ไตรมาส {n}/{year}",
+    "quarterCell": "ไตรมาส {n}"
   },
   "filterLabel": {
     "role": "ตำแหน่ง",

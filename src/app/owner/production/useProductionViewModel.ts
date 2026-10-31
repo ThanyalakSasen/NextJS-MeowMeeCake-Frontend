@@ -319,7 +319,7 @@ export function useProductionViewModel() {
   const historyQ = useQuery({
     queryKey: productionHistoryKey(historyFrom, historyTo),
     queryFn: () => productionOrdersService.list(productionHistoryParams(historyFrom, historyTo)),
-    enabled: activeTab === "history",
+    // ประวัติอยู่ใต้แผนการผลิตในหน้าเดียวกันแล้ว (ProductionView) — เดิมโหลดเฉพาะ ?tab=history → ค้าง "กำลังโหลด" ตลอด
   });
   const historyRows = useMemo(
     () =>
