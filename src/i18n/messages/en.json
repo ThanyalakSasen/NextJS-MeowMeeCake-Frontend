@@ -4438,6 +4438,8 @@
     "linkFailed": "Action failed",
     "linkTitle": "Link existing receipts",
     "linkHint": "For items already received into stock — pick the receipts and enter each line total from the bill",
+    "linkRange": "Received between",
+    "linkRangeMore": "Showing the latest {n} in this range — narrow the dates if you can't find it",
     "selectReceive": "Select an unlinked stock receipt",
     "noUnlinked": "No unlinked stock receipts",
     "linkTotalRequired": "Enter a line total for every selected item",

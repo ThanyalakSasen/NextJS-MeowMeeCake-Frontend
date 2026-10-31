@@ -7,7 +7,7 @@ import { formatDate } from "@/i18n/format";
 import { SOURCE_TYPE_CONFIG } from "@/constants/enumConfig";
 import type { ProductionOrder } from "@/types/productionOrder";
 import { actionIcon } from "@/components/shared/actions";
-import { getNextStatus, isFinalStatus, producedQty } from "../productionStatus";
+import { isFinalStatus, producedQty } from "../productionStatus";
 import { ProductionLots } from "./ProductionLots";
 
 export function ProductionOrderDetail({
@@ -15,7 +15,6 @@ export function ProductionOrderDetail({
   roundQuota,
   canUpdate,
   canComplete,
-  onAdvance,
   onCancel,
   onEdit,
   onFinish,
@@ -28,7 +27,6 @@ export function ProductionOrderDetail({
   canUpdate: boolean;
   /** ปิดงานผลิต (ไปสถานะ "เสร็จ") — production.approve */
   canComplete: boolean;
-  onAdvance: (o: ProductionOrder) => void;
   onCancel: (o: ProductionOrder) => void;
   onEdit: (o: ProductionOrder) => void;
   /** ผลิตเรียบร้อย — เปิดหน้าต่างปิดงาน (ใบรอดำเนินการ: เริ่มผลิตให้ตอนยืนยัน) */
@@ -41,7 +39,6 @@ export function ProductionOrderDetail({
   const locale = useLocale();
   const srcCfg = SOURCE_TYPE_CONFIG[order.source_type];
   const final = isFinalStatus(order.production_status);
-  const next = getNextStatus(order.production_status);
   const done = order.production_status === "done";
   // ใบจากรอบ: planned_qty = ผลรวมที่ลูกค้าสั่งในรอบ (backend รวมให้) — บอกที่มา + โควตาที่เปิดรับต่อรอบ
   // รายการที่เพิ่มเองในใบ (ผลิตเพิ่ม ไม่มี round_item_id) ไม่ใช่ยอดลูกค้าสั่ง — ไม่ขึ้นบรรทัดนี้
@@ -162,13 +159,6 @@ export function ProductionOrderDetail({
               {t("production.finishOrder")}
             </Button>
           )}
-          {/* ซ่อนปุ่มเลื่อนสถานะ (กำลังผลิต / เสร็จแล้ว) ไว้ก่อน
-          {next && (next !== "done" || canComplete) && (
-            <Button type="primary" size="small" onClick={() => onAdvance(order)}>
-              {t("production.advanceTo", { status: t(`enums.productionStatus.${next}`) })}
-            </Button>
-          )}
-          */}
         </div>
       )}
     </div>

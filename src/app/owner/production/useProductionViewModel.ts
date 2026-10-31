@@ -514,11 +514,6 @@ export function useProductionViewModel() {
     );
   };
 
-  const onAdvanceStatus = (order: ProductionOrder) => {
-    const next = getNextStatus(order.production_status);
-    if (next) onChangeStatus(order, next);
-  };
-
   const onCancelOrder = (order: ProductionOrder) => onChangeStatus(order, "cancelled");
   /** ปุ่ม "เริ่มการผลิต" (การ์ดวันนี้ผลิต + ป๊อปอัป) — ใบรอดำเนินการ → กำลังผลิต */
   const onStartOrder = (order: ProductionOrder) => onChangeStatus(order, "in_progress");
@@ -589,7 +584,7 @@ export function useProductionViewModel() {
     isDetailLoading: drawerOpen && !selectedOrder && (ordersQ.isLoading || detailQ.isLoading),
 
     isFinalStatus, getNextStatus,
-    onChangeStatus, onAdvanceStatus, onCancelOrder, onFinishOrder, onStartOrder, startingId,
+    onChangeStatus, onCancelOrder, onFinishOrder, onStartOrder, startingId,
     completeTarget, closeComplete: () => setCompleteTarget(null), onCompleteSubmit, completing: completeOrder.isPending,
   };
 }
