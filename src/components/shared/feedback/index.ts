@@ -5,3 +5,4 @@ export { AlertHost } from "./AlertHost";
 export { LoadFailed } from "./LoadFailed";
 export { LazyTooltip } from "./LazyTooltip";
 export { InfoTip } from "./InfoTip";
+export { DeleteBlockersModal } from "./DeleteBlockersModal";

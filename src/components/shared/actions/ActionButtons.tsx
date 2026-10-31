@@ -24,6 +24,7 @@ import {
   ClockIcon,
   EyeIcon,
   FunnelIcon,
+  LinkSlashIcon,
   MagnifyingGlassIcon,
   MinusCircleIcon,
   PencilSquareIcon,
@@ -62,6 +63,7 @@ const ICONS = {
   back: ArrowLeftIcon, // ย้อนกลับ
   search: MagnifyingGlassIcon, // ค้นหา (สมาชิก POS)
   calendar: CalendarDaysIcon, // กลับไปช่วงเวลาปัจจุบัน (วันนี้/เดือนนี้)
+  unlink: LinkSlashIcon, // ยกเลิกการเชื่อมต่อ (modal ลบยังไม่ได้)
 } as const;
 
 export type ActionIconKind = keyof typeof ICONS;

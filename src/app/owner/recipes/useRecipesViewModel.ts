@@ -227,14 +227,13 @@ export function useRecipesViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("recipes.recipeSaveFailed")),
   });
 
+  const [deleteBlockedId, setDeleteBlockedId] = useState<string | null>(null);
   const deleteRecipe = useMutation({
     mutationFn: (id: string) => recipesService.remove(id),
     onSuccess: () => { alert.success(t("recipes.recipeDeleted")); invalidateRecipes(); },
-    // 409 = สูตรยังอยู่ในใบสั่งผลิตที่ยังไม่เสร็จ — backend บอกเลขใบในข้อความ → เตือน (ไม่ใช่ error)
-    onError: (e) =>
-      isApiError(e) && e.status === 409
-        ? alert.warning(e.message, { title: t("recipes.recipeDeleteBlockedTitle") })
-        : alert.error(isApiError(e) ? e.message : t("recipes.recipeDeleteFailed")),
+    // 409 = ยังลบไม่ได้ (ติดเงื่อนไข) → modal รายการเหตุผล + ปุ่มแก้ทีละข้อ (DeleteBlockersModal · ผู้ใช้ขอ 2026-10-31)
+    onError: (e, id) =>
+      isApiError(e) && e.status === 409 ? setDeleteBlockedId(id) : alert.error(isApiError(e) ? e.message : t("recipes.recipeDeleteFailed")),
   });
 
   const onSaveRecipe = (v: RecipeSubmitValue) => {
@@ -281,10 +280,15 @@ export function useRecipesViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("recipes.componentSaveFailed")),
   });
 
+  // 409 = สูตรหลักยังใช้ส่วนประกอบนี้อยู่ → modal พร้อมปุ่มยกเลิกการผูกกับสูตรหลัก (ผู้ใช้ขอ 2026-10-31)
+  const [deleteBlockedComponentId, setDeleteBlockedComponentId] = useState<string | null>(null);
   const deleteComponent = useMutation({
     mutationFn: (id: string) => recipeComponentsService.remove(id),
     onSuccess: () => { alert.success(t("recipes.componentDeleted")); invalidateComponents(); },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("recipes.componentDeleteFailed")),
+    onError: (e, id) =>
+      isApiError(e) && e.status === 409
+        ? setDeleteBlockedComponentId(id)
+        : alert.error(isApiError(e) ? e.message : t("recipes.componentDeleteFailed")),
   });
 
   const onSaveComponent = (v: ComponentSubmitValue) => {
@@ -325,6 +329,8 @@ export function useRecipesViewModel() {
     closeRecipeForm: () => { setRecipeFormOpen(false); setRecipeEditTarget(null); },
     onSaveRecipe, savingRecipe: saveRecipe.isPending,
     onDeleteRecipe: (id: string) => deleteRecipe.mutate(id),
+    deleteBlockedId,
+    closeDeleteBlocked: () => setDeleteBlockedId(null),
 
     detailRecipe, drawerOpen,
     onViewRecipe: (r: Recipe) => { setDetailRecipe(r); setDrawerOpen(true); },
@@ -343,5 +349,7 @@ export function useRecipesViewModel() {
     closeComponentForm: () => { setComponentFormOpen(false); setComponentEditTarget(null); },
     onSaveComponent, savingComponent: saveComponent.isPending,
     onDeleteComponent: (id: string) => deleteComponent.mutate(id),
+    deleteBlockedComponentId,
+    closeDeleteBlockedComponent: () => setDeleteBlockedComponentId(null),
   };
 }

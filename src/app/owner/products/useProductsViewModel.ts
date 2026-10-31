@@ -58,17 +58,16 @@ export function useProductsViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("products.saveFailed")),
   });
 
+  const [deleteBlockedId, setDeleteBlockedId] = useState<string | null>(null);
   const remove = useMutation({
     mutationFn: (id: string) => productsService.remove(id),
     onSuccess: () => {
       alert.success(t("products.deleted"));
       invalidate();
     },
-    // 409 = ยังมีของในสต็อก — backend บอกจำนวนในข้อความ → เตือน (ไม่ใช่ error)
-    onError: (e) =>
-      isApiError(e) && e.status === 409
-        ? alert.warning(e.message, { title: t("products.deleteBlockedTitle") })
-        : alert.error(isApiError(e) ? e.message : t("products.deleteFailed")),
+    // 409 = ยังลบไม่ได้ (ติดเงื่อนไข) → modal รายการเหตุผล + ปุ่มแก้ทีละข้อ (DeleteBlockersModal · ผู้ใช้ขอ 2026-10-31)
+    onError: (e, id) =>
+      isApiError(e) && e.status === 409 ? setDeleteBlockedId(id) : alert.error(isApiError(e) ? e.message : t("products.deleteFailed")),
   });
 
   return {
@@ -93,5 +92,7 @@ export function useProductsViewModel() {
     // actions
     onToggleVisible: (p: Product) => toggleVisible.mutate(p),
     onDelete: (id: string) => remove.mutate(id),
+    deleteBlockedId,
+    closeDeleteBlocked: () => setDeleteBlockedId(null),
   };
 }
