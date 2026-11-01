@@ -16,6 +16,7 @@ import type { RefundAccount } from "@/types/order";
 export function RefundSection({
   amount,
   reason,
+  detail,
   account,
   paidPaymentId,
   canRefund,
@@ -24,6 +25,8 @@ export function RefundSection({
 }: {
   amount: number;
   reason: string | null | undefined;
+  /** ข้อความแทนค่าเริ่มต้น "ถูกยกเลิกหลังชำระเงินแล้ว" — ใช้กับการโอนคืนบางส่วนที่ใบยังไม่ถูกยกเลิก */
+  detail?: string;
   /** บัญชีพร้อมเพย์รับเงินคืนของลูกค้า · null = ลูกค้ายังไม่ได้ตั้ง */
   account: RefundAccount | null;
   /** รายการชำระเงินที่สถานะ paid (ตัวที่จะคืน) · null = หาไม่เจอ */
@@ -39,7 +42,7 @@ export function RefundSection({
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
       <p className="font-semibold text-warning">{t("orders.awaitingRefundTitle")}</p>
-      <p className="text-gray-700">{t("orders.awaitingRefundDetail", { amount: money })}</p>
+      <p className="text-gray-700">{detail ?? t("orders.awaitingRefundDetail", { amount: money })}</p>
       {reason && <p className="text-gray-600">{t("orders.cancelReasonLabel", { reason })}</p>}
       {account ? (
         <div className="rounded-md bg-white/70 px-2.5 py-2">

@@ -55,6 +55,10 @@ export interface Preorder extends DeliveryInfo {
   /** กำหนดชำระ = min(สั่ง + 24 ชม., ปิดรอบ) — เลยแล้วยังไม่จ่าย (และไม่มีสลิปรอตรวจ) backend ยกเลิกอัตโนมัติ
    *  · null = ข้อมูลก่อนมีฟิลด์นี้ (backend #55 — docs/preorder-round-flow.md ประเด็น 3) */
   payment_due_at?: string | null;
+  /** ยอดรอโอนคืนจากการที่ร้านยกเลิกบางสินค้าในใบนี้ — ใบยังเดินต่อ · total_amount หักแล้ว */
+  refund_due_amount: number;
+  /** สินค้าที่ถูกยกเลิก เช่น "ขนมปัง × 2" */
+  refund_due_note: string | null;
   /** มีทั้ง list และ get(id) — backend แนบรายการสินค้าของแต่ละใบมาให้ */
   items?: PreorderItem[];
   /** มีค่าเฉพาะ preordersService.get(id) ของพรีออเดอร์ที่รอโอนคืน + ลูกค้าตั้งบัญชีไว้ (Q-BE12) */

@@ -85,6 +85,18 @@ export interface RoundListParams extends ListParams {
   upcomingOnly?: boolean;
 }
 
+/** ผลของ POST /admin/preorder-round-items/[id]/cancel — ยกเลิกสินค้าออกจากรอบแบบไม่ผลิต */
+export interface CancelRoundItemResult {
+  round_item_id: string;
+  /** false = ยังมีใบที่ยกเลิกไม่สำเร็จ สินค้าถูกปิดขายแต่ยังอยู่ในรอบ (กดซ้ำได้) */
+  removed: boolean;
+  cancelled_orders: string[];
+  updated_orders: string[];
+  refunds: { preorder_no: string; amount: number }[];
+  refund_total: number;
+  failed: { preorder_no: string; error: string }[];
+}
+
 /** ผลของการปิดรอบ (PATCH .../status → closed) — backend ยกเลิกคนไม่จ่าย + สร้างใบสั่งผลิตอัตโนมัติ */
 export interface CloseRoundResult {
   unpaid: {

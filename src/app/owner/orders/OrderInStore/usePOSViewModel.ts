@@ -35,9 +35,9 @@ import type { PosMember, PosProduct } from "@/types/pos";
 import type { Order } from "@/types/order";
 import { nextRawInput, thaiLayoutToQwerty } from "@/constants/thaiKeyboard";
 import {
-  addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoLines, type CartLine,
+  addLine, setLineQty, removeLine, cartSubtotal, buildOrderInput, isAtStock, toPromoCatalog, toPromoLines, type CartLine,
 } from "./posCart";
-import { posPromotions, promotionsForProduct, evaluateAll, isScoped, togglePromoSelection, MAX_STACKED_PROMOTIONS } from "./posPromotion";
+import { posPromotions, promotionsForProduct, evaluateAll, otherPromotions, isScoped, togglePromoSelection, MAX_STACKED_PROMOTIONS } from "./posPromotion";
 import {
   useHeldBills, saveHeldBills, newHeldBillId, MAX_HELD_BILLS, type HeldBill,
 } from "./posHeldBills";
@@ -303,6 +303,10 @@ export function usePOSViewModel() {
     .filter((e): e is NonNullable<typeof e> => !!e);
   // เลือกไว้แต่บิลเปลี่ยนจนใช้ไม่ได้แล้ว (ลบสินค้า/ลดจำนวน/ถอดสมาชิก) → ไม่ใช้โปรนั้น + แจ้งในการ์ด
   const appliedPromos = selectedEvals.filter((e) => e.eligible);
+  const otherPromos = useMemo(
+    () => otherPromotions(promoEvals, selectedPromoIds, toPromoCatalog(catalog), toPromoLines(cart)),
+    [promoEvals, selectedPromoIds, catalog, cart],
+  );
   const bestPromo = promoEvals.find((e) => e.eligible) ?? null;
   const promoDiscount = Math.round(appliedPromos.reduce((s, e) => s + e.discount, 0) * 100) / 100;
   // ซ้อนโปรจนส่วนลดรวมเกินยอดบิล — backend ปฏิเสธ (400) จึงไม่ให้กดชำระ
@@ -684,6 +688,7 @@ export function usePOSViewModel() {
     // โปรโมชัน — ซ้อนได้เมื่อทุกตัวตั้ง stackable (backend รับ promotion_ids)
     promotionsEnabled,
     promoEvals,
+    otherPromos,
     billPromotions: promotions.filter((p) => !isScoped(p)),
     bestPromoId: bestPromo?.promotion._id ?? null,
     selectedPromoIds,

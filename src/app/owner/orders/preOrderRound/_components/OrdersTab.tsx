@@ -109,7 +109,7 @@ export function OrdersTab(vm: VM) {
         const due = vm.paymentDueState(o);
         return (
           <div>
-            {isAwaitingRefund(o) ? (
+            {isAwaitingRefund(o) || o.refund_due_amount > 0 ? (
               <Tag color={NOTICE_TAG.awaitingRefund}>{t("orders.awaitingRefund")}</Tag>
             ) : (
               <StatusBadge group="paymentStatus" value={o.payment_status} />

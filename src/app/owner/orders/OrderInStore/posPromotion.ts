@@ -143,3 +143,43 @@ export function evaluateAll(promos: Promotion[], lines: PromoLine[], hasMember =
     .map((p) => evaluatePromotion(p, lines, hasMember))
     .sort((a, b) => Number(b.eligible) - Number(a.eligible) || b.discount - a.discount);
 }
+
+export interface PromoCatalogItem {
+  productId: string;
+  categoryId: string | null;
+  name: string;
+}
+
+/** เหตุผลที่ลูกค้าแก้เองได้ (ซื้อเพิ่ม/เป็นสมาชิก) — usedUp กับ zero ทำอะไรต่อไม่ได้ จึงไม่เอามาชวน */
+type ReachableBlock = Extract<PromoBlock, { key: "minQty" | "minAmount" | "memberOnly" | "noEligibleItems" }>;
+
+export interface OtherPromo {
+  promotion: Promotion;
+  need: ReachableBlock;
+  /** ชื่อสินค้าที่ร่วมรายการ สินค้าในบิลขึ้นก่อน · ว่าง = โปรทั้งบิล หรือไม่พบในรายการสินค้า */
+  itemNames: string[];
+}
+
+// ใกล้ได้ส่วนลดสุดขึ้นก่อน: มีสินค้าในบิลแล้ว → แค่เป็นสมาชิก → ยังไม่มีสินค้าที่ร่วมรายการ
+const NEED_ORDER: Record<ReachableBlock["key"], number> = { minQty: 0, minAmount: 0, memberOnly: 1, noEligibleItems: 2 };
+
+const isReachable = (b: PromoBlock | undefined): b is ReachableBlock => b != null && b.key in NEED_ORDER;
+
+/** โปรที่ยังใช้กับบิลนี้ไม่ได้แต่ทำให้ครบเงื่อนไขได้ — ตัดตัวที่เลือกค้างไว้ (แสดงเป็นการ์ดแดงอยู่แล้ว) */
+export function otherPromotions(
+  evals: PromoEval[],
+  selectedIds: string[],
+  catalog: PromoCatalogItem[],
+  lines: PromoLine[],
+): OtherPromo[] {
+  const inBill = new Set(lines.map((l) => l.productId));
+  const result: OtherPromo[] = [];
+  for (const ev of evals) {
+    if (ev.eligible || selectedIds.includes(ev.promotion._id) || !isReachable(ev.block)) continue;
+    const p = ev.promotion;
+    const items = isScoped(p) ? catalog.filter((c) => appliesToProduct(p, c.productId, c.categoryId)) : [];
+    const itemNames = [...items.filter((c) => inBill.has(c.productId)), ...items.filter((c) => !inBill.has(c.productId))].map((c) => c.name);
+    result.push({ promotion: p, need: ev.block, itemNames });
+  }
+  return result.sort((a, b) => NEED_ORDER[a.need.key] - NEED_ORDER[b.need.key]);
+}

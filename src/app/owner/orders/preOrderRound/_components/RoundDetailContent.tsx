@@ -147,10 +147,22 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
                 {vm.perm.update && !final && (
                   <div className="flex gap-2">
                     <EditButton size="small" type="text" onClick={() => vm.openEditItem(it._id)} />
-                    {it.current_qty === 0 && (
+                    {it.current_qty === 0 ? (
                       <ConfirmDeletePopup title={t("preorderRound.removeItemConfirm")} onConfirm={() => vm.onRemoveRoundItem(it._id)}>
                         <DeleteButton size="small" type="text" />
                       </ConfirmDeletePopup>
+                    ) : (
+                      // มีคนจองแล้ว: ยกเลิกสินค้าในทุกคำสั่งซื้อ ไม่ผลิต — ต้องการหยุดรับจองแต่ยังผลิต ใช้ปิดการขายในหน้าแก้ไข
+                      <Button
+                        size="small"
+                        type="text"
+                        danger
+                        icon={actionIcon("cancelAction", "small")}
+                        disabled={vm.cancellingRoundItem}
+                        onClick={() => vm.onCancelRoundItem(it)}
+                      >
+                        {t("preorderRound.cancelItem")}
+                      </Button>
                     )}
                   </div>
                 )}

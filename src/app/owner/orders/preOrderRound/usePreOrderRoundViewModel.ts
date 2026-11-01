@@ -22,7 +22,7 @@ import { usePermission } from "@/context/PermissionsContext";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { OrderStatus, RoundStatus } from "@/constants/enumConfig";
-import type { PreorderRound, CloseRoundResult, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
+import type { PreorderRound, PreorderRoundItem, CloseRoundResult, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
 import type { Preorder } from "@/types/preorder";
 import { statusFilter, type DeliveryUpdateInput, type OrderType } from "@/types/order";
 import { formatCurrency } from "@/i18n/format";
@@ -303,6 +303,36 @@ export function usePreOrderRoundViewModel() {
     onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.itemRemoveFailed")),
   });
 
+  const cancelRoundItem = useMutation({
+    mutationFn: (itemId: string) => preorderRoundsService.cancelItem(itemId),
+    onSuccess: ({ data }) => {
+      invalidateRounds(selectedRoundId);
+      qc.invalidateQueries({ queryKey: ["preorders"] });
+      qc.invalidateQueries({ queryKey: ["reports"] });
+      if (data.failed.length > 0) {
+        alert.error(t("preorderRound.itemCancelPartial", { n: data.failed.length, orders: data.failed.map((f) => f.preorder_no).join(", ") }));
+        return;
+      }
+      const orders = data.cancelled_orders.length + data.updated_orders.length;
+      alert.success(
+        data.refund_total > 0
+          ? t("preorderRound.itemCancelledRefund", { n: orders, amount: formatCurrency(data.refund_total, locale) })
+          : t("preorderRound.itemCancelled", { n: orders }),
+      );
+    },
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.itemCancelFailed")),
+  });
+
+  const onCancelRoundItem = async (item: PreorderRoundItem) => {
+    const ok = await confirmAlert(t("preorderRound.cancelItemConfirm", { name: item.product_name, qty: item.current_qty }), {
+      title: t("preorderRound.cancelItem"),
+      confirmText: t("preorderRound.cancelItem"),
+      cancelText: t("common.cancel"),
+      danger: true,
+    });
+    if (ok) cancelRoundItem.mutate(item._id);
+  };
+
   const onSubmitItemForm = (roundId: string, body: RoundItemInput) => {
     if (editingItemId) updateRoundItem.mutate({ itemId: editingItemId, body });
     else addRoundItem.mutate({ roundId, body });
@@ -403,6 +433,26 @@ export function usePreOrderRoundViewModel() {
     );
     if (!ok) return;
     refundPayment.mutate(paymentId, {
+      onSuccess: () => alert.success(t("orders.refunded", { no })),
+      onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.refundFailed")),
+    });
+  };
+
+  // โอนคืนบางส่วน (ร้านยกเลิกบางสินค้าในใบ) — ใบยังเดินต่อ payment_status ไม่เปลี่ยน
+  const confirmRefundDue = useMutation({
+    mutationFn: (preorderId: string) => preordersService.confirmRefundDue(preorderId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["preorders"] }),
+  });
+
+  const onConfirmRefundDue = async () => {
+    if (!selectedOrder) return;
+    const no = selectedOrder.preorder_no;
+    const ok = await confirmAlert(
+      t("orders.partialRefundConfirm", { amount: formatCurrency(selectedOrder.refund_due_amount, locale), no }),
+      { title: t("orders.confirmRefund"), confirmText: t("orders.confirmRefund"), cancelText: t("common.cancel") },
+    );
+    if (!ok) return;
+    confirmRefundDue.mutate(selectedOrder._id, {
       onSuccess: () => alert.success(t("orders.refunded", { no })),
       onError: (e) => alert.error(isApiError(e) ? e.message : t("orders.refundFailed")),
     });
@@ -560,6 +610,7 @@ export function usePreOrderRoundViewModel() {
     itemFormOpen, editingItem, openAddItem, openEditItem, closeItemForm,
     onSubmitItemForm, savingItem: addRoundItem.isPending || updateRoundItem.isPending,
     onRemoveRoundItem: (itemId: string) => removeRoundItem.mutate(itemId),
+    onCancelRoundItem, cancellingRoundItem: cancelRoundItem.isPending,
 
     // แท็บ 2: คำสั่งซื้อพรีออเดอร์
     orderSearch, setOrderSearch: (v: string) => { setOrderSearchState(v); setOrderPage(1); },
@@ -577,6 +628,7 @@ export function usePreOrderRoundViewModel() {
     canRefundPayment: paymentPerm.delete,
     verifyingPayment: verifyPayment.isPending, onApprovePayment, onRejectPayment,
     paidPayment, onRefund, refunding: refundPayment.isPending,
+    onConfirmRefundDue, confirmingRefundDue: confirmRefundDue.isPending,
     onViewOrder, closeOrderDrawer,
 
     isFinalOrderStatus, getNextOrderStatus, paymentDueState,

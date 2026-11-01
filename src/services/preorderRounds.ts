@@ -8,7 +8,7 @@ import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse, EmptyResponse } from "@/types/api";
 import type {
   PreorderRound, PreorderRoundItem, CreateRoundInput, UpdateRoundInput,
-  RoundItemInput, UpdateRoundItemInput, RoundListParams, CloseRoundResult, CancelRoundCascade,
+  RoundItemInput, UpdateRoundItemInput, RoundListParams, CloseRoundResult, CancelRoundCascade, CancelRoundItemResult,
 } from "@/types/preorderRound";
 import type {
   RoundCustomers, RoundCustomersParams, RoundDashboardParams, RoundDashboardRow,
@@ -106,6 +106,9 @@ export const preorderRoundsService = {
   },
 
   removeItem: (itemId: string) => http.delete<EmptyResponse>(`${ROUND_ITEMS_BASE}/${itemId}`),
+
+  /** ยกเลิกสินค้าออกจากรอบแบบไม่ผลิต — ยกเลิกสินค้านี้ในทุกคำสั่งซื้อ ต่างจากปิดการขาย (is_active) ที่ยังผลิตต่อ */
+  cancelItem: (itemId: string) => http.post<ItemResponse<CancelRoundItemResult>>(`${ROUND_ITEMS_BASE}/${itemId}/cancel`, {}),
 
   /** GET /admin/preorder-rounds/dashboard — สรุปต่อรอบ (จอง/โควตา · ยอดแยกสถานะชำระเงิน) · รอบล่าสุดก่อน (F4 · Q-BE5) */
   dashboard: (params: RoundDashboardParams = {}, h: HttpReader = http) => h.getList<RoundDashboardRow>(`${ROUNDS_BASE}/dashboard`, { params }),
