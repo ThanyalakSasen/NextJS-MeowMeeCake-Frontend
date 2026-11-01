@@ -17,7 +17,8 @@ export function FilterToolbar({
   return (
     <div className="flex flex-wrap items-end justify-between gap-3 xl:flex-nowrap">
       <div className="flex min-w-0 flex-wrap items-end gap-2">{left}</div>
-      <div className="ml-auto flex flex-wrap items-end justify-end gap-2 xl:flex-nowrap">{right}</div>
+      {/* min-w-0 — ให้กล่องหดตามจอ ช่องที่มี max-w-full (เช่น ช่วงวันที่ 20rem) จึงไม่ล้นจอมือถือ */}
+      <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-end justify-end gap-2 xl:flex-nowrap">{right}</div>
     </div>
   );
 }

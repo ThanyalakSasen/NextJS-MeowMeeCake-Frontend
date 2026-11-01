@@ -1,14 +1,14 @@
 "use client";
 // แท็บ 1: รอบพรีออเดอร์ — presentational ล้วน รับ props จาก usePreOrderRoundViewModel
 import { useTranslations, useLocale } from "next-intl";
-import { Button, Select } from "@/components/base";
+import { Select } from "@/components/base";
 import { StatCard, StatCardsGrid, StatusBadge } from "@/components/shared/stats";
 import { DataTable, FilterToolbar, SearchInput, type Column, FilterField } from "@/components/shared/data";
 import { ConfirmDeletePopup, LoadFailed } from "@/components/shared/feedback";
 import { formatDate } from "@/i18n/format";
 import type { RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound } from "@/types/preorderRound";
-import { DeleteButton, EditButton, ViewButton, actionIcon } from "@/components/shared/actions";
+import { DeleteButton, EditButton, ViewButton } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "../usePreOrderRoundViewModel";
 import { isFinalRoundStatus } from "../preorderStatus";
 
@@ -52,20 +52,11 @@ export function RoundsTab(vm: VM) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-start justify-between gap-4">
-        <p className="text-base text-gray-600">{t("preorderRound.roundsDescription", { n: vm.roundTotal })}</p>
-        {vm.perm.create && (
-          <Button type="primary" icon={actionIcon("add")} onClick={vm.openCreateRound}>
-            {t("preorderRound.createRound")}
-          </Button>
-        )}
-      </div>
-
       <StatCardsGrid>
-        <StatCard label={t("common.all")} value={vm.roundStats.total} />
-        <StatCard label={t("enums.roundStatus.scheduled")} value={vm.roundStats.scheduled} />
-        <StatCard label={t("enums.roundStatus.open")} value={vm.roundStats.open} tone="up" />
-        <StatCard label={t("preorderRound.statClosedOrCancelled")} value={vm.roundStats.closed} tone="muted" />
+        <StatCard label={t("common.all")} value={t("preorderRound.roundCount", { n: vm.roundStats.total })} />
+        <StatCard label={t("enums.roundStatus.scheduled")} value={t("preorderRound.roundCount", { n: vm.roundStats.scheduled })} />
+        <StatCard label={t("enums.roundStatus.open")} value={t("preorderRound.roundCount", { n: vm.roundStats.open })} tone="up" />
+        <StatCard label={t("preorderRound.statClosedOrCancelled")} value={t("preorderRound.roundCount", { n: vm.roundStats.closed })} tone="muted" />
       </StatCardsGrid>
 
       <FilterToolbar

@@ -1018,7 +1018,7 @@
         "orderTotal": "Pre-order total"
       }
     },
-    "roundsDescription": "{n} rounds total",
+    "roundCount": "{n, plural, one {# round} other {# rounds}}",
     "createRound": "Create Round",
     "statClosedOrCancelled": "Closed/Cancelled",
     "searchRoundPlaceholder": "Search round name...",
