@@ -4,8 +4,10 @@
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useOpenedOnce } from "@/hooks/useOpenedOnce";
+import { Button } from "@/components/base";
 import { TabbedPageLayout } from "@/components/shared/layout";
 import { DetailModal } from "@/components/shared/feedback";
+import { actionIcon } from "@/components/shared/actions";
 import type { usePreOrderRoundViewModel } from "./usePreOrderRoundViewModel";
 import { RestoreDeletedButton } from "@/components/shared/restore";
 
@@ -39,7 +41,17 @@ export function PreOrderRoundView(vm: VM) {
     <>
       <TabbedPageLayout
         title={t("preorderRound.title")}
-        actions={<RestoreDeletedButton menu="preorder" resources={["preorderRounds"]} />}
+        actions={
+          <>
+            <RestoreDeletedButton menu="preorder" resources={["preorderRounds"]} />
+            {/* แถวหัวข้อใช้ร่วมทุกแท็บ — ปุ่มสร้างรอบแสดงเฉพาะแท็บรอบพรีออเดอร์ */}
+            {vm.activeTab === "rounds" && vm.perm.create && (
+              <Button type="primary" icon={actionIcon("add")} onClick={vm.openCreateRound}>
+                {t("preorderRound.createRound")}
+              </Button>
+            )}
+          </>
+        }
         activeKey={vm.activeTab}
         onChange={vm.setActiveTab}
         hideTabBar

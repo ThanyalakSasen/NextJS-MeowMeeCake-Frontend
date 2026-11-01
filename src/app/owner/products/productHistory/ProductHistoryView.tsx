@@ -95,7 +95,7 @@ export function ProductHistoryView(vm: VM) {
   return (
     <ListPageLayout
       title={t("productHistory.title")}
-      toolbar={
+      filters={
         <FilterToolbar
           right={
             <>

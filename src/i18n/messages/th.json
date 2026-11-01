@@ -1018,7 +1018,7 @@
         "orderTotal": "ยอดพรีออเดอร์"
       }
     },
-    "roundsDescription": "ทั้งหมด {n} รอบ",
+    "roundCount": "{n} รอบ",
     "createRound": "สร้างรอบใหม่",
     "statClosedOrCancelled": "ปิด/ยกเลิกแล้ว",
     "searchRoundPlaceholder": "ค้นหาชื่อรอบ...",
