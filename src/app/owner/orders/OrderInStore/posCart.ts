@@ -6,7 +6,7 @@
 import type { Product } from "@/types/product";
 import type { OrderInput } from "@/types/order";
 import { refId } from "@/lib/refId";
-import type { PromoLine } from "./posPromotion";
+import type { PromoCatalogItem, PromoLine } from "./posPromotion";
 import { EMPTY_SELECTION, type CartSelection, type SelectedOptionLine } from "@/lib/customizationSelection";
 
 export interface CartLine {
@@ -72,6 +72,11 @@ export function isAtStock(cart: CartLine[], productId: string): boolean {
 /** ตะกร้า → รายการสำหรับคิดโปรโมชัน (posPromotion.ts) */
 export function toPromoLines(cart: CartLine[]): PromoLine[] {
   return cart.map((c) => ({ productId: c.productId, categoryId: c.categoryId, qty: c.qty, lineTotal: c.price * c.qty }));
+}
+
+/** รายการสินค้าในรูปที่ otherPromotions() ใช้หาชื่อสินค้าที่ร่วมโปร */
+export function toPromoCatalog(products: Product[]): PromoCatalogItem[] {
+  return products.map((p) => ({ productId: p._id, categoryId: refId(p.category_id) || null, name: p.product_name_th }));
 }
 
 export function setLineQty(cart: CartLine[], lineKey: string, qty: number): CartLine[] {

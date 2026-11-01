@@ -83,6 +83,7 @@ export function POSView(vm: VM) {
         <PaymentAside
           promotionsEnabled={vm.promotionsEnabled}
           promoEvals={vm.promoEvals}
+          otherPromos={vm.otherPromos}
           billPromotions={vm.billPromotions}
           bestPromoId={vm.bestPromoId}
           selectedPromoIds={vm.selectedPromoIds}

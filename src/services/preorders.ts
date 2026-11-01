@@ -58,6 +58,8 @@ function toPreorder(raw: any): Preorder {
     total_amount: raw.total_amount,
     cancelled_reason: raw.cancelled_reason ?? null,
     payment_due_at: raw.payment_due_at ?? null,
+    refund_due_amount: raw.refund_due_amount ?? 0,
+    refund_due_note: raw.refund_due_note ?? null,
     items: Array.isArray(raw.items) ? raw.items.map(toPreorderItem) : undefined,
     refund_account: toRefundAccount(raw),
     created_at: raw.created_at,
@@ -81,6 +83,9 @@ export const preordersService = {
     const res = await http.patch<ItemResponse<any>>(`${BASE}/${id}/status`, { order_status, cancelled_reason });
     return { data: toPreorder(res.data) };
   },
+
+  /** ยืนยันว่าโอนเงินคืนบางส่วนแล้ว (ยอดจากการยกเลิกบางสินค้า) — สิทธิ์ payments.delete */
+  confirmRefundDue: (id: string) => http.post<ItemResponse<unknown>>(`${BASE}/${id}/refund-due`, {}),
 
   // คู่ขนานกับ ordersService.updateDelivery — เฉพาะพรีออเดอร์แบบจัดส่ง
   updateDelivery: async (id: string, body: DeliveryUpdateInput) => {

@@ -8,11 +8,13 @@ import { Button } from "@/components/base";
 import { color } from "@/theme";
 import { formatCurrency } from "@/i18n/format";
 import type { Promotion } from "@/types/promotion";
-import { canStack, isMemberOnly, type PromoBlock, type PromoEval } from "../posPromotion";
+import { canStack, isMemberOnly, type OtherPromo, type PromoBlock, type PromoEval } from "../posPromotion";
+import { OtherPromosCard } from "./OtherPromosCard";
 
 export function PaymentAside({
   promotionsEnabled,
   promoEvals,
+  otherPromos,
   billPromotions,
   bestPromoId,
   selectedPromoIds,
@@ -35,6 +37,8 @@ export function PaymentAside({
 }: {
   promotionsEnabled: boolean;
   promoEvals: PromoEval[];
+  /** โปรที่ยังใช้ไม่ได้แต่ทำให้ครบเงื่อนไขได้ — แสดงในการ์ดโปรโมชันอื่นๆ */
+  otherPromos: OtherPromo[];
   billPromotions: Promotion[];
   bestPromoId: string | null;
   selectedPromoIds: string[];
@@ -66,13 +70,12 @@ export function PaymentAside({
       ? t("pos.promoPercent", { n: p.discount_value })
       : t("pos.promoAmount", { amount: formatCurrency(p.discount_value, locale) });
 
-  // แสดงเฉพาะโปรที่ใช้กับบิลนี้ได้ตอนนี้ (ผู้ใช้ขอ 2026-10-30 — การ์ดยาวเกิน) · ที่ยังใช้ไม่ได้บอกแค่จำนวน
-  // (ครบยอด/เพิ่มสินค้า/กรอกเบอร์สมาชิกแล้วใช้ได้ = โผล่ขึ้นมาเอง)
+  // การ์ดเลือกได้แสดงเฉพาะโปรที่ใช้กับบิลนี้ได้ตอนนี้ (ผู้ใช้ขอ 2026-10-30 — การ์ดยาวเกิน) · ที่ยังใช้ไม่ได้อยู่ใน OtherPromosCard
+  // (ครบยอด/เพิ่มสินค้า/กรอกเบอร์สมาชิกแล้วใช้ได้ = ย้ายขึ้นมาเป็นการ์ดเลือกเอง)
   const usable = promoEvals.filter((ev) => ev.eligible);
   // เลือกไว้แล้วแต่บิลเปลี่ยนจนใช้ไม่ได้ (ลบสินค้า/ลดจำนวน/ถอดสมาชิก) — ยังแสดงเป็นการ์ดแดงพร้อมเหตุผล ให้กดเอาออกได้
   // (ซ่อนไปด้วย = คำเตือนค้าง ไม่มีที่ให้กดเอาออก แล้วบิลกลับมาเข้าเงื่อนไขก็ใช้โปรเองโดยไม่มีใครเห็น)
   const listed = promoEvals.filter((ev) => ev.eligible || selectedPromoIds.includes(ev.promotion._id));
-  const hiddenCount = promoEvals.length - listed.length;
   // ใช้ร่วมกับโปรไหนได้ — บอกเป็นชื่อโปรที่ใช้ได้ในบิลนี้ (canStack: ทั้งคู่ stackable และ stackable_with ยอมกันทั้งสองฝั่ง)
   const shown = usable.map((ev) => ev.promotion);
   const stackText = (p: Promotion) => {
@@ -159,9 +162,7 @@ export function PaymentAside({
               </button>
             );
           })}
-          {hasItems && hiddenCount > 0 && listed.length > 0 && (
-            <p className="m-0 text-xs text-gray-500">{t("pos.promoHiddenCount", { n: hiddenCount })}</p>
-          )}
+          {hasItems && otherPromos.length > 0 && <OtherPromosCard promos={otherPromos} valueLabel={valueLabel} />}
           {selectedPromoInvalid && <p className="m-0 text-xs text-danger">{t("pos.selectedPromoInvalid")}</p>}
           {discountExceeds && <p className="m-0 text-xs text-danger">{t("pos.promoDiscountExceeds")}</p>}
         </div>

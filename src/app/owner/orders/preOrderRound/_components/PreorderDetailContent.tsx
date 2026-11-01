@@ -69,6 +69,23 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
         />
       )}
 
+      {/* ร้านยกเลิกบางสินค้าในใบ — ใบยังเดินต่อ แต่ต้องโอนคืนส่วนของสินค้านั้น */}
+      {order.refund_due_amount > 0 && (
+        <RefundSection
+          amount={order.refund_due_amount}
+          reason={null}
+          detail={t("orders.partialRefundDetail", {
+            items: order.refund_due_note ?? "",
+            amount: formatCurrency(order.refund_due_amount, locale),
+          })}
+          account={order.refund_account}
+          paidPaymentId={order._id}
+          canRefund={vm.canRefundPayment}
+          refunding={vm.confirmingRefundDue}
+          onRefund={vm.onConfirmRefundDue}
+        />
+      )}
+
       {/* จัดส่ง: ที่อยู่ + สถานะจัดส่ง/ขนส่ง/เลขพัสดุ — ไว้บนสุดถัดจากสถานะ (เดิมอยู่ใต้สลิป ต้องเลื่อนหาจนดูเหมือนไม่มี) */}
       {order.order_type === "delivery" && (
         <>
