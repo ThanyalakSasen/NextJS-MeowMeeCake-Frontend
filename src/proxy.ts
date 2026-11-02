@@ -37,8 +37,30 @@ function stripSameOriginHeader(req: NextRequest): NextResponse {
   return NextResponse.next({ request: { headers } });
 }
 
+/**
+ * LIFF (Rich Menu ใน LINE): liff.line.me/<LIFF_ID>/product → LINE เปิด Endpoint URL (/customer) พร้อม ?liff.state=/product
+ * SDK จะพาไปหน้าปลายทางเองก็ต่อเมื่อ liff.init เสร็จ (หลัง hydrate + โหลด SDK) — ลูกค้าเห็นหน้าแรกค้างก่อน/แทน
+ * redirect ที่นี่เลย (307) · fragment (#access_token… ของ LIFF) เบราว์เซอร์พาไปด้วยเอง → liff.init หน้าปลายทางใช้ต่อได้
+ * รับเฉพาะ path ในเว็บเรา (กัน open redirect: //evil.com)
+ */
+function liffStateRedirect(req: NextRequest): NextResponse | null {
+  const state = req.nextUrl.searchParams.get("liff.state");
+  if (!state || !state.startsWith("/") || state.startsWith("//")) return null;
+  const target = new URL(CUSTOMER_HOME_PATH + state, req.url);
+  if (target.origin !== req.nextUrl.origin) return null;
+  req.nextUrl.searchParams.forEach((value, key) => {
+    if (key !== "liff.state" && !target.searchParams.has(key)) target.searchParams.set(key, value);
+  });
+  return NextResponse.redirect(target);
+}
+
 export function proxy(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
+
+  if (pathname === CUSTOMER_HOME_PATH) {
+    const liff = liffStateRedirect(req);
+    return ensureLocaleCookie(req, liff ?? NextResponse.next());
+  }
 
   if (pathname.startsWith("/api/")) {
     return process.env.API_PROXY_TARGET ? stripSameOriginHeader(req) : NextResponse.next();
@@ -78,5 +100,5 @@ export function proxy(req: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/", "/owner/:path*", "/profile", "/login", "/api/:path*"],
+  matcher: ["/", "/customer", "/owner/:path*", "/profile", "/login", "/api/:path*"],
 };
