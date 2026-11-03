@@ -24,6 +24,8 @@ const ReopenRoundModal = dynamic(() => import("./_components/ReopenRoundModal").
 const RoundItemFormModal = dynamic(() => import("./_components/RoundItemFormModal").then((m) => m.RoundItemFormModal), { ssr: false });
 const RoundDetailContent = dynamic(() => import("./_components/RoundDetailContent").then((m) => m.RoundDetailContent), { ssr: false });
 const PreorderDetailContent = dynamic(() => import("./_components/PreorderDetailContent").then((m) => m.PreorderDetailContent), { ssr: false });
+const EditPreorderAddressModal = dynamic(() => import("./_components/EditPreorderAddressModal").then((m) => m.EditPreorderAddressModal), { ssr: false });
+const EditPreorderItemsModal = dynamic(() => import("./_components/EditPreorderItemsModal").then((m) => m.EditPreorderItemsModal), { ssr: false });
 // ยืนยันยกเลิก + เหตุผล — ตัวเดียวกับหน้าจัดการคำสั่งซื้อ
 const CancelOrderModal = dynamic(() => import("../manageOrders/_components/CancelOrderModal").then((m) => m.CancelOrderModal), { ssr: false });
 
@@ -62,7 +64,7 @@ export function PreOrderRoundView(vm: VM) {
         ]}
       />
 
-      {dashboardDrawerUsed && <RoundDashboardDrawer {...vm.dashboard} />}
+      {dashboardDrawerUsed && <RoundDashboardDrawer {...vm.dashboard} onViewOrder={vm.onViewOrderFromDashboard} />}
 
       {createUsed && (
         <RoundFormModal
@@ -128,6 +130,26 @@ export function PreOrderRoundView(vm: VM) {
         {vm.isOrderDetailError && !vm.isOrderDetailLoading && <p className="py-10 text-center text-gray-500">{t("orders.orderNotFound")}</p>}
         {vm.selectedOrder && !vm.isOrderDetailLoading && <PreorderDetailContent {...vm} order={vm.selectedOrder} />}
       </DetailModal>
+
+      {vm.editAddressOpen && vm.selectedOrder && (
+        <EditPreorderAddressModal
+          address={vm.selectedOrder.delivery_address}
+          saving={vm.savingAddress}
+          onClose={vm.closeEditAddress}
+          onSubmit={vm.onSaveAddress}
+        />
+      )}
+      {vm.editItemsOpen && vm.selectedOrder && (
+        <EditPreorderItemsModal
+          order={vm.selectedOrder}
+          roundItems={vm.editRoundItems}
+          roundItemsLoading={vm.editRoundItemsLoading}
+          saving={vm.savingItems}
+          loadCustomization={vm.loadCustomization}
+          onClose={vm.closeEditItems}
+          onSubmit={vm.onSubmitEditItems}
+        />
+      )}
 
       <CancelOrderModal
         key={vm.cancelTarget?._id ?? "none"}

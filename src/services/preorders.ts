@@ -3,13 +3,12 @@
 // backend populate user_id/round_id เป็น object เต็มเสมอ — แปลงเป็น customer_name/customer_phone/
 // round_name ที่นี่จุดเดียว (แพทเทิร์นเดียวกับ services/orders.ts toOrder())
 //
-// ไม่มี create/update ทั่วไป — แอดมินไม่สร้างพรีออเดอร์แทนลูกค้าในหน้านี้ มีแค่ดู + เปลี่ยนสถานะ
-// (ขอบเขตที่ยืนยันแล้ว — ดู types/preorder.ts หัวไฟล์)
+// ไม่มี create — แอดมินไม่สร้างพรีออเดอร์แทนลูกค้า · แก้ได้เฉพาะผู้รับ/ที่อยู่ (updateAddress) และรายการสินค้า (editItems)
 // ─────────────────────────────────────────────────────────────
 import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
-import type { Preorder, PreorderItem, PreorderListParams } from "@/types/preorder";
-import { toDeliveryInfo, toRefundAccount, type DeliveryUpdateInput } from "@/types/order";
+import type { EditPreorderItemsInput, Preorder, PreorderItem, PreorderListParams } from "@/types/preorder";
+import { toDeliveryInfo, toRefundAccount, type DeliveryAddress, type DeliveryUpdateInput } from "@/types/order";
 import { refId } from "@/lib/refId";
 
 const BASE = "/admin/preorders";
@@ -86,6 +85,18 @@ export const preordersService = {
 
   /** ยืนยันว่าโอนเงินคืนบางส่วนแล้ว (ยอดจากการยกเลิกบางสินค้า) — สิทธิ์ payments.delete */
   confirmRefundDue: (id: string) => http.post<ItemResponse<unknown>>(`${BASE}/${id}/refund-due`, {}),
+
+  /** ร้านแก้ผู้รับ + ที่อยู่จัดส่ง (แบบจัดส่งที่ยังไม่ส่ง) — ค่าส่งคงเดิม */
+  updateAddress: async (id: string, delivery_address: DeliveryAddress) => {
+    const res = await http.patch<ItemResponse<any>>(`${BASE}/${id}`, { delivery_address });
+    return { data: toPreorder(res.data) };
+  },
+
+  /** ร้านเปลี่ยนสินค้าในใบ (รอบที่ยังเปิด) — ชำระแล้วยอดสินค้าใหม่ต้องไม่เกินยอดเดิม ส่วนต่างเข้า "รอโอนคืน" */
+  editItems: async (id: string, body: EditPreorderItemsInput) => {
+    const res = await http.put<ItemResponse<any>>(`${BASE}/${id}/items`, body);
+    return { data: toPreorder(res.data.preorder), refund: Number(res.data.refund ?? 0) };
+  },
 
   // คู่ขนานกับ ordersService.updateDelivery — เฉพาะพรีออเดอร์แบบจัดส่ง
   updateDelivery: async (id: string, body: DeliveryUpdateInput) => {

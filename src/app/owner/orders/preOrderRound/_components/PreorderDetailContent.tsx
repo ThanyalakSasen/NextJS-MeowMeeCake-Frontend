@@ -90,16 +90,27 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
       {order.order_type === "delivery" && (
         <>
           <Divider className="!my-0" />
-          {order.delivery_address && (
+          {(order.delivery_address || vm.canEditAddress(order)) && (
             <div>
-              <p className="mb-1 text-sm font-medium text-gray-600">{t("preorderRound.deliveryAddress")}</p>
-              <p className="text-sm text-gray-800">
-                {order.delivery_address.recipient_name} · {order.delivery_address.recipient_phone}
-              </p>
-              <p className="text-sm text-gray-600">
-                {order.delivery_address.house_no} {order.delivery_address.sub_district} {order.delivery_address.district}{" "}
-                {order.delivery_address.province} {order.delivery_address.zip_code}
-              </p>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <p className="m-0 text-sm font-medium text-gray-600">{t("preorderRound.deliveryAddress")}</p>
+                {vm.canEditAddress(order) && (
+                  <Button size="small" type="link" className="!px-0" icon={actionIcon("edit", "small")} onClick={vm.openEditAddress}>
+                    {t("preorderRound.editAddress.button")}
+                  </Button>
+                )}
+              </div>
+              {order.delivery_address && (
+                <>
+                  <p className="text-sm text-gray-800">
+                    {order.delivery_address.recipient_name} · {order.delivery_address.recipient_phone}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {order.delivery_address.house_no} {order.delivery_address.sub_district} {order.delivery_address.district}{" "}
+                    {order.delivery_address.province} {order.delivery_address.zip_code}
+                  </p>
+                </>
+              )}
             </div>
           )}
           <DeliverySection
@@ -201,7 +212,14 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
       <Divider className="!my-0" />
 
       <div>
-        <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.colItems")}</p>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="m-0 text-sm font-medium text-gray-600">{t("orders.colItems")}</p>
+          {vm.canEditItems(order) && (
+            <Button size="small" type="link" className="!px-0" icon={actionIcon("edit", "small")} onClick={vm.openEditItems}>
+              {t("preorderRound.editItems.button")}
+            </Button>
+          )}
+        </div>
         <div className="flex flex-col gap-1.5">
           {(order.items ?? []).map((it) => (
             <div key={it._id} className="flex justify-between gap-3 text-sm">
