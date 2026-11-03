@@ -85,7 +85,14 @@ export function AlertHost() {
         <span className={`flex h-14 w-14 items-center justify-center rounded-full ${style.ring}`}>
           <style.Icon className={`h-8 w-8 ${style.icon}`} aria-hidden />
         </span>
-        {shop ? (
+        {shop && a.stacked ? (
+          // หน้าร้าน แบบแยกบรรทัด: หัวข้อตัวหนา (กลาง) · ข้อความบรรทัดถัดไป
+          <>
+            {a.title && <h3 className="m-0 text-lg font-bold text-brown-900">{a.title}</h3>}
+            {a.text && <p className="m-0 whitespace-pre-line text-base leading-relaxed text-gray-600">{a.text}</p>}
+            {a.note && <p className="m-0 text-sm text-gray-500">{a.note}</p>}
+          </>
+        ) : shop ? (
           // หน้าร้าน: ข้อความบรรทัดเดียวใต้ไอคอน — ส่ง title มาเอง = ตัวหนานำหน้าในบรรทัดเดียวกัน · ไม่มีข้อความ = หัวข้อมาตรฐาน
           <p className="m-0 whitespace-pre-line text-base font-semibold leading-relaxed text-brown-900">
             {(a.title || !a.text) && <span>{a.title ?? t(`alert.${style.titleKey}`)}{a.text ? " " : ""}</span>}
@@ -103,13 +110,13 @@ export function AlertHost() {
         <div className="mt-3 flex w-full justify-center gap-2">
           {isConfirm ? (
             <>
-              <Button icon={actionIcon("cancel")} onClick={() => close(false)}>
+              <Button icon={a.stacked ? undefined : actionIcon("cancel")} onClick={() => close(false)}>
                 {a.cancelText ?? t("common.cancel")}
               </Button>
               <Button
                 type="primary"
                 danger={a.danger || a.variant === "delete"}
-                icon={actionIcon(a.variant === "delete" ? "delete" : "confirm")}
+                icon={a.stacked ? undefined : actionIcon(a.variant === "delete" ? "delete" : "confirm")}
                 onClick={() => close(true)}
                 autoFocus
               >

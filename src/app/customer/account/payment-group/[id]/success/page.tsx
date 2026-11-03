@@ -3,12 +3,16 @@
 // /customer/account/payment-group/[id]/success — สั่งซื้อสำเร็จ (ขั้นที่ 4) ของการชำระรวมหลายบิล
 // มาจากหน้าชำระรวมหลังส่งสลิป หรือกด "ชำระภายหลัง" — สรุปทุกบิล (เลขบิล · ยอด · สถานะ) + ยอดรวม ตามสถานะจริง
 // หน้าตาเดียวกับ _components/OrderSuccess (ชำระบิลเดียว) · ยังไม่ชำระ → ปุ่มกลับไปชำระที่หน้าชำระรวม
+// เปิดหน้านี้ = กดชำระเงินภายหลัง/ส่งสลิปแล้ว → บอก backend ให้แจ้ง "ออเดอร์ใหม่" ทุกบิลในกลุ่ม (ครั้งเดียว)
 // ─────────────────────────────────────────────────────────────
+import { useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { billHref, paymentGroupHref } from "@/services/shopCheckout";
+import { billHref, paymentGroupHref, shopCheckoutService } from "@/services/shopCheckout";
+import { shopNotificationsKey } from "../../../../lib/shopQueries";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import FlowSteps from "@/components/customer/FlowSteps";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
@@ -30,6 +34,13 @@ function PaymentGroupSuccess() {
   const { id } = useParams<{ id: string }>();
   const valid = isObjectId(id ?? "");
   const { q } = usePaymentGroup(id, valid);
+  const qc = useQueryClient();
+
+  // แจ้งออเดอร์ใหม่ทุกบิล — backend แจ้งครั้งเดียวต่อบิล (เรียกซ้ำได้) · ล้มเหลว = เงียบ
+  useEffect(() => {
+    if (!valid) return;
+    shopCheckoutService.groupPlaced(id).then(() => qc.invalidateQueries({ queryKey: shopNotificationsKey })).catch(() => undefined);
+  }, [id, valid, qc]);
 
   const shell = (content: React.ReactNode) => (
     <div className={shopPage}>

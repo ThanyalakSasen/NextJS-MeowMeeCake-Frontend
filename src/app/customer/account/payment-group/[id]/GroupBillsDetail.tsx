@@ -22,6 +22,9 @@ import { useOrderLabels } from "../../purchases/orderLabels";
 import { thaiDate } from "../../../preorder/lib/preorderDates";
 import { shopOrderKey, shopPreorderKey } from "../../../lib/shopQueries";
 import { BillStatus } from "./groupShared";
+import EditCheckoutButton from "../../_components/EditCheckoutButton";
+import { canEditBill, type EditBill } from "../../../hooks/useEditCheckout";
+import { useNow } from "../../../preorder/lib/useNow";
 
 /** บิล 1 ใบในรูปเดียวกัน (ออเดอร์ / พรีออเดอร์ ฟิลด์ต่างกันเล็กน้อย) */
 interface BillDetail {
@@ -90,6 +93,7 @@ export default function GroupBillsDetail({ page }: { page: PaymentGroupPage }) {
   const tc = useTranslations("shop.common");
   const locale = useLocale();
   const labels = useOrderLabels();
+  const now = useNow();
 
   // รายละเอียดทุกบิล — query key เดียวกับหน้ารายละเอียดบิล (กดเข้าไปดูต่อไม่ต้องโหลดใหม่)
   const qs = useQueries({
@@ -110,6 +114,17 @@ export default function GroupBillsDetail({ page }: { page: PaymentGroupPage }) {
   // โหลดบางบิลไม่ได้ — แสดงเฉพาะที่ได้ (บิลที่ขาดยังกดเข้าไปดูได้จากรายการ)
   const details = page.bills.flatMap((b, i) => (qs[i].data ? [toDetail(b, qs[i].data!)] : []));
   const first = details[0];
+
+  // แก้วิธีรับ/ที่อยู่ — สั่งพร้อมกันเลือกครั้งเดียว → แก้ทั้งกลุ่ม (ยกเลิกทุกบิล + ใส่สินค้ากลับตะกร้า)
+  //   ได้เมื่อยังชำระรวมได้ และทุกบิลยังแก้ได้ (รอชำระ · ร้านยังไม่รับ · รอบพรีออเดอร์ยังเปิด)
+  const editBills = page.bills.flatMap((b, i): EditBill[] => {
+    const doc = qs[i].data;
+    if (!doc) return [];
+    return "preorder_no" in doc ? [{ kind: "preorder", doc }] : [{ kind: "order", doc }];
+  });
+  const canEditCheckout =
+    page.status === "awaiting_payment" && page.can_pay_together &&
+    editBills.length === page.bills.length && editBills.every((b) => canEditBill(b, now));
 
   // เหมือนกันทุกบิล = แสดงครั้งเดียวด้านบน
   const sameStatus = details.every((d) => d.order_status === first?.order_status && d.payment_status === first?.payment_status);
@@ -149,14 +164,24 @@ export default function GroupBillsDetail({ page }: { page: PaymentGroupPage }) {
       ))}
 
       {sharedAddress && (
-        <div className="border-t border-[#8C5A3C]/10 pt-4 text-sm">
-          <p className="mb-1 font-semibold">{to("deliveryAddress")}</p>
-          <p>
-            {sharedAddress.recipient_name} · {sharedAddress.recipient_phone}
-          </p>
-          <p className="text-gray-600">
-            {sharedAddress.house_no} {sharedAddress.sub_district} {sharedAddress.district} {sharedAddress.province} {sharedAddress.zip_code}
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 font-semibold">{to("deliveryAddress")}</p>
+            <p>
+              {sharedAddress.recipient_name} · {sharedAddress.recipient_phone}
+            </p>
+            <p className="text-gray-600">
+              {sharedAddress.house_no} {sharedAddress.sub_district} {sharedAddress.district} {sharedAddress.province} {sharedAddress.zip_code}
+            </p>
+          </div>
+          {canEditCheckout && <EditCheckoutButton groupId={page._id} />}
+        </div>
+      )}
+      {/* ที่อยู่แสดงแยกในแต่ละบิล (ส่งคนละที่ / มีรับที่ร้าน) — ปุ่มแก้ไขเป็นแถวของตัวเอง */}
+      {!sharedAddress && canEditCheckout && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">
+          <p className="m-0 font-semibold">{to("receiveMethod")}</p>
+          <EditCheckoutButton groupId={page._id} />
         </div>
       )}
 
