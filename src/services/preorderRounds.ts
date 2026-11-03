@@ -33,8 +33,9 @@ function toRoundItem(raw: any): PreorderRoundItem {
     max_qty_total: raw.max_qty_total,
     current_qty: raw.current_qty,
     is_active: raw.is_active,
-    current_price: raw.current_price,
-    remaining_qty: raw.remaining_qty,
+    // GET /preorder-rounds/:id คำนวณให้ · GET /preorder-rounds/:id/items ไม่ส่งมา → คิดเองจากข้อมูลดิบ (สูตรเดียวกับ backend)
+    current_price: raw.current_price ?? raw.price_override ?? product?.sale_price ?? product?.product_price ?? 0,
+    remaining_qty: raw.remaining_qty ?? Math.max(0, (raw.max_qty_total ?? 0) - (raw.current_qty ?? 0)),
     created_at: raw.created_at,
     updated_at: raw.updated_at,
   };
