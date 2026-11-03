@@ -83,8 +83,10 @@ export interface CreateShopOrderInput {
   recipient_phone?: string;
   /** ที่อยู่กรอกเองทั้งก้อน (แก้เฉพาะคำสั่งซื้อนี้ — ไม่บันทึกลงสมุด) · ใช้แทน address_id (ส่งอย่างใดอย่างหนึ่ง) */
   delivery_address?: InlineDeliveryAddress;
-  /** โค้ดส่วนลด — ใช้คู่กับ user_coupon_id ไม่ได้ */
+  /** โค้ดส่วนลด (ตัวเดียวแบบเดิม) */
   promotion_code?: string;
+  /** โค้ดส่วนลดหลายตัว — รวมกับคูปองของฉันได้ไม่เกิน MAX_DISCOUNTS_PER_ORDER (2) */
+  promotion_codes?: string[];
   /** คูปองของฉัน (แลกด้วยแต้ม) */
   user_coupon_id?: string;
   /** ใช้แต้มเป็นส่วนลด (ทีละ 10 · ≤ 30% ของยอดสินค้าหลังหักคูปอง/โค้ด) */

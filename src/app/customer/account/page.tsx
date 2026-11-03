@@ -20,6 +20,7 @@ import { shopLineService } from "@/services/shopLine";
 import { catalogService } from "@/services/catalog";
 import { resendVerification } from "@/lib/authClient";
 import { formatPromptpayId, isPromptpayId, normalizePromptpayId } from "@/lib/promptpay";
+import { FieldError } from "@/components/shared/form";
 import { alert, confirmAlert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
@@ -207,9 +208,16 @@ function ProfileSection({ profile, autoEdit = false }: { profile: ShopProfile; a
   // autoEdit (?edit=profile) = เปิดฟอร์มตั้งแต่แรก
   const [open, setOpen] = useState(autoEdit);
   const [form, setForm] = useState(() => (autoEdit ? formOf(profile) : { name: "", phone: "", birthday: "", today: "" }));
+  /** ข้อความเตือนจาก backend ของช่องนั้น (เช่น เบอร์ซ้ำ) — แสดงใต้ช่อง · แก้ช่องนั้นแล้วหายไป */
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
   const openEdit = () => {
     setForm(formOf(profile));
+    setServerErrors({});
     setOpen(true);
+  };
+  const edit = (patch: Partial<typeof form>, field: string) => {
+    setForm((f) => ({ ...f, ...patch }));
+    setServerErrors((e) => (e[field] ? { ...e, [field]: "" } : e));
   };
   const save = useMutation({
     mutationFn: () =>
@@ -223,18 +231,23 @@ function ProfileSection({ profile, autoEdit = false }: { profile: ShopProfile; a
       setOpen(false);
       alert.success(t("profileSaved"));
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("profileSaveFailed")),
+    onError: (e) => {
+      // backend บอกช่องมา = แสดงใต้ช่องนั้น · อื่น ๆ = ป๊อปอัป
+      const fe = isApiError(e) ? e.fieldErrors ?? {} : {};
+      const mapped = { name: fe.user_fullname ?? "", phone: fe.user_phone ?? "", birthday: fe.user_birthdate ?? "" };
+      if (mapped.name || mapped.phone || mapped.birthday) setServerErrors(mapped);
+      else alert.error(isApiError(e) ? e.message : t("profileSaveFailed"));
+    },
   });
 
   const name = form.name.trim();
-  const problem =
-    !name || name.length > 120
-      ? t("nameRequired")
-      : form.phone && !PHONE_RE.test(form.phone.trim())
-        ? t("phoneInvalid")
-        : form.birthday && form.birthday > form.today
-          ? t("birthdayFuture")
-          : null;
+  // ตรวจทุกช่องพร้อมกัน → ข้อความใต้ช่องที่ผิด
+  const errors = {
+    name: !name || name.length > 120 ? t("nameRequired") : serverErrors.name || null,
+    phone: form.phone && !PHONE_RE.test(form.phone.trim()) ? t("phoneInvalid") : serverErrors.phone || null,
+    birthday: form.birthday && form.birthday > form.today ? t("birthdayFuture") : serverErrors.birthday || null,
+  };
+  const problem = errors.name || errors.phone || errors.birthday;
   const shownEmail = isLinePlaceholderEmail(profile.email) ? t("notSet") : profile.email;
 
   return (
@@ -272,7 +285,9 @@ function ProfileSection({ profile, autoEdit = false }: { profile: ShopProfile; a
         <div className="flex flex-col gap-3 text-sm">
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("fullName")}<span className="ml-0.5 text-red-500" aria-hidden="true">*</span></span>
-            <input className={shopInput} maxLength={120} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input className={`${shopInput} ${errors.name ? "!border-red-400" : ""}`} maxLength={120} value={form.name}
+              aria-invalid={!!errors.name} onChange={(e) => edit({ name: e.target.value }, "name")} />
+            <FieldError message={errors.name} />
           </label>
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("email")}</span>
@@ -281,15 +296,17 @@ function ProfileSection({ profile, autoEdit = false }: { profile: ShopProfile; a
           </label>
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("phone")}</span>
-            <input className={shopInput} inputMode="tel" maxLength={10} placeholder="0812345678" value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "") })} />
+            <input className={`${shopInput} ${errors.phone ? "!border-red-400" : ""}`} inputMode="tel" maxLength={10} placeholder="0812345678"
+              value={form.phone} aria-invalid={!!errors.phone}
+              onChange={(e) => edit({ phone: e.target.value.replace(/\D/g, "") }, "phone")} />
+            <FieldError message={errors.phone} />
           </label>
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("birthday")}</span>
-            <input type="date" className={shopInput} max={form.today} value={form.birthday}
-              onChange={(e) => setForm({ ...form, birthday: e.target.value })} />
+            <input type="date" className={`${shopInput} ${errors.birthday ? "!border-red-400" : ""}`} max={form.today} value={form.birthday}
+              aria-invalid={!!errors.birthday} onChange={(e) => edit({ birthday: e.target.value }, "birthday")} />
+            <FieldError message={errors.birthday} />
           </label>
-          {problem && <p className="m-0 text-xs text-red-600">{problem}</p>}
           <p className="m-0 text-xs text-stone-500">{t("bonusHint")}</p>
         </div>
       </Modal>
@@ -304,8 +321,11 @@ function RefundAccountSection({ profile }: { profile: ShopProfile }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ id: "", name: "" });
+  /** ข้อความเตือนจาก backend ของช่องนั้น — แสดงใต้ช่อง · แก้ช่องนั้นแล้วหายไป */
+  const [serverErrors, setServerErrors] = useState<{ id?: string; name?: string }>({});
   const openEdit = () => {
     setForm({ id: profile.refund_promptpay_id ?? "", name: profile.refund_promptpay_name ?? "" });
+    setServerErrors({});
     setOpen(true);
   };
 
@@ -318,9 +338,18 @@ function RefundAccountSection({ profile }: { profile: ShopProfile }) {
       setOpen(false);
       alert.success(id ? t("refundSaved") : t("refundRemoved"));
     },
-    onError: (e) => alert.error(isApiError(e) ? e.message : t("refundSaveFailed")),
+    onError: (e) => {
+      const fe = isApiError(e) ? e.fieldErrors ?? {} : {};
+      if (fe.refund_promptpay_id || fe.refund_promptpay_name) setServerErrors({ id: fe.refund_promptpay_id, name: fe.refund_promptpay_name });
+      else alert.error(isApiError(e) ? e.message : t("refundSaveFailed"));
+    },
   });
-  const problem = id && !isPromptpayId(id) ? t("refundIdInvalid") : id && !name ? t("refundNameRequired") : null;
+  // ตรวจทุกช่องพร้อมกัน → ข้อความใต้ช่องที่ผิด (เลขว่าง = ลบบัญชี ไม่ต้องกรอกชื่อ)
+  const errors = {
+    id: id && !isPromptpayId(id) ? t("refundIdInvalid") : serverErrors.id || null,
+    name: id && !name ? t("refundNameRequired") : serverErrors.name || null,
+  };
+  const problem = errors.id || errors.name;
   const current = profile.refund_promptpay_id;
 
   return (
@@ -363,15 +392,24 @@ function RefundAccountSection({ profile }: { profile: ShopProfile }) {
         <div className="flex flex-col gap-3 text-sm">
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("refundId")}</span>
-            <input className={shopInput} inputMode="numeric" maxLength={17} placeholder={t("refundIdPlaceholder")} value={form.id}
-              onChange={(e) => setForm({ ...form, id: e.target.value.replace(/[^\d\s-]/g, "") })} />
+            <input className={`${shopInput} ${errors.id ? "!border-red-400" : ""}`} inputMode="numeric" maxLength={17}
+              placeholder={t("refundIdPlaceholder")} value={form.id} aria-invalid={!!errors.id}
+              onChange={(e) => {
+                setForm({ ...form, id: e.target.value.replace(/[^\d\s-]/g, "") });
+                setServerErrors((x) => ({ ...x, id: undefined }));
+              }} />
+            <FieldError message={errors.id} />
           </label>
           <label className="space-y-1">
             <span className="block font-semibold text-stone-700">{t("refundName")}</span>
-            <input className={shopInput} maxLength={100} placeholder={t("refundNamePlaceholder")} value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input className={`${shopInput} ${errors.name ? "!border-red-400" : ""}`} maxLength={100} placeholder={t("refundNamePlaceholder")}
+              value={form.name} aria-invalid={!!errors.name}
+              onChange={(e) => {
+                setForm({ ...form, name: e.target.value });
+                setServerErrors((x) => ({ ...x, name: undefined }));
+              }} />
+            <FieldError message={errors.name} />
           </label>
-          {problem && <p className="m-0 text-xs text-red-600">{problem}</p>}
           <p className="m-0 text-xs text-stone-500">{t("refundModalHint")}</p>
         </div>
       </Modal>

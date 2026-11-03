@@ -22,6 +22,7 @@ import { shopReviewsService, type ReviewKind } from "@/services/shopReviews";
 import type { ReviewAspect } from "@/services/shopReviews";
 import { resolveUploadUrl } from "@/lib/uploads";
 import { alert } from "@/lib/alert";
+import { FieldError } from "@/components/shared/form";
 import { compressImage, UPLOAD_SAFE_BYTES } from "@/lib/compressImage";
 import { isApiError } from "@/types/api";
 import AspectIcon from "@/components/customer/AspectIcon";
@@ -37,6 +38,8 @@ const MAX_IMAGES = 5;
  *  เดิมวิดีโอรับ 30 MB ตามเพดาน backend แต่เกิน ~4.5 MB ได้ 413 จาก Vercel ทุกไฟล์ */
 const MAX_UPLOAD_MB = UPLOAD_SAFE_BYTES / 1024 / 1024;
 const MAX_TEXT = 500;
+/** รีวิวเสร็จ → ไปหน้า "รีวิวของฉัน" (เมนูรีวิว) เห็นรีวิวที่เพิ่งส่ง */
+const MY_REVIEWS_PATH = "/customer/account/reviews";
 
 const sentimentForRating = (rating: number) => (rating >= 4 ? ("positive" as const) : ("negative" as const));
 
@@ -116,6 +119,8 @@ export default function WriteReviewForm({
   // เนื้อหารีวิวแยกต่อชิ้น (key = item _id)
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const draftOf = (id: string) => drafts[id] ?? EMPTY_DRAFT;
+  /** กดส่งแล้วยังไม่ให้ดาว → ขึ้นข้อความใต้ดาวของการ์ดที่ขาด (ไม่เด้งป๊อปอัป) */
+  const [showRatingErrors, setShowRatingErrors] = useState(false);
   const patchDraft = (id: string, patch: Partial<Draft>) =>
     setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] ?? EMPTY_DRAFT), ...patch } }));
   const [submitting, setSubmitting] = useState(false);
@@ -211,15 +216,17 @@ export default function WriteReviewForm({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (targets.length === 0) return;
-    if (shared) {
-      if (draftOf(SHARED).rating === 0) return alert.warning(tw("needRating"));
-    } else {
-      const missing = targets.find((it) => draftOf(it._id).rating === 0);
-      if (missing) {
-        if (!eachCard) return alert.warning(tw("needRating"));
-        document.getElementById(`review-item-${missing._id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-        return alert.warning(tw("needRatingEach", { name: nameOf(missing) }));
-      }
+    const missing = shared
+      ? draftOf(SHARED).rating === 0
+        ? SHARED
+        : null
+      : targets.find((it) => draftOf(it._id).rating === 0)?._id ?? null;
+    if (missing) {
+      setShowRatingErrors(true);
+      document
+        .getElementById(eachCard ? `review-item-${missing}` : "review-rating")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
     }
 
     setSubmitting(true);
@@ -252,7 +259,7 @@ export default function WriteReviewForm({
       }
 
       alert.success(tw("thanks"));
-      router.push(backHref);
+      router.push(MY_REVIEWS_PATH);
     } finally {
       setSubmitting(false);
     }
@@ -327,6 +334,7 @@ export default function WriteReviewForm({
       onChange={(patch) => patchDraft(it._id, patch)}
       aspects={aspects}
       media={media}
+      ratingError={showRatingErrors && draftOf(it._id).rating === 0}
     />
   );
 
@@ -369,7 +377,13 @@ export default function WriteReviewForm({
 
       {shared ? (
         // รีวิวทั้งหมดพร้อมกัน: การ์ดรีวิวใบเดียว ใช้กับทุกชิ้น
-        <ReviewFields draft={draftOf(SHARED)} onChange={(patch) => patchDraft(SHARED, patch)} aspects={aspects} media={media} />
+        <ReviewFields
+          draft={draftOf(SHARED)}
+          onChange={(patch) => patchDraft(SHARED, patch)}
+          aspects={aspects}
+          media={media}
+          ratingError={showRatingErrors && draftOf(SHARED).rating === 0}
+        />
       ) : eachCard ? (
         // รีวิวทีละชิ้น: การ์ดแยกของทุกชิ้น เรียงลงมาในหน้าเดียว
         <div className="space-y-5">
@@ -406,16 +420,22 @@ function ReviewFields({
   onChange,
   aspects,
   media,
+  ratingError = false,
 }: {
   draft: Draft;
   onChange: (patch: Partial<Draft>) => void;
   aspects: ReviewAspect[];
   media: MediaHelpers;
+  /** true = ยังไม่ให้ดาวตอนกดส่ง → ข้อความใต้ดาว */
+  ratingError?: boolean;
 }) {
   const tw = useTranslations("shop.review");
   const { name: localName } = useLocalName();
   const [hover, setHover] = useState(0);
   const { rating, aspectIds, comment, images, video } = draft;
+  /** รูป/วิดีโอใช้ไม่ได้ (เกินจำนวน / ไฟล์ใหญ่) — แสดงใต้ปุ่มแนบ (ไม่เด้งป๊อปอัป) */
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const shown = hover || rating;
   const sentiment = sentimentForRating(rating);
 
@@ -429,22 +449,25 @@ function ReviewFields({
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
     const accepted: Media[] = [];
+    const problems: string[] = [];
     for (const raw of files) {
       if (images.length + accepted.length >= MAX_IMAGES) {
-        alert.warning(tw("maxImages", { n: MAX_IMAGES }));
+        problems.push(tw("maxImages", { n: MAX_IMAGES }));
         break;
       }
       // ย่อก่อนส่ง — Vercel ตัด request เกิน 4.5 MB ด้วย 413 ก่อนถึง backend (ดู lib/compressImage.ts)
       const file = await compressImage(raw);
       if (file.size > UPLOAD_SAFE_BYTES) {
-        alert.warning(tw("imageTooBig", { name: raw.name, mb: MAX_UPLOAD_MB }));
+        problems.push(tw("imageTooBig", { name: raw.name, mb: MAX_UPLOAD_MB }));
         continue;
       }
       accepted.push(media.make(file));
     }
+    setImageError(problems.length ? problems.join("\n") : null);
     if (accepted.length) onChange({ images: [...images, ...accepted] });
   };
   const removeImage = (m: Media) => {
+    setImageError(null);
     media.drop(m);
     onChange({ images: images.filter((x) => x !== m) });
   };
@@ -453,9 +476,10 @@ function ReviewFields({
     e.target.value = "";
     if (!file) return;
     if (file.size > UPLOAD_SAFE_BYTES) {
-      alert.warning(tw("videoTooBig", { mb: MAX_UPLOAD_MB }));
+      setVideoError(tw("videoTooBig", { mb: MAX_UPLOAD_MB }));
       return;
     }
+    setVideoError(null);
     media.drop(video);
     onChange({ video: media.make(file) });
   };
@@ -466,7 +490,7 @@ function ReviewFields({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col items-center gap-2 py-2">
+      <div id={ratingError ? "review-rating" : undefined} className="flex flex-col items-center gap-2 py-2">
         <span className="text-sm font-semibold text-stone-700">{shown > 0 ? tw("rateValue", { n: shown }) : tw("rate")}</span>
         <div className="flex items-center gap-1" onMouseLeave={() => setHover(0)}>
           {[1, 2, 3, 4, 5].map((star) => {
@@ -491,6 +515,7 @@ function ReviewFields({
         ) : (
           <span className="text-xs text-stone-500">{tw("tapToRate")}</span>
         )}
+        <FieldError message={ratingError ? tw("needRating") : null} className="text-center" />
       </div>
 
       {rating > 0 && aspects.length > 0 && (
@@ -537,6 +562,7 @@ function ReviewFields({
           <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" className="hidden"
             disabled={images.length >= MAX_IMAGES} onChange={addImages} />
         </MediaButton>
+        <FieldError message={imageError} />
         {images.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {images.map((m, i) => (
@@ -551,6 +577,7 @@ function ReviewFields({
         <MediaButton icon={<Video size={16} />} disabled={!!video} label={tw("attachVideo", { n: video ? 1 : 0, mb: MAX_UPLOAD_MB })}>
           <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" disabled={!!video} onChange={pickVideo} />
         </MediaButton>
+        <FieldError message={videoError} />
         {video && (
           <Preview onRemove={removeVideo} label={tw("removeVideo")} large>
             <video src={video.previewUrl} className="h-full w-full object-cover" muted />

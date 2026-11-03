@@ -26,7 +26,7 @@ import { shopPreordersService, type CreatePreorderInput, type StorefrontRoundDet
 import { billHref, paymentGroupHref, shopCheckoutService } from "@/services/shopCheckout";
 import { pickupLocationsService, type PickupLocation } from "@/services/pickupLocations";
 import { couponDiscount, shopLoyaltyService } from "@/services/shopLoyalty";
-import { normalizePromoCode } from "@/lib/promoCode";
+import { MAX_DISCOUNTS_PER_ORDER, normalizePromoCode } from "@/lib/promoCode";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
 import type { OrderType } from "@/types/order";
@@ -161,7 +161,8 @@ function CheckoutContent() {
   const [addressFormFor, setAddressFormFor] = useState<string | null>(null);
   const [addressEditFor, setAddressEditFor] = useState<string | null>(null);
   const [promoInput, setPromoInput] = useState("");
-  const [promo, setPromo] = useState<{ code: string; billKey: string; discount: number; forKey: string } | null>(null);
+  /** โค้ดที่ใช้แล้ว (รวมกับคูปองของฉันได้ไม่เกิน MAX_DISCOUNTS_PER_ORDER) — แต่ละโค้ดลงบิลที่ลดได้มากสุดของตัวเอง */
+  const [promos, setPromos] = useState<Array<{ code: string; billKey: string; discount: number; forKey: string }>>([]);
   const [couponId, setCouponId] = useState<string | null>(null);
 
   // ราคาในตะกร้าเก็บไว้ตอนใส่ — คิดใหม่จากราคาล่าสุดของรอบ ให้ยอดที่ยืนยันตรงกับบิลที่ backend สร้าง
@@ -296,9 +297,11 @@ function CheckoutContent() {
     return { bill: b, cfg, fee, combinedWith, combinedWithNo: combinedWith ? billNo(combinedWith) : null, isDelivery, undeliverable, quoteLoading, quote: q, needsPickup, pickupOk, missing, roundClosed, qtyOk, preorderOk, methodOk };
   });
 
-  // ── ส่วนลด: ใช้ได้บิลเดียว — เลือกบิลที่ลดได้มากสุด ──
+  // ── ส่วนลด: โค้ด + คูปองของฉัน รวมไม่เกิน 2 รายการต่อการสั่งซื้อ — แต่ละรายการลงบิลที่ลดได้มากสุด ──
   const promoKey = JSON.stringify(priced.map((p) => [p.bill.key, p.bill.subtotal, p.cfg.orderType, p.cfg.address?._id ?? null, p.fee]));
-  const activePromo = promo && promo.forKey === promoKey ? promo : null;
+  const activePromos = promos.filter((x) => x.forKey === promoKey);
+  /** ยอด/วิธีรับเปลี่ยนหลังใช้โค้ด → ต้องกดใช้ใหม่ */
+  const promoStale = promos.length > activePromos.length;
   const coupons = couponsQ.data ?? [];
   const selectedCoupon = coupons.find((c) => c._id === couponId) ?? null;
   const couponBest = selectedCoupon
@@ -306,11 +309,14 @@ function CheckoutContent() {
         .map((p) => ({ key: p.bill.key, amount: couponDiscount(selectedCoupon, p.bill.subtotal, p.fee).amount ?? 0 }))
         .reduce<{ key: string; amount: number } | null>((best, x) => (x.amount > (best?.amount ?? 0) ? x : best), null)
     : null;
-  const discount = activePromo
-    ? { billKey: activePromo.billKey, amount: activePromo.discount, label: t("discountCode", { code: activePromo.code }) }
-    : selectedCoupon && couponBest
-      ? { billKey: couponBest.key, amount: couponBest.amount, label: t("coupon", { code: selectedCoupon.promotion_code }) }
-      : null;
+  const discounts = [
+    ...activePromos.map((x) => ({ billKey: x.billKey, amount: x.discount, label: t("discountCode", { code: x.code }) })),
+    ...(selectedCoupon && couponBest
+      ? [{ billKey: couponBest.key, amount: couponBest.amount, label: t("coupon", { code: selectedCoupon.promotion_code }) }]
+      : []),
+  ];
+  const usedDiscounts = promos.length + (selectedCoupon ? 1 : 0);
+  const discountFull = usedDiscounts >= MAX_DISCOUNTS_PER_ORDER;
   // คูปองที่เลือกได้ = เทียบกับบิลที่ยอดสูงสุด (ใบที่มีโอกาสผ่านขั้นต่ำมากสุด)
   const biggest = priced.reduce<(typeof priced)[number] | null>((m, p) => (!m || p.bill.subtotal > m.bill.subtotal ? p : m), null);
 
@@ -350,14 +356,12 @@ function CheckoutContent() {
       return best as { billKey: string; discount: number; code: string };
     },
     onSuccess: (r) => {
-      setPromo({ ...r, forKey: promoKey });
-      setCouponId(null); // โค้ดกับคูปองของฉันใช้พร้อมกันไม่ได้
+      setPromoInput("");
+      setPromos((prev) => [...prev.filter((x) => x.forKey === promoKey && x.code !== r.code), { ...r, forKey: promoKey }]);
       alert.success(t("promoApplied"));
     },
-    onError: (e) => {
-      setPromo(null);
-      alert.error(isApiError(e) ? e.message : t("promoFailed"));
-    },
+    // ผลการใช้โค้ด (ใช้ได้ / ใช้ไม่ได้) แจ้งเป็นป๊อปอัป
+    onError: (e) => alert.error(isApiError(e) ? e.message : t("promoFailed")),
   });
 
   const checkoutMutation = useMutation({
@@ -439,11 +443,24 @@ function CheckoutContent() {
 
   const anyDelivery = priced.some((p) => p.isDelivery);
   const recipientOk = recipientName.trim().length > 0 && PHONE_RE.test(recipientPhone.trim());
+  // ส่วนลดรวมไม่เกินยอดบิล (สินค้า + ค่าส่ง) — ตัวหลังลดเท่าที่เหลือ · เหลือ 0 = ไม่แสดง (ตรงกับ backend)
+  const discountsOf = (key: string) => {
+    const p = priced.find((x) => x.bill.key === key);
+    let left = p ? round2(p.bill.subtotal + p.fee) : 0;
+    return discounts
+      .filter((d) => d.billKey === key && d.amount > 0)
+      .map((d) => {
+        const amount = Math.min(d.amount, left);
+        left = round2(left - amount);
+        return { ...d, amount };
+      })
+      .filter((d) => d.amount > 0);
+  };
   const totalOf = (p: (typeof priced)[number]) =>
-    Math.max(0, round2(p.bill.subtotal + p.fee - (discount?.billKey === p.bill.key ? discount.amount : 0)));
+    Math.max(0, round2(p.bill.subtotal + p.fee - discountsOf(p.bill.key).reduce((s, d) => s + d.amount, 0)));
   const grandTotal = round2(priced.reduce((s, p) => s + totalOf(p), 0));
   const canSubmit =
-    priced.every((p) => p.methodOk && p.preorderOk) && (!anyDelivery || recipientOk) && !(promo && !activePromo) && !checkoutMutation.isPending;
+    priced.every((p) => p.methodOk && p.preorderOk) && (!anyDelivery || recipientOk) && !promoStale && !checkoutMutation.isPending;
 
   const submit = () => {
     if (!canSubmit) return;
@@ -477,11 +494,10 @@ function CheckoutContent() {
       }
       return out;
     };
-    const discountFields = (key: string): Pick<CreateShopOrderInput, "promotion_code" | "user_coupon_id"> => {
-      if (discount?.billKey !== key) return {};
-      if (activePromo) return { promotion_code: activePromo.code };
-      if (selectedCoupon && discount.amount > 0) return { user_coupon_id: selectedCoupon._id };
-      return {};
+    const discountFields = (key: string): Pick<CreateShopOrderInput, "promotion_codes" | "user_coupon_id"> => {
+      const codes = activePromos.filter((x) => x.billKey === key).map((x) => x.code);
+      const coupon = selectedCoupon && couponBest?.key === key && couponBest.amount > 0 ? selectedCoupon._id : null;
+      return { ...(codes.length ? { promotion_codes: codes } : {}), ...(coupon ? { user_coupon_id: coupon } : {}) };
     };
     const orderBill = priced.find((p) => p.bill.kind === "order");
     const order: CreateShopOrderInput | null = orderBill
@@ -604,6 +620,7 @@ function CheckoutContent() {
                 <input
                   className={shopInput}
                   value={promoInput}
+                  disabled={discountFull}
                   placeholder={t("promoCode")}
                   aria-label={t("promoCode")}
                   onChange={(e) => setPromoInput(normalizePromoCode(e.target.value))}
@@ -611,16 +628,39 @@ function CheckoutContent() {
                 <button
                   type="button"
                   className={`${shopButton} shrink-0`}
-                  disabled={!promoInput.trim() || promoMutation.isPending || priced.some((p) => p.quoteLoading)}
-                  onClick={() => promoMutation.mutate(promoInput.trim())}
+                  disabled={discountFull || !promoInput.trim() || promoMutation.isPending || priced.some((p) => p.quoteLoading)}
+                  onClick={() => {
+                    const code = promoInput.trim();
+                    if (activePromos.some((x) => x.code === code)) return void alert.warning(t("codeAlreadyApplied"));
+                    promoMutation.mutate(code);
+                  }}
                 >
                   {promoMutation.isPending ? t("checking") : t("applyCode")}
                 </button>
               </div>
-              {promo && !activePromo && (
+              {/* โค้ดที่ใช้อยู่ — กด × เพื่อเอาออก · ครบ 2 รายการ (รวมคูปอง) แล้วช่องกรอกปิด */}
+              {activePromos.length > 0 && (
+                <div className="!-mt-1 flex flex-wrap gap-2">
+                  {activePromos.map((x) => (
+                    <span key={x.code} className="inline-flex items-center gap-1 rounded-full bg-[#FAF6F0] py-1 pl-3 pr-1 text-xs font-semibold text-[#4A342E]">
+                      {x.code}
+                      <button
+                        type="button"
+                        aria-label={t("removeCodeAria", { code: x.code })}
+                        onClick={() => setPromos((prev) => prev.filter((y) => y.code !== x.code))}
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-stone-500 hover:bg-stone-200 hover:text-red-600"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="!-mt-1 m-0 text-xs text-stone-500">{t("maxDiscounts", { n: MAX_DISCOUNTS_PER_ORDER })}</p>
+              {promoStale && (
                 <p className="m-0 flex flex-wrap items-center gap-2 text-xs text-amber-700">
                   {t("reapplyCode")}
-                  <button type="button" onClick={() => setPromo(null)} className="font-semibold underline">{tp("removeCode")}</button>
+                  <button type="button" onClick={() => setPromos([])} className="font-semibold underline">{tp("removeCode")}</button>
                 </p>
               )}
 
@@ -630,8 +670,11 @@ function CheckoutContent() {
                 subtotal={biggest?.bill.subtotal ?? 0}
                 deliveryFee={biggest?.fee ?? 0}
                 onSelect={(id) => {
+                  // ครบ 2 รายการแล้ว (โค้ด 2 ตัว) → เลือกคูปองเพิ่มไม่ได้ · เปลี่ยน/ยกเลิกคูปองเดิมได้เสมอ
+                  if (id && !selectedCoupon && promos.length >= MAX_DISCOUNTS_PER_ORDER) {
+                    return void alert.warning(t("maxDiscounts", { n: MAX_DISCOUNTS_PER_ORDER }));
+                  }
                   setCouponId(id);
-                  if (id) setPromo(null); // คูปองของฉันกับโค้ดใช้พร้อมกันไม่ได้
                 }}
               />
               {/* ใช้แต้มตอนสั่งซื้อไม่ได้แล้ว (2026-10-26) — แลกแต้มเป็นคูปองที่หน้าสมาชิก แล้วเลือกคูปองด้านบน */}
@@ -664,7 +707,9 @@ function CheckoutContent() {
                                     : baht(p.fee)
                       }
                     />
-                    {discount && discount.billKey === p.bill.key && discount.amount > 0 && <Line label={discount.label} value={`-${baht(discount.amount)}`} green />}
+                    {discountsOf(p.bill.key).map((d) => (
+                      <Line key={d.label} label={d.label} value={`-${baht(d.amount)}`} green />
+                    ))}
                     {many && <Line label={t("billTotal")} value={baht(totalOf(p))} bold />}
                   </div>
                 ))}

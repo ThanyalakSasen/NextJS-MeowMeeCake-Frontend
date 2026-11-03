@@ -118,8 +118,10 @@ export interface CreatePreorderInput {
   /** ที่อยู่กรอกเอง (แก้เฉพาะคำสั่งซื้อนี้) — ใช้แทน address_id */
   delivery_address?: InlineDeliveryAddress;
   user_coupon_id?: string;
-  /** โค้ดส่วนลด (ใช้แทนคูปองของฉัน) */
+  /** โค้ดส่วนลด (ตัวเดียวแบบเดิม) */
   promotion_code?: string;
+  /** โค้ดส่วนลดหลายตัว — รวมกับคูปองของฉันได้ไม่เกิน MAX_DISCOUNTS_PER_ORDER (2) */
+  promotion_codes?: string[];
   points_to_redeem?: number;
   pickup_location_id?: string;
   pickup_date?: string;

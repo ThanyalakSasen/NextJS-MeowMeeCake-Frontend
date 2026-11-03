@@ -1,5 +1,6 @@
 "use client";
 // View ของ /register — markup ยกจาก FrontOffice src/app/register/page.jsx (ปรับเป็น i18n + AuthBackdrop เดียวกับ /login)
+import { FieldError } from "@/components/shared/form";
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -58,12 +59,14 @@ export function RegisterView(vm: VM) {
           <label htmlFor="reg-name" className={authLabelClass}>{t("register.fullname")}{req}</label>
           <input id="reg-name" className={`${fieldClass} mt-1`} autoComplete="name" maxLength={120} value={vm.form.fullname}
             placeholder={t("register.fullnamePlaceholder")} onChange={(e) => vm.set("fullname", e.target.value)} />
+          <FieldError message={vm.errors.fullname} />
         </div>
 
         <div>
           <label htmlFor="reg-email" className={authLabelClass}>{t("auth.email")}{req}</label>
           <input id="reg-email" type="email" className={`${fieldClass} mt-1`} autoComplete="email" value={vm.form.email}
             placeholder="example@mail.com" onChange={(e) => vm.set("email", e.target.value)} />
+          <FieldError message={vm.errors.email} />
         </div>
 
         <fieldset className="m-0 border-0 p-0">
@@ -85,12 +88,14 @@ export function RegisterView(vm: VM) {
               className={`${fieldClass} text-center`} value={vm.form.birthYear}
               onChange={(e) => { if (/^\d{0,4}$/.test(e.target.value)) vm.set("birthYear", e.target.value); }} />
           </div>
+          <FieldError message={vm.errors.birth} />
         </fieldset>
 
         <div>
           <label htmlFor="reg-phone" className={authLabelClass}>{t("register.phone")}{req}</label>
           <input id="reg-phone" type="tel" inputMode="tel" className={`${fieldClass} mt-1`} autoComplete="tel" maxLength={10}
             value={vm.form.phone} placeholder="0812345678" onChange={(e) => vm.set("phone", e.target.value.replace(/\D/g, ""))} />
+          <FieldError message={vm.errors.phone} />
         </div>
 
         <div>
@@ -104,6 +109,7 @@ export function RegisterView(vm: VM) {
               {vm.showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <FieldError message={vm.errors.password} />
         </div>
 
         {/* ประวัติแพ้อาหาร — ใช้เตือนตอนดูสินค้า (แนะนำสินค้า · ตรวจสารก่อภูมิแพ้) */}
@@ -161,6 +167,7 @@ export function RegisterView(vm: VM) {
               )}
             </div>
           )}
+          <FieldError message={vm.errors.allergies} />
         </div>
 
         <button

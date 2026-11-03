@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { Eye, EyeOff, Lock, LockOpen, Mail, XCircle } from "lucide-react";
 import { checkResetToken, resetPassword } from "@/lib/authClient";
 import { alert } from "@/lib/alert";
+import { FieldError } from "@/components/shared/form";
 import { isApiError } from "@/types/api";
 import { LOGIN_PATH, MIN_PASSWORD_LENGTH } from "@/constants/auth";
 import { GOOGLE_CLIENT_ID, preloadGoogleAccountPicker } from "@/app/login/_components/googleAccountPicker";
@@ -28,8 +29,8 @@ const input =
   "w-full rounded-xl border border-[#e2d9d5] bg-[#fcfcfc] h-[40px] pl-3.5 pr-11 text-sm text-[#4a342e] outline-none transition placeholder:text-[#b0a5a0] focus:border-[#8C5A3C] focus:bg-white focus:ring-4 focus:ring-[#8C5A3C]/15";
 
 function PasswordField({
-  label, value, onChange, placeholder,
-}: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) {
+  label, value, onChange, placeholder, error,
+}: { label: string; value: string; onChange: (v: string) => void; placeholder: string; error?: string | null }) {
   const t = useTranslations("shop.password");
   const [show, setShow] = useState(false);
   return (
@@ -43,7 +44,8 @@ function PasswordField({
           value={value}
           maxLength={MAX_PASSWORD}
           onChange={(e) => onChange(e.target.value)}
-          className={input}
+          aria-invalid={!!error}
+          className={`${input} ${error ? "!border-red-400" : ""}`}
         />
         <button
           type="button"
@@ -54,6 +56,7 @@ function PasswordField({
           {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
         </button>
       </span>
+      <FieldError message={error} />
     </label>
   );
 }
@@ -66,6 +69,8 @@ function ResetPasswordContent() {
   const [tokenValid, setTokenValid] = useState<boolean | null>(token ? null : false); // null = กำลังเช็ค
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  /** ข้อมูลไม่ถูกต้อง — แสดงใต้ช่องนั้น (ไม่เด้งป๊อปอัป) */
+  const [errors, setErrors] = useState<{ password?: string; confirm?: string }>({});
   const [submitting, setSubmitting] = useState(false);
   // ขอลิงก์ใหม่ด้วยบัญชี Google — ส่งแล้วแสดงอีเมลที่ส่งไป
   const [requesting, setRequesting] = useState(false);
@@ -96,18 +101,10 @@ function ResetPasswordContent() {
 
   const submit = async () => {
     // ช่องว่างล้วน ยาวพอแต่ใช้เป็นรหัสผ่านไม่ได้
-    if (!password.trim()) {
-      alert.warning(t("blank"));
-      return;
-    }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      alert.warning(t("minLength", { n: MIN_PASSWORD_LENGTH }));
-      return;
-    }
-    if (password !== confirm) {
-      alert.warning(t("mismatch"));
-      return;
-    }
+    if (!password.trim()) return setErrors({ password: t("blank") });
+    if (password.length < MIN_PASSWORD_LENGTH) return setErrors({ password: t("minLength", { n: MIN_PASSWORD_LENGTH }) });
+    if (password !== confirm) return setErrors({ confirm: t("mismatch") });
+    setErrors({});
     setSubmitting(true);
     try {
       await resetPassword(token, password);
@@ -202,8 +199,26 @@ function ResetPasswordContent() {
         <h1 className="mb-2 text-xl font-bold text-[#4a342e]">{t("setNew")}</h1>
         <p className="mb-6 text-sm leading-relaxed text-[#77665e]">{t("minLength", { n: MIN_PASSWORD_LENGTH })}</p>
 
-        <PasswordField label={t("new")} value={password} onChange={setPassword} placeholder={t("atLeast", { n: MIN_PASSWORD_LENGTH })} />
-        <PasswordField label={t("confirmNew")} value={confirm} onChange={setConfirm} placeholder={t("retype")} />
+        <PasswordField
+          label={t("new")}
+          value={password}
+          onChange={(v) => {
+            setPassword(v);
+            setErrors({});
+          }}
+          placeholder={t("atLeast", { n: MIN_PASSWORD_LENGTH })}
+          error={errors.password}
+        />
+        <PasswordField
+          label={t("confirmNew")}
+          value={confirm}
+          onChange={(v) => {
+            setConfirm(v);
+            setErrors((e) => ({ ...e, confirm: undefined }));
+          }}
+          placeholder={t("retype")}
+          error={errors.confirm}
+        />
 
         <button
           type="button"

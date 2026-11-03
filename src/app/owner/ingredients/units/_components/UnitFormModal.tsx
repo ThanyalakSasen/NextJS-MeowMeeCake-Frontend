@@ -31,6 +31,10 @@ export function UnitFormModal({
   // ปุ่มบันทึกกดได้เมื่อทุกช่องผ่าน rules (required + รูปแบบ) — ผู้ใช้ขอ 2026-10-31
   const valid = useFormValid(form);
   const watchedUnitType = Form.useWatch("unit_type", form);
+  // ไม่ติ๊ก "ใช้กับ" สักช่อง → เตือนใต้ช่องทันที (ไม่เด้งป๊อปอัปตอนกดบันทึก)
+  const forIngredient = Form.useWatch("forIngredient", form);
+  const forProduct = Form.useWatch("forProduct", form);
+  const noContext = forIngredient === false && forProduct === false;
   const lockedContext = getUnitTypeLockedContext(watchedUnitType);
 
   useEffect(() => {
@@ -115,6 +119,8 @@ export function UnitFormModal({
         <FormItem
           label={t("units.fieldUsedWith")}
           required
+          validateStatus={noContext ? "error" : undefined}
+          help={noContext ? t("units.pickContext") : undefined}
         >
           <div className="flex flex-col gap-1.5">
             <FormItem name="forIngredient" valuePropName="checked" noStyle>
