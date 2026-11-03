@@ -17,6 +17,9 @@ import { preorderRoundsService } from "@/services/preorderRounds";
 import { preordersService } from "@/services/preorders";
 import { productsService } from "@/services/products";
 import { paymentsService } from "@/services/payments";
+import { posService } from "@/services/pos";
+import type { ProductCustomization } from "@/types/productCustomization";
+import type { EditPreorderItemsInput } from "@/types/preorder";
 import { productionOrdersService } from "@/services/productionOrders";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert, confirmAlert } from "@/lib/alert";
@@ -24,7 +27,7 @@ import { isApiError } from "@/types/api";
 import type { OrderStatus, RoundStatus } from "@/constants/enumConfig";
 import type { PreorderRound, PreorderRoundItem, CloseRoundResult, CreateRoundInput, RoundItemInput, UpdateRoundInput, UpdateRoundItemInput } from "@/types/preorderRound";
 import type { Preorder } from "@/types/preorder";
-import { statusFilter, type DeliveryUpdateInput, type OrderType } from "@/types/order";
+import { statusFilter, type DeliveryAddress, type DeliveryUpdateInput, type OrderType } from "@/types/order";
 import { formatCurrency } from "@/i18n/format";
 import { getNextRoundStatus, isFinalRoundStatus, getNextOrderStatus, isFinalOrderStatus, paymentDueState } from "./preorderStatus";
 import { LIST_ALL } from "@/lib/http";
@@ -563,7 +566,93 @@ export function usePreOrderRoundViewModel() {
   const { markShippedFor, markingShipped } = useMarkShipped(preordersService, invalidateOrders);
   const onMarkShipped = (changes?: DeliveryUpdateInput) => selectedOrder && markShippedFor(selectedOrder, selectedOrder.preorder_no, changes);
 
+  // ── แก้พรีออเดอร์ (ผู้รับ/ที่อยู่ · เปลี่ยนสินค้า) — ยอด/โควตาเปลี่ยน → รีเฟรชรอบ + สรุปรอบ + รายชื่อลูกค้าด้วย ──
+  const invalidateAfterEdit = () => {
+    invalidateOrders();
+    qc.invalidateQueries({ queryKey: ROUNDS_KEY });
+    qc.invalidateQueries({ queryKey: ["payments", "by-preorder", selectedOrderId] });
+  };
+  // แก้ได้: มีสิทธิ์แก้ · ยังไม่ยกเลิก/เตรียมเสร็จ/จัดส่ง
+  const orderEditable = (o: Preorder) =>
+    perm.update && !["cancelled", "ready", "completed"].includes(o.order_status) && (o.delivery_status ?? "pending") === "pending";
+  const canEditAddress = (o: Preorder) => orderEditable(o) && o.order_type === "delivery";
+  // เปลี่ยนสินค้า: รอบยังไม่ออกใบสั่งผลิต (ตั้งเวลาไว้/เปิดรับ) — backend ตรวจซ้ำ
+  const canEditItems = (o: Preorder) => orderEditable(o) && (!o.round_status || ["scheduled", "open"].includes(o.round_status));
+
+  const [editAddressOpen, setEditAddressOpen] = useState(false);
+  const addressMutation = useMutation({
+    mutationFn: ({ id, address }: { id: string; address: DeliveryAddress }) => preordersService.updateAddress(id, address),
+    onSuccess: invalidateAfterEdit,
+  });
+  const onSaveAddress = (address: DeliveryAddress) => {
+    if (!selectedOrder) return;
+    const no = selectedOrder.preorder_no;
+    addressMutation.mutate(
+      { id: selectedOrder._id, address },
+      {
+        onSuccess: () => {
+          setEditAddressOpen(false);
+          alert.success(t("preorderRound.editAddress.saved", { no }));
+        },
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.editAddress.failed")),
+      },
+    );
+  };
+
+  const [editItemsOpen, setEditItemsOpen] = useState(false);
+  const editRoundItemsQ = useQuery({
+    queryKey: [...ROUNDS_KEY, "items", selectedOrder?.round_id],
+    queryFn: () => preorderRoundsService.listItems(selectedOrder!.round_id),
+    enabled: editItemsOpen && !!selectedOrder?.round_id,
+  });
+  // ตัวเลือกสินค้า (กลุ่มตัวเลือก/ออปชัน) — endpoint เดียวกับ POS
+  const loadCustomization = async (productId: string): Promise<ProductCustomization | null> => {
+    try {
+      return await qc.fetchQuery({
+        queryKey: ["pos", "customization", productId],
+        queryFn: async () => (await posService.scan(productId)).customization,
+        staleTime: 60_000,
+      });
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("pos.customizationLoadFailed"));
+      return null;
+    }
+  };
+  const editItemsMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: EditPreorderItemsInput }) => preordersService.editItems(id, input),
+    onSuccess: invalidateAfterEdit,
+  });
+  const onSubmitEditItems = (input: EditPreorderItemsInput) => {
+    if (!selectedOrder) return;
+    const no = selectedOrder.preorder_no;
+    editItemsMutation.mutate(
+      { id: selectedOrder._id, input },
+      {
+        onSuccess: ({ refund }) => {
+          setEditItemsOpen(false);
+          alert.success(
+            refund > 0
+              ? t("preorderRound.editItems.savedRefund", { no, amount: formatCurrency(refund, locale) })
+              : t("preorderRound.editItems.saved", { no }),
+          );
+        },
+        onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.editItems.failed")),
+      },
+    );
+  };
+
+  // เปิดรายละเอียดจากลิ้นชักสรุปรอบ — คงแท็บสรุปรอบไว้ (ปิดแล้วกลับมาที่รายชื่อลูกค้าเดิม)
+  const onViewOrderFromDashboard = (id: string) =>
+    router.replace(`/owner/orders/preOrderRound?tab=dashboard&id=${encodeURIComponent(id)}`, { scroll: false });
+
   return {
+    canEditAddress, canEditItems,
+    editAddressOpen, openEditAddress: () => setEditAddressOpen(true), closeEditAddress: () => setEditAddressOpen(false),
+    onSaveAddress, savingAddress: addressMutation.isPending,
+    editItemsOpen, openEditItems: () => setEditItemsOpen(true), closeEditItems: () => setEditItemsOpen(false),
+    editRoundItems: editRoundItemsQ.data?.data ?? [], editRoundItemsLoading: editRoundItemsQ.isLoading,
+    loadCustomization, onSubmitEditItems, savingItems: editItemsMutation.isPending,
+    onViewOrderFromDashboard,
     t, locale, perm,
     onSaveDelivery,
     savingDelivery: deliveryMutation.isPending,

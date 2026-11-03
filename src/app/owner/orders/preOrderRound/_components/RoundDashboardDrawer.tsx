@@ -21,7 +21,8 @@ const GROUP_TONE: Record<PaymentGroup, string> = {
   cancelled: "border-gray-200 bg-gray-50 text-gray-600",
 };
 
-export function RoundDashboardDrawer(vm: DVM) {
+// กดใบไหน → ป๊อปอัปรายละเอียดพรีออเดอร์ (ชำระเงิน/สลิป · แก้ผู้รับ/ที่อยู่ · เปลี่ยนสินค้า) ซ้อนบนลิ้นชักนี้
+export function RoundDashboardDrawer({ onViewOrder, ...vm }: DVM & { onViewOrder: (preorderId: string) => void }) {
   const t = useTranslations();
   const locale = useLocale();
   const money = (n: number) => formatCurrency(n, locale);
@@ -122,9 +123,23 @@ export function RoundDashboardDrawer(vm: DVM) {
                   </div>
                   <div className="divide-y divide-gray-100">
                     {c.orders.map((o) => (
-                      <div key={o._id} className="flex flex-col gap-1 px-3 py-2 text-sm">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-medium text-gray-800">{o.preorder_no}</span>
+                      <div
+                        key={o._id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => onViewOrder(o._id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onViewOrder(o._id);
+                          }
+                        }}
+                        title={t("preorderRound.dashboard.viewOrder")}
+                        aria-label={t("preorderRound.dashboard.viewOrderAria", { no: o.preorder_no })}
+                        className="flex cursor-pointer flex-col gap-1 px-3 py-2 text-sm transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none"
+                      >
+                        <div className="flex w-full flex-wrap items-center gap-2">
+                          <span className="font-medium text-brown-700 underline-offset-2 hover:underline">{o.preorder_no}</span>
                           <Tag color={PAYMENT_GROUP_CONFIG[o.payment_group].antColor} className="!m-0">{t(`preorderRound.dashboard.payment.${o.payment_group}`)}</Tag>
                           <StatusBadge group="orderStatus" value={o.order_status} />
                           <span className="ml-auto font-medium text-gray-800">{money(o.total_amount)}</span>
@@ -134,7 +149,7 @@ export function RoundDashboardDrawer(vm: DVM) {
                           {vm.receiveText(o) && ` · ${vm.receiveText(o)}`}
                         </p>
                         {o.items.map((l, i) => (
-                          <div key={i} className="flex justify-between gap-3 pl-2 text-xs text-gray-600">
+                          <div key={i} className="flex w-full justify-between gap-3 pl-2 text-xs text-gray-600">
                             <span>
                               {l.product_name_th} ×{l.quantity}
                               {lineExtras(l).map((x) => (

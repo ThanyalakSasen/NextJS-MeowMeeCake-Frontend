@@ -9,13 +9,23 @@
 // customer_name/customer_phone/round_name ที่ services/preorders.ts จุดเดียว (แพทเทิร์นเดียวกับ
 // services/orders.ts toOrder())
 //
-// ไม่มี create/update ทั่วไปที่นี่ — แอดมินไม่สร้างพรีออเดอร์แทนลูกค้าในหน้านี้ (ขอบเขตที่ยืนยันแล้ว:
-// จัดการ "รอบ" + ดู/เปลี่ยนสถานะออเดอร์ลูกค้าที่มีอยู่แล้วเท่านั้น) — ดู services/preorders.ts
+// ไม่มี create — แอดมินไม่สร้างพรีออเดอร์แทนลูกค้า · แก้ผู้รับ/ที่อยู่ และเปลี่ยนรายการสินค้าได้ (EditPreorderItemsInput)
 // ─────────────────────────────────────────────────────────────
 import type { ListParams } from "@/types/api";
 import type { OrderStatus, PaymentStatus, RoundStatus } from "@/constants/enumConfig";
 import type { OrderStatusFilter } from "./order";
 import type { OrderType, DeliveryAddress, DeliveryInfo, RefundAccount } from "@/types/order";
+
+/** PUT /admin/preorders/:id/items — รายการเดิมที่ไม่อยู่ใน keep = เอาออก */
+export interface EditPreorderItemsInput {
+  keep: { item_id: string; quantity: number }[];
+  add: {
+    round_item_id: string;
+    quantity: number;
+    variant_ids?: string[];
+    selected_options?: { option_id: string; text_value: string | null }[];
+  }[];
+}
 
 export interface PreorderItem {
   _id: string;
