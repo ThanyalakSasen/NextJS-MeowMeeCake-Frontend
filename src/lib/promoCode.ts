@@ -3,3 +3,6 @@
 // คัดลอกจากแจ้งเตือน/LINE มักติดช่องว่างหรือขึ้นบรรทัดมา ("SAVE 10") · ตรงกับ backend lib/promoCode.normalizePromoCode
 // ─────────────────────────────────────────────────────────────
 export const normalizePromoCode = (raw: string) => raw.replace(/\s+/g, "").toUpperCase();
+
+/** ใช้โค้ดส่วนลด + คูปองของฉัน รวมกันได้สูงสุดเท่านี้ต่อการสั่งซื้อ 1 ครั้ง (ตรงกับ backend lib/promoCode) */
+export const MAX_DISCOUNTS_PER_ORDER = 2;

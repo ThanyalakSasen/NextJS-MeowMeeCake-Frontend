@@ -5,6 +5,7 @@
 // คั่นด้วยวันที่ · ข้อความล่าสุดของฝั่งตัวเองที่อีกฝั่งอ่านแล้วขึ้น "อ่านแล้ว"
 // เลื่อนลงล่างสุดเองเมื่อมีข้อความใหม่ — ยกเว้นผู้ใช้เลื่อนขึ้นไปอ่านของเก่าอยู่ (ไม่กระชากจอ)
 // ข้อความของฝั่งตัวเองมีปุ่ม "..." (ข้างเวลา) → แก้ไข / ลบ (ส่ง onEditMessage / onDeleteMessage มา = เปิดใช้) · แก้แล้วขึ้น "แก้ไขแล้ว"
+// ข้อความระบบ (sender_type "system" — สถานะคำสั่งซื้อเปลี่ยน · โค้ดส่วนลดใหม่) แสดงตรงกลาง กดเลขคำสั่งซื้อไปดูรายละเอียดได้
 // ─────────────────────────────────────────────────────────────
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -107,6 +108,21 @@ export default function ChatMessageList({
         const prev = messages[i - 1];
         const showDay = !prev || !sameDay(prev.created_at, m.created_at);
         const grouped = prev && !showDay && prev.sender_type === m.sender_type;
+        if (m.sender_type === "system") {
+          return (
+            <div key={m._id} className="flex flex-col">
+              {showDay && (
+                <span className="mx-auto my-2 rounded-full bg-stone-100 px-3 py-0.5 text-xs text-stone-600">{day(m.created_at)}</span>
+              )}
+              <SystemEvent
+                m={m}
+                time={time(m.created_at)}
+                href={m.attachment ? attachmentHref(m.attachment) : null}
+                onOpen={m.attachment && onOpenAttachment ? () => onOpenAttachment(m.attachment!) : undefined}
+              />
+            </div>
+          );
+        }
         return (
           <div key={m._id} className="flex flex-col">
             {showDay && (
@@ -155,6 +171,39 @@ export default function ChatMessageList({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** เหตุการณ์คำสั่งซื้อ (ข้อความระบบ) — กล่องกลางจอ: หัวข้อ + เลขคำสั่งซื้อ (กดดูได้) · ข้อความ · เวลา */
+function SystemEvent({ m, time, href, onOpen }: { m: ChatMessage; time: string; href: string | null; onOpen?: () => void }) {
+  const t = useTranslations("chat");
+  const a = m.attachment;
+  const docLabel = a ? `${a.kind === "order" ? t("attachOrder") : t("attachPreorder")} #${a.doc_no}` : null;
+  const linkCls = "font-semibold text-[#8C5A3C] underline-offset-2 hover:underline";
+  return (
+    <div className="mx-auto my-1.5 flex w-full max-w-[90%] flex-col items-center sm:max-w-[70%]">
+      <div className="w-full rounded-2xl border border-[#8C5A3C]/20 bg-[#FFF8F0] px-3.5 py-2 text-center text-sm leading-relaxed text-[#4A342E] shadow-sm">
+        {/* หัว "อัปเดตสถานะ" เฉพาะเหตุการณ์คำสั่งซื้อ · ไม่มีคำสั่งซื้อ (เช่น โค้ดส่วนลดใหม่) = ข้อความอย่างเดียว */}
+        {a && <p className="m-0 text-xs font-medium text-stone-500">
+          {t("orderUpdate")}
+          {docLabel && " · "}
+          {docLabel &&
+            (onOpen ? (
+              <button type="button" onClick={onOpen} className={linkCls}>
+                {docLabel}
+              </button>
+            ) : href ? (
+              <Link href={href} className={linkCls}>
+                {docLabel}
+              </Link>
+            ) : (
+              docLabel
+            ))}
+        </p>}
+        <p className={`m-0 whitespace-pre-wrap break-words ${a ? "mt-0.5" : ""}`}>{m.body}</p>
+      </div>
+      <span className="mt-0.5 text-[11px] text-stone-500">{time}</span>
     </div>
   );
 }

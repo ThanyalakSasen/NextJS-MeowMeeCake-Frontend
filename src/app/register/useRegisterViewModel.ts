@@ -63,32 +63,41 @@ export function useRegisterViewModel() {
   const ingredientsQ = useQuery({ queryKey: ["catalog", "ingredients"], queryFn: catalogService.ingredients, staleTime: 10 * 60_000 });
   const allergyOptions = (ingredientsQ.data ?? []).map((i) => i.ingredient_name).filter((n) => !form.allergies.includes(n)).sort(thaiCompare);
 
-  const set = <K extends keyof RegisterForm>(key: K, value: RegisterForm[K]) => setForm((f) => ({ ...f, [key]: value }));
+  /** ช่องที่ข้อมูลไม่ถูกต้อง → ข้อความใต้ช่องนั้น (ไม่เด้งป๊อปอัป) */
+  const [errors, setErrors] = useState<RegisterErrors>({});
 
-  /** ข้อความเตือนข้อแรกที่ไม่ผ่าน · null = ส่งได้ */
-  function problem(f: RegisterForm): string | null {
+  const set = <K extends keyof RegisterForm>(key: K, value: RegisterForm[K]) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    const field = fieldOf(key);
+    if (field) setErrors((e) => (e[field] ? { ...e, [field]: undefined } : e));
+  };
+
+  /** ข้อความเตือนของแต่ละช่องที่ไม่ผ่าน · {} = ส่งได้ */
+  function problems(f: RegisterForm): RegisterErrors {
+    const req = t("register.errFieldRequired");
+    const out: RegisterErrors = {};
     const name = f.fullname.trim();
-    if (!name || !f.email.trim() || !f.password || !f.phone.trim() || !f.birthDay || !f.birthMonth || !f.birthYear) {
-      return t("register.errRequired");
-    }
-    if (name.length < 2 || name.length > MAX_NAME) return t("register.errName", { max: MAX_NAME });
-    if (!EMAIL_RE.test(f.email.trim())) return t("register.errEmail");
-    if (!birthdateOf(f)) return t("register.errBirthdate");
-    if (!PHONE_RE.test(f.phone.trim())) return t("register.errPhone");
-    if (!f.password.trim()) return t("register.errPasswordBlank"); // ช่องว่างล้วน ยาวพอแต่ใช้ไม่ได้
-    if (f.password.length < MIN_PASSWORD_LENGTH) return t("register.errPasswordShort", { min: MIN_PASSWORD_LENGTH });
-    if (f.password.length > MAX_PASSWORD) return t("register.errPassword", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD });
-    if (f.hasAllergy && f.allergies.length === 0) return t("register.errAllergy");
-    return null;
+    if (!name) out.fullname = req;
+    else if (name.length < 2 || name.length > MAX_NAME) out.fullname = t("register.errName", { max: MAX_NAME });
+    if (!f.email.trim()) out.email = req;
+    else if (!EMAIL_RE.test(f.email.trim())) out.email = t("register.errEmail");
+    if (!f.birthDay || !f.birthMonth || !f.birthYear) out.birth = req;
+    else if (!birthdateOf(f)) out.birth = t("register.errBirthdate");
+    if (!f.phone.trim()) out.phone = req;
+    else if (!PHONE_RE.test(f.phone.trim())) out.phone = t("register.errPhone");
+    if (!f.password) out.password = req;
+    else if (!f.password.trim()) out.password = t("register.errPasswordBlank"); // ช่องว่างล้วน ยาวพอแต่ใช้ไม่ได้
+    else if (f.password.length < MIN_PASSWORD_LENGTH) out.password = t("register.errPasswordShort", { min: MIN_PASSWORD_LENGTH });
+    else if (f.password.length > MAX_PASSWORD) out.password = t("register.errPassword", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD });
+    if (f.hasAllergy && f.allergies.length === 0) out.allergies = t("register.errAllergy");
+    return out;
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const p = problem(form);
-    if (p) {
-      alert.warning(p);
-      return;
-    }
+    const found = problems(form);
+    setErrors(found);
+    if (Object.values(found).some(Boolean)) return;
     setBusy(true);
     try {
       const email = form.email.trim().toLowerCase();
@@ -103,7 +112,10 @@ export function useRegisterViewModel() {
       setDoneEmail(email);
     } catch (err) {
       // อีเมลซ้ำ / ส่งอีเมลไม่ได้ (502) / ถี่เกิน (429) — ข้อความของ backend เป็นภาษาไทยพร้อมแสดง
-      alert.error(isApiError(err) ? err.message : t("register.failed"));
+      // backend ระบุช่องมา (เช่น อีเมลซ้ำ) = แสดงใต้ช่องนั้น · อื่น ๆ (ส่งอีเมลไม่ได้ / ถี่เกิน) = ป๊อปอัป
+      const emailErr = isApiError(err) ? err.fieldErrors?.email : undefined;
+      if (emailErr) setErrors({ email: emailErr });
+      else alert.error(isApiError(err) ? err.message : t("register.failed"));
     } finally {
       setBusy(false);
     }
@@ -134,9 +146,20 @@ export function useRegisterViewModel() {
     removeAllergy: (name: string) => set("allergies", form.allergies.filter((a) => a !== name)),
     clearAllergies: () => set("allergies", []),
     busy,
+    errors,
     submit,
     doneEmail,
     resending,
     resend,
   };
+}
+
+export type RegisterErrors = Partial<Record<"fullname" | "email" | "birth" | "phone" | "password" | "allergies", string>>;
+
+/** ช่องในฟอร์ม → กลุ่มข้อความเตือน (วัน/เดือน/ปีเกิดใช้ข้อความเดียวกัน) */
+function fieldOf(key: keyof RegisterForm): keyof RegisterErrors | null {
+  if (key === "birthDay" || key === "birthMonth" || key === "birthYear") return "birth";
+  if (key === "hasAllergy" || key === "allergies") return "allergies";
+  if (key === "fullname" || key === "email" || key === "phone" || key === "password") return key;
+  return null;
 }

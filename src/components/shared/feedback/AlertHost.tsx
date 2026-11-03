@@ -2,8 +2,9 @@
 // ─────────────────────────────────────────────────────────────
 // AlertHost — ตัวแสดง modal ของ alert.* / confirmAlert (src/lib/alert.ts) · วางไว้ใน providers.tsx จุดเดียว
 // แสดงหัวคิวทีละอัน · ทุกประเภทต้องกดปุ่มปิดเอง · สี/ไอคอนต่อประเภทอยู่ใน KIND_STYLE ด้านล่าง
-// หน้าร้าน (ลูกค้า): แจ้ง "ไม่สำเร็จ" แบบนุ่มลง — ไอคอน ! สีเหลืองอำพัน แทนกากบาทแดง (ดูเหมือนระบบพัง)
-//   และไม่มีหัวข้อกลาง ๆ ("ทำรายการไม่สำเร็จ") — ใช้ข้อความที่บอกปัญหาจริงเป็นหัวข้อเลย (เช่น "ตอนนี้มีเค้กไข่อยู่ในตะกร้าแล้ว 17 ชิ้น…")
+// หลังร้าน: ไอคอน → หัวข้อ ("สำเร็จ" ฯลฯ) → ข้อความ (แบบเดิม)
+// หน้าร้าน (ลูกค้า): ไอคอนอยู่บนตรงกลางแยกจากข้อความ · ข้อความบรรทัดเดียว (ยาวเกินค่อยขึ้นบรรทัดสอง) ไม่มีหัวข้อกลาง ๆ
+//   แจ้ง "ไม่สำเร็จ" แบบนุ่มลง — ไอคอน ! สีเหลืองอำพัน แทนกากบาทแดง (ดูเหมือนระบบพัง)
 // ─────────────────────────────────────────────────────────────
 import { useState, useSyncExternalStore } from "react";
 import { Modal } from "antd";
@@ -70,7 +71,8 @@ export function AlertHost() {
       // อยู่เหนือป๊อปอัปอื่นเสมอ — antd Modal z-index เท่ากัน (1000) อันที่ต่อท้าย DOM ทีหลังจะทับ
       // (เช่น DetailModal ของออเดอร์เปิดหลัง AlertHost เคย mount → confirm "ปฏิเสธสลิป" ไปอยู่ข้างหลัง กดไม่ได้)
       zIndex={2000}
-      width={420}
+      // หน้าร้านกว้างขึ้นให้ข้อความส่วนใหญ่อยู่บรรทัดเดียว (จอเล็กหดตามจอ)
+      width={shop ? 520 : 420}
       footer={null}
       closable={a.dismissible}
       // antd v6: maskClosable เลิกใช้แล้ว → mask.closable (คลิกพื้นหลังเพื่อปิด)
@@ -83,16 +85,20 @@ export function AlertHost() {
         <span className={`flex h-14 w-14 items-center justify-center rounded-full ${style.ring}`}>
           <style.Icon className={`h-8 w-8 ${style.icon}`} aria-hidden />
         </span>
-        {shop && a.kind === "error" && !a.title ? (
-          // ข้อความปัญหาเป็นหัวข้อเลย — ลูกค้ารู้ทันทีว่าติดอะไร
-          <h3 className="whitespace-pre-line text-base font-semibold leading-relaxed text-brown-900">{a.text}</h3>
+        {shop ? (
+          // หน้าร้าน: ข้อความบรรทัดเดียวใต้ไอคอน — ส่ง title มาเอง = ตัวหนานำหน้าในบรรทัดเดียวกัน · ไม่มีข้อความ = หัวข้อมาตรฐาน
+          <p className="m-0 whitespace-pre-line text-base font-semibold leading-relaxed text-brown-900">
+            {(a.title || !a.text) && <span>{a.title ?? t(`alert.${style.titleKey}`)}{a.text ? " " : ""}</span>}
+            {a.text && <span className={a.title ? "font-normal text-gray-600" : ""}>{a.text}</span>}
+            {a.note && <span className="text-sm font-normal text-gray-500"> {a.note}</span>}
+          </p>
         ) : (
           <>
             <h3 className="text-lg font-semibold text-brown-900">{a.title ?? t(`alert.${style.titleKey}`)}</h3>
             <p className="whitespace-pre-line text-sm text-gray-600">{a.text}</p>
+            {a.note && <p className="text-sm text-gray-500">{a.note}</p>}
           </>
         )}
-        {a.note && <p className="text-sm text-gray-500">{a.note}</p>}
 
         <div className="mt-3 flex w-full justify-center gap-2">
           {isConfirm ? (

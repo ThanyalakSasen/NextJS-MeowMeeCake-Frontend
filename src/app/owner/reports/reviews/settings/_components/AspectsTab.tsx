@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import { Button, Card, Input, Switch } from "@/components/base";
 import { ConfirmDeletePopup } from "@/components/shared/feedback";
+import { FieldError } from "@/components/shared/form";
 import { DeleteButton, actionIcon } from "@/components/shared/actions";
 import AspectIcon, { ASPECT_ICON_KEYS, resolveAspectIcon } from "@/components/customer/AspectIcon";
 import { MAX_ASPECTS, type useReviewSettingsViewModel } from "../useReviewSettingsViewModel";
@@ -145,8 +146,12 @@ export function AspectsTab({ vm }: { vm: VM }) {
 
                 {renaming ? (
                   <span className="flex flex-1 flex-wrap items-center gap-2">
-                    <Input size="small" style={{ maxWidth: 200 }} value={renaming.th} maxLength={50} placeholder={t("reviewSettings.aspects.nameTh")}
-                      onChange={(e) => vm.setRenaming({ ...renaming, th: e.target.value })} onPressEnter={vm.saveRename} />
+                    <span className="flex flex-col">
+                      <Input size="small" style={{ maxWidth: 200 }} value={renaming.th} maxLength={50} placeholder={t("reviewSettings.aspects.nameTh")}
+                        status={renaming.th.trim() ? undefined : "error"}
+                        onChange={(e) => vm.setRenaming({ ...renaming, th: e.target.value })} onPressEnter={vm.saveRename} />
+                      <FieldError message={renaming.th.trim() ? null : t("reviewSettings.aspects.nameRequired")} />
+                    </span>
                     <Input size="small" style={{ maxWidth: 200 }} value={renaming.eng} maxLength={50} placeholder={t("reviewSettings.aspects.nameEng")}
                       onChange={(e) => vm.setRenaming({ ...renaming, eng: e.target.value })} onPressEnter={vm.saveRename} />
                     <Button icon={actionIcon("save", "small")} size="small" type="primary" onClick={vm.saveRename}>{t("common.save")}</Button>

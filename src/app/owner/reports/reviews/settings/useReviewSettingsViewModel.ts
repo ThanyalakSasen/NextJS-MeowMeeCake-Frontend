@@ -126,6 +126,7 @@ export function useReviewSettingsViewModel() {
   }, [termsQ.data, termSearch, termAspect]);
 
   const [termEdit, setTermEdit] = useState<{ id: string | null; form: SemanticTermInput } | null>(null);
+  const [termTried, setTermTried] = useState(false);
   const saveTerm = useMutation({
     mutationFn: ({ id, form }: { id: string | null; form: SemanticTermInput }) => {
       const body = { term: form.term.trim(), aspect_id: form.aspect_id, synonyms: [...new Set(form.synonyms.map((s) => s.trim()).filter(Boolean))] };
@@ -173,7 +174,8 @@ export function useReviewSettingsViewModel() {
       setRenaming({ id: a._id, th: a.aspect_name_th, eng: a.aspect_name_eng === a.aspect_name_th ? "" : a.aspect_name_eng }),
     setRenaming,
     saveRename: () => {
-      if (!renaming?.th.trim()) return void alert.warning(t("reviewSettings.aspects.nameRequired"));
+      // ชื่อว่าง = ข้อความเตือนใต้ช่องอยู่แล้ว (AspectsTab) ไม่เด้งป๊อปอัป
+      if (!renaming?.th.trim()) return;
       updateAspect.mutate({ id: renaming.id, body: { aspect_name_th: renaming.th.trim(), aspect_name_eng: renaming.eng.trim() || renaming.th.trim() } });
     },
     onToggleActive: (a: ReviewAspect) => updateAspect.mutate({ id: a._id, body: { is_active: !a.is_active } }),
@@ -198,14 +200,25 @@ export function useReviewSettingsViewModel() {
     termAspect,
     setTermAspect,
     termEdit,
+    /** กดบันทึกแล้วข้อมูลไม่ครบ → ข้อความใต้ช่องที่ขาด */
+    termErrors: termTried && termEdit
+      ? {
+          term: termEdit.form.term.trim() ? undefined : t("validation.required"),
+          aspect_id: termEdit.form.aspect_id ? undefined : t("validation.required"),
+        }
+      : {},
     openNewTerm: () => setTermEdit({ id: null, form: { term: "", synonyms: [], aspect_id: aspects[0]?._id ?? "" } }),
     openEditTerm: (x: SemanticTerm) => setTermEdit({ id: x._id, form: { term: x.term, synonyms: x.synonyms, aspect_id: x.aspect?._id ?? "" } }),
     setTermForm: (form: SemanticTermInput) => setTermEdit((e) => (e ? { ...e, form } : e)),
-    closeTerm: () => setTermEdit(null),
+    closeTerm: () => {
+      setTermEdit(null);
+      setTermTried(false);
+    },
     savingTerm: saveTerm.isPending,
     onSaveTerm: () => {
       if (!termEdit) return;
-      if (!termEdit.form.term.trim() || !termEdit.form.aspect_id) return void alert.warning(t("reviewSettings.terms.required"));
+      if (!termEdit.form.term.trim() || !termEdit.form.aspect_id) return void setTermTried(true);
+      setTermTried(false);
       saveTerm.mutate(termEdit);
     },
     onDeleteTerm: (x: SemanticTerm) => removeTerm.mutate(x),

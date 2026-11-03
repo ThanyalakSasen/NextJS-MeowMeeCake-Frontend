@@ -83,12 +83,12 @@ export function TermsTab({ vm }: { vm: VM }) {
       >
         {e && (
           <div className="flex flex-col gap-3">
-            <FormField label={t("reviewSettings.terms.term")} required>
-              <Input value={e.form.term} maxLength={100} placeholder={t("reviewSettings.terms.termPlaceholder")}
+            <FormField label={t("reviewSettings.terms.term")} required error={vm.termErrors.term}>
+              <Input value={e.form.term} status={vm.termErrors.term ? "error" : undefined} maxLength={100} placeholder={t("reviewSettings.terms.termPlaceholder")}
                 onChange={(ev) => vm.setTermForm({ ...e.form, term: ev.target.value })} />
             </FormField>
-            <FormField label={t("reviewSettings.terms.aspect")} required>
-              <Select value={e.form.aspect_id || undefined} options={vm.aspectOptions}
+            <FormField label={t("reviewSettings.terms.aspect")} required error={vm.termErrors.aspect_id}>
+              <Select value={e.form.aspect_id || undefined} status={vm.termErrors.aspect_id ? "error" : undefined} options={vm.aspectOptions}
                 onChange={(v: string) => vm.setTermForm({ ...e.form, aspect_id: v })} />
             </FormField>
           </div>

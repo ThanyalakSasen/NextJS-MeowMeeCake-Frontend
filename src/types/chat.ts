@@ -4,6 +4,8 @@
 import type { OrderStatus, PaymentStatus } from "@/constants/enumConfig";
 
 export type ChatSenderType = "customer" | "staff";
+/** ผู้ส่งของข้อความ — "system" = เหตุการณ์คำสั่งซื้อที่ระบบลงห้องให้ (ยืนยันชำระเงิน · ยกเลิก · จัดส่ง ฯลฯ) แก้/ลบไม่ได้ */
+export type ChatMessageSenderType = ChatSenderType | "system";
 export type ChatAttachmentKind = "order" | "preorder";
 
 /** คำสั่งซื้อที่ลูกค้าแนบในแชท — ภาพ ณ ตอนส่ง (สถานะล่าสุดดูที่หน้าคำสั่งซื้อ) */
@@ -23,7 +25,7 @@ export interface ChatAttachment {
 export interface ChatMessage {
   _id: string;
   conversation_id: string;
-  sender_type: ChatSenderType;
+  sender_type: ChatMessageSenderType;
   body: string;
   attachment: ChatAttachment | null;
   read_at: string | null;
@@ -51,7 +53,7 @@ export interface ChatConversation {
   customer: ChatCustomer | null;
   last_message_at: string | null;
   last_message_preview: string;
-  last_sender_type: ChatSenderType | null;
+  last_sender_type: ChatMessageSenderType | null;
   customer_unread: number;
   staff_unread: number;
   created_at: string;

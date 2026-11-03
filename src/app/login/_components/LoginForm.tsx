@@ -24,6 +24,7 @@ import {
   resendVerification,
 } from "@/lib/authClient";
 import { alert, confirmAlert } from "@/lib/alert";
+import { FieldError } from "@/components/shared/form";
 import { isApiError } from "@/types/api";
 import type { CurrentUser } from "@/types/auth";
 import { nextPathFor } from "../nextPath";
@@ -73,6 +74,8 @@ function Form() {
   const [pressed, setPressed] = useState(false);
   const [lineLoading, setLineLoading] = useState(false);
   const [lockout, setLockout] = useState<Lockout | null>(null);
+  /** กรอกไม่ครบ / รหัสผ่านผิด — แสดงใต้ช่องนั้น (ไม่เด้งป๊อปอัป) */
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const secondsLeft = useSecondsLeft(lockout?.until ?? null);
   // ล็อกเฉพาะอีเมลที่โดน — เปลี่ยนไปใช้อีเมลอื่นกดได้ตามปกติ
   const locked = !!lockout && secondsLeft > 0 && lockout.email === email.trim().toLowerCase();
@@ -103,9 +106,13 @@ function Form() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !password) {
-      alert.warning(t("auth.missingFields"));
+      setErrors({
+        email: email.trim() ? undefined : t("auth.emailRequired"),
+        password: password ? undefined : t("auth.passwordRequired"),
+      });
       return;
     }
+    setErrors({});
     setBusy(true);
     try {
       const user = await login({ email: email.trim(), password });
@@ -130,7 +137,7 @@ function Form() {
       }
       // 401 = อีเมลหรือรหัสผ่านผิด — ใช้ข้อความของเราเอง (แปลตามภาษา) ไม่พึ่งข้อความ backend
       if (isApiError(e2) && e2.status === 401) {
-        alert.error(t("auth.invalidCredentials"));
+        setErrors({ password: t("auth.invalidCredentials") });
         return;
       }
       // แจ้งด้วย toast เหมือนหน้าอื่นทั้งหมด (ดู docs/BACKLOG.md §9)
@@ -206,9 +213,13 @@ function Form() {
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setErrors((x) => ({ ...x, email: undefined }));
+            }}
             placeholder={t("auth.emailPlaceholder")}
-            className={inputClass}
+            aria-invalid={!!errors.email}
+            className={`${inputClass} ${errors.email ? "!border-red-400" : ""}`}
             required
           />
           {emailValid && (
@@ -217,6 +228,7 @@ function Form() {
             </span>
           )}
         </div>
+        <FieldError message={errors.email} className="!-mt-2" />
 
         <label htmlFor="login-password" className={labelClass}>
           {t("auth.password")}
@@ -231,9 +243,11 @@ function Form() {
             onChange={(e) => {
               setPassword(e.target.value);
               setPasswordCorrect(false);
+              setErrors((x) => ({ ...x, password: undefined }));
             }}
             placeholder={t("auth.passwordPlaceholder")}
-            className={inputClass}
+            aria-invalid={!!errors.password}
+            className={`${inputClass} ${errors.password ? "!border-red-400" : ""}`}
             required
           />
           {passwordCorrect ? (
@@ -251,6 +265,7 @@ function Form() {
             </button>
           )}
         </div>
+        <FieldError message={errors.password} className="!-mt-2" />
 
         {/* ลืมรหัสผ่าน? = เปิดหน้าต่างเลือกบัญชี Google ทันที · ใช้อีเมลอื่น (ไม่ใช่บัญชี Google) = หน้ากรอกอีเมล */}
         <div className="-mt-1 flex items-center justify-end gap-3">

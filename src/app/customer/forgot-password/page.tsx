@@ -14,6 +14,7 @@ import { Mail } from "lucide-react";
 import { requestPasswordReset } from "@/lib/authClient";
 import { useCustomerSession } from "@/hooks/useCustomerSession";
 import { alert } from "@/lib/alert";
+import { FieldError } from "@/components/shared/form";
 import { isApiError } from "@/types/api";
 import { LOGIN_PATH } from "@/constants/auth";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
@@ -33,6 +34,8 @@ export default function ForgotPasswordPage() {
   const [emailInput, setEmailInput] = useState<string | null>(null);
   const email = (emailInput ?? user?.email ?? "").trim();
   const [sending, setSending] = useState(false);
+  /** อีเมลไม่ถูกต้อง — แสดงใต้ช่อง (ไม่เด้งป๊อปอัป) */
+  const [emailError, setEmailError] = useState<string | null>(null);
   /** อีเมลที่ส่งลิงก์ไปแล้ว + มาจากบัญชี Google ไหม (แสดงปุ่มเปิด Gmail) */
   const [sent, setSent] = useState<{ email: string; google: boolean } | null>(null);
 
@@ -43,9 +46,10 @@ export default function ForgotPasswordPage() {
 
   async function sendTyped() {
     if (!EMAIL_RE.test(email)) {
-      alert.warning(t("invalidEmail"));
+      setEmailError(t("invalidEmail"));
       return;
     }
+    setEmailError(null);
     setSending(true);
     try {
       await requestPasswordReset(email);
@@ -110,12 +114,20 @@ export default function ForgotPasswordPage() {
                 placeholder={t("emailPlaceholder")}
                 aria-label={t("email")}
                 value={emailInput ?? user?.email ?? ""}
-                onChange={(e) => setEmailInput(e.target.value)}
+                onChange={(e) => {
+                  setEmailInput(e.target.value);
+                  setEmailError(null);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") void sendTyped();
                 }}
-                className="mb-6 w-full max-w-xs h-[40px] rounded-lg border border-stone-200 px-4 text-sm text-stone-800 focus:border-[#4A342E] focus:outline-none focus:ring-2 focus:ring-[#4A342E]/30"
+                aria-invalid={!!emailError}
+                className={`w-full max-w-xs h-[40px] rounded-lg border px-4 text-sm text-stone-800 focus:border-[#4A342E] focus:outline-none focus:ring-2 focus:ring-[#4A342E]/30 ${
+                  emailError ? "border-red-400" : "border-stone-200"
+                }`}
               />
+              <FieldError message={emailError} />
+              <div className="mb-6" />
               <button type="button" className={button} onClick={() => void sendTyped()} disabled={sending}>
                 {sending ? t("sending") : t("sendLink")}
               </button>
