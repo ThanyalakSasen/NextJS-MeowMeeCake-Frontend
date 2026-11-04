@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────
 import { http, type HttpReader } from "@/lib/http";
 import type { ItemResponse } from "@/types/api";
-import type { EditPreorderItemsInput, Preorder, PreorderItem, PreorderListParams } from "@/types/preorder";
+import type { EditPreorderItemsInput, Preorder, PreorderEditPreview, PreorderItem, PreorderListParams } from "@/types/preorder";
 import { toDeliveryInfo, toRefundAccount, type DeliveryAddress, type DeliveryUpdateInput } from "@/types/order";
 import { refId } from "@/lib/refId";
 
@@ -59,6 +59,7 @@ function toPreorder(raw: any): Preorder {
     payment_due_at: raw.payment_due_at ?? null,
     refund_due_amount: raw.refund_due_amount ?? 0,
     refund_due_note: raw.refund_due_note ?? null,
+    extra_due_amount: raw.extra_due_amount ?? 0,
     items: Array.isArray(raw.items) ? raw.items.map(toPreorderItem) : undefined,
     refund_account: toRefundAccount(raw),
     created_at: raw.created_at,
@@ -92,11 +93,20 @@ export const preordersService = {
     return { data: toPreorder(res.data) };
   },
 
-  /** ร้านเปลี่ยนสินค้าในใบ (รอบที่ยังเปิด) — ชำระแล้วยอดสินค้าใหม่ต้องไม่เกินยอดเดิม ส่วนต่างเข้า "รอโอนคืน" */
+  /** ร้านเปลี่ยนสินค้าในใบ (รอบที่ยังเปิด) — ชำระแล้ว: ถูกลง = ส่วนต่างเข้า "รอโอนคืน" ·
+   *  แพงขึ้นต้องส่ง allow_extra_payment (ร้านยืนยันแล้ว) = ส่วนต่างเข้า "รอชำระเพิ่ม" + แจ้งลูกค้า */
   editItems: async (id: string, body: EditPreorderItemsInput) => {
     const res = await http.put<ItemResponse<any>>(`${BASE}/${id}/items`, body);
-    return { data: toPreorder(res.data.preorder), refund: Number(res.data.refund ?? 0) };
+    return {
+      data: toPreorder(res.data.preorder),
+      refund: Number(res.data.refund ?? 0),
+      extraDue: Number(res.data.extra_due ?? 0),
+    };
   },
+
+  /** ตรวจสอบยอดก่อนเปลี่ยนสินค้า (ไม่บันทึก) — body เดียวกับ editItems */
+  previewEdit: async (id: string, body: EditPreorderItemsInput) =>
+    (await http.post<ItemResponse<PreorderEditPreview>>(`${BASE}/${id}/items/preview`, body)).data,
 
   // คู่ขนานกับ ordersService.updateDelivery — เฉพาะพรีออเดอร์แบบจัดส่ง
   updateDelivery: async (id: string, body: DeliveryUpdateInput) => {

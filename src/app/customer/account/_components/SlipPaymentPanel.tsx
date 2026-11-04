@@ -16,7 +16,7 @@ import { shopPaymentsService, type PaymentKind, type ShopPaymentPage } from "@/s
 import { paymentGroupHref } from "@/services/shopCheckout";
 import { alert } from "@/lib/alert";
 import { isApiError } from "@/types/api";
-import { formatDate } from "@/i18n/format";
+import { formatCurrency, formatDate } from "@/i18n/format";
 import { PayCard, PayQr, SlipDropzone, useSecondsLeft, useSlipFile } from "./PaymentCard";
 
 export default function SlipPaymentPanel({
@@ -45,7 +45,9 @@ export default function SlipPaymentPanel({
   // ส่งสลิปแล้วรอตรวจ = ซ่อนช่องแนบ จนกว่าลูกค้ากด "ส่งสลิปใหม่"
   const [resend, setResend] = useState(false);
 
-  const paid = page.payment_status === "paid" || page.payment_record_status === "paid";
+  // ชำระแล้วแต่ร้านเปลี่ยนสินค้าจนยอดเกิน = ยังต้องโอนส่วนต่าง (amount = ยอดเพิ่ม · ใบ payment ใหม่ที่ backend ออกให้)
+  const extraDue = page.extra_due ?? 0;
+  const paid = extraDue <= 0 && (page.payment_status === "paid" || page.payment_record_status === "paid");
   const awaitingReview = page.payment_record_status === "pending" && !!page.slip_url;
   const rejected = page.payment_record_status === "failed";
   // แนบกับรายการเดิมได้ (pending/failed) · ยังไม่มีใบ = สร้างใบก่อน
@@ -85,7 +87,7 @@ export default function SlipPaymentPanel({
   });
 
   const card = (body: React.ReactNode) => (
-    <PayCard title={t("title")} sub={t("sub")} secondsLeft={showCountdown ? secondsLeft : null} className={className}>
+    <PayCard id="payment" title={t("title")} sub={t("sub")} secondsLeft={showCountdown ? secondsLeft : null} className={className}>
       <div className="space-y-5 p-4 sm:p-5">{body}</div>
     </PayCard>
   );
@@ -115,6 +117,11 @@ export default function SlipPaymentPanel({
         <Link href={paymentGroupHref(page.group_id)} className="block rounded-xl border border-[#8C5A3C]/30 bg-[#FAF6F0] p-3 text-sm font-semibold text-[#4A342E] hover:bg-white">
           {t("groupHint")} <span className="text-[#8C5A3C] underline">{t("groupLink")}</span>
         </Link>
+      )}
+      {extraDue > 0 && (
+        <p className="m-0 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-800">
+          {t("extraDue", { amount: formatCurrency(page.amount, locale) })}
+        </p>
       )}
       {/* สถานะ (กล่องเหลือง) แยกจากปุ่มส่งสลิปใหม่ (ใต้เส้นคั่น) ชัดเจน */}
       {awaitingReview && (

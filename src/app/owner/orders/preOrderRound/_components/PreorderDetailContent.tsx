@@ -86,6 +86,16 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
         />
       )}
 
+      {/* ร้านเปลี่ยนสินค้าจนยอดเกินที่ชำระไว้ — รอลูกค้าโอนส่วนต่าง (สลิปเข้ามาตรวจที่ "หลักฐานการชำระเงิน" ด้านล่าง) */}
+      {!isCancelled && order.extra_due_amount > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <p className="m-0 font-semibold">
+            {t("preorderRound.extraDue.title", { amount: formatCurrency(order.extra_due_amount, locale) })}
+          </p>
+          <p className="m-0 text-xs">{t("preorderRound.extraDue.hint")}</p>
+        </div>
+      )}
+
       {/* จัดส่ง: ที่อยู่ + สถานะจัดส่ง/ขนส่ง/เลขพัสดุ — ไว้บนสุดถัดจากสถานะ (เดิมอยู่ใต้สลิป ต้องเลื่อนหาจนดูเหมือนไม่มี) */}
       {order.order_type === "delivery" && (
         <>
@@ -164,6 +174,11 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
           <div>
             <p className="mb-2 text-sm font-medium text-gray-600">{t("orders.paymentProof")}</p>
             <GroupPaymentNote payment={payment} />
+            {payment?.is_extra && (
+              <p className="mb-2 text-xs font-medium text-amber-700">
+                {t("preorderRound.extraDue.slipLabel", { amount: formatCurrency(payment.amount, locale) })}
+              </p>
+            )}
             {payment?.slip_image_url ? (
               <div className="flex items-start gap-3">
                 <SlipImage url={payment.slip_image_url} />
@@ -248,6 +263,15 @@ export function PreorderDetailContent(vm: VM & { order: Preorder }) {
         <span className="font-medium text-gray-700">{t("orders.totalLabel")}</span>
         <span className="text-lg font-bold text-brown-800">{formatCurrency(order.total_amount, locale)}</span>
       </div>
+      {!isCancelled && order.extra_due_amount > 0 && (
+        <div className="-mt-2 flex flex-col gap-1 text-sm">
+          <AmountRow label={t("preorderRound.extraDue.paid")} value={order.total_amount - order.extra_due_amount} locale={locale} />
+          <div className="flex items-center justify-between font-medium text-amber-700">
+            <span>{t("preorderRound.extraDue.due")}</span>
+            <span>{formatCurrency(order.extra_due_amount, locale)}</span>
+          </div>
+        </div>
+      )}
 
       {vm.perm.update && !final && (
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">

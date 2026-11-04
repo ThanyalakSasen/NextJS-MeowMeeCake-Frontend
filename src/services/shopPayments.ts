@@ -49,6 +49,8 @@ export interface ShopPaymentPage {
   payment_due_at: string | null;
   /** เวลา server ตอนตอบ — ใช้ชดเชยนาฬิกาเครื่องลูกค้าตอนนับถอยหลัง */
   server_time: string;
+  /** ยอดที่ต้องชำระเพิ่ม (พรีออเดอร์ที่ชำระแล้วแต่ร้านเปลี่ยนสินค้าจนยอดเกิน) · > 0 = amount คือยอดเพิ่มนี้ · backend เก่าไม่ส่ง */
+  extra_due?: number;
   /** สั่งพร้อมบิลอื่น (ตะกร้ารวม) — ชำระรวมที่ /customer/account/payment-group/{group_id} · ไม่มี = null */
   group_id?: string | null;
 }

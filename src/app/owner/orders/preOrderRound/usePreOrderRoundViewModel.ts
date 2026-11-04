@@ -19,7 +19,7 @@ import { productsService } from "@/services/products";
 import { paymentsService } from "@/services/payments";
 import { posService } from "@/services/pos";
 import type { ProductCustomization } from "@/types/productCustomization";
-import type { EditPreorderItemsInput } from "@/types/preorder";
+import type { EditPreorderItemsInput, PreorderEditPreview } from "@/types/preorder";
 import { productionOrdersService } from "@/services/productionOrders";
 import { usePermission } from "@/context/PermissionsContext";
 import { alert, confirmAlert } from "@/lib/alert";
@@ -618,6 +618,19 @@ export function usePreOrderRoundViewModel() {
       return null;
     }
   };
+  // ขั้น "ตรวจสอบยอด" — ยอดจริงจาก backend (ส่วนลดตามสัดส่วน · หักรอโอนคืน/รอชำระเพิ่มที่ค้าง · โควตา) · null = ไม่สำเร็จ (แจ้งแล้ว)
+  const previewMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: EditPreorderItemsInput }) => preordersService.previewEdit(id, input),
+  });
+  const onPreviewEditItems = async (input: EditPreorderItemsInput): Promise<PreorderEditPreview | null> => {
+    if (!selectedOrder) return null;
+    try {
+      return await previewMutation.mutateAsync({ id: selectedOrder._id, input });
+    } catch (e) {
+      alert.error(isApiError(e) ? e.message : t("preorderRound.editItems.previewFailed"));
+      return null;
+    }
+  };
   const editItemsMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: EditPreorderItemsInput }) => preordersService.editItems(id, input),
     onSuccess: invalidateAfterEdit,
@@ -628,12 +641,14 @@ export function usePreOrderRoundViewModel() {
     editItemsMutation.mutate(
       { id: selectedOrder._id, input },
       {
-        onSuccess: ({ refund }) => {
+        onSuccess: ({ refund, extraDue }) => {
           setEditItemsOpen(false);
           alert.success(
-            refund > 0
-              ? t("preorderRound.editItems.savedRefund", { no, amount: formatCurrency(refund, locale) })
-              : t("preorderRound.editItems.saved", { no }),
+            extraDue > 0
+              ? t("preorderRound.editItems.savedExtra", { no, amount: formatCurrency(extraDue, locale) })
+              : refund > 0
+                ? t("preorderRound.editItems.savedRefund", { no, amount: formatCurrency(refund, locale) })
+                : t("preorderRound.editItems.saved", { no }),
           );
         },
         onError: (e) => alert.error(isApiError(e) ? e.message : t("preorderRound.editItems.failed")),
@@ -652,6 +667,7 @@ export function usePreOrderRoundViewModel() {
     editItemsOpen, openEditItems: () => setEditItemsOpen(true), closeEditItems: () => setEditItemsOpen(false),
     editRoundItems: editRoundItemsQ.data?.data ?? [], editRoundItemsLoading: editRoundItemsQ.isLoading,
     loadCustomization, onSubmitEditItems, savingItems: editItemsMutation.isPending,
+    onPreviewEditItems, previewingItems: previewMutation.isPending,
     onViewOrderFromDashboard,
     t, locale, perm,
     onSaveDelivery,

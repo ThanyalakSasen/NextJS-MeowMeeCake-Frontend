@@ -46,9 +46,12 @@ export function PayCard({
   sub,
   secondsLeft,
   className = "",
+  id,
   children,
 }: {
   title: string;
+  /** id ของการ์ด — ลิงก์ #payment จากแจ้งเตือนเลื่อนมาที่นี่ */
+  id?: string;
   sub: string;
   /** null = ไม่แสดงนาฬิกา */
   secondsLeft: number | null;
@@ -57,7 +60,7 @@ export function PayCard({
 }) {
   const t = useTranslations("shop.slip");
   return (
-    <section className={`${payCardClass} ${className}`}>
+    <section id={id} className={`${payCardClass} scroll-mt-40 ${className}`}>
       <div className={cardHead}>
         <span className={headIcon}>
           <FaQrcode aria-hidden="true" />

@@ -111,6 +111,8 @@ export function OrdersTab(vm: VM) {
           <div>
             {isAwaitingRefund(o) || o.refund_due_amount > 0 ? (
               <Tag color={NOTICE_TAG.awaitingRefund}>{t("orders.awaitingRefund")}</Tag>
+            ) : o.order_status !== "cancelled" && o.extra_due_amount > 0 ? (
+              <Tag color={NOTICE_TAG.extraDue}>{t("preorderRound.extraDue.tag", { amount: formatCurrency(o.extra_due_amount, locale) })}</Tag>
             ) : (
               <StatusBadge group="paymentStatus" value={o.payment_status} />
             )}

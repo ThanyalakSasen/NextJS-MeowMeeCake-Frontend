@@ -6,7 +6,7 @@
 // ยกเลิก: POST /shop/preorders/{id}/cancel — pending/confirmed ที่ยังไม่ชำระเท่านั้น (ชำระแล้วต้องติดต่อร้าน)
 // ?new=1 = เพิ่งสั่งจากหน้า checkout พรีออเดอร์
 // ─────────────────────────────────────────────────────────────
-import { Suspense, useCallback } from "react";
+import { Suspense, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -32,6 +32,7 @@ import { shopPointsKey, shopCouponsKey, shopPreorderKey, shopPreorderPaymentPage
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../../purchases/orderLabels";
 import { thaiDate } from "../../../preorder/lib/preorderDates";
 import ShopSpinner from "@/components/customer/ShopSpinner";
+import { DevicePushPrompt } from "@/components/customer/DevicePushPrompt";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -77,6 +78,13 @@ function PreorderDetailContent() {
     void qc.invalidateQueries({ queryKey: shopPreorderKey(id) });
     void qc.invalidateQueries({ queryKey: shopPreordersKey });
   }, [qc, id]);
+
+  // เปิดจากแจ้งเตือน "ชำระเงินเพิ่ม" (ลิงก์ …#payment) → เลื่อนไปการ์ดชำระเงินเมื่อโหลดเสร็จ
+  const paymentReady = paymentQ.isSuccess;
+  useEffect(() => {
+    if (!paymentReady || window.location.hash !== "#payment") return;
+    document.getElementById("payment")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [paymentReady]);
 
   const cancel = useMutation({
     mutationFn: () => shopPreordersService.cancel(id),
@@ -168,6 +176,9 @@ function PreorderDetailContent() {
           </div>
         )}
 
+        {/* พรีออเดอร์ที่ยังไม่จบ — ร้านอาจเปลี่ยนสินค้า/เลื่อนวันรับ · ชวนเปิดแจ้งเตือนบนเครื่อง (เปิดแล้วซ่อน) */}
+        {p.order_status !== "cancelled" && p.order_status !== "completed" && <DevicePushPrompt hideWhenOn />}
+
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
           <section className={`${shopCard} space-y-4 lg:col-span-3`}>
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -227,6 +238,16 @@ function PreorderDetailContent() {
                 <span className="font-bold">{to("amountDue")}</span>
                 <span className="text-2xl font-extrabold text-[#8C5A3C]">{baht(p.total_amount)}</span>
               </div>
+              {/* ร้านเปลี่ยนสินค้าจนยอดเกินที่ชำระไว้ — โอนส่วนต่างที่การ์ดชำระเงิน */}
+              {p.order_status !== "cancelled" && p.extra_due_amount > 0 && (
+                <>
+                  <Row label={to("paidAlready")} value={baht(p.total_amount - p.extra_due_amount)} />
+                  <div className="flex items-baseline justify-between font-bold text-amber-700">
+                    <span>{to("extraDue")}</span>
+                    <span>{baht(p.extra_due_amount)}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {showPickupRow && (
