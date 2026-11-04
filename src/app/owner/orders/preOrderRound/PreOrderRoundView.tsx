@@ -145,7 +145,9 @@ export function PreOrderRoundView(vm: VM) {
           roundItems={vm.editRoundItems}
           roundItemsLoading={vm.editRoundItemsLoading}
           saving={vm.savingItems}
+          previewing={vm.previewingItems}
           loadCustomization={vm.loadCustomization}
+          onPreview={vm.onPreviewEditItems}
           onClose={vm.closeEditItems}
           onSubmit={vm.onSubmitEditItems}
         />

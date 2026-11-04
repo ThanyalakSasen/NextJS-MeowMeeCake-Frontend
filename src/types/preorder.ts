@@ -25,6 +25,42 @@ export interface EditPreorderItemsInput {
     variant_ids?: string[];
     selected_options?: { option_id: string; text_value: string | null }[];
   }[];
+  /** ชำระแล้วแต่ยอดใหม่เกิน — ร้านยืนยันแล้วให้ลูกค้าชำระเพิ่ม (ไม่ส่ง = backend ตอบ 422) */
+  allow_extra_payment?: boolean;
+}
+
+interface PreorderAmounts {
+  subtotal: number;
+  discount_amount: number;
+  delivery_fee: number;
+  total_amount: number;
+}
+
+/** POST /admin/preorders/:id/items/preview — ยอดจริงจาก backend ก่อนกดยืนยันเปลี่ยนสินค้า (ยังไม่บันทึก) */
+export interface PreorderEditPreview {
+  before: PreorderAmounts;
+  after: PreorderAmounts;
+  paid: boolean;
+  /** ยอดที่ลูกค้าโอนมาแล้ว · ยังไม่ชำระ = 0 */
+  paid_amount: number;
+  /** none = ยอดเท่าเดิม · refund = ร้านโอนคืน · extra = ลูกค้าชำระเพิ่ม · unpaid = ยังไม่ชำระ (QR ยอดใหม่) */
+  outcome: "none" | "refund" | "extra" | "unpaid";
+  refund: number;
+  extra: number;
+  refund_due_after: number;
+  extra_due_after: number;
+  lines: {
+    name: string;
+    extras: string[];
+    unit_price: number;
+    old_qty: number;
+    new_qty: number;
+    status: "kept" | "changed" | "removed" | "added";
+  }[];
+  /** โควตาในรอบไม่พอ — บันทึกไม่ได้ */
+  quota_errors: string[];
+  /** ข้อความที่ลูกค้าจะได้รับ (LINE / กระดิ่ง) */
+  customer_message: string;
 }
 
 export interface PreorderItem {
@@ -69,6 +105,8 @@ export interface Preorder extends DeliveryInfo {
   refund_due_amount: number;
   /** สินค้าที่ถูกยกเลิก เช่น "ขนมปัง × 2" */
   refund_due_note: string | null;
+  /** ยอดที่ลูกค้าต้องชำระเพิ่ม — ร้านเปลี่ยนสินค้าในใบที่ชำระแล้วจนยอดเกิน · total_amount รวมแล้ว · payment_status คง "paid" */
+  extra_due_amount: number;
   /** มีทั้ง list และ get(id) — backend แนบรายการสินค้าของแต่ละใบมาให้ */
   items?: PreorderItem[];
   /** มีค่าเฉพาะ preordersService.get(id) ของพรีออเดอร์ที่รอโอนคืน + ลูกค้าตั้งบัญชีไว้ (Q-BE12) */

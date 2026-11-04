@@ -9,6 +9,7 @@ import CustomerAuthGate from "@/components/customer/CustomerAuthGate";
 import CustomerBreadcrumb from "@/components/customer/CustomerBreadcrumb";
 import { NotificationList } from "@/components/customer/CustomerNotifications";
 import { shopPage } from "@/components/customer/shopStyles";
+import { DevicePushPrompt } from "@/components/customer/DevicePushPrompt";
 
 export default function NotificationsPage() {
   const t = useTranslations("shop");
@@ -24,6 +25,7 @@ export default function NotificationsPage() {
                   <Bell className="h-6 w-6 text-[#4A342E]" aria-hidden="true" /> {t("notifications.title")}
                 </h1>
               </header>
+              <DevicePushPrompt />
               <NotificationList />
             </div>
           </div>

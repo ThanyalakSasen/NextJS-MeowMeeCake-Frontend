@@ -11,6 +11,8 @@ import { Bell } from "lucide-react";
 import { notificationHref, type CustomerNotification } from "@/services/shopNotifications";
 import { useCustomerNotifications } from "@/app/customer/hooks/useCustomerNotifications";
 import { NotificationRow, useNow } from "@/components/shared/notifications";
+import { DevicePushPromptView } from "./DevicePushPrompt";
+import { useDevicePush } from "@/app/customer/hooks/useDevicePush";
 
 /** แถวเดียวกับกระดิ่งหลังร้าน (shared/notifications) — แปลงฟิลด์ของแจ้งเตือนลูกค้า (read_at · visible_at) */
 /** แจ้งเตือนคูปอง/โค้ดส่วนลดใหม่ (coupon_code) — แสดงรหัสใต้ข้อความ (ไม่มีปุ่มคัดลอก) */
@@ -50,6 +52,8 @@ export function NotificationBell({ size = 24 }: { size?: number }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const { items, unread, refresh, markRead, markAllRead } = useCustomerNotifications(8);
+  // ถือไว้ตลอด (ไม่ใช่เฉพาะตอนเปิดกล่อง) — ซิงก์เครื่องที่เปิดแจ้งเตือนไว้กับบัญชีนี้ + แจ้งเตือนเข้าแล้วกระดิ่งโหลดใหม่ทันที
+  const push = useDevicePush();
 
   // คลิกนอกกล่อง / กด Esc → ปิด
   useEffect(() => {
@@ -104,6 +108,7 @@ export function NotificationBell({ size = 24 }: { size?: number }) {
               </button>
             )}
           </div>
+          <DevicePushPromptView variant="compact" push={push} />
           <div className="max-h-96 divide-y divide-stone-100 overflow-y-auto">
             {items.length === 0 ? (
               <p className="px-4 py-8 text-center text-sm text-stone-500">{t("empty")}</p>

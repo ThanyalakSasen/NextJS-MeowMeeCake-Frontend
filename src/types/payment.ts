@@ -18,6 +18,8 @@ export interface Payment {
   /** ชำระรวมหลายบิล (สลิปเดียว — ตะกร้ารวม) · ยืนยัน/ปฏิเสธใบหนึ่ง = ทุกบิลในกลุ่ม */
   group_id?: string | null;
   group?: { doc_nos: string[]; total_amount: number; bill_count: number } | null;
+  /** ยอดชำระเพิ่มของพรีออเดอร์ที่ชำระแล้ว (ร้านเปลี่ยนสินค้าจนยอดเกิน) — ยืนยันใบนี้หัก "รอชำระเพิ่ม" ไม่เปลี่ยนสถานะชำระของใบ */
+  is_extra?: boolean;
   created_at: string;
   updated_at: string;
 }

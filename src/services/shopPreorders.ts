@@ -96,6 +96,8 @@ export interface ShopPreorder {
   points_discount: number;
   delivery_fee: number;
   total_amount: number;
+  /** ยอดที่ต้องชำระเพิ่ม — ร้านเปลี่ยนสินค้าในใบที่ชำระแล้วจนยอดเกิน (total_amount รวมแล้ว) */
+  extra_due_amount: number;
   items: ShopPreorderItem[];
   created_at: string;
   payment_due_at: string | null;
@@ -197,6 +199,7 @@ function toShopPreorder(raw: any): ShopPreorder {
       : [],
     created_at: raw.created_at,
     payment_due_at: raw.payment_due_at ?? null,
+    extra_due_amount: Number(raw.extra_due_amount ?? 0),
     has_payment: !!raw.payment_id,
     cancelled_reason: raw.cancelled_reason ?? null,
     pickup_point_name: raw.pickup_point?.point_name ?? null,

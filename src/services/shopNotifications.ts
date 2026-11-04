@@ -38,7 +38,11 @@ export interface NotificationInbox {
  */
 export function notificationHref(n: Pick<CustomerNotification, "link" | "ref_type" | "ref_id">): string | null {
   if (n.ref_id && n.ref_type === "order") return `/customer/account/purchases/${n.ref_id}`;
-  if (n.ref_id && n.ref_type === "preorder") return `/customer/account/preorders/${n.ref_id}`;
+  if (n.ref_id && n.ref_type === "preorder") {
+    const detail = `/customer/account/preorders/${n.ref_id}`;
+    // ลิงก์ของ backend ชี้ส่วนในหน้า (เช่น #payment ของแจ้งเตือนชำระเงินเพิ่ม) → คงไว้
+    return n.link?.startsWith(`${detail}#`) ? n.link : detail;
+  }
   if (n.link && n.link.startsWith("/") && !n.link.startsWith("//")) return n.link;
   return null;
 }
