@@ -24,6 +24,8 @@ export interface PreorderRoundItem {
   /** null = ใช้ราคาสินค้าปกติ (sale_price ?? product_price) */
   price_override: number | null;
   min_order_qty: number;
+  /** ขั้นต่ำที่ใช้จริง = มากสุดของขั้นต่ำในรอบ / ขั้นต่ำในการตั้งค่าพรีออเดอร์ของสินค้า (กติกาเดียวกับ backend) */
+  effective_min_qty: number;
   max_qty_total: number;
   current_qty: number;
   is_active: boolean;
