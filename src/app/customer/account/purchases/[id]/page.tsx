@@ -33,6 +33,7 @@ import OrderItemThumb from "../../_components/OrderItemThumb";
 import { BuyAgainAfterReview } from "../../_components/BuyAgainButton";
 import BackButton from "../../_components/BackButton";
 import EditCheckoutButton from "../../_components/EditCheckoutButton";
+import { canEditBill } from "../../../hooks/useEditCheckout";
 import { shopOrderKey, shopOrderPaymentPageKey, shopOrdersKey } from "../../../lib/shopQueries";
 import { formatStoreAddress } from "../../../lib/storeFormat";
 import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../orderLabels";
@@ -109,8 +110,7 @@ function OrderContent() {
   const showPickupRow = order.order_type === "takeaway" && !!(order.pickup_point_name || order.pickup_date);
   const showDeliveryRow = order.order_type === "delivery" && !!order.delivery_status && order.order_status !== "cancelled";
   // แก้วิธีรับ/ที่อยู่ได้ระหว่างรอชำระ (ยังไม่ชำระ · ยังไม่ส่งสลิป · ร้านยังไม่รับออเดอร์)
-  const canEditCheckout =
-    order.order_status === "pending" && order.payment_status !== "paid" && !order.has_payment && canCustomerCancel(order);
+  const canEditCheckout = canEditBill({ kind: "order", doc: order }, 0);
   const addr = order.delivery_address;
   const reviewStatus = (
     <ReviewLink
@@ -228,7 +228,7 @@ function OrderContent() {
                     </>
                   )}
                 </div>
-                {canEditCheckout && <EditCheckoutButton orderId={order._id} items={order.items} compact />}
+                {canEditCheckout && <EditCheckoutButton bill={{ kind: "order", doc: order }} groupId={paymentQ.data?.group_id} />}
               </div>
             )}
 

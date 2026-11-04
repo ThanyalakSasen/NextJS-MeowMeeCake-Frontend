@@ -65,6 +65,11 @@ export const shopCheckoutService = {
   paymentGroup: async (id: string): Promise<PaymentGroupPage> =>
     (await http.get<ItemResponse<PaymentGroupPage>>(`/shop/payment-groups/${encodeURIComponent(id)}`)).data,
 
+  /** POST /shop/payment-groups/{id}/placed — แจ้ง "ออเดอร์ใหม่" ทุกบิลในกลุ่ม (ครั้งเดียว · หน้าสั่งซื้อสำเร็จ) */
+  groupPlaced: async (id: string): Promise<void> => {
+    await http.post(`/shop/payment-groups/${encodeURIComponent(id)}/placed`, {});
+  },
+
   uploadGroupSlip: async (id: string, file: File): Promise<void> => {
     const form = new FormData();
     form.append("file", file);
