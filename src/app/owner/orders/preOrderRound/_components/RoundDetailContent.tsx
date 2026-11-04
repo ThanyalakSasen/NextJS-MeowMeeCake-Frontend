@@ -142,7 +142,11 @@ export function RoundDetailContent(vm: VM & { round: PreorderRound }) {
                 <span>
                   {t("preorderRound.qtyProgress", { current: it.current_qty, max: it.max_qty_total })}
                   {" · "}
-                  {t("preorderRound.minOrderQtyShort", { n: it.min_order_qty })}
+                  {it.min_order_qty > 1 ? (
+                    <span className="font-medium text-amber-700">{t("preorderRound.minOrderQtyShort", { n: it.min_order_qty })}</span>
+                  ) : (
+                    t("preorderRound.noMinQty")
+                  )}
                 </span>
                 {vm.perm.update && !final && (
                   <div className="flex gap-2">
