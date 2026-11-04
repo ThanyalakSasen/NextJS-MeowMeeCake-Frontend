@@ -63,6 +63,7 @@ export function RoundFormModal({
     : picked.some((r) => r.min_order_qty! > r.max_qty_total!)
       ? "preorderRound.minExceedsMax"
       : null;
+  const withMin = picked.filter((r) => (r.min_order_qty ?? 1) > 1);
 
   const handleAfterClose = () => {
     form.resetFields();
@@ -158,6 +159,7 @@ export function RoundFormModal({
             <span />
           </div>
         )}
+        {rows.length > 0 && <p className="m-0 mb-2 text-xs text-gray-500">{t("preorderRound.minQtyHint")}</p>}
         {rows.map((row) => {
           const product = products.find((p) => p._id === row.product_id);
           return (
@@ -168,7 +170,11 @@ export function RoundFormModal({
                 aria-label={t("preorderRound.colProduct")}
                 placeholder={t("preorderRound.selectProduct")}
                 value={row.product_id || undefined}
-                onChange={(v) => updateRow(row.key, { product_id: v as string })}
+                // เลือกสินค้า = ตั้งขั้นต่ำตามการตั้งค่าพรีออเดอร์ของสินค้า (ไม่ได้ตั้ง = 1 ไม่มีขั้นต่ำ) — แก้ต่อรอบได้
+                onChange={(v) => {
+                  const p = products.find((x) => x._id === v);
+                  updateRow(row.key, { product_id: v as string, min_order_qty: Math.max(1, p?.preorder_config?.min_order_qty ?? 1) });
+                }}
                 showSearch
                 optionFilterProp="label"
                 options={sortOptionsThai(products.map((p) => ({
@@ -210,6 +216,14 @@ export function RoundFormModal({
             </div>
           );
         })}
+        {/* สรุปว่าสินค้าไหนมีขั้นต่ำ — ตั้งผิดทั้งรอบจะเห็นก่อนกดสร้าง */}
+        {picked.length > 0 && !rowsIssue && (
+          <p className="m-0 mt-2 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+            {withMin.length === 0
+              ? t("preorderRound.minQtySummaryNone")
+              : t("preorderRound.minQtySummary", { items: withMin.map((r) => `${products.find((p) => p._id === r.product_id)?.product_name_th ?? ""} ${r.min_order_qty}`).join(", ") })}
+          </p>
+        )}
         {rowsIssue && (
           <p role="alert" className="m-0 mt-2 text-sm text-red-500">
             {t(rowsIssue)}

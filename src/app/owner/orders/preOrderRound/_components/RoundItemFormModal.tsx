@@ -95,6 +95,11 @@ export function RoundItemFormModal({
             showSearch
             optionFilterProp="label"
             placeholder={t("preorderRound.selectProduct")}
+            // เลือกสินค้า = ตั้งขั้นต่ำตามการตั้งค่าพรีออเดอร์ของสินค้า (ไม่ได้ตั้ง = 1) — แก้ต่อรอบได้
+            onChange={(v) => {
+              const p = products.find((x) => x._id === v);
+              form.setFieldsValue({ min_order_qty: Math.max(1, p?.preorder_config?.min_order_qty ?? 1) });
+            }}
             options={sortOptionsThai(products.map((p) => ({
               value: p._id,
               label: p.product_name_th,
@@ -109,6 +114,7 @@ export function RoundItemFormModal({
           <FormItem
             name="min_order_qty"
             label={t("preorderRound.fieldMinOrderQty")}
+            help={t("preorderRound.minQtyFieldHint")}
             dependencies={["max_qty_total"]}
             rules={[
               { required: true, message: t("validation.required") },
