@@ -30,6 +30,7 @@ function toRoundItem(raw: any): PreorderRoundItem {
     product_img: product?.product_img,
     price_override: raw.price_override ?? null,
     min_order_qty: raw.min_order_qty,
+    effective_min_qty: Math.max(1, Number(raw.min_order_qty) || 1, Number(product?.preorder_config?.min_order_qty) || 1),
     max_qty_total: raw.max_qty_total,
     current_qty: raw.current_qty,
     is_active: raw.is_active,

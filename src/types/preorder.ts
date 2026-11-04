@@ -59,6 +59,8 @@ export interface PreorderEditPreview {
   }[];
   /** โควตาในรอบไม่พอ — บันทึกไม่ได้ */
   quota_errors: string[];
+  /** สินค้าที่เพิ่มต่ำกว่าขั้นต่ำต่อรายการ — เตือนเท่านั้น ร้านบันทึกได้ */
+  below_min: Array<{ name: string; min_qty: number; quantity: number }>;
   /** ข้อความที่ลูกค้าจะได้รับ (LINE / กระดิ่ง) */
   customer_message: string;
 }

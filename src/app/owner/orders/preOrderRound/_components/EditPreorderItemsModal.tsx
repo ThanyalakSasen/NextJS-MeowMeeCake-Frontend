@@ -97,7 +97,8 @@ export function EditPreorderItemsModal({
   const addLine = (item: PreorderRoundItem, customization: ProductCustomization | null, picked: Picked | null, replaces: string | null) => {
     const sel = customization && picked ? toSelection(customization, picked) : null;
     const old = replaces ? items.find((it) => it._id === replaces) : null;
-    const minQty = Math.max(1, item.min_order_qty);
+    // เปลี่ยนแทนบรรทัดเดิม = ขั้นต่ำ 1 (ตกลงกับลูกค้าแล้ว ไม่ใช้ขั้นต่ำต่อรายการ) · เพิ่มสินค้าใหม่ = เตือนขั้นต่ำตามปกติ
+    const minQty = replaces ? 1 : item.effective_min_qty;
     setAdded((prev) => [
       ...prev,
       {
@@ -109,7 +110,7 @@ export function EditPreorderItemsModal({
           .join(" · ") || null,
         unit_price: round2(item.current_price + (sel?.extra ?? 0)),
         // เปลี่ยนแทนบรรทัดเดิม = ตั้งจำนวนเท่าเดิมไว้ก่อน
-        quantity: Math.max(minQty, old?.quantity ?? 1),
+        quantity: replaces ? Math.max(1, old?.quantity ?? 1) : Math.max(minQty, 1),
         min_qty: minQty,
         variant_ids: sel?.variantIds ?? [],
         selected_options: (sel?.options ?? []).map((o) => ({ option_id: o.option_id, text_value: o.text_value })),
@@ -137,7 +138,7 @@ export function EditPreorderItemsModal({
   };
 
   const setAddedQty = (key: string, v: number | string | null) =>
-    setAdded((a) => a.map((x) => (x.key === key ? { ...x, quantity: Math.max(x.min_qty, Number(v) || x.min_qty) } : x)));
+    setAdded((a) => a.map((x) => (x.key === key ? { ...x, quantity: Math.max(1, Number(v) || 1) } : x)));
 
   const input = (): EditPreorderItemsInput => ({
     keep: kept.map((it) => ({ item_id: it._id, quantity: qty[it._id] })),
@@ -156,6 +157,8 @@ export function EditPreorderItemsModal({
     setPreview(pv);
   };
 
+  // เตือนเฉพาะสินค้าที่เพิ่มใหม่ — สินค้าที่เปลี่ยนแทนบรรทัดเดิมขั้นต่ำ 1
+  const belowMin = (preview?.below_min ?? []).filter((b) => added.some((l) => !l.replaces && l.name === b.name && l.quantity < l.min_qty));
   const isExtra = preview?.outcome === "extra";
   const blocked = !!preview && (preview.quota_errors.length > 0 || (isExtra && !agreed));
   const submit = () => onSubmit({ ...input(), ...(isExtra ? { allow_extra_payment: true } : {}) });
@@ -167,7 +170,15 @@ export function EditPreorderItemsModal({
         {l.extras && <p className="m-0 text-xs text-gray-500">{l.extras}</p>}
         <p className="m-0 text-xs text-gray-500">{money(l.unit_price)} / {t("unit")}</p>
       </div>
-      <InputNumber size="small" min={l.min_qty} precision={0} value={l.quantity} onChange={(v) => setAddedQty(l.key, v)} className="!w-20" aria-label={t("qty")} />
+      <div className="flex flex-col items-end gap-0.5">
+        <InputNumber size="small" min={1} precision={0} value={l.quantity} onChange={(v) => setAddedQty(l.key, v)} className="!w-20" aria-label={t("qty")} />
+        {/* ขั้นต่ำต่อรายการ (กติกาตอนลูกค้าสั่งเอง) — ร้านใส่ต่ำกว่าได้ เพราะตกลงกับลูกค้าแล้ว */}
+        {l.min_qty > 1 && (
+          <span className={`text-xs ${l.quantity < l.min_qty ? "font-medium text-amber-700" : "text-gray-500"}`}>
+            {l.quantity < l.min_qty ? t("belowMin", { n: l.min_qty }) : t("minQty", { n: l.min_qty })}
+          </span>
+        )}
+      </div>
       <Button size="small" danger type="text" icon={actionIcon("delete", "small")} aria-label={removeLabel} title={removeLabel} onClick={onRemove} />
     </div>
   );
@@ -358,6 +369,15 @@ export function EditPreorderItemsModal({
               ? t("extraReduced", { amount: money(preview.extra_due_after) })
               : t("outcomeNone")}
           </p>
+        </section>
+      )}
+
+      {belowMin.length > 0 && (
+        <section className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <p className="m-0 font-semibold">{t("belowMinTitle")}</p>
+          {belowMin.map((b) => (
+            <p key={b.name} className="m-0 text-xs">{t("belowMinLine", { name: b.name, qty: b.quantity, min: b.min_qty })}</p>
+          ))}
         </section>
       )}
 
