@@ -25,10 +25,9 @@ export function useBuyAgain() {
   const router = useRouter();
   const qc = useQueryClient();
 
-  /** คืน true = ใส่ตะกร้าได้อย่างน้อย 1 รายการ (และไปหน้าถัดไปแล้ว) */
-  const buyAgain = async (items: ShopOrderItem[], opts: { redirect?: string; quiet?: boolean } = {}): Promise<boolean> => {
-    if (pending || items.length === 0) return false;
-    setPending(true);
+  /** ใส่รายการลงตะกร้า (ไม่แจ้งเตือน · ไม่เปลี่ยนหน้า) — คืนจำนวนที่ใส่ได้ + รายการที่ใส่ไม่ได้ (ชื่อ + เหตุผล)
+   *  ใช้ร่วมกับ "แก้ไขวิธีรับ/ที่อยู่" (useEditCheckout) ที่ต้องใส่พรีออเดอร์กลับด้วยก่อนเปลี่ยนหน้า */
+  const addItemsToCart = async (items: ShopOrderItem[]): Promise<{ added: number; failed: string[] }> => {
     const failed: string[] = [];
     let added = 0;
     for (const it of items) {
@@ -60,6 +59,14 @@ export function useBuyAgain() {
     } else {
       await qc.invalidateQueries({ queryKey: shopCartKey });
     }
+    return { added, failed };
+  };
+
+  /** คืน true = ใส่ตะกร้าได้อย่างน้อย 1 รายการ (และไปหน้าถัดไปแล้ว) */
+  const buyAgain = async (items: ShopOrderItem[], opts: { redirect?: string; quiet?: boolean } = {}): Promise<boolean> => {
+    if (pending || items.length === 0) return false;
+    setPending(true);
+    const { added, failed } = await addItemsToCart(items);
     setPending(false);
 
     if (added === 0) {
@@ -72,5 +79,5 @@ export function useBuyAgain() {
     return true;
   };
 
-  return { buyAgain, pending };
+  return { buyAgain, addItemsToCart, pending };
 }

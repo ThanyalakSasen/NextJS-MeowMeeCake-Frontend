@@ -181,8 +181,14 @@ export const shopOrdersService = {
   },
 
   /** POST /shop/orders/{id}/cancel { reason? } — คืนสต็อก/สิทธิ์โปรโมชันให้ · ชำระแล้ว = รอร้านโอนคืน */
-  cancel: async (id: string, reason?: string): Promise<void> => {
-    await http.post(`/shop/orders/${id}/cancel`, reason ? { reason } : {});
+  /** opts.editCheckout = ยกเลิกเพื่อกลับไปแก้ที่อยู่/วิธีรับแล้วสั่งใหม่ — backend ไม่ลงข้อความ "ลูกค้ายกเลิก" ในแชทร้าน */
+  /** POST …/placed — ถึงหน้าสั่งซื้อสำเร็จ (กดชำระเงินภายหลัง / ส่งสลิปแล้ว) → backend แจ้ง "ออเดอร์ใหม่" ให้ร้าน + กระดิ่งลูกค้า (ครั้งเดียว) */
+  placed: async (id: string): Promise<void> => {
+    await http.post(`/shop/orders/${encodeURIComponent(id)}/placed`, {});
+  },
+
+  cancel: async (id: string, reason?: string, opts: { editCheckout?: boolean } = {}): Promise<void> => {
+    await http.post(`/shop/orders/${id}/cancel`, { ...(reason ? { reason } : {}), ...(opts.editCheckout ? { edit_checkout: true } : {}) });
   },
 
   /** GET /shop/orders/{id} — ออเดอร์ + รายการสินค้า (เฉพาะเจ้าของ) */

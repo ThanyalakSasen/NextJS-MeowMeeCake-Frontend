@@ -30,6 +30,8 @@ export interface AlertRequest {
   danger?: boolean;
   /** "delete" = ไอคอนถังขยะ + ปุ่มยืนยันไอคอนลบ (confirm เท่านั้น) */
   variant?: "default" | "delete";
+  /** หน้าร้าน: หัวข้อตัวหนาบรรทัดแรก + ข้อความบรรทัดถัดไป · ปุ่มไม่มีไอคอน (ค่าเริ่มต้น = หัวข้อ+ข้อความบรรทัดเดียว) */
+  stacked?: boolean;
   /** false = ปิดด้วย Esc / คลิกนอกกล่อง / ปุ่ม ✕ มุมบนไม่ได้ — ต้องกดปุ่มใดปุ่มหนึ่ง */
   dismissible: boolean;
   resolve: (confirmed: boolean) => void;
@@ -94,6 +96,8 @@ export function confirmAlert(
     cancelText?: string;
     danger?: boolean;
     variant?: "default" | "delete";
+    /** หน้าร้าน: หัวข้อตัวหนาแยกบรรทัดจากข้อความ · ปุ่มไม่มีไอคอน */
+    stacked?: boolean;
     /** false = ปิดด้วย Esc / คลิกนอกกล่องไม่ได้ — ต้องกดปุ่มใดปุ่มหนึ่งเท่านั้น (ค่าเริ่มต้น true)
      *  ใช้เมื่อปุ่มยกเลิกมีผลจริง (เช่น "ออกจากระบบ") ไม่ใช่แค่ "ไม่ทำอะไร" — กันผู้ใช้กด Esc แล้วโดนผลนั้นโดยไม่ตั้งใจ */
     dismissible?: boolean;

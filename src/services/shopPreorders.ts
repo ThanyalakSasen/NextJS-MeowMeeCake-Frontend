@@ -66,11 +66,15 @@ export function roundItemLimits(it: StorefrontRoundItem): { min: number; max: nu
 
 export interface ShopPreorderItem {
   _id: string;
+  /** รายการในรอบ — ใช้ใส่กลับลงตะกร้าพรีออเดอร์ (แก้ที่อยู่/วิธีรับ) */
+  round_item_id: string | null;
   product_id: string;
   product_name: string;
   product_name_eng: string | null;
   variant_name: string | null;
-  selected_options: { option_name: string; text_value: string | null }[];
+  variant_ids: string[];
+  /** option_id null = ออปชันถูกลบไปแล้ว */
+  selected_options: { option_id: string | null; option_name: string; text_value: string | null }[];
   special_request: string | null;
   quantity: number;
   unit_price: number;
@@ -172,12 +176,20 @@ function toShopPreorder(raw: any): ShopPreorder {
     items: Array.isArray(raw.items)
       ? raw.items.map((it: any) => ({
           _id: it._id,
+          round_item_id: it.round_item_id ? String(it.round_item_id?._id ?? it.round_item_id) : null,
           product_id: String(it.product_id?._id ?? it.product_id ?? ""),
           product_name: it.product_snapshot?.product_name_th ?? "",
           product_name_eng: it.product_snapshot?.product_name_eng ?? null,
           variant_name: it.product_snapshot?.variant_name ?? null,
+          variant_ids: Array.isArray(it.selected_variants) && it.selected_variants.length
+            ? it.selected_variants.map((v: any) => v.variant_id).filter(Boolean).map(String)
+            : it.variant_id ? [String(it.variant_id?._id ?? it.variant_id)] : [],
           selected_options: Array.isArray(it.selected_options)
-            ? it.selected_options.map((o: any) => ({ option_name: o.option_name ?? "", text_value: o.text_value ?? null }))
+            ? it.selected_options.map((o: any) => ({
+                option_id: o.option_id ? String(o.option_id?._id ?? o.option_id) : null,
+                option_name: o.option_name ?? "",
+                text_value: o.text_value ?? null,
+              }))
             : [],
           special_request: it.special_request ?? null,
           quantity: it.quantity,
@@ -226,7 +238,13 @@ export const shopPreordersService = {
     toShopPreorder((await http.get<ItemResponse<any>>(`/shop/preorders/${encodeURIComponent(id)}`)).data),
 
   /** POST /shop/preorders/{id}/cancel { reason? } — คืนโควตาในรอบ + คูปอง/แต้มให้ */
-  cancel: async (id: string, reason?: string): Promise<void> => {
-    await http.post(`/shop/preorders/${encodeURIComponent(id)}/cancel`, reason ? { reason } : {});
+  /** opts.editCheckout = ยกเลิกเพื่อกลับไปแก้ที่อยู่/วิธีรับแล้วสั่งใหม่ — backend ไม่ลงข้อความ "ลูกค้ายกเลิก" ในแชทร้าน */
+  /** POST …/placed — ถึงหน้าสั่งซื้อสำเร็จ (กดชำระเงินภายหลัง / ส่งสลิปแล้ว) → backend แจ้ง "ออเดอร์ใหม่" ให้ร้าน + กระดิ่งลูกค้า (ครั้งเดียว) */
+  placed: async (id: string): Promise<void> => {
+    await http.post(`/shop/preorders/${encodeURIComponent(id)}/placed`, {});
+  },
+
+  cancel: async (id: string, reason?: string, opts: { editCheckout?: boolean } = {}): Promise<void> => {
+    await http.post(`/shop/preorders/${encodeURIComponent(id)}/cancel`, { ...(reason ? { reason } : {}), ...(opts.editCheckout ? { edit_checkout: true } : {}) });
   },
 };

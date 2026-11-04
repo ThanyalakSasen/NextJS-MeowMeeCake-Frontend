@@ -33,6 +33,10 @@ import { REVIEWED_PILL, REVIEW_PILL, useOrderLabels } from "../../purchases/orde
 import { thaiDate } from "../../../preorder/lib/preorderDates";
 import ShopSpinner from "@/components/customer/ShopSpinner";
 import { DevicePushPrompt } from "@/components/customer/DevicePushPrompt";
+import EditCheckoutButton from "../../_components/EditCheckoutButton";
+import { canEditBill } from "../../../hooks/useEditCheckout";
+import { formatStoreAddress } from "../../../lib/storeFormat";
+import { useNow } from "../../../preorder/lib/useNow";
 
 const isObjectId = (id: string) => /^[0-9a-f]{24}$/i.test(id);
 
@@ -61,6 +65,7 @@ function PreorderDetailContent() {
   const tf = useTranslations("shop.flow");
   const validId = isObjectId(id ?? "");
   const qc = useQueryClient();
+  const now = useNow();
 
   const preorderQ = useQuery({
     queryKey: shopPreorderKey(id),
@@ -142,6 +147,9 @@ function PreorderDetailContent() {
   // สถานะรีวิว — อยู่แถวเดียวกับนัดรับ/สถานะจัดส่ง (โครงเดียวกับหน้ารายละเอียดคำสั่งซื้อ) · ยังรีวิวไม่ได้ = บอกเงื่อนไข
   const showPickupRow = p.order_type === "takeaway" && !!(p.pickup_point_name || p.pickup_date);
   const showDeliveryRow = p.order_type === "delivery" && !!p.delivery_status && p.order_status !== "cancelled";
+  // แก้วิธีรับ/ที่อยู่ได้ระหว่างรอชำระ (ยังไม่ชำระ · ยังไม่ส่งสลิป · ร้านยังไม่รับ) และรอบยังเปิดรับ — ยกเลิกแล้วต้องสั่งใหม่ในรอบเดิมได้
+  const canEditCheckout = canEditBill({ kind: "preorder", doc: p }, now);
+  const addr = p.delivery_address;
   const reviewStatus = (
     <ReviewLink
       kind="preorder"
@@ -249,6 +257,34 @@ function PreorderDetailContent() {
                 </>
               )}
             </div>
+
+            {/* วิธีรับสินค้า / ที่อยู่จัดส่ง — ปุ่มแก้ไขชิดขวา (ระหว่างรอชำระ · รอบยังเปิดรับ) เหมือนหน้าคำสั่งซื้อ */}
+            {p.order_status !== "cancelled" && (
+              <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">
+                <div className="min-w-0 flex-1">
+                  <p className="mb-1 font-semibold">{to("receiveMethod")}</p>
+                  {p.order_type === "takeaway" ? (
+                    <p className="text-gray-600">
+                      {to("pickupAtStore")}
+                      {p.pickup_point_name ? ` · ${p.pickup_point_name}` : ""}
+                      {p.pickup_date ? ` · ${labels.pickupDate(p.pickup_date)}` : ""}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-gray-600">{to("delivery")}</p>
+                      {addr && (
+                        <p className="mt-0.5 text-gray-600">
+                          {[addr.recipient_name, addr.recipient_phone].filter(Boolean).join(" · ")}
+                          {addr.recipient_name || addr.recipient_phone ? <br /> : null}
+                          {formatStoreAddress(addr)}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+                {canEditCheckout && <EditCheckoutButton bill={{ kind: "preorder", doc: p }} groupId={paymentQ.data?.group_id} />}
+              </div>
+            )}
 
             {showPickupRow && (
               <div className="flex items-center justify-between gap-3 border-t border-[#8C5A3C]/10 pt-4 text-sm">

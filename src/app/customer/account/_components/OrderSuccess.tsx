@@ -4,10 +4,12 @@
 //   /customer/account/purchases/[id]/success · /customer/account/preorders/[id]/success
 // มาจากหน้ารายละเอียด (?new=1) หลังส่งสลิป หรือกด "ชำระภายหลัง" — แสดงสถานะตามจริงของเอกสาร
 // ยังไม่ชำระ → ปุ่มกลับไปชำระ (หน้ารายละเอียดมี QR + แนบสลิป)
+// เปิดหน้านี้ = ลูกค้ากดชำระเงินภายหลัง/ส่งสลิปแล้ว → บอก backend ให้แจ้ง "ออเดอร์ใหม่" (ร้าน + กระดิ่งลูกค้า · ครั้งเดียว)
 // ─────────────────────────────────────────────────────────────
+import { useEffect } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { shopOrdersService } from "@/services/shopOrders";
 import { shopPreordersService } from "@/services/shopPreorders";
@@ -15,7 +17,7 @@ import { isApiError } from "@/types/api";
 import { formatDate } from "@/i18n/format";
 import FlowSteps from "@/components/customer/FlowSteps";
 import { baht, shopButton, shopButtonPrimary, shopCard, shopPage } from "@/components/customer/shopStyles";
-import { shopOrderKey, shopPreorderKey } from "../../lib/shopQueries";
+import { shopNotificationsKey, shopOrderKey, shopPreorderKey } from "../../lib/shopQueries";
 import { useOrderLabels } from "../purchases/orderLabels";
 import SendToLineChat from "./SendToLineChat";
 
@@ -41,6 +43,14 @@ export default function OrderSuccess({ kind, id }: { kind: "order" | "preorder";
   const locale = useLocale();
   const validId = isObjectId(id);
   const base = kind === "order" ? "/customer/account/purchases" : "/customer/account/preorders";
+  const qc = useQueryClient();
+
+  // แจ้งออเดอร์ใหม่ — backend แจ้งครั้งเดียวต่อบิล (เรียกซ้ำได้) · ล้มเหลว = เงียบ (ไม่กระทบหน้านี้)
+  useEffect(() => {
+    if (!validId) return;
+    const call = kind === "order" ? shopOrdersService.placed(id) : shopPreordersService.placed(id);
+    call.then(() => qc.invalidateQueries({ queryKey: shopNotificationsKey })).catch(() => undefined);
+  }, [kind, id, validId, qc]);
 
   const q = useQuery({
     queryKey: kind === "order" ? shopOrderKey(id) : shopPreorderKey(id),
